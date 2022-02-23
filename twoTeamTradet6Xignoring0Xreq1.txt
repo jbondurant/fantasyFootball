@@ -1,0 +1,63 @@
+-----------------------------------------------------
+give:	Marvin Jones	and	Brandin Cooks	and	Corey Davis
+take:	Mike Williams	and	Laviska Shenault	and	Randall Cobb
+Your gain:	-6.2999999999999545
+Their gain:	12.699999999999932
+-----------------------------------------------------
+
+-----------------------------------------------------
+give:	Marvin Jones	and	Brandin Cooks	and	Corey Davis
+take:	Mike Williams	and	Darius Slayton	and	Laviska Shenault
+Your gain:	-6.2999999999999545
+Their gain:	12.699999999999932
+-----------------------------------------------------
+
+-----------------------------------------------------
+give:	Marvin Jones	and	Brandin Cooks	and	Corey Davis
+take:	Giovani Bernard	and	Mike Williams	and	Laviska Shenault
+Your gain:	-6.2999999999999545
+Their gain:	12.699999999999932
+-----------------------------------------------------
+
+-----------------------------------------------------
+give:	Marvin Jones	and	Brandin Cooks	and	Corey Davis
+take:	Carlos Hyde	and	Mike Williams	and	Laviska Shenault
+Your gain:	-6.2999999999999545
+Their gain:	12.699999999999932
+-----------------------------------------------------
+
+-----------------------------------------------------
+give:	Marvin Jones	and	Brandin Cooks	and	Corey Davis
+take:	Jared Cook	and	Mike Williams	and	Laviska Shenault
+Your gain:	-6.2999999999999545
+Their gain:	10.099999999999909
+-----------------------------------------------------
+
+-----------------------------------------------------
+give:	Marvin Jones	and	Brandin Cooks	and	Corey Davis
+take:	Mike Williams	and	Daniel Jones	and	Laviska Shenault
+Your gain:	-6.2999999999999545
+Their gain:	12.699999999999932
+-----------------------------------------------------
+
+-----------------------------------------------------
+give:	Marvin Jones	and	Brandin Cooks	and	Corey Davis
+take:	Derrick Henry	and	Mike Williams	and	Laviska Shenault
+Your gain:	-6.2999999999999545
+Their gain:	12.699999999999932
+-----------------------------------------------------
+
+-----------------------------------------------------
+give:	Marvin Jones	and	Brandin Cooks	and	Corey Davis
+take:	Tyler Higbee	and	Mike Williams	and	Laviska Shenault
+Your gain:	-6.2999999999999545
+Their gain:	12.699999999999932
+-----------------------------------------------------
+
+-----------------------------------------------------
+give:	Marvin Jones	and	Brandin Cooks	and	Corey Davis
+take:	Mike Williams	and	Jamaal Williams	and	Laviska Shenault
+Your gain:	-6.2999999999999545
+Their gain:	12.699999999999932
+-----------------------------------------------------
+

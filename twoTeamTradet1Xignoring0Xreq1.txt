@@ -1,0 +1,7 @@
+-----------------------------------------------------
+give:	Marvin Jones	and	Brandin Cooks	and	Corey Davis
+take:	Kirk Cousins	and	Jared Cook	and	Mike Williams
+Your gain:	-24.5
+Their gain:	-10.548000000000116
+-----------------------------------------------------
+

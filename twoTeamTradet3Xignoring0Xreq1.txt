@@ -1,0 +1,14 @@
+-----------------------------------------------------
+give:	Marvin Jones	and	Brandin Cooks	and	Corey Davis
+take:	Jamison Crowder	and	Mike Williams	and	Laviska Shenault
+Your gain:	4.7000000000000455
+Their gain:	-4.7000000000000455
+-----------------------------------------------------
+
+-----------------------------------------------------
+give:	Marvin Jones	and	Brandin Cooks	and	Corey Davis
+take:	Mike Williams	and	Jamaal Williams	and	Chris Carson
+Your gain:	-20.5
+Their gain:	-2.799999999999841
+-----------------------------------------------------
+
