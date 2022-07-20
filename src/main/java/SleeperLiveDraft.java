@@ -15,7 +15,7 @@ public class SleeperLiveDraft {
     //DO NOT USE IO UTILITIES
     //IT MUST UPDATE EVERY CALL, NOT ONCE PER DAY
 
-    public static LiveDraftInfoFunBulk getLiveDraftInfoFunBulk(String webURL, boolean isFun){
+    public static LiveDraftInfo getLiveDraftInfoFunBulk(String webURL, boolean isFun){
         String webData = WebUrlUtility.getLiveWebPage(webURL);
 
         JsonParser jp = new JsonParser();
@@ -52,22 +52,22 @@ public class SleeperLiveDraft {
                 draftedPlayers.add(player);
             }
         }
-        LiveDraftInfoFunBulk ldifb = new LiveDraftInfoFunBulk(draftedPlayers, rosterPlayers, isFun);
+        LiveDraftInfo ldifb = new LiveDraftInfo(draftedPlayers, rosterPlayers, isFun);
         return ldifb;
     }
 
 
-    public static LiveDraftInfoFunBulk getDraftedPlayersMock(String mockDraftID, boolean isFun){
+    public static LiveDraftInfo getDraftedPlayersMock(String mockDraftID, boolean isFun){
         String mockURL = "https://api.sleeper.app/v1/draft/" + mockDraftID + "/picks";
         return getLiveDraftInfoFunBulk(mockURL, isFun);
     }
 
 
-    public static LiveDraftInfoFunBulk getDraftedPlayersFun(){
+    public static LiveDraftInfo getDraftedPlayersFun(){
         return getLiveDraftInfoFunBulk(webURLFun, true);
     }
 
-    public static LiveDraftInfoFunBulk getDraftedPlayersSerious(){
+    public static LiveDraftInfo getDraftedPlayersSerious(){
         return getLiveDraftInfoFunBulk(webURLSerious, false);
     }
 
@@ -84,12 +84,18 @@ public class SleeperLiveDraft {
 
     //for permutations, have method to make all permutations then pic say perms (140,150) for
 
-    //TODO figure out if round 2 works
     public static void main(String[] args){
-        LiveDraftInfoFunBulk ldifb = getDraftedPlayersMock("707299245186691073", true);
-        LiveDraftInfoFunBulk.LiveDraftPotentialMoveAnalyzer(ldifb);
+        int roundPick = 1; //todo needs to be updated all the time
+        boolean isFun = false;
+        String draftID = "855593342313009152";
+        int numDraftsOnFly = 300;
+        LiveDraftInfo ldifb = getDraftedPlayersMock(draftID, isFun);
+        LiveDraftInfo.LiveDraftPotentialMoveAnalyzer(ldifb);
         ArrayList<Position> positionsWanted = HumanStrategy.nonPermutedFun();
-        OnTheFlySimulationRunner.runDraftsOnTheFly(300, 9,true, positionsWanted, ldifb);
+        if(!isFun){
+            positionsWanted = HumanStrategy.nonPermutedSerious();
+        }
+        OnTheFlySimulationRunner.runDraftsOnTheFly(numDraftsOnFly, roundPick,isFun, positionsWanted, ldifb);
         int y=1;
     }
 

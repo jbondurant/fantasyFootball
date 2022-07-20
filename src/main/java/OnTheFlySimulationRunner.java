@@ -1,16 +1,12 @@
-import org.checkerframework.checker.units.qual.A;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 
 public class OnTheFlySimulationRunner {
 
-    public static void runDraftsOnTheFly(int n, int roundPick, boolean isFun, ArrayList<Position> humanPermutationOld, LiveDraftInfoFunBulk ldifb) {
-        int numRoundsTotal = 9;
+    public static void runDraftsOnTheFly(int n, int roundPick, boolean isFun, ArrayList<Position> humanPermutationOld, LiveDraftInfo ldifb) {
+        int numRoundsTotal = 10;
         int numRoundsLeft = numRoundsTotal - roundPick + 1;
 
 
@@ -76,28 +72,29 @@ public class OnTheFlySimulationRunner {
 
             if(humanPermutationReducedRandom.contains(Position.QB)) {
                 positionsDraftedByHuman.add(Position.QB);
-                SimulationDraft simDraftQB = SimulationDraft.getFunSimulationPermPartial(humanPermutationPickQB, ldifb.draftedPlayers, numRoundsLeft);
+                SimulationDraft simDraftQB = null;
+                simDraftQB = SimulationDraft.getSimulationPermPartial(humanPermutationPickQB, ldifb.draftedPlayers, numRoundsLeft, isFun);
                 double draftScoreQB = simDraftQB.scoreDraft(isFun);
                 totalScoreQB = totalScoreQB.add(BigDecimal.valueOf(draftScoreQB));
             }
 
             if(humanPermutationReducedRandom.contains(Position.RB)) {
                 positionsDraftedByHuman.add(Position.RB);
-                SimulationDraft simDraftRB = SimulationDraft.getFunSimulationPermPartial(humanPermutationPickRB, ldifb.draftedPlayers, numRoundsLeft);
+                SimulationDraft simDraftRB = SimulationDraft.getSimulationPermPartial(humanPermutationPickRB, ldifb.draftedPlayers, numRoundsLeft, isFun);
                 double draftScoreRB = simDraftRB.scoreDraft(isFun);
                 totalScoreRB = totalScoreRB.add(BigDecimal.valueOf(draftScoreRB));
             }
 
             if(humanPermutationReducedRandom.contains(Position.WR)) {
                 positionsDraftedByHuman.add(Position.WR);
-                SimulationDraft simDraftWR = SimulationDraft.getFunSimulationPermPartial(humanPermutationPickWR, ldifb.draftedPlayers, numRoundsLeft);
+                SimulationDraft simDraftWR = SimulationDraft.getSimulationPermPartial(humanPermutationPickWR, ldifb.draftedPlayers, numRoundsLeft, isFun);
                 double draftScoreWR = simDraftWR.scoreDraft(isFun);
                 totalScoreWR = totalScoreWR.add(BigDecimal.valueOf(draftScoreWR));
             }
 
             if(humanPermutationReducedRandom.contains(Position.TE)) {
                 positionsDraftedByHuman.add(Position.TE);
-                SimulationDraft simDraftTE = SimulationDraft.getFunSimulationPermPartial(humanPermutationPickTE, ldifb.draftedPlayers, numRoundsLeft);
+                SimulationDraft simDraftTE = SimulationDraft.getSimulationPermPartial(humanPermutationPickTE, ldifb.draftedPlayers, numRoundsLeft, isFun);
                 double draftScoreTE = simDraftTE.scoreDraft(isFun);
                 totalScoreTE = totalScoreTE.add(BigDecimal.valueOf(draftScoreTE));
             }

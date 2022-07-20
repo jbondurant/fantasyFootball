@@ -12,10 +12,12 @@ public class SleeperLeague{
     private static final String myID = HumanOfInterest.humanID;
 
     public static String filepathStartFunLeague = "funLeagueSleeper";
+    //public static String webURLFunLeague = "https://api.sleeper.app/v1/league/707299245186691072";
     public static String webURLFunLeague = "https://api.sleeper.app/v1/league/707299245186691072";
 
     public static String filepathStartSeriousLeague = "seriousLeagueSleeper";
-    public static String webURLSeriousLeague = "https://api.sleeper.app/v1/league/725192042375917568";
+    //public static String webURLSeriousLeague = "https://api.sleeper.app/v1/league/725192042375917568";
+    public static String webURLSeriousLeague = "https://api.sleeper.app/v1/league/854055502148108288";
 
 
     League league;

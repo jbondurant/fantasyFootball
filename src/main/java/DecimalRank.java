@@ -5,9 +5,8 @@ import java.util.Random;
 
 public class DecimalRank {
 
-    double rankNum;
-    Player player;
-
+    public double rankNum;
+    public Player player;
 
     public DecimalRank(double rn, Player p){
         rankNum = rn;
@@ -16,41 +15,26 @@ public class DecimalRank {
 
     public static PriorityQueue<Rank> makeDeviatedRanking(ArrayList<DecimalRank> decimalRanking, HashMap<String, Double> apsd){
         ArrayList<DecimalRank> deviatedRanking = new ArrayList<DecimalRank>();
-
         for(DecimalRank decimalRank : decimalRanking){
             Player p = decimalRank.player;
-
-
             double rank = decimalRank.rankNum;
             String pSRID = p.sportRadarID;
-
             double sd = rank * 0.05;
             if(apsd.containsKey(pSRID)){
                 sd = apsd.get(pSRID);
             }
-
-
-
             Random r = new Random();
-
             double deviatedRank = r.nextGaussian() * sd + rank;
             deviatedRank = Math.max(deviatedRank, 0.0);
-
             DecimalRank deviatedDecimalRank = new DecimalRank(deviatedRank, p);
             deviatedRanking.add(deviatedDecimalRank);
         }
-        int y  = 1;
-
-
-
-
 
         PriorityQueue<Score> deviatedRankingAsScoring = new PriorityQueue<Score>(5, new ScoreComparator());
         for(DecimalRank dRank : deviatedRanking){
             Player devPlayer = dRank.player;
             double devRankNum = dRank.rankNum;
             devRankNum *= -1;
-
             Score deviatedRankAsScore = new Score(devRankNum, devPlayer);
             deviatedRankingAsScoring.add(deviatedRankAsScore);
         }
@@ -58,9 +42,7 @@ public class DecimalRank {
         ArrayList<Rank> deviatedRankingAsArray = Rank.scoringToRanking(deviatedRankingAsScoring);
         PriorityQueue<Rank> deviatedRankingAsQueue = new PriorityQueue<Rank>(5, new RankComparator());
         deviatedRankingAsQueue.addAll(deviatedRankingAsArray);
-
         return deviatedRankingAsQueue;
-
     }
 
 

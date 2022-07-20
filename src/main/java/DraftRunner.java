@@ -1,14 +1,13 @@
+import MathStuff.AvScore;
+import MathStuff.AverageUtility;
 import com.google.common.collect.Collections2;
 import com.mongodb.*;
-import org.bson.types.ObjectId;
-import org.checkerframework.checker.units.qual.A;
 
 
 import java.net.UnknownHostException;
 import java.util.*;
 
 public class DraftRunner {
-
 
     public static ArrayList<DraftReport> runDrafts(int n, boolean isFun) {
         ArrayList<DraftReport> multiDraftReport = new ArrayList<DraftReport>();
@@ -87,93 +86,10 @@ public class DraftRunner {
         return multiDraftReport;
     }
 
-
-
-
-    //if time for fun get average points per position
-
-    public static void sendDraftReportsToDatabase(ArrayList<DraftReport> draftReports, boolean isFun) throws UnknownHostException {
-        MongoClient mongoClient = new MongoClient("localhost");
-        DB database;
-        if (isFun) {
-            database = mongoClient.getDB("FantasyFunLeague");
-        } else {
-            database = mongoClient.getDB("FantasySeriousLeague");
-        }
-        DBCollection collection = database.getCollection("roundInfo");
-
-        //first I get them (if not there insert directly with num times = 1)
-        //then do the average utility
-        //then insert back with updated average and updated numb times
-
-        for (DraftReport draftReport : draftReports) {
-            for (RoundReport roundReport : draftReport.roundReports) {
-                String tierArrID = roundReport.idForDB;
-                //ObjectId mongoID = new ObjectId(keyID);
-
-                double endScore = roundReport.endScore;
-                int initialNumTimesAverage = 1;
-
-                //middle of program
-                //todo remove
-                boolean keyFound = false;
-
-                //DBObject oldEntry = collection.findOne(keyID);
-                //String queryString = "{_id : \"" + keyID + "\"}";
-                //DBObject oldEntry = collection.findOne(queryString);
-
-                BasicDBObject query = new BasicDBObject();
-                query.put("tierArrID", tierArrID);
-                DBObject oldEntry = collection.findOne(query);
-                int entrySize = collection.find(query).limit(1).size();
-                if (oldEntry == null) {
-                    int uy = 1;
-                }
-                if (entrySize == 0) {
-                    keyFound = false;
-                } else {
-                    if (oldEntry == null) {
-                        int y = 1;
-                    }
-                    keyFound = true;
-                }
-
-                if (!keyFound) {
-                    DBObject roundReportEntry = new BasicDBObject("tierArrID", tierArrID)
-                            .append("averageScore", endScore)
-                            .append("numTimesAverage", initialNumTimesAverage);
-                    collection.insert(roundReportEntry);
-                } else {
-                    double oldAverage = (double) oldEntry.get("averageScore");
-                    int oldNumTimes = (int) oldEntry.get("numTimesAverage");
-                    int newNumTimes = oldNumTimes + 1;
-                    double newAverage = AverageUtility.calculateAverage(oldAverage, oldNumTimes, endScore);
-
-                    //TODO update instead of delete and new
-                    collection.remove(query);
-                    DBObject roundReportEntry = new BasicDBObject("tierArrID", tierArrID)
-                            .append("averageScore", newAverage)
-                            .append("numTimesAverage", newNumTimes);
-                    collection.insert(roundReportEntry);
-                }
-
-
-            }
-        }
-
-
-    }
-
-
     public static HashMap<String, AvScore> runDraftsSmart(int n, boolean isFun, ArrayList<Position> humanPermutationOld) {
-
         HashMap<String, AvScore> preDB = new HashMap<String, AvScore>();
-
         double topScore = Double.MIN_VALUE;
         double minScore = Double.MAX_VALUE;
-
-
-
         for (int i = 0; i < n; i++) {
             ArrayList<Position> humanPermutation = new ArrayList<>();
             for(Position position : humanPermutationOld){
@@ -184,18 +100,13 @@ public class DraftRunner {
                 simDraft = SimulationDraft.getFunSimulationPerm(humanPermutation);
             }
             int posEncoded = (int) simDraft.draftReport.roundReports.get(0).partialArrangement[0];
-
             double draftScore = simDraft.scoreDraft(isFun);
-
-
             topScore = draftScore > topScore ? draftScore : topScore;
             minScore = draftScore < minScore ? draftScore : minScore;
-
             ArrayList<RoundReport> rrs = simDraft.draftReport.roundReports;
             for (RoundReport rr : rrs) {
                 String keyForHashMap = rr.idForDB;
                 double endScore = rr.endScore;
-
                 if (preDB.containsKey(keyForHashMap)) {
                     AvScore as = preDB.get(keyForHashMap);
                     double oldAverage = as.averageScore;
@@ -209,12 +120,8 @@ public class DraftRunner {
                     AvScore firstScore = new AvScore(endScore, 1);
                     preDB.put(keyForHashMap, firstScore);
                 }
-
-
             }
-
         }
-
         System.out.println("top: " + topScore);
         System.out.println("min: " + minScore);
         return preDB;
@@ -307,25 +214,8 @@ public class DraftRunner {
 
     public static void main(String[] args) {
         boolean isFun = false;
-        //
-        //
-        //
-        /*
         ArrayList<DraftReport> draftReports = runDrafts(30000, isFun);
-        try {
-            sendDraftReportsToDatabase(draftReports, isFun);
-        } catch (UnknownHostException e) {
-            e.printStackTrace();
-        }
-        */
-        //
-        //
-        //
-
-
-
         ArrayList<Position> humanPermutationNoR1 = HumanStrategy.nonPermutedSeriousNoR3();
-
         if(isFun){
             try {
                 humanPermutationNoR1 = HumanStrategy.nonPermutedFunNoR3();
@@ -335,18 +225,16 @@ public class DraftRunner {
         }
         Iterator<List<Position>> allPermsIt = Collections2.orderedPermutations(humanPermutationNoR1).iterator();
         Collection<List<Position>> allPermsCol = Collections2.orderedPermutations(humanPermutationNoR1);
-
         System.out.println("All permutations size: " + allPermsCol.size());
-
         ArrayList<List<Position>> selectPermsMeta = new ArrayList<>();
         int start = 5;
-        int end = 105;
+        int end = 105;//todo unhardcode
 
         int index=0;
         while(allPermsIt.hasNext()){
             List<Position> permutationSingleNoR1 = allPermsIt.next();
             ArrayList<Position> permutationSingle = new ArrayList<>();
-            permutationSingle.add(Position.RB);//round 1
+            permutationSingle.add(Position.RB);//round 1 todo remove 3 hardcoded rounds
             permutationSingle.add(Position.TE);//TODO put back to TE
             permutationSingle.add(Position.WR);
             for(Position posOfPerm : permutationSingleNoR1){

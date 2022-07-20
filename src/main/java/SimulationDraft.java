@@ -42,11 +42,14 @@ public class SimulationDraft {
         return new SimulationDraft(sl, draftReportSerious);
     }
 
-    public static SimulationDraft getFunSimulationPermPartial(ArrayList<Position> humanPermutation, ArrayList<Player> draftedPlayers, int roundsLeft){
+    public static SimulationDraft getSimulationPermPartial(ArrayList<Position> humanPermutation, ArrayList<Player> draftedPlayers, int roundsLeft, boolean isFun){
         SleeperLeague sl = SleeperLeague.getFunLeague();
-        DraftReport draftReportFun = runSimulationDraftPermPartial(sl, true, humanPermutation, draftedPlayers, roundsLeft);
+        DraftReport draftReportFun = runSimulationDraftPermPartial(sl, false, humanPermutation, draftedPlayers, roundsLeft);
         return new SimulationDraft(sl, draftReportFun);
     }
+
+
+
 
     public static SimulationDraft getFunSimulationPerm(ArrayList<Position> humanPermutation){
         SleeperLeague sl = SleeperLeague.getFunLeague();

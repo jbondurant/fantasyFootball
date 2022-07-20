@@ -3,11 +3,11 @@ import java.util.PriorityQueue;
 public class RankTierOrderedPlayers {
 
 
-    PriorityQueue<RankTier> quarterbacks;
-    PriorityQueue<RankTier> runningBacks;
-    PriorityQueue<RankTier> wideReceivers;
-    PriorityQueue<RankTier> tightEnds;
-    PriorityQueue<RankTier> defenses;
+    public PriorityQueue<RankTier> quarterbacks;
+    public PriorityQueue<RankTier> runningBacks;
+    public PriorityQueue<RankTier> wideReceivers;
+    public PriorityQueue<RankTier> tightEnds;
+    public PriorityQueue<RankTier> defenses;
 
     public RankTierOrderedPlayers(RankOrderedPlayers rop){
         PriorityQueue<Rank> qbRankOnly = rop.quarterbacks;
@@ -32,8 +32,6 @@ public class RankTierOrderedPlayers {
 
     public boolean removePlayer(Player player){
         Position pos = player.position;
-
-
         if(pos.equals(Position.QB)){
             for(RankTier rankTier : quarterbacks){
                 if(rankTier.player.sportRadarID.equals(player.sportRadarID)){

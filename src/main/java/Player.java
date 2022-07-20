@@ -4,15 +4,15 @@ import java.util.HashMap;
 
 
 public class Player {
-    String firstName;
-    String lastName;
-    String team;
-    Position position;
+    public String firstName;
+    public String lastName;
+    public String team;
+    public Position position;
 
-    int yahooID;
-    int sleeperID;
-    String sportRadarID;
-    int fantasyProsID;
+    public int yahooID;
+    public int sleeperID;
+    public String sportRadarID;
+    public int fantasyProsID;
 
     public static ArrayList<Player> draftablePlayers = new ArrayList<Player>();
     private static HashMap<String, Player> playersFromSRID = new HashMap<String, Player>();

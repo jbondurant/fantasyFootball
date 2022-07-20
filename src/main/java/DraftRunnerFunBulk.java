@@ -1,6 +1,7 @@
+import MathStuff.AvScore;
+import MathStuff.AverageUtility;
 import com.google.common.collect.Collections2;
 import com.mongodb.*;
-import org.checkerframework.checker.units.qual.A;
 
 import java.net.UnknownHostException;
 import java.util.*;
@@ -89,6 +90,7 @@ public class DraftRunnerFunBulk {
 
 
     public static void main(String[] args) {
+        System.out.println("Hardcoded isFun");
         boolean isFun = true;
 
 
@@ -103,7 +105,7 @@ public class DraftRunnerFunBulk {
 
         ArrayList<List<Position>> selectPermsMeta = new ArrayList<>();
         int start = 0;
-        int end = 1680;
+        int end = 1680;//todo unhardcode
 
         int index=0;
         while(allPermsIt.hasNext()){

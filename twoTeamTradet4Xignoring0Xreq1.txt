@@ -1,7 +1,0 @@
------------------------------------------------------
-give:	Marvin Jones	and	Brandin Cooks	and	Corey Davis
-take:	Mike Williams	and	Chris Carson	and	Laviska Shenault
-Your gain:	-2.2999999999999545
-Their gain:	2.300000000000068
------------------------------------------------------
-
