@@ -85,7 +85,7 @@ public class SleeperLiveDraft {
     //for permutations, have method to make all permutations then pic say perms (140,150) for
 
     public static void main(String[] args){
-        int roundPick = 1; //todo needs to be updated all the time
+        int roundPick = 2; //todo needs to be updated all the time
         boolean isFun = false;
         String draftID = "855593342313009152";
         int numDraftsOnFly = 300;

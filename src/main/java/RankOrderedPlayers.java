@@ -9,7 +9,6 @@ public class RankOrderedPlayers {
     PriorityQueue<Rank> tightEnds;
     PriorityQueue<Rank> defenses;
 
-
     public RankOrderedPlayers(ArrayList<Rank> ranking){
 
         ArrayList<Rank> qbs = new ArrayList<Rank>();
@@ -102,5 +101,64 @@ public class RankOrderedPlayers {
 
         RankOrderedPlayers rop = RankOrderedPlayers.scoreToRankOrderedPlayers(sop);
         return rop;
+    }
+
+    public boolean removePlayer(Player player){
+        Position pos = player.position;
+        if(pos.equals(Position.QB)){
+            for(Rank rank : quarterbacks){
+                if(rank.player.sportRadarID.equals(player.sportRadarID)){
+                    return quarterbacks.remove(rank);
+                }
+            }
+        }
+        else if(pos.equals(Position.RB)){
+            for(Rank rank : runningBacks){
+                if(rank.player.sportRadarID.equals(player.sportRadarID)){
+                    return runningBacks.remove(rank);
+                }
+            }
+        }
+        else if(pos.equals(Position.WR)){
+            for(Rank rank : wideReceivers){
+                if(rank.player.sportRadarID.equals(player.sportRadarID)){
+                    return wideReceivers.remove(rank);
+                }
+            }
+        }
+        else if(pos.equals(Position.TE)){
+            for(Rank rank : tightEnds){
+                if(rank.player.sportRadarID.equals(player.sportRadarID)){
+                    return tightEnds.remove(rank);
+                }
+            }
+        }
+        for(Rank rank : defenses){
+            if(rank.player.sportRadarID.equals(player.sportRadarID)){
+                return defenses.remove(rank);
+            }
+        }
+        return false;
+    }
+
+    public Player removeTopPlayerOfPos(Position pos){
+        if(pos.equals(Position.QB)){
+            Rank r = quarterbacks.poll();
+            return r.player;
+        }
+        else if(pos.equals(Position.RB)){
+            Rank r = runningBacks.poll();
+            return r.player;
+        }
+        else if(pos.equals(Position.WR)){
+            Rank r = wideReceivers.poll();
+            return r.player;
+        }
+        else if(pos.equals(Position.TE)){
+            Rank r = tightEnds.poll();
+            return r.player;
+        }
+        Rank r = defenses.poll();
+        return r.player;
     }
 }

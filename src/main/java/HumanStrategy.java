@@ -2,13 +2,13 @@ import java.util.*;
 
 public class HumanStrategy extends Strategy {
 
-    RankTierOrderedPlayers rankTierOrderedPlayers;
+    RankOrderedPlayers rankOrderedPlayers;
     ArrayList<Position> positionDraftOrder;
     final ArrayList<Position> initialPositionDraftOrder;
 
     //TODO my permutations must change based on fun or serious
     public HumanStrategy(RankOrderedPlayers rop, boolean isFun){
-        rankTierOrderedPlayers = new RankTierOrderedPlayers(rop);
+        rankOrderedPlayers = rop;
         positionDraftOrder = permutationGeneratorSerious();
         if(isFun) {
             positionDraftOrder = permutationGeneratorFun();
@@ -17,7 +17,7 @@ public class HumanStrategy extends Strategy {
     }
 
     public HumanStrategy(RankOrderedPlayers rop, boolean isFun, ArrayList<Position> permGiven){
-        rankTierOrderedPlayers = new RankTierOrderedPlayers(rop);
+        rankOrderedPlayers = rop;
         positionDraftOrder = permGiven;
         if(isFun) {
             positionDraftOrder = permGiven;
@@ -202,27 +202,15 @@ public class HumanStrategy extends Strategy {
         int a=1;
     }
 
-    public static int[] getTopTiers(HumanStrategy humanStrategy){
-        //int[] topTiers = new int[5];
-        RankTierOrderedPlayers rankTierOrderedPlayers = humanStrategy.rankTierOrderedPlayers;
-        int[] topTiers = new int[4];
-        topTiers[0] = rankTierOrderedPlayers.quarterbacks.peek().tierNum;
-        topTiers[1] = rankTierOrderedPlayers.runningBacks.peek().tierNum;
-        topTiers[2] = rankTierOrderedPlayers.wideReceivers.peek().tierNum;
-        topTiers[3] = rankTierOrderedPlayers.tightEnds.peek().tierNum;
-        //topTiers[4] = rankTierOrderedPlayers.defenses.peek().tierNum;
-        return topTiers;
-    }
-
     @Override
     public Player selectPlayer() {
         Position pos = positionDraftOrder.remove(0);
-        Player p = rankTierOrderedPlayers.removeTopPlayerOfPos(pos);
+        Player p = rankOrderedPlayers.removeTopPlayerOfPos(pos);
         return p;
     }
 
     @Override
     public void removeDraftedPlayer(Player p) {
-        rankTierOrderedPlayers.removePlayer(p);
+        rankOrderedPlayers.removePlayer(p);
     }
 }

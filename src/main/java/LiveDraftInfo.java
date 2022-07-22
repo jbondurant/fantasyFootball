@@ -16,21 +16,18 @@ public class LiveDraftInfo {
 
     public static BestAvailablePlayers getBestAvailablePlayers(ArrayList<Player> draftedPlayers, boolean isFun){
         RankOrderedPlayers rop;
-        RankTierOrderedPlayers rtop;
         if(isFun){
             rop = RankOrderedPlayers.getRankOrderedPlayerFPSerious();
-            rtop= new RankTierOrderedPlayers(rop);
         }
         else{
             rop = RankOrderedPlayers.getRankOrderedPlayerFPSerious();
-            rtop = new RankTierOrderedPlayers(rop);
         }
 
         for(Player player : draftedPlayers){
-            rtop.removePlayer(player);
+            rop.removePlayer(player);
         }
 
-        BestAvailablePlayers bap = new BestAvailablePlayers(rtop);
+        BestAvailablePlayers bap = new BestAvailablePlayers(rop);
         return bap;
     }
 

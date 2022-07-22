@@ -23,29 +23,36 @@ public class SimulationDraft {
 
 
     SleeperLeague sleeperLeague;
-    DraftReport draftReport;
+    double scoreDraftHuman;
 
-    public SimulationDraft(SleeperLeague sl, DraftReport dr){
+    public SimulationDraft(SleeperLeague sl, double sdh){
         sleeperLeague = sl;
-        draftReport = dr;
+        scoreDraftHuman = sdh;
     }
 
     public static SimulationDraft getFunSimulation(){
         SleeperLeague sl = SleeperLeague.getFunLeague();
-        DraftReport draftReportFun = runSimulationDraft(sl, true);
-        return new SimulationDraft(sl, draftReportFun);
+        double scoreDraftHumanFun = runSimulationDraft(sl, true);
+        return new SimulationDraft(sl, scoreDraftHumanFun);
     }
 
     public static SimulationDraft getSeriousSimulation(){
         SleeperLeague sl = SleeperLeague.getSeriousLeague();
-        DraftReport draftReportSerious = runSimulationDraft(sl, false);
-        return new SimulationDraft(sl, draftReportSerious);
+        double scoreDraftHumanSerious = runSimulationDraft(sl, false);
+        return new SimulationDraft(sl, scoreDraftHumanSerious);
     }
 
     public static SimulationDraft getSimulationPermPartial(ArrayList<Position> humanPermutation, ArrayList<Player> draftedPlayers, int roundsLeft, boolean isFun){
-        SleeperLeague sl = SleeperLeague.getFunLeague();
-        DraftReport draftReportFun = runSimulationDraftPermPartial(sl, false, humanPermutation, draftedPlayers, roundsLeft);
-        return new SimulationDraft(sl, draftReportFun);
+        SleeperLeague sl = null;
+
+        if(isFun) {
+            sl = SleeperLeague.getFunLeague();
+        }
+        else{
+            sl = SleeperLeague.getSeriousLeague();
+        }
+        double scoreDraftHumanFun = runSimulationDraftPermPartial(sl, isFun, humanPermutation, draftedPlayers, roundsLeft);
+        return new SimulationDraft(sl, scoreDraftHumanFun);
     }
 
 
@@ -53,17 +60,17 @@ public class SimulationDraft {
 
     public static SimulationDraft getFunSimulationPerm(ArrayList<Position> humanPermutation){
         SleeperLeague sl = SleeperLeague.getFunLeague();
-        DraftReport draftReportFun = runSimulationDraftPerm(sl, true, humanPermutation);
-        return new SimulationDraft(sl, draftReportFun);
+        double scoreDraftHumanFun = runSimulationDraftPerm(sl, true, humanPermutation);
+        return new SimulationDraft(sl, scoreDraftHumanFun);
     }
     public static SimulationDraft getSeriousSimulationPerm(ArrayList<Position> humanPermutation){
         SleeperLeague sl = SleeperLeague.getSeriousLeague();
-        DraftReport draftReportSerious = runSimulationDraftPerm(sl, false, humanPermutation);
-        return new SimulationDraft(sl, draftReportSerious);
+        double scoreDraftHumanSerious = runSimulationDraftPerm(sl, false, humanPermutation);
+        return new SimulationDraft(sl, scoreDraftHumanSerious);
     }
 
     //TODO score keeps increasing after 6th run
-    public static DraftReport runSimulationDraft(SleeperLeague sl, boolean isFun){
+    public static double runSimulationDraft(SleeperLeague sl, boolean isFun){
 
         for(User user : sl.sleeperDraftInfo.usersInfo){
             if(user.userID.equals(myID)){
@@ -103,8 +110,6 @@ public class SimulationDraft {
 
         ArrayList<User> usersAtDraft = sl.sleeperDraftInfo.usersInfo;
 
-        ArrayList<RoundReport> roundReports = new ArrayList<RoundReport>();
-
         for(int i=1; i<=numRounds; i++){
 
             Collections.sort(usersAtDraft, new UserComparator());
@@ -115,11 +120,6 @@ public class SimulationDraft {
                 Player draftedPlayer = user.strategy.selectPlayer();//moved this up
                 if(user.userID.equals(myID)){
                     HumanStrategy myStrategy = (HumanStrategy) user.strategy;
-                    int[] topTiers = HumanStrategy.getTopTiers(myStrategy);
-                    //used to be subList(0, i-1) but cause arrangements to be off by 1 for my database
-                    ArrayList<Position> partialArrangement = new ArrayList<Position>(myStrategy.initialPositionDraftOrder.subList(0,i));
-                    RoundReport roundReport = new RoundReport(partialArrangement, topTiers);
-                    roundReports.add(roundReport);
                 }
                 user.addToRoster(draftedPlayer);
                 for(User userToAlert : usersAtDraft){
@@ -134,14 +134,12 @@ public class SimulationDraft {
 
         PrintDraftCSV();
 
-        DraftReport draftReport = new DraftReport(roundReports);
         double scoreDraftHuman = SleeperLeague.scoreSleeperDraft(sl, isFun);
-        draftReport.setEndScoreAll(scoreDraftHuman);
-        return draftReport;
+        return scoreDraftHuman;
     }
 
 
-    public static DraftReport runSimulationDraftPerm(SleeperLeague sl, boolean isFun, ArrayList<Position> humanPerm){
+    public static double runSimulationDraftPerm(SleeperLeague sl, boolean isFun, ArrayList<Position> humanPerm){
 
         for(User user : sl.sleeperDraftInfo.usersInfo){
             if(user.userID.equals(myID)){
@@ -165,7 +163,6 @@ public class SimulationDraft {
 
         ArrayList<User> usersAtDraft = sl.sleeperDraftInfo.usersInfo;
 
-        ArrayList<RoundReport> roundReports = new ArrayList<RoundReport>();
         for(int i=1; i<=numRounds; i++){
             Collections.sort(usersAtDraft, new UserComparator());
 
@@ -176,11 +173,6 @@ public class SimulationDraft {
                 //System.out.println(draftedPlayer.firstName + " " + draftedPlayer.lastName);
                 if(user.userID.equals(myID)){
                     HumanStrategy myStrategy = (HumanStrategy) user.strategy;
-                    int[] topTiers = HumanStrategy.getTopTiers(myStrategy);
-                    //used to be subList(0, i-1) but cause arrangements to be off by 1 for my database
-                    ArrayList<Position> partialArrangement = new ArrayList<Position>(myStrategy.initialPositionDraftOrder.subList(0,i));
-                    RoundReport roundReport = new RoundReport(partialArrangement, topTiers);
-                    roundReports.add(roundReport);
                 }
                 user.addToRoster(draftedPlayer);
                 for(User userToAlert : usersAtDraft){
@@ -195,10 +187,8 @@ public class SimulationDraft {
 
         PrintDraftCSV();
 
-        DraftReport draftReport = new DraftReport(roundReports);
         double scoreDraftHuman = SleeperLeague.scoreSleeperDraft(sl, isFun);
-        draftReport.setEndScoreAll(scoreDraftHuman);
-        return draftReport;
+        return scoreDraftHuman;
     }
 
 
@@ -232,7 +222,7 @@ public class SimulationDraft {
 
 
 
-    public static DraftReport runSimulationDraftPermPartial(SleeperLeague sl, boolean isFun, ArrayList<Position> humanPerm, ArrayList<Player> draftedPlayers, int roundsLeft){
+    public static double runSimulationDraftPermPartial(SleeperLeague sl, boolean isFun, ArrayList<Position> humanPerm, ArrayList<Player> draftedPlayers, int roundsLeft){
 
         for(User user : sl.sleeperDraftInfo.usersInfo){
             if(user.userID.equals(myID)){
@@ -282,7 +272,6 @@ public class SimulationDraft {
 
         ArrayList<User> usersAtDraft = sl.sleeperDraftInfo.usersInfo;
 
-        ArrayList<RoundReport> roundReports = new ArrayList<RoundReport>();
         for(int i=1; i<= roundsLeft; i++){
             Collections.sort(usersAtDraft, new UserComparator());
 
@@ -293,11 +282,6 @@ public class SimulationDraft {
                 //System.out.println(draftedPlayer.firstName + " " + draftedPlayer.lastName);
                 if(user.userID.equals(myID)){
                     HumanStrategy myStrategy = (HumanStrategy) user.strategy;
-                    int[] topTiers = HumanStrategy.getTopTiers(myStrategy);
-                    //used to be subList(0, i-1) but cause arrangements to be off by 1 for my database
-                    ArrayList<Position> partialArrangement = new ArrayList<Position>(myStrategy.initialPositionDraftOrder.subList(0,i));
-                    RoundReport roundReport = new RoundReport(partialArrangement, topTiers);
-                    roundReports.add(roundReport);
                 }
                 user.addToRoster(draftedPlayer);
                 for(User userToAlert : usersAtDraft){
@@ -312,10 +296,8 @@ public class SimulationDraft {
 
         PrintDraftCSV();
 
-        DraftReport draftReport = new DraftReport(roundReports);
         double scoreDraftHuman = SleeperLeague.scoreSleeperDraft(sl, isFun);
-        draftReport.setEndScoreAll(scoreDraftHuman);
-        return draftReport;
+        return scoreDraftHuman;
     }
 
 
