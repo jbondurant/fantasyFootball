@@ -26,54 +26,23 @@ public class HumanStrategy extends Strategy {
     }
 
 
-    public static HumanStrategy getFPProjectionHumanStrategyFun(){
-
-        SleeperLeague funL = SleeperLeague.getFunLeague();
-        LeagueScoringSettings funSettings = funL.league.leagueScoringSettings;
-        FantasyProsScore funScores = new FantasyProsScore(funSettings);
-        ArrayList<Score> funScoresList = funScores.fantasyProsScoreLeagueAdjusted;
-        ScoreOrderedPlayers sop = new ScoreOrderedPlayers(funScoresList);
-
-        RankOrderedPlayers rop = RankOrderedPlayers.scoreToRankOrderedPlayers(sop);
-        HumanStrategy fppProjectionHumanStrategyFun = new HumanStrategy(rop, true);
-        return fppProjectionHumanStrategyFun;
-    }
-
-    public static HumanStrategy getFPProjectionHumanStrategySerious(){
-
-        SleeperLeague seriousL = SleeperLeague.getSeriousLeague();
-        LeagueScoringSettings seriousSettings = seriousL.league.leagueScoringSettings;
-        FantasyProsScore seriousScores = new FantasyProsScore(seriousSettings);
-        ArrayList<Score> seriousScoresList = seriousScores.fantasyProsScoreLeagueAdjusted;
-        ScoreOrderedPlayers sop = new ScoreOrderedPlayers(seriousScoresList);
-
-        RankOrderedPlayers rop = RankOrderedPlayers.scoreToRankOrderedPlayers(sop);
-        HumanStrategy fppProjectionHumanStrategySerious = new HumanStrategy(rop, false);
-        return fppProjectionHumanStrategySerious;
-    }
-
-
     public static HumanStrategy getFPHumanStrategyFunFromPerm(ArrayList<Position> permutationGiven){
-
         SleeperLeague funL = SleeperLeague.getFunLeague();
         LeagueScoringSettings funSettings = funL.league.leagueScoringSettings;
         FantasyProsScore funScores = new FantasyProsScore(funSettings);
         ArrayList<Score> funScoresList = funScores.fantasyProsScoreLeagueAdjusted;
         ScoreOrderedPlayers sop = new ScoreOrderedPlayers(funScoresList);
-
         RankOrderedPlayers rop = RankOrderedPlayers.scoreToRankOrderedPlayers(sop);
         HumanStrategy fppProjectionHumanStrategyFun = new HumanStrategy(rop, true, permutationGiven);
         return fppProjectionHumanStrategyFun;
     }
 
     public static HumanStrategy getFPHumanStrategySeriousFromPerm(ArrayList<Position> permutationGiven){
-
         SleeperLeague seriousL = SleeperLeague.getSeriousLeague();
         LeagueScoringSettings seriousSettings = seriousL.league.leagueScoringSettings;
         FantasyProsScore seriousScores = new FantasyProsScore(seriousSettings);
         ArrayList<Score> seriousScoresList = seriousScores.fantasyProsScoreLeagueAdjusted;
         ScoreOrderedPlayers sop = new ScoreOrderedPlayers(seriousScoresList);
-
         RankOrderedPlayers rop = RankOrderedPlayers.scoreToRankOrderedPlayers(sop);
         HumanStrategy fppProjectionHumanStrategySerious = new HumanStrategy(rop, false, permutationGiven);
         return fppProjectionHumanStrategySerious;

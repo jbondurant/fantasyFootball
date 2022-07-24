@@ -12,7 +12,7 @@ public class SleeperLiveDraft {
 
     //DO NOT USE IO UTILITIES
     //IT MUST UPDATE EVERY CALL, NOT ONCE PER DAY
-    public static LiveDraftInfo getLiveDraftInfoFunBulk(String webURL, boolean isFun){
+    public static LiveDraftInfo getLiveDraftInfo(String webURL, boolean isFun){
         String webData = WebUrlUtility.getLiveWebPage(webURL);
         JsonParser jp = new JsonParser();
         JsonElement jsonElement = jp.parse(webData);
@@ -45,11 +45,14 @@ public class SleeperLiveDraft {
     }
     public static LiveDraftInfo getDraftedPlayersMock(String mockDraftID, boolean isFun){
         String mockURL = "https://api.sleeper.app/v1/draft/" + mockDraftID + "/picks";
-        return getLiveDraftInfoFunBulk(mockURL, isFun);
+        return getLiveDraftInfo(mockURL, isFun);
     }
 
     public static void main(String[] args){
         int roundPick = 4; //todo needs to be updated all the time
+        //kinda tricky cause I would need to check the last drafted
+        // and also it would be different if I'm the first or last player
+        //and so you need to check the num of players
         boolean isFun = false;
         String draftID = "856967625014616064";
         int numDraftsOnFly = 300;
