@@ -3,17 +3,19 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Locale;
 
 public class FFCalculatorSD {
+    public static int year = LocalDate.now().getYear();
 
     public static String filepathStartSerious = "ffCalculatorSDSerious";
-    public static String webURLSerious = "https://fantasyfootballcalculator.com/api/v1/adp/half-ppr?teams=12&year=2021&position=all";
+    public static String webURLSerious = "https://fantasyfootballcalculator.com/api/v1/adp/half-ppr?teams=12&year=" + year + "&position=all";
 
     public static String filepathStartFun = "ffCalculatorSDFun";
-    public static String webURLFun = "https://fantasyfootballcalculator.com/api/v1/adp/2qb?teams=10&year=2021&position=all";
+    public static String webURLFun = "https://fantasyfootballcalculator.com/api/v1/adp/2qb?teams=10&year=" + year + "&position=all";
 
     public static ArrayList<StandardDevPlayer> funPlayerSD;
     public static ArrayList<StandardDevPlayer> seriousPlayerSD;

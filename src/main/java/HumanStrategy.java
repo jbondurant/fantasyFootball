@@ -93,20 +93,6 @@ public class HumanStrategy extends Strategy {
         return permutation;
     }
 
-    public static ArrayList<Position> nonPermutedSeriousNoR3(){
-        String[] version0StringArray = {"QB", "RB", "RB", "WR", "WR", "WR", "WR"};
-        ArrayList<String> version = new ArrayList<String>();
-        for(String s : version0StringArray){
-            version.add(s);
-        }
-        ArrayList<Position> permutation = new ArrayList<Position>();
-        for(String string : version){
-            Position pos = Position.valueOf(string);
-            permutation.add(pos);
-        }
-        return permutation;
-    }
-
     public static ArrayList<Position> nonPermutedFun(){
         String[] version0StringArray = {"QB", "QB", "TE", "RB", "RB",  "WR", "WR", "WR", "WR"};
         ArrayList<String> version = new ArrayList<String>();
@@ -121,85 +107,34 @@ public class HumanStrategy extends Strategy {
         return permutation;
     }
 
-    public static ArrayList<Position> nonPermutedFunNoR3() throws Exception {
-        Exception e = new Exception();
-        throw e;
-        //TODO find which pos to take out
-        /*
-        String[] version0StringArray = {"QB", "QB", "TE", "RB", "RB", "WR", "WR", "WR", "WR", "WR"};
-        ArrayList<String> version = new ArrayList<String>();
-        for(String s : version0StringArray){
-            version.add(s);
-        }
-        ArrayList<Position> permutation = new ArrayList<Position>();
-        for(String string : version){
-            Position pos = Position.valueOf(string);
-            permutation.add(pos);
-        }
-        return permutation;
-
-         */
-    }
-
     public static ArrayList<Position> permutationGeneratorSerious(){
         String[] version0StringArray = {"QB", "TE", "RB", "RB", "RB", "WR", "WR", "WR", "WR", "WR"};
         ArrayList<String> version = new ArrayList<String>();
         for(String s : version0StringArray){
             version.add(s);
         }
-
         Collections.shuffle(version);
-
         ArrayList<Position> permutation = new ArrayList<Position>();
         for(String string : version){
             Position pos = Position.valueOf(string);
             permutation.add(pos);
         }
         return permutation;
-
     }
 
     public static ArrayList<Position> permutationGeneratorFun(){
-        /*String[] version1StringArray = {"QB", "QB", "TE", "RB", "RB", "RB", "WR", "WR", "WR", "WR"};
-        String[] version2StringArray = {"QB", "QB", "TE", "RB", "RB", "WR", "WR", "WR", "WR", "WR"};
-        ArrayList<String> version1String = new ArrayList<String>();
-        ArrayList<String> version2String = new ArrayList<String>();
-        for(String s : version1StringArray){
-            version1String.add(s);
-        }
-        for(String s : version2StringArray){
-            version2String.add(s);
-        }
-        ArrayList<String> version = version1String;
-
-
-        double rand = Math.random();
-        if(rand > 0.5){
-            version = version2String;
-        }
-        */
-
         String[] versionString = {"QB", "QB", "RB", "RB", "WR", "WR", "WR", "WR"};
         ArrayList<String> version = new ArrayList<String>();
         for(String s : versionString){
             version.add(s);
         }
-
-
         Collections.shuffle(version);
-
         ArrayList<Position> permutation = new ArrayList<Position>();
         for(String string : version){
             Position pos = Position.valueOf(string);
             permutation.add(pos);
         }
         return permutation;
-    }
-
-    public static void main(String[] args){
-        HumanStrategy h = getFPProjectionHumanStrategyFun();
-        HumanStrategy h2 = getFPProjectionHumanStrategySerious();
-        int a=1;
     }
 
     @Override

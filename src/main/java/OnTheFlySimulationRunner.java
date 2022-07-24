@@ -8,30 +8,22 @@ public class OnTheFlySimulationRunner {
     public static void runDraftsOnTheFly(int n, int roundPick, boolean isFun, ArrayList<Position> humanPermutationOld, LiveDraftInfo ldifb) {
         int numRoundsTotal = 10;
         int numRoundsLeft = numRoundsTotal - roundPick + 1;
-
-
         ArrayList<Position> positionsDraftedByHuman = new ArrayList<Position>();
-
         ArrayList<Position> oldHumanPermutationReduced = humanPermutationOld;
         for(Player player : ldifb.rosterPlayers){
             Position pos = player.position;
             positionsDraftedByHuman.add(pos);
             oldHumanPermutationReduced.remove(pos);
-
         }
-
         BigDecimal totalScoreQB = BigDecimal.ZERO;
         BigDecimal totalScoreRB = BigDecimal.ZERO;
         BigDecimal totalScoreWR = BigDecimal.ZERO;
         BigDecimal totalScoreTE = BigDecimal.ZERO;
-
         double numSimsDouble = n * 1.0;
         BigDecimal totalNumSims = BigDecimal.valueOf(numSimsDouble);
 
         for (int i = 0; i < n; i++) {
-
             Collections.shuffle(oldHumanPermutationReduced);
-
             ArrayList<Position> copy1 = new ArrayList<>();
             ArrayList<Position> copy2 = new ArrayList<>();
             ArrayList<Position> copy3 = new ArrayList<>();
@@ -46,7 +38,6 @@ public class OnTheFlySimulationRunner {
             copy2.remove(Position.RB);
             copy3.remove(Position.WR);
             copy4.remove(Position.TE);
-
             ArrayList<Position> humanPermutationReducedRandom = oldHumanPermutationReduced;
             ArrayList<Position> humanPermutationPickQB = new ArrayList<>();
             humanPermutationPickQB.add(Position.QB);
@@ -56,7 +47,6 @@ public class OnTheFlySimulationRunner {
             humanPermutationPickWR.add(Position.WR);
             ArrayList<Position> humanPermutationPickTE = new ArrayList<>();
             humanPermutationPickTE.add(Position.TE);
-
             for(Position pos : copy1){
                 humanPermutationPickQB.add(pos);
             }
@@ -69,29 +59,24 @@ public class OnTheFlySimulationRunner {
             for(Position pos : copy4){
                 humanPermutationPickTE.add(pos);
             }
-
             if(humanPermutationReducedRandom.contains(Position.QB)) {
                 positionsDraftedByHuman.add(Position.QB);
-                SimulationDraft simDraftQB = null;
-                simDraftQB = SimulationDraft.getSimulationPermPartial(humanPermutationPickQB, ldifb.draftedPlayers, numRoundsLeft, isFun);
+                SimulationDraft simDraftQB = SimulationDraft.getSimulationPermPartial(humanPermutationPickQB, ldifb.draftedPlayers, numRoundsLeft, isFun);
                 double draftScoreQB = simDraftQB.scoreDraft(isFun);
                 totalScoreQB = totalScoreQB.add(BigDecimal.valueOf(draftScoreQB));
             }
-
             if(humanPermutationReducedRandom.contains(Position.RB)) {
                 positionsDraftedByHuman.add(Position.RB);
                 SimulationDraft simDraftRB = SimulationDraft.getSimulationPermPartial(humanPermutationPickRB, ldifb.draftedPlayers, numRoundsLeft, isFun);
                 double draftScoreRB = simDraftRB.scoreDraft(isFun);
                 totalScoreRB = totalScoreRB.add(BigDecimal.valueOf(draftScoreRB));
             }
-
             if(humanPermutationReducedRandom.contains(Position.WR)) {
                 positionsDraftedByHuman.add(Position.WR);
                 SimulationDraft simDraftWR = SimulationDraft.getSimulationPermPartial(humanPermutationPickWR, ldifb.draftedPlayers, numRoundsLeft, isFun);
                 double draftScoreWR = simDraftWR.scoreDraft(isFun);
                 totalScoreWR = totalScoreWR.add(BigDecimal.valueOf(draftScoreWR));
             }
-
             if(humanPermutationReducedRandom.contains(Position.TE)) {
                 positionsDraftedByHuman.add(Position.TE);
                 SimulationDraft simDraftTE = SimulationDraft.getSimulationPermPartial(humanPermutationPickTE, ldifb.draftedPlayers, numRoundsLeft, isFun);
@@ -99,12 +84,10 @@ public class OnTheFlySimulationRunner {
                 totalScoreTE = totalScoreTE.add(BigDecimal.valueOf(draftScoreTE));
             }
         }
-
         double avScoreQB = totalScoreQB.divide(totalNumSims, RoundingMode.HALF_UP).doubleValue();
         double avScoreRB = totalScoreRB.divide(totalNumSims, RoundingMode.HALF_UP).doubleValue();
         double avScoreWR = totalScoreWR.divide(totalNumSims, RoundingMode.HALF_UP).doubleValue();
         double avScoreTE = totalScoreTE.divide(totalNumSims, RoundingMode.HALF_UP).doubleValue();
-
         System.out.println("Pick best QB to Score:\t" + avScoreQB);
         System.out.println("Pick best RB to Score:\t" + avScoreRB);
         System.out.println("Pick best WR to Score:\t" + avScoreWR);

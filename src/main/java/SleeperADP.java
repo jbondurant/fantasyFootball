@@ -3,16 +3,14 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 
 public class SleeperADP {
 
-
+    public static int year = LocalDate.now().getYear();
     public static String filepathStart = "sleeperADPRanking";
-
-    public static String webURLBoth = "https://api.sleeper.app/projections/nfl/2021?season_type=regular&position[]=DEF&position[]=QB&position[]=RB&position[]=TE&position[]=WR&order_by=pts_half_ppr";
-
-
+    public static String webURLBoth = "https://api.sleeper.app/projections/nfl/" + year + "?season_type=regular&position[]=DEF&position[]=QB&position[]=RB&position[]=TE&position[]=WR&order_by=pts_half_ppr";
     public static ArrayList<DecimalRank> playerRankFun = new ArrayList<DecimalRank>();
     public static ArrayList<DecimalRank> playerRankSerious = new ArrayList<DecimalRank>();
 
