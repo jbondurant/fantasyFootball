@@ -1,22 +1,14 @@
 public class LeagueScoringSettings {
 
-    //OFFENSE
     double passYard;
     double passTD;
     double interception;
-
     double rushYard;
     double rushTD;
-
     double reception;
     double receivingYard;
     double receivingTD;
-
     double fumbleLost;
-
-
-    //DEFENSE
-    //not required for my needs
 
 
     public LeagueScoringSettings(double[] values){
@@ -34,10 +26,6 @@ public class LeagueScoringSettings {
         fumbleLost = values[8];
     }
 
-    //I don't think it's necessary.. perhaps
-    //public LeagueScoringSettings(SleeperLeague sleeperLeague){
-
-    //}
 
     public static LeagueScoringSettings defaultScoringSettings(){
         double[] values = {0.04, 0.4, -1.0, 0.1, 6.0, 0.5, 0.1, 6.0, -2.0};

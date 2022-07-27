@@ -16,9 +16,7 @@ public class Player {
 
     public static ArrayList<Player> draftablePlayers = new ArrayList<Player>();
     private static HashMap<String, Player> playersFromSRID = new HashMap<String, Player>();
-    private static HashMap<Integer, Player> playersFromFPID = new HashMap<Integer, Player>();
     private static HashMap<Integer, Player> playerMapSleeperOffense = new HashMap<Integer, Player>();
-
     private static HashMap<String, Player> playerMapInfo = new HashMap<String, Player>();
     private static HashMap<String, Player> playerDefenseMap = new HashMap<String, Player>();
 
@@ -27,7 +25,6 @@ public class Player {
         initializePlayersForNameSearch();
         initializePlayerDefenseMap();
     }
-
 
     public Player(String fn, String ln, String t, Position p, int yID, int sID, String srID, int fpID){
         firstName = fn;
@@ -40,14 +37,8 @@ public class Player {
         fantasyProsID = fpID;
     }
 
-
     public static Player getPlayer(String sportRadar_ID){
         Player player = playersFromSRID.get(sportRadar_ID);
-        return player;
-    }
-
-    public static Player getPlayerFromFPID(int fantasyPros_ID){
-        Player player = playersFromFPID.get(fantasyPros_ID);
         return player;
     }
 
@@ -70,7 +61,6 @@ public class Player {
                 int k=1;
             }
             return x;
-
         }
     }
 
@@ -95,67 +85,52 @@ public class Player {
         HashMap<String, Player> playerMap = new HashMap<String, Player>();
         HashMap<Integer, Player> playerMapFP = new HashMap<Integer, Player>();
         HashMap<Integer, Player> playerMapSO = new HashMap<Integer, Player>();
-
         ArrayList<Player> allPlayers = null;
         try {
             allPlayers = PlayerRawData.getPlayerMetaData();
         } catch (IOException e) {
             e.printStackTrace();
         }
-
         for(Player player : allPlayers){
             String sportRadarID = player.sportRadarID;
             int fpID = player.fantasyProsID;
-
             int sIDNum = player.sleeperID;
-
             playerMap.put(sportRadarID, player);
             playerMapFP.put(fpID, player);
-
             playerMapSO.put(sIDNum, player);
-
         }
         playersFromSRID = playerMap;
-        playersFromFPID = playerMapFP;
         draftablePlayers = allPlayers;
         playerMapSleeperOffense = playerMapSO;
     }
 
     public static void initializePlayersForNameSearch() {
         HashMap<String, Player> playerMapFromInfo = new HashMap<String, Player>();
-
-
         ArrayList<Player> allPlayers = null;
         try {
             allPlayers = PlayerRawData.getPlayerMetaData();
         } catch (IOException e) {
             e.printStackTrace();
         }
-
         for(Player player : allPlayers){
             String lastName = player.lastName;
             String pos = player.position.toString();
             String team = player.team;
-
-            String info = lastName+pos+team;
+            String info = lastName + pos + team;
             info = info.toLowerCase();
-
             playerMapFromInfo.put(info, player);
         }
-
         playerMapInfo = playerMapFromInfo;
     }
 
     public static void initializePlayerDefenseMap() {
         HashMap<String, Player> playerMapFromDef = new HashMap<String, Player>();
-
         ArrayList<Player> allPlayers = null;
         try {
             allPlayers = PlayerRawData.getPlayerMetaData();
         } catch (IOException e) {
             e.printStackTrace();
         }
-
         for(Player player : allPlayers){
             String pos = player.position.toString();
             if(pos == "DEF"){
@@ -163,10 +138,8 @@ public class Player {
                 playerMapFromDef.put(team, player);
             }
         }
-
         playerDefenseMap = playerMapFromDef;
     }
-
 
     public static double scorePlayer(ArrayList<Score> scoreList, Player p){
         for(Score score : scoreList){
@@ -176,12 +149,6 @@ public class Player {
         }
         return 0.0;
     }
-
-
-    public static void main(String[] args){
-        initializePlayers();
-    }
-
 }
 
 

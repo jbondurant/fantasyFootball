@@ -10,20 +10,16 @@ public class RankOrderedPlayers {
     PriorityQueue<Rank> defenses;
 
     public RankOrderedPlayers(ArrayList<Rank> ranking){
-
         ArrayList<Rank> qbs = new ArrayList<Rank>();
         ArrayList<Rank> rbs = new ArrayList<Rank>();
         ArrayList<Rank> wrs = new ArrayList<Rank>();
         ArrayList<Rank> tes = new ArrayList<Rank>();
         ArrayList<Rank> defs = new ArrayList<Rank>();
-
         for(Rank rank : ranking){
-
             Position pos = Position.OTHER;
             if(rank.player != null){
                 pos = rank.player.position;
             }
-
             if(pos.equals(Position.QB)){
                 qbs.add(rank);
             }
@@ -40,25 +36,21 @@ public class RankOrderedPlayers {
                 defs.add(rank);
             }
         }
-
         PriorityQueue<Rank> qbRankQueue = new PriorityQueue<>(5, new RankComparator());
         PriorityQueue<Rank> rbRankQueue = new PriorityQueue<>(5, new RankComparator());
         PriorityQueue<Rank> wrRankQueue = new PriorityQueue<>(5, new RankComparator());
         PriorityQueue<Rank> teRankQueue = new PriorityQueue<>(5, new RankComparator());
         PriorityQueue<Rank> defRankQueue = new PriorityQueue<>(5, new RankComparator());
-
         qbRankQueue.addAll(qbs);
         rbRankQueue.addAll(rbs);
         wrRankQueue.addAll(wrs);
         teRankQueue.addAll(tes);
         defRankQueue.addAll(defs);
-
         quarterbacks = qbRankQueue;
         runningBacks = rbRankQueue;
         wideReceivers = wrRankQueue;
         tightEnds = teRankQueue;
         defenses = defRankQueue;
-
     }
 
 

@@ -26,11 +26,7 @@ public class SimulationDraft {
     }
 
     public double scoreDraft(boolean isFun){
-        ArrayList<Score> scoreList = SleeperLeague.getSeriousScoreList();
-        if(isFun){
-            scoreList = SleeperLeague.getFunScoreList();
-        }
-
+        ArrayList<Score> scoreList = SleeperLeague.getScoreList(isFun);
         double totalScore = 0;
         for(User user : sleeperLeague.sleeperDraftInfo.usersInfo) {
             if (user.userID.equals(myID)) {

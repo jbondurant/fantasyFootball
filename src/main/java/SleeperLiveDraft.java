@@ -3,6 +3,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 
 public class SleeperLiveDraft {
@@ -53,6 +55,7 @@ public class SleeperLiveDraft {
         //kinda tricky cause I would need to check the last drafted
         // and also it would be different if I'm the first or last player
         //and so you need to check the num of players
+        Instant start = Instant.now();
         boolean isFun = false;
         String draftID = "856967625014616064";
         int numDraftsOnFly = 300;
@@ -64,6 +67,10 @@ public class SleeperLiveDraft {
         }
         OnTheFlySimulationRunner.runDraftsOnTheFly(numDraftsOnFly, roundPick,isFun, positionsWanted, ldifb);
         int y=1;
+        Instant end = Instant.now();
+        Duration timeElapsed = Duration.between(start, end);
+        System.out.println(timeElapsed);
+
     }
 
 

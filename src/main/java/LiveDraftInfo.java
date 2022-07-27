@@ -57,6 +57,17 @@ public class LiveDraftInfo {
         System.out.println("Best WRs are:\t" + wr1Name + "\t" + wr2Name + "\t" + wr3Name);
         System.out.println("Best TEs are:\t" + te1Name + "\t" + te2Name + "\t" + te3Name);
         System.out.println("Best DEFs are:\t" + def1Name + "\t" + def2Name + "\t" + def3Name);
+
+        ArrayList<Score> scoreList = SleeperLeague.getScoreList(ldifb.isFunLeague);
+        System.out.println("QB1 " + Player.scorePlayer(scoreList, bap.quarterbackRT1.player));
+        System.out.println("QB2 " + Player.scorePlayer(scoreList, bap.quarterbackRT2.player));
+        System.out.println("QB3 " + Player.scorePlayer(scoreList, bap.quarterbackRT3.player));
+
+        System.out.println("RB1 " + Player.scorePlayer(scoreList, bap.runningBackRT1.player));
+        System.out.println("RB2 " + Player.scorePlayer(scoreList, bap.runningBackRT2.player));
+        System.out.println("RB3 " + Player.scorePlayer(scoreList, bap.runningBackRT3.player));
+
+
     }
 
 }

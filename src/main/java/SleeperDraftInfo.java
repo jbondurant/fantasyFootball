@@ -18,8 +18,17 @@ public class SleeperDraftInfo {
 
     public ArrayList<User> usersInfo;
 
+    //todo these get___draft things are wrong and like return empty lists
     public SleeperDraftInfo(ArrayList<User> uInfo){
         usersInfo = uInfo;
+    }
+
+    public static SleeperDraftInfo getHardcodedDraft(String draftID){
+        String filepathHardcodedDraft = "hardcodedDraft";
+        String webURL = "https://api.sleeper.app/v1/draft/" + draftID;
+        String draftWebsite = InOutUtilities.getTodaysWebPage(webURL , filepathHardcodedDraft);
+        SleeperDraftInfo sdi = parseWebsite(draftWebsite);
+        return sdi;
     }
 
     public static SleeperDraftInfo getFunDraft(){
