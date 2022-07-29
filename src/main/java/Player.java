@@ -48,7 +48,7 @@ public class Player {
     }
 
     public static Player getPlayerFromSIDV2(String sleeperID){
-        System.out.println(sleeperID);
+        //System.out.println(sleeperID);
         boolean onlyDigits = sleeperID.matches("[0-9]+");
         if(onlyDigits){
             int sleeperIDAsInt = Integer.parseInt(sleeperID);

@@ -50,7 +50,8 @@ public class SleeperLiveDraft {
         return getLiveDraftInfo(mockURL, isFun);
     }
 
-    public static void main(String[] args){
+    public static void main(String[] args) throws Exception {
+        String userID = HumanOfInterest.humanID;
         int roundPick = 4; //todo needs to be updated all the time
         //kinda tricky cause I would need to check the last drafted
         // and also it would be different if I'm the first or last player
@@ -58,15 +59,18 @@ public class SleeperLiveDraft {
         Instant start = Instant.now();
         boolean isFun = false;
         String draftID = "856967625014616064";
-        int numDraftsOnFly = 300;
+        int numDraftsOnFly = 1000;//todo change back to 300
+        boolean allowUndrafted = false;
+        int undraftedRoundCost = 10;
+
         LiveDraftInfo ldifb = getDraftedPlayersMock(draftID, isFun);
         LiveDraftInfo.LiveDraftPotentialMoveAnalyzer(ldifb);
         ArrayList<Position> positionsWanted = HumanStrategy.nonPermutedFun();
         if(!isFun){
             positionsWanted = HumanStrategy.nonPermutedSerious();
         }
-        OnTheFlySimulationRunner.runDraftsOnTheFly(numDraftsOnFly, roundPick,isFun, positionsWanted, ldifb);
-        int y=1;
+        //OnTheFlySimulationRunner.runDraftsOnTheFly(numDraftsOnFly, roundPick,isFun, positionsWanted, ldifb);
+        OnTheFlySimulationRunner.runDraftsOnTheFlyToChooseMyKeeperHardcoded(numDraftsOnFly, positionsWanted, ldifb, userID, allowUndrafted, undraftedRoundCost);
         Instant end = Instant.now();
         Duration timeElapsed = Duration.between(start, end);
         System.out.println(timeElapsed);

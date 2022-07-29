@@ -2,7 +2,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import org.checkerframework.checker.units.qual.A;
+import org.checkerframework.checker.units.qual.K;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -22,16 +22,25 @@ public class Keepers {
 
     public HashSet<Keeper> keepers;
 
-    public static void main(String[] args) throws Exception {
-        getKeepersFromImmediateLastDraft(false, draftIDHardcoded2021);
-    }
 
     public Keepers(HashSet<Keeper> k){
         keepers = k;
     }
 
 
-    public static Keepers getKeepersFromImmediateLastDraft(boolean isFun, String draftID) throws Exception {
+    public static Keepers getKeepersForUserHardcoded(boolean isFun, String userID, boolean allowUndrafted, int undraftedRoundCost) throws Exception {
+        Keepers tooManyKeepers = getKeepersFromImmediateLastDraft(isFun, draftIDHardcoded2021, allowUndrafted, undraftedRoundCost);
+        HashSet<Keeper> playersKeepers = new HashSet<>();
+        for(Keeper k : tooManyKeepers.keepers){
+            if(k.humanWhoCanKeep.equals(userID)){
+                playersKeepers.add(k);
+            }
+        }
+        return new Keepers(playersKeepers);
+    }
+
+
+    public static Keepers getKeepersFromImmediateLastDraft(boolean isFun, String draftID, boolean allowUndrafted, int undraftedRoundCost) throws Exception {
         HashMap<String, Roster> humansAndRosters = getHumansAndTheirRosters(draftID);
         //the above method doesn't work
         HashMap<Player, Integer> draftedPlayersAndRound = draftedPlayersLastYearAndRound(isFun, draftID);
@@ -39,11 +48,19 @@ public class Keepers {
         for(String userID : humansAndRosters.keySet()){
             ArrayList<Player> players = humansAndRosters.get(userID).draftedPlayers;
             for(Player p : players){
-                if(draftedPlayersAndRound.containsKey(p)) {
+                if (draftedPlayersAndRound.containsKey(p)) {
                     int round = draftedPlayersAndRound.get(p);
                     Keeper keeper = new Keeper(userID, p, round);
                     allKeepers.add(keeper);
                 }
+                else{
+                    if(allowUndrafted){
+                        int round = undraftedRoundCost;
+                        Keeper keeper = new Keeper(userID, p, round);
+                        allKeepers.add(keeper);
+                    }
+                }
+
             }
         }
         Keepers keepers = new Keepers(allKeepers);
