@@ -32,7 +32,18 @@ public class Keepers {
         Keepers tooManyKeepers = getKeepersFromImmediateLastDraft(isFun, draftIDHardcoded2021, allowUndrafted, undraftedRoundCost);
         HashSet<Keeper> playersKeepers = new HashSet<>();
         for(Keeper k : tooManyKeepers.keepers){
+            //todo hardcoded
+            if(k.humanWhoCanKeep.equals("603706155834871808") && userID.equals("605534791072305152")){
+                playersKeepers.add(k);
+            }
+            if(k.humanWhoCanKeep.equals("604116412050513920") && userID.equals("740473448551366656")){
+                playersKeepers.add(k);
+            }
+            if(k.humanWhoCanKeep.equals("603735371280355328") && userID.equals("853719913725030400")){
+                playersKeepers.add(k);
+            }
             if(k.humanWhoCanKeep.equals(userID)){
+
                 playersKeepers.add(k);
             }
         }

@@ -143,7 +143,7 @@ public class Player {
 
     public static double scorePlayer(ArrayList<Score> scoreList, Player p){
         for(Score score : scoreList){
-            if(score.player.sportRadarID.equals(p.sportRadarID)){
+            if(score.player != null && score.player.sportRadarID.equals(p.sportRadarID)){
                 return score.score;
             }
         }

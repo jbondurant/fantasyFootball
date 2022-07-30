@@ -123,9 +123,7 @@ public class InSeasonProjectionsFP {
             }
 
             if(apiObject.get("r2p_pts") == null){
-                int aaaaa = 1;
                 Player playerX = Player.getPlayer(sportRadarID);
-                System.out.println(playerX.firstName + " " + playerX.lastName);
                 //maybe remove?
                 Score tempScore = new Score(0.0, playerX);
                 projections.add(tempScore);

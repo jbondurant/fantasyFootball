@@ -10,7 +10,8 @@ public class OnTheFlySimulationRunner {
 
     public static void runDraftsOnTheFlyToChooseMyKeeperHardcoded(int n, ArrayList<Position> humanPermutationOld, LiveDraftInfo ldifb, String userID, boolean allowUndrafted, int undraftedRoundCost) throws Exception {
         boolean isFun = false;
-        Keepers keepers = Keepers.getKeepersForUserHardcoded(isFun, userID, allowUndrafted, undraftedRoundCost);
+        Keepers keepers = Keepers.getKeepersForUserHardcoded(isFun, userID, true, undraftedRoundCost);
+        Keepers keepersWithoutUndrafted = Keepers.getKeepersForUserHardcoded(isFun, userID, false, undraftedRoundCost);
         ArrayList<Score> allKeeperScores = new ArrayList<>();
         for(Keeper keeper : keepers.keepers) {
             //System.out.println("My permutation size " + humanPermutationOld.size());
@@ -106,14 +107,23 @@ public class OnTheFlySimulationRunner {
             allKeeperScores.add(score);
             //System.out.println("Pick " + keeperName + " to score:\t" + bestPosScore);
         }
-
         PriorityQueue<Score> playersInBestScoreOrder = new PriorityQueue<Score>(5, new ScoreComparator());
         for(Score s : allKeeperScores){
             playersInBestScoreOrder.add(s);
         }
         while(playersInBestScoreOrder.size() != 0){
             Score s = playersInBestScoreOrder.poll();
-            String keeperName = s.player.firstName + " " + s.player.lastName;
+            boolean keeperIsUndrafted = true;
+            for(Keeper k : keepersWithoutUndrafted.keepers){
+                if(k.player.sleeperID == s.player.sleeperID){
+                    keeperIsUndrafted = false;
+                }
+            }
+            String keeperName = "";
+            if(keeperIsUndrafted){
+                keeperName += "*";
+            }
+            keeperName += s.player.firstName + " " + s.player.lastName;
             System.out.println(keeperName + " :\t" + s.score);
         }
 
