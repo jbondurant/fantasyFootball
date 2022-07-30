@@ -13,11 +13,14 @@ public class DecimalRank {
         player = p;
     }
 
-    public static PriorityQueue<Rank> makeDeviatedRanking(ArrayList<DecimalRank> decimalRanking, HashMap<String, Double> apsd){
+    public static PriorityQueue<Rank> makeDeviatedRanking(ArrayList<DecimalRank> decimalRanking, HashMap<String, Double> apsd, int qbADPChange){
         ArrayList<DecimalRank> deviatedRanking = new ArrayList<DecimalRank>();
         for(DecimalRank decimalRank : decimalRanking){
             Player p = decimalRank.player;
             double rank = decimalRank.rankNum;
+            if(p.position.equals(Position.QB)){
+                rank += qbADPChange;
+            }
             String pSRID = p.sportRadarID;
             double sd = rank * 0.05;
             if(apsd.containsKey(pSRID)){

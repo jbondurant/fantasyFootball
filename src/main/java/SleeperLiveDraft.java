@@ -62,6 +62,7 @@ public class SleeperLiveDraft {
         int numDraftsOnFly = 500;//todo change back to 300
         boolean allowUndrafted = false;
         int undraftedRoundCost = 10;
+        int qbADPChange = 12;
 
         LiveDraftInfo ldifb = getDraftedPlayersMock(draftID, isFun);
         LiveDraftInfo.LiveDraftPotentialMoveAnalyzer(ldifb);
@@ -69,7 +70,7 @@ public class SleeperLiveDraft {
         if(!isFun){
             positionsWanted = HumanStrategy.nonPermutedSerious();
         }
-        //OnTheFlySimulationRunner.runDraftsOnTheFly(numDraftsOnFly, roundPick,isFun, positionsWanted, ldifb);
+        //OnTheFlySimulationRunner.runDraftsOnTheFly(numDraftsOnFly, roundPick,isFun, positionsWanted, ldifb, qbADPChange);
         for(String userID : HumanOfInterest.getAllUserIDsHardcoded()) {
             OnTheFlySimulationRunner.runDraftsOnTheFlyToChooseMyKeeperHardcoded(numDraftsOnFly, positionsWanted, ldifb, userID, allowUndrafted, undraftedRoundCost);
             System.out.println("-----");

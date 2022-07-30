@@ -13,14 +13,14 @@ public class SimulationDraft {
         scoreDraftHuman = sdh;
     }
 
-    public static SimulationDraft getSimulationPermPartialForKeeperSerious(Keeper keeper, ArrayList<Position> humanPermutation, ArrayList<Player> draftedPlayers, int roundsLeft){
+    public static SimulationDraft getSimulationPermPartialForKeeperSerious(Keeper keeper, ArrayList<Position> humanPermutation, ArrayList<Player> draftedPlayers, int roundsLeft, int qbADPChange){
         SleeperLeague sl = SleeperLeague.getSeriousLeague();
         ArrayList<User> xyz = sl.sleeperDraftInfo.usersInfo;
-        double scoreDraftHumanFun = runSimulationDraftPermPartialForKeeperSerious(keeper, sl, humanPermutation, draftedPlayers, roundsLeft);
+        double scoreDraftHumanFun = runSimulationDraftPermPartialForKeeperSerious(keeper, sl, humanPermutation, draftedPlayers, roundsLeft, qbADPChange);
         return new SimulationDraft(sl, scoreDraftHumanFun);
     }
 
-    public static SimulationDraft getSimulationPermPartial(ArrayList<Position> humanPermutation, ArrayList<Player> draftedPlayers, int roundsLeft, boolean isFun){
+    public static SimulationDraft getSimulationPermPartial(ArrayList<Position> humanPermutation, ArrayList<Player> draftedPlayers, int roundsLeft, boolean isFun, int qbADPChange){
         SleeperLeague sl;
         if(isFun) {
             sl = SleeperLeague.getFunLeague();
@@ -28,7 +28,7 @@ public class SimulationDraft {
         else{
             sl = SleeperLeague.getSeriousLeague();
         }
-        double scoreDraftHumanFun = runSimulationDraftPermPartial(sl, isFun, humanPermutation, draftedPlayers, roundsLeft);
+        double scoreDraftHumanFun = runSimulationDraftPermPartial(sl, isFun, humanPermutation, draftedPlayers, roundsLeft, qbADPChange);
         return new SimulationDraft(sl, scoreDraftHumanFun);
     }
 
@@ -48,7 +48,7 @@ public class SimulationDraft {
     }
 
 
-    public static double runSimulationDraftPermPartialForKeeperSerious(Keeper keeper, SleeperLeague sl, ArrayList<Position> humanPerm, ArrayList<Player> draftedPlayers, int roundsLeft){
+    public static double runSimulationDraftPermPartialForKeeperSerious(Keeper keeper, SleeperLeague sl, ArrayList<Position> humanPerm, ArrayList<Player> draftedPlayers, int roundsLeft, int qbADPChange){
         boolean isFun = false;
         for(User user : sl.sleeperDraftInfo.usersInfo){
             if(user.userID.equals(myID)){
@@ -56,7 +56,7 @@ public class SimulationDraft {
                 user.strategy = HumanStrategy.getFPHumanStrategySeriousFromPerm(humanPerm);
             }
             else{
-                user.setStrategy(StrategyBot.getSleeperSeriousStrategy());
+                user.setStrategy(StrategyBot.getSleeperSeriousStrategy(qbADPChange));
             }
         }
         StrategyBot commonBotStrategy;
@@ -103,7 +103,7 @@ public class SimulationDraft {
 
 
 
-    public static double runSimulationDraftPermPartial(SleeperLeague sl, boolean isFun, ArrayList<Position> humanPerm, ArrayList<Player> draftedPlayers, int roundsLeft){
+    public static double runSimulationDraftPermPartial(SleeperLeague sl, boolean isFun, ArrayList<Position> humanPerm, ArrayList<Player> draftedPlayers, int roundsLeft, int qbADPChange){
         for(User user : sl.sleeperDraftInfo.usersInfo){
             if(user.userID.equals(myID)){
                 if(isFun) {
@@ -119,7 +119,7 @@ public class SimulationDraft {
                     user.setStrategy(StrategyBot.getSleeperFunStrategy());
                 }
                 else{
-                    user.setStrategy(StrategyBot.getSleeperSeriousStrategy());
+                    user.setStrategy(StrategyBot.getSleeperSeriousStrategy(qbADPChange));
                 }
             }
         }

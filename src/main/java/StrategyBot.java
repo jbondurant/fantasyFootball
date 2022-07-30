@@ -16,35 +16,19 @@ public class StrategyBot extends Strategy{
     public static StrategyBot getSleeperFunStrategy(){
         ArrayList<DecimalRank> decimalRanking = SleeperADP.playerRankFun;
         HashMap<String, Double> apsd = FFCalculatorSD.playerSRIDToSDMapFun;
-        //TODO remove test
-        /*for(DecimalRank decimalRank : decimalRanking){
-            if(decimalRank.player.position.equals(Position.DEF)){
-                int y=1;
-            }
-        }*/
-        PriorityQueue<Rank> deviatedRankingQueue = DecimalRank.makeDeviatedRanking(decimalRanking, apsd);
-        //TODO remove test again
-        /*for(Rank rank : deviatedRankingQueue){
-            if(rank.player.position.equals(Position.DEF)){
-                int y=1;
-            }
-        }*/
+
+        PriorityQueue<Rank> deviatedRankingQueue = DecimalRank.makeDeviatedRanking(decimalRanking, apsd, 0);
         StrategyBot sleeperFunStrategy = new StrategyBot(deviatedRankingQueue);
         return sleeperFunStrategy;
 
     }
 
-    public static StrategyBot  getSleeperSeriousStrategy(){
+    public static StrategyBot  getSleeperSeriousStrategy(int qbADPChange){
         ArrayList<DecimalRank> decimalRanking = SleeperADP.playerRankSerious;
         HashMap<String, Double> apsd = FFCalculatorSD.playerSRIDToSDMapSerious;
-        PriorityQueue<Rank> deviatedRankingQueue = DecimalRank.makeDeviatedRanking(decimalRanking, apsd);
+        PriorityQueue<Rank> deviatedRankingQueue = DecimalRank.makeDeviatedRanking(decimalRanking, apsd, qbADPChange);
         StrategyBot sleeperSeriousStrategy = new StrategyBot(deviatedRankingQueue);
         return sleeperSeriousStrategy;
-    }
-
-    public static void main(String[] args){
-        StrategyBot a = getSleeperFunStrategy();
-        StrategyBot b = getSleeperSeriousStrategy();
     }
 
     @Override

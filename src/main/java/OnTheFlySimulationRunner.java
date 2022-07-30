@@ -8,7 +8,7 @@ import java.util.PriorityQueue;
 
 public class OnTheFlySimulationRunner {
 
-    public static void runDraftsOnTheFlyToChooseMyKeeperHardcoded(int n, ArrayList<Position> humanPermutationOld, LiveDraftInfo ldifb, String userID, boolean allowUndrafted, int undraftedRoundCost) throws Exception {
+    public static void runDraftsOnTheFlyToChooseMyKeeperHardcoded(int n, ArrayList<Position> humanPermutationOld, LiveDraftInfo ldifb, String userID, boolean allowUndrafted, int undraftedRoundCost, int qbADPChange) throws Exception {
         boolean isFun = false;
         Keepers keepers = Keepers.getKeepersForUserHardcoded(isFun, userID, true, undraftedRoundCost);
         Keepers keepersWithoutUndrafted = Keepers.getKeepersForUserHardcoded(isFun, userID, false, undraftedRoundCost);
@@ -70,23 +70,23 @@ public class OnTheFlySimulationRunner {
                 }
 
                 if(humanPermutationReducedRandom.contains(Position.QB)) {
-                    SimulationDraft simDraftQB = SimulationDraft.getSimulationPermPartialForKeeperSerious(keeper, humanPermutationPickQB, ldifb.draftedPlayers, numRoundsLeft);
+                    SimulationDraft simDraftQB = SimulationDraft.getSimulationPermPartialForKeeperSerious(keeper, humanPermutationPickQB, ldifb.draftedPlayers, numRoundsLeft, qbADPChange);
                     double draftScoreQB = simDraftQB.scoreDraft(isFun);
                     totalScoreQB = totalScoreQB.add(BigDecimal.valueOf(draftScoreQB));
                 }
 
                 if(humanPermutationReducedRandom.contains(Position.RB)) {
-                    SimulationDraft simDraftRB = SimulationDraft.getSimulationPermPartialForKeeperSerious(keeper, humanPermutationPickRB, ldifb.draftedPlayers, numRoundsLeft);
+                    SimulationDraft simDraftRB = SimulationDraft.getSimulationPermPartialForKeeperSerious(keeper, humanPermutationPickRB, ldifb.draftedPlayers, numRoundsLeft, qbADPChange);
                     double draftScoreRB = simDraftRB.scoreDraft(isFun);
                     totalScoreRB = totalScoreRB.add(BigDecimal.valueOf(draftScoreRB));
                 }
                 if(humanPermutationReducedRandom.contains(Position.WR)) {
-                    SimulationDraft simDraftWR = SimulationDraft.getSimulationPermPartialForKeeperSerious(keeper, humanPermutationPickWR, ldifb.draftedPlayers, numRoundsLeft);
+                    SimulationDraft simDraftWR = SimulationDraft.getSimulationPermPartialForKeeperSerious(keeper, humanPermutationPickWR, ldifb.draftedPlayers, numRoundsLeft, qbADPChange);
                     double draftScoreWR = simDraftWR.scoreDraft(isFun);
                     totalScoreWR = totalScoreWR.add(BigDecimal.valueOf(draftScoreWR));
                 }
                 if(humanPermutationReducedRandom.contains(Position.TE)) {
-                    SimulationDraft simDraftTE = SimulationDraft.getSimulationPermPartialForKeeperSerious(keeper, humanPermutationPickTE, ldifb.draftedPlayers, numRoundsLeft);
+                    SimulationDraft simDraftTE = SimulationDraft.getSimulationPermPartialForKeeperSerious(keeper, humanPermutationPickTE, ldifb.draftedPlayers, numRoundsLeft, qbADPChange);
                     double draftScoreTE = simDraftTE.scoreDraft(isFun);
                     totalScoreTE = totalScoreTE.add(BigDecimal.valueOf(draftScoreTE));
                 }
@@ -129,7 +129,7 @@ public class OnTheFlySimulationRunner {
 
     }
 
-    public static void runDraftsOnTheFly(int n, int roundPick, boolean isFun, ArrayList<Position> humanPermutationOld, LiveDraftInfo ldifb) {
+    public static void runDraftsOnTheFly(int n, int roundPick, boolean isFun, ArrayList<Position> humanPermutationOld, LiveDraftInfo ldifb, int qbADPChange) {
         int numRoundsTotal = 10;
         int numRoundsLeft = numRoundsTotal - roundPick + 1;
         ArrayList<Position> oldHumanPermutationReduced = humanPermutationOld;
@@ -182,22 +182,22 @@ public class OnTheFlySimulationRunner {
                 humanPermutationPickTE.add(pos);
             }
             if(humanPermutationReducedRandom.contains(Position.QB)) {
-                SimulationDraft simDraftQB = SimulationDraft.getSimulationPermPartial(humanPermutationPickQB, ldifb.draftedPlayers, numRoundsLeft, isFun);
+                SimulationDraft simDraftQB = SimulationDraft.getSimulationPermPartial(humanPermutationPickQB, ldifb.draftedPlayers, numRoundsLeft, isFun, qbADPChange);
                 double draftScoreQB = simDraftQB.scoreDraft(isFun);
                 totalScoreQB = totalScoreQB.add(BigDecimal.valueOf(draftScoreQB));
             }
             if(humanPermutationReducedRandom.contains(Position.RB)) {
-                SimulationDraft simDraftRB = SimulationDraft.getSimulationPermPartial(humanPermutationPickRB, ldifb.draftedPlayers, numRoundsLeft, isFun);
+                SimulationDraft simDraftRB = SimulationDraft.getSimulationPermPartial(humanPermutationPickRB, ldifb.draftedPlayers, numRoundsLeft, isFun, qbADPChange);
                 double draftScoreRB = simDraftRB.scoreDraft(isFun);
                 totalScoreRB = totalScoreRB.add(BigDecimal.valueOf(draftScoreRB));
             }
             if(humanPermutationReducedRandom.contains(Position.WR)) {
-                SimulationDraft simDraftWR = SimulationDraft.getSimulationPermPartial(humanPermutationPickWR, ldifb.draftedPlayers, numRoundsLeft, isFun);
+                SimulationDraft simDraftWR = SimulationDraft.getSimulationPermPartial(humanPermutationPickWR, ldifb.draftedPlayers, numRoundsLeft, isFun, qbADPChange);
                 double draftScoreWR = simDraftWR.scoreDraft(isFun);
                 totalScoreWR = totalScoreWR.add(BigDecimal.valueOf(draftScoreWR));
             }
             if(humanPermutationReducedRandom.contains(Position.TE)) {
-                SimulationDraft simDraftTE = SimulationDraft.getSimulationPermPartial(humanPermutationPickTE, ldifb.draftedPlayers, numRoundsLeft, isFun);
+                SimulationDraft simDraftTE = SimulationDraft.getSimulationPermPartial(humanPermutationPickTE, ldifb.draftedPlayers, numRoundsLeft, isFun, qbADPChange);
                 double draftScoreTE = simDraftTE.scoreDraft(isFun);
                 totalScoreTE = totalScoreTE.add(BigDecimal.valueOf(draftScoreTE));
             }
