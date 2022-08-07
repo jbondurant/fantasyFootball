@@ -16,8 +16,15 @@ public class SimulationDraft {
     public static SimulationDraft getSimulationPermPartialForKeeperSerious(Keeper keeper, ArrayList<Position> humanPermutation, ArrayList<Player> draftedPlayers, int roundsLeft, int qbADPChange){
         SleeperLeague sl = SleeperLeague.getSeriousLeague();
         ArrayList<User> xyz = sl.sleeperDraftInfo.usersInfo;
-        double scoreDraftHumanFun = runSimulationDraftPermPartialForKeeperSerious(keeper, sl, humanPermutation, draftedPlayers, roundsLeft, qbADPChange);
-        return new SimulationDraft(sl, scoreDraftHumanFun);
+        double scoreDraftHuman = runSimulationDraftPermPartialForKeeperSerious(keeper, sl, humanPermutation, draftedPlayers, roundsLeft, qbADPChange);
+        return new SimulationDraft(sl, scoreDraftHuman);
+    }
+
+    public static SimulationDraft getSimulationPermPartialWithHardcodedKeepers(Keeper keeper, ArrayList<Position> humanPermutation, ArrayList<Player> draftedPlayers, int roundsLeft, int qbADPChange, ArrayList<Keeper> hardcodedKeepers){
+        SleeperLeague sl = SleeperLeague.getSeriousLeague();
+        ArrayList<User> xyz = sl.sleeperDraftInfo.usersInfo;
+        double scoreDraftHuman = runSimulationDraftPermPartialWithHardcodedKeepers(keeper, sl, humanPermutation, draftedPlayers, roundsLeft, qbADPChange, hardcodedKeepers);
+        return new SimulationDraft(sl, scoreDraftHuman);
     }
 
     public static SimulationDraft getSimulationPermPartial(ArrayList<Position> humanPermutation, ArrayList<Player> draftedPlayers, int roundsLeft, boolean isFun, int qbADPChange){
@@ -54,6 +61,59 @@ public class SimulationDraft {
             if(user.userID.equals(myID)){
                 //todo, i think this should work, but this area could also cause problems
                 user.strategy = HumanStrategy.getFPHumanStrategySeriousFromPerm(humanPerm);
+            }
+            else{
+                user.setStrategy(StrategyBot.getSleeperSeriousStrategy(qbADPChange));
+            }
+        }
+        StrategyBot commonBotStrategy;
+        if(sl.sleeperDraftInfo.usersInfo.get(0).userID.equals(myID)) {
+            commonBotStrategy = (StrategyBot) sl.sleeperDraftInfo.usersInfo.get(1).strategy;
+        }
+        else{
+            commonBotStrategy = (StrategyBot) sl.sleeperDraftInfo.usersInfo.get(0).strategy;
+        }
+        for(User user : sl.sleeperDraftInfo.usersInfo){
+            if(!user.userID.equals(myID)){
+                user.strategy = commonBotStrategy;
+            }
+        }
+        for(User user : sl.sleeperDraftInfo.usersInfo){
+            for(Player player : draftedPlayers){
+                user.strategy.removeDraftedPlayer(player);
+            }
+            user.strategy.removeDraftedPlayer(keeper.player);
+        }
+        ArrayList<User> usersAtDraft = sl.sleeperDraftInfo.usersInfo;
+        for(int i=1; i<= roundsLeft; i++){
+            Collections.sort(usersAtDraft, new UserComparator());
+            for(User user : usersAtDraft){
+                Player draftedPlayer;
+                if(user.userID.equals(myID) && i==keeper.roundCanBeKept){
+                    draftedPlayer = keeper.player;
+                    user.addToRoster(draftedPlayer);
+                }
+                else {
+                    draftedPlayer = user.strategy.selectPlayer();
+                    user.addToRoster(draftedPlayer);
+                }
+                for (User userToAlert : usersAtDraft) {
+                    userToAlert.strategy.removeDraftedPlayer(draftedPlayer);
+                }
+            }
+            Collections.reverse(usersAtDraft);
+        }
+        Collections.sort(usersAtDraft, new UserComparator());
+        double scoreDraftHuman = SleeperLeague.scoreSleeperDraft(sl, isFun);
+        return scoreDraftHuman;
+    }
+
+    public static double runSimulationDraftPermPartialWithHardcodedKeepers(Keeper keeper, SleeperLeague sl, ArrayList<Position> humanPerm, ArrayList<Player> draftedPlayers, int roundsLeft, int qbADPChange, ArrayList<Keeper> hardcodedKeepers){
+        boolean isFun = false;
+        for(User user : sl.sleeperDraftInfo.usersInfo){
+            if(user.userID.equals(myID)){
+                //todo, i think this should work, but this area could also cause problems
+                user.strategy = HumanStrategy.getFPHumanStrategySeriousFromPerm(humanPerm);;
             }
             else{
                 user.setStrategy(StrategyBot.getSleeperSeriousStrategy(qbADPChange));

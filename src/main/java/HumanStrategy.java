@@ -48,7 +48,21 @@ public class HumanStrategy extends Strategy {
         return fppProjectionHumanStrategySerious;
     }
 
-    public static ArrayList<Position> nonPermutedSerious(){
+    public static ArrayList<Position> nonPermutedSerious1261(){
+        String[] version0StringArray = {"QB", "TE", "RB", "RB", "WR", "WR", "WR", "WR", "WR", "WR"};
+        ArrayList<String> version = new ArrayList<String>();
+        for(String s : version0StringArray){
+            version.add(s);
+        }
+        ArrayList<Position> permutation = new ArrayList<Position>();
+        for(String string : version){
+            Position pos = Position.valueOf(string);
+            permutation.add(pos);
+        }
+        return permutation;
+    }
+
+    public static ArrayList<Position> nonPermutedSerious1351(){
         String[] version0StringArray = {"QB", "TE", "RB", "RB", "RB", "WR", "WR", "WR", "WR", "WR"};
         ArrayList<String> version = new ArrayList<String>();
         for(String s : version0StringArray){
@@ -62,7 +76,21 @@ public class HumanStrategy extends Strategy {
         return permutation;
     }
 
-    public static ArrayList<Position> nonPermutedFun(){
+    public static ArrayList<Position> nonPermutedSerious1441(){
+        String[] version0StringArray = {"QB", "TE", "RB", "RB", "RB", "RB", "WR", "WR", "WR", "WR"};
+        ArrayList<String> version = new ArrayList<String>();
+        for(String s : version0StringArray){
+            version.add(s);
+        }
+        ArrayList<Position> permutation = new ArrayList<Position>();
+        for(String string : version){
+            Position pos = Position.valueOf(string);
+            permutation.add(pos);
+        }
+        return permutation;
+    }
+
+    public static ArrayList<Position> nonPermutedFun2241(){
         String[] version0StringArray = {"QB", "QB", "TE", "RB", "RB",  "WR", "WR", "WR", "WR"};
         ArrayList<String> version = new ArrayList<String>();
         for(String s : version0StringArray){
