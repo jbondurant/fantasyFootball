@@ -19,27 +19,27 @@ public class Keeper {
     }
 
     public static ArrayList<Keeper> hardcodedAllPotentialKeepers(){
-        Player p1 = Player.getPlayerFromSID(7588); //$Javonte Williams
+        Player p1 = Player.getPlayerFromSID(7588); //Javonte Williams
         int r1 = 6;
-        Player p2 = Player.getPlayerFromSID(7610); //$Trey Lance, but should be *Hunter Renfrow
+        Player p2 = Player.getPlayerFromSID(7611); //Rhamondre Stevenson
         int r2 = 10;
-        Player p3 = Player.getPlayerFromSID(4068); //Mike Williams
-        int r3 = 8;
-        Player p4 = Player.getPlayerFromSID(7547); //$Amon-Ra St. Brown
+        Player p3 = Player.getPlayerFromSID(6943); //Gabriel Davis
+        int r3 = 10;
+        Player p4 = Player.getPlayerFromSID(7547); //Amon-Ra St. Brown
         int r4 = 4;
-        Player p5 = Player.getPlayerFromSID(6794); //$Justin Jefferson 6794 > Justin Herbert 6797 ? confirm 6794 is jj
-        int r5 = 3;//3 or 10 (11)
-        Player p6 = Player.getPlayerFromSID(7553); //%Kyle Pitts > Jaylen Waddle
+        Player p5 = Player.getPlayerFromSID(6794); //Justin Jefferson
+        int r5 = 3;
+        Player p6 = Player.getPlayerFromSID(7553); //Kyle Pitts
         int r6 = 4;
-        Player p7 = Player.getPlayerFromSID(6828); //%AJ Dillon > Mark Andrews
+        Player p7 = Player.getPlayerFromSID(6770); //Joe Burrow
         int r7 = 10;
-        Player p8 = Player.getPlayerFromSID(7564); //$Ja'Marr Chase
+        Player p8 = Player.getPlayerFromSID(7564); //Ja'Marr Chase
         int r8 = 6;
-        Player p9 = Player.getPlayerFromSID(4039); //$Cooper Kupp
+        Player p9 = Player.getPlayerFromSID(4039); //Cooper Kupp
         int r9 = 4;
-        Player p10 = Player.getPlayerFromSID(3199); //%Michael Thomas > *Dalton Schultz ?
-        int r10 = 8;
-        Player p11 = Player.getPlayerFromSID(5872); //Deebo Samuel > Leonard Fournette?
+        Player p10 = Player.getPlayerFromSID(5001); //Dalton Schultz
+        int r10 = 10;
+        Player p11 = Player.getPlayerFromSID(5872); //Deebo Samuel
         int r11 = 7;
         Player p12 = Player.getPlayerFromSID(4137); //James Conner
         int r12 = 8;
@@ -66,7 +66,7 @@ public class Keeper {
         Keeper k9 = new Keeper(h9, p9, r9);
         Keeper k10 = new Keeper(h10, p10, r10);
         Keeper k11 = new Keeper(h11, p11, r11);
-        Keeper k12 = new Keeper(h11, p11, r11);
+        Keeper k12 = new Keeper(h12, p12, r12);
         ArrayList<Keeper> keepers = new ArrayList<>();
         keepers.add(k1);
         keepers.add(k2);
