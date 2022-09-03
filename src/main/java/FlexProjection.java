@@ -24,5 +24,19 @@ public class FlexProjection {
         player = p;
     }
 
+    public static FlexProjection getFromTE(double[] proj, Player p){
+        double[] proj8 = new double[8];
+        proj8[0] = 0.0;
+        proj8[1] = 0.0;
+        proj8[2] = 0.0;
+        proj8[3] = proj[0];
+        proj8[4] = proj[1];
+        proj8[5] = proj[2];
+        proj8[6] = proj[3];
+        proj8[7] = proj[4];
+
+        return new FlexProjection(proj8, p);
+    }
+
 
 }
