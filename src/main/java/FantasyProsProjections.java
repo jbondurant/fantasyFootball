@@ -4,11 +4,17 @@ public class FantasyProsProjections {
 
 
     public static String filepathStartQB = "fantasyProsProjectionQB";
+    public static String filepathStartRB = "fantasyProsProjectionRB";
+    public static String filepathStartWR = "fantasyProsProjectionWR";
+    public static String filepathStartTE = "fantasyProsProjectionTE";
+
     public static String filepathStartFlexHalf = "fantasyProsProjectionFlexHalf";
     public static String filepathStartDEF = "fantasyProsProjectionDEF";
 
     public static String webURLQB = "https://www.fantasypros.com/nfl/projections/qb.php?week=draft";
-    public static String webURLFlexHalf = "https://www.fantasypros.com/nfl/projections/flex.php?week=draft&scoring=HALF&week=draft";
+    public static String webURLRB = "https://www.fantasypros.com/nfl/projections/rb.php?week=draft&scoring=HALF&week=draft";
+    public static String webURLWR = "https://www.fantasypros.com/nfl/projections/wr.php?week=draft&scoring=HALF&week=draft";
+    public static String webURLTE = "https://www.fantasypros.com/nfl/projections/te.php?week=draft&scoring=HALF&week=draft";
     public static String webURLDEF = "https://www.fantasypros.com/nfl/projections/dst.php?week=draft";
 
 
@@ -19,7 +25,14 @@ public class FantasyProsProjections {
 
     static{
         projectionsFPQB = parseTodaysWebPageQB();
-        projectionsFPFlex = parseTodaysWebPageFlex();
+        projectionsFPFlex = new ArrayList<>();
+        System.out.println("a");
+        projectionsFPFlex.addAll(parseTodaysWebPageFlex(getTodaysWebPageRBHalf(), 8));
+        System.out.println("b");
+        projectionsFPFlex.addAll(parseTodaysWebPageFlex(getTodaysWebPageWRHalf(), 8));
+        System.out.println("c");
+        projectionsFPFlex.addAll(parseTodaysWebPageFlex(getTodaysWebPageTEHalf(), 5));
+        System.out.println("d");
         projectionsFPDEF = parseTodaysWebPageDEF();
     }
 
@@ -37,9 +50,11 @@ public class FantasyProsProjections {
     private static String getTodaysWebPageQB(){
         return InOutUtilities.getTodaysWebPage(webURLQB, filepathStartQB);
     }
-    private static String getTodaysWebPageFlexHalf(){
-        return InOutUtilities.getTodaysWebPage(webURLFlexHalf, filepathStartFlexHalf);
-    }
+
+    private static String getTodaysWebPageRBHalf(){ return InOutUtilities.getTodaysWebPage(webURLRB, filepathStartRB); }
+    private static String getTodaysWebPageWRHalf(){ return InOutUtilities.getTodaysWebPage(webURLWR, filepathStartWR); }
+    private static String getTodaysWebPageTEHalf(){ return InOutUtilities.getTodaysWebPage(webURLTE, filepathStartTE); }
+
     private static String getTodaysWebPageDEF(){
         return InOutUtilities.getTodaysWebPage(webURLDEF, filepathStartDEF);
     }
@@ -108,11 +123,10 @@ public class FantasyProsProjections {
 
 
 
-    private static ArrayList<FlexProjection> parseTodaysWebPageFlex() {
+    private static ArrayList<FlexProjection> parseTodaysWebPageFlex(String entireHTML, int modSize) {
 
         ArrayList<FlexProjection> projections = new ArrayList<FlexProjection>();
 
-        String entireHTML = getTodaysWebPageFlexHalf();
         String[] lines = entireHTML.split("\r\n|\r|\n");
         String[] linesCleaned = new String[lines.length];
         for(int i = 0; i<lines.length; i++){
@@ -146,35 +160,43 @@ public class FantasyProsProjections {
         }
 
         //trailing players all called Tom Coughlin since ID utility methods aren't perfect
-        double[] proj = new double[8];
+        double[] proj = new double[modSize];
         String playerSRID = "";
 
         for(int i=0; i < importantNumbers.size(); i++){
-            int mod = i % 9;
+            int mod = i % (modSize+1);
 
             if(mod == 0){
                 String idString = importantNumbers.get(i);
                 int fpID = Integer.parseInt(idString);
                 playerSRID = FantasyProsUtility.getSRID(fpID);
 
-                proj = new double[8];
+                proj = new double[modSize];
             }
-            else if(mod < 8){
+            else if(mod < modSize){
                 double val = Double.parseDouble(importantNumbers.get(i));
                 proj[mod-1] = val;
 
             }
-            else if(mod == 8){
+            else if(mod == modSize){
                 double val = Double.parseDouble(importantNumbers.get(i));
                 proj[mod-1] = val;
 
                 Player playerFlex = Player.getPlayer(playerSRID);
-                FlexProjection flexProj = new FlexProjection(proj, playerFlex);
+                FlexProjection flexProj = null;
+                if(modSize == 5) {//hardcoded te stuff
+                    flexProj = FlexProjection.getFromTE(proj, playerFlex);
+                }
+                else {
+                    flexProj = new FlexProjection(proj, playerFlex);
+                }
                 projections.add(flexProj);
             }
         }
         return projections;
     }
+
+
 
 
 
@@ -244,7 +266,10 @@ public class FantasyProsProjections {
 
     public static void main(String[] args){
         ArrayList<QBProjection> projectionsQB = parseTodaysWebPageQB();
-        ArrayList<FlexProjection> projectionsFlex = parseTodaysWebPageFlex();
+        ArrayList<FlexProjection> projectionsFlex = new ArrayList<>();
+        projectionsFlex.addAll(parseTodaysWebPageFlex(getTodaysWebPageRBHalf(), 8));
+        projectionsFlex.addAll(parseTodaysWebPageFlex(getTodaysWebPageWRHalf(), 8));
+        projectionsFlex.addAll(parseTodaysWebPageFlex(getTodaysWebPageTEHalf(), 5));
         ArrayList<DEFProjection> projectionsDEF = parseTodaysWebPageDEF();
     }
 
