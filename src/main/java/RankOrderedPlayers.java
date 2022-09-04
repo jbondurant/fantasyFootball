@@ -1,3 +1,8 @@
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
 import java.util.ArrayList;
 import java.util.PriorityQueue;
 
@@ -71,6 +76,53 @@ public class RankOrderedPlayers {
         RankOrderedPlayers rankOrderedPlayers = new RankOrderedPlayers(allRanks);
         return rankOrderedPlayers;
 
+    }
+
+    public static RankOrderedPlayers getRankOrderedPlayerHardcodedExperts(){
+        RankOrderedPlayers rop = null;
+        ArrayList<Rank> rankingForHardcodedChosenExperts = new ArrayList<>();
+
+        String entireHTML = FantasyProsUtility.getTodaysWebPage();
+        String ecrDataStart = entireHTML.split("var ecrData = ")[1].split("\"players\":")[1];
+        String ecrData = ecrDataStart.split("var sosData")[0].split(",\"experts_available\":")[0];
+
+        JsonParser jp = new JsonParser();
+        JsonElement jsonElement = jp.parse(ecrData);
+        JsonArray jsonPlayers = jsonElement.getAsJsonArray();
+
+        ArrayList<Rank> todaysRankings = new ArrayList<Rank>();
+        for (JsonElement jsonPlayer : jsonPlayers) {
+            JsonObject apiObject = jsonPlayer.getAsJsonObject();
+
+            String sportRadarID = "";
+            if(!apiObject.get("sportsdata_id").isJsonNull()) {
+                sportRadarID = apiObject.get("sportsdata_id").getAsString();
+            }
+            int fantasyProsID = -1;
+            if(!apiObject.get("player_id").isJsonNull()) {
+                fantasyProsID = apiObject.get("player_id").getAsInt();
+            }
+
+            if(!apiObject.get("pos_rank").isJsonNull()) {
+                String posRank = apiObject.get("pos_rank").getAsString();
+                if(posRank.toLowerCase().startsWith("dst")){
+                    posRank = posRank.substring(3);
+                    int rank = Integer.parseInt(posRank);
+                    Player player = Player.getPlayer(sportRadarID);// sport radar and sport data seem used interchangeably...
+                    Rank r = new Rank(rank, player);
+                    rankingForHardcodedChosenExperts.add(r);
+                }
+                else if(posRank.toLowerCase().startsWith("qb") || posRank.toLowerCase().startsWith("rb") || posRank.toLowerCase().startsWith("wr") || posRank.toLowerCase().startsWith("te")){
+                    posRank = posRank.substring(2);
+                    int rank = Integer.parseInt(posRank);
+                    Player player = Player.getPlayer(sportRadarID);
+                    Rank r = new Rank(rank, player);
+                    rankingForHardcodedChosenExperts.add(r);
+                }
+            }
+        }
+        rop = new RankOrderedPlayers(rankingForHardcodedChosenExperts);
+        return rop;
     }
 
     public static RankOrderedPlayers getRankOrderedPlayerFPFun(){

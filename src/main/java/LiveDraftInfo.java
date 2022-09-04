@@ -17,7 +17,7 @@ public class LiveDraftInfo {
     }
 
     public static BestAvailablePlayers getBestAvailablePlayersByHardcodedRank(ArrayList<Player> draftedPlayers){
-        RankOrderedPlayers rop = FantasyProsUtility.rop;
+        RankOrderedPlayers rop = RankOrderedPlayers.getRankOrderedPlayerHardcodedExperts();
         for(Player player : draftedPlayers){
             rop.removePlayer(player);
         }

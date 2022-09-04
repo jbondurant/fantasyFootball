@@ -16,7 +16,6 @@ public class FantasyProsUtility {
     public static HashMap<String, Integer> sridToFPID = new HashMap<String, Integer>();
     public static HashMap<Integer, String> fpidToSRID = new HashMap<Integer, String>();
 
-    public static RankOrderedPlayers rop = null;
 
     static{
         initializeMap();
@@ -68,31 +67,9 @@ public class FantasyProsUtility {
                 fantasyProsID = apiObject.get("player_id").getAsInt();
             }
 
-
-            if(!apiObject.get("pos_rank").isJsonNull()) {
-                String posRank = apiObject.get("pos_rank").getAsString();
-                if(posRank.toLowerCase().startsWith("dst")){
-                    posRank = posRank.substring(3);
-                    int rank = Integer.parseInt(posRank);
-                    Player player = Player.getPlayer(sportRadarID);// sport radar and sport data seem used interchangeably...
-                    Rank r = new Rank(rank, player);
-                    rankingForHardcodedChosenExperts.add(r);
-                }
-                else if(posRank.toLowerCase().startsWith("qb") || posRank.toLowerCase().startsWith("rb") || posRank.toLowerCase().startsWith("wr") || posRank.toLowerCase().startsWith("te")){
-                    posRank = posRank.substring(2);
-                    int rank = Integer.parseInt(posRank);
-                    Player player = Player.getPlayer(sportRadarID);
-
-                    Rank r = new Rank(rank, player);
-                    rankingForHardcodedChosenExperts.add(r);
-                }
-
-            }
-
             sridToFPID.put(sportRadarID, fantasyProsID);
             fpidToSRID.put(fantasyProsID, sportRadarID);
         }
-        rop = new RankOrderedPlayers(rankingForHardcodedChosenExperts);
     }
 
 
