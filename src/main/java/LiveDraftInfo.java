@@ -6,12 +6,23 @@ public class LiveDraftInfo {
     ArrayList<Player> draftedPlayers;
     ArrayList<Player> rosterPlayers;
     BestAvailablePlayers bestAvailablePlayers;
+    BestAvailablePlayers bestAvailablePlayersByHardcodedRank;
 
     public LiveDraftInfo(ArrayList<Player> dp, ArrayList<Player> rp, boolean isFun){
         isFunLeague = isFun;
         draftedPlayers = dp;
         rosterPlayers = rp;
         bestAvailablePlayers = getBestAvailablePlayers(dp, isFun);
+        bestAvailablePlayersByHardcodedRank = getBestAvailablePlayersByHardcodedRank(dp);
+    }
+
+    public static BestAvailablePlayers getBestAvailablePlayersByHardcodedRank(ArrayList<Player> draftedPlayers){
+        RankOrderedPlayers rop = FantasyProsUtility.rop;
+        for(Player player : draftedPlayers){
+            rop.removePlayer(player);
+        }
+        BestAvailablePlayers bap = new BestAvailablePlayers(rop);
+        return bap;
     }
 
     public static BestAvailablePlayers getBestAvailablePlayers(ArrayList<Player> draftedPlayers, boolean isFun){
@@ -31,8 +42,8 @@ public class LiveDraftInfo {
         return bap;
     }
 
-    public static void LiveDraftPotentialMoveAnalyzer(LiveDraftInfo ldifb){
-        BestAvailablePlayers bap = ldifb.bestAvailablePlayers;
+    public static void LiveDraftPotentialMoveAnalyzer(BestAvailablePlayers bap){
+        boolean isFun = false;
         String qb1Name = bap.quarterbackRT1.player.firstName + " " + bap.quarterbackRT1.player.lastName;
         String rb1Name = bap.runningBackRT1.player.firstName + " " + bap.runningBackRT1.player.lastName;
         String wr1Name = bap.wideReceiverRT1.player.firstName + " " + bap.wideReceiverRT1.player.lastName;
@@ -58,7 +69,7 @@ public class LiveDraftInfo {
         System.out.println("Best TEs are:\t" + te1Name + "\t" + te2Name + "\t" + te3Name);
         System.out.println("Best DEFs are:\t" + def1Name + "\t" + def2Name + "\t" + def3Name);
 
-        ArrayList<Score> scoreList = SleeperLeague.getScoreList(ldifb.isFunLeague);
+        ArrayList<Score> scoreList = SleeperLeague.getScoreList(false);
         System.out.println("QB1 " + Player.scorePlayer(scoreList, bap.quarterbackRT1.player));
         System.out.println("QB2 " + Player.scorePlayer(scoreList, bap.quarterbackRT2.player));
         System.out.println("QB3 " + Player.scorePlayer(scoreList, bap.quarterbackRT3.player));
