@@ -12,49 +12,6 @@ import java.util.PriorityQueue;
 
 public class TradeFinder {
 
-    public static ArrayList<FPRosterSerious> getFPProjPointsRostersSerious(AAAConfiguration configuration, boolean inSeason, boolean isCSV){
-        ArrayList<FPRosterSerious> allRostersSerious = new ArrayList<>();
-
-        String webData = getTodaysWebPage(configuration);
-
-        JsonParser jp = new JsonParser();
-        JsonElement jsonElement = jp.parse(webData);
-        JsonArray jsonMembers = jsonElement.getAsJsonArray();
-
-        for (JsonElement jsonMember : jsonMembers) {
-            JsonObject apiObject = jsonMember.getAsJsonObject();
-
-            String ownerID = "";
-            if(!apiObject.get("owner_id").isJsonNull()) {
-                ownerID = apiObject.get("owner_id").getAsString();
-            }
-
-            ArrayList<Player> allPlayersOfTeam = new ArrayList<>();
-            JsonArray allWeirdIDs = apiObject.getAsJsonArray("players");
-            for(JsonElement playerWeirdID : allWeirdIDs){
-                Player tempPlayer = Player.getPlayerFromSIDV2(playerWeirdID.getAsString());
-                if(tempPlayer == null){
-                    System.out.println("Here is a null player mistake");
-                }
-                allPlayersOfTeam.add(tempPlayer);
-            }
-            allRostersSerious.add(new FPRosterSerious(ownerID, allPlayersOfTeam, inSeason, isCSV));
-        }
-        return allRostersSerious;
-
-    }
-
-
-
-    public static void printRostersByPoints(ArrayList<FPRosterSerious> allRosters){
-        ArrayList allTeamOwners = new ArrayList<>();
-        for(FPRosterSerious fpRost : allRosters){
-            TeamOwner teamOwner = TeamOwner.initializeTeamOwnerFromSleeperUserID(fpRost.userID, fpRost.scoreBestROSStartingLineup());
-            allTeamOwners.add(teamOwner);
-        }
-        TeamOwner.printTeamOwnersByPoints(allTeamOwners);
-    }
-
     public static PriorityQueue<TradePreviewSerious> singleSwapTradeFinderAll(ArrayList<FPRosterSerious> allRosters, AAAConfiguration aaaConfiguration){
 
         PriorityQueue<TradePreviewSerious> allTrades = new PriorityQueue<>(5, new TradePreviewSeriousComparator());
@@ -712,7 +669,46 @@ public class TradeFinder {
 
     }
 
-    private static String getTodaysWebPage(AAAConfiguration configuration){
+    public static ArrayList<FPRosterSerious> getFPProjPointsRostersSerious(AAAConfiguration configuration, boolean inSeason, boolean isCSV){
+        String webData = getTodaysSleeperRosterWebPage(configuration);
+
+        JsonElement jsonElement = new JsonParser().parse(webData);
+        JsonArray jsonMembers = jsonElement.getAsJsonArray();
+
+        ArrayList<FPRosterSerious> allRostersSerious = new ArrayList<>();
+        for (JsonElement jsonMember : jsonMembers) {
+            JsonObject apiObject = jsonMember.getAsJsonObject();
+
+            String ownerID = "";
+            if(!apiObject.get("owner_id").isJsonNull()) {
+                ownerID = apiObject.get("owner_id").getAsString();
+            }
+
+            ArrayList<Player> allPlayersOfTeam = new ArrayList<>();
+            JsonArray allWeirdIDs = apiObject.getAsJsonArray("players");
+            for(JsonElement playerWeirdID : allWeirdIDs){
+                Player tempPlayer = Player.getPlayerFromSIDV2(playerWeirdID.getAsString());
+                if(tempPlayer == null){
+                    System.out.println("Here is a null player mistake");
+                }
+                allPlayersOfTeam.add(tempPlayer);
+            }
+            allRostersSerious.add(new FPRosterSerious(ownerID, allPlayersOfTeam, inSeason, isCSV));
+        }
+        return allRostersSerious;
+
+    }
+
+    public static void printRostersByPoints(ArrayList<FPRosterSerious> allRosters){
+        ArrayList allTeamOwners = new ArrayList<>();
+        for(FPRosterSerious fpRost : allRosters){
+            TeamOwner teamOwner = TeamOwner.initializeTeamOwnerFromSleeperUserID(fpRost.userID, fpRost.scoreBestROSStartingLineup());
+            allTeamOwners.add(teamOwner);
+        }
+        TeamOwner.printTeamOwnersByPoints(allTeamOwners);
+    }
+
+    private static String getTodaysSleeperRosterWebPage(AAAConfiguration configuration){
         return InOutUtilities.getTodaysWebPage(configuration.getRosterWebURL(),
                 configuration.getMyNameForLeague());
     }
