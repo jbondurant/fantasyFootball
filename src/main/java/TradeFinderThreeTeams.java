@@ -11,12 +11,40 @@ import java.util.*;
 
 public class TradeFinderThreeTeams {
 
-    public static String webURLSerious = "https://api.sleeper.app/v1/league/725192042375917568/rosters";
+    public static String webURLSerious = "https://api.sleeper.app/v1/league/854055502148108288/rosters";
     public static String webURLFun = "https://api.sleeper.app/v1/league/707299245186691072/rosters";
     public static String myID = HumanOfInterest.humanID;
 
     public static String filepathStartSerious = "eagueRostersCurrentSerious";
     public static String filepathStartFun= "leagueRostersCurrentFun";
+
+    private static ArrayList<List<Character>> allPermsCleaned = new ArrayList<>();
+
+    static {
+        ArrayList<Character> noPerm = new ArrayList<>();
+        noPerm.add('a');
+        noPerm.add('b');
+        noPerm.add('c');
+        noPerm.add('d');
+        noPerm.add('e');
+        noPerm.add('f');
+        Iterator<List<Character>> allPerms = Collections2.orderedPermutations(noPerm).iterator();
+        while(allPerms.hasNext()){
+            List<Character> perm = allPerms.next();
+            if(perm.get(0) < perm.get(1) && perm.get(2) < perm.get(3) && perm.get(4) < perm.get(5)){
+                if(perm.get(0) == 'a' && perm.get(1) == 'b'){
+                    continue;
+                }
+                if(perm.get(2) == 'c' && perm.get(3) == 'd'){
+                    continue;
+                }
+                if(perm.get(4) == 'e' && perm.get(5) == 'f'){
+                    continue;
+                }
+                allPermsCleaned.add(perm);
+            }
+        }
+    }
 
 
     private static String getTodaysWebPageSerious(){
@@ -26,7 +54,7 @@ public class TradeFinderThreeTeams {
         return InOutUtilities.getTodaysWebPage(webURLFun, filepathStartFun);
     }
 
-    public static ArrayList<FPRosterSerious> getFPProjPointsRostersSerious(){
+    public static ArrayList<FPRosterSerious> getFPProjPointsRostersSerious(boolean inSeason, boolean isCSV){
         ArrayList<FPRosterSerious> allRostersSerious = new ArrayList<>();
 
         String webData = getTodaysWebPageSerious();
@@ -58,7 +86,7 @@ public class TradeFinderThreeTeams {
                 }
                 allPlayersOfTeam.add(tempPlayer);
             }
-            FPRosterSerious tempMemberSerious = new FPRosterSerious(ownerID, allPlayersOfTeam);
+            FPRosterSerious tempMemberSerious = new FPRosterSerious(ownerID, allPlayersOfTeam, inSeason, isCSV);
             allRostersSerious.add(tempMemberSerious);
 
         }
@@ -120,6 +148,11 @@ public class TradeFinderThreeTeams {
     public static PriorityQueue<TradePreviewSerious3T> doubleSwapTradeFinderSingleTeam(ArrayList<FPRosterSerious> allRosters, int teamNum1, int teamNum2, String lastNameToTrade, int minMine, int minTheirs, boolean ignoreJake){
         PriorityQueue<TradePreviewSerious3T> allTrades = new PriorityQueue<>(5, new TradePreviewSerious3TComparator());
         FPRosterSerious myRoster = allRosters.get(0);//make compiler happy
+        for(Score s : myRoster.draftedPlayersWithProj){
+            if(s.player.lastName.equals("Herbert")){
+                System.out.println("something wrong herbert");
+            }
+        }
         for(FPRosterSerious roster : allRosters){
             if(roster.userID.equals(myID)){
                 myRoster = roster;
@@ -168,43 +201,13 @@ public class TradeFinderThreeTeams {
                                 Score t3p1 = otr2.draftedPlayersWithProj.get(a);
                                 Score t3p2 = otr2.draftedPlayersWithProj.get(b);
 
-                                ArrayList<Character> noPerm = new ArrayList<>();
-                                noPerm.add('a');
-                                noPerm.add('b');
-                                noPerm.add('c');
-                                noPerm.add('d');
-                                noPerm.add('e');
-                                noPerm.add('f');
-                                Iterator<List<Character>> allPerms = Collections2.orderedPermutations(noPerm).iterator();
-                                Collection<List<Character>> allPermsCol = Collections2.orderedPermutations(noPerm);
-                                int allPermsWithNonValidSize = allPermsCol.size();
-
-                                int numPermsValid =0;
-                                int numTotalPerm = 0;
-                                while(allPerms.hasNext()){
-                                    List<Character> perm = allPerms.next();
-                                    numTotalPerm++;
-                                    if(perm.get(0) < perm.get(1) && perm.get(2) < perm.get(3) && perm.get(4) < perm.get(5)){
-                                        if(perm.get(0) == 'a' && perm.get(1) == 'b'){
-                                            continue;
-                                        }
-                                        if(perm.get(2) == 'c' && perm.get(3) == 'd'){
-                                            continue;
-                                        }
-                                        if(perm.get(4) == 'e' && perm.get(5) == 'f'){
-                                            continue;
-                                        }
-                                        numPermsValid++;
-                                        //System.out.println("NumValidPerm:\t" + numPermsValid + "\tNumTotalPerm:\t" + numTotalPerm + "\tout of:\t" + allPermsWithNonValidSize);
-                                        TradePreviewSerious3T tps = new TradePreviewSerious3T(myRoster, otr1, otr2, t1p1, t1p2, t2p1, t2p2, t3p1, t3p2, perm, minMine, minTheirs);
-                                        //TODO set bar
-                                        if(tps.improvementT1 > minMine && tps.improvementT2 > minTheirs && tps.improvementT3 >  minTheirs ) {
-                                            allTrades.add(tps);
-                                        }
+                                for(List<Character> perm : allPermsCleaned){
+                                    TradePreviewSerious3T tps = new TradePreviewSerious3T(myRoster, otr1, otr2, t1p1, t1p2, t2p1, t2p2, t3p1, t3p2, perm, minMine, minTheirs);
+                                    //TODO set bar
+                                    if(tps.improvementT1 > minMine && tps.improvementT2 > minTheirs && tps.improvementT3 >  minTheirs ) {
+                                        allTrades.add(tps);
                                     }
                                 }
-
-
                             }
                         }
                     }
@@ -216,9 +219,9 @@ public class TradeFinderThreeTeams {
 
     }
 
-    public static void tradeFinder3TRunner(int teamN, int lastTeamStart, int lastTeamEnd, String tradedPlayerLastName, int minMine, int minTheirs, boolean ignoreJake) throws IOException {
+    public static void tradeFinder3TRunner(int teamN, int lastTeamStart, int lastTeamEnd, String tradedPlayerLastName, int minMine, int minTheirs, boolean ignoreJake, boolean inSeason, boolean isCSV) throws IOException {
 
-        ArrayList<FPRosterSerious> xyz = getFPProjPointsRostersSerious();
+        ArrayList<FPRosterSerious> xyz = getFPProjPointsRostersSerious(inSeason, isCSV);
         scoreAllRosters(xyz);
         //PriorityQueue<TradePreviewSerious> xyz2 = doubleSwapTradeFinderSingleTeam(xyz, 0);
         PriorityQueue<TradePreviewSerious3T> xyz2 = doubleSwapTradeFinderAllWithN(xyz, teamN, lastTeamStart,lastTeamEnd, tradedPlayerLastName, minMine, minTheirs, ignoreJake);
@@ -240,38 +243,50 @@ public class TradeFinderThreeTeams {
 
         while(!xyz2.isEmpty()){
             TradePreviewSerious3T temp = xyz2.poll();
+            boolean isTradeGivingDefense = isTradeGivingDefense(temp);
+            if(isTradeGivingDefense){
+                continue;
+            }
+            boolean isTradeKeepingPlayer = isTradeKeepingPlayer(temp);
+            if(isTradeKeepingPlayer){
+                continue;
+            }
+            boolean isSuperSelfishTrade = isTradeSuperSelfish(temp);
+            if(isSuperSelfishTrade){
+                continue;
+            }
 
-            if(temp.improvementT2 > 25.0 && temp.improvementT3 > 25.0) {
+            if(temp.improvementT2 > 7.0 && temp.improvementT3 > 9.0) {
                 allT11.add(temp);
             }
-            else if(temp.improvementT2 > 25.0 && temp.improvementT3 > 18.0) {
+            else if(temp.improvementT2 > 9.0 && temp.improvementT3 > 7.0) {
                 allT10.add(temp);
             }
-            else if(temp.improvementT2 > 25.0 && temp.improvementT3 > 10.0) {
+            else if(temp.improvementT2 > 7.0 && temp.improvementT3 > 7.0) {
                 allT9.add(temp);
             }
-            else if(temp.improvementT2 > 25.0 && temp.improvementT3 > 0.0) {
+            else if(temp.improvementT2 > 5.0 && temp.improvementT3 > 7.0) {
                 allT8.add(temp);
             }
-            else if(temp.improvementT2 > 18.0 && temp.improvementT3 > 25.0) {
+            else if(temp.improvementT2 > 7.0 && temp.improvementT3 > 5.0) {
                 allT7.add(temp);
             }
-            else if(temp.improvementT2 > 18.0 && temp.improvementT3 > 18.0) {
+            else if(temp.improvementT2 > 5.0 && temp.improvementT3 > 5.0) {
                 allT6.add(temp);
             }
-            else if(temp.improvementT2 > 18.0 && temp.improvementT3 > 10.0) {
+            else if(temp.improvementT2 > 0.0 && temp.improvementT3 > 5.0) {
                 allT5.add(temp);
             }
-            else if(temp.improvementT2 > 18.0 && temp.improvementT3 > 0.0) {
+            else if(temp.improvementT2 > 5.0 && temp.improvementT3 > 0.0) {
                 allT4.add(temp);
             }
-            else if(temp.improvementT2 > 10.0 && temp.improvementT3 > 10.0) {
+            else if(temp.improvementT2 > 3.0 && temp.improvementT3 > 3.0) {
                 allT3.add(temp);
             }
-            else if(temp.improvementT2 > 10.0 && temp.improvementT3 > 0.0) {
+            else if(temp.improvementT2 > 3.0 && temp.improvementT3 > 0.0) {
                 allT2.add(temp);
             }
-            else if(temp.improvementT2 > 0.0 && temp.improvementT3 > 10.0) {
+            else if(temp.improvementT2 > 0.0 && temp.improvementT3 > 3.0) {
                 allT1.add(temp);
             }
             else if(temp.improvementT2 > 0.0 && temp.improvementT3 > 0.0) {
@@ -344,73 +359,73 @@ public class TradeFinderThreeTeams {
 
         String fileString = "x" + teamN + "x" + lastTeamStart + "to" + lastTeamEnd + "x" + tradedPlayerLastName;
 
-        FileWriter writer11 = new FileWriter("t11" + fileString + ".txt");
+        FileWriter writer11 = new FileWriter( fileString + "t11" + ".txt");
         for(String str: t11Strings) {
             writer11.write(str + System.lineSeparator());
         }
         writer11.close();
 
-        FileWriter writer10 = new FileWriter("t10" + fileString + ".txt");
+        FileWriter writer10 = new FileWriter(fileString + "t10" + ".txt");
         for(String str: t10Strings) {
             writer10.write(str + System.lineSeparator());
         }
         writer10.close();
 
-        FileWriter writer9 = new FileWriter("t9" + fileString + ".txt");
+        FileWriter writer9 = new FileWriter(fileString + "t9" + ".txt");
         for(String str: t9Strings) {
             writer9.write(str + System.lineSeparator());
         }
         writer9.close();
 
-        FileWriter writer8 = new FileWriter("t8" + fileString + ".txt");
+        FileWriter writer8 = new FileWriter(fileString + "t8" + ".txt");
         for(String str: t8Strings) {
             writer8.write(str + System.lineSeparator());
         }
         writer8.close();
 
-        FileWriter writer7 = new FileWriter("t7" + fileString + ".txt");
+        FileWriter writer7 = new FileWriter(fileString + "t7" + ".txt");
         for(String str: t7Strings) {
             writer7.write(str + System.lineSeparator());
         }
         writer7.close();
 
-        FileWriter writer6 = new FileWriter("t6" + fileString + ".txt");
+        FileWriter writer6 = new FileWriter(fileString + "t6" + ".txt");
         for(String str: t6Strings) {
             writer6.write(str + System.lineSeparator());
         }
         writer6.close();
 
-        FileWriter writer5 = new FileWriter("t5" + fileString + ".txt");
+        FileWriter writer5 = new FileWriter(fileString + "t5" + ".txt");
         for(String str: t5Strings) {
             writer5.write(str + System.lineSeparator());
         }
         writer5.close();
 
-        FileWriter writer4 = new FileWriter("t4" + fileString + ".txt");
+        FileWriter writer4 = new FileWriter(fileString + "t4" + ".txt");
         for(String str: t4Strings) {
             writer4.write(str + System.lineSeparator());
         }
         writer4.close();
 
-        FileWriter writer3 = new FileWriter("t3" + fileString + ".txt");
+        FileWriter writer3 = new FileWriter(fileString + "t3" + ".txt");
         for(String str: t3Strings) {
             writer3.write(str + System.lineSeparator());
         }
         writer3.close();
 
-        FileWriter writer2 = new FileWriter("t2" + fileString + ".txt");
+        FileWriter writer2 = new FileWriter(fileString + "t2" + ".txt");
         for(String str: t2Strings) {
             writer2.write(str + System.lineSeparator());
         }
         writer2.close();
 
-        FileWriter writer1 = new FileWriter("t1" + fileString + ".txt");
+        FileWriter writer1 = new FileWriter(fileString + "t1" + ".txt");
         for(String str: t1Strings) {
             writer1.write(str + System.lineSeparator());
         }
         writer1.close();
 
-        FileWriter writer0 = new FileWriter("t0" + fileString + ".txt");
+        FileWriter writer0 = new FileWriter(fileString + "t0" + ".txt");
         for(String str: t0Strings) {
             writer0.write(str + System.lineSeparator());
         }
@@ -435,21 +450,88 @@ public class TradeFinderThreeTeams {
         //9<10 is russellMania?
         //10<11 is hamrliks? *
         //ends at 10; <11
-        for(int i=3; i<4; i++){
+        boolean isCSV = false;
+        for(int i=0; i<11; i++){//todo change back to 11
             String tradedPlayerLastName = "Jefferson";
             int teamN = i;
-            int lastTeamStart = 0;
-            int lastTeamEnd = 10;
-            int minMine = 14;
+            int lastTeamStart = 0;//this is the range for the teams that are the 3rd one to trade
+            int lastTeamEnd = 10;//so team 1 is us, team 2 is i, and team 3 is in this range
+            int minMine = 14;//because of some calls to like allrosters.remove. you want the end above to be 10
             int minTheirs = 0;
-            boolean ignoreJake = true;
+            boolean ignoreJake = false;
+            boolean inSeason = true; //todo
 
-            tradeFinder3TRunner(teamN, lastTeamStart, lastTeamEnd, tradedPlayerLastName, minMine, minTheirs, ignoreJake);
+            tradeFinder3TRunner(teamN, lastTeamStart, lastTeamEnd, tradedPlayerLastName, minMine, minTheirs, ignoreJake, inSeason, isCSV);
 
         }
 
         int a = 1;
 
+    }
+
+    public static boolean isTradeSuperSelfish(TradePreviewSerious3T tps){
+        Player given1  = tps.t1p1Score.player;
+        Player given2 = tps.t1p2Score.player;
+
+        Player received1 = tps.t1Received1.player;
+        Player received2 = tps.t1Received2.player;
+
+        if(given1.sportRadarID.equals(received1.sportRadarID)){//11
+            if(given2.position.equals(received2.position)){
+                return true;
+            }
+        }
+        else if(given1.sportRadarID.equals(received2.sportRadarID)){//12
+            if(given2.position.equals(received1.position)){
+                return true;
+            }
+        }
+        else if(given2.sportRadarID.equals(received1.sportRadarID)){//21
+            if(given1.position.equals(received2.position)){
+                return true;
+            }
+        }
+        else if(given2.sportRadarID.equals(received2.sportRadarID)){//22
+            if(given1.position.equals(received1.position)){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static boolean isTradeKeepingPlayer(TradePreviewSerious3T tps){
+        Player given1  = tps.t1p1Score.player;
+        Player given2 = tps.t1p2Score.player;
+
+        Player received1 = tps.t1Received1.player;
+        Player received2 = tps.t1Received2.player;
+
+        if(given1.sportRadarID.equals(received1.sportRadarID)){//11
+            return true;
+        }
+        else if(given1.sportRadarID.equals(received2.sportRadarID)){//12
+            return true;
+        }
+        else if(given2.sportRadarID.equals(received1.sportRadarID)){//21
+            return true;
+        }
+        else if(given2.sportRadarID.equals(received2.sportRadarID)){//22
+            return true;
+        }
+        return false;
+    }
+
+    public static boolean isTradeGivingDefense(TradePreviewSerious3T tps){
+        Player given1  = tps.t1p1Score.player;
+        Player given2 = tps.t1p2Score.player;
+
+        if(given1.position.equals(Position.DEF)){//11
+            return true;
+        }
+        else if(given2.position.equals(Position.DEF)){//12
+            return true;
+        }
+        return false;
     }
 
 }

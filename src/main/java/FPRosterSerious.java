@@ -9,6 +9,8 @@ public class FPRosterSerious {
     public static LeagueScoringSettings lssSerious = SleeperLeague.getSeriousLeague().league.leagueScoringSettings;
 
     public static HashMap<String, Double> playerSRIDToScore = new HashMap<>();
+    public static HashMap<String, Double> playerCSVSRIDToScore = new HashMap<>();
+
     static{
         //this will only do next weeks projections
         /*FantasyProsScore fps = new FantasyProsScore(lssSerious);
@@ -19,6 +21,7 @@ public class FPRosterSerious {
         }*/
         boolean is6PtsThrow = true;
         playerSRIDToScore = InSeasonProjectionsFP.playerToScoreProjFPROS(is6PtsThrow);
+        playerCSVSRIDToScore = CSVProjectionsFP.playerToScoreProjFPROS(is6PtsThrow);
     }
 
     String userID;
@@ -27,16 +30,27 @@ public class FPRosterSerious {
 
     double scoreBestLineup;
 
+    boolean isInSeason;
 
-    public FPRosterSerious(String uid, ArrayList<Player> dp){
+    boolean isCSV;
+
+
+    public FPRosterSerious(String uid, ArrayList<Player> dp, boolean iis, boolean icsv){
         userID = uid;
-        draftedPlayersWithProj = getFPProjForPlayers(dp);
+        draftedPlayersWithProj = getFPProjForPlayers(dp, iis, icsv);
         scoreBestLineup = scoreBestROSStartingLineup();
+        isInSeason = iis;
+        isCSV = icsv;
+
     }
 
     public void removeScore(Score s){
         Score scoreToRemove = null;
         for(Score score : draftedPlayersWithProj){
+            if(score.player.sportRadarID == null){
+                //System.out.println("something is wrong perhaps");
+                continue;
+            }
             if(score.player.sportRadarID.equals(s.player.sportRadarID)){
                 scoreToRemove = score;
             }
@@ -56,7 +70,7 @@ public class FPRosterSerious {
         }
 
         String usedID = fpRoster.userID;
-        FPRosterSerious copyOfRoster = new FPRosterSerious(usedID, usedPlayers);
+        FPRosterSerious copyOfRoster = new FPRosterSerious(usedID, usedPlayers, fpRoster.isInSeason, fpRoster.isCSV);
         return copyOfRoster;
     }
 
@@ -175,18 +189,43 @@ public class FPRosterSerious {
         return scoreToReturn;
     }
 
-    public static ArrayList<Score> getFPProjForPlayers(ArrayList<Player> dp){
+    public static ArrayList<Score> getFPProjForPlayers(ArrayList<Player> dp, boolean inSeason, boolean isCSV){
         ArrayList<Score> toReturn = new ArrayList<>();
         FantasyProsScore fps = new FantasyProsScore(lssSerious);
         for(Player p : dp){
             String pID1 = p.sportRadarID;
-            if(playerSRIDToScore.containsKey(pID1)){
-                double scoreOfPlayer = playerSRIDToScore.get(pID1);
-                Score tempScore = new Score(scoreOfPlayer, p);
-                toReturn.add(tempScore);
+            if(inSeason && (!isCSV)) {
+                if (playerSRIDToScore.containsKey(pID1)) {
+                    double scoreOfPlayer = playerSRIDToScore.get(pID1);
+                    Score tempScore = new Score(scoreOfPlayer, p);
+                    toReturn.add(tempScore);
+                } else {
+                    System.out.println("Player score for " + p.firstName + " " + p.lastName + " not found");
+                }
+            }
+            else if(inSeason && isCSV){
+                if(playerCSVSRIDToScore.containsKey(pID1)){
+                  double scoreOfPlayer = playerCSVSRIDToScore.get(pID1);
+                  Score tempScore = new Score(scoreOfPlayer, p);
+                  toReturn.add(tempScore);
+                }
+                else {
+                    System.out.println("Player score for " + p.firstName + " " + p.lastName + " not found");
+                }
             }
             else{
-                System.out.println("Player score for " + p.firstName + " " + p.lastName + " not found");
+                ArrayList<Score> scoreList = SleeperLeague.getScoreList(false);
+                double scoreOfPlayer = 0.0;
+                for(Score score : scoreList){
+                    if(score.player != null && score.player.sportRadarID.equals(p.sportRadarID)){
+                        scoreOfPlayer = score.score;
+                        Score tempScore = new Score(scoreOfPlayer, p);
+                        toReturn.add(tempScore);
+                    }
+                }
+                if(scoreOfPlayer == 0.0) {
+                    System.out.println("Player score for " + p.firstName + " " + p.lastName + " not found");
+                }
             }
         }
         return toReturn;

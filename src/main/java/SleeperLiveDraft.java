@@ -52,26 +52,30 @@ public class SleeperLiveDraft {
 
     public static void main(String[] args) throws Exception {
         //String userID = HumanOfInterest.humanID;
-        int roundPick = 10; //todo needs to be updated all the time
+        int roundPick = 2; //todo needs to be updated all the time
         //kinda tricky cause I would need to check the last drafted
         // and also it would be different if I'm the first or last player
         //and so you need to check the num of players
         Instant start = Instant.now();
         boolean isFun = false;
         //String draftID = "859148171954208768";
-        String draftID = "859148171954208768";
-        int numDraftsOnFly = 300;//todo change back to 300
+        String draftID = "872539812945698816";
+        int numDraftsOnFly = 160;//todo change back to 300
         boolean allowUndrafted = false;
         int undraftedRoundCost = 10;
         int minKeeperRound = 3;
-        int qbADPChange = 12;//at least 6, if not 12
+        int qbADPChange = 18;//at least 6, if not 12
         ArrayList<Keeper> hardcodedKeepers = Keeper.hardcodedAllPotentialKeepers();
         ArrayList positionsWanted = HumanStrategy.nonPermutedSerious1261();
         //ArrayList positionsWanted = HumanStrategy.nonPermutedSerious1351();
         //ArrayList positionsWanted = HumanStrategy.nonPermutedSerious1441();
 
         LiveDraftInfo ldifb = getDraftedPlayersMock(draftID, isFun);
-        LiveDraftInfo.LiveDraftPotentialMoveAnalyzer(ldifb);
+        LiveDraftInfo.LiveDraftPotentialMoveAnalyzer(ldifb.bestAvailablePlayersByHardcodedRank);
+        System.out.println("---------------");
+        LiveDraftInfo.LiveDraftPotentialMoveAnalyzer(ldifb.bestAvailablePlayers);
+        System.out.println("---------------");
+
         //OnTheFlySimulationRunner.runDraftsOnTheFlyToChooseMyKeeperHardcoded(numDraftsOnFly, positionsWanted, ldifb, HumanOfInterest.humanID, allowUndrafted, undraftedRoundCost, qbADPChange, minKeeperRound);
         OnTheFlySimulationRunner.runDraftsOnTheFlyWithHardcodedKeepers(numDraftsOnFly, roundPick, positionsWanted, ldifb, qbADPChange, hardcodedKeepers);
         //OnTheFlySimulationRunner.runDraftsOnTheFly(numDraftsOnFly, roundPick,isFun, positionsWanted, ldifb, qbADPChange);

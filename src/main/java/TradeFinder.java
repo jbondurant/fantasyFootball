@@ -2,11 +2,9 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import org.checkerframework.checker.units.qual.A;
 
 import java.io.FileWriter;
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -14,68 +12,50 @@ import java.util.PriorityQueue;
 
 public class TradeFinder {
 
-    public static String webURLSerious = "https://api.sleeper.app/v1/league/725192042375917568/rosters";
-    public static String webURLFun = "https://api.sleeper.app/v1/league/707299245186691072/rosters";
-    public static String myID = HumanOfInterest.humanID;
-
-    public static String filepathStartSerious = "eagueRostersCurrentSerious";
-    public static String filepathStartFun= "leagueRostersCurrentFun";
-
-
-    private static String getTodaysWebPageSerious(){
-        return InOutUtilities.getTodaysWebPage(webURLSerious, filepathStartSerious);
-    }
-    private static String getTodaysWebPageFun(){
-        return InOutUtilities.getTodaysWebPage(webURLFun, filepathStartFun);
-    }
-
-    public static ArrayList<FPRosterSerious> getFPProjPointsRostersSerious(){
+    public static ArrayList<FPRosterSerious> getFPProjPointsRostersSerious(AAAConfiguration configuration, boolean inSeason, boolean isCSV){
         ArrayList<FPRosterSerious> allRostersSerious = new ArrayList<>();
 
-        String webData = getTodaysWebPageSerious();
+        String webData = getTodaysWebPage(configuration);
 
         JsonParser jp = new JsonParser();
         JsonElement jsonElement = jp.parse(webData);
         JsonArray jsonMembers = jsonElement.getAsJsonArray();
 
         for (JsonElement jsonMember : jsonMembers) {
-
             JsonObject apiObject = jsonMember.getAsJsonObject();
 
             String ownerID = "";
-            ArrayList<Player> allPlayersOfTeam = new ArrayList<>();
-
-
             if(!apiObject.get("owner_id").isJsonNull()) {
                 ownerID = apiObject.get("owner_id").getAsString();
             }
 
-
+            ArrayList<Player> allPlayersOfTeam = new ArrayList<>();
             JsonArray allWeirdIDs = apiObject.getAsJsonArray("players");
-            //JsonArray allWeirdIDs = playersWeirdID.getAsJsonArray();
             for(JsonElement playerWeirdID : allWeirdIDs){
-                String idStringWeird = playerWeirdID.getAsString();
-                Player tempPlayer = Player.getPlayerFromSIDV2(idStringWeird);
+                Player tempPlayer = Player.getPlayerFromSIDV2(playerWeirdID.getAsString());
                 if(tempPlayer == null){
                     System.out.println("Here is a null player mistake");
                 }
                 allPlayersOfTeam.add(tempPlayer);
             }
-            FPRosterSerious tempMemberSerious = new FPRosterSerious(ownerID, allPlayersOfTeam);
-            allRostersSerious.add(tempMemberSerious);
-
+            allRostersSerious.add(new FPRosterSerious(ownerID, allPlayersOfTeam, inSeason, isCSV));
         }
         return allRostersSerious;
 
     }
 
-    public static void scoreAllRosters(ArrayList<FPRosterSerious> allRosters){
+
+
+    public static void printRostersByPoints(ArrayList<FPRosterSerious> allRosters){
+        ArrayList allTeamOwners = new ArrayList<>();
         for(FPRosterSerious fpRost : allRosters){
-            System.out.println( "userId:\t" + fpRost.userID + "\t ROS best lineup score:\t" + fpRost.scoreBestROSStartingLineup());
+            TeamOwner teamOwner = TeamOwner.initializeTeamOwnerFromSleeperUserID(fpRost.userID, fpRost.scoreBestROSStartingLineup());
+            allTeamOwners.add(teamOwner);
         }
+        TeamOwner.printTeamOwnersByPoints(allTeamOwners);
     }
 
-    public static PriorityQueue<TradePreviewSerious> singleSwapTradeFinderAll(ArrayList<FPRosterSerious> allRosters){
+    public static PriorityQueue<TradePreviewSerious> singleSwapTradeFinderAll(ArrayList<FPRosterSerious> allRosters, AAAConfiguration aaaConfiguration){
 
         PriorityQueue<TradePreviewSerious> allTrades = new PriorityQueue<>(5, new TradePreviewSeriousComparator());
         for(int i=0; i<allRosters.size()-1; i++){
@@ -83,14 +63,14 @@ public class TradeFinder {
             for(FPRosterSerious fpRos : allRosters){
                 allRostersCopy.add(FPRosterSerious.makeCopy(fpRos));
             }
-            PriorityQueue<TradePreviewSerious> singleTeamTrades = singleSwapTradeFinderSingleTeam(allRostersCopy, i);
+            PriorityQueue<TradePreviewSerious> singleTeamTrades = singleSwapTradeFinderSingleTeam(allRostersCopy, i, aaaConfiguration.getMyID());
             allTrades.addAll(singleTeamTrades);
         }
         return allTrades;
     }
 
 
-    public static PriorityQueue<TradePreviewSerious> doubleSwapTradeFinderAll(ArrayList<FPRosterSerious> allRosters){
+    public static PriorityQueue<TradePreviewSerious> doubleSwapTradeFinderAll(ArrayList<FPRosterSerious> allRosters, AAAConfiguration aaaConfiguration){
 
         PriorityQueue<TradePreviewSerious> allTrades = new PriorityQueue<>(5, new TradePreviewSeriousComparator());
         for(int i=0; i<allRosters.size()-1; i++){
@@ -98,14 +78,14 @@ public class TradeFinder {
             for(FPRosterSerious fpRos : allRosters){
                 allRostersCopy.add(FPRosterSerious.makeCopy(fpRos));
             }
-            PriorityQueue<TradePreviewSerious> singleTeamTrades = doubleSwapTradeFinderSingleTeam(allRostersCopy, i);
+            PriorityQueue<TradePreviewSerious> singleTeamTrades = doubleSwapTradeFinderSingleTeam(allRostersCopy, i, aaaConfiguration.getMyID());
             allTrades.addAll(singleTeamTrades);
         }
         return allTrades;
     }
 
 
-    public static PriorityQueue<TradePreviewSerious> tripleSwapTradeFinderAll(ArrayList<FPRosterSerious> allRosters){
+    public static PriorityQueue<TradePreviewSerious> tripleSwapTradeFinderAll(ArrayList<FPRosterSerious> allRosters, AAAConfiguration aaaConfiguration){
 
         PriorityQueue<TradePreviewSerious> allTrades = new PriorityQueue<>(5, new TradePreviewSeriousComparator());
         for(int i=0; i<allRosters.size()-1; i++){
@@ -113,17 +93,17 @@ public class TradeFinder {
             for(FPRosterSerious fpRos : allRosters){
                 allRostersCopy.add(FPRosterSerious.makeCopy(fpRos));
             }
-            PriorityQueue<TradePreviewSerious> singleTeamTradesTriple = tripleSwapTradeFinderSingleTeam(allRostersCopy, i);
+            PriorityQueue<TradePreviewSerious> singleTeamTradesTriple = tripleSwapTradeFinderSingleTeam(allRostersCopy, i, aaaConfiguration.getMyID());
             allTrades.addAll(singleTeamTradesTriple);
         }
         return allTrades;
     }
 
-    public static PriorityQueue<TradePreviewSerious> singleDoubleTripleSwapFinderAll(ArrayList<FPRosterSerious> allRosters){
+    public static PriorityQueue<TradePreviewSerious> singleDoubleTripleSwapFinderAll(ArrayList<FPRosterSerious> allRosters, AAAConfiguration aaaConfiguration){
         PriorityQueue<TradePreviewSerious> doubleTripleSwaps = new PriorityQueue<>(5, new TradePreviewSeriousComparator());
-        PriorityQueue<TradePreviewSerious> singleSwaps = singleSwapTradeFinderAll(allRosters);
-        PriorityQueue<TradePreviewSerious> doubleSwaps = doubleSwapTradeFinderAll(allRosters);
-        PriorityQueue<TradePreviewSerious> tripleSwaps = tripleSwapTradeFinderAll(allRosters);
+        PriorityQueue<TradePreviewSerious> singleSwaps = singleSwapTradeFinderAll(allRosters, aaaConfiguration);
+        PriorityQueue<TradePreviewSerious> doubleSwaps = doubleSwapTradeFinderAll(allRosters, aaaConfiguration);
+        PriorityQueue<TradePreviewSerious> tripleSwaps = tripleSwapTradeFinderAll(allRosters, aaaConfiguration);
         doubleTripleSwaps.addAll(singleSwaps);
         doubleTripleSwaps.addAll(doubleSwaps);
         doubleTripleSwaps.addAll(tripleSwaps);
@@ -132,7 +112,7 @@ public class TradeFinder {
 
 
 
-    public static PriorityQueue<TradePreviewSerious> doubleSwapTradeFinderSingleTeam(ArrayList<FPRosterSerious> allRosters, int teamNum){
+    public static PriorityQueue<TradePreviewSerious> doubleSwapTradeFinderSingleTeam(ArrayList<FPRosterSerious> allRosters, int teamNum, String myID){
         PriorityQueue<TradePreviewSerious> allTrades = new PriorityQueue<>(5, new TradePreviewSeriousComparator());
         FPRosterSerious myRoster = allRosters.get(0);//make compiler happy
         boolean myRosterFound = false;//debug
@@ -170,7 +150,7 @@ public class TradeFinder {
 
     }
 
-    public static PriorityQueue<TradePreviewSerious> singleSwapTradeFinderSingleTeam(ArrayList<FPRosterSerious> allRosters, int teamNum){
+    public static PriorityQueue<TradePreviewSerious> singleSwapTradeFinderSingleTeam(ArrayList<FPRosterSerious> allRosters, int teamNum, String myID){
         PriorityQueue<TradePreviewSerious> allTrades = new PriorityQueue<>(5, new TradePreviewSeriousComparator());
         FPRosterSerious myRoster = allRosters.get(0);//make compiler happy
         boolean myRosterFound = false;//debug
@@ -187,19 +167,19 @@ public class TradeFinder {
 
         FPRosterSerious otherTeamsRoster = allRosters.get(teamNum);
 //TODO make roster copies
-        for(int w=0; w < myRoster.draftedPlayersWithProj.size()-1; w++){
-            for(int x = w+1; x < myRoster.draftedPlayersWithProj.size(); x++){
-                for(int y=0; y<otherTeamsRoster.draftedPlayersWithProj.size()-1; y++){
-                    for(int z=y+1; z<otherTeamsRoster.draftedPlayersWithProj.size(); z++){
-                        Score t1p1 = myRoster.draftedPlayersWithProj.get(w);
-                        Score t2p1 = otherTeamsRoster.draftedPlayersWithProj.get(y);
-
-                        TradePreviewSerious tps = new TradePreviewSerious(myRoster, otherTeamsRoster, t1p1, t2p1);
-                        allTrades.add(tps);
-
-                    }
+        for(int w=0; w < myRoster.draftedPlayersWithProj.size(); w++){
+            for(int y=0; y<otherTeamsRoster.draftedPlayersWithProj.size(); y++){
+                Score t1p1 = myRoster.draftedPlayersWithProj.get(w);
+                Score t2p1 = otherTeamsRoster.draftedPlayersWithProj.get(y);
+                if(t1p1.player.firstName.equals("Diontae") && t2p1.player.firstName.equals("David")){
+                    int d=1;
                 }
+
+                TradePreviewSerious tps = new TradePreviewSerious(myRoster, otherTeamsRoster, t1p1, t2p1);
+                allTrades.add(tps);
+
             }
+
         }
 
         return allTrades;
@@ -207,7 +187,7 @@ public class TradeFinder {
     }
 
 
-    public static PriorityQueue<TradePreviewSerious> tripleSwapTradeFinderSingleTeam(ArrayList<FPRosterSerious> allRosters, int teamNum){
+    public static PriorityQueue<TradePreviewSerious> tripleSwapTradeFinderSingleTeam(ArrayList<FPRosterSerious> allRosters, int teamNum, String myID){
         PriorityQueue<TradePreviewSerious> allTrades = new PriorityQueue<>(5, new TradePreviewSeriousComparator());
         FPRosterSerious myRoster = allRosters.get(0);//make compiler happy
         boolean myRosterFound = false;//debug
@@ -252,86 +232,58 @@ public class TradeFinder {
 
 
     public static void main(String[] args) throws IOException {
+        AAAConfiguration configuration = new AAAConfigurationSleeperLeague();
         boolean onlyOne = false;
         boolean onlyTwo = false;
         boolean toCrop = false;
+        boolean inSeason = true;
+        boolean isCSV = true;
+        boolean roundFilter = false;
         ArrayList<String> tradersToIgnore = new ArrayList<>();
-        //tradersToIgnore.add("724919475115225088");//jake
-        //tradersToIgnore.add("459267987174584320");//doddi
+        tradersToIgnore.add("606234521821577216");//tommyrads
+        tradersToIgnore.add("464471023782195200"); //itsabust
+        tradersToIgnore.add("605534791072305152"); //Tsayydeja
+        tradersToIgnore.add("725953800816373760");//Hamrliks
+        tradersToIgnore.add("740473448551366656"); //patek
+        tradersToIgnore.add("459267987174584320");//doddi
         ArrayList<String> playersToGive = new ArrayList<>();
-        //playersToGive.add("Alvin Kamara");
-        //playersToGive.add("D'Andre Swift");
+        //playersToGive.add("Christian McCaffrey");
+        //playersToGive.add("Diontae Johnson");
         //playersToGive.add("Justin Jefferson");
-        //playersToGive.add("Jalen Hurts");
-        //playersToGive.add("Brandin Cooks");
-        playersToGive.add("Brandin Cooks");
-        //playersToGive.add("Hunter Henry");
-        //playersToGive.add("Alvin Kamara");
-        //playersToGive.add("Odell Beckham");
-        //playersToGive.add("Kyler Murray");
-        playersToGive.add("Marvin Jones");
-        playersToGive.add("Corey Davis");
-        //playersToGive.add("Pittsburgh Steelers");
-        //playersToGive.add("Cleveland Browns");
-        //playersToGive.add("Justin Herbert");
+
 
         ArrayList<String> playersNotToGive = new ArrayList<>();
-        //playersNotToGive.add("Kyler Murray");
-        //playersNotToGive.add("Justin Herbert");
-        //playersNotToGive.add("Brandin Cooks");
-        //playersNotToGive.add("Michael Thomas");
-        //playersNotToGive.add("Darren Waller");
-        //playersNotToGive.add("Odell Beckham");
-        //playersNotToGive.add("D'Andre Swift");
-        //playersNotToGive.add("Pittsburgh Steelers");
-        //playersNotToGive.add("Hunter Henry");
-        //playersNotToGive.add("Michael Gallup");
+        //playersNotToGive.add("Dawson Knox");
+        //playersNotToGive.add("Tyler Conklin");
+        //playersNotToGive.add("David Njoku");
+
 
 
         ArrayList<String> givenPlayersToIgnore = new ArrayList<>();
-        //givenPlayersToIgnore.add("Travis Kelce");
-        //givenPlayersToIgnore.add("Allen Robinson");
-        //givenPlayersToIgnore.add("A.J. Brown");
-        //givenPlayersToIgnore.add("Kadarius Toney");
-        //givenPlayersToIgnore.add("Javonte Williams");
-        //givenPlayersToIgnore.add("Damien Harris");
-        //givenPlayersToIgnore.add("Robert Woods");
-        //givenPlayersToIgnore.add("Melvin Gordon");
-        //givenPlayersToIgnore.add("Antonio Gibson");
-        //givenPlayersToIgnore.add("Chase Claypool");
-        //givenPlayersToIgnore.add("Amari Cooper");
-        //givenPlayersToIgnore.add("Stefon Diggs");
-        //givenPlayersToIgnore.add("Davante Adams");
+        givenPlayersToIgnore.add("Miles Sanders");
+        givenPlayersToIgnore.add("Dameon Pierce");
+        givenPlayersToIgnore.add("Chase Claypool");
+        givenPlayersToIgnore.add("Chris Olave");
+
+
 
         ArrayList<String> givenPlayersToRequire = new ArrayList<>();
-        //givenPlayersToRequire.add("Jonathan Taylor");
-        //givenPlayersToRequire.add("Diontae Johnson");
+        //givenPlayersToRequire.add("Nick Chubb");
+        //givenPlayersToRequire.add("Deebo Samuel");
         //givenPlayersToRequire.add("Chase Edmonds");
         //givenPlayersToRequire.add("A.J. Brown");
         //givenPlayersToRequire.add("Ezekiel Elliott");
         //givenPlayersToRequire.add("Davante Adams");
-        givenPlayersToRequire.add("Mike Williams");
-        //givenPlayersToRequire.add("Stefon Diggs");
-        //givenPlayersToRequire.add("Jonathan Taylor");
-        //givenPlayersToRequire.add("Cordarrelle Patterson");
-        //givenPlayersToRequire.add("Ezekiel Elliott");
-        //givenPlayersToRequire.add("Adam Thielen");
-        //givenPlayersToRequire.add("Austin Ekeler");
-        //givenPlayersToRequire.add("Najee Harris");
-        //givenPlayersToRequire.add("Josh Jacobs");
-        //givenPlayersToRequire.add("Buffalo Bills");
-        //givenPlayersToRequire.add("Michael Carter");
-        //givenPlayersToRequire.add("Tyreek Hill");
-        //givenPlayersToRequire.add("Darrell Henderson");
 
-        ArrayList<FPRosterSerious> xyz = getFPProjPointsRostersSerious();
+
+        ArrayList<FPRosterSerious> xyz = getFPProjPointsRostersSerious(configuration, inSeason, isCSV);
         for(FPRosterSerious fpRos : xyz){
-            System.out.print("roster of " + fpRos.userID + "\n");
+            System.out.print("roster of " + HumanOfInterest.getHumanFromID(fpRos.userID) + "\n");
             for(Score s : fpRos.draftedPlayersWithProj){
                 System.out.println("\t" + s.player.firstName + " " + s.player.lastName + "\t score:\t" + s.score);
             }
         }
-        scoreAllRosters(xyz);
+        printRostersByPoints(xyz);
 
         FPRosterSerious.printWorstStartingQBRosterOrder(xyz);
 
@@ -341,13 +293,13 @@ public class TradeFinder {
 
         PriorityQueue<TradePreviewSerious> xyz2;
         if(onlyOne){
-            xyz2 = singleSwapTradeFinderAll(xyz);
+            xyz2 = singleSwapTradeFinderAll(xyz, configuration);
         }
         else if(onlyTwo){
-            xyz2 = doubleSwapTradeFinderAll(xyz);
+            xyz2 = doubleSwapTradeFinderAll(xyz, configuration);
         }
         else {
-            xyz2 = singleDoubleTripleSwapFinderAll(xyz);
+            xyz2 = singleDoubleTripleSwapFinderAll(xyz, configuration);
         }
 
         if(onlyOne) {
@@ -368,6 +320,12 @@ public class TradeFinder {
                 for (int j = i + 1; j < xyz2Arr.size(); j++) {
                     TradePreviewSerious tps1 = xyz2Arr.get(i);
                     TradePreviewSerious tps2 = xyz2Arr.get(j);
+                    if(tps1.t1p1Score.player.sportRadarID == null){
+                        //System.out.println("null srid is from " + tps1.t1p1Score.player.firstName
+                         //       + " "
+                         //       +  tps1.t1p1Score.player.lastName );
+                        continue;
+                    }
                     if (tps1.t1p1Score.player.sportRadarID.equals(tps2.t1p1Score.player.sportRadarID)) {
                         if (tps1.t2p1Score.player.sportRadarID.equals(tps2.t2p1Score.player.sportRadarID)) {
                             hasDup = true;
@@ -376,6 +334,42 @@ public class TradeFinder {
                     }
                 }
                 if (!hasDup) {
+                    xyz2.add(xyz2Arr.get(i));
+                }
+            }
+        }
+
+        ArrayList<Keeper> hardcodedKeepersArray = Keeper.hardcodedAllPotentialKeepers();
+        HashSet<Player> hardcodedKeepers = new HashSet<>();
+        for(Keeper k : hardcodedKeepersArray){
+            hardcodedKeepers.add(k.player);
+        }
+
+        if(roundFilter){
+            ArrayList<TradePreviewSerious> xyz2Arr = new ArrayList<>();
+            Iterator<TradePreviewSerious> it = xyz2.iterator();
+            while (it.hasNext()) {
+                xyz2Arr.add(it.next());
+            }
+
+            int xyz2Len = xyz2.size();
+            for (int i = 0; i < xyz2Len; i++) {
+                xyz2.poll();
+            }
+
+            for (int i = 0; i < xyz2Arr.size() - 1; i++) {
+                boolean passesRoundVibe = false;
+                TradePreviewSerious tps1 = xyz2Arr.get(i);
+                Player t1p1 = tps1.t1p1Score.player;
+                Player t2p1 = tps1.t2p1Score.player;
+
+                if(HardcodedDraftUtil.getRoundPlayer(t1p1) <= HardcodedDraftUtil.getRoundPlayer(t2p1)){
+                    if(!hardcodedKeepers.contains(t1p1) && !hardcodedKeepers.contains(t2p1)) {
+                        passesRoundVibe = true;
+                    }
+                }
+
+                if (passesRoundVibe) {
                     xyz2.add(xyz2Arr.get(i));
                 }
             }
@@ -527,37 +521,37 @@ public class TradeFinder {
 
 
 
-            if(temp.improvementT2 > 40.0) {
+            if(temp.improvementT2 > 5.0 && temp.improvementT2 < 10.0) {
                 allT10.add(temp);
             }
-            if(temp.improvementT2 > 25.0) {
+            if(temp.improvementT2 > 4.0) {
                 allT9.add(temp);
             }
-            else if(temp.improvementT2 > 20.0) {
+            else if(temp.improvementT2 > 3.0) {
                 allT8.add(temp);
             }
-            else if(temp.improvementT2 > 15.0) {
+            else if(temp.improvementT2 > 2.0) {
                 allT7.add(temp);
             }
-            else if(temp.improvementT2 > 10.0) {
+            else if(temp.improvementT2 > 0.5) {
                 allT6.add(temp);
             }
-            else if(temp.improvementT2 > 5.0) {
+            else if(temp.improvementT2 > -2.0) {
                 allT5.add(temp);
             }
-            else if(temp.improvementT2 > 0.0) {
+            else if(temp.improvementT2 > -4.0) {
                 allT4.add(temp);
             }
-            else if(temp.improvementT2 > -5.0) {
+            else if(temp.improvementT2 > -6.0) {
                 allT3.add(temp);
             }
-            else if(temp.improvementT2 > -10.0) {
+            else if(temp.improvementT2 > -8.0) {
                 allT2.add(temp);
             }
-            else if(temp.improvementT2 > -15.0) {
+            else if(temp.improvementT2 > -10.0) {
                 allT1.add(temp);
             }
-            else if(temp.improvementT2 > -30.0) {
+            else if(temp.improvementT2 > -12.0) {
                 allT0.add(temp);
             }
         }
@@ -716,8 +710,10 @@ public class TradeFinder {
         }
         writer0.close();
 
+    }
 
-        int a = 1;
-
+    private static String getTodaysWebPage(AAAConfiguration configuration){
+        return InOutUtilities.getTodaysWebPage(configuration.getRosterWebURL(),
+                configuration.getMyNameForLeague());
     }
 }

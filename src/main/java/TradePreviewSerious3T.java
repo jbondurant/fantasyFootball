@@ -15,6 +15,8 @@ public class TradePreviewSerious3T {
     Score t3p2Score;
     Score t3p3Score;
 
+    Score t1Received1;
+    Score t1Received2;
 
     double improvementT1;
     double improvementT2;
@@ -45,6 +47,9 @@ public class TradePreviewSerious3T {
         t2ReceivedPlayers = "";
         t3ReceivedPlayers = "";
 
+        t1Received1 = null;
+        t1Received2 = null;
+        ArrayList<Score> t1ReceivedBoth = new ArrayList<>();
 
         FPRosterSerious t1Copy = FPRosterSerious.makeCopy(t1);
         FPRosterSerious t2Copy = FPRosterSerious.makeCopy(t2);
@@ -66,52 +71,63 @@ public class TradePreviewSerious3T {
         if(perm.get(0) == 'a'){
             t1Copy.addScore(t1p1S);
             t1ReceivedPlayers += t1p1S.player.firstName + " " + t1p1S.player.lastName;
+            t1ReceivedBoth.add(t1p1S);
         }
         else if(perm.get(0) == 'b'){
             t1Copy.addScore(t1p2S);
             t1ReceivedPlayers += t1p2S.player.firstName + " " + t1p2S.player.lastName;
+            t1ReceivedBoth.add(t1p2S);
         }
         else if(perm.get(0) == 'c'){
             t1Copy.addScore(t2p1S);
             t1ReceivedPlayers += t2p1S.player.firstName + " " + t2p1S.player.lastName;
+            t1ReceivedBoth.add(t2p1S);
         }
         else if(perm.get(0) == 'd'){
             t1Copy.addScore(t2p2S);
             t1ReceivedPlayers += t2p2S.player.firstName + " " + t2p2S.player.lastName;
+            t1ReceivedBoth.add(t2p2S);
         }
         else if(perm.get(0) == 'e'){
             t1Copy.addScore(t3p1S);
             t1ReceivedPlayers += t3p1S.player.firstName + " " + t3p1S.player.lastName;
+            t1ReceivedBoth.add(t3p1S);
         }
         else if(perm.get(0) == 'f'){
             t1Copy.addScore(t3p2S);
             t1ReceivedPlayers += t3p2S.player.firstName + " " + t3p2S.player.lastName;
+            t1ReceivedBoth.add(t3p2S);
         }
         // 2 of 6
         if(perm.get(1) == 'a'){
             t1Copy.addScore(t1p1S);
             t1ReceivedPlayers += t1p1S.player.firstName + " " + t1p1S.player.lastName;
+            t1ReceivedBoth.add(t1p1S);
         }
         else if(perm.get(1) == 'b'){
             t1Copy.addScore(t1p2S);
             t1ReceivedPlayers += t1p2S.player.firstName + " " + t1p2S.player.lastName;
+            t1ReceivedBoth.add(t1p2S);
         }
         else if(perm.get(1) == 'c'){
             t1Copy.addScore(t2p1S);
             t1ReceivedPlayers += t2p1S.player.firstName + " " + t2p1S.player.lastName;
+            t1ReceivedBoth.add(t2p1S);
         }
         else if(perm.get(1) == 'd'){
             t1Copy.addScore(t2p2S);
             t1ReceivedPlayers += t2p2S.player.firstName + " " + t2p2S.player.lastName;
-
+            t1ReceivedBoth.add(t2p2S);
         }
         else if(perm.get(1) == 'e'){
             t1Copy.addScore(t3p1S);
             t1ReceivedPlayers += t3p1S.player.firstName + " " + t3p1S.player.lastName;
+            t1ReceivedBoth.add(t3p1S);
         }
         else if(perm.get(1) == 'f'){
             t1Copy.addScore(t3p2S);
             t1ReceivedPlayers += t3p2S.player.firstName + " " + t3p2S.player.lastName;
+            t1ReceivedBoth.add(t3p2S);
         }
 
         int t1SizeAgain = t1Copy.draftedPlayersWithProj.size();
@@ -131,52 +147,64 @@ public class TradePreviewSerious3T {
         if(perm.get(2) == 'a'){
             t2Copy.addScore(t1p1S);
             t2ReceivedPlayers += t1p1S.player.firstName + " " + t1p1S.player.lastName;
+            t1ReceivedBoth.add(t1p1S);
         }
         else if(perm.get(2) == 'b'){
             t2Copy.addScore(t1p2S);
             t2ReceivedPlayers += t1p2S.player.firstName + " " + t1p2S.player.lastName;
+            t1ReceivedBoth.add(t1p2S);
         }
         else if(perm.get(2) == 'c'){
             t2Copy.addScore(t2p1S);
             t2ReceivedPlayers += t2p1S.player.firstName + " " + t2p1S.player.lastName;
+            t1ReceivedBoth.add(t2p1S);
         }
         else if(perm.get(2) == 'd'){
             t2Copy.addScore(t2p2S);
             t2ReceivedPlayers += t2p2S.player.firstName + " " + t2p2S.player.lastName;
+            t1ReceivedBoth.add(t2p2S);
         }
         else if(perm.get(2) == 'e'){
             t2Copy.addScore(t3p1S);
             t2ReceivedPlayers += t3p1S.player.firstName + " " + t3p1S.player.lastName;
+            t1ReceivedBoth.add(t3p1S);
         }
         else if(perm.get(2) == 'f'){
             t2Copy.addScore(t3p2S);
             t2ReceivedPlayers += t3p2S.player.firstName + " " + t3p2S.player.lastName;
+            t1ReceivedBoth.add(t3p2S);
         }
         // 4 of 6
         if(perm.get(3) == 'a'){
             t2Copy.addScore(t1p1S);
             t2ReceivedPlayers += t1p1S.player.firstName + " " + t1p1S.player.lastName;
+            t1ReceivedBoth.add(t1p1S);
         }
         else if(perm.get(3) == 'b'){
             t2Copy.addScore(t1p2S);
             t2ReceivedPlayers += t1p2S.player.firstName + " " + t1p2S.player.lastName;
+            t1ReceivedBoth.add(t1p2S);
         }
         else if(perm.get(3) == 'c'){
             t2Copy.addScore(t2p1S);
             t2ReceivedPlayers += t2p1S.player.firstName + " " + t2p1S.player.lastName;
+            t1ReceivedBoth.add(t2p1S);
         }
         else if(perm.get(3) == 'd'){
             t2Copy.addScore(t2p2S);
             t2ReceivedPlayers += t2p2S.player.firstName + " " + t2p2S.player.lastName;
+            t1ReceivedBoth.add(t2p2S);
         }
         else if(perm.get(3) == 'e'){
             t2Copy.addScore(t3p1S);
             t2ReceivedPlayers += t3p1S.player.firstName + " " + t3p1S.player.lastName;
+            t1ReceivedBoth.add(t3p1S);
 
         }
         else if(perm.get(3) == 'f'){
             t2Copy.addScore(t3p2S);
             t2ReceivedPlayers += t3p2S.player.firstName + " " + t3p2S.player.lastName;
+            t1ReceivedBoth.add(t3p2S);
         }
 
 
@@ -194,51 +222,63 @@ public class TradePreviewSerious3T {
         if(perm.get(4) == 'a'){
             t3Copy.addScore(t1p1S);
             t3ReceivedPlayers += t1p1S.player.firstName + " " + t1p1S.player.lastName;
+            t1ReceivedBoth.add(t1p1S);
         }
         else if(perm.get(4) == 'b'){
             t3Copy.addScore(t1p2S);
             t3ReceivedPlayers += t1p2S.player.firstName + " " + t1p2S.player.lastName;
+            t1ReceivedBoth.add(t1p2S);
         }
         else if(perm.get(4) == 'c'){
             t3Copy.addScore(t2p1S);
             t3ReceivedPlayers += t2p1S.player.firstName + " " + t2p1S.player.lastName;
+            t1ReceivedBoth.add(t2p1S);
         }
         else if(perm.get(4) == 'd'){
             t3Copy.addScore(t2p2S);
             t3ReceivedPlayers += t2p2S.player.firstName + " " + t2p2S.player.lastName;
+            t1ReceivedBoth.add(t2p2S);
         }
         else if(perm.get(4) == 'e'){
             t3Copy.addScore(t3p1S);
             t3ReceivedPlayers += t3p1S.player.firstName + " " + t3p1S.player.lastName;
+            t1ReceivedBoth.add(t3p1S);
         }
         else if(perm.get(4) == 'f'){
             t3Copy.addScore(t3p2S);
             t3ReceivedPlayers += t3p2S.player.firstName + " " + t3p2S.player.lastName;
+            t1ReceivedBoth.add(t3p2S);
         }
         // 6 of 6
         if(perm.get(5) == 'a'){
             t3Copy.addScore(t1p1S);
             t3ReceivedPlayers += t1p1S.player.firstName + " " + t1p1S.player.lastName;
+            t1ReceivedBoth.add(t1p1S);
         }
         else if(perm.get(5) == 'b'){
             t3Copy.addScore(t1p2S);
             t3ReceivedPlayers += t1p2S.player.firstName + " " + t1p2S.player.lastName;
+            t1ReceivedBoth.add(t1p2S);
         }
         else if(perm.get(5) == 'c'){
             t3Copy.addScore(t2p1S);
             t3ReceivedPlayers += t2p1S.player.firstName + " " + t2p1S.player.lastName;
+            t1ReceivedBoth.add(t2p1S);
         }
         else if(perm.get(5) == 'd'){
             t3Copy.addScore(t2p2S);
             t3ReceivedPlayers += t2p2S.player.firstName + " " + t2p2S.player.lastName;
+            t1ReceivedBoth.add(t2p2S);
         }
         else if(perm.get(5) == 'e'){
             t3Copy.addScore(t3p1S);
             t3ReceivedPlayers += t3p1S.player.firstName + " " + t3p1S.player.lastName;
+            t1ReceivedBoth.add(t3p1S);
         }
         else if(perm.get(5) == 'f'){
             t3Copy.addScore(t3p2S);
             t3ReceivedPlayers += t3p2S.player.firstName + " " + t3p2S.player.lastName;
+            t1ReceivedBoth.add(t3p2S);
         }
 
         int t3SizeAgain = t3Copy.draftedPlayersWithProj.size();
@@ -251,64 +291,9 @@ public class TradePreviewSerious3T {
             improvementT3 = -900.0;
             return;
         }
-
+        t1Received1 = t1ReceivedBoth.get(0);
+        t1Received2 = t1ReceivedBoth.get(1);
     }
-
-
-    /*
-    TradePreviewSerious3T(FPRosterSerious t1, FPRosterSerious t2, Score t1p1S, Score t1p2S, Score t1p3S, Score t2p1S, Score t2p2S, Score t2p3S, Score t3p1S, Score t3p2S, Score t3p3S, List<Character> perm){
-
-        t1p1Score = t1p1S;
-        t1p2Score = t1p2S;
-        t1p3Score = t1p3S;
-        t2p1Score = t2p1S;
-        t2p2Score = t2p2S;
-        t2p3Score = t2p3S;
-
-        t3p1Score = t3p1S;
-        t3p2Score = t3p2S;
-        t3p3Score = t3p3S;
-
-        if(t1p1S.player.firstName.equals("Marvin") && t2p1S.player.firstName.equals("Keenan") && t2p2S.player.firstName.equals("Christian")){
-            String abc = t1p2S.player.firstName;
-            if(abc.startsWith("P")) {
-                int r = 1;
-            }
-
-        }
-
-        FPRosterSerious t1Copy = FPRosterSerious.makeCopy(t1);
-        FPRosterSerious t2Copy = FPRosterSerious.makeCopy(t2);
-
-        double initialScoreT1 = t1Copy.scoreBestROSStartingLineup();
-        double initialScoreT2 = t2Copy.scoreBestROSStartingLineup();
-
-        int t1Size = t1Copy.draftedPlayersWithProj.size();
-        t1Copy.removeScore(t1p1S);
-        t1Copy.removeScore(t1p2S);
-        t1Copy.removeScore(t1p3S);
-        t2Copy.removeScore(t2p1S);
-        t2Copy.removeScore(t2p2S);
-        t2Copy.removeScore(t2p3S);
-
-        t1Copy.addScore(t2p1S);
-        t1Copy.addScore(t2p2S);
-        t1Copy.addScore(t2p3S);
-        t2Copy.addScore(t1p1S);
-        t2Copy.addScore(t1p2S);
-        t2Copy.addScore(t1p3S);
-
-        int t1SizeAgain = t1Copy.draftedPlayersWithProj.size();
-
-        double postSwapScoreT1 = t1Copy.scoreBestROSStartingLineup();
-        double postSwapScoreT2 = t2Copy.scoreBestROSStartingLineup();
-
-
-        improvementT1 = postSwapScoreT1 - initialScoreT1;
-        improvementT2 = postSwapScoreT2 - initialScoreT2;
-
-    }
-     */
 
     public static String printTradePreview(TradePreviewSerious3T tps){
 

@@ -7,20 +7,18 @@ import java.util.Date;
 
 public class DateUtility {
 
-    public static DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-
-    public static String getTodaysDate(){
+    public static String getThisMonth(){
+        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM");
         Date date = Calendar.getInstance().getTime();
         String strDate = dateFormat.format(date);
         return strDate;
     }
 
-    public static boolean isStringToday(String dateString){
-        String strDate = getTodaysDate();
-        if(strDate.equals(dateString)){
-            return true;
-        }
-        return false;
+    public static String getTodaysDate(){
+        DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+        Date date = Calendar.getInstance().getTime();
+        String strDate = dateFormat.format(date);
+        return strDate;
     }
 
 }

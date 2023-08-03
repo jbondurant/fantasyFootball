@@ -26,13 +26,9 @@ public class FantasyProsProjections {
     static{
         projectionsFPQB = parseTodaysWebPageQB();
         projectionsFPFlex = new ArrayList<>();
-        System.out.println("a");
-        projectionsFPFlex.addAll(parseTodaysWebPageFlex(getTodaysWebPageRBHalf(), 8));
-        System.out.println("b");
-        projectionsFPFlex.addAll(parseTodaysWebPageFlex(getTodaysWebPageWRHalf(), 8));
-        System.out.println("c");
-        projectionsFPFlex.addAll(parseTodaysWebPageFlex(getTodaysWebPageTEHalf(), 5));
-        System.out.println("d");
+        projectionsFPFlex.addAll(parseTodaysWebPageFlex(getTodaysWebPageRBHalf(), 8, false));
+        projectionsFPFlex.addAll(parseTodaysWebPageFlex(getTodaysWebPageWRHalf(), 8, true));
+        projectionsFPFlex.addAll(parseTodaysWebPageFlex(getTodaysWebPageTEHalf(), 5, false));
         projectionsFPDEF = parseTodaysWebPageDEF();
     }
 
@@ -123,7 +119,7 @@ public class FantasyProsProjections {
 
 
 
-    private static ArrayList<FlexProjection> parseTodaysWebPageFlex(String entireHTML, int modSize) {
+    private static ArrayList<FlexProjection> parseTodaysWebPageFlex(String entireHTML, int modSize, boolean isWR) {
 
         ArrayList<FlexProjection> projections = new ArrayList<FlexProjection>();
 
@@ -187,7 +183,10 @@ public class FantasyProsProjections {
                 if(modSize == 5) {//hardcoded te stuff
                     flexProj = FlexProjection.getFromTE(proj, playerFlex);
                 }
-                else {
+                else if(isWR) {
+                    flexProj = FlexProjection.getFromWR(proj, playerFlex);
+                }
+                else{
                     flexProj = new FlexProjection(proj, playerFlex);
                 }
                 projections.add(flexProj);
@@ -267,9 +266,9 @@ public class FantasyProsProjections {
     public static void main(String[] args){
         ArrayList<QBProjection> projectionsQB = parseTodaysWebPageQB();
         ArrayList<FlexProjection> projectionsFlex = new ArrayList<>();
-        projectionsFlex.addAll(parseTodaysWebPageFlex(getTodaysWebPageRBHalf(), 8));
-        projectionsFlex.addAll(parseTodaysWebPageFlex(getTodaysWebPageWRHalf(), 8));
-        projectionsFlex.addAll(parseTodaysWebPageFlex(getTodaysWebPageTEHalf(), 5));
+        projectionsFlex.addAll(parseTodaysWebPageFlex(getTodaysWebPageRBHalf(), 8, false));
+        projectionsFlex.addAll(parseTodaysWebPageFlex(getTodaysWebPageWRHalf(), 8, true));
+        projectionsFlex.addAll(parseTodaysWebPageFlex(getTodaysWebPageTEHalf(), 5, false));
         ArrayList<DEFProjection> projectionsDEF = parseTodaysWebPageDEF();
     }
 

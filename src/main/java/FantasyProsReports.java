@@ -55,8 +55,8 @@ public class FantasyProsReports {
     }
 
     public static void main(String[] args){
-        sve();
+        //sve();
         //fve();
-        //svf();
+        svf();
     }
 }

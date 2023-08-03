@@ -62,21 +62,37 @@ public class LiveDraftInfo {
         String te3Name = bap.tightEndRT3.player.firstName + " " + bap.tightEndRT3.player.lastName;
         String def3Name = bap.defenseRT3.player.firstName + " " + bap.defenseRT3.player.lastName;
 
-        System.out.println("Given the projections on FantasyPros and your league settings");
-        System.out.println("Best QBs are:\t" + qb1Name + "\t" + qb2Name + "\t" + qb3Name);
-        System.out.println("Best RBs are:\t" + rb1Name + "\t" + rb2Name + "\t" + rb3Name);
-        System.out.println("Best WRs are:\t" + wr1Name + "\t" + wr2Name + "\t" + wr3Name);
-        System.out.println("Best TEs are:\t" + te1Name + "\t" + te2Name + "\t" + te3Name);
-        System.out.println("Best DEFs are:\t" + def1Name + "\t" + def2Name + "\t" + def3Name);
-
         ArrayList<Score> scoreList = SleeperLeague.getScoreList(false);
-        System.out.println("QB1 " + Player.scorePlayer(scoreList, bap.quarterbackRT1.player));
-        System.out.println("QB2 " + Player.scorePlayer(scoreList, bap.quarterbackRT2.player));
-        System.out.println("QB3 " + Player.scorePlayer(scoreList, bap.quarterbackRT3.player));
+        int qb1ScoreRound = (int) Player.scorePlayer(scoreList, bap.quarterbackRT1.player);
+        int qb2ScoreRound = (int) Player.scorePlayer(scoreList, bap.quarterbackRT2.player);
+        int qb3ScoreRound = (int) Player.scorePlayer(scoreList, bap.quarterbackRT3.player);
+        String qbScores = "\t\t" + qb1ScoreRound + "\t\t" + qb2ScoreRound + "\t\t" + qb3ScoreRound;
+        int rb1ScoreRound = (int) Player.scorePlayer(scoreList, bap.runningBackRT1.player);
+        int rb2ScoreRound = (int) Player.scorePlayer(scoreList, bap.runningBackRT2.player);
+        int rb3ScoreRound = (int) Player.scorePlayer(scoreList, bap.runningBackRT3.player);
+        String rbScores = "\t\t" + rb1ScoreRound + "\t\t" + rb2ScoreRound + "\t\t" + rb3ScoreRound;
 
-        System.out.println("RB1 " + Player.scorePlayer(scoreList, bap.runningBackRT1.player));
-        System.out.println("RB2 " + Player.scorePlayer(scoreList, bap.runningBackRT2.player));
-        System.out.println("RB3 " + Player.scorePlayer(scoreList, bap.runningBackRT3.player));
+
+        int wr1ScoreRound = (int) Player.scorePlayer(scoreList, bap.wideReceiverRT1.player);
+        int wr2ScoreRound = (int) Player.scorePlayer(scoreList, bap.wideReceiverRT2.player);
+        int wr3ScoreRound = (int) Player.scorePlayer(scoreList, bap.wideReceiverRT3.player);
+        String wrScores = "\t\t" + wr1ScoreRound + "\t\t" + wr2ScoreRound + "\t\t" + wr3ScoreRound;
+
+        int te1ScoreRound = (int) Player.scorePlayer(scoreList, bap.tightEndRT1.player);
+        int te2ScoreRound = (int) Player.scorePlayer(scoreList, bap.tightEndRT2.player);
+        int te3ScoreRound = (int) Player.scorePlayer(scoreList, bap.tightEndRT3.player);
+        String teScores = "\t\t" + te1ScoreRound + "\t\t" + te2ScoreRound + "\t\t" + te3ScoreRound;
+
+
+        System.out.println(qb1Name + "\t" + qb2Name + "\t" + qb3Name + qbScores);
+        System.out.println(rb1Name + "\t" + rb2Name + "\t" + rb3Name + rbScores);
+        System.out.println(wr1Name + "\t" + wr2Name + "\t" + wr3Name + wrScores);
+        System.out.println(te1Name + "\t" + te2Name + "\t" + te3Name + teScores);
+        System.out.println(def1Name + "\t" + def2Name + "\t" + def3Name);
+
+
+
+
 
 
     }
