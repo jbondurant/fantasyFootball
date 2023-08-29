@@ -10,11 +10,8 @@ public class SleeperDraftInfo {
 
     public static String myUserID = HumanOfInterest.humanID;
 
-    public static String filepathStartFunDraft = "funDraftSleeper";
-    public static String webURLFunDraft = "https://api.sleeper.app/v1/draft/707299245186691073";
-
     public static String filepathStartSeriousDraft = "seriousDraftSleeper";
-    public static String webURLSeriousDraft = "https://api.sleeper.app/v1/draft/725192044087148544";
+    public static String webURLSeriousDraft = "https://api.sleeper.app/v1/draft/980889732034994177"; //todo 2023
 
     public ArrayList<User> usersInfo;
 
@@ -29,15 +26,6 @@ public class SleeperDraftInfo {
         String draftWebsite = InOutUtilities.getTodaysWebPage(webURL , filepathHardcodedDraft);
         SleeperDraftInfo sdi = parseWebsite(draftWebsite);
         return sdi;
-    }
-
-    public static SleeperDraftInfo getFunDraft(){
-        String funDraftWebsite = getTodaysWebPageFun();
-        SleeperDraftInfo funDraft = parseWebsite(funDraftWebsite);
-        return funDraft;
-    }
-    private static String getTodaysWebPageFun(){
-        return InOutUtilities.getTodaysWebPage(webURLFunDraft, filepathStartFunDraft);
     }
 
     public static SleeperDraftInfo getSeriousDraft(){
@@ -72,7 +60,6 @@ public class SleeperDraftInfo {
     }
 
     public static void main(String[] args){
-        SleeperDraftInfo a = getFunDraft();
         SleeperDraftInfo b = getSeriousDraft();
     }
 

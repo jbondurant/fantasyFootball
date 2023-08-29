@@ -26,4 +26,10 @@ public class AAAConfiguration {
         return "https://api.sleeper.app/v1/league/" + this.leagueID + "/rosters";
     }
 
+    public static String filepathStartSeriousRosters = "seriousRostersForKeepers";
+
+    public String getTodaysRosterWebPageSerious(){//todo 2023 move this out into utilities or something
+        return InOutUtilities.getTodaysWebPage(this.getRosterWebURL(), filepathStartSeriousRosters);
+    }
+
 }

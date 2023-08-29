@@ -30,11 +30,7 @@ public class SleeperLeague{
 
 
     public static SleeperLeague getFunLeague(){
-        String funLeagueWebsite = getTodaysWebPageFun();
-        SleeperDraftInfo funDraft = SleeperDraftInfo.getFunDraft();
-        SleeperLeague funLeague = parseWebsite(funLeagueWebsite, funDraft);
-
-        return funLeague;
+        return null; // todo 2023 remove all fun league
     }
 
     public static SleeperLeague getSeriousLeague(){

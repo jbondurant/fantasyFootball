@@ -11,12 +11,7 @@ import java.util.*;
 
 public class TradeFinderThreeTeams {
 
-    public static String webURLSerious = "https://api.sleeper.app/v1/league/854055502148108288/rosters";
-    public static String webURLFun = "https://api.sleeper.app/v1/league/707299245186691072/rosters";
     public static String myID = HumanOfInterest.humanID;
-
-    public static String filepathStartSerious = "eagueRostersCurrentSerious";
-    public static String filepathStartFun= "leagueRostersCurrentFun";
 
     private static ArrayList<List<Character>> allPermsCleaned = new ArrayList<>();
 
@@ -46,18 +41,12 @@ public class TradeFinderThreeTeams {
         }
     }
 
-
-    private static String getTodaysWebPageSerious(){
-        return InOutUtilities.getTodaysWebPage(webURLSerious, filepathStartSerious);
-    }
-    private static String getTodaysWebPageFun(){
-        return InOutUtilities.getTodaysWebPage(webURLFun, filepathStartFun);
-    }
-
-    public static ArrayList<FPRosterSerious> getFPProjPointsRostersSerious(boolean inSeason, boolean isCSV){
+    public static ArrayList<FPRosterSerious> getFPProjPointsRostersSerious(boolean inSeason,
+                                                                           boolean isCSV,
+                                                                           AAAConfiguration aaaConfiguration){
         ArrayList<FPRosterSerious> allRostersSerious = new ArrayList<>();
 
-        String webData = getTodaysWebPageSerious();
+        String webData = aaaConfiguration.getTodaysRosterWebPageSerious();
 
         JsonParser jp = new JsonParser();
         JsonElement jsonElement = jp.parse(webData);
@@ -219,9 +208,18 @@ public class TradeFinderThreeTeams {
 
     }
 
-    public static void tradeFinder3TRunner(int teamN, int lastTeamStart, int lastTeamEnd, String tradedPlayerLastName, int minMine, int minTheirs, boolean ignoreJake, boolean inSeason, boolean isCSV) throws IOException {
+    public static void tradeFinder3TRunner(int teamN,
+                                           int lastTeamStart,
+                                           int lastTeamEnd,
+                                           String tradedPlayerLastName,
+                                           int minMine,
+                                           int minTheirs,
+                                           boolean ignoreJake,
+                                           boolean inSeason,
+                                           boolean isCSV,
+                                           AAAConfiguration aaaConfiguration) throws IOException {
 
-        ArrayList<FPRosterSerious> xyz = getFPProjPointsRostersSerious(inSeason, isCSV);
+        ArrayList<FPRosterSerious> xyz = getFPProjPointsRostersSerious(inSeason, isCSV, aaaConfiguration);
         scoreAllRosters(xyz);
         //PriorityQueue<TradePreviewSerious> xyz2 = doubleSwapTradeFinderSingleTeam(xyz, 0);
         PriorityQueue<TradePreviewSerious3T> xyz2 = doubleSwapTradeFinderAllWithN(xyz, teamN, lastTeamStart,lastTeamEnd, tradedPlayerLastName, minMine, minTheirs, ignoreJake);
@@ -450,6 +448,7 @@ public class TradeFinderThreeTeams {
         //9<10 is russellMania?
         //10<11 is hamrliks? *
         //ends at 10; <11
+        AAAConfiguration aaaConfiguration = new AAAConfigurationSleeperLeague();
         boolean isCSV = false;
         for(int i=0; i<11; i++){//todo change back to 11
             String tradedPlayerLastName = "Jefferson";
@@ -461,7 +460,7 @@ public class TradeFinderThreeTeams {
             boolean ignoreJake = false;
             boolean inSeason = true; //todo
 
-            tradeFinder3TRunner(teamN, lastTeamStart, lastTeamEnd, tradedPlayerLastName, minMine, minTheirs, ignoreJake, inSeason, isCSV);
+            tradeFinder3TRunner(teamN, lastTeamStart, lastTeamEnd, tradedPlayerLastName, minMine, minTheirs, ignoreJake, inSeason, isCSV, aaaConfiguration);
 
         }
 

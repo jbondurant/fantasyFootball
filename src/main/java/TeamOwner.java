@@ -3,8 +3,8 @@ import java.util.PriorityQueue;
 
 public class TeamOwner {
 
-    private String name;
-    private double points;
+    private final String name;
+    private final double points;
     private TeamOwner(String name, double points){
         this.name = name;
         this.points = points;
@@ -18,7 +18,7 @@ public class TeamOwner {
     {
         int L = 20;
         char ch = ' ';
-        return String.format("%" + (-L) + "s", input).replace(' ', ch);
+        return String.format("%" + (-L) + "s", input);
     }
 
     public String getName(){
@@ -30,14 +30,11 @@ public class TeamOwner {
     }
 
     public static void printTeamOwnersByPoints(ArrayList<TeamOwner> teamOwners){
-        PriorityQueue<TeamOwner> allTeamOwner = new PriorityQueue<>(5,new TeamOwnerComparator());
+        PriorityQueue<TeamOwner> allTeamOwners = new PriorityQueue<>(5,new TeamOwnerComparator());
+        allTeamOwners.addAll(teamOwners);
 
-        for(TeamOwner to : teamOwners){
-            allTeamOwner.add(to);
-        }
-
-        while(!allTeamOwner.isEmpty()) {
-            TeamOwner to = allTeamOwner.remove();
+        while(!allTeamOwners.isEmpty()) {
+            TeamOwner to = allTeamOwners.remove();
             System.out.println(to.getName() + "ROS best lineup score:\t" + to.getPoints());
         }
     }

@@ -52,37 +52,39 @@ public class SleeperLiveDraft {
 
     public static void main(String[] args) throws Exception {
         //String userID = HumanOfInterest.humanID;
-        int roundPick = 2; //todo needs to be updated all the time
         //kinda tricky cause I would need to check the last drafted
         // and also it would be different if I'm the first or last player
         //and so you need to check the num of players
+        AAAConfiguration aaaConfiguration = new AAAConfigurationSleeperLeague();
         Instant start = Instant.now();
         boolean isFun = false;
-        //String draftID = "859148171954208768";
-        String draftID = "872539812945698816";
-        int numDraftsOnFly = 160;//todo change back to 300
+        String draftID = "980889732034994177";
+        int numDraftsOnFly = 1000;//todo change back to 300
         boolean allowUndrafted = false;
         int undraftedRoundCost = 10;
         int minKeeperRound = 3;
         int qbADPChange = 18;//at least 6, if not 12
         ArrayList<Keeper> hardcodedKeepers = Keeper.hardcodedAllPotentialKeepers();
-        ArrayList positionsWanted = HumanStrategy.nonPermutedSerious1261();
+        //ArrayList positionsWanted = HumanStrategy.nonPermutedSerious1261();
         //ArrayList positionsWanted = HumanStrategy.nonPermutedSerious1351();
-        //ArrayList positionsWanted = HumanStrategy.nonPermutedSerious1441();
+        ArrayList positionsWanted = HumanStrategy.nonPermutedSerious1441();
 
         LiveDraftInfo ldifb = getDraftedPlayersMock(draftID, isFun);
+        int numDraftedPlayers = ldifb.draftedPlayers.size();
+        int currentRound = ((numDraftedPlayers) / 12) + 1;//todo 2023 make sure keepers don't mess this up
         LiveDraftInfo.LiveDraftPotentialMoveAnalyzer(ldifb.bestAvailablePlayersByHardcodedRank);
         System.out.println("---------------");
         LiveDraftInfo.LiveDraftPotentialMoveAnalyzer(ldifb.bestAvailablePlayers);
         System.out.println("---------------");
 
-        //OnTheFlySimulationRunner.runDraftsOnTheFlyToChooseMyKeeperHardcoded(numDraftsOnFly, positionsWanted, ldifb, HumanOfInterest.humanID, allowUndrafted, undraftedRoundCost, qbADPChange, minKeeperRound);
-        OnTheFlySimulationRunner.runDraftsOnTheFlyWithHardcodedKeepers(numDraftsOnFly, roundPick, positionsWanted, ldifb, qbADPChange, hardcodedKeepers);
+        OnTheFlySimulationRunner.runDraftsOnTheFlyToChooseMyKeeperHardcoded(numDraftsOnFly, positionsWanted, ldifb, HumanOfInterest.humanID, allowUndrafted, undraftedRoundCost, qbADPChange, minKeeperRound, aaaConfiguration);
+        //OnTheFlySimulationRunner.runDraftsOnTheFlyWithHardcodedKeepers(numDraftsOnFly, currentRound, positionsWanted, ldifb, qbADPChange, hardcodedKeepers);
         //OnTheFlySimulationRunner.runDraftsOnTheFly(numDraftsOnFly, roundPick,isFun, positionsWanted, ldifb, qbADPChange);
         /*for(String userID : HumanOfInterest.getAllUserIDsHardcoded()) {
             OnTheFlySimulationRunner.runDraftsOnTheFlyToChooseMyKeeperHardcoded(numDraftsOnFly, positionsWanted, ldifb, userID, allowUndrafted, undraftedRoundCost, qbADPChange, minKeeperRound);
             System.out.println("-----");
-        }*/
+        }
+         */
         Instant end = Instant.now();
         Duration timeElapsed = Duration.between(start, end);
         System.out.println(timeElapsed);

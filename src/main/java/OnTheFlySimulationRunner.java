@@ -9,10 +9,18 @@ import java.util.Random;
 
 public class OnTheFlySimulationRunner {
 
-    public static void runDraftsOnTheFlyToChooseMyKeeperHardcoded(int n, ArrayList<Position> humanPermutationOld, LiveDraftInfo ldifb, String userID, boolean allowUndrafted, int undraftedRoundCost, int qbADPChange, int minKeeperRound) throws Exception {
+    public static void runDraftsOnTheFlyToChooseMyKeeperHardcoded(int n,
+                                                                  ArrayList<Position> humanPermutationOld,
+                                                                  LiveDraftInfo ldifb,
+                                                                  String userID,
+                                                                  boolean allowUndrafted,
+                                                                  int undraftedRoundCost,
+                                                                  int qbADPChange,
+                                                                  int minKeeperRound,
+                                                                  AAAConfiguration aaaConfiguration) throws Exception {
         boolean isFun = false;
-        Keepers keepers = Keepers.getKeepersForUserHardcoded(isFun, userID, true, undraftedRoundCost);
-        Keepers keepersWithoutUndrafted = Keepers.getKeepersForUserHardcoded(isFun, userID, false, undraftedRoundCost);
+        Keepers keepers = Keepers.getKeepersForUserHardcoded(isFun, userID, true, undraftedRoundCost, aaaConfiguration);
+        Keepers keepersWithoutUndrafted = Keepers.getKeepersForUserHardcoded(isFun, userID, false, undraftedRoundCost, aaaConfiguration);
         ArrayList<Score> allKeeperScores = new ArrayList<>();
         for(Keeper keeper : keepers.keepers) {
             int numRoundsLeft = 10;

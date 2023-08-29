@@ -2,7 +2,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import org.checkerframework.checker.units.qual.K;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -13,11 +12,9 @@ public class Keepers {
     //todo, eventually, keepers will come from years prior, and will likely need to be manually added
     //todo hardcoded 2021 value
     public static String filepathStartSeriousLeague = "seriousOldDraftsSleeper";
-    public static String draftIDHardcoded2021 = "725192044087148544";
-    public static String leagueIDHardcoded2021 = "725192042375917568";
-    public static String webURLSeriousRosters = "https://api.sleeper.app/v1/league/" + leagueIDHardcoded2021 + "/rosters";
-    public static String filepathStartSeriousRosters = "seriousRostersForKeepers";
-    public static String webURLSeriousLeague = "https://api.sleeper.app/v1/league/" + draftIDHardcoded2021 + "/drafts";
+    public static String draftIDHardcoded2022 = "854055502148108289";
+    public static String leagueIDHardcoded2022 = "854055502148108288";
+
     public static String filepathDraftIDStartSeriousLeague = "seriousDraftIDPicks";
 
     public HashSet<Keeper> keepers;
@@ -28,10 +25,12 @@ public class Keepers {
     }
 
 
-    public static Keepers getKeepersForUserHardcoded(boolean isFun, String userID, boolean allowUndrafted, int undraftedRoundCost) throws Exception {
-        Keepers tooManyKeepers = getKeepersFromImmediateLastDraft(isFun, draftIDHardcoded2021, allowUndrafted, undraftedRoundCost);
+    public static Keepers getKeepersForUserHardcoded(boolean isFun, String userID, boolean allowUndrafted, int undraftedRoundCost, AAAConfiguration aaaConfiguration) throws Exception {
+        Keepers tooManyKeepers = getKeepersFromImmediateLastDraft(isFun, draftIDHardcoded2022, allowUndrafted, undraftedRoundCost, aaaConfiguration);
         HashSet<Keeper> playersKeepers = new HashSet<>();
+        HashSet<String> allHumansWhoCanKeep = new HashSet<>();
         for(Keeper k : tooManyKeepers.keepers){
+            allHumansWhoCanKeep.add(k.humanWhoCanKeep);
             //todo hardcoded
             if(k.humanWhoCanKeep.equals("603706155834871808") && userID.equals("605534791072305152")){
                 playersKeepers.add(k);
@@ -42,17 +41,24 @@ public class Keepers {
             if(k.humanWhoCanKeep.equals("603735371280355328") && userID.equals("853719913725030400")){
                 playersKeepers.add(k);
             }
+            if(k.humanWhoCanKeep.equals("603706155834871808") && userID.equals("604377190016016384")){//jf this year
+                playersKeepers.add(k);
+            }
             if(k.humanWhoCanKeep.equals(userID)){
-
                 playersKeepers.add(k);
             }
         }
+        int k=1;
         return new Keepers(playersKeepers);
     }
 
 
-    public static Keepers getKeepersFromImmediateLastDraft(boolean isFun, String draftID, boolean allowUndrafted, int undraftedRoundCost) throws Exception {
-        HashMap<String, Roster> humansAndRosters = getHumansAndTheirRosters(draftID);
+    public static Keepers getKeepersFromImmediateLastDraft(boolean isFun,
+                                                           String draftID,
+                                                           boolean allowUndrafted,
+                                                           int undraftedRoundCost,
+                                                           AAAConfiguration aaaConfiguration) throws Exception {
+        HashMap<String, Roster> humansAndRosters = getHumansAndTheirRosters(draftID, aaaConfiguration);
         //the above method doesn't work
         HashMap<Player, Integer> draftedPlayersAndRound = draftedPlayersLastYearAndRound(isFun, draftID);
         HashSet<Keeper> allKeepers = new HashSet<>();
@@ -79,8 +85,8 @@ public class Keepers {
     }
 
 
-    public static HashMap<String, Roster> getHumansAndTheirRosters(String hardcodedDraftID){
-        String websiteData = getTodaysRosterWebPageSerious();
+    public static HashMap<String, Roster> getHumansAndTheirRosters(String hardcodedDraftID, AAAConfiguration aaaConfiguration){
+        String websiteData = aaaConfiguration.getTodaysRosterWebPageSerious();
         JsonParser jp = new JsonParser();
         JsonElement jsonElementDraft = jp.parse(websiteData);
         JsonArray jsonArrayRosters = jsonElementDraft.getAsJsonArray();
@@ -140,11 +146,6 @@ public class Keepers {
         JsonObject jsonObjectDraft = jsonArrayDraft.get(arrayLastIndex).getAsJsonObject();
         String draftID = jsonObjectDraft.get("draft_id").getAsString();
         return draftID;
-    }
-
-
-    private static String getTodaysRosterWebPageSerious(){
-        return InOutUtilities.getTodaysWebPage(webURLSeriousRosters, filepathStartSeriousRosters);
     }
 
     private static String getDraftPicksTodaysWebPageSerious(String draftID){
