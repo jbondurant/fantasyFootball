@@ -58,13 +58,13 @@ public class SleeperLiveDraft {
         AAAConfiguration aaaConfiguration = new AAAConfigurationSleeperLeague();
         Instant start = Instant.now();
         boolean isFun = false;
-        String draftID = "980889732034994177";
-        int numDraftsOnFly = 1000;//todo change back to 300
+        String draftID = "1002410801145274368";
+        int numDraftsOnFly = 160;//todo change back to 300
         boolean allowUndrafted = false;
         int undraftedRoundCost = 10;
         int minKeeperRound = 3;
         int qbADPChange = 18;//at least 6, if not 12
-        ArrayList<Keeper> hardcodedKeepers = Keeper.hardcodedAllPotentialKeepers();
+        ArrayList<Keeper> hardcodedKeepers = aaaConfiguration.getTodaysKeepers();
         //ArrayList positionsWanted = HumanStrategy.nonPermutedSerious1261();
         //ArrayList positionsWanted = HumanStrategy.nonPermutedSerious1351();
         ArrayList positionsWanted = HumanStrategy.nonPermutedSerious1441();
@@ -77,8 +77,8 @@ public class SleeperLiveDraft {
         LiveDraftInfo.LiveDraftPotentialMoveAnalyzer(ldifb.bestAvailablePlayers);
         System.out.println("---------------");
 
-        OnTheFlySimulationRunner.runDraftsOnTheFlyToChooseMyKeeperHardcoded(numDraftsOnFly, positionsWanted, ldifb, HumanOfInterest.humanID, allowUndrafted, undraftedRoundCost, qbADPChange, minKeeperRound, aaaConfiguration);
-        //OnTheFlySimulationRunner.runDraftsOnTheFlyWithHardcodedKeepers(numDraftsOnFly, currentRound, positionsWanted, ldifb, qbADPChange, hardcodedKeepers);
+        //OnTheFlySimulationRunner.runDraftsOnTheFlyToChooseMyKeeperHardcoded(numDraftsOnFly, positionsWanted, ldifb, HumanOfInterest.humanID, allowUndrafted, undraftedRoundCost, qbADPChange, minKeeperRound, aaaConfiguration);
+        OnTheFlySimulationRunner.runDraftsOnTheFlyWithHardcodedKeepers(numDraftsOnFly, currentRound, positionsWanted, ldifb, qbADPChange, hardcodedKeepers);
         //OnTheFlySimulationRunner.runDraftsOnTheFly(numDraftsOnFly, roundPick,isFun, positionsWanted, ldifb, qbADPChange);
         /*for(String userID : HumanOfInterest.getAllUserIDsHardcoded()) {
             OnTheFlySimulationRunner.runDraftsOnTheFlyToChooseMyKeeperHardcoded(numDraftsOnFly, positionsWanted, ldifb, userID, allowUndrafted, undraftedRoundCost, qbADPChange, minKeeperRound);

@@ -17,7 +17,6 @@ public class Keeper {
         }
         roundCanBeKept = rcbk;
     }
-
     public static ArrayList<Keeper> hardcodedAllPotentialKeepers(){
         Player p1 = Player.getPlayerFromSID(7588); //Javonte Williams
         int r1 = 6;

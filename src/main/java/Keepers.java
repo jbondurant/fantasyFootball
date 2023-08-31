@@ -10,7 +10,7 @@ import java.util.HashSet;
 public class Keepers {
 
     //todo, eventually, keepers will come from years prior, and will likely need to be manually added
-    //todo hardcoded 2021 value
+    //todo hardcoded 2022 value
     public static String filepathStartSeriousLeague = "seriousOldDraftsSleeper";
     public static String draftIDHardcoded2022 = "854055502148108289";
     public static String leagueIDHardcoded2022 = "854055502148108288";
@@ -152,6 +152,5 @@ public class Keepers {
         String webURL = "https://api.sleeper.app/v1/draft/" + draftID + "/picks";
         return InOutUtilities.getTodaysWebPage(webURL, filepathDraftIDStartSeriousLeague);
     }
-
 
 }
