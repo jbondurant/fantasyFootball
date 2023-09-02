@@ -1,21 +1,18 @@
-import com.mongodb.util.Hash;
-import org.checkerframework.checker.units.qual.A;
-
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
 
 public class OnTheFlySimulationRunner {
 
-    public static void runDraftsOnTheFlyToChooseMyKeeperHardcoded(int n,
-                                                                  ArrayList<Position> humanPermutationOld,
-                                                                  LiveDraftInfo ldifb,
-                                                                  String userID,
-                                                                  boolean allowUndrafted,
-                                                                  int undraftedRoundCost,
-                                                                  int qbADPChange,
-                                                                  int minKeeperRound,
-                                                                  AAAConfiguration aaaConfiguration) throws Exception {
+    public static void runDraftsToChooseMyKeeperHardcoded(int n,
+                                                          ArrayList<Position> humanPermutationOld,
+                                                          LiveDraftInfo ldifb,
+                                                          String userID,
+                                                          boolean allowUndrafted,
+                                                          int undraftedRoundCost,
+                                                          int qbADPChange,
+                                                          int minKeeperRound,
+                                                          AAAConfiguration aaaConfiguration) throws Exception {
         boolean isFun = false;
         Keepers keepers = Keepers.getKeepersForUserHardcoded(isFun, userID, true, undraftedRoundCost, aaaConfiguration);
         Keepers keepersWithoutUndrafted = Keepers.getKeepersForUserHardcoded(isFun, userID, false, undraftedRoundCost, aaaConfiguration);
@@ -144,11 +141,7 @@ public class OnTheFlySimulationRunner {
     public static void runDraftsOnTheFly(int n, int roundPick, boolean isFun, ArrayList<Position> humanPermutationOld, LiveDraftInfo ldifb, int qbADPChange) {
         int numRoundsTotal = 10;
         int numRoundsLeft = numRoundsTotal - roundPick + 1;
-        ArrayList<Position> oldHumanPermutationReduced = humanPermutationOld;
-        for(Player player : ldifb.rosterPlayers){
-            Position pos = player.position;
-            oldHumanPermutationReduced.remove(pos);
-        }
+        ArrayList<Position> oldHumanPermutationReduced = getPositionsStillNeededToDraft(humanPermutationOld, ldifb);
         BigDecimal totalScoreQB = BigDecimal.ZERO;
         BigDecimal totalScoreRB = BigDecimal.ZERO;
         BigDecimal totalScoreWR = BigDecimal.ZERO;
@@ -318,21 +311,47 @@ public class OnTheFlySimulationRunner {
 
     }
 
+    public static ArrayList<Position> createPositionsDesiredOrderIfRandomlyRemoveManyPositions(ArrayList<Position> positionsDesiredOrder, List<Position> positionsToRemove){
+        ArrayList<Position> positionsDesiredOrderCopy = Position.getCopy(positionsDesiredOrder);
+        for(Position positionToRemove : positionsToRemove){
+            positionsDesiredOrderCopy = getPositionsDesiredOrderIfRemoveSinglePosition(positionsDesiredOrderCopy, positionToRemove);
+        }
+        return positionsDesiredOrderCopy;
+    }
+
+    public static ArrayList<Position> getPositionsDesiredOrderIfRemoveSinglePosition(ArrayList<Position> positionsDesiredOrder, Position positionToRemove){
+        ArrayList<Position> positionsDesiredOrderCopy = Position.getCopy(positionsDesiredOrder);
+        ArrayList<Integer> positionToRemoveIndices = new ArrayList<>();
+        for(int j=0; j < positionsDesiredOrderCopy.size(); j++){
+            if(positionsDesiredOrderCopy.get(j).equals(positionToRemove)){
+                positionToRemoveIndices.add(j);
+            }
+        }
+        Random rand1 = new Random();
+        if(positionToRemoveIndices.size() > 0) {
+            int positionIndexToRemove = positionToRemoveIndices
+                    .get(rand1.nextInt(positionToRemoveIndices.size()));
+            positionsDesiredOrderCopy.remove(positionIndexToRemove);
+        }
+        return positionsDesiredOrderCopy;
+    }
+
+    //todo 2023 make method smaller so we call it 4 times, once per position.
     public static ArrayList<ArrayList<Position>> createDraftOrdersWithOneListPerPosAtFirstIndex(ArrayList<Position> oldHumanPermutationReduced){
-        ArrayList<Position> copy1 = new ArrayList<>();
-        ArrayList<Position> copy2 = new ArrayList<>();
-        ArrayList<Position> copy3 = new ArrayList<>();
-        ArrayList<Position> copy4 = new ArrayList<>();
+        ArrayList<Position> positionsWantedIfRemoveQB = new ArrayList<>();
+        ArrayList<Position> positionsWantedIfRemoveRB = new ArrayList<>();
+        ArrayList<Position> positionsWantedIfRemoveWR = new ArrayList<>();
+        ArrayList<Position> positionsWantedIfRemoveTE = new ArrayList<>();
         ArrayList<Integer> qbIndices = new ArrayList<>();
         ArrayList<Integer> rbIndices = new ArrayList<>();
         ArrayList<Integer> wrIndices = new ArrayList<>();
         ArrayList<Integer> teIndices = new ArrayList<>();
         for(int j=0; j < oldHumanPermutationReduced.size(); j++){
             Position pos = oldHumanPermutationReduced.get(j);
-            copy1.add(pos);
-            copy2.add(pos);
-            copy3.add(pos);
-            copy4.add(pos);
+            positionsWantedIfRemoveQB.add(pos);
+            positionsWantedIfRemoveRB.add(pos);
+            positionsWantedIfRemoveWR.add(pos);
+            positionsWantedIfRemoveTE.add(pos);
             if(pos.equals(Position.QB)){
                 qbIndices.add(j);
             }
@@ -353,48 +372,62 @@ public class OnTheFlySimulationRunner {
 
         if(qbIndices.size() > 0) {
             int qbIndexToRemove = qbIndices.get(rand1.nextInt(qbIndices.size()));
-            copy1.remove(qbIndexToRemove);
+            positionsWantedIfRemoveQB.remove(qbIndexToRemove);
         }
         if(rbIndices.size() > 0) {
             int rbIndexToRemove = rbIndices.get(rand2.nextInt(rbIndices.size()));
-            copy2.remove(rbIndexToRemove);
+            positionsWantedIfRemoveRB.remove(rbIndexToRemove);
         }
         if(wrIndices.size() > 0) {
             int wrIndexToRemove = wrIndices.get(rand3.nextInt(wrIndices.size()));
-            copy3.remove(wrIndexToRemove);
+            positionsWantedIfRemoveWR.remove(wrIndexToRemove);
         }
         if(teIndices.size() > 0) {
             int teIndexToRemove = teIndices.get(rand4.nextInt(teIndices.size()));
-            copy4.remove(teIndexToRemove);
+            positionsWantedIfRemoveTE.remove(teIndexToRemove);
         }
         ArrayList<ArrayList<Position>> allCopies = new ArrayList<>();
-        allCopies.add(copy1);
-        allCopies.add(copy2);
-        allCopies.add(copy3);
-        allCopies.add(copy4);
+        allCopies.add(positionsWantedIfRemoveQB);
+        allCopies.add(positionsWantedIfRemoveRB);
+        allCopies.add(positionsWantedIfRemoveWR);
+        allCopies.add(positionsWantedIfRemoveTE);
         return allCopies;
     }
 
-    public static void runDraftsOnTheFlyWithHardcodedKeepers(int n, int roundPick, ArrayList<Position> humanPermutationOld, LiveDraftInfo ldifb, int qbADPChange, ArrayList<Keeper> hardcodedKeepers) {
+    private static HashSet<Keeper> getMyKeepers(ArrayList<Keeper> hardcodedKeepers) {
         HashSet<Keeper> myKeepers = new HashSet<>();
         for(Keeper k : hardcodedKeepers){
             if(k.humanWhoCanKeep.equals(HumanOfInterest.humanID)){
                 myKeepers.add(k);
             }
         }
+        return myKeepers;
+    }
+
+    public static <T> boolean containsAllIncludingDuplicates(List<T> list, List<T> targets) {
+        List<T> copy = new ArrayList<>(list);
+        for (T element : targets) {
+            if (copy.contains(element)) {
+                copy.remove(element);
+            } else {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static ArrayList<Position> getPositionsStillNeededToDraft(ArrayList<Position> neededPositions, LiveDraftInfo ldifb) {
+        for(Player player : ldifb.rosterPlayers){
+            neededPositions.remove(player.position);
+        }
+        return neededPositions;
+    }
+    public static void runDraftsWithKeepers(int numSimulations, int roundPick, ArrayList<Position> desiredPositions, LiveDraftInfo ldifb, int qbADPChange, ArrayList<Keeper> keepers) {
+        HashSet<Keeper> myKeepers = getMyKeepers(keepers);
         int numRoundsTotal = 10;
         int numRoundsLeft = numRoundsTotal - roundPick + 1;
-        ArrayList<Position> oldHumanPermutationReduced = humanPermutationOld;
-        for(Player player : ldifb.rosterPlayers){
-            Position pos = player.position;
-            oldHumanPermutationReduced.remove(pos);
-        }
-        /*for(Position p : humanPermutationOld){
-            oldHumanPermutationReduced.add(p);
-        }
-        Position keeperPosition = myKeeper.player.position;
-        oldHumanPermutationReduced.remove(keeperPosition);*/
-        double numSimsDouble = n * 1.0;
+        ArrayList<Position> positionsStillNeededToDraft = getPositionsStillNeededToDraft(desiredPositions, ldifb);
+        double numSimsDouble = numSimulations * 1.0;
 
         BigDecimal totalScoreQB = BigDecimal.ZERO;
         BigDecimal totalScoreRB = BigDecimal.ZERO;
@@ -402,230 +435,213 @@ public class OnTheFlySimulationRunner {
         BigDecimal totalScoreTE = BigDecimal.ZERO;
         BigDecimal totalNumSims = BigDecimal.valueOf(numSimsDouble);
 
-        for (int i = 0; i < n; i++) {
-            Collections.shuffle(oldHumanPermutationReduced);
-            ArrayList<ArrayList<Position>> allCopies = createDraftOrdersWithOneListPerPosAtFirstIndex(oldHumanPermutationReduced);
-            ArrayList<Position> copy1 = allCopies.get(0);
-            ArrayList<Position> copy2 = allCopies.get(1);
-            ArrayList<Position> copy3 = allCopies.get(2);
-            ArrayList<Position> copy4 = allCopies.get(3);
+        for (int i = 0; i < numSimulations; i++) {
+            Collections.shuffle(positionsStillNeededToDraft);
 
-            ArrayList<ArrayList<Position>> allCopies1 = createDraftOrdersWithOneListPerPosAtFirstIndex(copy1);
-            ArrayList<Position> copy11 = allCopies1.get(0);
-            ArrayList<Position> copy12 = allCopies1.get(1);
-            ArrayList<Position> copy13 = allCopies1.get(2);
-            ArrayList<Position> copy14 = allCopies1.get(3);
+            ArrayList<Position> positionsToDraftMinusQBQB = createPositionsDesiredOrderIfRandomlyRemoveManyPositions(positionsStillNeededToDraft, List.of(Position.QB, Position.QB));
+            ArrayList<Position> positionsToDraftMinusQBRB = createPositionsDesiredOrderIfRandomlyRemoveManyPositions(positionsStillNeededToDraft, List.of(Position.QB, Position.RB));
+            ArrayList<Position> positionsToDraftMinusQBWR = createPositionsDesiredOrderIfRandomlyRemoveManyPositions(positionsStillNeededToDraft, List.of(Position.QB, Position.WR));
+            ArrayList<Position> positionsToDraftMinusQBTE = createPositionsDesiredOrderIfRandomlyRemoveManyPositions(positionsStillNeededToDraft, List.of(Position.QB, Position.TE));
 
-            ArrayList<ArrayList<Position>> allCopies2 = createDraftOrdersWithOneListPerPosAtFirstIndex(copy2);
-            ArrayList<Position> copy21 = allCopies2.get(0);
-            ArrayList<Position> copy22 = allCopies2.get(1);
-            ArrayList<Position> copy23 = allCopies2.get(2);
-            ArrayList<Position> copy24 = allCopies2.get(3);
+            ArrayList<Position> positionsToDraftMinusRBQB = createPositionsDesiredOrderIfRandomlyRemoveManyPositions(positionsStillNeededToDraft, List.of(Position.RB, Position.QB));
+            ArrayList<Position> positionsToDraftMinusRBRB = createPositionsDesiredOrderIfRandomlyRemoveManyPositions(positionsStillNeededToDraft, List.of(Position.RB, Position.RB));
+            ArrayList<Position> positionsToDraftMinusRBWR = createPositionsDesiredOrderIfRandomlyRemoveManyPositions(positionsStillNeededToDraft, List.of(Position.RB, Position.WR));
+            ArrayList<Position> positionsToDraftMinusRBTE = createPositionsDesiredOrderIfRandomlyRemoveManyPositions(positionsStillNeededToDraft, List.of(Position.RB, Position.TE));
 
-            ArrayList<ArrayList<Position>> allCopies3 = createDraftOrdersWithOneListPerPosAtFirstIndex(copy3);
-            ArrayList<Position> copy31 = allCopies3.get(0);
-            ArrayList<Position> copy32 = allCopies3.get(1);
-            ArrayList<Position> copy33 = allCopies3.get(2);
-            ArrayList<Position> copy34 = allCopies3.get(3);
+            ArrayList<Position> positionsToDraftMinusWRQB = createPositionsDesiredOrderIfRandomlyRemoveManyPositions(positionsStillNeededToDraft, List.of(Position.WR, Position.QB));
+            ArrayList<Position> positionsToDraftMinusWRRB = createPositionsDesiredOrderIfRandomlyRemoveManyPositions(positionsStillNeededToDraft, List.of(Position.WR, Position.RB));
+            ArrayList<Position> positionsToDraftMinusWRWR = createPositionsDesiredOrderIfRandomlyRemoveManyPositions(positionsStillNeededToDraft, List.of(Position.WR, Position.WR));
+            ArrayList<Position> positionsToDraftMinusWRTE = createPositionsDesiredOrderIfRandomlyRemoveManyPositions(positionsStillNeededToDraft, List.of(Position.WR, Position.TE));
 
-            ArrayList<ArrayList<Position>> allCopies4 = createDraftOrdersWithOneListPerPosAtFirstIndex(copy4);
-            ArrayList<Position> copy41 = allCopies4.get(0);
-            ArrayList<Position> copy42 = allCopies4.get(1);
-            ArrayList<Position> copy43 = allCopies4.get(2);
-            ArrayList<Position> copy44 = allCopies4.get(3);
+            ArrayList<Position> positionsToDraftMinusTEQB = createPositionsDesiredOrderIfRandomlyRemoveManyPositions(positionsStillNeededToDraft, List.of(Position.TE, Position.QB));
+            ArrayList<Position> positionsToDraftMinusTERB = createPositionsDesiredOrderIfRandomlyRemoveManyPositions(positionsStillNeededToDraft, List.of(Position.TE, Position.RB));
+            ArrayList<Position> positionsToDraftMinusTEWR = createPositionsDesiredOrderIfRandomlyRemoveManyPositions(positionsStillNeededToDraft, List.of(Position.TE, Position.WR));
+            ArrayList<Position> positionsToDraftMinusTETE = createPositionsDesiredOrderIfRandomlyRemoveManyPositions(positionsStillNeededToDraft, List.of(Position.TE, Position.TE));
 
 
-            ArrayList<Position> humanPermutationReducedRandom = oldHumanPermutationReduced;
-            ArrayList<Position> humanPermutationPickQB1 = new ArrayList<>();
-            humanPermutationPickQB1.add(Position.QB);
-            humanPermutationPickQB1.add(Position.QB);
-            ArrayList<Position> humanPermutationPickQB2 = new ArrayList<>();
-            humanPermutationPickQB2.add(Position.QB);
-            humanPermutationPickQB2.add(Position.RB);
-            ArrayList<Position> humanPermutationPickQB3 = new ArrayList<>();
-            humanPermutationPickQB3.add(Position.QB);
-            humanPermutationPickQB3.add(Position.WR);
-            ArrayList<Position> humanPermutationPickQB4 = new ArrayList<>();
-            humanPermutationPickQB4.add(Position.QB);
-            humanPermutationPickQB4.add(Position.TE);
+            ArrayList<Position> humanPermutationReducedRandom = positionsStillNeededToDraft;
+            ArrayList<Position> humanPermutationPickQBQB = new ArrayList<>();
+            humanPermutationPickQBQB.add(Position.QB);
+            humanPermutationPickQBQB.add(Position.QB);
+            ArrayList<Position> humanPermutationPickQBRB = new ArrayList<>();
+            humanPermutationPickQBRB.add(Position.QB);
+            humanPermutationPickQBRB.add(Position.RB);
+            ArrayList<Position> humanPermutationPickQBWR = new ArrayList<>();
+            humanPermutationPickQBWR.add(Position.QB);
+            humanPermutationPickQBWR.add(Position.WR);
+            ArrayList<Position> humanPermutationPickQBTE = new ArrayList<>();
+            humanPermutationPickQBTE.add(Position.QB);
+            humanPermutationPickQBTE.add(Position.TE);
 
-            ArrayList<Position> humanPermutationPickRB1 = new ArrayList<>();
-            humanPermutationPickRB1.add(Position.RB);
-            humanPermutationPickRB1.add(Position.QB);
-            ArrayList<Position> humanPermutationPickRB2 = new ArrayList<>();
-            humanPermutationPickRB2.add(Position.RB);
-            humanPermutationPickRB2.add(Position.RB);
-            ArrayList<Position> humanPermutationPickRB3 = new ArrayList<>();
-            humanPermutationPickRB3.add(Position.RB);
-            humanPermutationPickRB3.add(Position.WR);
-            ArrayList<Position> humanPermutationPickRB4 = new ArrayList<>();
-            humanPermutationPickRB4.add(Position.RB);
-            humanPermutationPickRB4.add(Position.TE);
+            ArrayList<Position> humanPermutationPickRBQB = new ArrayList<>();
+            humanPermutationPickRBQB.add(Position.RB);
+            humanPermutationPickRBQB.add(Position.QB);
+            ArrayList<Position> humanPermutationPickRBRB = new ArrayList<>();
+            humanPermutationPickRBRB.add(Position.RB);
+            humanPermutationPickRBRB.add(Position.RB);
+            ArrayList<Position> humanPermutationPickRBWR = new ArrayList<>();
+            humanPermutationPickRBWR.add(Position.RB);
+            humanPermutationPickRBWR.add(Position.WR);
+            ArrayList<Position> humanPermutationPickRBTE = new ArrayList<>();
+            humanPermutationPickRBTE.add(Position.RB);
+            humanPermutationPickRBTE.add(Position.TE);
 
-            ArrayList<Position> humanPermutationPickWR1 = new ArrayList<>();
-            humanPermutationPickWR1.add(Position.WR);
-            humanPermutationPickWR1.add(Position.QB);
-            ArrayList<Position> humanPermutationPickWR2 = new ArrayList<>();
-            humanPermutationPickWR2.add(Position.WR);
-            humanPermutationPickWR2.add(Position.RB);
-            ArrayList<Position> humanPermutationPickWR3 = new ArrayList<>();
-            humanPermutationPickWR3.add(Position.WR);
-            humanPermutationPickWR3.add(Position.WR);
-            ArrayList<Position> humanPermutationPickWR4 = new ArrayList<>();
-            humanPermutationPickWR4.add(Position.WR);
-            humanPermutationPickWR4.add(Position.TE);
+            ArrayList<Position> humanPermutationPickWRQB = new ArrayList<>();
+            humanPermutationPickWRQB.add(Position.WR);
+            humanPermutationPickWRQB.add(Position.QB);
+            ArrayList<Position> humanPermutationPickWRRB = new ArrayList<>();
+            humanPermutationPickWRRB.add(Position.WR);
+            humanPermutationPickWRRB.add(Position.RB);
+            ArrayList<Position> humanPermutationPickWRWR = new ArrayList<>();
+            humanPermutationPickWRWR.add(Position.WR);
+            humanPermutationPickWRWR.add(Position.WR);
+            ArrayList<Position> humanPermutationPickWRTE = new ArrayList<>();
+            humanPermutationPickWRTE.add(Position.WR);
+            humanPermutationPickWRTE.add(Position.TE);
 
-            ArrayList<Position> humanPermutationPickTE1 = new ArrayList<>();
-            humanPermutationPickTE1.add(Position.TE);
-            humanPermutationPickTE1.add(Position.QB);
-            ArrayList<Position> humanPermutationPickTE2 = new ArrayList<>();
-            humanPermutationPickTE2.add(Position.TE);
-            humanPermutationPickTE2.add(Position.RB);
-            ArrayList<Position> humanPermutationPickTE3 = new ArrayList<>();
-            humanPermutationPickTE3.add(Position.TE);
-            humanPermutationPickTE3.add(Position.WR);
-            ArrayList<Position> humanPermutationPickTE4 = new ArrayList<>();
-            humanPermutationPickTE4.add(Position.TE);
-            humanPermutationPickTE4.add(Position.TE);
+            ArrayList<Position> humanPermutationPickTEQB = new ArrayList<>();
+            humanPermutationPickTEQB.add(Position.TE);
+            humanPermutationPickTEQB.add(Position.QB);
+            ArrayList<Position> humanPermutationPickTERB = new ArrayList<>();
+            humanPermutationPickTERB.add(Position.TE);
+            humanPermutationPickTERB.add(Position.RB);
+            ArrayList<Position> humanPermutationPickTEWR = new ArrayList<>();
+            humanPermutationPickTEWR.add(Position.TE);
+            humanPermutationPickTEWR.add(Position.WR);
+            ArrayList<Position> humanPermutationPickTETE = new ArrayList<>();
+            humanPermutationPickTETE.add(Position.TE);
+            humanPermutationPickTETE.add(Position.TE);
 
-            for(Position pos : copy11){
-                humanPermutationPickQB1.add(pos);
+            for (Position pos : positionsToDraftMinusQBQB) {
+                humanPermutationPickQBQB.add(pos);
             }
-            for(Position pos : copy12){
-                humanPermutationPickQB2.add(pos);
+            for (Position pos : positionsToDraftMinusQBRB) {
+                humanPermutationPickQBRB.add(pos);
             }
-            for(Position pos : copy13){
-                humanPermutationPickQB3.add(pos);
+            for (Position pos : positionsToDraftMinusQBWR) {
+                humanPermutationPickQBWR.add(pos);
             }
-            for(Position pos : copy14){
-                humanPermutationPickQB4.add(pos);
+            for (Position pos : positionsToDraftMinusQBTE) {
+                humanPermutationPickQBTE.add(pos);
             }
 
-            for(Position pos : copy21){
-                humanPermutationPickRB1.add(pos);
+            for (Position pos : positionsToDraftMinusRBQB) {
+                humanPermutationPickRBQB.add(pos);
             }
-            for(Position pos : copy22){
-                humanPermutationPickRB2.add(pos);
+            for (Position pos : positionsToDraftMinusRBRB) {
+                humanPermutationPickRBRB.add(pos);
             }
-            for(Position pos : copy23){
-                humanPermutationPickRB3.add(pos);
+            for (Position pos : positionsToDraftMinusRBWR) {
+                humanPermutationPickRBWR.add(pos);
             }
-            for(Position pos : copy24){
-                humanPermutationPickRB4.add(pos);
-            }
-
-            for(Position pos : copy31){
-                humanPermutationPickWR1.add(pos);
-            }
-            for(Position pos : copy32){
-                humanPermutationPickWR2.add(pos);
-            }
-            for(Position pos : copy33){
-                humanPermutationPickWR3.add(pos);
-            }
-            for(Position pos : copy34){
-                humanPermutationPickWR4.add(pos);
+            for (Position pos : positionsToDraftMinusRBTE) {
+                humanPermutationPickRBTE.add(pos);
             }
 
-            for(Position pos : copy41){
-                humanPermutationPickTE1.add(pos);
+            for (Position pos : positionsToDraftMinusWRQB) {
+                humanPermutationPickWRQB.add(pos);
             }
-            for(Position pos : copy42){
-                humanPermutationPickTE2.add(pos);
+            for (Position pos : positionsToDraftMinusWRRB) {
+                humanPermutationPickWRRB.add(pos);
             }
-            for(Position pos : copy43){
-                humanPermutationPickTE3.add(pos);
+            for (Position pos : positionsToDraftMinusWRWR) {
+                humanPermutationPickWRWR.add(pos);
             }
-            for(Position pos : copy44){
-                humanPermutationPickTE4.add(pos);
-            }
-
-            if(humanPermutationReducedRandom.contains(Position.QB)) {
-                double draftScoreQB = 0.0;
-                if(copy1.contains(Position.QB)) {
-                    SimulationDraft simDraftQB1 = SimulationDraft.getSimulationPermPartialWithHardcodedKeepers(myKeepers, humanPermutationPickQB1, ldifb.draftedPlayers, numRoundsLeft, qbADPChange, hardcodedKeepers);
-                    draftScoreQB = Math.max(draftScoreQB, simDraftQB1.scoreDraft());
-                }
-                if(copy1.contains(Position.RB)) {
-                    SimulationDraft simDraftQB2 = SimulationDraft.getSimulationPermPartialWithHardcodedKeepers(myKeepers, humanPermutationPickQB2, ldifb.draftedPlayers, numRoundsLeft, qbADPChange, hardcodedKeepers);
-                    draftScoreQB = Math.max(draftScoreQB, simDraftQB2.scoreDraft());
-                }
-                if(copy1.contains(Position.WR)) {
-                    SimulationDraft simDraftQB3 = SimulationDraft.getSimulationPermPartialWithHardcodedKeepers(myKeepers, humanPermutationPickQB3, ldifb.draftedPlayers, numRoundsLeft, qbADPChange, hardcodedKeepers);
-                    draftScoreQB = Math.max(draftScoreQB, simDraftQB3.scoreDraft());
-                }
-                if(copy1.contains(Position.TE)) {
-                    SimulationDraft simDraftQB4 = SimulationDraft.getSimulationPermPartialWithHardcodedKeepers(myKeepers, humanPermutationPickQB4, ldifb.draftedPlayers, numRoundsLeft, qbADPChange, hardcodedKeepers);
-                    draftScoreQB = Math.max(draftScoreQB, simDraftQB4.scoreDraft());
-                }
-
-                totalScoreQB = totalScoreQB.add(BigDecimal.valueOf(draftScoreQB));
+            for (Position pos : positionsToDraftMinusWRTE) {
+                humanPermutationPickWRTE.add(pos);
             }
 
-
-            if(humanPermutationReducedRandom.contains(Position.RB)) {
-                double draftScoreRB = 0.0;
-                if(copy2.contains(Position.QB)){
-                    SimulationDraft simDraftRB1 = SimulationDraft.getSimulationPermPartialWithHardcodedKeepers(myKeepers, humanPermutationPickRB1, ldifb.draftedPlayers, numRoundsLeft, qbADPChange, hardcodedKeepers);
-                    draftScoreRB = Math.max(draftScoreRB, simDraftRB1.scoreDraft());
-                }
-                if(copy2.contains(Position.RB)){
-                    SimulationDraft simDraftRB2 = SimulationDraft.getSimulationPermPartialWithHardcodedKeepers(myKeepers, humanPermutationPickRB2, ldifb.draftedPlayers, numRoundsLeft, qbADPChange, hardcodedKeepers);
-                    draftScoreRB = Math.max(draftScoreRB, simDraftRB2.scoreDraft());
-                }
-                if(copy2.contains(Position.WR)){
-                    SimulationDraft simDraftRB3 = SimulationDraft.getSimulationPermPartialWithHardcodedKeepers(myKeepers, humanPermutationPickRB3, ldifb.draftedPlayers, numRoundsLeft, qbADPChange, hardcodedKeepers);
-                    draftScoreRB = Math.max(draftScoreRB, simDraftRB3.scoreDraft());
-                }
-                if(copy2.contains(Position.TE)){
-                    SimulationDraft simDraftRB4 = SimulationDraft.getSimulationPermPartialWithHardcodedKeepers(myKeepers, humanPermutationPickRB4, ldifb.draftedPlayers, numRoundsLeft, qbADPChange, hardcodedKeepers);
-                    draftScoreRB = Math.max(draftScoreRB, simDraftRB4.scoreDraft());
-                }
-                totalScoreRB = totalScoreRB.add(BigDecimal.valueOf(draftScoreRB));
+            for (Position pos : positionsToDraftMinusTEQB) {
+                humanPermutationPickTEQB.add(pos);
+            }
+            for (Position pos : positionsToDraftMinusTERB) {
+                humanPermutationPickTERB.add(pos);
+            }
+            for (Position pos : positionsToDraftMinusTEWR) {
+                humanPermutationPickTEWR.add(pos);
+            }
+            for (Position pos : positionsToDraftMinusTETE) {
+                humanPermutationPickTETE.add(pos);
             }
 
+            double draftScoreQB = 0.0;
+            if (containsAllIncludingDuplicates(humanPermutationReducedRandom, List.of(Position.QB, Position.QB))) {
+                SimulationDraft simDraftQB1 = SimulationDraft.getSimulationPermPartialWithHardcodedKeepers(myKeepers, humanPermutationPickQBQB, ldifb.draftedPlayers, numRoundsLeft, qbADPChange, keepers);
+                draftScoreQB = Math.max(draftScoreQB, simDraftQB1.scoreDraft());
+            }
+            if (containsAllIncludingDuplicates(humanPermutationReducedRandom, List.of(Position.QB, Position.RB))) {
+                SimulationDraft simDraftQB2 = SimulationDraft.getSimulationPermPartialWithHardcodedKeepers(myKeepers, humanPermutationPickQBRB, ldifb.draftedPlayers, numRoundsLeft, qbADPChange, keepers);
+                draftScoreQB = Math.max(draftScoreQB, simDraftQB2.scoreDraft());
+            }
+            if (containsAllIncludingDuplicates(humanPermutationReducedRandom, List.of(Position.QB, Position.WR))) {
+                SimulationDraft simDraftQB3 = SimulationDraft.getSimulationPermPartialWithHardcodedKeepers(myKeepers, humanPermutationPickQBWR, ldifb.draftedPlayers, numRoundsLeft, qbADPChange, keepers);
+                draftScoreQB = Math.max(draftScoreQB, simDraftQB3.scoreDraft());
+            }
+            if (containsAllIncludingDuplicates(humanPermutationReducedRandom, List.of(Position.QB, Position.TE))) {
+                SimulationDraft simDraftQB4 = SimulationDraft.getSimulationPermPartialWithHardcodedKeepers(myKeepers, humanPermutationPickQBTE, ldifb.draftedPlayers, numRoundsLeft, qbADPChange, keepers);
+                draftScoreQB = Math.max(draftScoreQB, simDraftQB4.scoreDraft());
+            }
+            totalScoreQB = totalScoreQB.add(BigDecimal.valueOf(draftScoreQB));
 
-            if(humanPermutationReducedRandom.contains(Position.WR)) {
-                double draftScoreWR = 0.0;
-                if(copy3.contains(Position.QB)) {
-                    SimulationDraft simDraftWR1 = SimulationDraft.getSimulationPermPartialWithHardcodedKeepers(myKeepers, humanPermutationPickWR1, ldifb.draftedPlayers, numRoundsLeft, qbADPChange, hardcodedKeepers);
-                    draftScoreWR = Math.max(draftScoreWR, simDraftWR1.scoreDraft());
-                }
-                if(copy3.contains(Position.RB)) {
-                    SimulationDraft simDraftWR2 = SimulationDraft.getSimulationPermPartialWithHardcodedKeepers(myKeepers, humanPermutationPickWR2, ldifb.draftedPlayers, numRoundsLeft, qbADPChange, hardcodedKeepers);
-                    draftScoreWR = Math.max(draftScoreWR, simDraftWR2.scoreDraft());
-                }
-                if(copy3.contains(Position.WR)) {
-                    SimulationDraft simDraftWR3 = SimulationDraft.getSimulationPermPartialWithHardcodedKeepers(myKeepers, humanPermutationPickWR3, ldifb.draftedPlayers, numRoundsLeft, qbADPChange, hardcodedKeepers);
+
+            double draftScoreRB = 0.0;
+            if (containsAllIncludingDuplicates(humanPermutationReducedRandom, List.of(Position.RB, Position.QB))) {
+                SimulationDraft simDraftRB1 = SimulationDraft.getSimulationPermPartialWithHardcodedKeepers(myKeepers, humanPermutationPickRBQB, ldifb.draftedPlayers, numRoundsLeft, qbADPChange, keepers);
+                draftScoreRB = Math.max(draftScoreRB, simDraftRB1.scoreDraft());
+            }
+            if (containsAllIncludingDuplicates(humanPermutationReducedRandom, List.of(Position.RB, Position.RB))) {
+                SimulationDraft simDraftRB2 = SimulationDraft.getSimulationPermPartialWithHardcodedKeepers(myKeepers, humanPermutationPickRBRB, ldifb.draftedPlayers, numRoundsLeft, qbADPChange, keepers);
+                draftScoreRB = Math.max(draftScoreRB, simDraftRB2.scoreDraft());
+            }
+            if (containsAllIncludingDuplicates(humanPermutationReducedRandom, List.of(Position.RB, Position.WR))) {
+                SimulationDraft simDraftRB3 = SimulationDraft.getSimulationPermPartialWithHardcodedKeepers(myKeepers, humanPermutationPickRBWR, ldifb.draftedPlayers, numRoundsLeft, qbADPChange, keepers);
+                draftScoreRB = Math.max(draftScoreRB, simDraftRB3.scoreDraft());
+            }
+            if (containsAllIncludingDuplicates(humanPermutationReducedRandom, List.of(Position.RB, Position.TE))) {
+                SimulationDraft simDraftRB4 = SimulationDraft.getSimulationPermPartialWithHardcodedKeepers(myKeepers, humanPermutationPickRBTE, ldifb.draftedPlayers, numRoundsLeft, qbADPChange, keepers);
+                draftScoreRB = Math.max(draftScoreRB, simDraftRB4.scoreDraft());
+            }
+            totalScoreRB = totalScoreRB.add(BigDecimal.valueOf(draftScoreRB));
+
+            double draftScoreWR = 0.0;
+            if (containsAllIncludingDuplicates(humanPermutationReducedRandom, List.of(Position.WR, Position.QB))) {
+                SimulationDraft simDraftWR1 = SimulationDraft.getSimulationPermPartialWithHardcodedKeepers(myKeepers, humanPermutationPickWRQB, ldifb.draftedPlayers, numRoundsLeft, qbADPChange, keepers);
+                draftScoreWR = Math.max(draftScoreWR, simDraftWR1.scoreDraft());
+            }
+            if (containsAllIncludingDuplicates(humanPermutationReducedRandom, List.of(Position.WR, Position.RB))) {
+                SimulationDraft simDraftWR2 = SimulationDraft.getSimulationPermPartialWithHardcodedKeepers(myKeepers, humanPermutationPickWRRB, ldifb.draftedPlayers, numRoundsLeft, qbADPChange, keepers);
+                draftScoreWR = Math.max(draftScoreWR, simDraftWR2.scoreDraft());
+                if (containsAllIncludingDuplicates(humanPermutationReducedRandom, List.of(Position.WR, Position.WR))) {
+                    SimulationDraft simDraftWR3 = SimulationDraft.getSimulationPermPartialWithHardcodedKeepers(myKeepers, humanPermutationPickWRWR, ldifb.draftedPlayers, numRoundsLeft, qbADPChange, keepers);
                     draftScoreWR = Math.max(draftScoreWR, simDraftWR3.scoreDraft());
                 }
-                if(copy3.contains(Position.TE)) {
-                    SimulationDraft simDraftWR4 = SimulationDraft.getSimulationPermPartialWithHardcodedKeepers(myKeepers, humanPermutationPickWR4, ldifb.draftedPlayers, numRoundsLeft, qbADPChange, hardcodedKeepers);
+                if (containsAllIncludingDuplicates(humanPermutationReducedRandom, List.of(Position.WR, Position.TE))) {
+                    SimulationDraft simDraftWR4 = SimulationDraft.getSimulationPermPartialWithHardcodedKeepers(myKeepers, humanPermutationPickWRTE, ldifb.draftedPlayers, numRoundsLeft, qbADPChange, keepers);
                     draftScoreWR = Math.max(draftScoreWR, simDraftWR4.scoreDraft());
                 }
                 totalScoreWR = totalScoreWR.add(BigDecimal.valueOf(draftScoreWR));
-            }
-            if(humanPermutationReducedRandom.contains(Position.TE)) {
+
                 double draftScoreTE = 0.0;
-                if(copy4.contains(Position.QB)){
-                    SimulationDraft simDraftTE1 = SimulationDraft.getSimulationPermPartialWithHardcodedKeepers(myKeepers, humanPermutationPickTE1, ldifb.draftedPlayers, numRoundsLeft, qbADPChange, hardcodedKeepers);
+                if (containsAllIncludingDuplicates(humanPermutationReducedRandom, List.of(Position.TE, Position.QB))) {
+                    SimulationDraft simDraftTE1 = SimulationDraft.getSimulationPermPartialWithHardcodedKeepers(myKeepers, humanPermutationPickTEQB, ldifb.draftedPlayers, numRoundsLeft, qbADPChange, keepers);
                     draftScoreTE = simDraftTE1.scoreDraft();
                 }
-                if(copy4.contains(Position.RB)){
-                    SimulationDraft simDraftTE2 = SimulationDraft.getSimulationPermPartialWithHardcodedKeepers(myKeepers, humanPermutationPickTE2, ldifb.draftedPlayers, numRoundsLeft, qbADPChange, hardcodedKeepers);
+                if (containsAllIncludingDuplicates(humanPermutationReducedRandom, List.of(Position.TE, Position.RB))) {
+                    SimulationDraft simDraftTE2 = SimulationDraft.getSimulationPermPartialWithHardcodedKeepers(myKeepers, humanPermutationPickTERB, ldifb.draftedPlayers, numRoundsLeft, qbADPChange, keepers);
                     draftScoreTE = simDraftTE2.scoreDraft();
                 }
-                if(copy4.contains(Position.WR)){
-                    SimulationDraft simDraftTE3 = SimulationDraft.getSimulationPermPartialWithHardcodedKeepers(myKeepers, humanPermutationPickTE3, ldifb.draftedPlayers, numRoundsLeft, qbADPChange, hardcodedKeepers);
+                if (containsAllIncludingDuplicates(humanPermutationReducedRandom, List.of(Position.TE, Position.WR))) {
+                    SimulationDraft simDraftTE3 = SimulationDraft.getSimulationPermPartialWithHardcodedKeepers(myKeepers, humanPermutationPickTEWR, ldifb.draftedPlayers, numRoundsLeft, qbADPChange, keepers);
                     draftScoreTE = simDraftTE3.scoreDraft();
                 }
-                if(copy4.contains(Position.TE)){
-                    SimulationDraft simDraftTE4 = SimulationDraft.getSimulationPermPartialWithHardcodedKeepers(myKeepers, humanPermutationPickTE4, ldifb.draftedPlayers, numRoundsLeft, qbADPChange, hardcodedKeepers);
+                if (containsAllIncludingDuplicates(humanPermutationReducedRandom, List.of(Position.TE, Position.TE))) {
+                    SimulationDraft simDraftTE4 = SimulationDraft.getSimulationPermPartialWithHardcodedKeepers(myKeepers, humanPermutationPickTETE, ldifb.draftedPlayers, numRoundsLeft, qbADPChange, keepers);
                     draftScoreTE = simDraftTE4.scoreDraft();
                 }
                 totalScoreTE = totalScoreTE.add(BigDecimal.valueOf(draftScoreTE));
             }
         }
+
         double scoreQB = totalScoreQB.divide(totalNumSims, RoundingMode.HALF_UP).doubleValue();
         double scoreRB = totalScoreRB.divide(totalNumSims, RoundingMode.HALF_UP).doubleValue();
         double scoreWR = totalScoreWR.divide(totalNumSims, RoundingMode.HALF_UP).doubleValue();
@@ -699,6 +715,5 @@ public class OnTheFlySimulationRunner {
             System.out.println("Pick " + name + " to Score:\t" + s.score);
         }
     }
-
 
 }

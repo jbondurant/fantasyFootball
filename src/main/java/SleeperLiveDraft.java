@@ -59,12 +59,12 @@ public class SleeperLiveDraft {
         Instant start = Instant.now();
         boolean isFun = false;
         String draftID = "1003537678798794752";
-        int numDraftsOnFly = 500;//todo change back to 300
+        int numDraftsOnFly = 5000;//todo change back to 300
         boolean allowUndrafted = false;
         int undraftedRoundCost = 10;
         int minKeeperRound = 3;
         int qbADPChange = 18;//at least 6, if not 12
-        ArrayList<Keeper> hardcodedKeepers = aaaConfiguration.getTodaysKeepers();
+        ArrayList<Keeper> keepers = aaaConfiguration.getTodaysKeepers();
         //tried 1261, 1351, 1441
         ArrayList positionsWanted = HumanStrategy.nonPermutedPositions(1,2,6,1);
 
@@ -76,8 +76,8 @@ public class SleeperLiveDraft {
         LiveDraftInfo.LiveDraftPotentialMoveAnalyzer(ldifb.bestAvailablePlayers);
         System.out.println("---------------");
 
-        //OnTheFlySimulationRunner.runDraftsOnTheFlyToChooseMyKeeperHardcoded(numDraftsOnFly, positionsWanted, ldifb, HumanOfInterest.humanID, allowUndrafted, undraftedRoundCost, qbADPChange, minKeeperRound, aaaConfiguration);
-        OnTheFlySimulationRunner.runDraftsOnTheFlyWithHardcodedKeepers(numDraftsOnFly, currentRound, positionsWanted, ldifb, qbADPChange, hardcodedKeepers);
+        //OnTheFlySimulationRunner.runDraftsToChooseMyKeeperHardcoded(numDraftsOnFly, positionsWanted, ldifb, HumanOfInterest.humanID, allowUndrafted, undraftedRoundCost, qbADPChange, minKeeperRound, aaaConfiguration);
+        OnTheFlySimulationRunner.runDraftsWithKeepers(numDraftsOnFly, currentRound, positionsWanted, ldifb, qbADPChange, keepers);
         //OnTheFlySimulationRunner.runDraftsOnTheFly(numDraftsOnFly, roundPick,isFun, positionsWanted, ldifb, qbADPChange);
         /*for(String userID : HumanOfInterest.getAllUserIDsHardcoded()) {
             OnTheFlySimulationRunner.runDraftsOnTheFlyToChooseMyKeeperHardcoded(numDraftsOnFly, positionsWanted, ldifb, userID, allowUndrafted, undraftedRoundCost, qbADPChange, minKeeperRound);
