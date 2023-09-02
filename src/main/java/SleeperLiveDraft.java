@@ -58,15 +58,15 @@ public class SleeperLiveDraft {
         AAAConfiguration aaaConfiguration = new AAAConfigurationSleeperLeague();
         Instant start = Instant.now();
         boolean isFun = false;
-        String draftID = "1002410801145274368";
-        int numDraftsOnFly = 160;//todo change back to 300
+        String draftID = "1003537678798794752";
+        int numDraftsOnFly = 500;//todo change back to 300
         boolean allowUndrafted = false;
         int undraftedRoundCost = 10;
         int minKeeperRound = 3;
         int qbADPChange = 18;//at least 6, if not 12
         ArrayList<Keeper> hardcodedKeepers = aaaConfiguration.getTodaysKeepers();
         //tried 1261, 1351, 1441
-        ArrayList positionsWanted = HumanStrategy.nonPermutedPositions(1,4,4,1);
+        ArrayList positionsWanted = HumanStrategy.nonPermutedPositions(1,2,6,1);
 
         LiveDraftInfo ldifb = getDraftedPlayersMock(draftID, isFun);
         int numDraftedPlayers = ldifb.draftedPlayers.size();

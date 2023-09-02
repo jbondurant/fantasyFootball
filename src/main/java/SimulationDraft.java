@@ -189,21 +189,10 @@ public class SimulationDraft {
     public static double runSimulationDraftPermPartial(SleeperLeague sl, boolean isFun, ArrayList<Position> humanPerm, ArrayList<Player> draftedPlayers, int roundsLeft, int qbADPChange){
         for(User user : sl.sleeperDraftInfo.usersInfo){
             if(user.userID.equals(myID)){
-                if(isFun) {
-                    user.strategy = HumanStrategy.getFPHumanStrategyFunFromPerm(humanPerm);
-                }
-                else{
-                    user.strategy = HumanStrategy.getFPHumanStrategySeriousFromPerm(humanPerm);
-                    int y=1;
-                }
+                user.strategy = HumanStrategy.getFPHumanStrategySeriousFromPerm(humanPerm);
             }
             else{
-                if(isFun) {
-                    user.setStrategy(StrategyBot.getSleeperFunStrategy());
-                }
-                else{
                     user.setStrategy(StrategyBot.getSleeperSeriousStrategy(qbADPChange));
-                }
             }
         }
         StrategyBot commonBotStrategy;
