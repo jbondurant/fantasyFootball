@@ -62,7 +62,7 @@ public class LiveDraftInfo {
         String te3Name = bap.tightEndRT3.player.firstName + " " + bap.tightEndRT3.player.lastName;
         String def3Name = bap.defenseRT3.player.firstName + " " + bap.defenseRT3.player.lastName;
 
-        ArrayList<Score> scoreList = SleeperLeague.getScoreList(false);
+        ArrayList<Score> scoreList = SleeperLeague.getScoreList();
         int qb1ScoreRound = (int) Player.scorePlayer(scoreList, bap.quarterbackRT1.player);
         int qb2ScoreRound = (int) Player.scorePlayer(scoreList, bap.quarterbackRT2.player);
         int qb3ScoreRound = (int) Player.scorePlayer(scoreList, bap.quarterbackRT3.player);

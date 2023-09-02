@@ -247,7 +247,7 @@ public class OnTheFlySimulationRunner {
         double scoreTE = totalScoreTE.divide(totalNumSims, RoundingMode.HALF_UP).doubleValue();
 
         BestAvailablePlayers bap = ldifb.bestAvailablePlayers;
-        ArrayList<Score> scoreList = SleeperLeague.getScoreList(ldifb.isFunLeague);
+        ArrayList<Score> scoreList = SleeperLeague.getScoreList();
 
         Player pQB1 = bap.quarterbackRT1.player;
         double sQB1 = Player.scorePlayer(scoreList, pQB1);
@@ -376,7 +376,6 @@ public class OnTheFlySimulationRunner {
     }
 
     public static void runDraftsOnTheFlyWithHardcodedKeepers(int n, int roundPick, ArrayList<Position> humanPermutationOld, LiveDraftInfo ldifb, int qbADPChange, ArrayList<Keeper> hardcodedKeepers) {
-        boolean isFun = false;
         HashSet<Keeper> myKeepers = new HashSet<>();
         for(Keeper k : hardcodedKeepers){
             if(k.humanWhoCanKeep.equals(HumanOfInterest.humanID)){
@@ -545,19 +544,19 @@ public class OnTheFlySimulationRunner {
                 double draftScoreQB = 0.0;
                 if(copy1.contains(Position.QB)) {
                     SimulationDraft simDraftQB1 = SimulationDraft.getSimulationPermPartialWithHardcodedKeepers(myKeepers, humanPermutationPickQB1, ldifb.draftedPlayers, numRoundsLeft, qbADPChange, hardcodedKeepers);
-                    draftScoreQB = Math.max(draftScoreQB, simDraftQB1.scoreDraft(isFun));
+                    draftScoreQB = Math.max(draftScoreQB, simDraftQB1.scoreDraft());
                 }
                 if(copy1.contains(Position.RB)) {
                     SimulationDraft simDraftQB2 = SimulationDraft.getSimulationPermPartialWithHardcodedKeepers(myKeepers, humanPermutationPickQB2, ldifb.draftedPlayers, numRoundsLeft, qbADPChange, hardcodedKeepers);
-                    draftScoreQB = Math.max(draftScoreQB, simDraftQB2.scoreDraft(isFun));
+                    draftScoreQB = Math.max(draftScoreQB, simDraftQB2.scoreDraft());
                 }
                 if(copy1.contains(Position.WR)) {
                     SimulationDraft simDraftQB3 = SimulationDraft.getSimulationPermPartialWithHardcodedKeepers(myKeepers, humanPermutationPickQB3, ldifb.draftedPlayers, numRoundsLeft, qbADPChange, hardcodedKeepers);
-                    draftScoreQB = Math.max(draftScoreQB, simDraftQB3.scoreDraft(isFun));
+                    draftScoreQB = Math.max(draftScoreQB, simDraftQB3.scoreDraft());
                 }
                 if(copy1.contains(Position.TE)) {
                     SimulationDraft simDraftQB4 = SimulationDraft.getSimulationPermPartialWithHardcodedKeepers(myKeepers, humanPermutationPickQB4, ldifb.draftedPlayers, numRoundsLeft, qbADPChange, hardcodedKeepers);
-                    draftScoreQB = Math.max(draftScoreQB, simDraftQB4.scoreDraft(isFun));
+                    draftScoreQB = Math.max(draftScoreQB, simDraftQB4.scoreDraft());
                 }
 
                 totalScoreQB = totalScoreQB.add(BigDecimal.valueOf(draftScoreQB));
@@ -568,19 +567,19 @@ public class OnTheFlySimulationRunner {
                 double draftScoreRB = 0.0;
                 if(copy2.contains(Position.QB)){
                     SimulationDraft simDraftRB1 = SimulationDraft.getSimulationPermPartialWithHardcodedKeepers(myKeepers, humanPermutationPickRB1, ldifb.draftedPlayers, numRoundsLeft, qbADPChange, hardcodedKeepers);
-                    draftScoreRB = Math.max(draftScoreRB, simDraftRB1.scoreDraft(isFun));
+                    draftScoreRB = Math.max(draftScoreRB, simDraftRB1.scoreDraft());
                 }
                 if(copy2.contains(Position.RB)){
                     SimulationDraft simDraftRB2 = SimulationDraft.getSimulationPermPartialWithHardcodedKeepers(myKeepers, humanPermutationPickRB2, ldifb.draftedPlayers, numRoundsLeft, qbADPChange, hardcodedKeepers);
-                    draftScoreRB = Math.max(draftScoreRB, simDraftRB2.scoreDraft(isFun));
+                    draftScoreRB = Math.max(draftScoreRB, simDraftRB2.scoreDraft());
                 }
                 if(copy2.contains(Position.WR)){
                     SimulationDraft simDraftRB3 = SimulationDraft.getSimulationPermPartialWithHardcodedKeepers(myKeepers, humanPermutationPickRB3, ldifb.draftedPlayers, numRoundsLeft, qbADPChange, hardcodedKeepers);
-                    draftScoreRB = Math.max(draftScoreRB, simDraftRB3.scoreDraft(isFun));
+                    draftScoreRB = Math.max(draftScoreRB, simDraftRB3.scoreDraft());
                 }
                 if(copy2.contains(Position.TE)){
                     SimulationDraft simDraftRB4 = SimulationDraft.getSimulationPermPartialWithHardcodedKeepers(myKeepers, humanPermutationPickRB4, ldifb.draftedPlayers, numRoundsLeft, qbADPChange, hardcodedKeepers);
-                    draftScoreRB = Math.max(draftScoreRB, simDraftRB4.scoreDraft(isFun));
+                    draftScoreRB = Math.max(draftScoreRB, simDraftRB4.scoreDraft());
                 }
                 totalScoreRB = totalScoreRB.add(BigDecimal.valueOf(draftScoreRB));
             }
@@ -590,19 +589,19 @@ public class OnTheFlySimulationRunner {
                 double draftScoreWR = 0.0;
                 if(copy3.contains(Position.QB)) {
                     SimulationDraft simDraftWR1 = SimulationDraft.getSimulationPermPartialWithHardcodedKeepers(myKeepers, humanPermutationPickWR1, ldifb.draftedPlayers, numRoundsLeft, qbADPChange, hardcodedKeepers);
-                    draftScoreWR = Math.max(draftScoreWR, simDraftWR1.scoreDraft(isFun));
+                    draftScoreWR = Math.max(draftScoreWR, simDraftWR1.scoreDraft());
                 }
                 if(copy3.contains(Position.RB)) {
                     SimulationDraft simDraftWR2 = SimulationDraft.getSimulationPermPartialWithHardcodedKeepers(myKeepers, humanPermutationPickWR2, ldifb.draftedPlayers, numRoundsLeft, qbADPChange, hardcodedKeepers);
-                    draftScoreWR = Math.max(draftScoreWR, simDraftWR2.scoreDraft(isFun));
+                    draftScoreWR = Math.max(draftScoreWR, simDraftWR2.scoreDraft());
                 }
                 if(copy3.contains(Position.WR)) {
                     SimulationDraft simDraftWR3 = SimulationDraft.getSimulationPermPartialWithHardcodedKeepers(myKeepers, humanPermutationPickWR3, ldifb.draftedPlayers, numRoundsLeft, qbADPChange, hardcodedKeepers);
-                    draftScoreWR = Math.max(draftScoreWR, simDraftWR3.scoreDraft(isFun));
+                    draftScoreWR = Math.max(draftScoreWR, simDraftWR3.scoreDraft());
                 }
                 if(copy3.contains(Position.TE)) {
                     SimulationDraft simDraftWR4 = SimulationDraft.getSimulationPermPartialWithHardcodedKeepers(myKeepers, humanPermutationPickWR4, ldifb.draftedPlayers, numRoundsLeft, qbADPChange, hardcodedKeepers);
-                    draftScoreWR = Math.max(draftScoreWR, simDraftWR4.scoreDraft(isFun));
+                    draftScoreWR = Math.max(draftScoreWR, simDraftWR4.scoreDraft());
                 }
                 totalScoreWR = totalScoreWR.add(BigDecimal.valueOf(draftScoreWR));
             }
@@ -610,19 +609,19 @@ public class OnTheFlySimulationRunner {
                 double draftScoreTE = 0.0;
                 if(copy4.contains(Position.QB)){
                     SimulationDraft simDraftTE1 = SimulationDraft.getSimulationPermPartialWithHardcodedKeepers(myKeepers, humanPermutationPickTE1, ldifb.draftedPlayers, numRoundsLeft, qbADPChange, hardcodedKeepers);
-                    draftScoreTE = simDraftTE1.scoreDraft(isFun);
+                    draftScoreTE = simDraftTE1.scoreDraft();
                 }
                 if(copy4.contains(Position.RB)){
                     SimulationDraft simDraftTE2 = SimulationDraft.getSimulationPermPartialWithHardcodedKeepers(myKeepers, humanPermutationPickTE2, ldifb.draftedPlayers, numRoundsLeft, qbADPChange, hardcodedKeepers);
-                    draftScoreTE = simDraftTE2.scoreDraft(isFun);
+                    draftScoreTE = simDraftTE2.scoreDraft();
                 }
                 if(copy4.contains(Position.WR)){
                     SimulationDraft simDraftTE3 = SimulationDraft.getSimulationPermPartialWithHardcodedKeepers(myKeepers, humanPermutationPickTE3, ldifb.draftedPlayers, numRoundsLeft, qbADPChange, hardcodedKeepers);
-                    draftScoreTE = simDraftTE3.scoreDraft(isFun);
+                    draftScoreTE = simDraftTE3.scoreDraft();
                 }
                 if(copy4.contains(Position.TE)){
                     SimulationDraft simDraftTE4 = SimulationDraft.getSimulationPermPartialWithHardcodedKeepers(myKeepers, humanPermutationPickTE4, ldifb.draftedPlayers, numRoundsLeft, qbADPChange, hardcodedKeepers);
-                    draftScoreTE = simDraftTE4.scoreDraft(isFun);
+                    draftScoreTE = simDraftTE4.scoreDraft();
                 }
                 totalScoreTE = totalScoreTE.add(BigDecimal.valueOf(draftScoreTE));
             }
@@ -633,7 +632,7 @@ public class OnTheFlySimulationRunner {
         double scoreTE = totalScoreTE.divide(totalNumSims, RoundingMode.HALF_UP).doubleValue();
 
         BestAvailablePlayers bap = ldifb.bestAvailablePlayers;
-        ArrayList<Score> scoreList = SleeperLeague.getScoreList(ldifb.isFunLeague);
+        ArrayList<Score> scoreList = SleeperLeague.getScoreList();
 
         Player pQB1 = bap.quarterbackRT1.player;
         double sQB1 = Player.scorePlayer(scoreList, pQB1);

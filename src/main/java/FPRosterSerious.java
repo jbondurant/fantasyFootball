@@ -214,7 +214,7 @@ public class FPRosterSerious {
                 }
             }
             else{
-                ArrayList<Score> scoreList = SleeperLeague.getScoreList(false);
+                ArrayList<Score> scoreList = SleeperLeague.getScoreList();
                 double scoreOfPlayer = 0.0;
                 for(Score score : scoreList){
                     if(score.player != null && score.player.sportRadarID.equals(p.sportRadarID)){

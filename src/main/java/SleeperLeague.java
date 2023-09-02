@@ -109,19 +109,12 @@ public class SleeperLeague{
         return seriousScoresList;
     }
 
-    public static ArrayList<Score> getScoreList(boolean isFun){
-        ArrayList<Score> scoreList;
-        if(isFun){
-            scoreList = SleeperLeague.getFunScoreList();
-        }
-        else{
-            scoreList = SleeperLeague.getSeriousScoreList();
-        }
-        return scoreList;
+    public static ArrayList<Score> getScoreList(){
+        return SleeperLeague.getSeriousScoreList();
     }
 
     public static double scoreSleeperDraft(SleeperLeague sleeperLeague, boolean isFun){
-        ArrayList<Score> scoreList = getScoreList(isFun);
+        ArrayList<Score> scoreList = getScoreList();
         double totalScore = 0;
         for(User user : sleeperLeague.sleeperDraftInfo.usersInfo) {
             if (user.userID.equals(myID)) {
