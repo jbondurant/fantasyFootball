@@ -77,23 +77,23 @@ public class OnTheFlySimulationRunner {
 
                 if(humanPermutationReducedRandom.contains(Position.QB)) {
                     SimulationDraft simDraftQB = SimulationDraft.getSimulationPermPartialForKeeperSerious(keeper, humanPermutationPickQB, ldifb.draftedPlayers, numRoundsLeft, qbADPChange);
-                    double draftScoreQB = simDraftQB.scoreDraft(isFun);
+                    double draftScoreQB = simDraftQB.scoreDraft();
                     totalScoreQB = totalScoreQB.add(BigDecimal.valueOf(draftScoreQB));
                 }
 
                 if(humanPermutationReducedRandom.contains(Position.RB)) {
                     SimulationDraft simDraftRB = SimulationDraft.getSimulationPermPartialForKeeperSerious(keeper, humanPermutationPickRB, ldifb.draftedPlayers, numRoundsLeft, qbADPChange);
-                    double draftScoreRB = simDraftRB.scoreDraft(isFun);
+                    double draftScoreRB = simDraftRB.scoreDraft();
                     totalScoreRB = totalScoreRB.add(BigDecimal.valueOf(draftScoreRB));
                 }
                 if(humanPermutationReducedRandom.contains(Position.WR)) {
                     SimulationDraft simDraftWR = SimulationDraft.getSimulationPermPartialForKeeperSerious(keeper, humanPermutationPickWR, ldifb.draftedPlayers, numRoundsLeft, qbADPChange);
-                    double draftScoreWR = simDraftWR.scoreDraft(isFun);
+                    double draftScoreWR = simDraftWR.scoreDraft();
                     totalScoreWR = totalScoreWR.add(BigDecimal.valueOf(draftScoreWR));
                 }
                 if(humanPermutationReducedRandom.contains(Position.TE)) {
                     SimulationDraft simDraftTE = SimulationDraft.getSimulationPermPartialForKeeperSerious(keeper, humanPermutationPickTE, ldifb.draftedPlayers, numRoundsLeft, qbADPChange);
-                    double draftScoreTE = simDraftTE.scoreDraft(isFun);
+                    double draftScoreTE = simDraftTE.scoreDraft();
                     totalScoreTE = totalScoreTE.add(BigDecimal.valueOf(draftScoreTE));
                 }
             }
@@ -222,22 +222,22 @@ public class OnTheFlySimulationRunner {
             }
             if(humanPermutationReducedRandom.contains(Position.QB)) {
                 SimulationDraft simDraftQB = SimulationDraft.getSimulationPermPartial(humanPermutationPickQB, ldifb.draftedPlayers, numRoundsLeft, isFun, qbADPChange);
-                double draftScoreQB = simDraftQB.scoreDraft(isFun);
+                double draftScoreQB = simDraftQB.scoreDraft();
                 totalScoreQB = totalScoreQB.add(BigDecimal.valueOf(draftScoreQB));
             }
             if(humanPermutationReducedRandom.contains(Position.RB)) {
                 SimulationDraft simDraftRB = SimulationDraft.getSimulationPermPartial(humanPermutationPickRB, ldifb.draftedPlayers, numRoundsLeft, isFun, qbADPChange);
-                double draftScoreRB = simDraftRB.scoreDraft(isFun);
+                double draftScoreRB = simDraftRB.scoreDraft();
                 totalScoreRB = totalScoreRB.add(BigDecimal.valueOf(draftScoreRB));
             }
             if(humanPermutationReducedRandom.contains(Position.WR)) {
                 SimulationDraft simDraftWR = SimulationDraft.getSimulationPermPartial(humanPermutationPickWR, ldifb.draftedPlayers, numRoundsLeft, isFun, qbADPChange);
-                double draftScoreWR = simDraftWR.scoreDraft(isFun);
+                double draftScoreWR = simDraftWR.scoreDraft();
                 totalScoreWR = totalScoreWR.add(BigDecimal.valueOf(draftScoreWR));
             }
             if(humanPermutationReducedRandom.contains(Position.TE)) {
                 SimulationDraft simDraftTE = SimulationDraft.getSimulationPermPartial(humanPermutationPickTE, ldifb.draftedPlayers, numRoundsLeft, isFun, qbADPChange);
-                double draftScoreTE = simDraftTE.scoreDraft(isFun);
+                double draftScoreTE = simDraftTE.scoreDraft();
                 totalScoreTE = totalScoreTE.add(BigDecimal.valueOf(draftScoreTE));
             }
         }
