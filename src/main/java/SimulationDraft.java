@@ -1,5 +1,8 @@
+import org.checkerframework.checker.units.qual.K;
+
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 
 public class SimulationDraft {
 
@@ -20,10 +23,10 @@ public class SimulationDraft {
         return new SimulationDraft(sl, scoreDraftHuman);
     }
 
-    public static SimulationDraft getSimulationPermPartialWithHardcodedKeepers(Keeper keeper, ArrayList<Position> humanPermutation, ArrayList<Player> draftedPlayers, int roundsLeft, int qbADPChange, ArrayList<Keeper> hardcodedKeepers){
+    public static SimulationDraft getSimulationPermPartialWithHardcodedKeepers(HashSet<Keeper> keepers, ArrayList<Position> humanPermutation, ArrayList<Player> draftedPlayers, int roundsLeft, int qbADPChange, ArrayList<Keeper> hardcodedKeepers){
         SleeperLeague sl = SleeperLeague.getSeriousLeague();
         ArrayList<User> xyz = sl.sleeperDraftInfo.usersInfo;
-        double scoreDraftHuman = runSimulationDraftPermPartialWithHardcodedKeepers(keeper, sl, humanPermutation, draftedPlayers, roundsLeft, qbADPChange, hardcodedKeepers);
+        double scoreDraftHuman = runSimulationDraftPermPartialWithHardcodedKeepers(keepers, sl, humanPermutation, draftedPlayers, roundsLeft, qbADPChange, hardcodedKeepers);
         return new SimulationDraft(sl, scoreDraftHuman);
     }
 
@@ -108,7 +111,24 @@ public class SimulationDraft {
         return scoreDraftHuman;
     }
 
-    public static double runSimulationDraftPermPartialWithHardcodedKeepers(Keeper keeper, SleeperLeague sl, ArrayList<Position> humanPerm, ArrayList<Player> draftedPlayers, int roundsLeft, int qbADPChange, ArrayList<Keeper> hardcodedKeepers){
+    public static HashSet<Integer> getRoundsOfKeepers(HashSet<Keeper> keepers){
+        HashSet<Integer> rounds = new HashSet<>();
+        for(Keeper keeper : keepers){
+            rounds.add(keeper.roundCanBeKept);
+        }
+        return rounds;
+    }
+
+    public static Player getKeeperPlayerAtRound(HashSet<Keeper> keepers, Integer i){
+        for(Keeper keeper : keepers){
+            if(keeper.roundCanBeKept == i){
+                return keeper.player;
+            }
+        }
+        throw new RuntimeException("keeper round not matching");
+    }
+
+    public static double runSimulationDraftPermPartialWithHardcodedKeepers(HashSet<Keeper> keepers, SleeperLeague sl, ArrayList<Position> humanPerm, ArrayList<Player> draftedPlayers, int roundsLeft, int qbADPChange, ArrayList<Keeper> hardcodedKeepers){
         boolean isFun = false;
         for(User user : sl.sleeperDraftInfo.usersInfo){
             if(user.userID.equals(myID)){
@@ -135,15 +155,18 @@ public class SimulationDraft {
             for(Player player : draftedPlayers){
                 user.strategy.removeDraftedPlayer(player);
             }
-            user.strategy.removeDraftedPlayer(keeper.player);
+            for(Keeper keeper : keepers) {
+                user.strategy.removeDraftedPlayer(keeper.player);
+            }
         }
         ArrayList<User> usersAtDraft = sl.sleeperDraftInfo.usersInfo;
         for(int i=1; i<= roundsLeft; i++){
             Collections.sort(usersAtDraft, new UserComparator());
             for(User user : usersAtDraft){
                 Player draftedPlayer;
-                if(user.userID.equals(myID) && i==keeper.roundCanBeKept){
-                    draftedPlayer = keeper.player;
+                HashSet<Integer> roundsWithKeeper = getRoundsOfKeepers(keepers);
+                if(user.userID.equals(myID) && roundsWithKeeper.contains(i)){
+                    draftedPlayer = getKeeperPlayerAtRound(keepers, i);
                     user.addToRoster(draftedPlayer);
                 }
                 else {

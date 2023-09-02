@@ -65,9 +65,8 @@ public class SleeperLiveDraft {
         int minKeeperRound = 3;
         int qbADPChange = 18;//at least 6, if not 12
         ArrayList<Keeper> hardcodedKeepers = aaaConfiguration.getTodaysKeepers();
-        //ArrayList positionsWanted = HumanStrategy.nonPermutedSerious1261();
-        //ArrayList positionsWanted = HumanStrategy.nonPermutedSerious1351();
-        ArrayList positionsWanted = HumanStrategy.nonPermutedSerious1441();
+        //tried 1261, 1351, 1441
+        ArrayList positionsWanted = HumanStrategy.nonPermutedPositions(1,4,4,1);
 
         LiveDraftInfo ldifb = getDraftedPlayersMock(draftID, isFun);
         int numDraftedPlayers = ldifb.draftedPlayers.size();

@@ -1,4 +1,6 @@
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class HumanStrategy extends Strategy {
 
@@ -10,9 +12,6 @@ public class HumanStrategy extends Strategy {
     public HumanStrategy(RankOrderedPlayers rop, boolean isFun){
         rankOrderedPlayers = rop;
         positionDraftOrder = permutationGeneratorSerious();
-        if(isFun) {
-            positionDraftOrder = permutationGeneratorFun();
-        }
         initialPositionDraftOrder = new ArrayList<>(Collections.unmodifiableList(positionDraftOrder));
     }
 
@@ -48,81 +47,29 @@ public class HumanStrategy extends Strategy {
         return fppProjectionHumanStrategySerious;
     }
 
-    public static ArrayList<Position> nonPermutedSerious1261(){
-        String[] version0StringArray = {"QB", "TE", "RB", "RB", "WR", "WR", "WR", "WR", "WR", "WR"};
-        ArrayList<String> version = new ArrayList<String>();
-        for(String s : version0StringArray){
-            version.add(s);
-        }
-        ArrayList<Position> permutation = new ArrayList<Position>();
-        for(String string : version){
-            Position pos = Position.valueOf(string);
-            permutation.add(pos);
-        }
-        return permutation;
+    public static ArrayList<Position> nonPermutedPositions(int numQB,
+                                                           int numRB,
+                                                           int numWR,
+                                                           int numTE){
+        List<String> qbs = Collections.nCopies(numQB, "QB");
+        List<String> rbs = Collections.nCopies(numRB, "RB");
+        List<String> wrs = Collections.nCopies(numWR, "WR");
+        List<String> tes = Collections.nCopies(numTE, "TE");
+        List<String> all = Stream.of(qbs, rbs, wrs, tes)
+                .flatMap(Collection::stream)
+                .collect(Collectors.toList());
+        ArrayList<Position> a = (ArrayList<Position>) all.stream().map(Position::valueOf).collect(Collectors.toList());
+        return a;
     }
 
-    public static ArrayList<Position> nonPermutedSerious1351(){
-        String[] version0StringArray = {"QB", "TE", "RB", "RB", "RB", "WR", "WR", "WR", "WR", "WR"};
-        ArrayList<String> version = new ArrayList<String>();
-        for(String s : version0StringArray){
-            version.add(s);
-        }
-        ArrayList<Position> permutation = new ArrayList<Position>();
-        for(String string : version){
-            Position pos = Position.valueOf(string);
-            permutation.add(pos);
-        }
-        return permutation;
-    }
-
-    public static ArrayList<Position> nonPermutedSerious1441(){
-        String[] version0StringArray = {"QB", "TE", "RB", "RB", "RB", "RB", "WR", "WR", "WR", "WR"};
-        ArrayList<String> version = new ArrayList<String>();
-        for(String s : version0StringArray){
-            version.add(s);
-        }
-        ArrayList<Position> permutation = new ArrayList<Position>();
-        for(String string : version){
-            Position pos = Position.valueOf(string);
-            permutation.add(pos);
-        }
-        return permutation;
-    }
-
-    public static ArrayList<Position> nonPermutedFun2241(){
-        String[] version0StringArray = {"QB", "QB", "TE", "RB", "RB",  "WR", "WR", "WR", "WR"};
-        ArrayList<String> version = new ArrayList<String>();
-        for(String s : version0StringArray){
-            version.add(s);
-        }
-        ArrayList<Position> permutation = new ArrayList<Position>();
-        for(String string : version){
-            Position pos = Position.valueOf(string);
-            permutation.add(pos);
-        }
-        return permutation;
+    public static void main(String[] args){
+        nonPermutedPositions(1,3,5,1);
     }
 
     public static ArrayList<Position> permutationGeneratorSerious(){
         String[] version0StringArray = {"QB", "TE", "RB", "RB", "RB", "WR", "WR", "WR", "WR", "WR"};
         ArrayList<String> version = new ArrayList<String>();
         for(String s : version0StringArray){
-            version.add(s);
-        }
-        Collections.shuffle(version);
-        ArrayList<Position> permutation = new ArrayList<Position>();
-        for(String string : version){
-            Position pos = Position.valueOf(string);
-            permutation.add(pos);
-        }
-        return permutation;
-    }
-
-    public static ArrayList<Position> permutationGeneratorFun(){
-        String[] versionString = {"QB", "QB", "RB", "RB", "WR", "WR", "WR", "WR"};
-        ArrayList<String> version = new ArrayList<String>();
-        for(String s : versionString){
             version.add(s);
         }
         Collections.shuffle(version);
