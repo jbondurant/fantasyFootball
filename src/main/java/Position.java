@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.List;
 
 public enum Position {
     QB,
@@ -16,8 +17,8 @@ public enum Position {
         return isStandard;
     }
 
-    public static ArrayList<Position> getCopy(ArrayList<Position> positions){
-        ArrayList<Position> copy = new ArrayList<>();
+    public static List<Position> getCopy(List<Position> positions){
+        List<Position> copy = new ArrayList<>();
         for(Position position : positions){
             copy.add(position);
         }

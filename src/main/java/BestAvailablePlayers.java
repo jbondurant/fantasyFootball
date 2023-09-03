@@ -17,6 +17,7 @@ public class BestAvailablePlayers {
     public Rank tightEndRT3;
     public Rank defenseRT3;
 
+
     //TODO switch class to get top 3 at each position?
 
     public BestAvailablePlayers(RankOrderedPlayers rtop){

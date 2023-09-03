@@ -12,7 +12,7 @@ public class LiveDraftInfo {
         isFunLeague = isFun;
         draftedPlayers = dp;
         rosterPlayers = rp;
-        bestAvailablePlayers = getBestAvailablePlayers(dp, isFun);
+        bestAvailablePlayers = getBestAvailablePlayers(dp);
         bestAvailablePlayersByHardcodedRank = getBestAvailablePlayersByHardcodedRank(dp);
     }
 
@@ -25,15 +25,8 @@ public class LiveDraftInfo {
         return bap;
     }
 
-    public static BestAvailablePlayers getBestAvailablePlayers(ArrayList<Player> draftedPlayers, boolean isFun){
-        RankOrderedPlayers rop;
-        if(isFun){
-            rop = RankOrderedPlayers.getRankOrderedPlayerFPFun();
-        }
-        else{
-            rop = RankOrderedPlayers.getRankOrderedPlayerFPSerious();
-        }
-
+    public static BestAvailablePlayers getBestAvailablePlayers(ArrayList<Player> draftedPlayers){
+        RankOrderedPlayers rop = RankOrderedPlayers.getRankOrderedPlayerFPSerious();
         for(Player player : draftedPlayers){
             rop.removePlayer(player);
         }
