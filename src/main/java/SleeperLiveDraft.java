@@ -6,6 +6,7 @@ import com.google.gson.JsonParser;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.List;
 
 public class SleeperLiveDraft {
 
@@ -60,12 +61,13 @@ public class SleeperLiveDraft {
         boolean isFun = false;
         String draftID = "1003537678798794752";
         //String draftID = "1003861905636687872";
-        int numDraftsOnFly = 200;//todo change back to 300
+        int numDraftsOnFly = 300;//todo change back to 300
         boolean allowUndrafted = false;
         int undraftedRoundCost = 10;
         int minKeeperRound = 3;
         int qbADPChange = 18;//at least 6, if not 12
-        int minMaxStartSize = 2;
+        int minMaxStartSize = 2;//todo change back to 2
+        int numThreads = 5;
         ArrayList<Keeper> keepers = aaaConfiguration.getTodaysKeepers();
         //tried 1261, 1351, 1441
         ArrayList positionsWanted = HumanStrategy.nonPermutedPositions(1,2,6,1);
@@ -79,7 +81,7 @@ public class SleeperLiveDraft {
         System.out.println("---------------");
 
         //OnTheFlySimulationRunner.runDraftsToChooseMyKeeperHardcoded(numDraftsOnFly, positionsWanted, ldifb, HumanOfInterest.humanID, allowUndrafted, undraftedRoundCost, qbADPChange, minKeeperRound, aaaConfiguration);
-        OnTheFlySimulationRunner.runDraftsWithKeepersMultipleThreads(numDraftsOnFly, currentRound, positionsWanted, ldifb, qbADPChange, keepers, minMaxStartSize);
+        List<DraftRunsResults> draftRunsResults = OnTheFlySimulationRunner.runDraftsWithKeepersMultipleThreads(numDraftsOnFly, currentRound, positionsWanted, ldifb, qbADPChange, keepers, minMaxStartSize, numThreads);
         //OnTheFlySimulationRunner.runDraftsWithKeepers(numDraftsOnFly, currentRound, positionsWanted, ldifb, qbADPChange, keepers, minMaxStartSize);
         //OnTheFlySimulationRunner.runDraftsOnTheFly(numDraftsOnFly, roundPick,isFun, positionsWanted, ldifb, qbADPChange);
         /*for(String userID : HumanOfInterest.getAllUserIDsHardcoded()) {
@@ -87,6 +89,9 @@ public class SleeperLiveDraft {
             System.out.println("-----");
         }
          */
+
+        DraftRunsResults.printDraftRunResults(ldifb, draftRunsResults);
+
         Instant end = Instant.now();
         Duration timeElapsed = Duration.between(start, end);
         System.out.println(timeElapsed);
