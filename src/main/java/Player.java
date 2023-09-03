@@ -1,7 +1,6 @@
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Locale;
 
 
 public class Player {
@@ -27,6 +26,25 @@ public class Player {
         initializePlayersForNameSearch();
         initializePlayerDefenseMap();
 
+    }
+
+    public static ArrayList<Player> getCopyOfList(ArrayList<Player> draftedPlayers) {
+        ArrayList<Player> copy = new ArrayList<>();
+        for(Player p : draftedPlayers){
+            copy.add(getCopy(p));
+        }
+        return copy;
+    }
+
+    public static Player getCopy(Player player){
+        return new Player(player.firstName,
+                player.lastName,
+                player.team,
+                player.position,
+                player.yahooID,
+                player.sleeperID,
+                player.sportRadarID,
+                player.fantasyProsID);
     }
 
     public Player(String fn, String ln, String t, Position p, int yID, int sID, String srID, int fpID){
@@ -195,6 +213,8 @@ public class Player {
         }
         return 0.0;
     }
+
+
 }
 
 

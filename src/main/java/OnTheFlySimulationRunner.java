@@ -1,7 +1,7 @@
 import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.math.RoundingMode;
 import java.util.*;
+import java.util.concurrent.*;
 
 public class OnTheFlySimulationRunner {
 
@@ -455,17 +455,41 @@ public class OnTheFlySimulationRunner {
         }
         return allStartPositionsStartingWithPos;
     }
-    public static void runDraftsWithKeepers(int numSimulations, int roundPick, ArrayList<Position> desiredPositions, LiveDraftInfo ldifb, int qbADPChange, ArrayList<Keeper> keepers, int minMaxStartSize) {
+
+    public static void runDraftsWithKeepersMultipleThreads(int numSimulations, int roundPick, ArrayList<Position> desiredPositions, LiveDraftInfo ldifb, int qbADPChange, ArrayList<Keeper> keepers, int minMaxStartSize) throws InterruptedException {
+        int numMaxThreads = 3;
+        int numSimulationsPerThread = numSimulations / numMaxThreads;
+
+        List<Callable<DraftRunsResults>> tasks = new ArrayList<>();
+        for(int i=0; i<numMaxThreads; i++){
+            tasks.add(new RunDraftWithKeepersTask(numSimulationsPerThread, roundPick, desiredPositions, ldifb, qbADPChange, keepers, minMaxStartSize));
+        }
+
+        ExecutorService executorService = Executors.newFixedThreadPool(numMaxThreads);
+
+        try{
+            List<Future<DraftRunsResults>> results = executorService.invokeAll(tasks);
+
+            List<DraftRunsResults> draftRunsResultsList = new ArrayList<>();
+            for(Future<DraftRunsResults> result : results){
+                DraftRunsResults drr = result.get();
+                draftRunsResultsList.add(drr);
+            }
+        } catch (ExecutionException e) {
+            throw new RuntimeException(e);
+        } finally {
+            executorService.shutdown();
+        }
+
+    }
+    public static DraftRunsResults runDraftsWithKeepers(int numSimulations, int roundPick, ArrayList<Position> desiredPositions, LiveDraftInfo ldifb, int qbADPChange, ArrayList<Keeper> keepers, int minMaxStartSize) {
         HashSet<Keeper> myKeepers = getMyKeepers(keepers);
         int numRoundsTotal = 10;
         int numRoundsLeft = numRoundsTotal - roundPick + 1;
         ArrayList<Position> positionsStillNeededToDraft = getPositionsStillNeededToDraft(desiredPositions, ldifb);
         double numSimsDouble = numSimulations * 1.0;
 
-        BigDecimal totalScoreQB = BigDecimal.ZERO;
-        BigDecimal totalScoreRB = BigDecimal.ZERO;
-        BigDecimal totalScoreWR = BigDecimal.ZERO;
-        BigDecimal totalScoreTE = BigDecimal.ZERO;
+
         BigDecimal totalNumSims = BigDecimal.valueOf(numSimsDouble);
 
         List<Position> positionsToDraft = List.of(Position.QB, Position.RB, Position.WR, Position.TE);
@@ -512,14 +536,31 @@ public class OnTheFlySimulationRunner {
         }
 
 
+        HashMap<Position, Double> startToAverageScore = new HashMap<>();
+        for(Position position : positionsToDraft){
+            BigDecimal totalScoreForPosition = startToTotalScoreSum.get(position);
+            double scoreForPosition = totalScoreForPosition.divide(totalNumSims, RoundingMode.HALF_UP).doubleValue();
+            startToAverageScore.put(position, scoreForPosition);
+        }
+
+        HashMap<List<Position>, Double> headToAverageScore = new HashMap<>();
+        for(List<Position> draftStartPositions : allDraftStartPositions){
+            BigDecimal totalScoreForHead = headToTotalScoreSum.get(draftStartPositions);
+            double scoreForHead = totalScoreForHead.divide(totalNumSims, RoundingMode.HALF_UP).doubleValue();
+            headToAverageScore.put(draftStartPositions, scoreForHead);
+            System.out.println("score for " + draftStartPositions.toString() +"\tis:\t" + scoreForHead);
+        }
+
+
         double scoreQB = 0.0;
         double scoreRB = 0.0;
         double scoreWR = 0.0;
         double scoreTE = 0.0;
 
+        DraftRunsResults draftRunsResults = new DraftRunsResults(allDraftStartPositions, headToAverageScore, positionsToDraft, startToAverageScore, numSimulations);
+
         for(Position position : positionsToDraft){
-            BigDecimal totalScoreForPosition = startToTotalScoreSum.get(position);
-            double scoreForPosition = totalScoreForPosition.divide(totalNumSims, RoundingMode.HALF_UP).doubleValue();
+            double scoreForPosition = startToAverageScore.get(position);
             if(position.equals(Position.QB)){
                 scoreQB = scoreForPosition;
             }
@@ -533,10 +574,7 @@ public class OnTheFlySimulationRunner {
                 scoreTE = scoreForPosition;
             }
         }
-        for(List<Position> draftStartPositions : allDraftStartPositions){
-            BigDecimal totalScoreForHead = headToTotalScoreSum.get(draftStartPositions);
-            double scoreForHead = totalScoreForHead.divide(totalNumSims, RoundingMode.HALF_UP).doubleValue();
-        }
+
 
 
         BestAvailablePlayers bap = ldifb.bestAvailablePlayers;
@@ -606,6 +644,7 @@ public class OnTheFlySimulationRunner {
             String name = s.player.firstName + " " + s.player.lastName;
             System.out.println("Pick " + name + " to Score:\t" + s.score);
         }
+        return new DraftRunsResults(null, null, null, null, 1);
     }
 
 }

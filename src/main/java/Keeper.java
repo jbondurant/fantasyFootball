@@ -2,12 +2,25 @@ import org.checkerframework.checker.units.qual.A;
 import org.checkerframework.checker.units.qual.K;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class Keeper {
 
     public String humanWhoCanKeep;
     public Player player;
     public int roundCanBeKept;
+
+    public static List<Keeper> getCopyOfList(ArrayList<Keeper> keepers){
+        List<Keeper> copy = new ArrayList<Keeper>();
+        for(Keeper keeper : keepers){
+            copy.add(getCopy(keeper));
+        }
+        return copy;
+    }
+
+    public static Keeper getCopy(Keeper keeper){
+        return new Keeper(keeper.humanWhoCanKeep, keeper.player, keeper.roundCanBeKept);
+    }
 
     public Keeper(String hwck, Player p, int rcbk){
         humanWhoCanKeep = hwck;

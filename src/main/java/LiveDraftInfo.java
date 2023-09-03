@@ -8,6 +8,12 @@ public class LiveDraftInfo {
     BestAvailablePlayers bestAvailablePlayers;
     BestAvailablePlayers bestAvailablePlayersByHardcodedRank;
 
+    public static LiveDraftInfo getCopy(LiveDraftInfo ldi){
+        return new LiveDraftInfo(Player.getCopyOfList(ldi.draftedPlayers),
+                Player.getCopyOfList(ldi.rosterPlayers),
+                ldi.isFunLeague);
+    }
+
     public LiveDraftInfo(ArrayList<Player> dp, ArrayList<Player> rp, boolean isFun){
         isFunLeague = isFun;
         draftedPlayers = dp;

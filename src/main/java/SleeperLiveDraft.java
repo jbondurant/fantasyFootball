@@ -59,7 +59,8 @@ public class SleeperLiveDraft {
         Instant start = Instant.now();
         boolean isFun = false;
         String draftID = "1003537678798794752";
-        int numDraftsOnFly = 5000;//todo change back to 300
+        //String draftID = "1003861905636687872";
+        int numDraftsOnFly = 200;//todo change back to 300
         boolean allowUndrafted = false;
         int undraftedRoundCost = 10;
         int minKeeperRound = 3;
@@ -78,7 +79,8 @@ public class SleeperLiveDraft {
         System.out.println("---------------");
 
         //OnTheFlySimulationRunner.runDraftsToChooseMyKeeperHardcoded(numDraftsOnFly, positionsWanted, ldifb, HumanOfInterest.humanID, allowUndrafted, undraftedRoundCost, qbADPChange, minKeeperRound, aaaConfiguration);
-        OnTheFlySimulationRunner.runDraftsWithKeepers(numDraftsOnFly, currentRound, positionsWanted, ldifb, qbADPChange, keepers, minMaxStartSize);
+        OnTheFlySimulationRunner.runDraftsWithKeepersMultipleThreads(numDraftsOnFly, currentRound, positionsWanted, ldifb, qbADPChange, keepers, minMaxStartSize);
+        //OnTheFlySimulationRunner.runDraftsWithKeepers(numDraftsOnFly, currentRound, positionsWanted, ldifb, qbADPChange, keepers, minMaxStartSize);
         //OnTheFlySimulationRunner.runDraftsOnTheFly(numDraftsOnFly, roundPick,isFun, positionsWanted, ldifb, qbADPChange);
         /*for(String userID : HumanOfInterest.getAllUserIDsHardcoded()) {
             OnTheFlySimulationRunner.runDraftsOnTheFlyToChooseMyKeeperHardcoded(numDraftsOnFly, positionsWanted, ldifb, userID, allowUndrafted, undraftedRoundCost, qbADPChange, minKeeperRound);
