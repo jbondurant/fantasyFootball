@@ -12,16 +12,10 @@ public class FPRosterSerious {
     public static HashMap<String, Double> playerCSVSRIDToScore = new HashMap<>();
 
     static{
-        //this will only do next weeks projections
-        /*FantasyProsScore fps = new FantasyProsScore(lssSerious);
-        for(Score theScore : fps.fantasyProsScoreLeagueAdjusted){
-            if(theScore != null && theScore.player != null) {
-                playerSRIDToScore.put(theScore.player.sportRadarID, theScore.score);
-            }
-        }*/
         boolean is6PtsThrow = true;
         playerSRIDToScore = InSeasonProjectionsFP.playerToScoreProjFPROS(is6PtsThrow);
-        playerCSVSRIDToScore = CSVProjectionsFP.playerToScoreProjFPROS(is6PtsThrow);
+        //todo 2023 uncomment playerCSVSRIDToScore = CSVProjectionsFP.playerToScoreProjFPROS(is6PtsThrow);
+        playerCSVSRIDToScore = null;
     }
 
     String userID;

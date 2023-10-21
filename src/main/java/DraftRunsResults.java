@@ -29,6 +29,7 @@ public class DraftRunsResults {
     }
 
     private static DraftRunsResults makeAverageDraftRunResults(List<DraftRunsResults> allDraftRunResults){
+
         int numSimulationsInHeadSum = 0;
         int numSimulationsInStartSum = 0;
         HashMap<List<Position>, BigDecimal> headToTotalScoreSum = new HashMap<>();

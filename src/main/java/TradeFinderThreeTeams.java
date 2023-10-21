@@ -450,8 +450,8 @@ public class TradeFinderThreeTeams {
         //ends at 10; <11
         AAAConfiguration aaaConfiguration = new AAAConfigurationSleeperLeague();
         boolean isCSV = false;
-        for(int i=0; i<11; i++){//todo change back to 11
-            String tradedPlayerLastName = "Jefferson";
+        for(int i=0; i<1; i++){//todo change back to 11
+            String tradedPlayerLastName = "Henry";
             int teamN = i;
             int lastTeamStart = 0;//this is the range for the teams that are the 3rd one to trade
             int lastTeamEnd = 10;//so team 1 is us, team 2 is i, and team 3 is in this range

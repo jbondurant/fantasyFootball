@@ -6,11 +6,11 @@ import java.util.HashMap;
 
 public class CSVProjectionsFP {
 
-    public static String filepathStartQB = "FantasyPros_2022_Ros_QB_Rankings";
-    public static String filepathStartRBHalf = "FantasyPros_2022_Ros_RB_Rankings";
-    public static String filepathStartWRHalf = "FantasyPros_2022_Ros_WR_Rankings";
-    public static String filepathStartTEHalf = "FantasyPros_2022_Ros_TE_Rankings";
-    public static String filepathStartDEF = "FantasyPros_2022_Ros_DST_Rankings";
+    public static String filepathStartQB = "FantasyPros_2023_Ros_QB_Rankings";
+    public static String filepathStartRBHalf = "FantasyPros_2023_Ros_RB_Rankings";
+    public static String filepathStartWRHalf = "FantasyPros_2023_Ros_WR_Rankings";
+    public static String filepathStartTEHalf = "FantasyPros_2023_Ros_TE_Rankings";
+    public static String filepathStartDEF = "FantasyPros_2023_Ros_DST_Rankings";
 
     private static final ArrayList<Score> projectionsFPQB;
     private static final ArrayList<Score> projectionsFPFlex;

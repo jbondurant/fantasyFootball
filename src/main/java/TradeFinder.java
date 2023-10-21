@@ -112,42 +112,44 @@ public class TradeFinder {
 
     public static void main(String[] args) throws IOException {
         AAAConfiguration configuration = new AAAConfigurationSleeperLeague();
-        boolean onlyOne = false;
+        boolean onlyOne = true;
         boolean onlyTwo = false;
         boolean toCrop = false;
-        boolean inSeason = true;
-        boolean isCSV = true;
+        boolean inSeason = false;//todo 2023 put back to true
+        boolean isCSV = false;//todo 2023 put back to true
         boolean roundFilter = false;
         ArrayList<String> tradersToIgnore = new ArrayList<>();
-        tradersToIgnore.add("606234521821577216");//tommyrads
-        tradersToIgnore.add("464471023782195200"); //itsabust
-        tradersToIgnore.add("605534791072305152"); //Tsayydeja
-        tradersToIgnore.add("725953800816373760");//Hamrliks
-        tradersToIgnore.add("740473448551366656"); //patek
-        tradersToIgnore.add("459267987174584320");//doddi
+        //tradersToIgnore.add("606234521821577216");//tommyrads
+        //tradersToIgnore.add("464471023782195200"); //itsabust
+        //tradersToIgnore.add("605534791072305152"); //Tsayydeja
+        //tradersToIgnore.add("725953800816373760");//Hamrliks
+        //tradersToIgnore.add("740473448551366656"); //patek
+        //tradersToIgnore.add("452603383455412224");//kevinDA
+        //tradersToIgnore.add("459267987174584320");//doddi
         ArrayList<String> playersToGive = new ArrayList<>();
-        //playersToGive.add("Christian McCaffrey");
         //playersToGive.add("Diontae Johnson");
         //playersToGive.add("Justin Jefferson");
 
 
         ArrayList<String> playersNotToGive = new ArrayList<>();
-        //playersNotToGive.add("Dawson Knox");
+        //playersNotToGive.add("James Conner");
         //playersNotToGive.add("Tyler Conklin");
         //playersNotToGive.add("David Njoku");
 
 
 
         ArrayList<String> givenPlayersToIgnore = new ArrayList<>();
-        givenPlayersToIgnore.add("Miles Sanders");
-        givenPlayersToIgnore.add("Dameon Pierce");
-        givenPlayersToIgnore.add("Chase Claypool");
-        givenPlayersToIgnore.add("Chris Olave");
+        givenPlayersToIgnore.add("Amari Cooper");
+        givenPlayersToIgnore.add("Zay Flowers");
+        givenPlayersToIgnore.add("Garrett Wilson");
+        givenPlayersToIgnore.add("Diontae Johnson");
+        givenPlayersToIgnore.add("Jaylen Warren");
+        givenPlayersToIgnore.add("Christian Watson");
 
 
 
         ArrayList<String> givenPlayersToRequire = new ArrayList<>();
-        //givenPlayersToRequire.add("Nick Chubb");
+        //givenPlayersToRequire.add("Brandin Cooks");
         //givenPlayersToRequire.add("Deebo Samuel");
         //givenPlayersToRequire.add("Chase Edmonds");
         //givenPlayersToRequire.add("A.J. Brown");
