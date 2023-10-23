@@ -1,8 +1,8 @@
 import java.util.Comparator;
 
-public class FPRosterSeriousStartingQBComparator implements Comparator<FPRosterSerious> {
+public class FPRosterSeriousStartingQBComparator implements Comparator<ScoredRoster> {
     @Override
-    public int compare(FPRosterSerious r1, FPRosterSerious r2) {
+    public int compare(ScoredRoster r1, ScoredRoster r2) {
         double bestQBR1 = 0.0;
         double bestQBR2 = 0.0;
 

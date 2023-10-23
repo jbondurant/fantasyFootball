@@ -12,9 +12,9 @@ import java.util.PriorityQueue;
 
 public class TradeFinder {
 
-    private static FPRosterSerious locateMyRoster(ArrayList<FPRosterSerious> allRosters, String myID) {
-        FPRosterSerious myRoster = null;
-        for(FPRosterSerious roster : allRosters){
+    private static ScoredRoster locateMyRoster(ArrayList<ScoredRoster> allRosters, String myID) {
+        ScoredRoster myRoster = null;
+        for(ScoredRoster roster : allRosters){
             if(roster.userID.equals(myID)){
                 myRoster = roster;
             }
@@ -22,12 +22,12 @@ public class TradeFinder {
         return myRoster;
     }
 
-    public static PriorityQueue<TradePreviewSerious> singleSwapTradeFinderSingleTeam(ArrayList<FPRosterSerious> allRosters, int teamNum, String myID){
+    public static PriorityQueue<TradePreviewSerious> singleSwapTradeFinderSingleTeam(ArrayList<ScoredRoster> allRosters, int teamNum, String myID){
         PriorityQueue<TradePreviewSerious> allTrades = new PriorityQueue<>(5, new TradePreviewSeriousComparator());
-        FPRosterSerious myRoster = locateMyRoster(allRosters, myID);
+        ScoredRoster myRoster = locateMyRoster(allRosters, myID);
         allRosters.remove(myRoster);
 
-        FPRosterSerious otherTeamsRoster = allRosters.get(teamNum);
+        ScoredRoster otherTeamsRoster = allRosters.get(teamNum);
 //TODO make roster copies
         for(int w=0; w < myRoster.draftedPlayersWithProj.size(); w++){
             for(int y=0; y<otherTeamsRoster.draftedPlayersWithProj.size(); y++){
@@ -48,12 +48,12 @@ public class TradeFinder {
 
     }
 
-    public static PriorityQueue<TradePreviewSerious> doubleSwapTradeFinderSingleTeam(ArrayList<FPRosterSerious> allRosters, int teamNum, String myID){
+    public static PriorityQueue<TradePreviewSerious> doubleSwapTradeFinderSingleTeam(ArrayList<ScoredRoster> allRosters, int teamNum, String myID){
         PriorityQueue<TradePreviewSerious> allTrades = new PriorityQueue<>(5, new TradePreviewSeriousComparator());
-        FPRosterSerious myRoster = locateMyRoster(allRosters, myID);
+        ScoredRoster myRoster = locateMyRoster(allRosters, myID);
         allRosters.remove(myRoster);
 
-        FPRosterSerious otherTeamsRoster = allRosters.get(teamNum);
+        ScoredRoster otherTeamsRoster = allRosters.get(teamNum);
 //TODO make roster copies
         for(int w=0; w < myRoster.draftedPlayersWithProj.size()-1; w++){
             for(int x = w+1; x < myRoster.draftedPlayersWithProj.size(); x++){
@@ -76,12 +76,12 @@ public class TradeFinder {
 
     }
 
-    public static PriorityQueue<TradePreviewSerious> tripleSwapTradeFinderSingleTeam(ArrayList<FPRosterSerious> allRosters, int teamNum, String myID){
+    public static PriorityQueue<TradePreviewSerious> tripleSwapTradeFinderSingleTeam(ArrayList<ScoredRoster> allRosters, int teamNum, String myID){
         PriorityQueue<TradePreviewSerious> allTrades = new PriorityQueue<>(5, new TradePreviewSeriousComparator());
-        FPRosterSerious myRoster = locateMyRoster(allRosters, myID);
+        ScoredRoster myRoster = locateMyRoster(allRosters, myID);
         allRosters.remove(myRoster);
 
-        FPRosterSerious otherTeamsRoster = allRosters.get(teamNum);
+        ScoredRoster otherTeamsRoster = allRosters.get(teamNum);
 
         for(int a1=0; a1 < myRoster.draftedPlayersWithProj.size()-2; a1++){
             for(int a2 = a1+1; a2 < myRoster.draftedPlayersWithProj.size()-1; a2++){
@@ -157,8 +157,8 @@ public class TradeFinder {
         //givenPlayersToRequire.add("Davante Adams");
 
 
-        ArrayList<FPRosterSerious> xyz = getFPProjPointsRostersSerious(configuration, inSeason, isCSV);
-        for(FPRosterSerious fpRos : xyz){
+        ArrayList<ScoredRoster> xyz = getFPProjPointsRosters(configuration, inSeason, isCSV);
+        for(ScoredRoster fpRos : xyz){
             System.out.print("roster of " + HumanOfInterest.getHumanFromID(fpRos.userID) + "\n");
             for(Score s : fpRos.draftedPlayersWithProj){
                 System.out.println("\t" + s.player.firstName + " " + s.player.lastName + "\t score:\t" + s.score);
@@ -166,7 +166,7 @@ public class TradeFinder {
         }
         printRostersByPoints(xyz);
 
-        FPRosterSerious.printWorstStartingQBRosterOrder(xyz);
+        ScoredRoster.printWorstStartingQBRosterOrder(xyz);
 
         //PriorityQueue<TradePreviewSerious> xyz2 = doubleSwapTradeFinderSingleTeam(xyz, 0);
         //PriorityQueue<TradePreviewSerious> xyz2 = doubleSwapTradeFinderAll(xyz);
@@ -270,7 +270,7 @@ public class TradeFinder {
 
         ArrayList<String> playersOfIgnoredTraders = new ArrayList<>();
         for(String ignoredTrader : tradersToIgnore){
-            for(FPRosterSerious fpRos : xyz){
+            for(ScoredRoster fpRos : xyz){
                 if(ignoredTrader.equals(fpRos.userID)){
                     for(Score score : fpRos.draftedPlayersWithProj){
                         playersOfIgnoredTraders.add(score.player.sportRadarID);
@@ -593,7 +593,7 @@ public class TradeFinder {
 
     }
 
-    public static PriorityQueue<TradePreviewSerious> singleDoubleTripleSwapFinderAll(ArrayList<FPRosterSerious> allRosters, AAAConfiguration aaaConfiguration){
+    public static PriorityQueue<TradePreviewSerious> singleDoubleTripleSwapFinderAll(ArrayList<ScoredRoster> allRosters, AAAConfiguration aaaConfiguration){
         PriorityQueue<TradePreviewSerious> doubleTripleSwaps = new PriorityQueue<>(5, new TradePreviewSeriousComparator());
         PriorityQueue<TradePreviewSerious> singleSwaps = singleSwapTradeFinderAll(allRosters, aaaConfiguration);
         PriorityQueue<TradePreviewSerious> doubleSwaps = doubleSwapTradeFinderAll(allRosters, aaaConfiguration);
@@ -604,80 +604,83 @@ public class TradeFinder {
         return doubleTripleSwaps;
     }
 
-    private static ArrayList<FPRosterSerious> getCopyOfAllRosters(ArrayList<FPRosterSerious> allRosters) {
-        ArrayList<FPRosterSerious> allRostersCopy = new ArrayList<>();
-        for(FPRosterSerious fpRos : allRosters){
-            allRostersCopy.add(FPRosterSerious.makeCopy(fpRos));
+    private static ArrayList<ScoredRoster> getCopyOfAllRosters(ArrayList<ScoredRoster> allRosters) {
+        ArrayList<ScoredRoster> allRostersCopy = new ArrayList<>();
+        for(ScoredRoster fpRos : allRosters){
+            allRostersCopy.add(ScoredRoster.makeCopy(fpRos));
         }
         return allRostersCopy;
     }
 
-    public static PriorityQueue<TradePreviewSerious> singleSwapTradeFinderAll(ArrayList<FPRosterSerious> allRosters, AAAConfiguration aaaConfiguration){
+    public static PriorityQueue<TradePreviewSerious> singleSwapTradeFinderAll(ArrayList<ScoredRoster> allRosters, AAAConfiguration aaaConfiguration){
 
         PriorityQueue<TradePreviewSerious> allTrades = new PriorityQueue<>(5, new TradePreviewSeriousComparator());
         for(int i=0; i<allRosters.size()-1; i++){
-            ArrayList<FPRosterSerious> allRostersCopy = getCopyOfAllRosters(allRosters);
+            ArrayList<ScoredRoster> allRostersCopy = getCopyOfAllRosters(allRosters);
             PriorityQueue<TradePreviewSerious> singleTeamTrades = singleSwapTradeFinderSingleTeam(allRostersCopy, i, aaaConfiguration.getMyID());
             allTrades.addAll(singleTeamTrades);
         }
         return allTrades;
     }
 
-    public static PriorityQueue<TradePreviewSerious> doubleSwapTradeFinderAll(ArrayList<FPRosterSerious> allRosters, AAAConfiguration aaaConfiguration){
+    public static PriorityQueue<TradePreviewSerious> doubleSwapTradeFinderAll(ArrayList<ScoredRoster> allRosters, AAAConfiguration aaaConfiguration){
 
         PriorityQueue<TradePreviewSerious> allTrades = new PriorityQueue<>(5, new TradePreviewSeriousComparator());
         for(int i=0; i<allRosters.size()-1; i++){
-            ArrayList<FPRosterSerious> allRostersCopy = getCopyOfAllRosters(allRosters);
+            ArrayList<ScoredRoster> allRostersCopy = getCopyOfAllRosters(allRosters);
             PriorityQueue<TradePreviewSerious> singleTeamTrades = doubleSwapTradeFinderSingleTeam(allRostersCopy, i, aaaConfiguration.getMyID());
             allTrades.addAll(singleTeamTrades);
         }
         return allTrades;
     }
 
-    public static PriorityQueue<TradePreviewSerious> tripleSwapTradeFinderAll(ArrayList<FPRosterSerious> allRosters, AAAConfiguration aaaConfiguration){
+    public static PriorityQueue<TradePreviewSerious> tripleSwapTradeFinderAll(ArrayList<ScoredRoster> allRosters, AAAConfiguration aaaConfiguration){
 
         PriorityQueue<TradePreviewSerious> allTrades = new PriorityQueue<>(5, new TradePreviewSeriousComparator());
         for(int i=0; i<allRosters.size()-1; i++){
-            ArrayList<FPRosterSerious> allRostersCopy = getCopyOfAllRosters(allRosters);
+            ArrayList<ScoredRoster> allRostersCopy = getCopyOfAllRosters(allRosters);
             PriorityQueue<TradePreviewSerious> singleTeamTradesTriple = tripleSwapTradeFinderSingleTeam(allRostersCopy, i, aaaConfiguration.getMyID());
             allTrades.addAll(singleTeamTradesTriple);
         }
         return allTrades;
     }
 
-    public static ArrayList<FPRosterSerious> getFPProjPointsRostersSerious(AAAConfiguration configuration, boolean inSeason, boolean isCSV){
-        String webData = getTodaysSleeperRosterWebPage(configuration);
-
-        JsonElement jsonElement = new JsonParser().parse(webData);
-        JsonArray jsonMembers = jsonElement.getAsJsonArray();
-
-        ArrayList<FPRosterSerious> allRostersSerious = new ArrayList<>();
-        for (JsonElement jsonMember : jsonMembers) {
-            JsonObject apiObject = jsonMember.getAsJsonObject();
-
-            String ownerID = "";
-            if(!apiObject.get("owner_id").isJsonNull()) {
-                ownerID = apiObject.get("owner_id").getAsString();
-            }
-
-            ArrayList<Player> allPlayersOfTeam = new ArrayList<>();
-            JsonArray allWeirdIDs = apiObject.getAsJsonArray("players");
-            for(JsonElement playerWeirdID : allWeirdIDs){
-                Player tempPlayer = Player.getPlayerFromSIDV2(playerWeirdID.getAsString());
-                if(tempPlayer == null){
-                    System.out.println("Here is a null player mistake");
-                }
-                allPlayersOfTeam.add(tempPlayer);
-            }
-            allRostersSerious.add(new FPRosterSerious(ownerID, allPlayersOfTeam, inSeason, isCSV));
+    public static ArrayList<ScoredRoster> getFPProjPointsRosters(AAAConfiguration configuration, boolean inSeason, boolean isCSV){
+        ArrayList<ScoredRoster> allRosters = new ArrayList<>();
+        for (JsonObject sleeperRoster : getTodaysSleeperRosters(configuration)) {
+            String ownerID = getOwnerID(sleeperRoster);
+            ArrayList<Player> allPlayersOfTeam = getSleeperPlayersUsingWeirdIDs(sleeperRoster);
+            //this is stupid. We set the score inside here. Let's parametrize this
+            allRosters.add(new ScoredRoster(ownerID, allPlayersOfTeam, inSeason, isCSV));
         }
-        return allRostersSerious;
+        return allRosters;
 
     }
 
-    public static void printRostersByPoints(ArrayList<FPRosterSerious> allRosters){
+    private static ArrayList<Player> getSleeperPlayersUsingWeirdIDs(JsonObject sleeperRoster) {
+        ArrayList<Player> allPlayersOfTeam = new ArrayList<>();
+        JsonArray allWeirdIDs = sleeperRoster.getAsJsonArray("players");
+        for(JsonElement playerWeirdID : allWeirdIDs){
+            Player tempPlayer = Player.getPlayerFromSIDV2(playerWeirdID.getAsString());
+            if(tempPlayer == null){
+                System.out.println("Here is a null player mistake");
+            }
+            allPlayersOfTeam.add(tempPlayer);
+        }
+        return allPlayersOfTeam;
+    }
+
+    private static String getOwnerID(JsonObject sleeperRoster) {
+        String ownerID = "";
+        if(!sleeperRoster.get("owner_id").isJsonNull()) {
+            ownerID = sleeperRoster.get("owner_id").getAsString();
+        }
+        return ownerID;
+    }
+
+    public static void printRostersByPoints(ArrayList<ScoredRoster> allRosters){
         ArrayList allTeamOwners = new ArrayList<>();
-        for(FPRosterSerious fpRost : allRosters){
+        for(ScoredRoster fpRost : allRosters){
             TeamOwner teamOwner = TeamOwner.initializeTeamOwnerFromSleeperUserID(fpRost.userID, fpRost.scoreBestROSStartingLineup());
             allTeamOwners.add(teamOwner);
         }
@@ -687,5 +690,17 @@ public class TradeFinder {
     private static String getTodaysSleeperRosterWebPage(AAAConfiguration configuration){
         return InOutUtilities.getTodaysWebPage(configuration.getRosterWebURL(),
                 configuration.getMyNameForLeague());
+    }
+
+    private static ArrayList<JsonObject> getTodaysSleeperRosters(AAAConfiguration configuration) {
+        String webData = getTodaysSleeperRosterWebPage(configuration);
+        JsonElement jsonElement = new JsonParser().parse(webData);
+        JsonArray jsonMembers = jsonElement.getAsJsonArray();
+        ArrayList<JsonObject> jsonObjects = new ArrayList<>();
+        for(JsonElement sleeperRoster : jsonMembers) {
+            JsonObject apiObject = sleeperRoster.getAsJsonObject();
+            jsonObjects.add(apiObject);
+        }
+        return jsonObjects;
     }
 }

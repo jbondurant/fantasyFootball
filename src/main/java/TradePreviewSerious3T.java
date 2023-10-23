@@ -26,7 +26,7 @@ public class TradePreviewSerious3T {
     String t2ReceivedPlayers;
     String t3ReceivedPlayers;
 
-    TradePreviewSerious3T(FPRosterSerious t1, FPRosterSerious t2, FPRosterSerious t3, Score t1p1S, Score t1p2S, Score t2p1S, Score t2p2S, Score t3p1S, Score t3p2S, List<Character> perm, int minMe, int minThem){
+    TradePreviewSerious3T(ScoredRoster t1, ScoredRoster t2, ScoredRoster t3, Score t1p1S, Score t1p2S, Score t2p1S, Score t2p2S, Score t3p1S, Score t3p2S, List<Character> perm, int minMe, int minThem){
         double minMine = (double) minMe;
         double minTheirs = (double) minThem;
 
@@ -51,9 +51,9 @@ public class TradePreviewSerious3T {
         t1Received2 = null;
         ArrayList<Score> t1ReceivedBoth = new ArrayList<>();
 
-        FPRosterSerious t1Copy = FPRosterSerious.makeCopy(t1);
-        FPRosterSerious t2Copy = FPRosterSerious.makeCopy(t2);
-        FPRosterSerious t3Copy = FPRosterSerious.makeCopy(t3);
+        ScoredRoster t1Copy = ScoredRoster.makeCopy(t1);
+        ScoredRoster t2Copy = ScoredRoster.makeCopy(t2);
+        ScoredRoster t3Copy = ScoredRoster.makeCopy(t3);
 
         double initialScoreT1 = t1Copy.scoreBestROSStartingLineup();
         double initialScoreT2 = t2Copy.scoreBestROSStartingLineup();

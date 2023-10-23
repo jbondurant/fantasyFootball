@@ -1,9 +1,7 @@
-import java.util.ArrayList;
-
 public class TradePreviewSerious {
 
-    FPRosterSerious initialRosterTeam1;
-    FPRosterSerious initialRosterTeam2;
+    ScoredRoster initialRosterTeam1;
+    ScoredRoster initialRosterTeam2;
 
     Score t1p1Score;
     Score t1p2Score;
@@ -16,7 +14,7 @@ public class TradePreviewSerious {
     double improvementT1;
     double improvementT2;
 
-    TradePreviewSerious(FPRosterSerious t1, FPRosterSerious t2, Score t1p1S, Score t2p1S){
+    TradePreviewSerious(ScoredRoster t1, ScoredRoster t2, Score t1p1S, Score t2p1S){
 
         if(t1p1S.player.lastName.equals("Murray")) {
             if (t2p1S.player.lastName.equals("Hill")) {
@@ -32,11 +30,11 @@ public class TradePreviewSerious {
         t1p1Score = t1p1S;
         t2p1Score = t2p1S;
 
-        FPRosterSerious t1Copy = FPRosterSerious.makeCopy(t1);
-        FPRosterSerious t2Copy = FPRosterSerious.makeCopy(t2);
+        ScoredRoster t1Copy = ScoredRoster.makeCopy(t1);
+        ScoredRoster t2Copy = ScoredRoster.makeCopy(t2);
 
-        initialRosterTeam1 = FPRosterSerious.makeCopy(t1);
-        initialRosterTeam2 = FPRosterSerious.makeCopy(t2);
+        initialRosterTeam1 = ScoredRoster.makeCopy(t1);
+        initialRosterTeam2 = ScoredRoster.makeCopy(t2);
 
         double initialScoreT1 = t1Copy.scoreBestROSStartingLineup();
         double initialScoreT2 = t2Copy.scoreBestROSStartingLineup();
@@ -75,7 +73,7 @@ public class TradePreviewSerious {
 
     }
 
-    TradePreviewSerious(FPRosterSerious t1, FPRosterSerious t2, Score t1p1S, Score t1p2S, Score t2p1S, Score t2p2S){
+    TradePreviewSerious(ScoredRoster t1, ScoredRoster t2, Score t1p1S, Score t1p2S, Score t2p1S, Score t2p2S){
 
         t1p3Score = null;
         t2p3Score = null;
@@ -93,8 +91,8 @@ public class TradePreviewSerious {
 
         }
 
-        FPRosterSerious t1Copy = FPRosterSerious.makeCopy(t1);
-        FPRosterSerious t2Copy = FPRosterSerious.makeCopy(t2);
+        ScoredRoster t1Copy = ScoredRoster.makeCopy(t1);
+        ScoredRoster t2Copy = ScoredRoster.makeCopy(t2);
 
         double initialScoreT1 = t1Copy.scoreBestROSStartingLineup();
         double initialScoreT2 = t2Copy.scoreBestROSStartingLineup();
@@ -126,7 +124,7 @@ public class TradePreviewSerious {
 
 
 
-    TradePreviewSerious(FPRosterSerious t1, FPRosterSerious t2, Score t1p1S, Score t1p2S, Score t1p3S, Score t2p1S, Score t2p2S, Score t2p3S){
+    TradePreviewSerious(ScoredRoster t1, ScoredRoster t2, Score t1p1S, Score t1p2S, Score t1p3S, Score t2p1S, Score t2p2S, Score t2p3S){
 
         t1p1Score = t1p1S;
         t1p2Score = t1p2S;
@@ -147,8 +145,8 @@ public class TradePreviewSerious {
 
         }
 
-        FPRosterSerious t1Copy = FPRosterSerious.makeCopy(t1);
-        FPRosterSerious t2Copy = FPRosterSerious.makeCopy(t2);
+        ScoredRoster t1Copy = ScoredRoster.makeCopy(t1);
+        ScoredRoster t2Copy = ScoredRoster.makeCopy(t2);
 
         double initialScoreT1 = t1Copy.scoreBestROSStartingLineup();
         double initialScoreT2 = t2Copy.scoreBestROSStartingLineup();
