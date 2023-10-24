@@ -14,6 +14,7 @@ public class ScoredRoster {
         playerSRIDToScore = InSeasonProjectionsFP.playerToScoreProjFPROS(is6PtsThrow);
         //todo 2023 uncomment playerCSVSRIDToScore = CSVProjectionsFP.playerToScoreProjFPROS(is6PtsThrow);
         playerCSVSRIDToScore = null;
+
     }
 
     String userID;
@@ -22,17 +23,14 @@ public class ScoredRoster {
 
     double scoreBestLineup;
 
-    boolean isInSeason;
-
-    boolean isCSV;
+    ProjectionSource projectionSource;
 
 
-    public ScoredRoster(String uid, ArrayList<Player> dp, boolean iis, boolean icsv){
+    public ScoredRoster(String uid, ArrayList<Player> dp, ProjectionSource ps){
         userID = uid;
-        draftedPlayersWithProj = getPlayerProjections(dp, iis, icsv);
+        draftedPlayersWithProj = getPlayerProjections(dp, ps);
         scoreBestLineup = scoreBestROSStartingLineup();
-        isInSeason = iis;
-        isCSV = icsv;
+        projectionSource = ps;
 
     }
 
@@ -62,7 +60,7 @@ public class ScoredRoster {
         }
 
         String usedID = scoredRoster.userID;
-        ScoredRoster copyOfRoster = new ScoredRoster(usedID, usedPlayers, scoredRoster.isInSeason, scoredRoster.isCSV);
+        ScoredRoster copyOfRoster = new ScoredRoster(usedID, usedPlayers, scoredRoster.projectionSource);
         return copyOfRoster;
     }
 
@@ -181,17 +179,23 @@ public class ScoredRoster {
         return scoreToReturn;
     }
 
-    //todo 2023 need to detangle this mess
-    public static ArrayList<Score> getPlayerProjections(ArrayList<Player> dp, boolean inSeason, boolean isCSV){
+    //todo 2023 add sleeper proj
+    public static ArrayList<Score> getPlayerProjections(ArrayList<Player> dp, ProjectionSource ps){
         ArrayList<Score> toReturn = new ArrayList<>();
-        if(inSeason && (!isCSV)) {
+        if(ProjectionSource.SLEEPER.equals(ps)){
+            return null;
+        }
+        else if(ProjectionSource.IN_SEASON_FP_SITE.equals(ps)) {
             return getFPPlayerProjInSeasonNotCSV(dp, toReturn);
         }
-        else if(inSeason && isCSV){
+        else if(ProjectionSource.IN_SEASON_FP_CSV.equals(ps)){
             return getFPPlayerProjInSeasonIsCSV(dp, toReturn);
         }
-        else{
+        else if(ProjectionSource.PRESEASON_FP_SITE.equals(ps)){
             return getFPPlayerProjectionsPreSeason(dp, toReturn);
+        }
+        else{
+            throw new RuntimeException("wrong projection source");
         }
     }
 

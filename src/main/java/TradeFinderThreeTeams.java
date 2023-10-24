@@ -40,8 +40,7 @@ public class TradeFinderThreeTeams {
         }
     }
 
-    public static ArrayList<ScoredRoster> getFPProjPointsRostersSerious(boolean inSeason,
-                                                                        boolean isCSV,
+    public static ArrayList<ScoredRoster> getFPProjPointsRostersSerious(ProjectionSource projectionSource,
                                                                         AAAConfiguration aaaConfiguration){
         ArrayList<ScoredRoster> allRostersSerious = new ArrayList<>();
 
@@ -74,7 +73,7 @@ public class TradeFinderThreeTeams {
                 }
                 allPlayersOfTeam.add(tempPlayer);
             }
-            ScoredRoster tempMemberSerious = new ScoredRoster(ownerID, allPlayersOfTeam, inSeason, isCSV);
+            ScoredRoster tempMemberSerious = new ScoredRoster(ownerID, allPlayersOfTeam, projectionSource);
             allRostersSerious.add(tempMemberSerious);
 
         }
@@ -214,11 +213,10 @@ public class TradeFinderThreeTeams {
                                            int minMine,
                                            int minTheirs,
                                            boolean ignoreJake,
-                                           boolean inSeason,
-                                           boolean isCSV,
+                                           ProjectionSource projectionSource,
                                            AAAConfiguration aaaConfiguration) throws IOException {
 
-        ArrayList<ScoredRoster> xyz = getFPProjPointsRostersSerious(inSeason, isCSV, aaaConfiguration);
+        ArrayList<ScoredRoster> xyz = getFPProjPointsRostersSerious(projectionSource, aaaConfiguration);
         scoreAllRosters(xyz);
         //PriorityQueue<TradePreviewSerious> xyz2 = doubleSwapTradeFinderSingleTeam(xyz, 0);
         PriorityQueue<TradePreviewSerious3T> xyz2 = doubleSwapTradeFinderAllWithN(xyz, teamN, lastTeamStart,lastTeamEnd, tradedPlayerLastName, minMine, minTheirs, ignoreJake);
@@ -448,7 +446,7 @@ public class TradeFinderThreeTeams {
         //10<11 is hamrliks? *
         //ends at 10; <11
         AAAConfiguration aaaConfiguration = new AAAConfigurationSleeperLeague();
-        boolean isCSV = false;
+        ProjectionSource projectionSource = ProjectionSource.PRESEASON_FP_SITE;
         for(int i=0; i<1; i++){//todo change back to 11
             String tradedPlayerLastName = "Henry";
             int teamN = i;
@@ -459,7 +457,7 @@ public class TradeFinderThreeTeams {
             boolean ignoreJake = false;
             boolean inSeason = true; //todo
 
-            tradeFinder3TRunner(teamN, lastTeamStart, lastTeamEnd, tradedPlayerLastName, minMine, minTheirs, ignoreJake, inSeason, isCSV, aaaConfiguration);
+            tradeFinder3TRunner(teamN, lastTeamStart, lastTeamEnd, tradedPlayerLastName, minMine, minTheirs, ignoreJake, projectionSource, aaaConfiguration);
 
         }
 

@@ -115,8 +115,7 @@ public class TradeFinder {
         boolean onlyOne = true;
         boolean onlyTwo = false;
         boolean toCrop = false;
-        boolean inSeason = false;//todo 2023 put back to true
-        boolean isCSV = false;//todo 2023 put back to true
+        ProjectionSource projectionSource = ProjectionSource.IN_SEASON_FP_SITE;
         boolean roundFilter = false;
         ArrayList<String> tradersToIgnore = new ArrayList<>();
         //tradersToIgnore.add("606234521821577216");//tommyrads
@@ -128,17 +127,12 @@ public class TradeFinder {
         //tradersToIgnore.add("459267987174584320");//doddi
         ArrayList<String> playersToGive = new ArrayList<>();
         //playersToGive.add("Diontae Johnson");
-        //playersToGive.add("Justin Jefferson");
 
 
         ArrayList<String> playersNotToGive = new ArrayList<>();
         //playersNotToGive.add("James Conner");
-        //playersNotToGive.add("Tyler Conklin");
-        //playersNotToGive.add("David Njoku");
 
-
-
-        ArrayList<String> givenPlayersToIgnore = new ArrayList<>();
+        HashSet<String> givenPlayersToIgnore = new HashSet<>();
         givenPlayersToIgnore.add("Amari Cooper");
         givenPlayersToIgnore.add("Zay Flowers");
         givenPlayersToIgnore.add("Garrett Wilson");
@@ -146,26 +140,12 @@ public class TradeFinder {
         givenPlayersToIgnore.add("Jaylen Warren");
         givenPlayersToIgnore.add("Christian Watson");
 
-
-
         ArrayList<String> givenPlayersToRequire = new ArrayList<>();
         //givenPlayersToRequire.add("Brandin Cooks");
-        //givenPlayersToRequire.add("Deebo Samuel");
-        //givenPlayersToRequire.add("Chase Edmonds");
-        //givenPlayersToRequire.add("A.J. Brown");
-        //givenPlayersToRequire.add("Ezekiel Elliott");
-        //givenPlayersToRequire.add("Davante Adams");
 
-
-        ArrayList<ScoredRoster> xyz = getFPProjPointsRosters(configuration, inSeason, isCSV);
-        for(ScoredRoster fpRos : xyz){
-            System.out.print("roster of " + HumanOfInterest.getHumanFromID(fpRos.userID) + "\n");
-            for(Score s : fpRos.draftedPlayersWithProj){
-                System.out.println("\t" + s.player.firstName + " " + s.player.lastName + "\t score:\t" + s.score);
-            }
-        }
+        ArrayList<ScoredRoster> xyz = getFPProjPointsRosters(configuration, projectionSource);
+        printRostersWitPointsAndPlayerPoints(xyz);
         printRostersByPoints(xyz);
-
         ScoredRoster.printWorstStartingQBRosterOrder(xyz);
 
         //PriorityQueue<TradePreviewSerious> xyz2 = doubleSwapTradeFinderSingleTeam(xyz, 0);
@@ -593,6 +573,15 @@ public class TradeFinder {
 
     }
 
+    private static void printRostersWitPointsAndPlayerPoints(ArrayList<ScoredRoster> xyz) {
+        for(ScoredRoster fpRos : xyz){
+            System.out.print("roster of " + HumanOfInterest.getHumanFromID(fpRos.userID) + "\n");
+            for(Score s : fpRos.draftedPlayersWithProj){
+                System.out.println("\t" + s.player.firstName + " " + s.player.lastName + "\t score:\t" + s.score);
+            }
+        }
+    }
+
     public static PriorityQueue<TradePreviewSerious> singleDoubleTripleSwapFinderAll(ArrayList<ScoredRoster> allRosters, AAAConfiguration aaaConfiguration){
         PriorityQueue<TradePreviewSerious> doubleTripleSwaps = new PriorityQueue<>(5, new TradePreviewSeriousComparator());
         PriorityQueue<TradePreviewSerious> singleSwaps = singleSwapTradeFinderAll(allRosters, aaaConfiguration);
@@ -645,13 +634,13 @@ public class TradeFinder {
         return allTrades;
     }
 
-    public static ArrayList<ScoredRoster> getFPProjPointsRosters(AAAConfiguration configuration, boolean inSeason, boolean isCSV){
+    public static ArrayList<ScoredRoster> getFPProjPointsRosters(AAAConfiguration configuration, ProjectionSource projectionSource){
         ArrayList<ScoredRoster> allRosters = new ArrayList<>();
         for (JsonObject sleeperRoster : getTodaysSleeperRosters(configuration)) {
             String ownerID = getOwnerID(sleeperRoster);
             ArrayList<Player> allPlayersOfTeam = getSleeperPlayersUsingWeirdIDs(sleeperRoster);
             //this is stupid. We set the score inside here. Let's parametrize this
-            allRosters.add(new ScoredRoster(ownerID, allPlayersOfTeam, inSeason, isCSV));
+            allRosters.add(new ScoredRoster(ownerID, allPlayersOfTeam, projectionSource));
         }
         return allRosters;
 
