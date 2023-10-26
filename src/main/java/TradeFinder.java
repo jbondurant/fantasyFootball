@@ -634,7 +634,6 @@ public class TradeFinder {
         for (JsonObject sleeperRoster : getTodaysSleeperRosters(configuration)) {
             String ownerID = getOwnerID(sleeperRoster);
             ArrayList<Player> allPlayersOfTeam = getSleeperPlayersUsingWeirdIDs(sleeperRoster);
-            //this is stupid. We set the score inside here. Let's parametrize this
             allRosters.add(new ScoredRoster(ownerID, allPlayersOfTeam, projectionSource));
         }
         return allRosters;
