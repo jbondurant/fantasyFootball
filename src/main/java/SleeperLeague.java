@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 //Poorly designed
 public class SleeperLeague{
@@ -101,7 +102,7 @@ public class SleeperLeague{
         return funScoresList;
     }
 
-    private static ArrayList<Score> getSeriousScoreList(){
+    public static ArrayList<Score> getScoreList(){
         SleeperLeague seriousL = SleeperLeague.getSeriousLeague();
         LeagueScoringSettings seriousSettings = seriousL.league.leagueScoringSettings;
         FantasyProsScore seriousScores = new FantasyProsScore(seriousSettings);
@@ -109,8 +110,15 @@ public class SleeperLeague{
         return seriousScoresList;
     }
 
-    public static ArrayList<Score> getScoreList(){
-        return SleeperLeague.getSeriousScoreList();
+    public static HashMap<String, Double> getScoreMap(){
+        HashMap<String, Double> scoreMap = new HashMap<>();
+        ArrayList<Score> scoreList = getScoreList();
+        for(Score s : scoreList){
+            if(s.player != null && s.player.sportRadarID != null){
+                scoreMap.put(s.player.sportRadarID, s.score);
+            }
+        }
+        return scoreMap;
     }
 
     public static double scoreSleeperDraft(SleeperLeague sleeperLeague, boolean isFun){

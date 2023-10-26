@@ -6,14 +6,16 @@ public class ScoredRoster {
 
     public static LeagueScoringSettings lssSerious = SleeperLeague.getSeriousLeague().league.leagueScoringSettings;
 
-    public static HashMap<String, Double> playerSRIDToScore = new HashMap<>();
-    public static HashMap<String, Double> playerCSVSRIDToScore = new HashMap<>();
+    public static HashMap<String, Double> playerSRIDToScoreFPInSeasonNotCSV = new HashMap<>();
+    public static HashMap<String, Double> playerSRIDToScoreFPInSeasonCSV = new HashMap<>();
+    public static HashMap<String, Double> playerSRIDToScoreFPPreSeason = new HashMap<>();
 
     static{
         boolean is6PtsThrow = true;
-        playerSRIDToScore = InSeasonProjectionsFP.playerToScoreProjFPROS(is6PtsThrow);
+        playerSRIDToScoreFPInSeasonNotCSV = InSeasonProjectionsFP.playerToScoreProjFPROS(is6PtsThrow);
         //todo 2023 uncomment playerCSVSRIDToScore = CSVProjectionsFP.playerToScoreProjFPROS(is6PtsThrow);
-        playerCSVSRIDToScore = null;
+        playerSRIDToScoreFPInSeasonCSV = null;
+        playerSRIDToScoreFPPreSeason = SleeperLeague.getScoreMap();
 
     }
 
@@ -181,67 +183,44 @@ public class ScoredRoster {
 
     //todo 2023 add sleeper proj
     public static ArrayList<Score> getPlayerProjections(ArrayList<Player> dp, ProjectionSource ps){
-        ArrayList<Score> toReturn = new ArrayList<>();
         if(ProjectionSource.SLEEPER.equals(ps)){
             return null;
         }
         else if(ProjectionSource.IN_SEASON_FP_SITE.equals(ps)) {
-            return getFPPlayerProjInSeasonNotCSV(dp, toReturn);
+            return getPlayerProjInSeasonFromMap(dp, playerSRIDToScoreFPInSeasonNotCSV);
         }
         else if(ProjectionSource.IN_SEASON_FP_CSV.equals(ps)){
-            return getFPPlayerProjInSeasonIsCSV(dp, toReturn);
+            return getPlayerProjInSeasonFromMap(dp, playerSRIDToScoreFPInSeasonCSV);
         }
         else if(ProjectionSource.PRESEASON_FP_SITE.equals(ps)){
-            return getFPPlayerProjectionsPreSeason(dp, toReturn);
+            return getPlayerProjInSeasonFromMap(dp, playerSRIDToScoreFPPreSeason);
         }
         else{
             throw new RuntimeException("wrong projection source");
         }
     }
 
-    private static ArrayList<Score> getFPPlayerProjectionsPreSeason(ArrayList<Player> dp, ArrayList<Score> toReturn) {
+    private static Score getSinglePlayerProj(Player p, HashMap<String, Double> playerSRIDToScore) {
+        if (playerSRIDToScore.containsKey(p.sportRadarID)) {
+            return new Score(playerSRIDToScore.get(p.sportRadarID), p);
+        } else {
+            System.out.println("Player score for " + p.firstName + " " + p.lastName + " not found");
+            return null;
+        }
+    }
+
+    private static ArrayList<Score> getPlayerProjInSeasonFromMap(ArrayList<Player> dp, HashMap<String, Double> playerSRIDToScore) {
+        ArrayList<Score> toReturn = new ArrayList<>();
         for(Player p : dp) {
-            ArrayList<Score> scoreList = SleeperLeague.getScoreList();
-            double scoreOfPlayer = 0.0;
-            for (Score score : scoreList) {
-                if (score.player != null && score.player.sportRadarID.equals(p.sportRadarID)) {
-                    scoreOfPlayer = score.score;
-                    Score tempScore = new Score(scoreOfPlayer, p);
-                    toReturn.add(tempScore);
-                }
-            }
-            if (scoreOfPlayer == 0.0) {
-                System.out.println("Player score for " + p.firstName + " " + p.lastName + " not found");
+            Score s = getSinglePlayerProj(p, playerSRIDToScore);
+            if(s != null){
+                toReturn.add(s);
             }
         }
         return toReturn;
     }
 
-    private static ArrayList<Score> getFPPlayerProjInSeasonIsCSV(ArrayList<Player> dp, ArrayList<Score> toReturn) {
-        for(Player p : dp) {
-            if (playerCSVSRIDToScore.containsKey(p.sportRadarID)) {
-                double scoreOfPlayer = playerCSVSRIDToScore.get(p.sportRadarID);
-                Score tempScore = new Score(scoreOfPlayer, p);
-                toReturn.add(tempScore);
-            } else {
-                System.out.println("Player score for " + p.firstName + " " + p.lastName + " not found");
-            }
-        }
-        return toReturn;
-    }
 
-    private static ArrayList<Score> getFPPlayerProjInSeasonNotCSV(ArrayList<Player> dp, ArrayList<Score> toReturn) {
-        for(Player p : dp) {
-            if (playerSRIDToScore.containsKey(p.sportRadarID)) {
-                double scoreOfPlayer = playerSRIDToScore.get(p.sportRadarID);
-                Score tempScore = new Score(scoreOfPlayer, p);
-                toReturn.add(tempScore);
-            } else {
-                System.out.println("Player score for " + p.firstName + " " + p.lastName + " not found");
-            }
-        }
-        return toReturn;
-    }
 
     public static void printWorstStartingQBRosterOrder(ArrayList<ScoredRoster> allRosters){
         Collections.sort(allRosters, new FPRosterSeriousStartingQBComparator());

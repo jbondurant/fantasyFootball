@@ -143,37 +143,32 @@ public class TradeFinder {
         ArrayList<String> givenPlayersToRequire = new ArrayList<>();
         //givenPlayersToRequire.add("Brandin Cooks");
 
-        ArrayList<ScoredRoster> xyz = getFPProjPointsRosters(configuration, projectionSource);
-        printRostersWitPointsAndPlayerPoints(xyz);
-        printRostersByPoints(xyz);
-        ScoredRoster.printWorstStartingQBRosterOrder(xyz);
+        ArrayList<ScoredRoster> scoredRosters = getProjPointsRosters(configuration, projectionSource);
+        printRostersWitPointsAndPlayerPoints(scoredRosters);
+        printRostersByPoints(scoredRosters);
+        ScoredRoster.printWorstStartingQBRosterOrder(scoredRosters);
 
-        //PriorityQueue<TradePreviewSerious> xyz2 = doubleSwapTradeFinderSingleTeam(xyz, 0);
-        //PriorityQueue<TradePreviewSerious> xyz2 = doubleSwapTradeFinderAll(xyz);
-        //PriorityQueue<TradePreviewSerious> xyz2 = singleSwapTradeFinderAll(xyz);
-
-        PriorityQueue<TradePreviewSerious> xyz2;
+        PriorityQueue<TradePreviewSerious> tradePreviews;
         if(onlyOne){
-            xyz2 = singleSwapTradeFinderAll(xyz, configuration);
+            tradePreviews = singleSwapTradeFinderAll(scoredRosters, configuration);
         }
         else if(onlyTwo){
-            xyz2 = doubleSwapTradeFinderAll(xyz, configuration);
+            tradePreviews = doubleSwapTradeFinderAll(scoredRosters, configuration);
         }
         else {
-            xyz2 = singleDoubleTripleSwapFinderAll(xyz, configuration);
+            tradePreviews = singleDoubleTripleSwapFinderAll(scoredRosters, configuration);
         }
 
         if(onlyOne) {
-
             ArrayList<TradePreviewSerious> xyz2Arr = new ArrayList<>();
-            Iterator<TradePreviewSerious> it = xyz2.iterator();
+            Iterator<TradePreviewSerious> it = tradePreviews.iterator();
             while (it.hasNext()) {
                 xyz2Arr.add(it.next());
             }
 
-            int xyz2Len = xyz2.size();
+            int xyz2Len = tradePreviews.size();
             for (int i = 0; i < xyz2Len; i++) {
-                xyz2.poll();
+                tradePreviews.poll();
             }
 
             for (int i = 0; i < xyz2Arr.size() - 1; i++) {
@@ -195,7 +190,7 @@ public class TradeFinder {
                     }
                 }
                 if (!hasDup) {
-                    xyz2.add(xyz2Arr.get(i));
+                    tradePreviews.add(xyz2Arr.get(i));
                 }
             }
         }
@@ -208,14 +203,14 @@ public class TradeFinder {
 
         if(roundFilter){
             ArrayList<TradePreviewSerious> xyz2Arr = new ArrayList<>();
-            Iterator<TradePreviewSerious> it = xyz2.iterator();
+            Iterator<TradePreviewSerious> it = tradePreviews.iterator();
             while (it.hasNext()) {
                 xyz2Arr.add(it.next());
             }
 
-            int xyz2Len = xyz2.size();
+            int xyz2Len = tradePreviews.size();
             for (int i = 0; i < xyz2Len; i++) {
-                xyz2.poll();
+                tradePreviews.poll();
             }
 
             for (int i = 0; i < xyz2Arr.size() - 1; i++) {
@@ -231,7 +226,7 @@ public class TradeFinder {
                 }
 
                 if (passesRoundVibe) {
-                    xyz2.add(xyz2Arr.get(i));
+                    tradePreviews.add(xyz2Arr.get(i));
                 }
             }
         }
@@ -250,7 +245,7 @@ public class TradeFinder {
 
         ArrayList<String> playersOfIgnoredTraders = new ArrayList<>();
         for(String ignoredTrader : tradersToIgnore){
-            for(ScoredRoster fpRos : xyz){
+            for(ScoredRoster fpRos : scoredRosters){
                 if(ignoredTrader.equals(fpRos.userID)){
                     for(Score score : fpRos.draftedPlayersWithProj){
                         playersOfIgnoredTraders.add(score.player.sportRadarID);
@@ -260,9 +255,9 @@ public class TradeFinder {
         }
 
 
-        while(!xyz2.isEmpty()){
+        while(!tradePreviews.isEmpty()){
 
-            TradePreviewSerious temp = xyz2.poll();
+            TradePreviewSerious temp = tradePreviews.poll();
 
             boolean foundIgnoredPlayer = false;
             for(String playerOfIgnoredTraded : playersOfIgnoredTraders){
@@ -634,7 +629,7 @@ public class TradeFinder {
         return allTrades;
     }
 
-    public static ArrayList<ScoredRoster> getFPProjPointsRosters(AAAConfiguration configuration, ProjectionSource projectionSource){
+    public static ArrayList<ScoredRoster> getProjPointsRosters(AAAConfiguration configuration, ProjectionSource projectionSource){
         ArrayList<ScoredRoster> allRosters = new ArrayList<>();
         for (JsonObject sleeperRoster : getTodaysSleeperRosters(configuration)) {
             String ownerID = getOwnerID(sleeperRoster);
