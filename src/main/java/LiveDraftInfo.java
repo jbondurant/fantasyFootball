@@ -6,7 +6,6 @@ public class LiveDraftInfo {
     ArrayList<Player> draftedPlayers;
     ArrayList<Player> rosterPlayers;
     BestAvailablePlayers bestAvailablePlayers;
-    BestAvailablePlayers bestAvailablePlayersByHardcodedRank;
 
     public static LiveDraftInfo getCopy(LiveDraftInfo ldi){
         return new LiveDraftInfo(Player.getCopyOfList(ldi.draftedPlayers),
@@ -19,16 +18,6 @@ public class LiveDraftInfo {
         draftedPlayers = dp;
         rosterPlayers = rp;
         bestAvailablePlayers = getBestAvailablePlayers(dp);
-        bestAvailablePlayersByHardcodedRank = getBestAvailablePlayersByHardcodedRank(dp);
-    }
-
-    public static BestAvailablePlayers getBestAvailablePlayersByHardcodedRank(ArrayList<Player> draftedPlayers){
-        RankOrderedPlayers rop = RankOrderedPlayers.getRankOrderedPlayerHardcodedExperts();
-        for(Player player : draftedPlayers){
-            rop.removePlayer(player);
-        }
-        BestAvailablePlayers bap = new BestAvailablePlayers(rop);
-        return bap;
     }
 
     public static BestAvailablePlayers getBestAvailablePlayers(ArrayList<Player> draftedPlayers){
@@ -42,7 +31,6 @@ public class LiveDraftInfo {
     }
 
     public static void LiveDraftPotentialMoveAnalyzer(BestAvailablePlayers bap){
-        boolean isFun = false;
         String qb1Name = bap.quarterbackRT1.player.firstName + " " + bap.quarterbackRT1.player.lastName;
         String rb1Name = bap.runningBackRT1.player.firstName + " " + bap.runningBackRT1.player.lastName;
         String wr1Name = bap.wideReceiverRT1.player.firstName + " " + bap.wideReceiverRT1.player.lastName;

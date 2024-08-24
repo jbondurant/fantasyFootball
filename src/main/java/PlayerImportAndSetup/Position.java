@@ -1,5 +1,6 @@
-import java.util.ArrayList;
-import java.util.List;
+package PlayerImportAndSetup;
+
+import java.util.*;
 
 public enum Position {
     QB,
@@ -24,6 +25,21 @@ public enum Position {
         }
         return copy;
     }
+
+
+    public static String getSubIdForPositions(HashSet<Position> positions){
+        ArrayList<Position> positionsList =new ArrayList<>(); //Creation of ArrayList
+        positionsList.addAll(positions);
+        Collections.sort(positionsList);
+        StringBuilder subId = new StringBuilder();
+        for (Position position : positions) {
+            subId.append(position.name());
+        }
+        return subId.toString();
+    }
+
+
+
 
 
 

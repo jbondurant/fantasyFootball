@@ -1,3 +1,5 @@
+import PlayerImportAndSetup.Position;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -10,12 +12,15 @@ public class ScoredRoster {
     public static HashMap<String, Double> playerSRIDToScoreFPInSeasonCSV = new HashMap<>();
     public static HashMap<String, Double> playerSRIDToScoreFPPreSeason = new HashMap<>();
 
+    public static HashMap<String, Double> playerSRIDToScoreSleeper = new HashMap<>();
+
     static{
         boolean is6PtsThrow = true;
         playerSRIDToScoreFPInSeasonNotCSV = InSeasonProjectionsFP.playerToScoreProjFPROS(is6PtsThrow);
         //todo 2023 uncomment playerCSVSRIDToScore = CSVProjectionsFP.playerToScoreProjFPROS(is6PtsThrow);
         playerSRIDToScoreFPInSeasonCSV = null;
         playerSRIDToScoreFPPreSeason = SleeperLeague.getScoreMap();
+        playerSRIDToScoreSleeper = SleeperProjections.parseTodaysWebPage();
 
     }
 
@@ -184,7 +189,7 @@ public class ScoredRoster {
     //todo 2023 add sleeper proj
     public static ArrayList<Score> getPlayerProjections(ArrayList<Player> dp, ProjectionSource ps){
         if(ProjectionSource.SLEEPER.equals(ps)){
-            return null;
+            return getPlayerProjInSeasonFromSleeperMap(dp, playerSRIDToScoreSleeper);
         }
         else if(ProjectionSource.IN_SEASON_FP_SITE.equals(ps)) {
             return getPlayerProjInSeasonFromMap(dp, playerSRIDToScoreFPInSeasonNotCSV);
@@ -194,6 +199,9 @@ public class ScoredRoster {
         }
         else if(ProjectionSource.PRESEASON_FP_SITE.equals(ps)){
             return getPlayerProjInSeasonFromMap(dp, playerSRIDToScoreFPPreSeason);
+        }
+        else if(ProjectionSource.SLEEPER.equals(ps)){
+            return getPlayerProjInSeasonFromMap(dp, playerSRIDToScoreSleeper);
         }
         else{
             throw new RuntimeException("wrong projection source");
@@ -218,6 +226,26 @@ public class ScoredRoster {
             }
         }
         return toReturn;
+    }
+
+    private static ArrayList<Score> getPlayerProjInSeasonFromSleeperMap(ArrayList<Player> dp, HashMap<String, Double> playerSIDStringToScore) {
+        ArrayList<Score> toReturn = new ArrayList<>();
+        for(Player p : dp) {
+            Score s = getSinglePlayerSleeperProj(p, playerSIDStringToScore);
+            if(s != null){
+                toReturn.add(s);
+            }
+        }
+        return toReturn;
+    }
+
+    private static Score getSinglePlayerSleeperProj(Player p, HashMap<String, Double> playerSIDStringToScore) {
+        if (playerSIDStringToScore.containsKey(p.sleeperIDString)) {
+            return new Score(playerSIDStringToScore.get(p.sleeperIDString), p);
+        } else {
+            System.out.println("Player score for " + p.firstName + " " + p.lastName + " not found");
+            return null;
+        }
     }
 
 

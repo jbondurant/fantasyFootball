@@ -10,8 +10,6 @@ import java.util.HashMap;
 public class SleeperLeague{
 
     private static final String myID = HumanOfInterest.humanID;
-    public static String filepathStartFunLeague = "funLeagueSleeper";
-    public static String webURLFunLeague = "https://api.sleeper.app/v1/league/707299245186691072";
     public static String filepathStartSeriousLeague = "seriousLeagueSleeper";
     public static String webURLSeriousLeague = "https://api.sleeper.app/v1/league/854055502148108288";
 
@@ -42,9 +40,6 @@ public class SleeperLeague{
         return seriousLeague;
     }
 
-    private static String getTodaysWebPageFun(){
-        return InOutUtilities.getTodaysWebPage(webURLFunLeague, filepathStartFunLeague);
-    }
 
     private static String getTodaysWebPageSerious(){
         return InOutUtilities.getTodaysWebPage(webURLSeriousLeague, filepathStartSeriousLeague);
@@ -92,14 +87,6 @@ public class SleeperLeague{
         League league = new League(leagueScoringSettings, users, undraftedPlayers);
         SleeperLeague sleeperLeague = new SleeperLeague(league, name, leagueID, draftID, sdi);
         return sleeperLeague;
-    }
-
-    private static ArrayList<Score> getFunScoreList(){
-        SleeperLeague funL = SleeperLeague.getFunLeague();
-        LeagueScoringSettings funSettings = funL.league.leagueScoringSettings;
-        FantasyProsScore funScores = new FantasyProsScore(funSettings);
-        ArrayList<Score> funScoresList = funScores.fantasyProsScoreLeagueAdjusted;
-        return funScoresList;
     }
 
     public static ArrayList<Score> getScoreList(){

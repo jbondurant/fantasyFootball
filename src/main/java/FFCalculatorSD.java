@@ -26,10 +26,11 @@ public class FFCalculatorSD {
 
     static{
 
-        funPlayerSD = initializeFunSD();
-        seriousPlayerSD = initializeSeriousSD();
-        playerSRIDToSDMapFun = initializeFunSDMap();
+        //funPlayerSD = initializeFunSD();
+        //seriousPlayerSD = initializeSeriousSD();
+        //playerSRIDToSDMapFun = initializeFunSDMap();
         playerSRIDToSDMapSerious = initializeSeriousSDMap();
+
     }
 
 
@@ -39,19 +40,9 @@ public class FFCalculatorSD {
     private static String getTodaysWebPageSerious(){
         return InOutUtilities.getTodaysWebPage(webURLSerious, filepathStartSerious);
     }
-
-    private static HashMap<String, Double> initializeFunSDMap(){
-        String webData = getTodaysWebPageFun();
-        return parsePageMap(webData);
-    }
     private static HashMap<String, Double> initializeSeriousSDMap(){
         String webData = getTodaysWebPageSerious();
         return parsePageMap(webData);
-    }
-
-    private static ArrayList<StandardDevPlayer> initializeFunSD(){
-        String webData = getTodaysWebPageFun();
-        return parsePage(webData);
     }
 
     private static ArrayList<StandardDevPlayer> initializeSeriousSD(){
@@ -147,7 +138,7 @@ public class FFCalculatorSD {
 
 
     public static void main(String[] args){
-        ArrayList<StandardDevPlayer> a = initializeFunSD();
+        initializeSeriousSDMap();
     }
 
 

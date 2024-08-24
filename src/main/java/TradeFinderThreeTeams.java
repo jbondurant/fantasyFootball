@@ -1,3 +1,4 @@
+import PlayerImportAndSetup.Position;
 import com.google.common.collect.Collections2;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -251,40 +252,40 @@ public class TradeFinderThreeTeams {
                 continue;
             }
 
-            if(temp.improvementT2 > 7.0 && temp.improvementT3 > 9.0) {
+            if(temp.improvementT2 > 14.0 && temp.improvementT3 > 17.0) {
                 allT11.add(temp);
             }
-            else if(temp.improvementT2 > 9.0 && temp.improvementT3 > 7.0) {
+            else if(temp.improvementT2 > 17.0 && temp.improvementT3 > 14.0) {
                 allT10.add(temp);
             }
-            else if(temp.improvementT2 > 7.0 && temp.improvementT3 > 7.0) {
+            else if(temp.improvementT2 > 14.0 && temp.improvementT3 > 14.0) {
                 allT9.add(temp);
             }
-            else if(temp.improvementT2 > 5.0 && temp.improvementT3 > 7.0) {
+            else if(temp.improvementT2 > 11.0 && temp.improvementT3 > 14.0) {
                 allT8.add(temp);
             }
-            else if(temp.improvementT2 > 7.0 && temp.improvementT3 > 5.0) {
+            else if(temp.improvementT2 > 14.0 && temp.improvementT3 > 11.0) {
                 allT7.add(temp);
             }
-            else if(temp.improvementT2 > 5.0 && temp.improvementT3 > 5.0) {
+            else if(temp.improvementT2 > 11.0 && temp.improvementT3 > 11.0) {
                 allT6.add(temp);
             }
-            else if(temp.improvementT2 > 0.0 && temp.improvementT3 > 5.0) {
+            else if(temp.improvementT2 > 8.0 && temp.improvementT3 > 11.0) {
                 allT5.add(temp);
             }
-            else if(temp.improvementT2 > 5.0 && temp.improvementT3 > 0.0) {
+            else if(temp.improvementT2 > 11.0 && temp.improvementT3 > 8.0) {
                 allT4.add(temp);
             }
-            else if(temp.improvementT2 > 3.0 && temp.improvementT3 > 3.0) {
+            else if(temp.improvementT2 > 8.0 && temp.improvementT3 > 8.0) {
                 allT3.add(temp);
             }
-            else if(temp.improvementT2 > 3.0 && temp.improvementT3 > 0.0) {
+            else if(temp.improvementT2 > 5.0 && temp.improvementT3 > 8.0) {
                 allT2.add(temp);
             }
-            else if(temp.improvementT2 > 0.0 && temp.improvementT3 > 3.0) {
+            else if(temp.improvementT2 > 8.0 && temp.improvementT3 > 5.0) {
                 allT1.add(temp);
             }
-            else if(temp.improvementT2 > 0.0 && temp.improvementT3 > 0.0) {
+            else if(temp.improvementT2 > 5.0 && temp.improvementT3 > 5.0) {
                 allT0.add(temp);
             }
 
@@ -446,13 +447,13 @@ public class TradeFinderThreeTeams {
         //10<11 is hamrliks? *
         //ends at 10; <11
         AAAConfiguration aaaConfiguration = new AAAConfigurationSleeperLeague();
-        ProjectionSource projectionSource = ProjectionSource.PRESEASON_FP_SITE;
-        for(int i=0; i<1; i++){//todo change back to 11
+        ProjectionSource projectionSource = ProjectionSource.IN_SEASON_FP_SITE;
+        for(int i=0; i<11; i++){//todo change back to 11
             String tradedPlayerLastName = "Henry";
             int teamN = i;
             int lastTeamStart = 0;//this is the range for the teams that are the 3rd one to trade
             int lastTeamEnd = 10;//so team 1 is us, team 2 is i, and team 3 is in this range
-            int minMine = 14;//because of some calls to like allrosters.remove. you want the end above to be 10
+            int minMine = 10;//because of some calls to like allrosters.remove. you want the end above to be 10
             int minTheirs = 0;
             boolean ignoreJake = false;
             boolean inSeason = true; //todo

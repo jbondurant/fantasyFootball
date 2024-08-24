@@ -1,3 +1,5 @@
+import PlayerImportAndSetup.Position;
+
 import java.util.Comparator;
 
 public class FPRosterSeriousStartingQBComparator implements Comparator<ScoredRoster> {

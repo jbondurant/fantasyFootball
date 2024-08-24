@@ -60,6 +60,7 @@ public class HumanOfInterest {
         else if(userID.equals("725953800816373760")){ return "Hamrliks";}
         else if(userID.equals("740473448551366656")){ return "patekxwater";}
         else if(userID.equals("853719913725030400")){ return "BHier";}
+        else if(userID.equals("604377190016016384")){return "JFMarino";}
         return "user not found";
     }
 

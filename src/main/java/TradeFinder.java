@@ -112,36 +112,37 @@ public class TradeFinder {
 
     public static void main(String[] args) throws IOException {
         AAAConfiguration configuration = new AAAConfigurationSleeperLeague();
-        boolean onlyOne = true;
+        boolean onlyOne = false;
         boolean onlyTwo = false;
         boolean toCrop = false;
         ProjectionSource projectionSource = ProjectionSource.IN_SEASON_FP_SITE;
+        //ProjectionSource projectionSource = ProjectionSource.SLEEPER;
         boolean roundFilter = false;
         ArrayList<String> tradersToIgnore = new ArrayList<>();
-        //tradersToIgnore.add("606234521821577216");//tommyrads
-        //tradersToIgnore.add("464471023782195200"); //itsabust
-        //tradersToIgnore.add("605534791072305152"); //Tsayydeja
-        //tradersToIgnore.add("725953800816373760");//Hamrliks
-        //tradersToIgnore.add("740473448551366656"); //patek
-        //tradersToIgnore.add("452603383455412224");//kevinDA
-        //tradersToIgnore.add("459267987174584320");//doddi
-        ArrayList<String> playersToGive = new ArrayList<>();
-        //playersToGive.add("Diontae Johnson");
+        /*tradersToIgnore.add("452603383455412224");// "Kevin";}
+        tradersToIgnore.add("459267987174584320");// "d0ddi";}
+        tradersToIgnore.add("464471023782195200");// "itsabust";}
+        tradersToIgnore.add("603709077557669888");// "Renteez";}
+        tradersToIgnore.add("606234521821577216");// "tommyrads";}
+        tradersToIgnore.add("724919475115225088");// "JakeSK";}
+        tradersToIgnore.add("725379562434830336");// "jerem9604";}
+        tradersToIgnore.add("725953800816373760");// "Hamrliks";}
+        tradersToIgnore.add("740473448551366656");// "patekxwater";}
+        tradersToIgnore.add("853719913725030400");// "BHier";}
+        tradersToIgnore.add("604377190016016384");// "JFMarino";}*/
 
+        ArrayList<String> playersToGive = new ArrayList<>();
+        //playersToGive.add("Breece Hall");
 
         ArrayList<String> playersNotToGive = new ArrayList<>();
         //playersNotToGive.add("James Conner");
 
         HashSet<String> givenPlayersToIgnore = new HashSet<>();
-        givenPlayersToIgnore.add("Amari Cooper");
-        givenPlayersToIgnore.add("Zay Flowers");
-        givenPlayersToIgnore.add("Garrett Wilson");
-        givenPlayersToIgnore.add("Diontae Johnson");
-        givenPlayersToIgnore.add("Jaylen Warren");
-        givenPlayersToIgnore.add("Christian Watson");
+        //givenPlayersToIgnore.add("Amari Cooper");
 
         ArrayList<String> givenPlayersToRequire = new ArrayList<>();
-        //givenPlayersToRequire.add("Brandin Cooks");
+        //givenPlayersToRequire.add("DK Metcalf");
+
 
         ArrayList<ScoredRoster> scoredRosters = getProjPointsRosters(configuration, projectionSource);
         printRostersWitPointsAndPlayerPoints(scoredRosters);
@@ -183,7 +184,9 @@ public class TradeFinder {
                         continue;
                     }
                     if (tps1.t1p1Score.player.sportRadarID.equals(tps2.t1p1Score.player.sportRadarID)) {
-                        if (tps1.t2p1Score.player.sportRadarID.equals(tps2.t2p1Score.player.sportRadarID)) {
+                        if (tps1.t2p1Score.player.sportRadarID!=null
+                            && tps1.t2p1Score.player.sportRadarID.equals(tps2.t2p1Score.player.sportRadarID)){
+
                             hasDup = true;
                             break;
                         }
@@ -248,6 +251,9 @@ public class TradeFinder {
             for(ScoredRoster fpRos : scoredRosters){
                 if(ignoredTrader.equals(fpRos.userID)){
                     for(Score score : fpRos.draftedPlayersWithProj){
+                        if(projectionSource.equals(ProjectionSource.SLEEPER)){
+                            playersOfIgnoredTraders.add(score.player.sleeperIDString);
+                        }
                         playersOfIgnoredTraders.add(score.player.sportRadarID);
                     }
                 }
@@ -258,15 +264,23 @@ public class TradeFinder {
         while(!tradePreviews.isEmpty()){
 
             TradePreviewSerious temp = tradePreviews.poll();
-
             boolean foundIgnoredPlayer = false;
             for(String playerOfIgnoredTraded : playersOfIgnoredTraders){
-
-                String pID = temp.t2p1Score.player.sportRadarID;
-                if(pID.equals(playerOfIgnoredTraded)){
-                    foundIgnoredPlayer = true;
-                    break;
+                if(projectionSource.equals(ProjectionSource.SLEEPER)){
+                    String sID = temp.t2p1Score.player.sleeperIDString;
+                    if(sID.equals(playerOfIgnoredTraded)){
+                        foundIgnoredPlayer = true;
+                        break;
+                    }
                 }
+                else{
+                    String pID = temp.t2p1Score.player.sportRadarID;
+                    if(pID.equals(playerOfIgnoredTraded)){
+                        foundIgnoredPlayer = true;
+                        break;
+                    }
+                }
+
             }
             if(foundIgnoredPlayer){
                 continue;
@@ -377,37 +391,37 @@ public class TradeFinder {
 
 
 
-            if(temp.improvementT2 > 5.0 && temp.improvementT2 < 10.0) {
+            if(temp.improvementT2 > 45.0 && temp.improvementT2 < 200.0) {
                 allT10.add(temp);
             }
-            if(temp.improvementT2 > 4.0) {
+            if(temp.improvementT2 > 40.0) {
                 allT9.add(temp);
             }
-            else if(temp.improvementT2 > 3.0) {
+            else if(temp.improvementT2 > 35.0) {
                 allT8.add(temp);
             }
-            else if(temp.improvementT2 > 2.0) {
+            else if(temp.improvementT2 > 12.0) {
                 allT7.add(temp);
             }
-            else if(temp.improvementT2 > 0.5) {
+            else if(temp.improvementT2 > 10.0) {
                 allT6.add(temp);
             }
-            else if(temp.improvementT2 > -2.0) {
+            else if(temp.improvementT2 > 8.0) {
                 allT5.add(temp);
             }
-            else if(temp.improvementT2 > -4.0) {
+            else if(temp.improvementT2 > 6.0) {
                 allT4.add(temp);
             }
-            else if(temp.improvementT2 > -6.0) {
+            else if(temp.improvementT2 > 4.0) {
                 allT3.add(temp);
             }
-            else if(temp.improvementT2 > -8.0) {
+            else if(temp.improvementT2 > 2.0) {
                 allT2.add(temp);
             }
-            else if(temp.improvementT2 > -10.0) {
+            else if(temp.improvementT2 > 0.0) {
                 allT1.add(temp);
             }
-            else if(temp.improvementT2 > -12.0) {
+            else if(temp.improvementT2 > -20.0) {
                 allT0.add(temp);
             }
         }

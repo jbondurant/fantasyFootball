@@ -7,8 +7,6 @@ public class FantasyProsProjections {
     public static String filepathStartRB = "fantasyProsProjectionRB";
     public static String filepathStartWR = "fantasyProsProjectionWR";
     public static String filepathStartTE = "fantasyProsProjectionTE";
-
-    public static String filepathStartFlexHalf = "fantasyProsProjectionFlexHalf";
     public static String filepathStartDEF = "fantasyProsProjectionDEF";
 
     public static String webURLQB = "https://www.fantasypros.com/nfl/projections/qb.php?week=draft";
@@ -16,7 +14,6 @@ public class FantasyProsProjections {
     public static String webURLWR = "https://www.fantasypros.com/nfl/projections/wr.php?week=draft&scoring=HALF&week=draft";
     public static String webURLTE = "https://www.fantasypros.com/nfl/projections/te.php?week=draft&scoring=HALF&week=draft";
     public static String webURLDEF = "https://www.fantasypros.com/nfl/projections/dst.php?week=draft";
-
 
 
     private static final ArrayList<QBProjection> projectionsFPQB;
@@ -60,10 +57,10 @@ public class FantasyProsProjections {
         ArrayList<QBProjection> projections = new ArrayList<QBProjection>();
 
         String entireHTML = getTodaysWebPageQB();
-        String[] lines = entireHTML.split("\r\n|\r|\n");
-        String[] linesCleaned = new String[lines.length];
-        for(int i = 0; i<lines.length; i++){
-            linesCleaned[i] = lines[i].trim();
+        String[] linesCleaned = entireHTML.split("\r\n|\r|\n");
+        //String[] linesCleaned = new String[lines.length];
+        for(int i = 0; i<linesCleaned.length; i++){
+            linesCleaned[i] = linesCleaned[i].trim();
         }
 
         ArrayList<String> importantNumbers = new ArrayList<>();
@@ -86,17 +83,13 @@ public class FantasyProsProjections {
             }
         }
 
-        //trailing players all called Tom Coughlin since ID utility methods aren't perfect
         double[] proj = new double[10];
-        String playerSRID = "";
-
+        String fpID = "";
         for(int i=0; i < importantNumbers.size(); i++){
             int mod = i % 11;
 
             if(mod == 0){
-                String idString = importantNumbers.get(i);
-                int fpID = Integer.parseInt(idString);
-                playerSRID = FantasyProsUtility.getSRID(fpID);
+                fpID = importantNumbers.get(i);
 
                 proj = new double[10];
             }
@@ -109,7 +102,7 @@ public class FantasyProsProjections {
                 double val = Double.parseDouble(importantNumbers.get(i));
                 proj[mod-1] = val;
 
-                Player playerQB = Player.getPlayer(playerSRID);
+                Player playerQB = Player.getPlayerFromFPid(fpID);
                 QBProjection quarterbackProj = new QBProjection(proj, playerQB);
                 projections.add(quarterbackProj);
             }
@@ -165,7 +158,7 @@ public class FantasyProsProjections {
             if(mod == 0){
                 String idString = importantNumbers.get(i);
                 int fpID = Integer.parseInt(idString);
-                playerSRID = FantasyProsUtility.getSRID(fpID);
+                //playerSRID = FantasyProsUtility.getSRID(fpID);
 
                 proj = new double[modSize];
             }
@@ -240,7 +233,7 @@ public class FantasyProsProjections {
             if(mod == 0){
                 String idString = importantNumbers.get(i);
                 int fpID = Integer.parseInt(idString);
-                playerSRID = FantasyProsUtility.getSRID(fpID);
+                //playerSRID = FantasyProsUtility.getSRID(fpID);
 
                 proj = new double[9];
             }

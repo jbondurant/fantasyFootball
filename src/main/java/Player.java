@@ -1,3 +1,5 @@
+import PlayerImportAndSetup.Position;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -11,6 +13,7 @@ public class Player {
 
     public int yahooID;
     public int sleeperID;
+    public String sleeperIDString;
     public String sportRadarID;
     public int fantasyProsID;
 
@@ -44,10 +47,11 @@ public class Player {
                 player.yahooID,
                 player.sleeperID,
                 player.sportRadarID,
-                player.fantasyProsID);
+                player.fantasyProsID,
+                player.sleeperIDString);
     }
 
-    public Player(String fn, String ln, String t, Position p, int yID, int sID, String srID, int fpID){
+    public Player(String fn, String ln, String t, Position p, int yID, int sID, String srID, int fpID, String sIDString){
         firstName = fn;
         lastName = ln;
         team = t;
@@ -56,11 +60,16 @@ public class Player {
         sleeperID = sID;
         sportRadarID = srID;
         fantasyProsID = fpID;
+        sleeperIDString = sIDString;
     }
 
     public static Player getPlayer(String sportRadar_ID){
         Player player = playersFromSRID.get(sportRadar_ID);
         return player;
+    }
+
+    public static Player getPlayerFromFPid(String fpID){
+        return null;
     }
 
     public static Player getPlayerFromSID(int sleeper_ID){
