@@ -22,7 +22,33 @@ public class PlayerV2 {
         this.lastName = lastName;
         this.teamFull = teamFull;
         this.positions = positions;
-        this.customID = firstName + lastName + teamFull.name() + Position.getSubIdForPositions(positions);
+        String customID = firstName.replaceAll("[^a-zA-Z]", "").toLowerCase()
+                + lastName.replaceAll("[^a-zA-Z]", "").toLowerCase()
+                + teamFull.name()
+                + Position.getSubIdForPositions(positions);
+        customID = correctedCustomIDForDefense(teamFull, positions, customID);
+        customID = correctedCustomID(customID);
+        this.customID = customID;
+    }
+
+    public String correctedCustomIDForDefense(TeamName teamName, HashSet<Position> positions, String customID){
+        if(positions.size()==1 && positions.contains(Position.DEF)){
+            return teamName.toString() + Position.DEF.toString();
+        }
+        return customID;
+    }
+    public String correctedCustomID(String customID){
+        if(customID.equals("amonrastDETROITWR")){
+            return "amonrastbrownDETROITWR";
+        }
+        if(customID.equals("taysomhillNEW_ORLEANSTE")){
+            return "taysomhillNEW_ORLEANSQBTE";
+        }
+        else return customID;
+    }
+
+    public String getCustomID() {
+        return customID;
     }
 
     private static HashMap<String, PlayerV2> fantasyProsIdToPlayerV2 = new HashMap<>();

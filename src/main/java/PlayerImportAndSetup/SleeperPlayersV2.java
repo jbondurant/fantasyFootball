@@ -93,17 +93,14 @@ public class SleeperPlayersV2 {
             }
             HashSet<Position> positions =  new HashSet();
             if(playerJson.get("fantasy_positions") != null && (!playerJson.get("fantasy_positions").isJsonNull())){
-                if(playerJson.get("fantasy_positions").getAsJsonArray().size() > 1){
-                    //System.out.println(firstName + " "  + lastName);
-                    if(lastName.equals("Hill")) {
-                        int x = 1;
-                    }
-                }
                 for(JsonElement positionElement : playerJson.get("fantasy_positions").getAsJsonArray()){
                     String currentPos = positionElement.getAsString();
                     if(Position.isStandardPosition(currentPos)){
                         positions.add(Position.valueOf(currentPos));
                     }
+                }
+                if(positions.size()==0){
+                    positions.add(Position.OTHER);
                 }
             }
             SleeperPlayerV2 sleeperPlayerV2 = SleeperPlayerV2.playerFromSleeper(sleeperID, firstName, lastName, team, positions);

@@ -10,12 +10,15 @@ public class FantasyProsPlayerV2 {
     private PlayerV2 playerV2;
     private String fantasyProsId;
 
+    private Double rankAverage;
+
     private static final Logger logger = LogManager.getLogger(FantasyProsPlayerV2.class);
 
 
-    public FantasyProsPlayerV2(String fantasyProsId, PlayerV2 playerV2){
+    public FantasyProsPlayerV2(String fantasyProsId, Double rankAverage, PlayerV2 playerV2){
         this.playerV2 = playerV2;
         this.fantasyProsId = fantasyProsId;
+        this.rankAverage = rankAverage;
     }
 
     public PlayerV2 getPlayerV2(){
@@ -25,16 +28,17 @@ public class FantasyProsPlayerV2 {
                                         String playerName,
                                         String playerShortName,
                                         String fantasyProsTeamName,
-                                        String playerPositions) {
+                                        String playerPositions,
+                                        Double rankAverage) {
         PlayerV2 playerV2 = player2FromFantasyPros(playerName, playerShortName, fantasyProsTeamName, playerPositions);
 
-        return new FantasyProsPlayerV2(fantasyProsID, playerV2);
+        return new FantasyProsPlayerV2(fantasyProsID, rankAverage, playerV2);
     }
 
     private static PlayerV2 player2FromFantasyPros(String playerName, String playerShortName, String fantasyProsTeamName, String playerPositions) {
         String lastNameFromShortName = "";
-        if(playerShortName.split(". ").length > 1){
-            lastNameFromShortName= playerShortName.split(". ")[1];
+        if(playerShortName.split(" ").length > 1){
+            lastNameFromShortName= playerShortName.split(" ")[1];
         }
         else{
             logger.error("Can't get last name for the following player"
@@ -53,8 +57,17 @@ public class FantasyProsPlayerV2 {
             throw new RuntimeException("unrecognized position");
         }
         HashSet<Position> positions = new HashSet<>();
+        if(positionsString.equals("DST")){
+            positionsString = "DEF";
+        }
+        if(!Position.isStandardPosition(positionsString)){
+            positionsString="OTHER";
+        }
         positions.add(Position.valueOf(positionsString));
         return positions;
     }
 
+    public Double getRankAverage() {
+        return rankAverage;
+    }
 }

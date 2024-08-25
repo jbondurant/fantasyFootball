@@ -32,7 +32,7 @@ public enum Position {
         positionsList.addAll(positions);
         Collections.sort(positionsList);
         StringBuilder subId = new StringBuilder();
-        for (Position position : positions) {
+        for (Position position : positionsList) {
             subId.append(position.name());
         }
         return subId.toString();

@@ -70,7 +70,12 @@ public class FantasyProsPlayersV2 {
                 playerPositions = apiObject.get("player_positions").getAsString();
             }
 
-            FantasyProsPlayerV2 fantasyProsPlayerV2 = FantasyProsPlayerV2.playerFromFP(fantasyProsID, playerName, playerShortName, playerTeamID, playerPositions);
+            Double rankAverage = null;
+            if((apiObject.get("rank_ave") != null) && (!apiObject.get("rank_ave").isJsonNull())) {
+                rankAverage = apiObject.get("rank_ave").getAsDouble();
+            }
+
+            FantasyProsPlayerV2 fantasyProsPlayerV2 = FantasyProsPlayerV2.playerFromFP(fantasyProsID, playerName, playerShortName, playerTeamID, playerPositions, rankAverage);
             fantasyProsPlayersV2.add(fantasyProsPlayerV2);
         }
         return fantasyProsPlayersV2;
