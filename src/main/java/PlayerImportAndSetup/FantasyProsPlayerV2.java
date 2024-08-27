@@ -8,6 +8,11 @@ import java.util.HashSet;
 
 public class FantasyProsPlayerV2 {
     private PlayerV2 playerV2;
+
+    public String getFantasyProsId() {
+        return fantasyProsId;
+    }
+
     private String fantasyProsId;
 
     private Double rankAverage;

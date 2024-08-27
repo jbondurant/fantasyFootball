@@ -24,6 +24,10 @@ public class FantasyProsPlayersV2 {
         intializeAllPlayers(entireHTML);
     }
 
+    public static HashSet<FantasyProsPlayerV2> getFantasyProsPlayersV2(){
+        return  fantasyProsPlayersV2;
+    }
+
     public static String getTodaysWebPage(){
         return InOutUtilitiesV2.getTodaysWebPage(WEB_URL, FILEPATH_START);
     }

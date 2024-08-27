@@ -23,6 +23,15 @@ public class SleeperPlayersV2 {
 
     public static String WEB_URL = "https://fantasyfootballcalculator.com/api/v1/adp/half-ppr?teams=12&year=" + year + "&position=all";
 
+
+    public static HashMap<String, SleeperPlayerV2> getSleeperPlayersV2AsMap() {
+        HashMap<String, SleeperPlayerV2> customIdToSleeperPlayerV2 = new HashMap<>();
+        for(SleeperPlayerV2 sleeperPlayerV2 : sleeperPlayersV2){
+            customIdToSleeperPlayerV2.put(sleeperPlayerV2.getPlayerV2().customID, sleeperPlayerV2);
+        }
+        return customIdToSleeperPlayerV2;
+    }
+
     private static HashSet<SleeperPlayerV2> sleeperPlayersV2 = new HashSet<>();
 
     public static String getTodaysWebPage(){

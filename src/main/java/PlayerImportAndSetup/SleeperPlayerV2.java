@@ -37,4 +37,7 @@ public class SleeperPlayerV2 {
         return new PlayerV2(firstName, lastName, TeamName.shortTeamNameToFullTeamName(teamName), playerPositions);
     }
 
+    public String getSleeperId() {
+        return sleeperId;
+    }
 }

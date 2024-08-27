@@ -110,24 +110,11 @@ public class FFCalculatorSD {
             String firstName = fullName.split(" ")[0];
             String lastName = fullName.split(" ")[1];
 
-            if(position.equals("QB") && team.equals("KC")){
-                int y=0;
-            }
-
             double sd = apiObject.get("stdev").getAsDouble();
             Player player = Player.getPlayerFromInfo(lastName, firstName, position, team);
-
-
-
-
             if(player == null){
                 continue;
             }
-
-            //Agholor and others weren't in the list of unrecognized players because
-            //I was looking at the 2qb league where he's not in the top 200
-
-            //System.out.println(player.firstName + " " + player.lastName);
 
             String playerSRID = player.sportRadarID;
             allPlayerSDMap.put(playerSRID, sd);
