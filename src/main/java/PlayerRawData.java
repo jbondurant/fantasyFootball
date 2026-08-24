@@ -8,8 +8,7 @@ public class PlayerRawData {
 
 
     public static void main(String[] args) throws IOException {
-        getPlayerMetaData();
-        int a = 3;
+        System.out.println("loaded " + getPlayerMetaData().size() + " players from sleeper");
     }
 
 
@@ -28,10 +27,10 @@ public class PlayerRawData {
 
     public static ArrayList<Player> cleanRawPlayerMetaData() throws IOException {
 
-        JsonParser parser = new JsonParser();
-
-        Object obj = parser.parse(new FileReader("sleeperDataPlayerAPI.json"));
-        JsonObject jsonObject = (JsonObject) obj;
+        JsonObject jsonObject;
+        try (FileReader reader = new FileReader("sleeperDataPlayerAPI.json")) {
+            jsonObject = JsonParser.parseReader(reader).getAsJsonObject();
+        }
 
         Set<String> keySet = jsonObject.keySet();
         ArrayList<Player> players = new ArrayList<Player>();
@@ -43,59 +42,30 @@ public class PlayerRawData {
 
             JsonObject playerJson = (JsonObject) jsonObject.get(key);
 
-            String firstName = "";
-            if(!playerJson.get("first_name").isJsonNull()){
-                firstName = playerJson.get("first_name").getAsString();
-            }
-
-            String lastName = "";
-            if(!playerJson.get("last_name").isJsonNull()){
-                lastName = playerJson.get("last_name").getAsString();
-            }
-            String team = "";
-            if(!playerJson.get("team").isJsonNull()){
-                team = playerJson.get("team").getAsString();
-            }
-            String positionString = "";
-            if(!playerJson.get("fantasy_positions").isJsonNull()){
-                positionString = playerJson.get("fantasy_positions").getAsJsonArray().get(0).getAsString();
-            }
-            Position position = Position.OTHER;
-            if(Position.isStandardPosition(positionString)){
-                position = Position.valueOf(positionString);
-            }
+            String firstName = optionalString(playerJson, "first_name");
+            String lastName = optionalString(playerJson, "last_name");
+            String team = optionalString(playerJson, "team");
+            Position position = readPosition(playerJson);
 
             int yahooID = -1;
             int sleeperID = -1;
-            String sIDString = "";
+            String sIDString = optionalString(playerJson, "player_id");
             String sportRadarID = "";
             int fpID = -1;
             if(!position.equals(Position.DEF)) {
-                if (!playerJson.get("yahoo_id").isJsonNull()) {
-                    yahooID = playerJson.get("yahoo_id").getAsInt();
+                String yahoo = optionalString(playerJson, "yahoo_id");
+                if(!yahoo.isEmpty()){
+                    yahooID = Integer.parseInt(yahoo);
                 }
-                if (!playerJson.get("player_id").isJsonNull()) {
-                    sleeperID = playerJson.get("player_id").getAsInt();
-                    sIDString = playerJson.get("player_id").getAsString();
+                if(sIDString.matches("[0-9]+")){
+                    sleeperID = Integer.parseInt(sIDString);
                 }
-                if (!playerJson.get("sportradar_id").isJsonNull()) {
-                    sportRadarID = playerJson.get("sportradar_id").getAsString();
-                }
-                //fpID = FantasyProsPlayersV2.getFPID(sportRadarID);
+                sportRadarID = optionalString(playerJson, "sportradar_id");
             }
             else{
-                String xyz = team;
+                // A defense has no sportradar id; its team abbreviation is its id.
                 sportRadarID = DefenseUtility.getDefenseID(team);
-                if (!playerJson.get("player_id").isJsonNull()) {
-                    sIDString = playerJson.get("player_id").getAsString();
-                }
-                //System.out.println(team + "\t" + sportRadarID);
             }
-            //System.out.println(firstName + "\t" + lastName);
-            if(lastName.equals("Coughlin")){
-                int r=1;
-            }
-
 
             Player player = new Player(firstName, lastName, team, position, yahooID, sleeperID, sportRadarID, fpID, sIDString);
             players.add(player);
@@ -105,6 +75,40 @@ public class PlayerRawData {
 
     }
 
+
+    private static String optionalString(JsonObject object, String key){
+        JsonElement element = object.get(key);
+        if(element == null || element.isJsonNull()){
+            return "";
+        }
+        return element.getAsString();
+    }
+
+    /**
+     * Sleeper reports a player's real position in "position" and their fantasy
+     * eligibility in "fantasy_positions". Reading only fantasy_positions[0] hid
+     * anyone whose first eligibility is defensive - Travis Hunter came through
+     * as ["DB","WR"] and so was filed as OTHER and never matched to a ranking.
+     */
+    private static Position readPosition(JsonObject playerJson){
+        String position = optionalString(playerJson, "position");
+        if(Position.isStandardPosition(position)){
+            return Position.valueOf(position);
+        }
+        JsonElement fantasyPositions = playerJson.get("fantasy_positions");
+        if(fantasyPositions != null && fantasyPositions.isJsonArray()){
+            for(JsonElement candidate : fantasyPositions.getAsJsonArray()){
+                if(candidate.isJsonNull()){
+                    continue;
+                }
+                String fantasyPosition = candidate.getAsString();
+                if(Position.isStandardPosition(fantasyPosition)){
+                    return Position.valueOf(fantasyPosition);
+                }
+            }
+        }
+        return Position.OTHER;
+    }
 
     public static ArrayList<Player> getPlayerMetaData() throws IOException {
         File f = new File("./sleeperDataPlayerAPI.json");

@@ -4,9 +4,9 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -20,14 +20,11 @@ public class InOutUtilities {
             downloadThisMonthsMyID(username);
         }
 
-        String todaysWebpage = null;
         try {
-            todaysWebpage = Files.readString(Path.of(thisMonthsFilePath));
+            return Files.readString(Path.of(thisMonthsFilePath)).strip();
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new RuntimeException("could not read cached " + thisMonthsFilePath, e);
         }
-
-        return todaysWebpage.strip();
     }
 
     public static void main(String[] args){
@@ -41,9 +38,7 @@ public class InOutUtilities {
 
         String webContent = WebUrlUtility.urlToString(webURL);
 
-        JsonParser jp = new JsonParser();
-        JsonElement jsonElement = jp.parse(webContent);
-        JsonObject apiObject = jsonElement.getAsJsonObject();
+        JsonObject apiObject = JsonParser.parseString(webContent).getAsJsonObject();
 
         String myID = "";
         if(!apiObject.get("user_id").isJsonNull()) {
@@ -63,18 +58,17 @@ public class InOutUtilities {
             downloadTodaysWebPage(webURL, filepathStart);
         }
 
-        String todaysWebpage = null;
         try {
-            todaysWebpage = Files.readString(Path.of(todaysFilePath));
+            return Files.readString(Path.of(todaysFilePath));
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new RuntimeException("could not read cached " + todaysFilePath, e);
         }
-
-        return todaysWebpage;
     }
 
     public static void downloadTodaysWebPage(String webURL, String filepathStart){
 
+        // Fetch first, write second: a failed fetch now throws instead of
+        // caching the string "null" for the rest of the day.
         String webContent = WebUrlUtility.urlToString(webURL);
         String todaysDate = DateUtility.getTodaysDate();
 
@@ -83,15 +77,12 @@ public class InOutUtilities {
         writeContentToFile(webContent, todaysFilePath);
     }
 
-    private static void writeContentToFile(String webContent, String thisMonthsFilePath) {
-        PrintWriter out = null;
-        try {
-            out = new PrintWriter(thisMonthsFilePath);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
+    private static void writeContentToFile(String content, String filePath) {
+        try (PrintWriter out = new PrintWriter(filePath, StandardCharsets.UTF_8)) {
+            out.println(content);
+        } catch (IOException e) {
+            throw new RuntimeException("could not write " + filePath, e);
         }
-        out.println(webContent);
-        out.close();
     }
 
 }

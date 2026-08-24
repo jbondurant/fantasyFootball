@@ -1,72 +1,102 @@
-import PlayerImportAndSetup.Position;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
-import java.time.LocalDate;
 import java.util.HashMap;
 
+/**
+ * Sleeper's season projections. This is the only remaining feed that publishes
+ * projected *stat lines*, so it backs both the raw points map here and the
+ * league-scored projections in {@link StatLineProjections}.
+ */
 public class SleeperProjections {
-    public static String webURL = "";
+
     public static String filepathStart = "sleeperProjections";
 
+    /**
+     * The season comes off the configured league, not the wall clock. The old
+     * "if it is January or February, subtract a year" rule guessed wrong every
+     * time it was run outside the season it was written for.
+     */
+    public static String getSeason(){
+        return AAAConfiguration.getInstance().getSeason();
+    }
 
-    static{
-        LocalDate currentdate = LocalDate.now();
-        int year = currentdate.getYear();
-        int currentMonth = currentdate.getMonth().getValue();
-        if(currentMonth <= 2){
-            year--;
-        }
-        webURL = "https://api.sleeper.app/projections/nfl/" + year + "?season_type=regular&position[]=DEF&position[]=QB&position[]=RB&position[]=TE&position[]=WR&order_by=pts_half_ppr";
-
+    public static String getWebURL(){
+        return "https://api.sleeper.app/projections/nfl/" + getSeason()
+                + "?season_type=regular&position[]=DEF&position[]=QB&position[]=RB&position[]=TE&position[]=WR"
+                + "&order_by=pts_half_ppr";
     }
 
     private static String getTodaysWebPage(){
-        return InOutUtilities.getTodaysWebPage(webURL, filepathStart);
+        return InOutUtilities.getTodaysWebPage(getWebURL(), filepathStart + getSeason());
     }
 
-    public static HashMap<String, Double> parseTodaysWebPage() {
-        String entireHTML = getTodaysWebPage();
+    private static JsonArray cachedProjections;
 
-        JsonParser jp = new JsonParser();
-        JsonArray jsonPlayers = jp.parse(entireHTML).getAsJsonArray();
+    public static synchronized JsonArray getTodaysProjections(){
+        if(cachedProjections == null){
+            cachedProjections = JsonParser.parseString(getTodaysWebPage()).getAsJsonArray();
+        }
+        return cachedProjections;
+    }
+
+    public static double optionalStat(JsonObject stats, String key){
+        JsonElement element = stats.get(key);
+        if(element == null || element.isJsonNull()){
+            return 0.0;
+        }
+        return element.getAsDouble();
+    }
+
+    /**
+     * Sleeper player id -> projected points under this league's scoring.
+     *
+     * Sleeper's own pts_half_ppr assumes 4 points per passing touchdown; rather
+     * than patching that up afterwards the points are recomputed from the stat
+     * line using the league's real settings.
+     */
+    public static HashMap<String, Double> parseTodaysWebPage() {
+        LeagueScoringSettings scoringSettings = SleeperLeague.getSeriousLeague().league.leagueScoringSettings;
         HashMap<String, Double> playerSIDToScore = new HashMap<>();
-        for (JsonElement jsonPlayer : jsonPlayers) {
+
+        for (JsonElement jsonPlayer : getTodaysProjections()) {
             JsonObject playerObject = jsonPlayer.getAsJsonObject();
             String sleeperID = playerObject.get("player_id").getAsString();
-            Player player = Player.getPlayerFromSIDV2(sleeperID);
-            JsonObject statsObject = playerObject.getAsJsonObject("stats");
-            double pts = 0.0;
-            if(statsObject.get("pts_half_ppr") != null) {
-                pts = statsObject.get("pts_half_ppr").getAsDouble();
+            JsonObject stats = playerObject.getAsJsonObject("stats");
+            if(stats == null){
+                continue;
             }
-            else{
-                //System.out.println(player.firstName + " " + player.lastName);
-            }
-            double numPassTD = 0.0;
-            if(statsObject.get("pass_td") != null) {
-                numPassTD = statsObject.get("pass_td").getAsDouble();
-            }
-            pts += numPassTD * (6.0 - 4.0); //hardcoded 6pts per td
-            Score score = new Score(pts, player);
-            String sid = String.valueOf(player.sleeperIDString);
-            //System.out.println(sid);
-            if(sid == null || sid == ""){
-                if(player.position.equals(Position.DEF)){
-                    int a=1;
-                }
-                else {
-                    int k = 1;
-                }
-            }
-            playerSIDToScore.put(sid, score.score);
+            playerSIDToScore.put(sleeperID, scoreStatLine(stats, scoringSettings));
         }
         return playerSIDToScore;
     }
+
+    /** Points for one projected stat line under the given league settings. */
+    public static double scoreStatLine(JsonObject stats, LeagueScoringSettings lss){
+        double passing = optionalStat(stats, "pass_yd") * lss.passYard
+                + optionalStat(stats, "pass_td") * lss.passTD
+                + optionalStat(stats, "pass_int") * lss.interception;
+        double rushing = optionalStat(stats, "rush_yd") * lss.rushYard
+                + optionalStat(stats, "rush_td") * lss.rushTD;
+        double receiving = optionalStat(stats, "rec") * lss.reception
+                + optionalStat(stats, "rec_yd") * lss.receivingYard
+                + optionalStat(stats, "rec_td") * lss.receivingTD;
+        double turnovers = optionalStat(stats, "fum_lost") * lss.fumbleLost;
+
+        double total = passing + rushing + receiving + turnovers;
+
+        // Defenses have no offensive stat line to score; take Sleeper's number.
+        if(total == 0.0){
+            return optionalStat(stats, "pts_half_ppr");
+        }
+        return total;
+    }
+
     public static void main(String[] args){
-        parseTodaysWebPage();
+        HashMap<String, Double> scores = parseTodaysWebPage();
+        System.out.println("projected " + scores.size() + " players for the " + getSeason() + " season");
     }
 
 }

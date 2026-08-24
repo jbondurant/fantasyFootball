@@ -75,17 +75,6 @@ public class RankOrderedPlayers {
 
     }
 
-    public static RankOrderedPlayers getRankOrderedPlayerFPFun(){
-        SleeperLeague funL = SleeperLeague.getFunLeague();
-        LeagueScoringSettings funSettings = funL.league.leagueScoringSettings;
-        FantasyProsScore funScores = new FantasyProsScore(funSettings);
-        ArrayList<Score> funScoresList = funScores.fantasyProsScoreLeagueAdjusted;
-        ScoreOrderedPlayers sop = new ScoreOrderedPlayers(funScoresList);
-
-        RankOrderedPlayers rop = RankOrderedPlayers.scoreToRankOrderedPlayers(sop);
-        return rop;
-    }
-
     public static RankOrderedPlayers getRankOrderedPlayerFPSerious(){
         SleeperLeague seriousL = SleeperLeague.getSeriousLeague();
         LeagueScoringSettings seriousSettings = seriousL.league.leagueScoringSettings;
@@ -98,37 +87,40 @@ public class RankOrderedPlayers {
     }
 
     public boolean removePlayer(Player player){
+        if(player == null || player.sportRadarID == null){
+            return false;
+        }
         Position pos = player.position;
         if(pos.equals(Position.QB)){
             for(Rank rank : quarterbacks){
-                if(rank.player.sportRadarID.equals(player.sportRadarID)){
+                if(player.sportRadarID.equals(rank.player.sportRadarID)){
                     return quarterbacks.remove(rank);
                 }
             }
         }
         else if(pos.equals(Position.RB)){
             for(Rank rank : runningBacks){
-                if(rank.player.sportRadarID.equals(player.sportRadarID)){
+                if(player.sportRadarID.equals(rank.player.sportRadarID)){
                     return runningBacks.remove(rank);
                 }
             }
         }
         else if(pos.equals(Position.WR)){
             for(Rank rank : wideReceivers){
-                if(rank.player.sportRadarID.equals(player.sportRadarID)){
+                if(player.sportRadarID.equals(rank.player.sportRadarID)){
                     return wideReceivers.remove(rank);
                 }
             }
         }
         else if(pos.equals(Position.TE)){
             for(Rank rank : tightEnds){
-                if(rank.player.sportRadarID.equals(player.sportRadarID)){
+                if(player.sportRadarID.equals(rank.player.sportRadarID)){
                     return tightEnds.remove(rank);
                 }
             }
         }
         for(Rank rank : defenses){
-            if(rank.player.sportRadarID.equals(player.sportRadarID)){
+            if(player.sportRadarID.equals(rank.player.sportRadarID)){
                 return defenses.remove(rank);
             }
         }
@@ -136,23 +128,23 @@ public class RankOrderedPlayers {
     }
 
     public Player removeTopPlayerOfPos(Position pos){
+        Rank r;
         if(pos.equals(Position.QB)){
-            Rank r = quarterbacks.poll();
-            return r.player;
+            r = quarterbacks.poll();
         }
         else if(pos.equals(Position.RB)){
-            Rank r = runningBacks.poll();
-            return r.player;
+            r = runningBacks.poll();
         }
         else if(pos.equals(Position.WR)){
-            Rank r = wideReceivers.poll();
-            return r.player;
+            r = wideReceivers.poll();
         }
         else if(pos.equals(Position.TE)){
-            Rank r = tightEnds.poll();
-            return r.player;
+            r = tightEnds.poll();
         }
-        Rank r = defenses.poll();
-        return r.player;
+        else {
+            r = defenses.poll();
+        }
+        // A simulated draft can run the board dry at a position.
+        return r == null ? null : r.player;
     }
 }

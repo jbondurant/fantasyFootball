@@ -6,22 +6,27 @@ import java.util.HashMap;
 
 public class ScoredRoster {
 
-    public static LeagueScoringSettings lssSerious = SleeperLeague.getSeriousLeague().league.leagueScoringSettings;
+    public static LeagueScoringSettings getLssSerious(){
+        return SleeperLeague.getSeriousLeague().league.leagueScoringSettings;
+    }
 
-    public static HashMap<String, Double> playerSRIDToScoreFPInSeasonNotCSV = new HashMap<>();
-    public static HashMap<String, Double> playerSRIDToScoreFPInSeasonCSV = new HashMap<>();
-    public static HashMap<String, Double> playerSRIDToScoreFPPreSeason = new HashMap<>();
+    // Built on demand. Loading all of these up front meant picking one broken
+    // feed took down every run, including the ones that did not use it.
+    private static HashMap<String, Double> playerSRIDToScoreFPPreSeason;
+    private static HashMap<String, Double> playerSIDToScoreSleeper;
 
-    public static HashMap<String, Double> playerSRIDToScoreSleeper = new HashMap<>();
+    private static synchronized HashMap<String, Double> preSeasonScores(){
+        if(playerSRIDToScoreFPPreSeason == null){
+            playerSRIDToScoreFPPreSeason = SleeperLeague.getScoreMap();
+        }
+        return playerSRIDToScoreFPPreSeason;
+    }
 
-    static{
-        boolean is6PtsThrow = true;
-        playerSRIDToScoreFPInSeasonNotCSV = InSeasonProjectionsFP.playerToScoreProjFPROS(is6PtsThrow);
-        //todo 2023 uncomment playerCSVSRIDToScore = CSVProjectionsFP.playerToScoreProjFPROS(is6PtsThrow);
-        playerSRIDToScoreFPInSeasonCSV = null;
-        playerSRIDToScoreFPPreSeason = SleeperLeague.getScoreMap();
-        playerSRIDToScoreSleeper = SleeperProjections.parseTodaysWebPage();
-
+    private static synchronized HashMap<String, Double> sleeperScores(){
+        if(playerSIDToScoreSleeper == null){
+            playerSIDToScoreSleeper = SleeperProjections.parseTodaysWebPage();
+        }
+        return playerSIDToScoreSleeper;
     }
 
     String userID;
@@ -186,22 +191,19 @@ public class ScoredRoster {
         return scoreToReturn;
     }
 
-    //todo 2023 add sleeper proj
     public static ArrayList<Score> getPlayerProjections(ArrayList<Player> dp, ProjectionSource ps){
         if(ProjectionSource.SLEEPER.equals(ps)){
-            return getPlayerProjInSeasonFromSleeperMap(dp, playerSRIDToScoreSleeper);
-        }
-        else if(ProjectionSource.IN_SEASON_FP_SITE.equals(ps)) {
-            return getPlayerProjInSeasonFromMap(dp, playerSRIDToScoreFPInSeasonNotCSV);
-        }
-        else if(ProjectionSource.IN_SEASON_FP_CSV.equals(ps)){
-            return getPlayerProjInSeasonFromMap(dp, playerSRIDToScoreFPInSeasonCSV);
+            return getPlayerProjInSeasonFromSleeperMap(dp, sleeperScores());
         }
         else if(ProjectionSource.PRESEASON_FP_SITE.equals(ps)){
-            return getPlayerProjInSeasonFromMap(dp, playerSRIDToScoreFPPreSeason);
+            return getPlayerProjInSeasonFromMap(dp, preSeasonScores());
         }
-        else if(ProjectionSource.SLEEPER.equals(ps)){
-            return getPlayerProjInSeasonFromMap(dp, playerSRIDToScoreSleeper);
+        else if(ProjectionSource.IN_SEASON_FP_SITE.equals(ps)) {
+            // Throws with an explanation: FantasyPros dropped projected points.
+            return getPlayerProjInSeasonFromMap(dp, InSeasonProjectionsFP.playerToScoreProjFPROS(true));
+        }
+        else if(ProjectionSource.IN_SEASON_FP_CSV.equals(ps)){
+            return getPlayerProjInSeasonFromMap(dp, CSVProjectionsFP.playerToScoreProjFPROS(true));
         }
         else{
             throw new RuntimeException("wrong projection source");
@@ -209,10 +211,9 @@ public class ScoredRoster {
     }
 
     private static Score getSinglePlayerProj(Player p, HashMap<String, Double> playerSRIDToScore) {
-        if (playerSRIDToScore.containsKey(p.sportRadarID)) {
+        if (p != null && playerSRIDToScore.containsKey(p.sportRadarID)) {
             return new Score(playerSRIDToScore.get(p.sportRadarID), p);
         } else {
-            System.out.println("Player score for " + p.firstName + " " + p.lastName + " not found");
             return null;
         }
     }
@@ -240,11 +241,16 @@ public class ScoredRoster {
     }
 
     private static Score getSinglePlayerSleeperProj(Player p, HashMap<String, Double> playerSIDStringToScore) {
+        if (p == null) {
+            return null;
+        }
         if (playerSIDStringToScore.containsKey(p.sleeperIDString)) {
             return new Score(playerSIDStringToScore.get(p.sleeperIDString), p);
         } else {
-            System.out.println("Player score for " + p.firstName + " " + p.lastName + " not found");
-            return null;
+            // No projection published for this player: bench fodder, a rookie
+            // Sleeper has not priced yet, or someone on IR. Scores as zero
+            // rather than dropping off the roster entirely.
+            return new Score(0.0, p);
         }
     }
 

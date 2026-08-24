@@ -1,30 +1,25 @@
-import java.io.*;
-import java.net.URL;
-import java.net.URLConnection;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Scanner;
+import java.util.List;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-
+/**
+ * FantasyPros expert consensus ranking, half-PPR.
+ *
+ * These pages no longer carry a "sportsdata_id", so rows are matched to Sleeper
+ * players by name/team/position instead. Rows that match nothing (rookies
+ * FantasyPros lists before Sleeper does, retired players, and so on) are
+ * dropped rather than added with a null player.
+ */
 public class FantasyProsADP {
-
 
     public static String filepathStart = "fantasyProsADP";
     public static String webURL = "https://www.fantasypros.com/nfl/rankings/half-point-ppr-cheatsheets.php";
 
+    private static ArrayList<Rank> rankingFPADP;
 
-    private static final ArrayList<Rank> rankingFPADP;
-
-    static{
-        rankingFPADP = parseTodaysWebPage();
-    }
-
-    public static ArrayList<Rank> getRankingFPECR(){
+    public static synchronized ArrayList<Rank> getRankingFPECR(){
+        if(rankingFPADP == null){
+            rankingFPADP = parseTodaysWebPage();
+        }
         return rankingFPADP;
     }
 
@@ -32,48 +27,37 @@ public class FantasyProsADP {
         return InOutUtilities.getTodaysWebPage(webURL, filepathStart);
     }
 
-
-    private static ArrayList<Rank> parseTodaysWebPage(){
-        String entireHTML = getTodaysWebPage();
-        String ecrDataStart = entireHTML.split("var ecrData = ")[1].split("\"players\":")[1];
-        String ecrData = ecrDataStart.split("var sosData")[0].split(",\"experts_available\":")[0];
-
-        JsonParser jp = new JsonParser();
-        JsonElement jsonElement = jp.parse(ecrData);
-        JsonArray jsonPlayers = jsonElement.getAsJsonArray();
+    public static ArrayList<Rank> parseTodaysWebPage(){
+        List<FantasyProsEcrData.Entry> entries = FantasyProsEcrData.parse(getTodaysWebPage());
 
         ArrayList<Rank> todaysRankings = new ArrayList<Rank>();
-        for (JsonElement jsonPlayer : jsonPlayers) {
-            JsonObject apiObject = jsonPlayer.getAsJsonObject();
-
-            String sportRadarID = "";
-            if(!apiObject.get("sportsdata_id").isJsonNull()) {
-                sportRadarID = apiObject.get("sportsdata_id").getAsString();
+        int unmatched = 0;
+        for(FantasyProsEcrData.Entry entry : entries){
+            Player player = entry.resolvePlayer();
+            if(player == null){
+                unmatched++;
+                continue;
             }
-
-            int ecr = apiObject.get("rank_ecr").getAsInt();
-            Player player = Player.getPlayer(sportRadarID);
-            Rank rank = new Rank(ecr, player);
-            todaysRankings.add(rank);
+            todaysRankings.add(new Rank(entry.rankEcr, player));
+        }
+        if(todaysRankings.isEmpty()){
+            throw new RuntimeException("no FantasyPros ranking rows could be matched to a sleeper player");
+        }
+        if(unmatched > 0){
+            System.out.println("FantasyPros ranking: " + unmatched + " of " + entries.size()
+                    + " rows had no matching sleeper player");
         }
         return todaysRankings;
     }
 
-
-    /*
-    private static void downloadTodaysWebPage() throws FileNotFoundException {
-        InOutUtilities.downloadTodaysWebPage(webURL, filepathStart);
-    }*/
-
     public static void main(String[] args){
-        ArrayList<Rank> xyz = parseTodaysWebPage();
-        int eee = 1;
+        ArrayList<Rank> ranking = getRankingFPECR();
+        System.out.println("ranked " + ranking.size() + " players");
+        for(int i = 0; i < Math.min(10, ranking.size()); i++){
+            Rank rank = ranking.get(i);
+            System.out.println(rank.rankNum + "\t" + rank.player.firstName + " " + rank.player.lastName
+                    + "\t" + rank.player.position + "\t" + rank.player.team);
+        }
     }
 
-
-
 }
-
-
-
-

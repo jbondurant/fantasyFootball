@@ -1,4 +1,16 @@
 # Project exclude paths
 /.gradle/
 /build/
-/build/classes/java/main/
+
+# Cached API responses. Every fetch is written to the working directory as
+# <prefix><today>.txt and reused for the rest of the day; delete them to force
+# a refresh.
+/*.txt
+/sleeperDataPlayerAPI.json
+
+# TradeFinder output - hundreds of megabytes of candidate trades.
+/twoTeamTrade*.txt
+/threeTeamTrade*.txt
+
+# FantasyPros CSV exports, downloaded by hand.
+/FantasyPros_*.csv

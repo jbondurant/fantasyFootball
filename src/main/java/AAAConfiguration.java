@@ -2,12 +2,36 @@ import com.google.gson.*;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
+/**
+ * Single source of truth for "which league am I playing in".
+ *
+ * Only the league id and the sleeper username are configured (see
+ * {@link AAAConfigurationSleeperLeague}); the draft id, the previous season's
+ * league/draft, the roster of humans and the season are all read back from the
+ * Sleeper API. Before 2026 those were pasted in as literals all over the
+ * codebase and went stale every August.
+ */
 public class AAAConfiguration {
 
     private String leagueID;
     private String myUsername;
     private String myNameForLeague;
+
+    private static AAAConfiguration instance;
+
+    /**
+     * The configured league. Everything that used to reach for a hardcoded
+     * league/draft id now goes through here.
+     */
+    public static synchronized AAAConfiguration getInstance(){
+        if(instance == null){
+            instance = new AAAConfigurationSleeperLeague();
+        }
+        return instance;
+    }
 
     public AAAConfiguration(String leagueID, String myUsername, String myNameForLeague){
         this.leagueID = leagueID;
@@ -24,41 +48,123 @@ public class AAAConfiguration {
     }
 
     public String getMyNameForLeague(){
-        return myNameForLeague;
+        return myNameForLeague + leagueID;
     }
 
     public String getRosterWebURL(){
-        return "https://api.sleeper.app/v1/league/" + this.leagueID + "/rosters";
+        return leagueWebURL(this.leagueID) + "/rosters";
+    }
+
+    public String getUsersWebURL(){
+        return leagueWebURL(this.leagueID) + "/users";
+    }
+
+    private static String leagueWebURL(String leagueID){
+        return "https://api.sleeper.app/v1/league/" + leagueID;
     }
 
     private String getDraftsWebURL(){
-        return "https://api.sleeper.app/v1/league/" + this.leagueID + "/drafts";
+        return leagueWebURL(this.leagueID) + "/drafts";
     }
 
     private String getDraftPicksWebURL(){
-        return "https://api.sleeper.app/v1/draft/" + getDraftFromLeagueIfOnlyOneDraft() + "/picks";
+        return draftPicksWebURL(getDraftID());
+    }
+
+    public static String draftPicksWebURL(String draftID){
+        return "https://api.sleeper.app/v1/draft/" + draftID + "/picks";
+    }
+
+    public static String draftWebURL(String draftID){
+        return "https://api.sleeper.app/v1/draft/" + draftID;
     }
 
     public static String filepathStartSeriousRosters = "seriousRostersForKeepers";
+    public static String filepathStartUsers = "leagueUsers";
+    public static String filepathStartLeague = "leagueSettings";
+    public static String filepathStartPreviousLeague = "previousLeagueSettings";
     public static String filepathStartDrafts = "draftsData";
     public static String filepathStartDraft = "draftData";
+    public static String filepathStartPreviousDraftPicks = "previousSeasonDraftPicks";
 
-    public String getTodaysRosterWebPageSerious(){//todo 2023 move this out into utilities or something
-        return InOutUtilities.getTodaysWebPage(this.getRosterWebURL(), filepathStartSeriousRosters);
+    public String getTodaysRosterWebPageSerious(){
+        return InOutUtilities.getTodaysWebPage(this.getRosterWebURL(), filepathStartSeriousRosters + leagueID);
     }
 
     public String getTodaysDrafts(){
-        return InOutUtilities.getTodaysWebPage(this.getDraftsWebURL(), filepathStartDrafts);
+        return InOutUtilities.getTodaysWebPage(this.getDraftsWebURL(), filepathStartDrafts + leagueID);
     }
 
-    public String getTodaysDraftPicks(){// todo 2023 perhaps change this to not cache;
-        return InOutUtilities.getTodaysWebPage(this.getDraftPicksWebURL(), filepathStartDraft);
+    public String getTodaysDraftPicks(){
+        return InOutUtilities.getTodaysWebPage(getDraftPicksWebURL(), filepathStartDraft + leagueID);
+    }
+
+    private JsonObject leagueJson;
+
+    /** The league object itself: scoring settings, season, draft id, previous league id. */
+    public JsonObject getLeagueJson(){
+        if(leagueJson == null){
+            String data = InOutUtilities.getTodaysWebPage(leagueWebURL(this.leagueID), filepathStartLeague + leagueID);
+            leagueJson = JsonParser.parseString(data).getAsJsonObject();
+        }
+        return leagueJson;
+    }
+
+    private static String optionalString(JsonObject object, String key){
+        JsonElement element = object.get(key);
+        if(element == null || element.isJsonNull()){
+            return null;
+        }
+        return element.getAsString();
+    }
+
+    /** e.g. "2026". Read from the league rather than the system clock. */
+    public String getSeason(){
+        return optionalString(getLeagueJson(), "season");
+    }
+
+    public String getDraftID(){
+        String draftID = optionalString(getLeagueJson(), "draft_id");
+        if(draftID == null){
+            // Older leagues only expose the draft through the /drafts collection.
+            draftID = getDraftFromLeagueIfOnlyOneDraft();
+        }
+        return draftID;
+    }
+
+    /** Null in the league's very first season. */
+    public String getPreviousLeagueID(){
+        return optionalString(getLeagueJson(), "previous_league_id");
+    }
+
+    /**
+     * The draft that sets keeper cost: a keeper's price is the round they were
+     * taken in last season, so this is last season's draft, not this one's
+     * (which is still empty until draft day).
+     */
+    public String getPreviousDraftID(){
+        String previousLeagueID = getPreviousLeagueID();
+        if(previousLeagueID == null){
+            return null;
+        }
+        String data = InOutUtilities.getTodaysWebPage(leagueWebURL(previousLeagueID),
+                filepathStartPreviousLeague + leagueID);
+        JsonObject previousLeague = JsonParser.parseString(data).getAsJsonObject();
+        return optionalString(previousLeague, "draft_id");
+    }
+
+    public String getPreviousSeasonDraftPicks(){
+        String previousDraftID = getPreviousDraftID();
+        if(previousDraftID == null){
+            return "[]";
+        }
+        return InOutUtilities.getTodaysWebPage(draftPicksWebURL(previousDraftID),
+                filepathStartPreviousDraftPicks + leagueID);
     }
 
     public ArrayList<JsonElement> getTodaysRoster() {
         String websiteData = getTodaysRosterWebPageSerious();
-        JsonParser jp = new JsonParser();
-        JsonArray unparsedRosters = jp.parse(websiteData).getAsJsonArray();
+        JsonArray unparsedRosters = JsonParser.parseString(websiteData).getAsJsonArray();
         ArrayList<JsonElement> jsonRosters = new ArrayList<>();
         for (JsonElement jsonRoster : unparsedRosters) {
             jsonRosters.add(jsonRoster);
@@ -66,47 +172,112 @@ public class AAAConfiguration {
         return jsonRosters;
     }
 
-    public HashSet<Integer> getTodaysKeeperPlayerIDs(){
-        HashSet<Integer> playerIDs = new HashSet<>();
+    private Map<String, String> userIDToDisplayName;
+
+    /** Sleeper user id -> display name, straight from the league. */
+    public synchronized Map<String, String> getUserIDToDisplayName(){
+        if(userIDToDisplayName == null){
+            Map<String, String> names = new LinkedHashMap<>();
+            String data = InOutUtilities.getTodaysWebPage(getUsersWebURL(), filepathStartUsers + leagueID);
+            for(JsonElement jsonUser : JsonParser.parseString(data).getAsJsonArray()){
+                JsonObject user = jsonUser.getAsJsonObject();
+                String userID = optionalString(user, "user_id");
+                String displayName = optionalString(user, "display_name");
+                if(userID != null){
+                    names.put(userID, displayName == null ? userID : displayName);
+                }
+            }
+            userIDToDisplayName = names;
+        }
+        return userIDToDisplayName;
+    }
+
+    /**
+     * Sleeper hands keepers back as player id strings ("9226", and "CHI" for a
+     * defense), so they stay strings all the way through.
+     */
+    public HashSet<String> getTodaysKeeperPlayerIDs(){
+        HashSet<String> playerIDs = new HashSet<>();
         ArrayList<JsonElement> rosters = getTodaysRoster();
         for(JsonElement unparsedRoster : rosters){
             JsonObject apiObject = unparsedRoster.getAsJsonObject();
-            if(apiObject.get("keepers").isJsonNull()){
+            JsonElement keepersElement = apiObject.get("keepers");
+            if(keepersElement == null || keepersElement.isJsonNull()){
                continue;
             }
-            JsonArray jsonArray = apiObject.getAsJsonArray("keepers");
-            for (JsonElement jsonElement : jsonArray){
-                //Player keeper = Player.getPlayerFromSID(jsonElement.getAsInt());
-                playerIDs.add(jsonElement.getAsInt());
+            for (JsonElement jsonElement : keepersElement.getAsJsonArray()){
+                playerIDs.add(jsonElement.getAsString());
             }
         }
         return playerIDs;
     }
 
+    /**
+     * The keepers everyone has declared, priced at the round they were drafted
+     * in last season.
+     */
     public ArrayList<Keeper> getTodaysKeepers(){
         ArrayList<Keeper> keepers = new ArrayList<>();
 
-        HashSet<Integer> keeperPlayerIDs = getTodaysKeeperPlayerIDs();
-        String draftData = getTodaysDraftPicks();
-        JsonParser jp = new JsonParser();
-        JsonArray unparsedPicks = jp.parse(draftData).getAsJsonArray();
+        HashSet<String> keeperPlayerIDs = getTodaysKeeperPlayerIDs();
+        if(keeperPlayerIDs.isEmpty()){
+            return keepers;
+        }
+
+        String draftData = getPreviousSeasonDraftPicks();
+        JsonArray unparsedPicks = JsonParser.parseString(draftData).getAsJsonArray();
+        HashSet<String> pricedFromDraft = new HashSet<>();
         for (JsonElement jsonPick : unparsedPicks) {
-            int playerID = ((JsonObject) jsonPick).get("player_id").getAsInt();
-            if(!keeperPlayerIDs.contains(playerID)){
+            JsonObject pick = jsonPick.getAsJsonObject();
+            String playerID = optionalString(pick, "player_id");
+            if(playerID == null || !keeperPlayerIDs.contains(playerID)){
                 continue;
             }
-            int playerRound = ((JsonObject) jsonPick).get("round").getAsInt();
-            String teamOwnerID = ((JsonObject) jsonPick).get("picked_by").getAsString();
-            Player player = Player.getPlayerFromSID(playerID);
-            keepers.add(new Keeper(teamOwnerID, player, playerRound));
+            int playerRound = pick.get("round").getAsInt();
+            Player player = Player.getPlayerFromSIDV2(playerID);
+            if(player == null){
+                continue;
+            }
+            pricedFromDraft.add(playerID);
+            keepers.add(new Keeper(currentOwnerOf(playerID), player, playerRound));
+        }
+
+        // A keeper picked up off waivers never appears in last season's draft;
+        // those cost a last-round pick.
+        int undraftedRound = Keeper.UNDRAFTED_ROUND_COST;
+        for(String playerID : keeperPlayerIDs){
+            if(pricedFromDraft.contains(playerID)){
+                continue;
+            }
+            Player player = Player.getPlayerFromSIDV2(playerID);
+            if(player == null){
+                continue;
+            }
+            keepers.add(new Keeper(currentOwnerOf(playerID), player, undraftedRound));
         }
         return keepers;
     }
 
+    /** Who holds this player right now, which is who gets to keep them. */
+    private String currentOwnerOf(String playerID){
+        for(JsonElement unparsedRoster : getTodaysRoster()){
+            JsonObject roster = unparsedRoster.getAsJsonObject();
+            JsonElement players = roster.get("players");
+            if(players == null || players.isJsonNull()){
+                continue;
+            }
+            for(JsonElement rosteredPlayer : players.getAsJsonArray()){
+                if(rosteredPlayer.getAsString().equals(playerID)){
+                    return optionalString(roster, "owner_id");
+                }
+            }
+        }
+        return null;
+    }
+
     public String getDraftFromLeagueIfOnlyOneDraft(){
         String apiData = getTodaysDrafts();
-        JsonParser jp = new JsonParser();
-        JsonArray unparsedDrafts = jp.parse(apiData).getAsJsonArray();
+        JsonArray unparsedDrafts = JsonParser.parseString(apiData).getAsJsonArray();
         ArrayList<JsonElement> jsonDrafts = new ArrayList<>();
         for (JsonElement jsonRoster : unparsedDrafts) {
             jsonDrafts.add(jsonRoster);
@@ -118,9 +289,18 @@ public class AAAConfiguration {
     }
 
     public static void main(String[] args){
-        AAAConfiguration aaaConfiguration = new AAAConfigurationSleeperLeague();
-        ArrayList<Keeper> abc = aaaConfiguration.getTodaysKeepers();
-        int a = 1;
+        AAAConfiguration aaaConfiguration = AAAConfiguration.getInstance();
+        System.out.println("league:\t" + aaaConfiguration.getLeagueID() + "\tseason:\t" + aaaConfiguration.getSeason());
+        System.out.println("draft:\t" + aaaConfiguration.getDraftID());
+        System.out.println("previous league:\t" + aaaConfiguration.getPreviousLeagueID()
+                + "\tprevious draft:\t" + aaaConfiguration.getPreviousDraftID());
+        System.out.println("me:\t" + aaaConfiguration.getMyID());
+        for(Keeper keeper : aaaConfiguration.getTodaysKeepers()){
+            System.out.println("keeper:\t"
+                    + HumanOfInterest.getHumanFromID(keeper.humanWhoCanKeep) + "\t"
+                    + keeper.player.firstName + " " + keeper.player.lastName
+                    + "\tround " + keeper.roundCanBeKept);
+        }
     }
 
 }

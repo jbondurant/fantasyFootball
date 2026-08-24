@@ -9,7 +9,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -17,11 +16,7 @@ import java.util.Set;
 
 public class SleeperPlayersV2 {
 
-    public static int year = LocalDate.now().getYear();
-
     public static String FILEPATH_START = "FantasyFootballCalculatorForSleeperIds";
-
-    public static String WEB_URL = "https://fantasyfootballcalculator.com/api/v1/adp/half-ppr?teams=12&year=" + year + "&position=all";
 
 
     public static HashMap<String, SleeperPlayerV2> getSleeperPlayersV2AsMap() {
@@ -34,12 +29,7 @@ public class SleeperPlayersV2 {
 
     private static HashSet<SleeperPlayerV2> sleeperPlayersV2 = new HashSet<>();
 
-    public static String getTodaysWebPage(){
-        return InOutUtilitiesV2.getTodaysWebPage(WEB_URL, FILEPATH_START);
-    }
-
     static{
-        String entireHTML = getTodaysWebPage();
         intializeAllPlayers();
     }
 

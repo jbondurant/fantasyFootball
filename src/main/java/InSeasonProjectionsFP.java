@@ -1,14 +1,21 @@
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.mongodb.util.Hash;
-
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
+/**
+ * FantasyPros rest-of-season pages.
+ *
+ * These used to be the projected-points source: each player row carried an
+ * "r2p_pts" field. FantasyPros removed it (along with "sportsdata_id") and the
+ * pages now publish expert consensus *ranks* only. There is no longer any way
+ * to get projected points out of them, so:
+ *
+ *  - {@link #getRosRanking()} still works, and is the useful thing here.
+ *  - {@link #playerToScoreProjFPROS} cannot work and says so, loudly. Use
+ *    {@link ProjectionSource#SLEEPER}, which is backed by real stat-line
+ *    projections.
+ */
 public class InSeasonProjectionsFP {
-
 
     public static String filepathStartQB = "fantasyProsProjectionInSeasonQB";
     public static String filepathStartRBHalf = "fantasyProsProjectionInSeasonRBHalf";
@@ -16,162 +23,52 @@ public class InSeasonProjectionsFP {
     public static String filepathStartTEHalf = "fantasyProsProjectionInSeasonTEHalf";
     public static String filepathStartDEF = "fantasyProsProjectionInSeasonDEF";
 
-
     public static String webURLQB = "https://www.fantasypros.com/nfl/rankings/ros-qb.php";
     public static String webURLRBHalf = "https://www.fantasypros.com/nfl/rankings/ros-half-point-ppr-rb.php";
     public static String webURLWRHalf = "https://www.fantasypros.com/nfl/rankings/ros-half-point-ppr-wr.php";
     public static String webURLTEHalf = "https://www.fantasypros.com/nfl/rankings/ros-half-point-ppr-te.php";
     public static String webURLDEF = "https://www.fantasypros.com/nfl/rankings/ros-dst.php";
 
-    private static final ArrayList<Score> projectionsFPQB;
-    private static final ArrayList<Score> projectionsFPFlex;
-    private static final ArrayList<Score> projectionsFPDEF;
+    private static ArrayList<Rank> rosRanking;
 
-    static{
-        projectionsFPQB = parseTodaysWebPageQB();
-        ArrayList<Score> projectionsFPRB = parseTodaysWebPageRB();
-        ArrayList<Score> projectionsFPWR = parseTodaysWebPageWR();
-        ArrayList<Score> projectionsFPTE = parseTodaysWebPageTE();
-        projectionsFPFlex = new ArrayList<>();
-        projectionsFPFlex.addAll(projectionsFPRB);
-        projectionsFPFlex.addAll(projectionsFPWR);
-        projectionsFPFlex.addAll(projectionsFPTE);
-        projectionsFPDEF = parseTodaysWebPageDEF();
-    }
-
-    public static ArrayList<Score> getQBProjections(){
-        return projectionsFPQB;
-    }
-    public static ArrayList<Score> getFlexProjections(){
-        return projectionsFPFlex;
-    }
-    public static ArrayList<Score> getDEFProjections(){
-        return projectionsFPDEF;
-    }
-
-
-    private static String getTodaysWebPageQB(){
-        return InOutUtilities.getTodaysWebPage(webURLQB, filepathStartQB);
-    }
-    private static String getTodaysWebPageRBHalf(){
-        return InOutUtilities.getTodaysWebPage(webURLRBHalf, filepathStartRBHalf);
-    }
-    private static String getTodaysWebPageWRHalf(){
-        return InOutUtilities.getTodaysWebPage(webURLWRHalf, filepathStartWRHalf);
-    }
-    private static String getTodaysWebPageTEHalf(){
-        return InOutUtilities.getTodaysWebPage(webURLTEHalf, filepathStartTEHalf);
-    }
-
-    private static String getTodaysWebPageDEF(){
-        return InOutUtilities.getTodaysWebPage(webURLDEF, filepathStartDEF);
-    }
-
-
-    //bad practice
-    private static ArrayList<Score> parseTodaysWebPageQB() {
-        return parseTodaysWebPageAny(0);
-    }
-    private static ArrayList<Score> parseTodaysWebPageRB() {
-        return parseTodaysWebPageAny(1);
-    }
-    private static ArrayList<Score> parseTodaysWebPageWR() {
-        return parseTodaysWebPageAny(2);
-    }
-    private static ArrayList<Score> parseTodaysWebPageTE() {
-        return parseTodaysWebPageAny(3);
-    }
-    private static ArrayList<Score> parseTodaysWebPageDEF() {
-        return parseTodaysWebPageAny(4);
-    }
-
-    private static ArrayList<Score> parseTodaysWebPageAny(int whatPage) {
-
-        ArrayList<Score> projections = new ArrayList<>();
-
-        String entireHTML = "";
-        if(whatPage == 0) {
-            entireHTML = getTodaysWebPageQB();
+    /** Rest-of-season expert consensus rank, per position, matched to players. */
+    public static synchronized ArrayList<Rank> getRosRanking(){
+        if(rosRanking == null){
+            ArrayList<Rank> ranking = new ArrayList<>();
+            ranking.addAll(rankPage(webURLQB, filepathStartQB));
+            ranking.addAll(rankPage(webURLRBHalf, filepathStartRBHalf));
+            ranking.addAll(rankPage(webURLWRHalf, filepathStartWRHalf));
+            ranking.addAll(rankPage(webURLTEHalf, filepathStartTEHalf));
+            ranking.addAll(rankPage(webURLDEF, filepathStartDEF));
+            rosRanking = ranking;
         }
-        else if(whatPage == 1) {
-            entireHTML = getTodaysWebPageRBHalf();
-        }
-        else if(whatPage == 2){
-            entireHTML = getTodaysWebPageWRHalf();
-        }
-        else if (whatPage == 3){
-            entireHTML = getTodaysWebPageTEHalf();
-        }
-        else{
-            entireHTML = getTodaysWebPageDEF();
-        }
+        return rosRanking;
+    }
 
-
-        String ecrDataStart = entireHTML.split("var ecrData = ")[1].split("\"players\":")[1];
-        String ecrData = ecrDataStart.split("var sosData")[0].split(",\"experts_available\":")[0];
-
-        JsonParser jp = new JsonParser();
-        JsonElement jsonElement = jp.parse(ecrData);
-        JsonArray jsonPlayers = jsonElement.getAsJsonArray();
-
-        for (JsonElement jsonPlayer : jsonPlayers) {
-            JsonObject apiObject = jsonPlayer.getAsJsonObject();
-
-            String sportRadarID = "";
-            if(!apiObject.get("sportsdata_id").isJsonNull()) {
-                sportRadarID = apiObject.get("sportsdata_id").getAsString();
-            }
-
-            if(apiObject.get("r2p_pts") == null){
-                Player playerX = Player.getPlayer(sportRadarID);
-                //maybe remove?
-                Score tempScore = new Score(0.0, playerX);
-                projections.add(tempScore);
+    private static ArrayList<Rank> rankPage(String webURL, String filepathStart){
+        String entireHTML = InOutUtilities.getTodaysWebPage(webURL, filepathStart);
+        List<FantasyProsEcrData.Entry> entries = FantasyProsEcrData.parse(entireHTML);
+        ArrayList<Rank> ranking = new ArrayList<>();
+        for(FantasyProsEcrData.Entry entry : entries){
+            Player player = entry.resolvePlayer();
+            if(player == null){
                 continue;
             }
-
-            double rosProj = apiObject.get("r2p_pts").getAsDouble();
-            Player player = Player.getPlayer(sportRadarID);
-            Score score = new Score(rosProj, player);
-            projections.add(score);
+            ranking.add(new Rank(entry.rankEcr, player));
         }
-        return projections;
+        return ranking;
     }
-
 
     public static HashMap<String, Double> playerToScoreProjFPROS(boolean is6ptsThrow){
-        HashMap<String, Double> toReturn = new HashMap<>();
-        for(Score score : projectionsFPQB){
-            if(score != null && score.player != null) {
-                //TODO correct for 6pts per qb
-                double scoreToEnter = score.score;
-                if(is6ptsThrow){
-                    scoreToEnter = scoreToEnter * 1.18;
-                }
-                toReturn.put(score.player.sportRadarID, scoreToEnter);
-            }
-        }
-        for(Score score : projectionsFPFlex){
-            if(score != null && score.player != null) {
-                toReturn.put(score.player.sportRadarID, score.score);
-            }
-        }
-        for(Score score : projectionsFPDEF){
-            if(score != null && score.player != null) {
-                toReturn.put(score.player.sportRadarID, score.score);
-            }
-        }
-        return toReturn;
+        throw new UnsupportedOperationException(
+                "FantasyPros no longer publishes rest-of-season projected points (the r2p_pts field was "
+                        + "removed from their rankings pages), so IN_SEASON_FP_SITE cannot produce scores. "
+                        + "Use ProjectionSource.SLEEPER, or InSeasonProjectionsFP.getRosRanking() for ranks.");
     }
 
-
-
-
-
     public static void main(String[] args){
-        //ArrayList<QBProjection> projectionsQB = parseTodaysWebPageQB();
-        //ArrayList<FlexProjection> projectionsFlex = parseTodaysWebPageAny();
-        //ArrayList<DEFProjection> projectionsDEF = parseTodaysWebPageDEF();
+        ArrayList<Rank> ranking = getRosRanking();
+        System.out.println("rest-of-season ranks matched for " + ranking.size() + " players");
     }
 
 }

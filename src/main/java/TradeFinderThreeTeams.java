@@ -11,7 +11,7 @@ import java.util.*;
 
 public class TradeFinderThreeTeams {
 
-    public static String myID = HumanOfInterest.humanID;
+    public static String myID = HumanOfInterest.humanID();
 
     private static ArrayList<List<Character>> allPermsCleaned = new ArrayList<>();
 
@@ -446,8 +446,8 @@ public class TradeFinderThreeTeams {
         //9<10 is russellMania?
         //10<11 is hamrliks? *
         //ends at 10; <11
-        AAAConfiguration aaaConfiguration = new AAAConfigurationSleeperLeague();
-        ProjectionSource projectionSource = ProjectionSource.IN_SEASON_FP_SITE;
+        AAAConfiguration aaaConfiguration = AAAConfiguration.getInstance();
+        ProjectionSource projectionSource = ProjectionSource.SLEEPER;
         for(int i=0; i<11; i++){//todo change back to 11
             String tradedPlayerLastName = "Henry";
             int teamN = i;

@@ -10,8 +10,10 @@ import java.util.List;
 
 public class SleeperLiveDraft {
 
-    public static String webURLSerious = "https://api.sleeper.app/v1/draft/725192044087148544/picks";
-    public static String webURLFun = "https://api.sleeper.app/v1/draft/707299245186691073/picks";
+    /** This season's draft picks, live. */
+    public static String getWebURLSerious(){
+        return AAAConfiguration.draftPicksWebURL(AAAConfiguration.getInstance().getDraftID());
+    }
 
     //DO NOT USE IO UTILITIES
     //IT MUST UPDATE EVERY CALL, NOT ONCE PER DAY
@@ -24,21 +26,18 @@ public class SleeperLiveDraft {
         ArrayList<Player> draftedPlayers = new ArrayList<Player>();
         ArrayList<Player> rosterPlayers = new ArrayList<Player>();
 
+        String myID = HumanOfInterest.humanID();
         for (JsonElement jsonPlayer : jsonPlayers) {
             JsonObject apiObject = jsonPlayer.getAsJsonObject();
-            JsonObject playerMetadata = apiObject.getAsJsonObject("metadata");
-            String position = playerMetadata.get("position").getAsString();
-            String team = playerMetadata.get("team").getAsString();
-            Player player;
-            if(!position.equals("DEF")) {
-                int playerSID = apiObject.get("player_id").getAsInt();
-                player = Player.getPlayerFromSID(playerSID);
+            // player_id carries the team abbreviation for a defense, so it is
+            // read as a string and dispatched on rather than parsed as an int.
+            Player player = Player.getPlayerFromSIDV2(apiObject.get("player_id").getAsString());
+            if(player == null){
+                continue;
             }
-            else{
-                player = Player.getPlayerDefense(team);
-            }
-            String pickedBy = apiObject.get("picked_by").getAsString();
-            if(pickedBy.equals(HumanOfInterest.humanID)){
+            JsonElement pickedByElement = apiObject.get("picked_by");
+            if(pickedByElement != null && !pickedByElement.isJsonNull()
+                    && pickedByElement.getAsString().equals(myID)){
                 rosterPlayers.add(player);
             }
             draftedPlayers.add(player);
@@ -52,41 +51,28 @@ public class SleeperLiveDraft {
     }
 
     public static void main(String[] args) throws Exception {
-        //String userID = HumanOfInterest.humanID;
-        //kinda tricky cause I would need to check the last drafted
-        // and also it would be different if I'm the first or last player
-        //and so you need to check the num of players
-        AAAConfiguration aaaConfiguration = new AAAConfigurationSleeperLeague();
+        AAAConfiguration aaaConfiguration = AAAConfiguration.getInstance();
         Instant start = Instant.now();
         boolean isFun = false;
-        String draftID = "980889732034994177";
-        //String draftID = "1003861905636687872";
-        int numDraftsOnFly = 300;//todo change back to 300
-        boolean allowUndrafted = false;
-        int undraftedRoundCost = 10;
-        int minKeeperRound = 3;
+        String draftID = aaaConfiguration.getDraftID();
+        int numDraftsOnFly = 300;
         int qbADPChange = 18;//at least 6, if not 12
-        int minMaxStartSize = 2;//todo change back to 2
+        int minMaxStartSize = 2;
         int numThreads = 5;
+        int numTeams = SleeperLeague.getSeriousLeague().sleeperDraftInfo.usersInfo.size();
+        if(numTeams == 0){
+            numTeams = 12;
+        }
         ArrayList<Keeper> keepers = aaaConfiguration.getTodaysKeepers();
-        //tried 1261, 1351, 1441
         ArrayList positionsWanted = HumanStrategy.nonPermutedPositions(1,4,4,1);
 
         LiveDraftInfo ldifb = getDraftedPlayersMock(draftID, isFun);
         int numDraftedPlayers = ldifb.draftedPlayers.size();
-        int currentRound = ((numDraftedPlayers) / 12) + 1;//todo 2023 make sure keepers don't mess this up
+        int currentRound = (numDraftedPlayers / numTeams) + 1;
         LiveDraftInfo.LiveDraftPotentialMoveAnalyzer(ldifb.bestAvailablePlayers);
         System.out.println("---------------");
 
-        //OnTheFlySimulationRunner.runDraftsToChooseMyKeeperHardcoded(numDraftsOnFly, positionsWanted, ldifb, HumanOfInterest.humanID, allowUndrafted, undraftedRoundCost, qbADPChange, minKeeperRound, aaaConfiguration);
         List<DraftRunsResults> draftRunsResults = OnTheFlySimulationRunner.runDraftsWithKeepersMultipleThreads(numDraftsOnFly, currentRound, positionsWanted, ldifb, qbADPChange, keepers, minMaxStartSize, numThreads);
-        //OnTheFlySimulationRunner.runDraftsWithKeepers(numDraftsOnFly, currentRound, positionsWanted, ldifb, qbADPChange, keepers, minMaxStartSize);
-        //OnTheFlySimulationRunner.runDraftsOnTheFly(numDraftsOnFly, roundPick,isFun, positionsWanted, ldifb, qbADPChange);
-        /*for(String userID : HumanOfInterest.getAllUserIDsHardcoded()) {
-            OnTheFlySimulationRunner.runDraftsOnTheFlyToChooseMyKeeperHardcoded(numDraftsOnFly, positionsWanted, ldifb, userID, allowUndrafted, undraftedRoundCost, qbADPChange, minKeeperRound);
-            System.out.println("-----");
-        }
-         */
 
         DraftRunsResults.printDraftRunResults(ldifb, draftRunsResults);
 

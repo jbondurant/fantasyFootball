@@ -7,9 +7,9 @@ public class FantasyProsScore {
 
 
     public FantasyProsScore(LeagueScoringSettings leagueScoringSettings){
-        ArrayList<QBProjection> qbProjections = FantasyProsProjections.getQBProjections();
-        ArrayList<FlexProjection> flexProjections = FantasyProsProjections.getFlexProjections();
-        ArrayList<DEFProjection> defProjections = FantasyProsProjections.getDEFProjections();
+        ArrayList<QBProjection> qbProjections = StatLineProjections.getQBProjections();
+        ArrayList<FlexProjection> flexProjections = StatLineProjections.getFlexProjections();
+        ArrayList<DEFProjection> defProjections = StatLineProjections.getDEFProjections();
 
         ArrayList<Score> qbScores = scoreQuarterbacks(qbProjections, leagueScoringSettings);
         ArrayList<Score> flexScores = scoreFlexes(flexProjections, leagueScoringSettings);
@@ -67,14 +67,10 @@ public class FantasyProsScore {
     }
 
     public static void main(String[] args){
-        SleeperLeague funL = SleeperLeague.getFunLeague();
-        LeagueScoringSettings funSettings = funL.league.leagueScoringSettings;
-        //looks like bug on website values which I confirmed with funSettings.interception = -2.0;
-        FantasyProsScore funScores = new FantasyProsScore(funSettings);
-
         SleeperLeague seriousL = SleeperLeague.getSeriousLeague();
         LeagueScoringSettings seriousSettings = seriousL.league.leagueScoringSettings;
         FantasyProsScore seriousScores = new FantasyProsScore(seriousSettings);
+        System.out.println("scored " + seriousScores.fantasyProsScoreLeagueAdjusted.size() + " players");
     }
 
 

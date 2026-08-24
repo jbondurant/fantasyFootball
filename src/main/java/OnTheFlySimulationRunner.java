@@ -17,8 +17,8 @@ public class OnTheFlySimulationRunner {
                                                           int minKeeperRound,
                                                           AAAConfiguration aaaConfiguration) throws Exception {
         boolean isFun = false;
-        Keepers keepers = Keepers.getKeepersForUserHardcoded(isFun, userID, true, undraftedRoundCost, aaaConfiguration);
-        Keepers keepersWithoutUndrafted = Keepers.getKeepersForUserHardcoded(isFun, userID, false, undraftedRoundCost, aaaConfiguration);
+        Keepers keepers = Keepers.getKeepersForUser(isFun, userID, true, undraftedRoundCost, aaaConfiguration);
+        Keepers keepersWithoutUndrafted = Keepers.getKeepersForUser(isFun, userID, false, undraftedRoundCost, aaaConfiguration);
         ArrayList<Score> allKeeperScores = new ArrayList<>();
         for(Keeper keeper : keepers.keepers) {
             int numRoundsLeft = 10;
@@ -400,7 +400,7 @@ public class OnTheFlySimulationRunner {
     private static HashSet<Keeper> getMyKeepers(ArrayList<Keeper> hardcodedKeepers) {
         HashSet<Keeper> myKeepers = new HashSet<>();
         for(Keeper k : hardcodedKeepers){
-            if(k.humanWhoCanKeep.equals(HumanOfInterest.humanID)){
+            if(k.humanWhoCanKeep.equals(HumanOfInterest.humanID())){
                 myKeepers.add(k);
             }
         }

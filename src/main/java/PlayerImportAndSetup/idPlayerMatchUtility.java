@@ -21,7 +21,7 @@ public class idPlayerMatchUtility {
         for(FantasyProsPlayerV2 fantasyProsPlayerV2 : fantasyProsPlayerV2s){
             String fantasyProsCustomID = fantasyProsPlayerV2.getPlayerV2().customID;
             String fantasyProsID = fantasyProsPlayerV2.getFantasyProsId();
-            if(customIdToSleeperPlayerV2.containsKey(fantasyProsID)){
+            if(customIdToSleeperPlayerV2.containsKey(fantasyProsCustomID)){
                 String sleeperID = customIdToSleeperPlayerV2.get(fantasyProsCustomID).getSleeperId();
                 sleeperIdToFantasyProsId.put(sleeperID, fantasyProsID);
                 fantasyProsIdToSleeperId.put(fantasyProsID, sleeperID);
