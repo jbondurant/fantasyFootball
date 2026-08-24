@@ -1,5 +1,6 @@
 import PlayerImportAndSetup.*;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashSet;
@@ -8,6 +9,7 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@Tag("smoke")
 class FantasyProsPlayersV2Test {
 
     @Test

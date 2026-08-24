@@ -24,8 +24,39 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
+// Unit tests: fast, offline, no API calls. This is what `./gradlew build` runs.
 test {
-    useJUnitPlatform()
+    useJUnitPlatform {
+        excludeTags 'smoke'
+    }
+}
+
+// Smoke tests: hit the live Sleeper and FantasyPros APIs and check the feeds
+// still look the way the code expects. Run them before the draft, and any time
+// a scrape starts behaving oddly:
+//
+//   ./gradlew smokeTest
+//   ./gradlew smokeTest -PdraftId=<sleeper mock draft id>
+//
+// Passing a mock draft id exercises the live-draft path against a board with
+// real picks on it, which the real draft cannot offer until draft day.
+tasks.register('smokeTest', Test) {
+    group = 'verification'
+    description = 'Checks the live APIs against what the code expects'
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    workingDir = project.projectDir
+    useJUnitPlatform {
+        includeTags 'smoke'
+    }
+    if (project.hasProperty('draftId')) {
+        systemProperty 'draftId', project.property('draftId')
+    }
+    outputs.upToDateWhen { false }
+    testLogging {
+        events 'passed', 'skipped', 'failed'
+        showStandardStreams = true
+    }
 }
 
 // Every entry point is a plain `main`, and they all read/write their day-cached
