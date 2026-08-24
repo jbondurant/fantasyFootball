@@ -1,8 +1,5 @@
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -21,18 +18,9 @@ public class DraftRoundUtil {
 
     private static synchronized Map<String, Integer> rounds(){
         if(sleeperIDToRound == null){
-            Map<String, Integer> rounds = new HashMap<>();
             String picks = AAAConfiguration.getInstance().getPreviousSeasonDraftPicks();
-            for(JsonElement jsonPick : JsonParser.parseString(picks).getAsJsonArray()){
-                JsonObject pick = jsonPick.getAsJsonObject();
-                JsonElement playerID = pick.get("player_id");
-                JsonElement round = pick.get("round");
-                if(playerID == null || playerID.isJsonNull() || round == null || round.isJsonNull()){
-                    continue;
-                }
-                rounds.put(playerID.getAsString(), round.getAsInt());
-            }
-            sleeperIDToRound = rounds;
+            sleeperIDToRound = KeeperPricing.roundsByPlayerID(
+                    JsonParser.parseString(picks).getAsJsonArray());
         }
         return sleeperIDToRound;
     }
