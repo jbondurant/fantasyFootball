@@ -233,9 +233,14 @@ public class AAAConfiguration {
      * in last season. Empty until somebody declares one.
      */
     public ArrayList<Keeper> getTodaysKeepers(){
+        return priceTodaysKeepers().keepers;
+    }
+
+    /** Keepers plus anything the rules disallow, for reporting. */
+    public KeeperPricing.PricedKeepers priceTodaysKeepers(){
         JsonArray rosters = JsonParser.parseString(getTodaysRosterWebPageSerious()).getAsJsonArray();
-        JsonArray previousPicks = JsonParser.parseString(getPreviousSeasonDraftPicks()).getAsJsonArray();
-        return KeeperPricing.priceKeepers(rosters, previousPicks, Player::getPlayerFromSIDV2);
+        return KeeperPricing.price(rosters, getPreviousDraftPicks(),
+                Player::getPlayerFromSIDV2, SleeperProjections::adpOf);
     }
 
     public String getDraftFromLeagueIfOnlyOneDraft(){
@@ -258,11 +263,15 @@ public class AAAConfiguration {
         System.out.println("previous league:\t" + aaaConfiguration.getPreviousLeagueID()
                 + "\tprevious draft:\t" + aaaConfiguration.getPreviousDraftID());
         System.out.println("me:\t" + aaaConfiguration.getMyID());
-        for(Keeper keeper : aaaConfiguration.getTodaysKeepers()){
+        KeeperPricing.PricedKeepers priced = aaaConfiguration.priceTodaysKeepers();
+        for(Keeper keeper : priced.keepers){
             System.out.println("keeper:\t"
                     + HumanOfInterest.getHumanFromID(keeper.humanWhoCanKeep) + "\t"
                     + keeper.player.firstName + " " + keeper.player.lastName
                     + "\tround " + keeper.roundCanBeKept);
+        }
+        for(String rejection : priced.rejected){
+            System.out.println("not a legal keeper:\t" + rejection);
         }
     }
 
