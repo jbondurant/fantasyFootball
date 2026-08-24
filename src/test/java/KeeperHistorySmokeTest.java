@@ -13,16 +13,23 @@ import java.util.Map;
 /**
  * Replays the pricing rules against every keeper the league has ever declared.
  *
- * Sleeper records what each keeper actually cost - the round on their is_keeper
- * pick - so six seasons of drafts are six seasons of worked answers. If the
- * rules here are right, they reproduce those rounds.
+ * Sleeper records what each keeper cost - the round on their is_keeper pick -
+ * so six seasons of drafts are six seasons of worked examples. They are not an
+ * oracle, though. Sleeper has no keeper-cost setting at all; the league carries
+ * max_keepers and a deadline and nothing else, so somebody places each keeper
+ * onto a round of the board by hand. These rounds are data entry, and the
+ * mismatches below all look like the sort of thing hand entry produces.
+ *
+ * So this is a regression test on the rules, not a fit to the data: the point
+ * is to notice if a change to the pricing stops explaining the bulk of six
+ * seasons, not to bend the rules until every entry is matched.
  */
 @Tag("smoke")
 class KeeperHistorySmokeTest {
 
     /**
-     * Three costs in the league's history do not follow the rules, and all
-     * three look like bookkeeping rather than a rule I have missed:
+     * Costs in the league's history that do not follow the rules. All of them
+     * look like hand entry rather than a rule I have missed:
      *
      *   Joe Burrow 2023   kept at a 13th when escalation from his 2022 13th
      *                     called for a 12th - the escalation was skipped
@@ -31,13 +38,13 @@ class KeeperHistorySmokeTest {
      *   Josh Jacobs 2023  drafted in the 5th, kept at a 4th, with no clash on
      *                     his roster to explain the extra round
      *
-     * Plus the one ADP clash the league has ever had to settle, which it
-     * settled the other way:
+     * Plus the one ADP clash the league has ever had to settle, settled the
+     * other way:
      *
      *   Jeudy / Daniels   2025, both costing an 8th. Daniels was the lower ADP
      *   2025              in both relevant seasons, so the rule moves Daniels;
-     *                     the league moved Jeudy. Counted here rather than
-     *                     reverse-engineering the rule from a single case.
+     *                     the board has Jeudy moved instead. One hand-entered
+     *                     case is not a reason to rewrite the rule around it.
      */
     private static final int KNOWN_HISTORICAL_EXCEPTIONS = 5;
 

@@ -14,8 +14,18 @@ settings, the season - is read back from the API.
 ```
 ./gradlew run -Pmain=TradeFinder          # trades worth proposing
 ./gradlew run -Pmain=SleeperLiveDraft     # draft-day advice
+./gradlew run -Pmain=KeeperAudit          # check keeper costs before the draft
 ./gradlew run -Pmain=AAAConfiguration     # what league am I pointed at
 ```
+
+### Keeper costs
+
+Sleeper has no keeper-cost setting - the league carries `max_keepers` and a
+deadline and nothing else - so the commissioner places each keeper onto a round
+of the draft board by hand. `KeeperAudit` prices them from the ruleset and
+compares the two, which is worth running once the board is set and before the
+draft, while anything wrong can still be changed. Six seasons of history contain
+at least three entries that do not follow the rules.
 
 Each entry point caches its API responses to the project root as
 `<name><today>.txt` and reuses them for the rest of the day. Delete them to
