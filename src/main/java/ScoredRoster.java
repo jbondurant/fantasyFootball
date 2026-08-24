@@ -48,33 +48,60 @@ public class ScoredRoster {
         scoreBestLineup = scoreBestROSStartingLineup();
     }
 
+    /**
+     * Takes a player off the roster.
+     *
+     * Matched on the sleeper id: sportRadarID is null for a fair number of
+     * players, and null never matched anything, so the player stayed put. A
+     * trade preview that removed nobody but added somebody scored the resulting
+     * roster as if it had an extra man.
+     */
     public void removeScore(Score s){
+        if(s == null || s.player == null){
+            return;
+        }
         Score scoreToRemove = null;
         for(Score score : draftedPlayersWithProj){
-            if(score.player.sportRadarID == null){
-                //System.out.println("something is wrong perhaps");
-                continue;
+            if(score == s){
+                scoreToRemove = score;
+                break;
             }
-            if(score.player.sportRadarID.equals(s.player.sportRadarID)){
+            if(score.player != null && samePlayer(score.player, s.player)){
                 scoreToRemove = score;
             }
         }
+        if(scoreToRemove == null){
+            throw new IllegalArgumentException("cannot trade away " + s.player.firstName + " "
+                    + s.player.lastName + ": not on this roster");
+        }
         draftedPlayersWithProj.remove(scoreToRemove);
+    }
+
+    private static boolean samePlayer(Player a, Player b){
+        if(a == b){
+            return true;
+        }
+        if(a.sleeperIDString != null && !a.sleeperIDString.isEmpty()){
+            return a.sleeperIDString.equals(b.sleeperIDString);
+        }
+        return a.sportRadarID != null && a.sportRadarID.equals(b.sportRadarID);
     }
 
     public void addScore(Score s){
         draftedPlayersWithProj.add(s);
     }
 
+    /**
+     * Copies the scores rather than re-deriving them from the projection feed.
+     *
+     * Re-deriving threw away any score the caller had put there by hand, which
+     * is precisely what a trade preview does when it swaps players between two
+     * rosters, and it could not copy a roster built from scores alone.
+     */
     public static ScoredRoster makeCopy(ScoredRoster scoredRoster){
-        ArrayList<Score> usedScores = scoredRoster.draftedPlayersWithProj;
-        ArrayList<Player> usedPlayers = new ArrayList<Player>();
-        for(Score score : usedScores){
-            usedPlayers.add(score.player);
-        }
-
-        String usedID = scoredRoster.userID;
-        ScoredRoster copyOfRoster = new ScoredRoster(usedID, usedPlayers, scoredRoster.projectionSource);
+        ArrayList<Score> copiedScores = new ArrayList<>(scoredRoster.draftedPlayersWithProj);
+        ScoredRoster copyOfRoster = new ScoredRoster(scoredRoster.userID, copiedScores);
+        copyOfRoster.projectionSource = scoredRoster.projectionSource;
         return copyOfRoster;
     }
 

@@ -16,12 +16,6 @@ public class TradePreviewSerious {
 
     TradePreviewSerious(ScoredRoster t1, ScoredRoster t2, Score t1p1S, Score t2p1S){
 
-        if(t1p1S.player.lastName.equals("Murray")) {
-            if (t2p1S.player.lastName.equals("Hill")) {
-                int r = 0;
-            }
-        }
-
         t1p3Score = null;
         t2p3Score = null;
         t1p2Score = null;
@@ -39,14 +33,11 @@ public class TradePreviewSerious {
         double initialScoreT1 = t1Copy.scoreBestROSStartingLineup();
         double initialScoreT2 = t2Copy.scoreBestROSStartingLineup();
 
-        int t1Size = t1Copy.draftedPlayersWithProj.size();
         t1Copy.removeScore(t1p1S);
         t2Copy.removeScore(t2p1S);
 
         t1Copy.addScore(t2p1S);
         t2Copy.addScore(t1p1S);
-
-        int t1SizeAgain = t1Copy.draftedPlayersWithProj.size();
 
         double postSwapScoreT1 = t1Copy.scoreBestROSStartingLineup();
         double postSwapScoreT2 = t2Copy.scoreBestROSStartingLineup();
@@ -83,21 +74,12 @@ public class TradePreviewSerious {
         t2p1Score = t2p1S;
         t2p2Score = t2p2S;
 
-        if(t1p1S.player.firstName.equals("Marvin") && t2p1S.player.firstName.equals("Keenan") && t2p2S.player.firstName.equals("Christian")){
-            String abc = t1p2S.player.firstName;
-            if(abc.startsWith("P")) {
-                int r = 1;
-            }
-
-        }
-
         ScoredRoster t1Copy = ScoredRoster.makeCopy(t1);
         ScoredRoster t2Copy = ScoredRoster.makeCopy(t2);
 
         double initialScoreT1 = t1Copy.scoreBestROSStartingLineup();
         double initialScoreT2 = t2Copy.scoreBestROSStartingLineup();
 
-        int t1Size = t1Copy.draftedPlayersWithProj.size();
         t1Copy.removeScore(t1p1S);
         t1Copy.removeScore(t1p2S);
         t2Copy.removeScore(t2p1S);
@@ -109,8 +91,6 @@ public class TradePreviewSerious {
         t2Copy.addScore(t1p2S);
 
 
-
-        int t1SizeAgain = t1Copy.draftedPlayersWithProj.size();
 
         double postSwapScoreT1 = t1Copy.scoreBestROSStartingLineup();
         double postSwapScoreT2 = t2Copy.scoreBestROSStartingLineup();
@@ -137,21 +117,12 @@ public class TradePreviewSerious {
 
 
 
-        if(t1p1S.player.firstName.equals("Marvin") && t2p1S.player.firstName.equals("Keenan") && t2p2S.player.firstName.equals("Christian")){
-            String abc = t1p2S.player.firstName;
-            if(abc.startsWith("P")) {
-                int r = 1;
-            }
-
-        }
-
         ScoredRoster t1Copy = ScoredRoster.makeCopy(t1);
         ScoredRoster t2Copy = ScoredRoster.makeCopy(t2);
 
         double initialScoreT1 = t1Copy.scoreBestROSStartingLineup();
         double initialScoreT2 = t2Copy.scoreBestROSStartingLineup();
 
-        int t1Size = t1Copy.draftedPlayersWithProj.size();
         t1Copy.removeScore(t1p1S);
         t1Copy.removeScore(t1p2S);
         t1Copy.removeScore(t1p3S);
@@ -165,8 +136,6 @@ public class TradePreviewSerious {
         t2Copy.addScore(t1p1S);
         t2Copy.addScore(t1p2S);
         t2Copy.addScore(t1p3S);
-
-        int t1SizeAgain = t1Copy.draftedPlayersWithProj.size();
 
         double postSwapScoreT1 = t1Copy.scoreBestROSStartingLineup();
         double postSwapScoreT2 = t2Copy.scoreBestROSStartingLineup();
