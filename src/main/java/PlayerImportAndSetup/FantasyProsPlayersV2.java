@@ -33,11 +33,12 @@ public class FantasyProsPlayersV2 {
     }
 
     public static HashSet<FantasyProsPlayerV2> intializeAllPlayers(String entireHTML) {
-        String playerHTML = entireHTML.split("\"players\":")[1].split("]")[0] + "]";
+        // Built fresh each call. It used to add into the static set, so calling
+        // this twice in one JVM doubled the player count (FantasyProsPlayerV2
+        // has no equals/hashCode, so the duplicates all stuck).
+        HashSet<FantasyProsPlayerV2> players = new HashSet<>();
 
-        JsonParser jp = new JsonParser();
-        JsonElement jsonElement = jp.parse(playerHTML);
-        JsonArray jsonPlayers = jsonElement.getAsJsonArray();
+        JsonArray jsonPlayers = EcrDataExtractor.extract(entireHTML).getAsJsonArray("players");
 
         for (JsonElement jsonPlayer : jsonPlayers) {
             JsonObject apiObject = jsonPlayer.getAsJsonObject();
@@ -80,8 +81,9 @@ public class FantasyProsPlayersV2 {
             }
 
             FantasyProsPlayerV2 fantasyProsPlayerV2 = FantasyProsPlayerV2.playerFromFP(fantasyProsID, playerName, playerShortName, playerTeamID, playerPositions, rankAverage);
-            fantasyProsPlayersV2.add(fantasyProsPlayerV2);
+            players.add(fantasyProsPlayerV2);
         }
-        return fantasyProsPlayersV2;
+        fantasyProsPlayersV2 = players;
+        return players;
     }
 }

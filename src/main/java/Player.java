@@ -3,6 +3,10 @@ import PlayerImportAndSetup.Position;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 
 
 public class Player {
@@ -24,11 +28,50 @@ public class Player {
     private static HashMap<String, Player> playerMapFullNameInfo = new HashMap<String, Player>();
     private static HashMap<String, Player> playerDefenseMap = new HashMap<String, Player>();
 
+    // FantasyPros dropped the shared "sportsdata_id" in 2025, so their pages are
+    // now joined to Sleeper on name + team + position instead.
+    private static HashMap<String, Player> playersByNameTeamPosition = new HashMap<>();
+    private static HashMap<String, Player> playersByNamePosition = new HashMap<>();
+    private static HashMap<String, Player> playersByNameTeam = new HashMap<>();
+    private static HashSet<String> ambiguousNamePositions = new HashSet<>();
+    private static HashSet<String> ambiguousNameTeams = new HashSet<>();
+
+    /**
+     * FantasyPros publishes some players under a nickname. Left-hand side is the
+     * normalized FantasyPros name, right-hand side the normalized Sleeper name.
+     */
+    private static final HashMap<String, String> FANTASY_PROS_NAME_ALIASES = new HashMap<>();
+    static {
+        FANTASY_PROS_NAME_ALIASES.put("hollywoodbrown", "marquisebrown");
+        FANTASY_PROS_NAME_ALIASES.put("juicewells", "antwanewells");
+        FANTASY_PROS_NAME_ALIASES.put("chiptrayanum", "deamontetrayanum");
+        FANTASY_PROS_NAME_ALIASES.put("bamknight", "zonovanknight");
+    }
+
+    private static ArrayList<Player> allPlayersCache = null;
+
+    private static final Set<String> NAME_SUFFIXES = Set.of("jr", "sr", "ii", "iii", "iv", "v");
+
     static{
         initializePlayers();
         initializePlayersForNameSearch();
         initializePlayerDefenseMap();
+        initializeFantasyProsNameIndex();
+    }
 
+    /**
+     * The Sleeper player dump is 14MB and was being re-read and re-parsed once
+     * per initializer. Read it once.
+     */
+    private static synchronized ArrayList<Player> allPlayers(){
+        if(allPlayersCache == null){
+            try {
+                allPlayersCache = PlayerRawData.getPlayerMetaData();
+            } catch (IOException e) {
+                throw new RuntimeException("could not load the sleeper player list", e);
+            }
+        }
+        return allPlayersCache;
     }
 
     public static ArrayList<Player> getCopyOfList(ArrayList<Player> draftedPlayers) {
@@ -99,24 +142,16 @@ public class Player {
         if(allName.endsWith(" ii") || allName.endsWith(" iii") || allName.endsWith(" v") || allName.endsWith(" jr") || allName.endsWith(" sr")){
             allName = allName.substring(0, allName.lastIndexOf(" "));
         }
-        if(allName.equals("isiah pacheco")){
-            allName = "isaih pacheco";
-        }
-        if(allName.equals("gabe davis")){
-            allName = "gabriel davis";
-        }
-        if(allName.equals("scotty miller")){
-            allName = "scott miller";
-        }
-        //System.out.println(playerMapFullNameInfo.keySet());
         String info = allName + position.toString().toLowerCase();
         Player p = playerMapFullNameInfo.get(info);
         if(p == null){
-            if(position.equals("DEF")) {
+            if(position.equals(Position.DEF)) {
                 p = getPlayerDefense(allName);
-                System.out.println("defense not found: " + allName);
             }
-            System.out.println("player not found: " + allName);
+        }
+        if(p == null){
+            // The name/team/position matcher handles renames and nicknames.
+            p = getPlayerFromFantasyPros(allName, null, position);
         }
         return p;
     }
@@ -142,15 +177,8 @@ public class Player {
         HashMap<String, Player> playerMap = new HashMap<String, Player>();
         HashMap<Integer, Player> playerMapFP = new HashMap<Integer, Player>();
         HashMap<Integer, Player> playerMapSO = new HashMap<Integer, Player>();
-        ArrayList<Player> allPlayers = null;
-        try {
-            allPlayers = PlayerRawData.getPlayerMetaData();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        finally {
-            int y = allPlayers.size();
-
+        ArrayList<Player> allPlayers = allPlayers();
+        {
             for (Player player : allPlayers) {
                 String sportRadarID = player.sportRadarID;
                 int fpID = player.fantasyProsID;
@@ -169,12 +197,7 @@ public class Player {
         HashMap<String, Player> playerMapFromInfo = new HashMap<String, Player>();
         HashMap<String, Player> playerMapFromFullNameInfo = new HashMap<String, Player>();
 
-        ArrayList<Player> allPlayers = null;
-        try {
-            allPlayers = PlayerRawData.getPlayerMetaData();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        ArrayList<Player> allPlayers = allPlayers();
         for(Player player : allPlayers){
             String lastName = player.lastName;
             String pos = player.position.toString();
@@ -198,20 +221,168 @@ public class Player {
 
     public static void initializePlayerDefenseMap() {
         HashMap<String, Player> playerMapFromDef = new HashMap<String, Player>();
-        ArrayList<Player> allPlayers = null;
-        try {
-            allPlayers = PlayerRawData.getPlayerMetaData();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        ArrayList<Player> allPlayers = allPlayers();
         for(Player player : allPlayers){
-            String pos = player.position.toString();
-            if(pos == "DEF"){
-                String team = player.team;
-                playerMapFromDef.put(team, player);
+            if(player.position.equals(Position.DEF)){
+                playerMapFromDef.put(player.team, player);
             }
         }
         playerDefenseMap = playerMapFromDef;
+    }
+
+    /**
+     * Look a FantasyPros row up in the Sleeper player list.
+     *
+     * Tries name + position + team first, then falls back to name + position
+     * when the two sites disagree about a player's team (which happens all
+     * offseason). A bare name+position that maps to more than one Sleeper
+     * player is treated as no match rather than a coin flip.
+     */
+    public static Player getPlayerFromFantasyPros(String fullName, String team, Position position){
+        if(fullName == null || position == null){
+            return null;
+        }
+        if(position.equals(Position.DEF)){
+            return getPlayerDefense(normalizeTeam(team));
+        }
+        String name = normalizeName(fullName);
+        name = FANTASY_PROS_NAME_ALIASES.getOrDefault(name, name);
+        String normalizedTeam = normalizeTeam(team);
+
+        Player player = playersByNameTeamPosition.get(nameTeamPositionKey(name, normalizedTeam, position));
+        if(player != null){
+            return player;
+        }
+
+        String namePositionKey = namePositionKey(name, position);
+        if(!ambiguousNamePositions.contains(namePositionKey)){
+            player = playersByNamePosition.get(namePositionKey);
+            if(player != null){
+                return player;
+            }
+        }
+
+        // Last resort: the two sites sometimes disagree about a player's
+        // position (a converted TE listed as a WR, say). Name plus team is a
+        // strong enough signal on its own.
+        if(normalizedTeam.isEmpty()){
+            return null;
+        }
+        String nameTeamKey = nameTeamKey(name, normalizedTeam);
+        if(ambiguousNameTeams.contains(nameTeamKey)){
+            return null;
+        }
+        return playersByNameTeam.get(nameTeamKey);
+    }
+
+    private static void initializeFantasyProsNameIndex(){
+        HashMap<String, Player> byNameTeamPosition = new HashMap<>();
+        HashMap<String, Player> byNamePosition = new HashMap<>();
+        HashMap<String, Player> byNameTeam = new HashMap<>();
+        HashSet<String> ambiguous = new HashSet<>();
+        HashSet<String> ambiguousTeams = new HashSet<>();
+
+        for(Player player : allPlayers()){
+            if(player.position.equals(Position.OTHER) || player.position.equals(Position.DEF)){
+                continue;
+            }
+            String name = normalizeName(player.firstName + " " + player.lastName);
+            if(name.isEmpty()){
+                continue;
+            }
+            String team = normalizeTeam(player.team);
+
+            byNameTeamPosition.putIfAbsent(nameTeamPositionKey(name, team, player.position), player);
+
+            if(!team.isEmpty()){
+                String nameTeamKey = nameTeamKey(name, team);
+                Player sameNameAndTeam = byNameTeam.putIfAbsent(nameTeamKey, player);
+                if(sameNameAndTeam != null && !sameNameAndTeam.sleeperIDString.equals(player.sleeperIDString)){
+                    ambiguousTeams.add(nameTeamKey);
+                }
+            }
+
+            String namePositionKey = namePositionKey(name, player.position);
+            Player existing = byNamePosition.get(namePositionKey);
+            if(existing == null){
+                byNamePosition.put(namePositionKey, player);
+            }
+            else if(!existing.sleeperIDString.equals(player.sleeperIDString)){
+                // Prefer whichever of the two is actually on a roster; only give
+                // up when both are.
+                boolean existingHasTeam = !normalizeTeam(existing.team).isEmpty();
+                boolean playerHasTeam = !team.isEmpty();
+                if(playerHasTeam && !existingHasTeam){
+                    byNamePosition.put(namePositionKey, player);
+                }
+                else if(playerHasTeam == existingHasTeam){
+                    ambiguous.add(namePositionKey);
+                }
+            }
+        }
+
+        playersByNameTeamPosition = byNameTeamPosition;
+        playersByNamePosition = byNamePosition;
+        playersByNameTeam = byNameTeam;
+        ambiguousNamePositions = ambiguous;
+        ambiguousNameTeams = ambiguousTeams;
+    }
+
+    private static String nameTeamPositionKey(String name, String team, Position position){
+        return name + "|" + team + "|" + position.name();
+    }
+
+    private static String namePositionKey(String name, Position position){
+        return name + "|" + position.name();
+    }
+
+    private static String nameTeamKey(String name, String team){
+        return name + "|" + team;
+    }
+
+    /** "Marvin Harrison Jr." and "Marvin Harrison" have to land on the same key. */
+    static String normalizeName(String fullName){
+        if(fullName == null){
+            return "";
+        }
+        String cleaned = fullName.toLowerCase(Locale.ROOT)
+                .replace("'", "")
+                .replace("\u2019", "")
+                .replace(".", " ");
+        String[] tokens = cleaned.split("[^a-z]+");
+        StringBuilder builder = new StringBuilder();
+        List<String> kept = new ArrayList<>();
+        for(String token : tokens){
+            if(!token.isEmpty()){
+                kept.add(token);
+            }
+        }
+        // Only a trailing suffix is dropped - "Vernon V" keeps its surname.
+        while(kept.size() > 2 && NAME_SUFFIXES.contains(kept.get(kept.size() - 1))){
+            kept.remove(kept.size() - 1);
+        }
+        for(String token : kept){
+            builder.append(token);
+        }
+        return builder.toString();
+    }
+
+    /** FantasyPros says JAC and FA where Sleeper says JAX and "". */
+    static String normalizeTeam(String team){
+        if(team == null){
+            return "";
+        }
+        String normalized = team.trim().toUpperCase(Locale.ROOT);
+        if(normalized.equals("FA")){
+            return "";
+        }
+        if(normalized.equals("JAC")){
+            return "JAX";
+        }
+        if(normalized.equals("OAK")){
+            return "LV";
+        }
+        return normalized;
     }
 
     public static double scorePlayer(ArrayList<Score> scoreList, Player p){

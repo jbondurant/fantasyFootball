@@ -14,7 +14,9 @@ class FantasyProsPlayersV2Test {
     void testGetMapFantasyProsIDtoPlayerV2_hasAtLeast150Players() {
         String entireHTML = FantasyProsPlayersV2.getTodaysWebPage();
         HashSet<FantasyProsPlayerV2> playersV2 = FantasyProsPlayersV2.intializeAllPlayers(entireHTML);
-        Assertions.assertTrue(playersV2.size() > 1500);
+        // FantasyPros publishes a shade under 900 ranked players; this only
+        // passed at 1500 because the loader used to double-count.
+        Assertions.assertTrue(playersV2.size() > 500, "only got " + playersV2.size());
     }
     @Test
     void testGetMapFantasyProsIDtoPlayerV2_teamNamesMapCorrectly() {
