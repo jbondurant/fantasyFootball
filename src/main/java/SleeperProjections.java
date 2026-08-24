@@ -83,15 +83,34 @@ public class SleeperProjections {
         double receiving = optionalStat(stats, "rec") * lss.reception
                 + optionalStat(stats, "rec_yd") * lss.receivingYard
                 + optionalStat(stats, "rec_td") * lss.receivingTD;
+        double twoPointConversions = optionalStat(stats, "pass_2pt") * lss.passTwoPoint
+                + optionalStat(stats, "rush_2pt") * lss.rushTwoPoint
+                + optionalStat(stats, "rec_2pt") * lss.receivingTwoPoint;
         double turnovers = optionalStat(stats, "fum_lost") * lss.fumbleLost;
 
-        double total = passing + rushing + receiving + turnovers;
-
-        // Defenses have no offensive stat line to score; take Sleeper's number.
-        if(total == 0.0){
+        // Defenses have no offensive stat line to score, so they keep Sleeper's
+        // number. Decided on which categories are present rather than on the
+        // total coming out at zero, so that a genuine zero - a benched running
+        // back projected for nothing - is not mistaken for a defense.
+        if(!hasOffensiveStats(stats)){
             return optionalStat(stats, "pts_half_ppr");
         }
-        return total;
+
+        return passing + rushing + receiving + twoPointConversions + turnovers;
+    }
+
+    private static final String[] OFFENSIVE_STATS =
+            {"pass_yd", "pass_td", "pass_int", "rush_yd", "rush_td", "rec", "rec_yd", "rec_td",
+             "pass_2pt", "rush_2pt", "rec_2pt"};
+
+    static boolean hasOffensiveStats(JsonObject stats){
+        for(String key : OFFENSIVE_STATS){
+            JsonElement element = stats.get(key);
+            if(element != null && !element.isJsonNull()){
+                return true;
+            }
+        }
+        return false;
     }
 
     public static void main(String[] args){

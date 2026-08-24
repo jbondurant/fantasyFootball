@@ -58,15 +58,8 @@ public class SleeperLeague{
         JsonElement jsonElementLeague = jp.parse(websiteData);
         JsonObject jsonObjectLeague = jsonElementLeague.getAsJsonObject();
         JsonObject scoringParameters = jsonObjectLeague.getAsJsonObject("scoring_settings");
-        double passYards = scoringParameters.get("pass_yd").getAsDouble();
-        double passTD = scoringParameters.get("pass_td").getAsDouble();
-        double passInt = scoringParameters.get("pass_int").getAsDouble();
-        double rushYards = scoringParameters.get("rush_yd").getAsDouble();
-        double rushTD = scoringParameters.get("rush_td").getAsDouble();
-        double reception = scoringParameters.get("rec").getAsDouble();
-        double recYards = scoringParameters.get("rec_yd").getAsDouble();
-        double recTD = scoringParameters.get("rec_td").getAsDouble();
-        double fumbleLost = scoringParameters.get("fum_lost").getAsDouble();
+        LeagueScoringSettings leagueScoringSettings =
+                LeagueScoringSettings.fromSleeperScoringSettings(scoringParameters);
         String name = "";
         if(!jsonObjectLeague.get("name").isJsonNull()) {
             name = jsonObjectLeague.get("name").getAsString();
@@ -79,18 +72,7 @@ public class SleeperLeague{
         if(!jsonObjectLeague.get("draft_id").isJsonNull()) {
             draftID = jsonObjectLeague.get("draft_id").getAsString();
         }
-        double[] parameters = new double[9];
-        parameters[0] = passYards;
-        parameters[1] = passTD;
-        parameters[2] = passInt;
-        parameters[3] = rushYards;
-        parameters[4] = rushTD;
-        parameters[5] = reception;
-        parameters[6] = recYards;
-        parameters[7] = recTD;
-        parameters[8] = fumbleLost;
         ArrayList<User> users = sdi.usersInfo;
-        LeagueScoringSettings leagueScoringSettings = new LeagueScoringSettings(parameters);
         ArrayList<Player> undraftedPlayers = Player.getDraftablePlayers();
         League league = new League(leagueScoringSettings, users, undraftedPlayers);
         SleeperLeague sleeperLeague = new SleeperLeague(league, name, leagueID, draftID, sdi);
