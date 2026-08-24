@@ -36,7 +36,7 @@ class KeeperPricingTest {
         return byID::get;
     }
 
-    /** Only consulted when an undrafted keeper is involved in a clash. */
+    /** Lower is drafted earlier. Gibbs is the more valuable of the two. */
     private static final KeeperPricing.AdpLookup ADP = sleeperID -> {
         switch(sleeperID){
             case "7564": return 5.0;
@@ -61,7 +61,7 @@ class KeeperPricingTest {
 
     /** Chase round 3, Gibbs round 6, neither previously kept. */
     private static JsonArray lastSeason(){
-        // Gibbs went at pick 66, Nabers later at pick 70, both in round 6.
+        // Both in round 6, which only a trade can produce.
         return json("["
                 + "{\"player_id\":\"7564\",\"round\":3,\"pick_no\":30,\"is_keeper\":null},"
                 + "{\"player_id\":\"9226\",\"round\":6,\"pick_no\":66,\"is_keeper\":null},"
@@ -253,18 +253,18 @@ class KeeperPricingTest {
         ArrayList<Keeper> keepers = price(rosters, lastSeason());
 
         Assertions.assertEquals(2, keepers.size());
+        // Only reachable via a trade: nobody gets two picks in one round.
         Assertions.assertEquals(5, keeperFor(keepers, GIBBS).roundCanBeKept,
-                "taken earlier in the round, so pays the dearer pick");
+                "lower ADP, so pays the dearer pick");
         Assertions.assertEquals(6, keeperFor(keepers, NABERS).roundCanBeKept,
-                "taken later, so keeps the round");
+                "higher ADP, so keeps the round");
     }
 
     @Test
     void aConsecutiveYearKeeperHoldsItsRoundAndTheOtherMoves(){
         // Nabers is on the 6th only because he was kept last year, so he keeps
         // it even though Gibbs has the earlier ADP.
-        // Gibbs went at pick 66, earlier than Nabers' keeper slot, so without
-        // the exception Gibbs would hold the 6th.
+        // Without the exception, ADP would send Gibbs up and leave Nabers.
         JsonArray previous = json("["
                 + "{\"player_id\":\"9226\",\"round\":6,\"pick_no\":66,\"is_keeper\":null},"
                 + "{\"player_id\":\"11565\",\"round\":7,\"pick_no\":80,\"is_keeper\":true}"

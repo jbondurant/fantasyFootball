@@ -39,8 +39,8 @@ public class KeeperPricing {
     /**
      * Sleeper player id -> average draft position, lower being drafted earlier.
      *
-     * Only consulted when two keepers cost the same round and at least one of
-     * them went undrafted, so there is no real draft position to compare.
+     * Consulted only to settle two keepers landing on the same round, which
+     * happens when one of them was acquired in a trade.
      */
     public interface AdpLookup {
         double adpOf(String sleeperID);
@@ -70,8 +70,6 @@ public class KeeperPricing {
         final String ownerID;
         int round;
         boolean viaConsecutiveYear;
-        /** Where they went in last season's draft; -1 if undrafted. */
-        int draftPickNumber = -1;
         double adp;
 
         Candidate(String playerID, Player player, String ownerID){
@@ -183,8 +181,6 @@ public class KeeperPricing {
                     + HIGHEST_KEEPABLE_DRAFT_ROUND + " rounds cannot be kept";
         }
 
-        candidate.draftPickNumber = lastSeason.get("pick_no").getAsInt();
-
         // Last season's round already carries every earlier escalation, so a
         // player kept again only moves one more round.
         int round = lastSeason.get("round").getAsInt();
@@ -236,18 +232,23 @@ public class KeeperPricing {
     /**
      * Two keepers cannot both cost the same round, so one goes up.
      *
-     * The ruleset sends "the player with the lower ADP" up a round, which means
-     * the one taken earlier - the more valuable of the two pays the dearer
-     * pick. The exception is when the other player is only on that round
-     * because of consecutive-year escalation; that player has priority to keep
-     * their cost rather than being moved twice.
+     * A manager only ever gets one pick per round, so this cannot arise from
+     * their own draft: two keepers share a round because one was acquired in a
+     * trade, or because consecutive-year escalation moved one onto the other.
+     * The ruleset settles the trade case on ADP - "the player with the lower
+     * ADP has their cost go up a round", the more valuable of the two paying
+     * the dearer pick. The escalation case is the stated exception: a player
+     * already moved up for being kept again holds their round rather than being
+     * moved twice.
      *
-     * Compared on where they actually went in last season's draft rather than
-     * on preseason ADP. The one clash in six seasons that turned on this settles
-     * it: in 2025 Jerry Jeudy and Jayden Daniels both cost an 8th, ADP had
-     * Daniels well ahead (35.6 to 75.2), but Jeudy went one pick earlier in the
-     * 2024 draft - 85 to 86 - and Jeudy is the one who moved to a 7th.
-     * ADP is only the fallback for an undrafted player, who has no pick number.
+     * One caveat, recorded rather than smoothed over. The only clash in six
+     * seasons that ADP had to settle was 2025, Jerry Jeudy and Jayden Daniels,
+     * both costing an 8th. Daniels was comfortably the lower ADP in both the
+     * season they were drafted and the season they were kept into (112.0 to
+     * 148.7, then 35.6 to 75.2), so the rule says Daniels moves. The league
+     * moved Jeudy. One case with no explanation attached is not enough to
+     * rewrite the rule around, so the document's reading stands and
+     * KeeperHistorySmokeTest carries that season as a known exception.
      */
     private static List<String> resolveSameRoundCosts(List<Candidate> candidates){
         List<String> rejected = new ArrayList<>();
@@ -260,16 +261,12 @@ public class KeeperPricing {
             if(clashing.size() < 2){
                 continue;
             }
-            boolean everyoneWasDrafted = clashing.stream().allMatch(c -> c.draftPickNumber > 0);
-
-            // Most entitled to keep the round comes first: a consecutive-year
-            // keeper, then whoever was taken later.
+            // Most entitled to keep the round first: a consecutive-year keeper,
+            // then whoever has the higher ADP, being the less valuable of them.
             clashing.sort(Comparator
                     .comparing((Candidate candidate) -> !candidate.viaConsecutiveYear)
                     .thenComparing(Comparator.comparingDouble(
-                            (Candidate candidate) -> everyoneWasDrafted
-                                    ? candidate.draftPickNumber
-                                    : candidate.adp).reversed()));
+                            (Candidate candidate) -> candidate.adp).reversed()));
 
             for(int i = 1; i < clashing.size(); i++){
                 Candidate bumped = clashing.get(i);

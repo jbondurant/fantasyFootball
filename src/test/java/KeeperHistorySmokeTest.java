@@ -30,8 +30,16 @@ class KeeperHistorySmokeTest {
      *                     which puts him back where he would have been
      *   Josh Jacobs 2023  drafted in the 5th, kept at a 4th, with no clash on
      *                     his roster to explain the extra round
+     *
+     * Plus the one ADP clash the league has ever had to settle, which it
+     * settled the other way:
+     *
+     *   Jeudy / Daniels   2025, both costing an 8th. Daniels was the lower ADP
+     *   2025              in both relevant seasons, so the rule moves Daniels;
+     *                     the league moved Jeudy. Counted here rather than
+     *                     reverse-engineering the rule from a single case.
      */
-    private static final int KNOWN_HISTORICAL_EXCEPTIONS = 3;
+    private static final int KNOWN_HISTORICAL_EXCEPTIONS = 5;
 
     @Test
     void thePricingRulesReproduceSixSeasonsOfKeeperCosts(){
