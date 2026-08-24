@@ -115,8 +115,9 @@ public class TradeFinder {
         boolean onlyOne = false;
         boolean onlyTwo = false;
         boolean toCrop = false;
-        ProjectionSource projectionSource = ProjectionSource.IN_SEASON_FP_SITE;
-        //ProjectionSource projectionSource = ProjectionSource.SLEEPER;
+        // Sleeper is the only source with real projected points now - see
+        // InSeasonProjectionsFP for why the FantasyPros ones are gone.
+        ProjectionSource projectionSource = ProjectionSource.SLEEPER;
         boolean roundFilter = false;
         ArrayList<String> tradersToIgnore = new ArrayList<>();
         /*tradersToIgnore.add("452603383455412224");// "Kevin";}

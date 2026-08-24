@@ -7,9 +7,9 @@ public class FantasyProsScore {
 
 
     public FantasyProsScore(LeagueScoringSettings leagueScoringSettings){
-        ArrayList<QBProjection> qbProjections = FantasyProsProjections.getQBProjections();
-        ArrayList<FlexProjection> flexProjections = FantasyProsProjections.getFlexProjections();
-        ArrayList<DEFProjection> defProjections = FantasyProsProjections.getDEFProjections();
+        ArrayList<QBProjection> qbProjections = StatLineProjections.getQBProjections();
+        ArrayList<FlexProjection> flexProjections = StatLineProjections.getFlexProjections();
+        ArrayList<DEFProjection> defProjections = StatLineProjections.getDEFProjections();
 
         ArrayList<Score> qbScores = scoreQuarterbacks(qbProjections, leagueScoringSettings);
         ArrayList<Score> flexScores = scoreFlexes(flexProjections, leagueScoringSettings);

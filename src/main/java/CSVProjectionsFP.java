@@ -6,37 +6,48 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+/**
+ * Rest-of-season projections from FantasyPros CSV exports saved next to the
+ * project, e.g. FantasyPros_2026_Ros_QB_Rankings.csv.
+ *
+ * These are downloaded by hand from a FantasyPros account, so nothing here can
+ * fetch them for you; the season prefix follows the configured league instead of
+ * being frozen at 2023. Loading is lazy - selecting a different projection
+ * source no longer requires the files to be present.
+ */
 public class CSVProjectionsFP {
 
-    public static String filepathStartQB = "FantasyPros_2023_Ros_QB_Rankings";
-    public static String filepathStartRBHalf = "FantasyPros_2023_Ros_RB_Rankings";
-    public static String filepathStartWRHalf = "FantasyPros_2023_Ros_WR_Rankings";
-    public static String filepathStartTEHalf = "FantasyPros_2023_Ros_TE_Rankings";
-    public static String filepathStartDEF = "FantasyPros_2023_Ros_DST_Rankings";
+    private static String filepathStart(String position){
+        return "FantasyPros_" + AAAConfiguration.getInstance().getSeason() + "_Ros_" + position + "_Rankings";
+    }
 
-    private static final ArrayList<Score> projectionsFPQB;
-    private static final ArrayList<Score> projectionsFPFlex;
-    private static final ArrayList<Score> projectionsFPDEF;
+    private static ArrayList<Score> projectionsFPQB;
+    private static ArrayList<Score> projectionsFPFlex;
+    private static ArrayList<Score> projectionsFPDEF;
 
-    static{
-        projectionsFPQB = parseCsvAny(filepathStartQB, Position.QB);
-        ArrayList<Score> projectionsFPRB = parseCsvAny(filepathStartRBHalf, Position.RB);
-        ArrayList<Score> projectionsFPWR = parseCsvAny(filepathStartWRHalf, Position.WR);
-        ArrayList<Score> projectionsFPTE = parseCsvAny(filepathStartTEHalf, Position.TE);
-        projectionsFPFlex = new ArrayList<>();
-        projectionsFPFlex.addAll(projectionsFPRB);
-        projectionsFPFlex.addAll(projectionsFPWR);
-        projectionsFPFlex.addAll(projectionsFPTE);
-        projectionsFPDEF = parseCsvAny(filepathStartDEF, Position.DEF);
+    private static synchronized void initialize(){
+        if(projectionsFPQB != null){
+            return;
+        }
+        ArrayList<Score> flex = new ArrayList<>();
+        flex.addAll(parseCsvAny(filepathStart("RB"), Position.RB));
+        flex.addAll(parseCsvAny(filepathStart("WR"), Position.WR));
+        flex.addAll(parseCsvAny(filepathStart("TE"), Position.TE));
+        projectionsFPFlex = flex;
+        projectionsFPDEF = parseCsvAny(filepathStart("DST"), Position.DEF);
+        projectionsFPQB = parseCsvAny(filepathStart("QB"), Position.QB);
     }
 
     public static ArrayList<Score> getQBProjections(){
+        initialize();
         return projectionsFPQB;
     }
     public static ArrayList<Score> getFlexProjections(){
+        initialize();
         return projectionsFPFlex;
     }
     public static ArrayList<Score> getDEFProjections(){
+        initialize();
         return projectionsFPDEF;
     }
 
@@ -70,6 +81,7 @@ public class CSVProjectionsFP {
 
 
     public static HashMap<String, Double> playerToScoreProjFPROS(boolean is6ptsThrow){
+        initialize();
         HashMap<String, Double> toReturn = new HashMap<>();
         for(Score score : projectionsFPQB){
             if(score != null && score.player != null) {
@@ -98,17 +110,16 @@ public class CSVProjectionsFP {
 
     public static String readCsv(String filename){
         String filePath = "./" + filename + ".csv";
-        String webpage = null;
         try {
-            webpage = Files.readString(Path.of(filePath));
+            return Files.readString(Path.of(filePath));
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new RuntimeException("missing " + filePath
+                    + " - export it from FantasyPros and drop it in the project root", e);
         }
-        return webpage;
     }
 
 
     public static void main(String[] args){
-        String s = readCsv(filepathStartQB);
+        System.out.println("QB rows: " + getQBProjections().size());
     }
 }
