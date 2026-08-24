@@ -12,31 +12,31 @@ import java.util.PriorityQueue;
 
 public class TradeFinder {
 
-    private static ScoredRoster locateMyRoster(ArrayList<ScoredRoster> allRosters, String myID) {
-        ScoredRoster myRoster = null;
+    /**
+     * Pulls my roster out of the list, leaving the teams I could trade with.
+     *
+     * Used to return null when it could not find me, which then failed several
+     * frames away with a NullPointerException and nothing pointing at the
+     * cause.
+     */
+    private static ScoredRoster takeMyRoster(ArrayList<ScoredRoster> allRosters, String myID) {
         for(ScoredRoster roster : allRosters){
             if(roster.userID.equals(myID)){
-                myRoster = roster;
+                allRosters.remove(roster);
+                return roster;
             }
         }
-        return myRoster;
+        throw new IllegalArgumentException("no roster in this league belongs to user " + myID);
     }
 
     public static PriorityQueue<TradePreviewSerious> singleSwapTradeFinderSingleTeam(ArrayList<ScoredRoster> allRosters, int teamNum, String myID){
         PriorityQueue<TradePreviewSerious> allTrades = new PriorityQueue<>(5, new TradePreviewSeriousComparator());
-        ScoredRoster myRoster = locateMyRoster(allRosters, myID);
-        allRosters.remove(myRoster);
-
+        ScoredRoster myRoster = takeMyRoster(allRosters, myID);
         ScoredRoster otherTeamsRoster = allRosters.get(teamNum);
-//TODO make roster copies
         for(int w=0; w < myRoster.draftedPlayersWithProj.size(); w++){
             for(int y=0; y<otherTeamsRoster.draftedPlayersWithProj.size(); y++){
                 Score t1p1 = myRoster.draftedPlayersWithProj.get(w);
                 Score t2p1 = otherTeamsRoster.draftedPlayersWithProj.get(y);
-                if(t1p1.player.firstName.equals("Diontae") && t2p1.player.firstName.equals("David")){
-                    int d=1;
-                }
-
                 TradePreviewSerious tps = new TradePreviewSerious(myRoster, otherTeamsRoster, t1p1, t2p1);
                 allTrades.add(tps);
 
@@ -50,11 +50,8 @@ public class TradeFinder {
 
     public static PriorityQueue<TradePreviewSerious> doubleSwapTradeFinderSingleTeam(ArrayList<ScoredRoster> allRosters, int teamNum, String myID){
         PriorityQueue<TradePreviewSerious> allTrades = new PriorityQueue<>(5, new TradePreviewSeriousComparator());
-        ScoredRoster myRoster = locateMyRoster(allRosters, myID);
-        allRosters.remove(myRoster);
-
+        ScoredRoster myRoster = takeMyRoster(allRosters, myID);
         ScoredRoster otherTeamsRoster = allRosters.get(teamNum);
-//TODO make roster copies
         for(int w=0; w < myRoster.draftedPlayersWithProj.size()-1; w++){
             for(int x = w+1; x < myRoster.draftedPlayersWithProj.size(); x++){
                 for(int y=0; y<otherTeamsRoster.draftedPlayersWithProj.size()-1; y++){
@@ -78,9 +75,7 @@ public class TradeFinder {
 
     public static PriorityQueue<TradePreviewSerious> tripleSwapTradeFinderSingleTeam(ArrayList<ScoredRoster> allRosters, int teamNum, String myID){
         PriorityQueue<TradePreviewSerious> allTrades = new PriorityQueue<>(5, new TradePreviewSeriousComparator());
-        ScoredRoster myRoster = locateMyRoster(allRosters, myID);
-        allRosters.remove(myRoster);
-
+        ScoredRoster myRoster = takeMyRoster(allRosters, myID);
         ScoredRoster otherTeamsRoster = allRosters.get(teamNum);
 
         for(int a1=0; a1 < myRoster.draftedPlayersWithProj.size()-2; a1++){
@@ -603,6 +598,19 @@ public class TradeFinder {
         return doubleTripleSwaps;
     }
 
+    private static int countOpponents(ArrayList<ScoredRoster> allRosters, String myID){
+        int mine = 0;
+        for(ScoredRoster roster : allRosters){
+            if(roster.userID.equals(myID)){
+                mine++;
+            }
+        }
+        if(mine == 0){
+            throw new IllegalArgumentException("no roster in this league belongs to user " + myID);
+        }
+        return allRosters.size() - mine;
+    }
+
     private static ArrayList<ScoredRoster> getCopyOfAllRosters(ArrayList<ScoredRoster> allRosters) {
         ArrayList<ScoredRoster> allRostersCopy = new ArrayList<>();
         for(ScoredRoster fpRos : allRosters){
@@ -612,34 +620,52 @@ public class TradeFinder {
     }
 
     public static PriorityQueue<TradePreviewSerious> singleSwapTradeFinderAll(ArrayList<ScoredRoster> allRosters, AAAConfiguration aaaConfiguration){
+        return singleSwapTradeFinderAll(allRosters, aaaConfiguration.getMyID());
+    }
 
+    public static PriorityQueue<TradePreviewSerious> singleSwapTradeFinderAll(ArrayList<ScoredRoster> allRosters, String myID){
         PriorityQueue<TradePreviewSerious> allTrades = new PriorityQueue<>(5, new TradePreviewSeriousComparator());
-        for(int i=0; i<allRosters.size()-1; i++){
+        // One pass per team I could trade with, which is everyone but me. The
+        // bound used to be allRosters.size() - 1, which only lined up because
+        // taking my roster out happens to leave exactly that many.
+        int opponents = countOpponents(allRosters, myID);
+        for(int i = 0; i < opponents; i++){
             ArrayList<ScoredRoster> allRostersCopy = getCopyOfAllRosters(allRosters);
-            PriorityQueue<TradePreviewSerious> singleTeamTrades = singleSwapTradeFinderSingleTeam(allRostersCopy, i, aaaConfiguration.getMyID());
-            allTrades.addAll(singleTeamTrades);
+            allTrades.addAll(singleSwapTradeFinderSingleTeam(allRostersCopy, i, myID));
         }
         return allTrades;
     }
 
     public static PriorityQueue<TradePreviewSerious> doubleSwapTradeFinderAll(ArrayList<ScoredRoster> allRosters, AAAConfiguration aaaConfiguration){
+        return doubleSwapTradeFinderAll(allRosters, aaaConfiguration.getMyID());
+    }
 
+    public static PriorityQueue<TradePreviewSerious> doubleSwapTradeFinderAll(ArrayList<ScoredRoster> allRosters, String myID){
         PriorityQueue<TradePreviewSerious> allTrades = new PriorityQueue<>(5, new TradePreviewSeriousComparator());
-        for(int i=0; i<allRosters.size()-1; i++){
+        // One pass per team I could trade with, which is everyone but me. The
+        // bound used to be allRosters.size() - 1, which only lined up because
+        // taking my roster out happens to leave exactly that many.
+        int opponents = countOpponents(allRosters, myID);
+        for(int i = 0; i < opponents; i++){
             ArrayList<ScoredRoster> allRostersCopy = getCopyOfAllRosters(allRosters);
-            PriorityQueue<TradePreviewSerious> singleTeamTrades = doubleSwapTradeFinderSingleTeam(allRostersCopy, i, aaaConfiguration.getMyID());
-            allTrades.addAll(singleTeamTrades);
+            allTrades.addAll(doubleSwapTradeFinderSingleTeam(allRostersCopy, i, myID));
         }
         return allTrades;
     }
 
     public static PriorityQueue<TradePreviewSerious> tripleSwapTradeFinderAll(ArrayList<ScoredRoster> allRosters, AAAConfiguration aaaConfiguration){
+        return tripleSwapTradeFinderAll(allRosters, aaaConfiguration.getMyID());
+    }
 
+    public static PriorityQueue<TradePreviewSerious> tripleSwapTradeFinderAll(ArrayList<ScoredRoster> allRosters, String myID){
         PriorityQueue<TradePreviewSerious> allTrades = new PriorityQueue<>(5, new TradePreviewSeriousComparator());
-        for(int i=0; i<allRosters.size()-1; i++){
+        // One pass per team I could trade with, which is everyone but me. The
+        // bound used to be allRosters.size() - 1, which only lined up because
+        // taking my roster out happens to leave exactly that many.
+        int opponents = countOpponents(allRosters, myID);
+        for(int i = 0; i < opponents; i++){
             ArrayList<ScoredRoster> allRostersCopy = getCopyOfAllRosters(allRosters);
-            PriorityQueue<TradePreviewSerious> singleTeamTradesTriple = tripleSwapTradeFinderSingleTeam(allRostersCopy, i, aaaConfiguration.getMyID());
-            allTrades.addAll(singleTeamTradesTriple);
+            allTrades.addAll(tripleSwapTradeFinderSingleTeam(allRostersCopy, i, myID));
         }
         return allTrades;
     }
@@ -658,10 +684,18 @@ public class TradeFinder {
     private static ArrayList<Player> getSleeperPlayersUsingWeirdIDs(JsonObject sleeperRoster) {
         ArrayList<Player> allPlayersOfTeam = new ArrayList<>();
         JsonArray allWeirdIDs = sleeperRoster.getAsJsonArray("players");
+        if(allWeirdIDs == null){
+            // An expansion team, or one whose players were all dropped.
+            return allPlayersOfTeam;
+        }
         for(JsonElement playerWeirdID : allWeirdIDs){
-            Player tempPlayer = Player.getPlayerFromSIDV2(playerWeirdID.getAsString());
+            String sleeperID = playerWeirdID.getAsString();
+            Player tempPlayer = Player.getPlayerFromSIDV2(sleeperID);
             if(tempPlayer == null){
-                System.out.println("Here is a null player mistake");
+                // Naming the id matters: the old message said only "Here is a
+                // null player mistake", which told you nothing about who.
+                System.out.println("no sleeper player for id " + sleeperID + "; leaving them off the roster");
+                continue;
             }
             allPlayersOfTeam.add(tempPlayer);
         }
