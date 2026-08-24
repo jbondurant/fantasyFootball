@@ -15,14 +15,7 @@ public class HumanStrategy extends Strategy {
     }
 
     public static HumanStrategy getFPHumanStrategySeriousFromPerm(ArrayList<Position> permutationGiven){
-        SleeperLeague seriousL = SleeperLeague.getSeriousLeague();
-        LeagueScoringSettings seriousSettings = seriousL.league.leagueScoringSettings;
-        FantasyProsScore seriousScores = new FantasyProsScore(seriousSettings);
-        ArrayList<Score> seriousScoresList = seriousScores.fantasyProsScoreLeagueAdjusted;
-        ScoreOrderedPlayers sop = new ScoreOrderedPlayers(seriousScoresList);
-        RankOrderedPlayers rop = RankOrderedPlayers.scoreToRankOrderedPlayers(sop);
-        HumanStrategy fppProjectionHumanStrategySerious = new HumanStrategy(rop, permutationGiven);
-        return fppProjectionHumanStrategySerious;
+        return new HumanStrategy(RankOrderedPlayers.getRankOrderedPlayerFPSerious(), permutationGiven);
     }
 
     public static ArrayList<Position> nonPermutedPositions(int numQB,

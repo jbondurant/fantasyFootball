@@ -12,15 +12,7 @@ public class ScoredRoster {
 
     // Built on demand. Loading all of these up front meant picking one broken
     // feed took down every run, including the ones that did not use it.
-    private static HashMap<String, Double> playerSRIDToScoreFPPreSeason;
     private static HashMap<String, Double> playerSIDToScoreSleeper;
-
-    private static synchronized HashMap<String, Double> preSeasonScores(){
-        if(playerSRIDToScoreFPPreSeason == null){
-            playerSRIDToScoreFPPreSeason = SleeperLeague.getScoreMap();
-        }
-        return playerSRIDToScoreFPPreSeason;
-    }
 
     private static synchronized HashMap<String, Double> sleeperScores(){
         if(playerSIDToScoreSleeper == null){
@@ -204,9 +196,6 @@ public class ScoredRoster {
     public static ArrayList<Score> getPlayerProjections(ArrayList<Player> dp, ProjectionSource ps){
         if(ProjectionSource.SLEEPER.equals(ps)){
             return getPlayerProjInSeasonFromSleeperMap(dp, sleeperScores());
-        }
-        else if(ProjectionSource.PRESEASON_FP_SITE.equals(ps)){
-            return getPlayerProjInSeasonFromMap(dp, preSeasonScores());
         }
         else if(ProjectionSource.IN_SEASON_FP_SITE.equals(ps)) {
             // Throws with an explanation: FantasyPros dropped projected points.

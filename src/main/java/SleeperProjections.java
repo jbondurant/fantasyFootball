@@ -3,6 +3,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 /**
@@ -71,6 +72,34 @@ public class SleeperProjections {
             playerSIDToScore.put(sleeperID, scoreStatLine(stats, scoringSettings));
         }
         return playerSIDToScore;
+    }
+
+    /**
+     * The same projections as a list of scored players.
+     *
+     * The draft simulator used to reach these through a second, parallel
+     * implementation - Sleeper stats were unpacked into QBProjection /
+     * FlexProjection / DEFProjection and rescored by FantasyProsScore. Both
+     * arrived at the same number from the same input, so the two drifted the
+     * moment a scoring category was added to one and not the other, which is
+     * exactly what happened with two point conversions.
+     */
+    public static ArrayList<Score> getScoreList(LeagueScoringSettings scoringSettings) {
+        ArrayList<Score> scores = new ArrayList<>();
+
+        for (JsonElement jsonPlayer : getTodaysProjections()) {
+            JsonObject playerObject = jsonPlayer.getAsJsonObject();
+            JsonObject stats = playerObject.getAsJsonObject("stats");
+            if(stats == null){
+                continue;
+            }
+            Player player = Player.getPlayerFromSIDV2(playerObject.get("player_id").getAsString());
+            if(player == null){
+                continue;
+            }
+            scores.add(new Score(scoreStatLine(stats, scoringSettings), player));
+        }
+        return scores;
     }
 
     /** Points for one projected stat line under the given league settings. */

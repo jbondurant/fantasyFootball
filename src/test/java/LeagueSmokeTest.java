@@ -192,6 +192,40 @@ class LeagueSmokeTest {
     }
 
     @Test
+    void thereIsOnlyOneScoringPathAndEverythingAgreesWithIt(){
+        // Trades and the draft simulator used to score through two separate
+        // implementations of the same arithmetic. They agreed until a category
+        // was added to one and not the other, at which point nothing failed and
+        // the two simply disagreed. Now both come from here.
+        LeagueScoringSettings settings =
+                SleeperLeague.getSeriousLeague().league.leagueScoringSettings;
+
+        Map<String, Double> byID = SleeperProjections.parseTodaysWebPage();
+        List<Score> asList = SleeperProjections.getScoreList(settings);
+
+        Assertions.assertFalse(asList.isEmpty());
+        for(Score score : asList){
+            Double fromMap = byID.get(score.player.sleeperIDString);
+            Assertions.assertNotNull(fromMap, score.player.lastName + " is scored in one path and not the other");
+            Assertions.assertEquals(fromMap, score.score, 0.0001,
+                    score.player.firstName + " " + score.player.lastName + " scores differently in the two paths");
+        }
+    }
+
+    @Test
+    void theLeagueScoresTwoPointConversions(){
+        // Not universal across leagues, so worth noticing if it ever changes.
+        LeagueScoringSettings settings =
+                SleeperLeague.getSeriousLeague().league.leagueScoringSettings;
+
+        Assertions.assertEquals(2.0, settings.passTwoPoint, 0.0001);
+        Assertions.assertEquals(2.0, settings.rushTwoPoint, 0.0001);
+        Assertions.assertEquals(2.0, settings.receivingTwoPoint, 0.0001);
+        Assertions.assertEquals(6.0, settings.passTD, 0.0001, "six point passing touchdowns");
+        Assertions.assertEquals(0.5, settings.reception, 0.0001, "half ppr");
+    }
+
+    @Test
     void theWholeTradeFinderPipelineProducesScoredRosters(){
         ArrayList<ScoredRoster> rosters =
                 TradeFinder.getProjPointsRosters(CONFIG, ProjectionSource.SLEEPER);
