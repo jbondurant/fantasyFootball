@@ -46,6 +46,16 @@ public class ScoredRoster {
 
     }
 
+    /**
+     * Build a roster from scores that are already in hand, skipping the
+     * projection feeds. Used by makeCopy and by the lineup tests.
+     */
+    public ScoredRoster(String uid, ArrayList<Score> scoredPlayers){
+        userID = uid;
+        draftedPlayersWithProj = scoredPlayers;
+        scoreBestLineup = scoreBestROSStartingLineup();
+    }
+
     public void removeScore(Score s){
         Score scoreToRemove = null;
         for(Score score : draftedPlayersWithProj){
