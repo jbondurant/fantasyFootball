@@ -316,12 +316,6 @@ public class TradePreviewSerious3T {
 
         String pointChanges = "Your gain:\t" + tps.improvementT1 + "\n" + "Team 2 gain:\t" + tps.improvementT2 + "\n" + "Team 3 gain:\t" + tps.improvementT3 + "\n";
 
-        if(tps.t2p3Score != null){
-            //team2ToGive += "\tand\t" + tps.t1p3Score.player.firstName + " " + tps.t1p3Score.player.lastName;
-            int u=1;
-        }
-
-
         String toPrint = banner + team1ToGive + team2ToGive + team3ToGive + team1ToReceive + team2ToReceive + team3ToReceive + pointChanges + banner;
         //System.out.println(toPrint);
         return toPrint;
