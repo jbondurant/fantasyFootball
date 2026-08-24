@@ -38,7 +38,9 @@ public class KeeperPricing {
 
     /**
      * Sleeper player id -> average draft position, lower being drafted earlier.
-     * Only used to break a tie between two keepers costing the same round.
+     *
+     * Only consulted when two keepers cost the same round and at least one of
+     * them went undrafted, so there is no real draft position to compare.
      */
     public interface AdpLookup {
         double adpOf(String sleeperID);
@@ -68,6 +70,8 @@ public class KeeperPricing {
         final String ownerID;
         int round;
         boolean viaConsecutiveYear;
+        /** Where they went in last season's draft; -1 if undrafted. */
+        int draftPickNumber = -1;
         double adp;
 
         Candidate(String playerID, Player player, String ownerID){
@@ -179,6 +183,8 @@ public class KeeperPricing {
                     + HIGHEST_KEEPABLE_DRAFT_ROUND + " rounds cannot be kept";
         }
 
+        candidate.draftPickNumber = lastSeason.get("pick_no").getAsInt();
+
         // Last season's round already carries every earlier escalation, so a
         // player kept again only moves one more round.
         int round = lastSeason.get("round").getAsInt();
@@ -230,9 +236,18 @@ public class KeeperPricing {
     /**
      * Two keepers cannot both cost the same round, so one goes up.
      *
-     * The ruleset sends the later-ADP player up, unless the other one is only
-     * on that round because of consecutive-year escalation - that player has
-     * priority to keep their cost rather than being moved twice.
+     * The ruleset sends "the player with the lower ADP" up a round, which means
+     * the one taken earlier - the more valuable of the two pays the dearer
+     * pick. The exception is when the other player is only on that round
+     * because of consecutive-year escalation; that player has priority to keep
+     * their cost rather than being moved twice.
+     *
+     * Compared on where they actually went in last season's draft rather than
+     * on preseason ADP. The one clash in six seasons that turned on this settles
+     * it: in 2025 Jerry Jeudy and Jayden Daniels both cost an 8th, ADP had
+     * Daniels well ahead (35.6 to 75.2), but Jeudy went one pick earlier in the
+     * 2024 draft - 85 to 86 - and Jeudy is the one who moved to a 7th.
+     * ADP is only the fallback for an undrafted player, who has no pick number.
      */
     private static List<String> resolveSameRoundCosts(List<Candidate> candidates){
         List<String> rejected = new ArrayList<>();
@@ -245,10 +260,16 @@ public class KeeperPricing {
             if(clashing.size() < 2){
                 continue;
             }
-            // Whoever is most entitled to keep their round comes first.
+            boolean everyoneWasDrafted = clashing.stream().allMatch(c -> c.draftPickNumber > 0);
+
+            // Most entitled to keep the round comes first: a consecutive-year
+            // keeper, then whoever was taken later.
             clashing.sort(Comparator
                     .comparing((Candidate candidate) -> !candidate.viaConsecutiveYear)
-                    .thenComparingDouble(candidate -> candidate.adp));
+                    .thenComparing(Comparator.comparingDouble(
+                            (Candidate candidate) -> everyoneWasDrafted
+                                    ? candidate.draftPickNumber
+                                    : candidate.adp).reversed()));
 
             for(int i = 1; i < clashing.size(); i++){
                 Candidate bumped = clashing.get(i);

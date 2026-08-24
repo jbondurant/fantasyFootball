@@ -36,7 +36,7 @@ class KeeperPricingTest {
         return byID::get;
     }
 
-    /** Lower is drafted earlier. Chase is the most valuable of these. */
+    /** Only consulted when an undrafted keeper is involved in a clash. */
     private static final KeeperPricing.AdpLookup ADP = sleeperID -> {
         switch(sleeperID){
             case "7564": return 5.0;
@@ -61,11 +61,12 @@ class KeeperPricingTest {
 
     /** Chase round 3, Gibbs round 6, neither previously kept. */
     private static JsonArray lastSeason(){
+        // Gibbs went at pick 66, Nabers later at pick 70, both in round 6.
         return json("["
-                + "{\"player_id\":\"7564\",\"round\":3,\"is_keeper\":null},"
-                + "{\"player_id\":\"9226\",\"round\":6,\"is_keeper\":null},"
-                + "{\"player_id\":\"11565\",\"round\":6,\"is_keeper\":null},"
-                + "{\"player_id\":\"1111\",\"round\":12,\"is_keeper\":null}"
+                + "{\"player_id\":\"7564\",\"round\":3,\"pick_no\":30,\"is_keeper\":null},"
+                + "{\"player_id\":\"9226\",\"round\":6,\"pick_no\":66,\"is_keeper\":null},"
+                + "{\"player_id\":\"11565\",\"round\":6,\"pick_no\":70,\"is_keeper\":null},"
+                + "{\"player_id\":\"1111\",\"round\":12,\"pick_no\":140,\"is_keeper\":null}"
                 + "]");
     }
 
@@ -141,10 +142,21 @@ class KeeperPricingTest {
     }
 
     @Test
-    void aLateRoundKeeperIsCappedRatherThanCostingRound12(){
-        JsonArray previous = json("[{\"player_id\":\"7564\",\"round\":12}]");
-        Assertions.assertEquals(Keeper.MAX_ROUND_COST,
-                price(oneKeeper("u1", "7564"), previous).get(0).roundCanBeKept);
+    void aLateRoundKeeperCostsThatLateRound(){
+        // The 10th is the price of an undrafted player, not a ceiling on
+        // everyone. Six seasons contain 31 keepers costing more than a 10th.
+        JsonArray previous = json("[{\"player_id\":\"7564\",\"round\":12,\"pick_no\":140}]");
+        Assertions.assertEquals(12, price(oneKeeper("u1", "7564"), previous).get(0).roundCanBeKept);
+    }
+
+    @Test
+    void adraftedPlayerCanCostLessThanAnUndraftedOne(){
+        JsonArray previous = json("[{\"player_id\":\"7564\",\"round\":14,\"pick_no\":160}]");
+        int drafted = price(oneKeeper("u1", "7564"), previous).get(0).roundCanBeKept;
+        int undrafted = price(oneKeeper("u1", "4984"), previous).get(0).roundCanBeKept;
+        Assertions.assertEquals(14, drafted);
+        Assertions.assertEquals(Keeper.UNDRAFTED_ROUND_COST, undrafted);
+        Assertions.assertTrue(drafted > undrafted, "a 14th is a cheaper price than a 10th");
     }
 
     @Test
@@ -167,25 +179,25 @@ class KeeperPricingTest {
     @Test
     void keepingSomeoneASecondYearRunningCostsARoundMore(){
         // Last season's round already is the escalated cost, so it moves one more.
-        JsonArray previous = json("[{\"player_id\":\"7564\",\"round\":6,\"is_keeper\":true}]");
+        JsonArray previous = json("[{\"player_id\":\"7564\",\"round\":6,\"pick_no\":67,\"is_keeper\":true}]");
         Assertions.assertEquals(5, price(oneKeeper("u1", "7564"), previous).get(0).roundCanBeKept);
     }
 
     @Test
     void aThirdConsecutiveYearCostsAnotherRound(){
-        JsonArray previous = json("[{\"player_id\":\"7564\",\"round\":5,\"is_keeper\":true}]");
-        JsonArray twoSeasonsAgo = json("[{\"player_id\":\"7564\",\"round\":6,\"is_keeper\":true}]");
-        JsonArray threeSeasonsAgo = json("[{\"player_id\":\"7564\",\"round\":6,\"is_keeper\":null}]");
+        JsonArray previous = json("[{\"player_id\":\"7564\",\"round\":5,\"pick_no\":55,\"is_keeper\":true}]");
+        JsonArray twoSeasonsAgo = json("[{\"player_id\":\"7564\",\"round\":6,\"pick_no\":67,\"is_keeper\":true}]");
+        JsonArray threeSeasonsAgo = json("[{\"player_id\":\"7564\",\"round\":6,\"pick_no\":67,\"is_keeper\":null}]");
         Assertions.assertEquals(4,
                 price(oneKeeper("u1", "7564"), previous, twoSeasonsAgo, threeSeasonsAgo).get(0).roundCanBeKept);
     }
 
     @Test
     void aFourthConsecutiveYearIsNotAllowed(){
-        JsonArray previous = json("[{\"player_id\":\"7564\",\"round\":4,\"is_keeper\":true}]");
-        JsonArray twoAgo = json("[{\"player_id\":\"7564\",\"round\":5,\"is_keeper\":true}]");
-        JsonArray threeAgo = json("[{\"player_id\":\"7564\",\"round\":6,\"is_keeper\":true}]");
-        JsonArray fourAgo = json("[{\"player_id\":\"7564\",\"round\":6,\"is_keeper\":null}]");
+        JsonArray previous = json("[{\"player_id\":\"7564\",\"round\":4,\"pick_no\":43,\"is_keeper\":true}]");
+        JsonArray twoAgo = json("[{\"player_id\":\"7564\",\"round\":5,\"pick_no\":55,\"is_keeper\":true}]");
+        JsonArray threeAgo = json("[{\"player_id\":\"7564\",\"round\":6,\"pick_no\":67,\"is_keeper\":true}]");
+        JsonArray fourAgo = json("[{\"player_id\":\"7564\",\"round\":6,\"pick_no\":67,\"is_keeper\":null}]");
 
         KeeperPricing.PricedKeepers priced =
                 priceDetailed(oneKeeper("u1", "7564"), previous, twoAgo, threeAgo, fourAgo);
@@ -209,7 +221,7 @@ class KeeperPricingTest {
 
     @Test
     void theThirdRoundIsKeepable(){
-        JsonArray previous = json("[{\"player_id\":\"7564\",\"round\":3}]");
+        JsonArray previous = json("[{\"player_id\":\"7564\",\"round\":3,\"pick_no\":31}]");
         Assertions.assertEquals(3, price(oneKeeper("u1", "7564"), previous).get(0).roundCanBeKept);
     }
 
@@ -217,15 +229,15 @@ class KeeperPricingTest {
     void theFirstTwoRoundsRuleFollowsTheOriginalDraftNotTheKeeperCost(){
         // Drafted in the 5th, kept twice, now costing a 3rd. Still legal: the
         // rule is about where they were drafted.
-        JsonArray previous = json("[{\"player_id\":\"7564\",\"round\":4,\"is_keeper\":true}]");
-        JsonArray twoAgo = json("[{\"player_id\":\"7564\",\"round\":5,\"is_keeper\":null}]");
+        JsonArray previous = json("[{\"player_id\":\"7564\",\"round\":4,\"pick_no\":43,\"is_keeper\":true}]");
+        JsonArray twoAgo = json("[{\"player_id\":\"7564\",\"round\":5,\"pick_no\":55,\"is_keeper\":null}]");
         Assertions.assertEquals(3, price(oneKeeper("u1", "7564"), previous, twoAgo).get(0).roundCanBeKept);
     }
 
     @Test
     void aCostCannotClimbAboveAFirstRoundPick(){
-        JsonArray previous = json("[{\"player_id\":\"7564\",\"round\":1,\"is_keeper\":true}]");
-        JsonArray twoAgo = json("[{\"player_id\":\"7564\",\"round\":3,\"is_keeper\":null}]");
+        JsonArray previous = json("[{\"player_id\":\"7564\",\"round\":1,\"pick_no\":7,\"is_keeper\":true}]");
+        JsonArray twoAgo = json("[{\"player_id\":\"7564\",\"round\":3,\"pick_no\":31,\"is_keeper\":null}]");
         KeeperPricing.PricedKeepers priced = priceDetailed(oneKeeper("u1", "7564"), previous, twoAgo);
         Assertions.assertTrue(priced.keepers.isEmpty());
         Assertions.assertTrue(priced.rejected.get(0).contains("first-round"), priced.rejected.get(0));
@@ -241,17 +253,21 @@ class KeeperPricingTest {
         ArrayList<Keeper> keepers = price(rosters, lastSeason());
 
         Assertions.assertEquals(2, keepers.size());
-        Assertions.assertEquals(6, keeperFor(keepers, GIBBS).roundCanBeKept, "earlier ADP keeps its round");
-        Assertions.assertEquals(5, keeperFor(keepers, NABERS).roundCanBeKept, "later ADP goes up a round");
+        Assertions.assertEquals(5, keeperFor(keepers, GIBBS).roundCanBeKept,
+                "taken earlier in the round, so pays the dearer pick");
+        Assertions.assertEquals(6, keeperFor(keepers, NABERS).roundCanBeKept,
+                "taken later, so keeps the round");
     }
 
     @Test
     void aConsecutiveYearKeeperHoldsItsRoundAndTheOtherMoves(){
         // Nabers is on the 6th only because he was kept last year, so he keeps
         // it even though Gibbs has the earlier ADP.
+        // Gibbs went at pick 66, earlier than Nabers' keeper slot, so without
+        // the exception Gibbs would hold the 6th.
         JsonArray previous = json("["
-                + "{\"player_id\":\"9226\",\"round\":6,\"is_keeper\":null},"
-                + "{\"player_id\":\"11565\",\"round\":7,\"is_keeper\":true}"
+                + "{\"player_id\":\"9226\",\"round\":6,\"pick_no\":66,\"is_keeper\":null},"
+                + "{\"player_id\":\"11565\",\"round\":7,\"pick_no\":80,\"is_keeper\":true}"
                 + "]");
         JsonArray rosters = json("[{\"owner_id\":\"u1\",\"keepers\":[\"9226\",\"11565\"],"
                 + "\"players\":[\"9226\",\"11565\"]}]");
@@ -289,7 +305,7 @@ class KeeperPricingTest {
     void aPickWithNoPlayerIsIgnoredWhenReadingRounds(){
         JsonArray previous = json("["
                 + "{\"player_id\":null,\"round\":1},"
-                + "{\"player_id\":\"7564\",\"round\":4}"
+                + "{\"player_id\":\"7564\",\"round\":4,\"pick_no\":43}"
                 + "]");
         Map<String, Integer> rounds = KeeperPricing.roundsByPlayerID(previous);
         Assertions.assertEquals(1, rounds.size());

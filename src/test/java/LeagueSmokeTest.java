@@ -77,7 +77,7 @@ class LeagueSmokeTest {
         for(Keeper keeper : priced.keepers){
             Assertions.assertNotNull(keeper.player, "a keeper resolved to no player");
             Assertions.assertNotNull(keeper.humanWhoCanKeep, "a keeper belongs to nobody");
-            Assertions.assertTrue(keeper.roundCanBeKept >= 1 && keeper.roundCanBeKept <= Keeper.MAX_ROUND_COST,
+            Assertions.assertTrue(keeper.roundCanBeKept >= 1 && keeper.roundCanBeKept <= 20,
                     keeper.player.lastName + " priced at round " + keeper.roundCanBeKept);
             System.out.println("  " + HumanOfInterest.getHumanFromID(keeper.humanWhoCanKeep)
                     + "\t" + keeper.player.firstName + " " + keeper.player.lastName
