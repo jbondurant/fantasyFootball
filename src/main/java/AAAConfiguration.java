@@ -2,6 +2,7 @@ import com.google.gson.*;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -154,13 +155,48 @@ public class AAAConfiguration {
     }
 
     public String getPreviousSeasonDraftPicks(){
-        String previousDraftID = getPreviousDraftID();
-        if(previousDraftID == null){
-            return "[]";
-        }
-        return InOutUtilities.getTodaysWebPage(draftPicksWebURL(previousDraftID),
-                filepathStartPreviousDraftPicks + leagueID);
+        List<JsonArray> history = getPreviousDraftPicks();
+        return history.isEmpty() ? "[]" : history.get(0).toString();
     }
+
+    private List<JsonArray> previousDraftPicks;
+
+    /**
+     * Picks from every earlier draft in this league's history, most recent
+     * first.
+     *
+     * Keeper pricing needs more than last season: a player kept two years
+     * running costs a round more than one kept once, and the ruleset caps that
+     * at three consecutive years, so the chain has to be walked back far enough
+     * to count them. Sleeper links each season to the one before it through
+     * previous_league_id.
+     */
+    public synchronized List<JsonArray> getPreviousDraftPicks(){
+        if(previousDraftPicks != null){
+            return previousDraftPicks;
+        }
+        List<JsonArray> history = new ArrayList<>();
+        String previousLeagueID = getPreviousLeagueID();
+        int guard = 0;
+        while(previousLeagueID != null && guard++ < MAX_SEASONS_OF_HISTORY){
+            String leagueData = InOutUtilities.getTodaysWebPage(leagueWebURL(previousLeagueID),
+                    filepathStartPreviousLeague + previousLeagueID);
+            JsonObject previousLeague = JsonParser.parseString(leagueData).getAsJsonObject();
+
+            String draftID = optionalString(previousLeague, "draft_id");
+            if(draftID != null){
+                String picks = InOutUtilities.getTodaysWebPage(draftPicksWebURL(draftID),
+                        filepathStartPreviousDraftPicks + draftID);
+                history.add(JsonParser.parseString(picks).getAsJsonArray());
+            }
+            previousLeagueID = optionalString(previousLeague, "previous_league_id");
+        }
+        previousDraftPicks = history;
+        return previousDraftPicks;
+    }
+
+    /** Far enough back to settle a three-consecutive-year keeper, with room to spare. */
+    private static final int MAX_SEASONS_OF_HISTORY = 8;
 
     public ArrayList<JsonElement> getTodaysRoster() {
         String websiteData = getTodaysRosterWebPageSerious();
