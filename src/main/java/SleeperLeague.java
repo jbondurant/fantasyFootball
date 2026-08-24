@@ -91,7 +91,7 @@ public class SleeperLeague{
         parameters[8] = fumbleLost;
         ArrayList<User> users = sdi.usersInfo;
         LeagueScoringSettings leagueScoringSettings = new LeagueScoringSettings(parameters);
-        ArrayList<Player> undraftedPlayers = Player.draftablePlayers;
+        ArrayList<Player> undraftedPlayers = Player.getDraftablePlayers();
         League league = new League(leagueScoringSettings, users, undraftedPlayers);
         SleeperLeague sleeperLeague = new SleeperLeague(league, name, leagueID, draftID, sdi);
         return sleeperLeague;
