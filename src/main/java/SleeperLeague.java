@@ -9,9 +9,11 @@ import java.util.HashMap;
 //Poorly designed
 public class SleeperLeague{
 
-    private static final String myID = HumanOfInterest.humanID;
     public static String filepathStartSeriousLeague = "seriousLeagueSleeper";
-    public static String webURLSeriousLeague = "https://api.sleeper.app/v1/league/854055502148108288";
+
+    private static String myID(){
+        return HumanOfInterest.humanID();
+    }
 
     League league;
     String name;
@@ -28,21 +30,27 @@ public class SleeperLeague{
     }
 
 
-    public static SleeperLeague getFunLeague(){
-        return null; // todo 2023 remove all fun league
-    }
+    private static SleeperLeague cachedSeriousLeague;
 
-    public static SleeperLeague getSeriousLeague(){
-        String seriousLeagueWebsite = getTodaysWebPageSerious();
-        SleeperDraftInfo seriousDraft = SleeperDraftInfo.getSeriousDraft();
-        SleeperLeague seriousLeague = parseWebsite(seriousLeagueWebsite, seriousDraft);
-
-        return seriousLeague;
+    /**
+     * The configured league. Parsing it hits three endpoints, and roughly every
+     * scoring path asks for it, so the result is held onto.
+     */
+    public static synchronized SleeperLeague getSeriousLeague(){
+        if(cachedSeriousLeague == null){
+            String seriousLeagueWebsite = getTodaysWebPageSerious();
+            SleeperDraftInfo seriousDraft = SleeperDraftInfo.getSeriousDraft();
+            cachedSeriousLeague = parseWebsite(seriousLeagueWebsite, seriousDraft);
+        }
+        return cachedSeriousLeague;
     }
 
 
     private static String getTodaysWebPageSerious(){
-        return InOutUtilities.getTodaysWebPage(webURLSeriousLeague, filepathStartSeriousLeague);
+        AAAConfiguration configuration = AAAConfiguration.getInstance();
+        return InOutUtilities.getTodaysWebPage(
+                "https://api.sleeper.app/v1/league/" + configuration.getLeagueID(),
+                filepathStartSeriousLeague + configuration.getLeagueID());
     }
 
     public static SleeperLeague parseWebsite(String websiteData, SleeperDraftInfo sdi){
@@ -89,12 +97,17 @@ public class SleeperLeague{
         return sleeperLeague;
     }
 
-    public static ArrayList<Score> getScoreList(){
+    private static ArrayList<Score> cachedScoreList;
+
+    public static synchronized ArrayList<Score> getScoreList(){
+        if(cachedScoreList != null){
+            return cachedScoreList;
+        }
         SleeperLeague seriousL = SleeperLeague.getSeriousLeague();
         LeagueScoringSettings seriousSettings = seriousL.league.leagueScoringSettings;
         FantasyProsScore seriousScores = new FantasyProsScore(seriousSettings);
-        ArrayList<Score> seriousScoresList = seriousScores.fantasyProsScoreLeagueAdjusted;
-        return seriousScoresList;
+        cachedScoreList = seriousScores.fantasyProsScoreLeagueAdjusted;
+        return cachedScoreList;
     }
 
     public static HashMap<String, Double> getScoreMap(){
@@ -112,7 +125,7 @@ public class SleeperLeague{
         ArrayList<Score> scoreList = getScoreList();
         double totalScore = 0;
         for(User user : sleeperLeague.sleeperDraftInfo.usersInfo) {
-            if (user.userID.equals(myID)) {
+            if (user.userID.equals(myID())) {
                 Roster roster = user.roster;
                 for(Player player : roster.draftedPlayers){
                     double playerScore = Player.scorePlayer(scoreList, player);

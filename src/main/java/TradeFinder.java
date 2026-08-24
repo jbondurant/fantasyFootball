@@ -111,7 +111,7 @@ public class TradeFinder {
 
 
     public static void main(String[] args) throws IOException {
-        AAAConfiguration configuration = new AAAConfigurationSleeperLeague();
+        AAAConfiguration configuration = AAAConfiguration.getInstance();
         boolean onlyOne = false;
         boolean onlyTwo = false;
         boolean toCrop = false;
@@ -198,7 +198,7 @@ public class TradeFinder {
             }
         }
 
-        ArrayList<Keeper> hardcodedKeepersArray = Keeper.hardcodedAllPotentialKeepers();
+        ArrayList<Keeper> hardcodedKeepersArray = Keeper.allPotentialKeepers();
         HashSet<Player> hardcodedKeepers = new HashSet<>();
         for(Keeper k : hardcodedKeepersArray){
             hardcodedKeepers.add(k.player);
@@ -222,7 +222,7 @@ public class TradeFinder {
                 Player t1p1 = tps1.t1p1Score.player;
                 Player t2p1 = tps1.t2p1Score.player;
 
-                if(HardcodedDraftUtil.getRoundPlayer(t1p1) <= HardcodedDraftUtil.getRoundPlayer(t2p1)){
+                if(DraftRoundUtil.getRoundPlayer(t1p1) <= DraftRoundUtil.getRoundPlayer(t2p1)){
                     if(!hardcodedKeepers.contains(t1p1) && !hardcodedKeepers.contains(t2p1)) {
                         passesRoundVibe = true;
                     }

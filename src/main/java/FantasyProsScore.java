@@ -67,14 +67,10 @@ public class FantasyProsScore {
     }
 
     public static void main(String[] args){
-        SleeperLeague funL = SleeperLeague.getFunLeague();
-        LeagueScoringSettings funSettings = funL.league.leagueScoringSettings;
-        //looks like bug on website values which I confirmed with funSettings.interception = -2.0;
-        FantasyProsScore funScores = new FantasyProsScore(funSettings);
-
         SleeperLeague seriousL = SleeperLeague.getSeriousLeague();
         LeagueScoringSettings seriousSettings = seriousL.league.leagueScoringSettings;
         FantasyProsScore seriousScores = new FantasyProsScore(seriousSettings);
+        System.out.println("scored " + seriousScores.fantasyProsScoreLeagueAdjusted.size() + " players");
     }
 
 

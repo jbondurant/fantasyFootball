@@ -3,42 +3,34 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Locale;
 
 public class FFCalculatorSD {
-    public static int year = LocalDate.now().getYear();
+
+    public static String getSeason(){
+        return AAAConfiguration.getInstance().getSeason();
+    }
 
     public static String filepathStartSerious = "ffCalculatorSDSerious";
-    public static String webURLSerious = "https://fantasyfootballcalculator.com/api/v1/adp/half-ppr?teams=12&year=" + year + "&position=all";
 
-    public static String filepathStartFun = "ffCalculatorSDFun";
-    public static String webURLFun = "https://fantasyfootballcalculator.com/api/v1/adp/2qb?teams=10&year=" + year + "&position=all";
+    public static String getWebURLSerious(){
+        return "https://fantasyfootballcalculator.com/api/v1/adp/half-ppr?teams=12&year=" + getSeason() + "&position=all";
+    }
 
-    public static ArrayList<StandardDevPlayer> funPlayerSD;
     public static ArrayList<StandardDevPlayer> seriousPlayerSD;
 
-    public static HashMap<String, Double> playerSRIDToSDMapFun;
     public static HashMap<String, Double> playerSRIDToSDMapSerious;
 
 
     static{
-
-        //funPlayerSD = initializeFunSD();
-        //seriousPlayerSD = initializeSeriousSD();
-        //playerSRIDToSDMapFun = initializeFunSDMap();
         playerSRIDToSDMapSerious = initializeSeriousSDMap();
-
     }
 
 
-    private static String getTodaysWebPageFun(){
-        return InOutUtilities.getTodaysWebPage(webURLFun, filepathStartFun);
-    }
     private static String getTodaysWebPageSerious(){
-        return InOutUtilities.getTodaysWebPage(webURLSerious, filepathStartSerious);
+        return InOutUtilities.getTodaysWebPage(getWebURLSerious(), filepathStartSerious + getSeason());
     }
     private static HashMap<String, Double> initializeSeriousSDMap(){
         String webData = getTodaysWebPageSerious();
@@ -70,13 +62,7 @@ public class FFCalculatorSD {
             String position = apiObject.get("position").getAsString();
             String team = apiObject.get("team").getAsString();
             String firstName = fullName.split(" ")[0];
-            String lastName = fullName.split(" ")[1];
-
-
-            if(position.equals("QB") && team.equals("KC")){
-                int y=0;
-            }
-
+            String lastName = fullName.split(" ").length > 1 ? fullName.split(" ")[1] : "";
 
             double sd = apiObject.get("stdev").getAsDouble();
             Player player = Player.getPlayerFromInfo(lastName, firstName, position, team);
@@ -108,11 +94,11 @@ public class FFCalculatorSD {
             String position = apiObject.get("position").getAsString();
             String team = apiObject.get("team").getAsString();
             String firstName = fullName.split(" ")[0];
-            String lastName = fullName.split(" ")[1];
+            String lastName = fullName.split(" ").length > 1 ? fullName.split(" ")[1] : "";
 
             double sd = apiObject.get("stdev").getAsDouble();
             Player player = Player.getPlayerFromInfo(lastName, firstName, position, team);
-            if(player == null){
+            if(player == null || player.sportRadarID == null){
                 continue;
             }
 
@@ -125,7 +111,7 @@ public class FFCalculatorSD {
 
 
     public static void main(String[] args){
-        initializeSeriousSDMap();
+        System.out.println("draft-position standard deviations for " + initializeSeriousSDMap().size() + " players");
     }
 
 

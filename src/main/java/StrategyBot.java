@@ -12,17 +12,6 @@ public class StrategyBot extends Strategy{
         deviatedRanking = devRank;
     }
 
-    //jacksonville jaguars have no srid
-    public static StrategyBot getSleeperFunStrategy(){
-        ArrayList<DecimalRank> decimalRanking = SleeperADP.playerRankFun;
-        HashMap<String, Double> apsd = FFCalculatorSD.playerSRIDToSDMapFun;
-
-        PriorityQueue<Rank> deviatedRankingQueue = DecimalRank.makeDeviatedRanking(decimalRanking, apsd, 0);
-        StrategyBot sleeperFunStrategy = new StrategyBot(deviatedRankingQueue);
-        return sleeperFunStrategy;
-
-    }
-
     public static StrategyBot  getSleeperSeriousStrategy(int qbADPChange){
         ArrayList<DecimalRank> decimalRanking = SleeperADP.playerRankSerious;
         HashMap<String, Double> apsd = FFCalculatorSD.playerSRIDToSDMapSerious;

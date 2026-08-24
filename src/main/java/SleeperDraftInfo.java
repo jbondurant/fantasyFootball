@@ -8,10 +8,7 @@ import java.util.Set;
 
 public class SleeperDraftInfo {
 
-    public static String myUserID = HumanOfInterest.humanID;
-
     public static String filepathStartSeriousDraft = "seriousDraftSleeper";
-    public static String webURLSeriousDraft = "https://api.sleeper.app/v1/draft/980889732034994177"; //todo 2023
 
     public ArrayList<User> usersInfo;
 
@@ -20,21 +17,23 @@ public class SleeperDraftInfo {
         usersInfo = uInfo;
     }
 
-    public static SleeperDraftInfo getHardcodedDraft(String draftID){
-        String filepathHardcodedDraft = "hardcodedDraft";
-        String webURL = "https://api.sleeper.app/v1/draft/" + draftID;
-        String draftWebsite = InOutUtilities.getTodaysWebPage(webURL , filepathHardcodedDraft);
-        SleeperDraftInfo sdi = parseWebsite(draftWebsite);
-        return sdi;
+    public static SleeperDraftInfo getDraft(String draftID){
+        String draftWebsite = InOutUtilities.getTodaysWebPage(
+                AAAConfiguration.draftWebURL(draftID), "draft" + draftID);
+        return parseWebsite(draftWebsite);
     }
 
+    /** This season's draft for the configured league. */
     public static SleeperDraftInfo getSeriousDraft(){
         String seriousDraftWebsite = getTodaysWebPageSerious();
         SleeperDraftInfo seriousDraft = parseWebsite(seriousDraftWebsite);
         return seriousDraft;
     }
     private static String getTodaysWebPageSerious(){
-        return InOutUtilities.getTodaysWebPage(webURLSeriousDraft, filepathStartSeriousDraft);
+        AAAConfiguration configuration = AAAConfiguration.getInstance();
+        String draftID = configuration.getDraftID();
+        return InOutUtilities.getTodaysWebPage(AAAConfiguration.draftWebURL(draftID),
+                filepathStartSeriousDraft + draftID);
     }
 
     public static SleeperDraftInfo parseWebsite(String websiteData){
@@ -45,9 +44,12 @@ public class SleeperDraftInfo {
 
         JsonObject draftOrder = jsonObjectSDI.getAsJsonObject("draft_order");
 
-
-        Set<String> keySet = draftOrder.keySet();
         ArrayList<User> users = new ArrayList<User>();
+        if(draftOrder == null){
+            // Sleeper leaves draft_order null until the commissioner sets it.
+            return new SleeperDraftInfo(users);
+        }
+        Set<String> keySet = draftOrder.keySet();
         for(String key : keySet){
             String userID = key;
             int userDraftPosition = draftOrder.get(key).getAsInt();
@@ -60,7 +62,10 @@ public class SleeperDraftInfo {
     }
 
     public static void main(String[] args){
-        SleeperDraftInfo b = getSeriousDraft();
+        SleeperDraftInfo seriousDraft = getSeriousDraft();
+        for(User user : seriousDraft.usersInfo){
+            System.out.println("pick " + user.draftPosition + "\t" + HumanOfInterest.getHumanFromID(user.userID));
+        }
     }
 
 }

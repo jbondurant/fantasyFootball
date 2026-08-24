@@ -9,11 +9,7 @@ import java.util.HashSet;
 
 public class Keepers {
 
-    //todo, eventually, keepers will come from years prior, and will likely need to be manually added
-    //todo hardcoded 2022 value
     public static String filepathStartSeriousLeague = "seriousOldDraftsSleeper";
-    public static String draftIDHardcoded2022 = "854055502148108289";
-    public static String leagueIDHardcoded2022 = "854055502148108288";
 
     public static String filepathDraftIDStartSeriousLeague = "seriousDraftIDPicks";
 
@@ -25,30 +21,28 @@ public class Keepers {
     }
 
 
-    public static Keepers getKeepersForUserHardcoded(boolean isFun, String userID, boolean allowUndrafted, int undraftedRoundCost, AAAConfiguration aaaConfiguration) throws Exception {
-        Keepers tooManyKeepers = getKeepersFromImmediateLastDraft(isFun, draftIDHardcoded2022, allowUndrafted, undraftedRoundCost, aaaConfiguration);
+    /**
+     * Everyone this user could keep: the players currently on their roster,
+     * priced at the round they went in last season's draft.
+     *
+     * The old version read a draft id pasted in from 2022 and then remapped a
+     * handful of user ids by hand to paper over people who had left the league.
+     * Both now come from the API - the previous season is reachable through the
+     * league's previous_league_id, and rosters carry current owners.
+     */
+    public static Keepers getKeepersForUser(boolean isFun, String userID, boolean allowUndrafted, int undraftedRoundCost, AAAConfiguration aaaConfiguration) throws Exception {
+        String previousDraftID = aaaConfiguration.getPreviousDraftID();
+        if(previousDraftID == null){
+            throw new Exception("league " + aaaConfiguration.getLeagueID()
+                    + " has no previous season, so there are no keeper prices to read");
+        }
+        Keepers tooManyKeepers = getKeepersFromImmediateLastDraft(isFun, previousDraftID, allowUndrafted, undraftedRoundCost, aaaConfiguration);
         HashSet<Keeper> playersKeepers = new HashSet<>();
-        HashSet<String> allHumansWhoCanKeep = new HashSet<>();
         for(Keeper k : tooManyKeepers.keepers){
-            allHumansWhoCanKeep.add(k.humanWhoCanKeep);
-            //todo hardcoded
-            if(k.humanWhoCanKeep.equals("603706155834871808") && userID.equals("605534791072305152")){
-                playersKeepers.add(k);
-            }
-            if(k.humanWhoCanKeep.equals("604116412050513920") && userID.equals("740473448551366656")){
-                playersKeepers.add(k);
-            }
-            if(k.humanWhoCanKeep.equals("603735371280355328") && userID.equals("853719913725030400")){
-                playersKeepers.add(k);
-            }
-            if(k.humanWhoCanKeep.equals("603706155834871808") && userID.equals("604377190016016384")){//jf this year
-                playersKeepers.add(k);
-            }
             if(k.humanWhoCanKeep.equals(userID)){
                 playersKeepers.add(k);
             }
         }
-        int k=1;
         return new Keepers(playersKeepers);
     }
 
@@ -59,7 +53,6 @@ public class Keepers {
                                                            int undraftedRoundCost,
                                                            AAAConfiguration aaaConfiguration) throws Exception {
         HashMap<String, Roster> humansAndRosters = getHumansAndTheirRosters(draftID, aaaConfiguration);
-        //the above method doesn't work
         HashMap<Player, Integer> draftedPlayersAndRound = draftedPlayersLastYearAndRound(isFun, draftID);
         HashSet<Keeper> allKeepers = new HashSet<>();
         for(String userID : humansAndRosters.keySet()){
@@ -101,7 +94,9 @@ public class Keepers {
                     for(JsonElement playerID : allPIDsElements) {
                         String pid = playerID.getAsString();
                         Player tempPlayer = Player.getPlayerFromSIDV2(pid);
-                        rosterPlayers.add(tempPlayer);
+                        if(tempPlayer != null){
+                            rosterPlayers.add(tempPlayer);
+                        }
                     }
                     Roster roster = new Roster(rosterPlayers);
                     allRosters.put(userID, roster);
@@ -129,7 +124,7 @@ public class Keepers {
             if(!apiObject.get("player_id").isJsonNull()) {
                 sleeperID = apiObject.get("player_id").getAsString();
                 Player p = Player.getPlayerFromSIDV2(sleeperID);
-                if(!apiObject.get("round").isJsonNull()){
+                if(p != null && !apiObject.get("round").isJsonNull()){
                     int roundNum = apiObject.get("round").getAsInt();
                     allDraftedPlayersAndRound.put(p, roundNum);
                 }
