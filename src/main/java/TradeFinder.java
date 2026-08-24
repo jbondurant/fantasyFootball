@@ -20,6 +20,41 @@ public class TradeFinder {
      * frames away with a NullPointerException and nothing pointing at the
      * cause.
      */
+    /**
+     * Trades are filed by how much they help the other side, on the theory that
+     * a trade nobody else wants is not a trade. Ascending floors: a trade lands
+     * in the highest tier whose floor it clears, and anything below the lowest
+     * floor is not written down at all.
+     */
+    private static final double[] TIER_FLOORS = {-20.0, 0.0, 2.0, 4.0, 6.0, 8.0, 10.0, 12.0, 35.0, 40.0};
+
+    /**
+     * An extra bucket, overlapping the ones above, for trades that are a big
+     * win for them without being so lopsided that they smell like a mistake.
+     */
+    static final int STANDOUT_TIER = TIER_FLOORS.length;
+
+    static boolean isStandoutTrade(double improvementForThem){
+        return improvementForThem > 45.0 && improvementForThem < 200.0;
+    }
+
+    static int tierFor(double improvementForThem){
+        for(int tier = TIER_FLOORS.length - 1; tier >= 0; tier--){
+            if(improvementForThem > TIER_FLOORS[tier]){
+                return tier;
+            }
+        }
+        return -1;
+    }
+
+    private static void writeTier(String filePath, List<TradePreviewSerious> trades) throws IOException {
+        try (FileWriter writer = new FileWriter(filePath)) {
+            for(TradePreviewSerious trade : trades){
+                writer.write(TradePreviewSerious.printTradePreviewString(trade) + System.lineSeparator());
+            }
+        }
+    }
+
     private static ScoredRoster takeMyRoster(ArrayList<ScoredRoster> allRosters, String myID) {
         for(ScoredRoster roster : allRosters){
             if(roster.userID.equals(myID)){
@@ -231,17 +266,11 @@ public class TradeFinder {
             }
         }
 
-        ArrayList<TradePreviewSerious> allT0 = new ArrayList<>();
-        ArrayList<TradePreviewSerious> allT1 = new ArrayList<>();
-        ArrayList<TradePreviewSerious> allT2 = new ArrayList<>();
-        ArrayList<TradePreviewSerious> allT3 = new ArrayList<>();
-        ArrayList<TradePreviewSerious> allT4 = new ArrayList<>();
-        ArrayList<TradePreviewSerious> allT5 = new ArrayList<>();
-        ArrayList<TradePreviewSerious> allT6 = new ArrayList<>();
-        ArrayList<TradePreviewSerious> allT7 = new ArrayList<>();
-        ArrayList<TradePreviewSerious> allT8 = new ArrayList<>();
-        ArrayList<TradePreviewSerious> allT9 = new ArrayList<>();
-        ArrayList<TradePreviewSerious> allT10 = new ArrayList<>();
+        // One bucket per "how much this helps the other side" tier, see tierFor.
+        List<List<TradePreviewSerious>> tiers = new ArrayList<>();
+        for(int tier = 0; tier <= STANDOUT_TIER; tier++){
+            tiers.add(new ArrayList<>());
+        }
 
         ArrayList<String> playersOfIgnoredTraders = new ArrayList<>();
         for(String ignoredTrader : tradersToIgnore){
@@ -299,194 +328,29 @@ public class TradeFinder {
                 continue;
             }
 
-            if(temp.improvementT2 > 45.0 && temp.improvementT2 < 200.0) {
-                allT10.add(temp);
+            int tier = tierFor(temp.improvementT2);
+            if(tier >= 0){
+                tiers.get(tier).add(temp);
             }
-            if(temp.improvementT2 > 40.0) {
-                allT9.add(temp);
-            }
-            else if(temp.improvementT2 > 35.0) {
-                allT8.add(temp);
-            }
-            else if(temp.improvementT2 > 12.0) {
-                allT7.add(temp);
-            }
-            else if(temp.improvementT2 > 10.0) {
-                allT6.add(temp);
-            }
-            else if(temp.improvementT2 > 8.0) {
-                allT5.add(temp);
-            }
-            else if(temp.improvementT2 > 6.0) {
-                allT4.add(temp);
-            }
-            else if(temp.improvementT2 > 4.0) {
-                allT3.add(temp);
-            }
-            else if(temp.improvementT2 > 2.0) {
-                allT2.add(temp);
-            }
-            else if(temp.improvementT2 > 0.0) {
-                allT1.add(temp);
-            }
-            else if(temp.improvementT2 > -20.0) {
-                allT0.add(temp);
+            if(isStandoutTrade(temp.improvementT2)){
+                tiers.get(STANDOUT_TIER).add(temp);
             }
         }
 
         if(toCrop) {
             int cropSize = 300;
-            int t0Max = Math.min(cropSize, allT0.size());
-            int t1Max = Math.min(cropSize, allT1.size());
-            int t2Max = Math.min(cropSize, allT2.size());
-            int t3Max = Math.min(cropSize, allT3.size());
-            int t4Max = Math.min(cropSize, allT4.size());
-            int t5Max = Math.min(cropSize, allT5.size());
-            int t6Max = Math.min(cropSize, allT6.size());
-            int t7Max = Math.min(cropSize, allT7.size());
-            int t8Max = Math.min(cropSize, allT8.size());
-            int t9Max = Math.min(cropSize, allT9.size());
-            int t10Max = Math.min(cropSize, allT10.size());
-
-            allT0 = new ArrayList<TradePreviewSerious>(allT0.subList(0, t0Max));
-            allT1 = new ArrayList<TradePreviewSerious>(allT1.subList(0, t1Max));
-            allT2 = new ArrayList<TradePreviewSerious>(allT2.subList(0, t2Max));
-            allT3 = new ArrayList<TradePreviewSerious>(allT3.subList(0, t3Max));
-            allT4 = new ArrayList<TradePreviewSerious>(allT4.subList(0, t4Max));
-            allT5 = new ArrayList<TradePreviewSerious>(allT5.subList(0, t5Max));
-            allT6 = new ArrayList<TradePreviewSerious>(allT6.subList(0, t6Max));
-            allT7 = new ArrayList<TradePreviewSerious>(allT7.subList(0, t7Max));
-            allT8 = new ArrayList<TradePreviewSerious>(allT8.subList(0, t8Max));
-            allT9 = new ArrayList<TradePreviewSerious>(allT9.subList(0, t9Max));
-            allT10 = new ArrayList<TradePreviewSerious>(allT10.subList(0, t10Max));
+            for(int tier = 0; tier <= STANDOUT_TIER; tier++){
+                List<TradePreviewSerious> bucket = tiers.get(tier);
+                tiers.set(tier, new ArrayList<>(bucket.subList(0, Math.min(cropSize, bucket.size()))));
+            }
         }
 
-
-        ArrayList<String> t10Strings = new ArrayList<>();
-        ArrayList<String> t9Strings = new ArrayList<>();
-        ArrayList<String> t8Strings = new ArrayList<>();
-        ArrayList<String> t7Strings = new ArrayList<>();
-        ArrayList<String> t6Strings = new ArrayList<>();
-        ArrayList<String> t5Strings = new ArrayList<>();
-        ArrayList<String> t4Strings = new ArrayList<>();
-        ArrayList<String> t3Strings = new ArrayList<>();
-        ArrayList<String> t2Strings = new ArrayList<>();
-        ArrayList<String> t1Strings = new ArrayList<>();
-        ArrayList<String> t0Strings = new ArrayList<>();
-
-        for(TradePreviewSerious temp : allT10){
-            String t10TempString = TradePreviewSerious.printTradePreviewString(temp);
-            t10Strings.add(t10TempString);
-        }
-        for(TradePreviewSerious temp : allT9){
-            String t9TempString = TradePreviewSerious.printTradePreviewString(temp);
-            t9Strings.add(t9TempString);
-        }
-        for(TradePreviewSerious temp : allT8){
-            String t8TempString = TradePreviewSerious.printTradePreviewString(temp);
-            t8Strings.add(t8TempString);
-        }
-        for(TradePreviewSerious temp : allT7){
-            String t7TempString = TradePreviewSerious.printTradePreviewString(temp);
-            t7Strings.add(t7TempString);
-        }
-        for(TradePreviewSerious temp : allT6){
-            String t6TempString = TradePreviewSerious.printTradePreviewString(temp);
-            t6Strings.add(t6TempString);
-        }
-        for(TradePreviewSerious temp : allT5){
-            String t5TempString = TradePreviewSerious.printTradePreviewString(temp);
-            t5Strings.add(t5TempString);
-        }
-        for(TradePreviewSerious temp : allT4){
-            String t4TempString = TradePreviewSerious.printTradePreviewString(temp);
-            t4Strings.add(t4TempString);
-        }
-        for(TradePreviewSerious temp : allT3){
-            String t3TempString = TradePreviewSerious.printTradePreviewString(temp);
-            t3Strings.add(t3TempString);
-        }
-        for(TradePreviewSerious temp : allT2){
-            String t2TempString = TradePreviewSerious.printTradePreviewString(temp);
-            t2Strings.add(t2TempString);
-        }
-        for(TradePreviewSerious temp : allT1){
-            String t1TempString = TradePreviewSerious.printTradePreviewString(temp);
-            t1Strings.add(t1TempString);
-        }
-        for(TradePreviewSerious temp : allT0){
-            String t0TempString = TradePreviewSerious.printTradePreviewString(temp);
-            t0Strings.add(t0TempString);
-        }
         String fileStringStart = "twoTeamTrade";
         String fileString = "Xignoring" + givenPlayersToIgnore.size() + "Xreq" + givenPlayersToRequire.size();
 
-
-        FileWriter writer10 = new FileWriter(fileStringStart + "t10" + fileString + ".txt");
-        for(String str: t10Strings) {
-            writer10.write(str + System.lineSeparator());
+        for(int tier = 0; tier <= STANDOUT_TIER; tier++){
+            writeTier(fileStringStart + "t" + tier + fileString + ".txt", tiers.get(tier));
         }
-        writer10.close();
-
-        FileWriter writer9 = new FileWriter(fileStringStart + "t9" + fileString + ".txt");
-        for(String str: t9Strings) {
-            writer9.write(str + System.lineSeparator());
-        }
-        writer9.close();
-
-        FileWriter writer8 = new FileWriter(fileStringStart + "t8" + fileString + ".txt");
-        for(String str: t8Strings) {
-            writer8.write(str + System.lineSeparator());
-        }
-        writer8.close();
-
-        FileWriter writer7 = new FileWriter(fileStringStart + "t7" + fileString + ".txt");
-        for(String str: t7Strings) {
-            writer7.write(str + System.lineSeparator());
-        }
-        writer7.close();
-
-        FileWriter writer6 = new FileWriter(fileStringStart + "t6" + fileString + ".txt");
-        for(String str: t6Strings) {
-            writer6.write(str + System.lineSeparator());
-        }
-        writer6.close();
-
-        FileWriter writer5 = new FileWriter(fileStringStart + "t5" + fileString + ".txt");
-        for(String str: t5Strings) {
-            writer5.write(str + System.lineSeparator());
-        }
-        writer5.close();
-
-        FileWriter writer4 = new FileWriter(fileStringStart + "t4" + fileString + ".txt");
-        for(String str: t4Strings) {
-            writer4.write(str + System.lineSeparator());
-        }
-        writer4.close();
-
-        FileWriter writer3 = new FileWriter(fileStringStart + "t3" + fileString + ".txt");
-        for(String str: t3Strings) {
-            writer3.write(str + System.lineSeparator());
-        }
-        writer3.close();
-
-        FileWriter writer2 = new FileWriter(fileStringStart + "t2" + fileString + ".txt");
-        for(String str: t2Strings) {
-            writer2.write(str + System.lineSeparator());
-        }
-        writer2.close();
-
-        FileWriter writer1 = new FileWriter(fileStringStart + "t1" + fileString + ".txt");
-        for(String str: t1Strings) {
-            writer1.write(str + System.lineSeparator());
-        }
-        writer1.close();
-
-        FileWriter writer0 = new FileWriter(fileStringStart + "t0" + fileString + ".txt");
-        for(String str: t0Strings) {
-            writer0.write(str + System.lineSeparator());
-        }
-        writer0.close();
 
     }
 
@@ -623,7 +487,7 @@ public class TradeFinder {
     }
 
     public static void printRostersByPoints(ArrayList<ScoredRoster> allRosters){
-        ArrayList allTeamOwners = new ArrayList<>();
+        ArrayList<TeamOwner> allTeamOwners = new ArrayList<>();
         for(ScoredRoster fpRost : allRosters){
             TeamOwner teamOwner = TeamOwner.initializeTeamOwnerFromSleeperUserID(fpRost.userID, fpRost.scoreBestROSStartingLineup());
             allTeamOwners.add(teamOwner);
@@ -638,7 +502,7 @@ public class TradeFinder {
 
     private static ArrayList<JsonObject> getTodaysSleeperRosters(AAAConfiguration configuration) {
         String webData = getTodaysSleeperRosterWebPage(configuration);
-        JsonElement jsonElement = new JsonParser().parse(webData);
+        JsonElement jsonElement = JsonParser.parseString(webData);
         JsonArray jsonMembers = jsonElement.getAsJsonArray();
         ArrayList<JsonObject> jsonObjects = new ArrayList<>();
         for(JsonElement sleeperRoster : jsonMembers) {

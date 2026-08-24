@@ -4,7 +4,10 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-/** The "only show me trades involving X" knobs at the top of TradeFinder.main. */
+/**
+ * The "only show me trades involving X" knobs, and the tiers the results get
+ * filed into.
+ */
 class TradeFilterTest {
 
     private static final Player ST_BROWN =
@@ -60,5 +63,31 @@ class TradeFilterTest {
         Assertions.assertTrue(TradeFilter.includesAny(ROSTER, List.of("Josh Allen", "D'Andre Swift")));
         Assertions.assertFalse(TradeFilter.includesAny(ROSTER, List.of("Josh Allen")));
         Assertions.assertFalse(TradeFilter.includesAny(ROSTER, List.of()), "no exclusion excludes nothing");
+    }
+
+    @Test
+    void tradesAreFiledByHowMuchTheyHelpTheOtherSide(){
+        // Pins the thresholds that were an eleven-branch if/else chain.
+        Assertions.assertEquals(-1, TradeFinder.tierFor(-25.0), "too lopsided to write down");
+        Assertions.assertEquals(0, TradeFinder.tierFor(-19.0));
+        Assertions.assertEquals(0, TradeFinder.tierFor(0.0), "exactly zero is not an improvement");
+        Assertions.assertEquals(1, TradeFinder.tierFor(0.5));
+        Assertions.assertEquals(2, TradeFinder.tierFor(3.0));
+        Assertions.assertEquals(3, TradeFinder.tierFor(5.0));
+        Assertions.assertEquals(4, TradeFinder.tierFor(7.0));
+        Assertions.assertEquals(5, TradeFinder.tierFor(9.0));
+        Assertions.assertEquals(6, TradeFinder.tierFor(11.0));
+        Assertions.assertEquals(7, TradeFinder.tierFor(20.0));
+        Assertions.assertEquals(8, TradeFinder.tierFor(36.0));
+        Assertions.assertEquals(9, TradeFinder.tierFor(41.0));
+        Assertions.assertEquals(9, TradeFinder.tierFor(1000.0), "the top tier is open ended");
+    }
+
+    @Test
+    void aStandoutTradeIsGoodForThemWithoutLookingLikeAMistake(){
+        Assertions.assertFalse(TradeFinder.isStandoutTrade(45.0));
+        Assertions.assertTrue(TradeFinder.isStandoutTrade(46.0));
+        Assertions.assertTrue(TradeFinder.isStandoutTrade(199.0));
+        Assertions.assertFalse(TradeFinder.isStandoutTrade(200.0), "that far out of line is a bug, not a trade");
     }
 }
