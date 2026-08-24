@@ -37,9 +37,7 @@ public class SleeperDraftInfo {
     }
 
     public static SleeperDraftInfo parseWebsite(String websiteData){
-
-        JsonParser jp = new JsonParser();
-        JsonElement jsonElementSDI= jp.parse(websiteData);
+        JsonElement jsonElementSDI= JsonParser.parseString(websiteData);
         JsonObject jsonObjectSDI = jsonElementSDI.getAsJsonObject();
 
         JsonObject draftOrder = jsonObjectSDI.getAsJsonObject("draft_order");

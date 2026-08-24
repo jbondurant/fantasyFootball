@@ -1,3 +1,4 @@
+import PlayerImportAndSetup.Position;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -19,8 +20,7 @@ public class SleeperLiveDraft {
     //IT MUST UPDATE EVERY CALL, NOT ONCE PER DAY
     public static LiveDraftInfo getLiveDraftInfo(String webURL, boolean isFun){
         String webData = WebUrlUtility.getLiveWebPage(webURL);
-        JsonParser jp = new JsonParser();
-        JsonElement jsonElement = jp.parse(webData);
+        JsonElement jsonElement = JsonParser.parseString(webData);
         JsonArray jsonPlayers = jsonElement.getAsJsonArray();
 
         ArrayList<Player> draftedPlayers = new ArrayList<Player>();
@@ -64,7 +64,7 @@ public class SleeperLiveDraft {
             numTeams = 12;
         }
         ArrayList<Keeper> keepers = aaaConfiguration.getTodaysKeepers();
-        ArrayList positionsWanted = HumanStrategy.nonPermutedPositions(1,4,4,1);
+        ArrayList<Position> positionsWanted = HumanStrategy.nonPermutedPositions(1,4,4,1);
 
         LiveDraftInfo ldifb = getDraftedPlayersMock(draftID, isFun);
         int numDraftedPlayers = ldifb.draftedPlayers.size();

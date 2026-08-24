@@ -70,3 +70,7 @@ tasks.register('run', JavaExec) {
     workingDir = project.projectDir
     standardInput = System.in
 }
+
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs << '-Xlint:unchecked' << '-Xlint:deprecation'
+}

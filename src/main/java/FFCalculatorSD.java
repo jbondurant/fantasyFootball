@@ -44,9 +44,7 @@ public class FFCalculatorSD {
 
     private static ArrayList<StandardDevPlayer> parsePage(String webData){
         ArrayList<StandardDevPlayer> allPlayerSD = new ArrayList<StandardDevPlayer>();
-
-        JsonParser jp = new JsonParser();
-        JsonElement jsonElement = jp.parse(webData);
+        JsonElement jsonElement = JsonParser.parseString(webData);
         JsonObject allData = jsonElement.getAsJsonObject();
 
         JsonElement jsonPlayersElement = allData.get("players");
@@ -76,9 +74,7 @@ public class FFCalculatorSD {
 
     private static HashMap<String, Double> parsePageMap(String webData){
         HashMap<String, Double> allPlayerSDMap = new HashMap<String, Double>();
-
-        JsonParser jp = new JsonParser();
-        JsonElement jsonElement = jp.parse(webData);
+        JsonElement jsonElement = JsonParser.parseString(webData);
         JsonObject allData = jsonElement.getAsJsonObject();
 
         JsonElement jsonPlayersElement = allData.get("players");
