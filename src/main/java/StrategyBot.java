@@ -23,25 +23,41 @@ public class StrategyBot extends Strategy{
     @Override
     public Player selectPlayer() {
         Rank rank = deviatedRanking.poll();
-        return rank.player;
+        return rank == null ? null : rank.player;
     }
 
-    //slow
+    /**
+     * Takes a player off this bot's board.
+     *
+     * Matched on sportRadarID, which is null for a good few players - every
+     * defense among them - and those were skipped outright, so a drafted player
+     * stayed on the board and could be drafted again by the same bot later in
+     * the simulation. Matched on the sleeper id now.
+     */
     @Override
     public void removeDraftedPlayer(Player p){
+        if(p == null){
+            return;
+        }
         Rank rankToRemove = null;
         for(Rank rank : deviatedRanking){
-
-            //messes up with only the jacksonville jaguars
-            if(rank.player.sportRadarID == null){
-               int y=1;
-                continue;
-            }
-            if(rank.player.sportRadarID.equals(p.sportRadarID)){
+            if(rank.player != null && samePlayer(rank.player, p)){
                 rankToRemove = rank;
                 break;
             }
         }
-        deviatedRanking.remove(rankToRemove);
+        if(rankToRemove != null){
+            deviatedRanking.remove(rankToRemove);
+        }
+    }
+
+    private static boolean samePlayer(Player a, Player b){
+        if(a == b){
+            return true;
+        }
+        if(a.sleeperIDString != null && !a.sleeperIDString.isEmpty()){
+            return a.sleeperIDString.equals(b.sleeperIDString);
+        }
+        return a.sportRadarID != null && a.sportRadarID.equals(b.sportRadarID);
     }
 }

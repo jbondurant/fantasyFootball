@@ -125,6 +125,36 @@ class DraftStrategyTest {
     }
 
     @Test
+    void aDraftedPlayerLeavesTheBotsBoardEvenWithoutASportRadarId(){
+        // Regression: removeDraftedPlayer matched on sportRadarID and skipped
+        // players whose id was null - every defense among them - so a bot could
+        // draft the same player twice in one simulated draft.
+        Player defense = new Player("Chicago", "Bears", "CHI", Position.DEF, -1, -1, null, -1, "CHI");
+        ArrayList<DecimalRank> withDefense = decimalBoard();
+        withDefense.add(new DecimalRank(0.5, defense));
+
+        StrategyBot bot = new StrategyBot(
+                DecimalRank.makeDeviatedRanking(withDefense, noVariance(), 0));
+        bot.removeDraftedPlayer(defense);
+
+        List<String> taken = new ArrayList<>();
+        for(int pick = 0; pick < withDefense.size() - 1; pick++){
+            taken.add(bot.selectPlayer().lastName);
+        }
+        Assertions.assertFalse(taken.contains("Bears"), "a drafted defense stayed on the board: " + taken);
+    }
+
+    @Test
+    void aBotWhoseBoardRanDryReturnsNullRatherThanThrowing(){
+        StrategyBot bot = new StrategyBot(
+                DecimalRank.makeDeviatedRanking(decimalBoard(), noVariance(), 0));
+        for(int pick = 0; pick < board().size(); pick++){
+            bot.selectPlayer();
+        }
+        Assertions.assertNull(bot.selectPlayer());
+    }
+
+    @Test
     void everyPlayerSurvivesTheDeviation(){
         // Losing players here would quietly shrink the pool every simulated draft.
         PriorityQueue<Rank> deviated = DecimalRank.makeDeviatedRanking(decimalBoard(), noVariance(), 0);
