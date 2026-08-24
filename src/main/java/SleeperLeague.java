@@ -53,8 +53,7 @@ public class SleeperLeague{
     }
 
     public static SleeperLeague parseWebsite(String websiteData, SleeperDraftInfo sdi){
-        JsonParser jp = new JsonParser();
-        JsonElement jsonElementLeague = jp.parse(websiteData);
+        JsonElement jsonElementLeague = JsonParser.parseString(websiteData);
         JsonObject jsonObjectLeague = jsonElementLeague.getAsJsonObject();
         JsonObject scoringParameters = jsonObjectLeague.getAsJsonObject("scoring_settings");
         LeagueScoringSettings leagueScoringSettings =

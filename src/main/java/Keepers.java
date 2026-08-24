@@ -80,8 +80,7 @@ public class Keepers {
 
     public static HashMap<String, Roster> getHumansAndTheirRosters(String hardcodedDraftID, AAAConfiguration aaaConfiguration){
         String websiteData = aaaConfiguration.getTodaysRosterWebPageSerious();
-        JsonParser jp = new JsonParser();
-        JsonElement jsonElementDraft = jp.parse(websiteData);
+        JsonElement jsonElementDraft = JsonParser.parseString(websiteData);
         JsonArray jsonArrayRosters = jsonElementDraft.getAsJsonArray();
         HashMap<String, Roster> allRosters = new HashMap<>();
         for (JsonElement jsonDraftPick : jsonArrayRosters) {
@@ -114,8 +113,7 @@ public class Keepers {
         else{
             websiteData = getDraftPicksTodaysWebPageSerious(draftID);
         }
-        JsonParser jp = new JsonParser();
-        JsonElement jsonElementDraft = jp.parse(websiteData);
+        JsonElement jsonElementDraft = JsonParser.parseString(websiteData);
         JsonArray jsonArrayDraft = jsonElementDraft.getAsJsonArray();
         HashMap<Player, Integer> allDraftedPlayersAndRound = new HashMap<>();
         for (JsonElement jsonDraftPick : jsonArrayDraft) {
@@ -134,8 +132,7 @@ public class Keepers {
     }
 
     public static String getLatestDraftID(String websiteData) {
-        JsonParser jp = new JsonParser();
-        JsonElement jsonElementDraft = jp.parse(websiteData);
+        JsonElement jsonElementDraft = JsonParser.parseString(websiteData);
         JsonArray jsonArrayDraft = jsonElementDraft.getAsJsonArray();
         int arrayLastIndex = jsonArrayDraft.size() - 1;
         JsonObject jsonObjectDraft = jsonArrayDraft.get(arrayLastIndex).getAsJsonObject();

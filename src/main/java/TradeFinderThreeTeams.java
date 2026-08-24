@@ -46,9 +46,7 @@ public class TradeFinderThreeTeams {
         ArrayList<ScoredRoster> allRostersSerious = new ArrayList<>();
 
         String webData = aaaConfiguration.getTodaysRosterWebPageSerious();
-
-        JsonParser jp = new JsonParser();
-        JsonElement jsonElement = jp.parse(webData);
+        JsonElement jsonElement = JsonParser.parseString(webData);
         JsonArray jsonMembers = jsonElement.getAsJsonArray();
 
         for (JsonElement jsonMember : jsonMembers) {
@@ -461,9 +459,6 @@ public class TradeFinderThreeTeams {
             tradeFinder3TRunner(teamN, lastTeamStart, lastTeamEnd, tradedPlayerLastName, minMine, minTheirs, ignoreJake, projectionSource, aaaConfiguration);
 
         }
-
-        int a = 1;
-
     }
 
     public static boolean isTradeSuperSelfish(TradePreviewSerious3T tps){

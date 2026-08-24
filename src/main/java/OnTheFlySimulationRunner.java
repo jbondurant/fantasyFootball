@@ -429,7 +429,6 @@ public class OnTheFlySimulationRunner {
     public static List<List<Position>> getAllDraftStartPositions(List<Position> positionsToDraft, int minMaxStartSize){
         List<List<Position>> permutations = new ArrayList<>();
         generatePermutationsRecursive(positionsToDraft, minMaxStartSize, new ArrayList<>(), permutations);
-        int k=1;
         return permutations;
     }
 
@@ -521,9 +520,6 @@ public class OnTheFlySimulationRunner {
             }
 
             for(Position position : positionsToDraft) {
-                if(position.equals(Position.RB)){
-                    int k = 1;
-                }
                 double draftScoreForPosition = 0.0;
                 ArrayList<ArrayList<Position>> starterPositionsStartingWithPosition = getStarterPositionsStartingWithPosition(allDraftStartPositions, position);
                 for (ArrayList<Position> starterPositions : starterPositionsStartingWithPosition) {

@@ -159,10 +159,6 @@ public class Player {
         return player;
     }
 
-    public static Player getPlayerFromFPid(String fpID){
-        return null;
-    }
-
     public static Player getPlayerFromSID(int sleeper_ID){
         ensureIndexed();
         Player player = playerMapSleeperOffense.get(sleeper_ID);
@@ -178,11 +174,7 @@ public class Player {
             return x;
         }
         else{
-            Player x =  getPlayerDefense(sleeperID);
-            if(x == null){
-                int k=1;
-            }
-            return x;
+            return getPlayerDefense(sleeperID);
         }
     }
 
