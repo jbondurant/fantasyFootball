@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.PriorityQueue;
 
 public class TradeFinder {
@@ -282,110 +283,21 @@ public class TradeFinder {
                 continue;
             }
 
-            boolean allRequiredPlayersFound = true;
-            for(String name : givenPlayersToRequire) {
-                boolean requiredPlayerFound = false;
-                String givenFirstName = name.split(" ")[0];
-                String givenLastName = name.split(" ")[1];
-                if(temp.t2p1Score.player.firstName.equals(givenFirstName) && temp.t2p1Score.player.lastName.equals(givenLastName)){
-                    requiredPlayerFound = true;
-                }
-                if(temp.t2p2Score != null){
-                    if(temp.t2p2Score.player.firstName.equals(givenFirstName) && temp.t2p2Score.player.lastName.equals(givenLastName)){
-                        requiredPlayerFound = true;
-                    }
-                }
-                if(temp.t2p3Score != null) {
-                    if (temp.t2p3Score.player.firstName.equals(givenFirstName) && temp.t2p3Score.player.lastName.equals(givenLastName)) {
-                        requiredPlayerFound = true;
-                    }
-                }
-                if(!requiredPlayerFound){
-                    allRequiredPlayersFound = false;
-                    break;
-                }
-            }
-            if(!allRequiredPlayersFound){
+            List<Player> given = TradeFilter.playersGiven(temp);
+            List<Player> received = TradeFilter.playersReceived(temp);
+
+            if(!TradeFilter.includesAll(received, givenPlayersToRequire)){
                 continue;
             }
-
-
-            boolean allRequiredGivenPlayersFound = true;
-            for(String name : playersToGive) {
-                boolean requiredGivenPlayerFound = false;
-                String givenFirstName = name.split(" ")[0];
-                String givenLastName = name.split(" ")[1];
-                if(temp.t1p1Score.player.firstName.equals(givenFirstName) && temp.t1p1Score.player.lastName.equals(givenLastName)){
-                    requiredGivenPlayerFound = true;
-                }
-                if(temp.t1p2Score != null){
-                    if(temp.t1p2Score.player.firstName.equals(givenFirstName) && temp.t1p2Score.player.lastName.equals(givenLastName)){
-                        requiredGivenPlayerFound = true;
-                    }
-                }
-                if(temp.t1p3Score != null) {
-                    if (temp.t1p3Score.player.firstName.equals(givenFirstName) && temp.t1p3Score.player.lastName.equals(givenLastName)) {
-                        requiredGivenPlayerFound = true;
-                    }
-                }
-                if(!requiredGivenPlayerFound){
-                    allRequiredGivenPlayersFound = false;
-                    break;
-                }
-            }
-            if(!allRequiredGivenPlayersFound){
+            if(!TradeFilter.includesAll(given, playersToGive)){
                 continue;
             }
-
-
-
-            boolean playerToignoreFound = false;
-            for(String name : givenPlayersToIgnore) {
-                String givenFirstName = name.split(" ")[0];
-                String givenLastName = name.split(" ")[1];
-                if(temp.t2p1Score.player.firstName.equals(givenFirstName) && temp.t2p1Score.player.lastName.equals(givenLastName)){
-                    playerToignoreFound = true;
-                }
-                if(temp.t2p2Score != null){
-                    if(temp.t2p2Score.player.firstName.equals(givenFirstName) && temp.t2p2Score.player.lastName.equals(givenLastName)){
-                        playerToignoreFound = true;
-                    }
-                }
-                if(temp.t2p3Score != null) {
-                    if (temp.t2p3Score.player.firstName.equals(givenFirstName) && temp.t2p3Score.player.lastName.equals(givenLastName)) {
-                        playerToignoreFound = true;
-                    }
-                }
-            }
-            if(playerToignoreFound){
+            if(TradeFilter.includesAny(received, new ArrayList<>(givenPlayersToIgnore))){
                 continue;
             }
-
-
-
-            boolean playerNotToGiveFound = false;
-            for(String name : playersNotToGive) {
-                String givenFirstName = name.split(" ")[0];
-                String givenLastName = name.split(" ")[1];
-                if(temp.t1p1Score.player.firstName.equals(givenFirstName) && temp.t1p1Score.player.lastName.equals(givenLastName)){
-                    playerNotToGiveFound = true;
-                }
-                if(temp.t1p2Score != null){
-                    if(temp.t1p2Score.player.firstName.equals(givenFirstName) && temp.t1p2Score.player.lastName.equals(givenLastName)){
-                        playerNotToGiveFound = true;
-                    }
-                }
-                if(temp.t1p3Score != null) {
-                    if (temp.t1p3Score.player.firstName.equals(givenFirstName) && temp.t1p3Score.player.lastName.equals(givenLastName)) {
-                        playerNotToGiveFound = true;
-                    }
-                }
-            }
-            if(playerNotToGiveFound){
+            if(TradeFilter.includesAny(given, playersNotToGive)){
                 continue;
             }
-
-
 
             if(temp.improvementT2 > 45.0 && temp.improvementT2 < 200.0) {
                 allT10.add(temp);
