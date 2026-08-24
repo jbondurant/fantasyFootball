@@ -21,7 +21,7 @@ public class Player {
     public String sportRadarID;
     public int fantasyProsID;
 
-    public static ArrayList<Player> draftablePlayers = new ArrayList<Player>();
+    private static ArrayList<Player> draftablePlayers = new ArrayList<Player>();
     private static HashMap<String, Player> playersFromSRID = new HashMap<>();
     private static HashMap<Integer, Player> playerMapSleeperOffense = new HashMap<Integer, Player>();
     private static HashMap<String, Player> playerMapInfo = new HashMap<String, Player>();
@@ -52,11 +52,58 @@ public class Player {
 
     private static final Set<String> NAME_SUFFIXES = Set.of("jr", "sr", "ii", "iii", "iv", "v");
 
-    static{
+    private static boolean indexed = false;
+
+    /**
+     * Building the indexes needs the Sleeper player list, i.e. the network.
+     * It used to happen in a static initialiser, which meant merely mentioning
+     * this class - constructing a Player, reading a constant - pulled 14MB down
+     * before anything else could run, and made the scoring and roster logic
+     * impossible to test offline. Lookups now index on first use; construction
+     * and the pure name-matching helpers need nothing.
+     */
+    private static synchronized void ensureIndexed(){
+        if(indexed){
+            return;
+        }
+        indexed = true;
         initializePlayers();
         initializePlayersForNameSearch();
         initializePlayerDefenseMap();
         initializeFantasyProsNameIndex();
+    }
+
+    /** Every player Sleeper knows about. */
+    public static ArrayList<Player> getDraftablePlayers(){
+        ensureIndexed();
+        return draftablePlayers;
+    }
+
+    /**
+     * Seam for tests: index a handmade player list instead of Sleeper's, so the
+     * lookup logic can be exercised without the network.
+     */
+    static synchronized void indexForTest(ArrayList<Player> players){
+        allPlayersCache = players;
+        indexed = false;
+        ensureIndexed();
+    }
+
+    /** Drops anything indexForTest set up. */
+    static synchronized void resetIndexForTest(){
+        allPlayersCache = null;
+        indexed = false;
+        playersFromSRID = new HashMap<>();
+        playerMapSleeperOffense = new HashMap<>();
+        playerMapInfo = new HashMap<>();
+        playerMapFullNameInfo = new HashMap<>();
+        playerDefenseMap = new HashMap<>();
+        playersByNameTeamPosition = new HashMap<>();
+        playersByNamePosition = new HashMap<>();
+        playersByNameTeam = new HashMap<>();
+        ambiguousNamePositions = new HashSet<>();
+        ambiguousNameTeams = new HashSet<>();
+        draftablePlayers = new ArrayList<>();
     }
 
     /**
@@ -107,6 +154,7 @@ public class Player {
     }
 
     public static Player getPlayer(String sportRadar_ID){
+        ensureIndexed();
         Player player = playersFromSRID.get(sportRadar_ID);
         return player;
     }
@@ -116,6 +164,7 @@ public class Player {
     }
 
     public static Player getPlayerFromSID(int sleeper_ID){
+        ensureIndexed();
         Player player = playerMapSleeperOffense.get(sleeper_ID);
         return player;
     }
@@ -138,6 +187,7 @@ public class Player {
     }
 
     public static Player getPlayerFromNameAndPos(String allName, Position position){
+        ensureIndexed();
         allName = allName.replace(".", "").toLowerCase();
         if(allName.endsWith(" ii") || allName.endsWith(" iii") || allName.endsWith(" v") || allName.endsWith(" jr") || allName.endsWith(" sr")){
             allName = allName.substring(0, allName.lastIndexOf(" "));
@@ -157,6 +207,7 @@ public class Player {
     }
 
     public static Player getPlayerFromInfo(String lastName, String firstName, String pos, String team){
+        ensureIndexed();
         String info = lastName + pos + team;
         info = info.toLowerCase();
         Player p = playerMapInfo.get(info);
@@ -169,6 +220,7 @@ public class Player {
     }
 
     public static Player getPlayerDefense(String team){
+        ensureIndexed();
         return playerDefenseMap.get(team);
     }
 
@@ -242,6 +294,7 @@ public class Player {
         if(fullName == null || position == null){
             return null;
         }
+        ensureIndexed();
         if(position.equals(Position.DEF)){
             return getPlayerDefense(normalizeTeam(team));
         }

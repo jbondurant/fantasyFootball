@@ -68,7 +68,7 @@ public class SleeperLiveDraft {
 
         LiveDraftInfo ldifb = getDraftedPlayersMock(draftID, isFun);
         int numDraftedPlayers = ldifb.draftedPlayers.size();
-        int currentRound = (numDraftedPlayers / numTeams) + 1;
+        int currentRound = DraftProgress.currentRound(numDraftedPlayers, numTeams);
         LiveDraftInfo.LiveDraftPotentialMoveAnalyzer(ldifb.bestAvailablePlayers);
         System.out.println("---------------");
 

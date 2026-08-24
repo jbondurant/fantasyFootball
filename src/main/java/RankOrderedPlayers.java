@@ -75,15 +75,10 @@ public class RankOrderedPlayers {
 
     }
 
+    /** Players ranked by their projected points under this league's scoring. */
     public static RankOrderedPlayers getRankOrderedPlayerFPSerious(){
-        SleeperLeague seriousL = SleeperLeague.getSeriousLeague();
-        LeagueScoringSettings seriousSettings = seriousL.league.leagueScoringSettings;
-        FantasyProsScore seriousScores = new FantasyProsScore(seriousSettings);
-        ArrayList<Score> seriousScoresList = seriousScores.fantasyProsScoreLeagueAdjusted;
-        ScoreOrderedPlayers sop = new ScoreOrderedPlayers(seriousScoresList);
-
-        RankOrderedPlayers rop = RankOrderedPlayers.scoreToRankOrderedPlayers(sop);
-        return rop;
+        ScoreOrderedPlayers sop = new ScoreOrderedPlayers(SleeperLeague.getScoreList());
+        return RankOrderedPlayers.scoreToRankOrderedPlayers(sop);
     }
 
     public boolean removePlayer(Player player){

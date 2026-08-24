@@ -3,6 +3,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 /**
@@ -73,6 +74,34 @@ public class SleeperProjections {
         return playerSIDToScore;
     }
 
+    /**
+     * The same projections as a list of scored players.
+     *
+     * The draft simulator used to reach these through a second, parallel
+     * implementation - Sleeper stats were unpacked into QBProjection /
+     * FlexProjection / DEFProjection and rescored by FantasyProsScore. Both
+     * arrived at the same number from the same input, so the two drifted the
+     * moment a scoring category was added to one and not the other, which is
+     * exactly what happened with two point conversions.
+     */
+    public static ArrayList<Score> getScoreList(LeagueScoringSettings scoringSettings) {
+        ArrayList<Score> scores = new ArrayList<>();
+
+        for (JsonElement jsonPlayer : getTodaysProjections()) {
+            JsonObject playerObject = jsonPlayer.getAsJsonObject();
+            JsonObject stats = playerObject.getAsJsonObject("stats");
+            if(stats == null){
+                continue;
+            }
+            Player player = Player.getPlayerFromSIDV2(playerObject.get("player_id").getAsString());
+            if(player == null){
+                continue;
+            }
+            scores.add(new Score(scoreStatLine(stats, scoringSettings), player));
+        }
+        return scores;
+    }
+
     /** Points for one projected stat line under the given league settings. */
     public static double scoreStatLine(JsonObject stats, LeagueScoringSettings lss){
         double passing = optionalStat(stats, "pass_yd") * lss.passYard
@@ -83,15 +112,34 @@ public class SleeperProjections {
         double receiving = optionalStat(stats, "rec") * lss.reception
                 + optionalStat(stats, "rec_yd") * lss.receivingYard
                 + optionalStat(stats, "rec_td") * lss.receivingTD;
+        double twoPointConversions = optionalStat(stats, "pass_2pt") * lss.passTwoPoint
+                + optionalStat(stats, "rush_2pt") * lss.rushTwoPoint
+                + optionalStat(stats, "rec_2pt") * lss.receivingTwoPoint;
         double turnovers = optionalStat(stats, "fum_lost") * lss.fumbleLost;
 
-        double total = passing + rushing + receiving + turnovers;
-
-        // Defenses have no offensive stat line to score; take Sleeper's number.
-        if(total == 0.0){
+        // Defenses have no offensive stat line to score, so they keep Sleeper's
+        // number. Decided on which categories are present rather than on the
+        // total coming out at zero, so that a genuine zero - a benched running
+        // back projected for nothing - is not mistaken for a defense.
+        if(!hasOffensiveStats(stats)){
             return optionalStat(stats, "pts_half_ppr");
         }
-        return total;
+
+        return passing + rushing + receiving + twoPointConversions + turnovers;
+    }
+
+    private static final String[] OFFENSIVE_STATS =
+            {"pass_yd", "pass_td", "pass_int", "rush_yd", "rush_td", "rec", "rec_yd", "rec_td",
+             "pass_2pt", "rush_2pt", "rec_2pt"};
+
+    static boolean hasOffensiveStats(JsonObject stats){
+        for(String key : OFFENSIVE_STATS){
+            JsonElement element = stats.get(key);
+            if(element != null && !element.isJsonNull()){
+                return true;
+            }
+        }
+        return false;
     }
 
     public static void main(String[] args){

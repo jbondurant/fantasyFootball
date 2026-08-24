@@ -17,13 +17,7 @@ public class FantasyProsReports {
     }
 
     public static void initializeReportVariables() {
-        SleeperLeague tempSerious = SleeperLeague.getSeriousLeague();
-
-        FantasyProsScore seriousLSS = new FantasyProsScore(tempSerious.league.leagueScoringSettings);
-
-        ArrayList<Score> seriousPlayersUnranked = seriousLSS.fantasyProsScoreLeagueAdjusted;
-
-        seriousPlayers = new ScoreOrderedPlayers(seriousPlayersUnranked);
+        seriousPlayers = new ScoreOrderedPlayers(SleeperLeague.getScoreList());
 
         ArrayList<Rank> rankingFPECR = FantasyProsADP.getRankingFPECR();
         ArrayList<Score> scoringFPECR = Score.rankingToScoring(rankingFPECR);

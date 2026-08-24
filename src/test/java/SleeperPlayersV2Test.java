@@ -2,6 +2,7 @@ import PlayerImportAndSetup.SleeperPlayerV2;
 import PlayerImportAndSetup.SleeperPlayersV2;
 import PlayerImportAndSetup.TeamName;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashSet;
@@ -9,6 +10,7 @@ import java.util.HashSet;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@Tag("smoke")
 class SleeperPlayersV2Test {
 
     @Test

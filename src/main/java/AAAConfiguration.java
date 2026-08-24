@@ -193,86 +193,13 @@ public class AAAConfiguration {
     }
 
     /**
-     * Sleeper hands keepers back as player id strings ("9226", and "CHI" for a
-     * defense), so they stay strings all the way through.
-     */
-    public HashSet<String> getTodaysKeeperPlayerIDs(){
-        HashSet<String> playerIDs = new HashSet<>();
-        ArrayList<JsonElement> rosters = getTodaysRoster();
-        for(JsonElement unparsedRoster : rosters){
-            JsonObject apiObject = unparsedRoster.getAsJsonObject();
-            JsonElement keepersElement = apiObject.get("keepers");
-            if(keepersElement == null || keepersElement.isJsonNull()){
-               continue;
-            }
-            for (JsonElement jsonElement : keepersElement.getAsJsonArray()){
-                playerIDs.add(jsonElement.getAsString());
-            }
-        }
-        return playerIDs;
-    }
-
-    /**
      * The keepers everyone has declared, priced at the round they were drafted
-     * in last season.
+     * in last season. Empty until somebody declares one.
      */
     public ArrayList<Keeper> getTodaysKeepers(){
-        ArrayList<Keeper> keepers = new ArrayList<>();
-
-        HashSet<String> keeperPlayerIDs = getTodaysKeeperPlayerIDs();
-        if(keeperPlayerIDs.isEmpty()){
-            return keepers;
-        }
-
-        String draftData = getPreviousSeasonDraftPicks();
-        JsonArray unparsedPicks = JsonParser.parseString(draftData).getAsJsonArray();
-        HashSet<String> pricedFromDraft = new HashSet<>();
-        for (JsonElement jsonPick : unparsedPicks) {
-            JsonObject pick = jsonPick.getAsJsonObject();
-            String playerID = optionalString(pick, "player_id");
-            if(playerID == null || !keeperPlayerIDs.contains(playerID)){
-                continue;
-            }
-            int playerRound = pick.get("round").getAsInt();
-            Player player = Player.getPlayerFromSIDV2(playerID);
-            if(player == null){
-                continue;
-            }
-            pricedFromDraft.add(playerID);
-            keepers.add(new Keeper(currentOwnerOf(playerID), player, playerRound));
-        }
-
-        // A keeper picked up off waivers never appears in last season's draft;
-        // those cost a last-round pick.
-        int undraftedRound = Keeper.UNDRAFTED_ROUND_COST;
-        for(String playerID : keeperPlayerIDs){
-            if(pricedFromDraft.contains(playerID)){
-                continue;
-            }
-            Player player = Player.getPlayerFromSIDV2(playerID);
-            if(player == null){
-                continue;
-            }
-            keepers.add(new Keeper(currentOwnerOf(playerID), player, undraftedRound));
-        }
-        return keepers;
-    }
-
-    /** Who holds this player right now, which is who gets to keep them. */
-    private String currentOwnerOf(String playerID){
-        for(JsonElement unparsedRoster : getTodaysRoster()){
-            JsonObject roster = unparsedRoster.getAsJsonObject();
-            JsonElement players = roster.get("players");
-            if(players == null || players.isJsonNull()){
-                continue;
-            }
-            for(JsonElement rosteredPlayer : players.getAsJsonArray()){
-                if(rosteredPlayer.getAsString().equals(playerID)){
-                    return optionalString(roster, "owner_id");
-                }
-            }
-        }
-        return null;
+        JsonArray rosters = JsonParser.parseString(getTodaysRosterWebPageSerious()).getAsJsonArray();
+        JsonArray previousPicks = JsonParser.parseString(getPreviousSeasonDraftPicks()).getAsJsonArray();
+        return KeeperPricing.priceKeepers(rosters, previousPicks, Player::getPlayerFromSIDV2);
     }
 
     public String getDraftFromLeagueIfOnlyOneDraft(){
