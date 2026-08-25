@@ -60,6 +60,19 @@ public class DraftBacktest {
         }
 
         AvailabilityModel model(ManagerProfiles profiles, double sd, double valueWeight){
+            Map<String, Double>[] pools = pools();
+            return AvailabilityModel.build(pools[0], profiles.leagueBiasMap(), pools[1], sd, valueWeight)
+                    .withOccupiedPicks(keeperPickNumbers);
+        }
+
+        AvailabilityModel learnedModel(PickDisplacement displacement){
+            Map<String, Double>[] pools = pools();
+            return AvailabilityModel.buildLearned(pools[0], pools[1], displacement)
+                    .withOccupiedPicks(keeperPickNumbers);
+        }
+
+        @SuppressWarnings("unchecked")
+        private Map<String, Double>[] pools(){
             Map<String, Double> pool = new HashMap<>();
             Map<String, Double> poolAdp = new HashMap<>();
             for(Map.Entry<String, Double> entry : rawPoints.entrySet()){
@@ -71,8 +84,7 @@ public class DraftBacktest {
                     }
                 }
             }
-            return AvailabilityModel.build(pool, profiles.leagueBiasMap(), poolAdp, sd, valueWeight)
-                    .withOccupiedPicks(keeperPickNumbers);
+            return new Map[]{pool, poolAdp};
         }
     }
 
@@ -80,7 +92,12 @@ public class DraftBacktest {
     public static double calibrationError(AAAConfiguration configuration, Season season,
                                           ManagerProfiles profiles, double sd, double valueWeight,
                                           int trials, double[][] bucketReportOut){
-        AvailabilityModel model = season.model(profiles, sd, valueWeight);
+        return calibrationErrorFor(season.model(profiles, sd, valueWeight), season, trials, bucketReportOut);
+    }
+
+    /** The same measurement for any availability model - Gaussian or learned. */
+    public static double calibrationErrorFor(AvailabilityModel model, Season season,
+                                             int trials, double[][] bucketReportOut){
 
         int[] checkpoints = new int[15];
         for(int c = 0; c < 15; c++){
@@ -248,6 +265,28 @@ public class DraftBacktest {
         System.out.printf("   (shipped defaults SD=%.0f VW=%.2f would score %.1f%%)%n",
                 AvailabilityModel.PICK_STANDARD_DEVIATION, AvailabilityModel.VALUE_WEIGHT,
                 defaultsError * 100);
+
+        // ---- Gaussian vs learned displacement, same gate ----
+        PickDisplacement displacement = PickDisplacement.fitThroughSeason(configuration, 2024);
+        double[][] learnedBuckets = new double[10][3];
+        double learnedError = calibrationErrorFor(testSeason.learnedModel(displacement),
+                testSeason, TRIALS, learnedBuckets);
+        System.out.println("\nLearned displacement (fit 2021-2024) on 2025:\n");
+        System.out.printf("   %-12s %10s %10s %8s%n", "PREDICTED", "OBSERVED", "GAP", "N");
+        for(int b = 0; b < 10; b++){
+            if(learnedBuckets[b][2] < 20){
+                continue;
+            }
+            double predicted = learnedBuckets[b][0] / learnedBuckets[b][2];
+            double observed = learnedBuckets[b][1] / learnedBuckets[b][2];
+            System.out.printf("   %3d-%3d%%     %8.1f%% %+9.1f%% %8.0f%n",
+                    b * 10, b * 10 + 10, observed * 100, (observed - predicted) * 100, learnedBuckets[b][2]);
+        }
+        System.out.printf("%n   learned %.1f%% vs gaussian %.1f%% weighted error%n",
+                learnedError * 100, defaultsError * 100);
+        System.out.println(learnedError < defaultsError
+                ? "   -> the learned displacement wins the gate"
+                : "   -> the gaussian keeps the gate; the learned model does not ship");
     }
 
 }

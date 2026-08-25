@@ -30,6 +30,8 @@ public class AvailabilityModel {
 
     private final double pickStandardDeviation;
     private final double valueWeight;
+    /** Null means Gaussian; set means bootstrap the learned residuals. */
+    private PickDisplacement learnedDisplacement;
     private final List<String> ids = new ArrayList<>();
     private final Map<String, Integer> indexOf = new HashMap<>();
     private final Map<String, Double> expectedPick = new HashMap<>();
@@ -50,6 +52,28 @@ public class AvailabilityModel {
             adp.put(sleeperID, SleeperProjections.adpOf(sleeperID));
         }
         return build(projectedPoints, leagueBias, adp, PICK_STANDARD_DEVIATION, VALUE_WEIGHT);
+    }
+
+    /**
+     * Build on the learned displacement: players located at their rank in the
+     * keeper-thinned pool, deviations bootstrapped from the league's own
+     * history rather than drawn from a Gaussian.
+     */
+    public static AvailabilityModel buildLearned(Map<String, Double> projectedPoints,
+                                                 Map<String, Double> adpBySleeperID,
+                                                 PickDisplacement displacement){
+        AvailabilityModel model = build(projectedPoints, Map.of(), adpBySleeperID, 0.0, 0.0);
+        // Relocate everyone to par rank in selection space.
+        List<Map.Entry<String, Double>> byAdp = new ArrayList<>();
+        for(String sleeperID : model.ids){
+            byAdp.add(Map.entry(sleeperID, adpBySleeperID.get(sleeperID)));
+        }
+        byAdp.sort(Map.Entry.comparingByValue());
+        for(int rank = 0; rank < byAdp.size(); rank++){
+            model.expectedPick.put(byAdp.get(rank).getKey(), (double) (rank + 1));
+        }
+        model.learnedDisplacement = displacement;
+        return model;
     }
 
     /** Fully explicit build, for the backtest and the tuning grid. */
@@ -113,7 +137,13 @@ public class AvailabilityModel {
         double[] landing = new double[n];
         Integer[] order = new Integer[n];
         for(int i = 0; i < n; i++){
-            landing[i] = expectedPick.get(ids.get(i)) + random.nextGaussian() * pickStandardDeviation;
+            String sleeperID = ids.get(i);
+            double location = expectedPick.get(sleeperID);
+            double deviation = learnedDisplacement == null
+                    ? random.nextGaussian() * pickStandardDeviation
+                    : learnedDisplacement.sample(random, (int) Math.round(location),
+                            positions.get(sleeperID));
+            landing[i] = location + deviation;
             order[i] = i;
         }
         java.util.Arrays.sort(order, (a, b) -> Double.compare(landing[a], landing[b]));

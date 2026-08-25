@@ -30,7 +30,7 @@ Scope decisions (Justin's, deliberate):
 |---|-----------|--------|----------|
 | A | `ManagerProfiles` — per-manager positional timing fitted from 2021-25 with shrinkage to the league mean; flex-share fitted, not assumed | DONE | the bias constants (20.4/-0.1/-11.7/16.3) hand-pasted in three files; the 50/42/8 flex guess |
 | B | `BoardSimulator` — true serpentine order from the real draft_order; keeper-occupied slots skip their round; each opponent picks a position from their profile *conditioned on their roster so far and their declared keepers*, then the best player at it by blended ADP/league-value with noise | new | AvailabilityModel's order-blind Gaussian draw; the fixed-script StrategyBot sim |
-| C | `MyPickOptimizer` — enumerate my position-sequences over simulated boards, maximize expected 9-starter total; outputs the recommended position per pick, per-player survival at each of my picks, and V(K) | new | KeeperChooser.draftPlan's fixed script; WaitOrTake (subsumed) |
+| C | `MyPickOptimizer` — enumerate my position-sequences over simulated boards; outputs the recommended position per pick, per-player survival at each of my picks, and V(K). Objective is tunable: expected points (default) or risk-adjusted over the BOARD distribution — report mean and a low quantile (p10), rank by mean − λ·(mean − p10), knobs -Prisk / -Pquantile. Risk here is availability risk only: projections stay deterministic, no boom/bust or injury modeling yet. Acceptance test: the round-3-good vs round-8-amazing-but-10%-reached decision comes out as two strategy distributions whose comparison flips as λ rises | new | KeeperChooser.draftPlan's fixed script; WaitOrTake (subsumed) |
 | D | `KeeperValuation` v2 = V(K) − V(none) | rewrite | all previous keeper metrics — one number ships |
 | E | `Backtest2025` — fit on ≤2024, replay 2025; report position-timing calibration per manager and availability calibration (of players scored 70-80% available, how many were?). PICK_SD and VALUE_WEIGHT get tuned here, never hand-set | DONE (`DraftBacktest`) | scratch Python backtest |
 | F | Draft-day mode — C conditioned on live picks | later | SleeperLiveDraft's current advice path |
@@ -93,3 +93,9 @@ bucketed predicted-vs-actual survival within ±10 points), and the Allen
 - Production now removes the 22 declared keepers from the draftable pool and
   marks their rounds as consuming nobody. That thinned board moved the keeper
   numbers: Flowers +30, Tuten +12, Purdy -3.
+- Learned displacement (PickDisplacement): the ML challenger for availability,
+  fitted on 814 picks in structural keeper-thinned rank space - no
+  season-centering constant. Lost the gate on 2025: 1.4% weighted vs the
+  Gaussian's 0.4%, mid-buckets off 15-21 points. Known flaw is censoring (fit
+  only sees drafted players); a censored-likelihood fit may re-challenge. It
+  stays in the repo and DraftBacktest prints the head-to-head every run.
