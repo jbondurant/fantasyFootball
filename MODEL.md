@@ -120,14 +120,25 @@ compute-heavy part is the Monte Carlo, which Justin has approved.
 
 ### C - the optimizer on top
 
-  - State: my pick index + positional counts already held (keepers included).
-  - Policy: position-priority per pick, player = best available at the chosen
-    position under the same choice model; policy search over sequences,
-    evaluated by simulation.
+  This restores the decision structure the repo already had - expectimax over
+  position choices with Monte Carlo rollouts (max over [take position X now +
+  average of simulated completions]) - which was the right architecture all
+  along; the 2023-era bugs were in the plumbing around it, not the idea.
+  Now taken to full depth and put on the fitted selection model:
+
+  - Scoring rule (Justin's formalization): roster = keepers UNION my picks;
+    score = best 9 of it. An out-of-game keeper (cost r10+) consumes no pick
+    and "costs a round 9" only in the emergent sense that he benches my
+    weakest pick. In-game keepers also consume their round's pick.
+  - Search: backward induction over (my pick index, positional counts held),
+    values estimated by rollouts under the selection model. Full depth to
+    round 9 - the state space is tiny; the compute goes into rollouts.
   - Objective: mean of best-9 total, or mean - lambda*(mean - p10), knobs
     -Prisk/-Pquantile. Availability risk only, per instruction.
-  - Keeper value: V(K) - V(none), both branches optimized, with the r10+
-    keeper consequence above.
+  - Per-round output: for each position choice - mean, p10, and the snipe
+    decomposition: P(the player I would wait for is gone by my next pick) and
+    the conditional drop when he is. That is the wait-vs-take information.
+  - Keeper value: V(K) - V(none), both branches optimized.
   - Acceptance test: the round-3-good vs round-8-amazing-but-sometimes-sniped
     case produces two distributions whose ranking flips as lambda rises.
 
