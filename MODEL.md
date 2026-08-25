@@ -151,10 +151,14 @@ seasons 2021-2026, exactly one real draft each per season and nothing else -
 and historical mocks 404 even by a known draft id, so they are ephemeral.
 Settled by live experiment 2026-08-25: Justin created a fresh mock while
 logged in and it did NOT appear on his own per-user draft list, immediately or
-after propagation delay - mocks never attach to the public list at all. (They
-DO serve at /v1/draft/{id} while live, which is how this repo's 2023 code read
-them - by pasted id.) The missing capability is enumeration: leaguemates' mock
-ids can never be discovered, so their mocks cannot be collected, period.
+after propagation delay - mocks never attach to the public list, even for
+their creator, even mid-draft. They DO serve fully at /v1/draft/{id} while
+live, and the draft object carries a `creators` field naming whose mock it is
+- so attribution exists, only enumeration does not. Consequence: a mock whose
+LINK is shared is readable and attributable until Sleeper prunes it.
+MockDraftReader archives any pasted link under data/mocks/ permanently and
+prints its reaches vs current ADP; Justin's own 2026 mock is the first entry.
+Anything archived this way is report-only unless enough accumulates to gate.
 
 Two substitutes:
   - FFC per-player ADP stdev (per season, backtestable) - the gated feature

@@ -18,6 +18,7 @@ settings, the season - is read back from the API.
 ./gradlew run -Pmain=KeeperEligibility    # who is keeping whom, and for how long
 ./gradlew run -Pmain=WaitOrTake           # take him now, or gamble he lasts a round
 ./gradlew run -Pmain=AdpSnapshot          # record today's ADP; run often before the draft
+./gradlew run -Pmain=MockDraftReader -PdraftId=<link>   # archive a shared mock before it vanishes
 ./gradlew run -Pmain=KeeperChooser        # the same question by simulation
 ./gradlew run -Pmain=KeeperChooser -Psims=200   # ...with tighter error bars
 ./gradlew run -Pmain=KeeperAudit          # check keeper costs before the draft
