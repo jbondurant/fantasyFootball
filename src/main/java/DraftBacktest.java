@@ -308,30 +308,44 @@ public class DraftBacktest {
         System.out.println("\nCensored MLE displacement (fit 2021-2024) on 2025:\n");
         printBuckets(censoredBuckets);
 
-        // ---- hybrid: gaussian location, learned asymmetry ----
-        // The MLE says falls outrun reaches about 1.8 to 1 at every depth; a
-        // zero-mean split normal with that ratio, total scale tuned on 2024.
-        double asymmetry = 1.8;
-        double bestHybridScale = 18;
+        // ---- the superset test: a family that CONTAINS the incumbent ----
+        // Split-normal noise on the gaussian's own location layer, with both
+        // the scale and the asymmetry tuned end-to-end on 2024. At asymmetry
+        // 1.0 this is exactly the shipped gaussian, so the learned model can
+        // reproduce the incumbent if the data asks for it - the question is
+        // whether the tuning season wants the extra freedom at all.
+        double bestHybridScale = 20;
+        double bestAsymmetry = 1.0;
         double bestHybridError = 1.0;
-        System.out.println("\nTuning the hybrid's scale on 2024:\n");
-        for(double scale : new double[]{12, 15, 18, 21, 24}){
-            double hybridTuneError = calibrationErrorFor(
-                    tuneSeason.model(tuneProfiles, AvailabilityModel.PICK_STANDARD_DEVIATION,
-                            AvailabilityModel.VALUE_WEIGHT)
-                        .withDisplacement(splitNoise(scale, asymmetry)),
-                    tuneSeason, TRIALS / 3, null);
-            System.out.printf("   scale %4.0f  calib error %5.1f%%%n", scale, hybridTuneError * 100);
-            if(hybridTuneError < bestHybridError){
-                bestHybridError = hybridTuneError;
-                bestHybridScale = scale;
-            }
+        System.out.println("\nTuning shape end-to-end on 2024 (asymmetry 1.0 = the gaussian):\n");
+        System.out.printf("   %-8s", "SCALE");
+        for(double asymmetry : new double[]{1.0, 1.2, 1.4, 1.6, 1.8, 2.0}){
+            System.out.printf(" a=%-5.1f", asymmetry);
         }
+        System.out.println();
+        for(double scale : new double[]{14, 17, 20, 23}){
+            System.out.printf("   %-8.0f", scale);
+            for(double asymmetry : new double[]{1.0, 1.2, 1.4, 1.6, 1.8, 2.0}){
+                double hybridTuneError = calibrationErrorFor(
+                        tuneSeason.model(tuneProfiles, AvailabilityModel.PICK_STANDARD_DEVIATION,
+                                AvailabilityModel.VALUE_WEIGHT)
+                            .withDisplacement(splitNoise(scale, asymmetry)),
+                        tuneSeason, TRIALS / 3, null);
+                System.out.printf(" %6.1f%%", hybridTuneError * 100);
+                if(hybridTuneError < bestHybridError){
+                    bestHybridError = hybridTuneError;
+                    bestHybridScale = scale;
+                    bestAsymmetry = asymmetry;
+                }
+            }
+            System.out.println();
+        }
+        System.out.printf("   chosen: scale %.0f, asymmetry %.1f%n", bestHybridScale, bestAsymmetry);
         double[][] hybridBuckets = new double[10][3];
         double hybridError = calibrationErrorFor(
                 testSeason.model(testProfiles, AvailabilityModel.PICK_STANDARD_DEVIATION,
                         AvailabilityModel.VALUE_WEIGHT)
-                    .withDisplacement(splitNoise(bestHybridScale, asymmetry)),
+                    .withDisplacement(splitNoise(bestHybridScale, bestAsymmetry)),
                 testSeason, TRIALS, hybridBuckets);
 
         System.out.println("\nHead-to-head on 2025:\n");
@@ -344,7 +358,7 @@ public class DraftBacktest {
                 String.format("censored MLE x%.2f", bestScale),
                 censoredError * 100, midBucketGap(censoredBuckets) * 100);
         System.out.printf("   %-28s %9.2f%% %13.1f%%%n",
-                String.format("hybrid split x%.0f", bestHybridScale),
+                String.format("superset (s=%.0f, a=%.1f)", bestHybridScale, bestAsymmetry),
                 hybridError * 100, midBucketGap(hybridBuckets) * 100);
         System.out.println("\n   gate metric is WEIGHTED error; mid-buckets (10-90% predictions,");
         System.out.println("   the hard region) shown so an easy-bucket flood cannot hide anything.");

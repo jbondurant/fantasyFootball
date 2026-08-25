@@ -101,6 +101,11 @@ bucketed predicted-vs-actual survival within ±10 points), and the Allen
       + dispersion rescale   falsified: scale 1.0 optimal, wider strictly worse
       hybrid (gaussian location + learned asymmetric shape)
                              0.64% / 6.0%
+      superset (shape tuned end-to-end, family contains the gaussian)
+                             0.51% / 4.3%  - the fit chose scale 20 (the
+                             gaussian's own sigma) and asymmetry 1.2; the 2024
+                             surface is a plateau that cannot tell 1.0 from
+                             1.6, and the freedom cost 0.06 points on 2025
   Conclusion: the LOCATION layer (blended ADP + fitted bias + value rank) is
   what wins; the noise shape adds nothing measurable on five seasons of data.
   A learned model's remaining path to the gate is a better location signal -
