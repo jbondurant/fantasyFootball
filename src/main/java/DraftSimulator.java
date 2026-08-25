@@ -124,6 +124,7 @@ public class DraftSimulator {
             rosters.put(entry.getKey(), new EnumMap<>(entry.getValue()));
         }
         Map<String, Integer> takenAt = new HashMap<>();
+        List<Position> recentPicks = new ArrayList<>();
         for(Slot slot : schedule){
             if(slot.keeperSlot() || board.isEmpty()){
                 continue;
@@ -139,11 +140,14 @@ public class DraftSimulator {
                         board.subList(0, Math.min(board.size(), SelectionModel.CHOICE_SET)));
                 double[] probabilities = model.choiceProbabilities(SelectionModel.features(
                         choiceSet, adp, points, roster,
-                        qbEarliness.getOrDefault(slot.manager(), 0.0)));
+                        qbEarliness.getOrDefault(slot.manager(), 0.0), recentPicks));
                 chosen = choiceSet.get(sample(probabilities, random));
             }
             takenAt.put(chosen, slot.pickNumber());
             board.remove(chosen);
+            // My policy picks feed the run window too - a deliberate early QB
+            // can start the very run the feature measures.
+            recentPicks.add(Player.getPlayerFromSIDV2(chosen).position);
             roster.merge(Player.getPlayerFromSIDV2(chosen).position, 1, Integer::sum);
         }
         return takenAt;
@@ -339,33 +343,38 @@ public class DraftSimulator {
         for(int f = 0; f < 5; f++){
             withoutIntercepts[f] = true;
         }
-        boolean[] withIntercepts = new boolean[SelectionModel.FEATURES];
-        Arrays.fill(withIntercepts, true);
+        boolean[] withIntercepts = withoutIntercepts.clone();
+        withIntercepts[5] = withIntercepts[6] = withIntercepts[7] = true;
+        boolean[] withRun = new boolean[SelectionModel.FEATURES];
+        Arrays.fill(withRun, true);
+        Map<boolean[], String> labels = new java.util.LinkedHashMap<>();
+        labels.put(withoutIntercepts, "no intercepts");
+        labels.put(withIntercepts, "with intercepts");
+        labels.put(withRun, "intercepts + QB run");
 
         System.out.println("Choosing features and temperature on 2024 (model fitted 2021-2023):\n");
         boolean[] bestFeatures = withoutIntercepts;
         double bestTemperature = 1.0;
         double bestError = 1.0;
-        for(boolean[] active : List.of(withoutIntercepts, withIntercepts)){
-            SelectionModel candidate = SelectionModel.fit(tuneObservations, active);
-            String label = active == withIntercepts ? "with intercepts" : "no intercepts";
+        for(Map.Entry<boolean[], String> variant : labels.entrySet()){
+            SelectionModel candidate = SelectionModel.fit(tuneObservations, variant.getKey());
             for(double temperature : new double[]{1.0, 1.5, 2.0}){
                 DraftSimulator tuner = forSeason(tuneSeason, candidate.scaled(temperature),
                         tuneEarliness);
                 double error = DraftBacktest.calibrationOfMatrix(
                         tuner.survivalMatrix(gameCheckpoints(), trials / 3, SEED),
                         gameCheckpoints(), tuneSeason, null);
-                System.out.printf("   %-16s temperature %.1f  calib error %5.2f%%%n",
-                        label, temperature, error * 100);
+                System.out.printf("   %-17s temperature %.1f  calib error %5.2f%%%n",
+                        variant.getValue(), temperature, error * 100);
                 if(error < bestError){
                     bestError = error;
-                    bestFeatures = active;
+                    bestFeatures = variant.getKey();
                     bestTemperature = temperature;
                 }
             }
         }
         System.out.printf("   chosen: %s, temperature %.1f%n",
-                bestFeatures == withIntercepts ? "with intercepts" : "no intercepts", bestTemperature);
+                labels.get(bestFeatures), bestTemperature);
 
         // ---- report on 2025, model fitted through 2024, chosen setup ----
         Map<String, Double> earliness = SelectionModel.qbEarliness(configuration, 2024);

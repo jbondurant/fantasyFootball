@@ -30,10 +30,9 @@ public class KeeperPlan {
         double q = Double.parseDouble(System.getProperty("quantile", "0.10"));
 
         Map<String, Double> earliness = SelectionModel.qbEarliness(configuration, 2025);
-        boolean[] full = new boolean[SelectionModel.FEATURES];
-        Arrays.fill(full, true);
         SelectionModel model = SelectionModel.fit(
-                SelectionModel.loadObservations(configuration, 2021, 2025, earliness), full);
+                SelectionModel.loadObservations(configuration, 2021, 2025, earliness),
+                SelectionModel.shippedFeatures());
 
         DraftPlanner noKeeper = DraftPlanner.forCurrentSeason(configuration, null,
                 model, earliness);

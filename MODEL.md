@@ -290,3 +290,28 @@ bucketed predicted-vs-actual survival within ±10 points), and the Allen
   it can - it is the freed round-2 pick cascading the skill roster up one
   notch. The QB-late league bias already CUTS this value: Allen costing pick
   18 rather than pick 7 is exactly why the net is only ~15.
+
+### The QB-run question (Justin's herding hypothesis, 2026-08-25)
+
+  Hypothesis: "people draft QBs in trendy chunks - if I stop taking QBs
+  early, the league would take them even later." Tested three ways:
+
+  - Raw co-occurrence (QBMarket): QB repeats within 3 picks 27.5% after a QB
+    versus 22.2% otherwise (40 events) - but TE goes the other way (17.1% vs
+    24.1%), so raw counts are tier/ADP confounds, not evidence.
+  - Pooled run feature (same-position count in the last 6 selections): fit
+    +0.01 - the opposing positional effects cancel. Dropped.
+  - QB-only run feature: fit -0.57, and it WON the 2024 chooser (1.19% vs
+    1.40% calibration, 400 trials/cell) with all 2025 gates still passing.
+    Controlling for ADP, need, saturation and per-manager timing, a recent
+    QB run SUPPRESSES the next QB pick. The trendy-chunks story is the
+    confound; demand depletion is the signal. Shipped in shippedFeatures().
+
+  Consequences: (1) my early QBs did not detectably push the league toward
+  QBs - the fitted reaction runs the other way; my restraint would not slow
+  the QB market further. (2) Kept QBs already flow through the simulator as
+  roster state (3 declared for 2026 so far; rerun as declarations land).
+  Keeper answers under the shipped model: Tuten +15.9, Purdy +14.2 (gap
+  ~1.7 vs +/-1.0 noise - still effectively a tie), Flowers +5.6.
+  Observational caveat: one league, ~500 selections - "no detectable
+  herding" is the claim, not "impossible".

@@ -30,6 +30,12 @@ import java.util.Set;
  *   f5-f7  positional intercepts (QB, RB, TE; WR is the baseline) - the
  *          league-bias layer that won the location contest, expressed as
  *          preferences rather than pick offsets
+ *   f8     the QB run: for QB candidates, how many of the last RUN_WINDOW
+ *          selections were QBs - Justin's herding hypothesis ("it's trendy
+ *          now and I'm afraid of the fall-off"), made falsifiable. QB-only
+ *          because a pooled version fit to +0.01: the raw run rates go
+ *          opposite ways by position (QB +5 points, TE -7) and a shared
+ *          coefficient cancels itself
  *
  * Fitting is concave maximum likelihood; plain gradient ascent converges in
  * seconds on ~500 in-game selections.
@@ -38,10 +44,28 @@ import java.util.Set;
  */
 public class SelectionModel {
 
-    public static final int FEATURES = 8;
+    public static final int FEATURES = 9;
     public static final int GAME_ROUNDS = 9;
     static final int CHOICE_SET = 60;
     static final double ADP_LIMIT = 250.0;
+    /** Selections that count as "recent" for the run feature. */
+    public static final int RUN_WINDOW = 6;
+
+    /**
+     * The feature set that won the leakage-safe 2024 chooser in
+     * DraftSimulator.main; production fits (DraftPlanner, KeeperPlan) use
+     * exactly this. Update it only when the chooser's verdict changes.
+     * Current verdict: positional intercepts AND the QB-run feature in
+     * (2024 calibration 1.19% with it versus 1.40% without, 400 trials per
+     * cell). The fitted run coefficient is NEGATIVE (-0.57): a recent QB run
+     * suppresses the next QB pick once ADP, need and saturation are held
+     * fixed - the opposite of the herding story the raw counts suggest.
+     */
+    public static boolean[] shippedFeatures(){
+        boolean[] active = new boolean[FEATURES];
+        java.util.Arrays.fill(active, true);
+        return active;
+    }
 
     /** One historical selection: the chosen index within its choice set. */
     public record Observation(double[][] features, int chosen) {}
@@ -272,14 +296,19 @@ public class SelectionModel {
         }
 
         List<Observation> observations = new ArrayList<>();
+        List<Position> recentPicks = new ArrayList<>();
         for(JsonObject pick : picks){
             if(pick.get("round").getAsInt() > GAME_ROUNDS){
                 break;
             }
             String chosenID = pick.get("player_id").getAsString();
+            Player player = Player.getPlayerFromSIDV2(chosenID);
             JsonElement pickedBy = pick.get("picked_by");
             if(pickedBy == null || pickedBy.isJsonNull()){
                 board.remove(chosenID);
+                if(player != null && StartingLineup.isSkillPosition(player.position)){
+                    recentPicks.add(player.position);
+                }
                 continue;
             }
             String manager = pickedBy.getAsString();
@@ -294,17 +323,30 @@ public class SelectionModel {
                 observations.add(new Observation(
                         features(choiceSet, adp, points,
                                 rosters.computeIfAbsent(manager, u -> new EnumMap<>(Position.class)),
-                                qbEarliness.getOrDefault(manager, 0.0)),
+                                qbEarliness.getOrDefault(manager, 0.0), recentPicks),
                         chosen));
             }
             board.remove(chosenID);
-            Player player = Player.getPlayerFromSIDV2(chosenID);
             if(player != null){
                 rosters.computeIfAbsent(manager, u -> new EnumMap<>(Position.class))
                         .merge(player.position, 1, Integer::sum);
+                if(StartingLineup.isSkillPosition(player.position)){
+                    recentPicks.add(player.position);
+                }
             }
         }
         return observations;
+    }
+
+    /** Same-position count within the trailing run window. */
+    static int runCount(List<Position> recentPicks, Position position){
+        int count = 0;
+        for(int r = Math.max(0, recentPicks.size() - RUN_WINDOW); r < recentPicks.size(); r++){
+            if(recentPicks.get(r).equals(position)){
+                count++;
+            }
+        }
+        return count;
     }
 
     /** The feature matrix for one choice set - also used by the simulator. */
@@ -312,7 +354,8 @@ public class SelectionModel {
                                       Map<String, Double> adp,
                                       Map<String, Double> points,
                                       Map<Position, Integer> roster,
-                                      double managerQBEarliness){
+                                      double managerQBEarliness,
+                                      List<Position> recentPicks){
         int n = choiceSet.size();
         Integer[] byAdp = rankOrder(choiceSet, adp, true);
         Integer[] byPoints = rankOrder(choiceSet, points, false);
@@ -339,6 +382,8 @@ public class SelectionModel {
             features[a][5] = position.equals(Position.QB) ? 1.0 : 0.0;
             features[a][6] = position.equals(Position.RB) ? 1.0 : 0.0;
             features[a][7] = position.equals(Position.TE) ? 1.0 : 0.0;
+            features[a][8] = position.equals(Position.QB)
+                    ? runCount(recentPicks, Position.QB) : 0.0;
         }
         return features;
     }
@@ -378,7 +423,8 @@ public class SelectionModel {
 
         System.out.println("fitted coefficients (full model):");
         String[] names = {"log ADP rank", "log points rank", "starter need", "saturated",
-                "QB x earliness", "QB intercept", "RB intercept", "TE intercept"};
+                "QB x earliness", "QB intercept", "RB intercept", "TE intercept",
+                "QB run"};
         for(int f = 0; f < FEATURES; f++){
             System.out.printf("   %-16s %+7.3f%n", names[f], model.beta()[f]);
         }

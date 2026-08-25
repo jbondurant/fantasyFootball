@@ -151,6 +151,26 @@ class DraftSimulatorTest {
     }
 
     @Test
+    void theRunFeatureCountsOnlyTheRecentWindow(){
+        List<Position> recent = new ArrayList<>();
+        for(int i = 0; i < 5; i++){
+            recent.add(Position.QB);   // stale - will fall outside the window
+        }
+        recent.add(Position.RB);
+        recent.add(Position.WR);
+        recent.add(Position.QB);
+        recent.add(Position.QB);
+        recent.add(Position.RB);
+        recent.add(Position.TE);
+        // window of 6: RB, WR, QB, QB, RB, TE
+        Assertions.assertEquals(2, SelectionModel.runCount(recent, Position.QB));
+        Assertions.assertEquals(2, SelectionModel.runCount(recent, Position.RB));
+        Assertions.assertEquals(1, SelectionModel.runCount(recent, Position.WR));
+        Assertions.assertEquals(1, SelectionModel.runCount(recent, Position.TE));
+        Assertions.assertEquals(0, SelectionModel.runCount(List.of(), Position.QB));
+    }
+
+    @Test
     void realFirstRoundIgnoresKeepersAndLateRounds(){
         JsonArray picks = new JsonArray();
         picks.add(pick("101", "alice", 1, 1, true));    // kept QB does not count
