@@ -55,6 +55,8 @@ public class FeatureLab {
         candidates.put("QB stack", new int[]{18});
         candidates.put("rookie", new int[]{19});
         candidates.put("ADP spread", new int[]{20});
+        candidates.put("loyalty (my guy)", new int[]{21});
+        candidates.put("keeper stash", new int[]{22});
 
         List<Integer> winners = new ArrayList<>();
         for(Map.Entry<String, int[]> candidate : candidates.entrySet()){
@@ -77,6 +79,23 @@ public class FeatureLab {
                 }
             }
         }
+
+        // ---- not a feature: the information-set correction. The managers'
+        // draft room shows LEAGUE-scored projections (6-pt passing TDs); the
+        // value features train on the raw 4-pt feed. Same shipped features,
+        // value input swapped on both sides of the gate.
+        List<SelectionModel.Observation> leagueTrain = SelectionModel.loadObservations(
+                configuration, 2021, 2023, qbE,
+                extras24.teEarliness(), extras24.rbEarliness(), true);
+        DraftSimulator.Extras leagueExtras24 = new DraftSimulator.Extras(
+                extras24.teEarliness(), extras24.rbEarliness(), extras24.teamOf(),
+                extras24.rookies(), extras24.adpSpreadCentered(), extras24.keeperStackTeams(),
+                extras24.formerPlayersByManager(), extras24.young(),
+                HistoricalProjections.leaguePointsBySleeperID(configuration, "2024"));
+        double leagueScored = calibration(leagueTrain, shipped, season24, qbE,
+                leagueExtras24, configuration, trials);
+        System.out.printf("%n   %-22s %10.2f%% %+9.2f%%   (input swap, not a feature)%n",
+                "league-scored value", leagueScored * 100, (leagueScored - baseline) * 100);
 
         if(winners.isEmpty()){
             System.out.println("\nno candidate beat the shipped baseline by the margin;");

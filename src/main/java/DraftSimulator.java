@@ -45,9 +45,13 @@ public class DraftSimulator {
     public record Extras(Map<String, Double> teEarliness, Map<String, Double> rbEarliness,
                          Map<String, String> teamOf, Set<String> rookies,
                          Map<String, Double> adpSpreadCentered,
-                         Map<String, Set<String>> keeperStackTeams){
+                         Map<String, Set<String>> keeperStackTeams,
+                         Map<String, Set<String>> formerPlayersByManager,
+                         Set<String> young,
+                         Map<String, Double> pointsOverride){
         public static Extras none(){
-            return new Extras(Map.of(), Map.of(), Map.of(), Set.of(), Map.of(), Map.of());
+            return new Extras(Map.of(), Map.of(), Map.of(), Set.of(), Map.of(), Map.of(),
+                    Map.of(), Set.of(), Map.of());
         }
     }
 
@@ -127,6 +131,9 @@ public class DraftSimulator {
                 HistoricalProjections.teamBySleeperID(configuration, season),
                 HistoricalProjections.rookiesForSeason(configuration, season),
                 FFCalculatorSD.centeredSpreadBySleeperID(season),
+                Map.of(),
+                SelectionModel.formerPlayersBefore(configuration, season),
+                HistoricalProjections.youngForSeason(configuration, season, 2),
                 Map.of());
     }
 
@@ -185,8 +192,11 @@ public class DraftSimulator {
             }
         }
         Extras withStacks = new Extras(extras.teEarliness(), extras.rbEarliness(),
-                extras.teamOf(), extras.rookies(), extras.adpSpreadCentered(), keeperStacks);
-        return new DraftSimulator(schedule, board, season.adp, season.rawPoints, rosters,
+                extras.teamOf(), extras.rookies(), extras.adpSpreadCentered(), keeperStacks,
+                extras.formerPlayersByManager(), extras.young(), extras.pointsOverride());
+        Map<String, Double> simulatorPoints = extras.pointsOverride().isEmpty()
+                ? season.rawPoints : extras.pointsOverride();
+        return new DraftSimulator(schedule, board, season.adp, simulatorPoints, rosters,
                 model, qbEarliness, withStacks);
     }
 
@@ -241,7 +251,10 @@ public class DraftSimulator {
                                 extras.rbEarliness().getOrDefault(slot.manager(), 0.0),
                                 stackTeams.getOrDefault(slot.manager(), Set.of()),
                                 extras.teamOf(), extras.rookies(),
-                                extras.adpSpreadCentered())));
+                                extras.adpSpreadCentered(),
+                                extras.formerPlayersByManager()
+                                        .getOrDefault(slot.manager(), Set.of()),
+                                extras.young())));
                 chosen = choiceSet.get(sample(probabilities, random));
             }
             takenAt.put(chosen, slot.pickNumber());

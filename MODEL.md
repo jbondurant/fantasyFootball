@@ -364,3 +364,27 @@ bucketed predicted-vs-actual survival within ±10 points), and the Allen
   selections). Infrastructure kept: Context-based features, positional
   earliness, team/rookie/spread archives, so any candidate can be re-judged
   as seasons accumulate. The honest next test is the 2026 draft itself.
+
+### Domain-driven candidates (2026-08-25): loyalty, keeper stash, and the
+### information-set test
+
+  Three mechanisms specific to THIS league's construction, same lab, same
+  margin. None ship; each leaves a finding:
+
+  - loyalty (f21, "my guy": manager rostered him in a prior season): the
+    behavior is REAL - coefficient +0.37, managers do go back to their
+    former players - but availability calibration worsens (+0.32). Known
+    tendency, no shippable signal.
+  - keeper stash (f22, lateness x first-two-seasons player): +0.08,
+    nothing. Rounds 1-9 are not where this league stashes; benches
+    (rounds 10+, outside the game) presumably are.
+  - league-scored value input swap (not a feature): retrain and simulate
+    with the 6-pt league-scored projections the draft room displays,
+    instead of the raw 4-pt national feed. Calibration DEGRADES 1.19% ->
+    1.59%. The league demonstrably drafts off NATIONAL consensus value,
+    not its own scoring - which is why QBs go ~20 picks late in a 6-pt
+    league year after year. This validates the model's deliberate
+    asymmetry: opponent behavior is fitted on consensus inputs, while MY
+    planner values everything at league scoring. The gap between those
+    two value systems (the unpriced 6-pt QB premium) is exactly the edge
+    the expectimax is harvesting when it takes Allen at pick 18.

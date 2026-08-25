@@ -32,6 +32,59 @@ public class HistoricalProjections {
         return JsonParser.parseString(data).getAsJsonArray();
     }
 
+    /**
+     * Sleeper player id -> that season's projections scored under the
+     * LEAGUE's settings (6-pt passing TDs) - the numbers the managers were
+     * actually looking at in their draft room, unlike the raw 4-pt feed.
+     * Assumes the league's scoring has been stable across the chain.
+     */
+    public static Map<String, Double> leaguePointsBySleeperID(AAAConfiguration configuration,
+                                                              String season){
+        LeagueScoringSettings scoring =
+                SleeperLeague.getSeriousLeague().league.leagueScoringSettings;
+        Map<String, Double> out = new HashMap<>();
+        for(JsonElement row : forSeason(configuration, season)){
+            JsonObject object = row.getAsJsonObject();
+            JsonElement stats = object.get("stats");
+            JsonElement id = object.get("player_id");
+            if(stats == null || !stats.isJsonObject() || id == null || id.isJsonNull()){
+                continue;
+            }
+            out.put(id.getAsString(),
+                    SleeperProjections.scoreStatLine(stats.getAsJsonObject(), scoring));
+        }
+        return out;
+    }
+
+    /** Players within their first maxYears seasons, by rookie_year metadata. */
+    public static Set<String> youngForSeason(AAAConfiguration configuration, String season,
+                                             int maxYears){
+        Set<String> out = new HashSet<>();
+        int year = Integer.parseInt(season);
+        for(JsonElement row : forSeason(configuration, season)){
+            JsonObject object = row.getAsJsonObject();
+            JsonElement playerElement = object.get("player");
+            if(playerElement == null || !playerElement.isJsonObject()){
+                continue;
+            }
+            JsonElement metadataElement = playerElement.getAsJsonObject().get("metadata");
+            if(metadataElement == null || !metadataElement.isJsonObject()){
+                continue;
+            }
+            JsonElement rookieYear = metadataElement.getAsJsonObject().get("rookie_year");
+            if(rookieYear == null || rookieYear.isJsonNull()){
+                continue;
+            }
+            try {
+                if(year - Integer.parseInt(rookieYear.getAsString()) <= maxYears){
+                    out.add(object.get("player_id").getAsString());
+                }
+            } catch (NumberFormatException ignored){
+            }
+        }
+        return out;
+    }
+
     /** Sleeper player id -> NFL team that season, from the frozen snapshot. */
     public static Map<String, String> teamBySleeperID(AAAConfiguration configuration, String season){
         Map<String, String> out = new HashMap<>();
