@@ -279,3 +279,14 @@ bucketed predicted-vs-actual survival within ±10 points), and the Allen
   A learned model's remaining path to the gate is a better location signal -
   which is exactly step B's order-aware board with manager timing. All four
   models print head-to-head on every DraftBacktest run.
+
+### KeeperWhy - keeper values, explained by slot (2026-08-25)
+
+  `./gradlew run -Pmain=KeeperWhy -Pwhy=<last name>` decomposes V(K)-V(none)
+  by lineup slot group and prints who mans the QB slot in each branch. For
+  Purdy r13 at 500 rollouts: QB slot -50.3 (Allen 95% of no-keeper rollouts,
+  413.6 mean, versus Purdy 363.3), RB +14.5, FLEX +51.5, net +14.8. The
+  keeper's value is not Purdy-over-Allen - the model drafts Allen either way
+  it can - it is the freed round-2 pick cascading the skill roster up one
+  notch. The QB-late league bias already CUTS this value: Allen costing pick
+  18 rather than pick 7 is exactly why the net is only ~15.

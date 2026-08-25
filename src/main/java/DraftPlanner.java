@@ -227,6 +227,49 @@ public class DraftPlanner {
         return player == null ? sleeperID : player.firstName + " " + player.lastName;
     }
 
+    /** Where a plan's points actually come from, and who mans the QB slot. */
+    public record Profile(StartingLineup.NineBreakdown slots, Map<String, Integer> lineupQBs,
+                          int rollouts){}
+
+    /**
+     * Rollouts under a fixed plan, decomposed: mean points per slot group and
+     * how often each quarterback ends up the one in my lineup. Uses the same
+     * rollout streams as plan(), so the total equals that plan's mean.
+     */
+    public Profile profile(List<Position> plan, int rollouts, long seed){
+        double qb = 0;
+        double rb = 0;
+        double wr = 0;
+        double te = 0;
+        double flex = 0;
+        Map<String, Integer> lineupQBs = new HashMap<>();
+        for(int r = 0; r < rollouts; r++){
+            PlanPolicy policy = new PlanPolicy(plan);
+            simulator.simulateOnce(new Random(seed + 7919L * r), me, policy);
+            StartingLineup.NineBreakdown slots =
+                    StartingLineup.bestNineBreakdown(policy.mine, points);
+            qb += slots.qb();
+            rb += slots.rb();
+            wr += slots.wr();
+            te += slots.te();
+            flex += slots.flex();
+            String starter = null;
+            double best = -1;
+            for(String sleeperID : policy.mine){
+                if(Player.getPlayerFromSIDV2(sleeperID).position.equals(Position.QB)
+                        && points.getOrDefault(sleeperID, 0.0) > best){
+                    best = points.getOrDefault(sleeperID, 0.0);
+                    starter = sleeperID;
+                }
+            }
+            if(starter != null){
+                lineupQBs.merge(playerName(starter), 1, Integer::sum);
+            }
+        }
+        return new Profile(new StartingLineup.NineBreakdown(qb / rollouts, rb / rollouts,
+                wr / rollouts, te / rollouts, flex / rollouts), lineupQBs, rollouts);
+    }
+
     // ---- the 2026 setup ----
 
     /**

@@ -70,6 +70,18 @@ public class StartingLineup {
      */
     public static double bestNine(java.util.Collection<String> sleeperIDs,
                                   Map<String, Double> points){
+        return bestNineBreakdown(sleeperIDs, points).total();
+    }
+
+    /** The same optimum, split by slot group - for explaining a decision. */
+    public record NineBreakdown(double qb, double rb, double wr, double te, double flex){
+        public double total(){
+            return qb + rb + wr + te + flex;
+        }
+    }
+
+    public static NineBreakdown bestNineBreakdown(java.util.Collection<String> sleeperIDs,
+                                                  Map<String, Double> points){
         Map<Position, java.util.List<Double>> byPosition = new EnumMap<>(Position.class);
         for(Position position : FIXED.keySet()){
             byPosition.put(position, new java.util.ArrayList<>());
@@ -81,14 +93,16 @@ public class StartingLineup {
             }
             byPosition.get(player.position).add(points.getOrDefault(sleeperID, 0.0));
         }
-        double total = 0;
+        Map<Position, Double> fixedPoints = new EnumMap<>(Position.class);
         java.util.List<Double> flexPool = new java.util.ArrayList<>();
         for(Map.Entry<Position, Integer> slot : FIXED.entrySet()){
             java.util.List<Double> have = byPosition.get(slot.getKey());
             have.sort(java.util.Comparator.reverseOrder());
+            double group = 0;
             for(int s = 0; s < slot.getValue() && s < have.size(); s++){
-                total += have.get(s);
+                group += have.get(s);
             }
+            fixedPoints.put(slot.getKey(), group);
             if(!slot.getKey().equals(Position.QB)){
                 for(int s = slot.getValue(); s < have.size(); s++){
                     flexPool.add(have.get(s));
@@ -96,10 +110,12 @@ public class StartingLineup {
             }
         }
         flexPool.sort(java.util.Comparator.reverseOrder());
+        double flex = 0;
         for(int s = 0; s < FLEX_SLOTS && s < flexPool.size(); s++){
-            total += flexPool.get(s);
+            flex += flexPool.get(s);
         }
-        return total;
+        return new NineBreakdown(fixedPoints.get(Position.QB), fixedPoints.get(Position.RB),
+                fixedPoints.get(Position.WR), fixedPoints.get(Position.TE), flex);
     }
 
 }
