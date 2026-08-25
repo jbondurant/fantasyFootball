@@ -388,3 +388,15 @@ bucketed predicted-vs-actual survival within ±10 points), and the Allen
     planner values everything at league scoring. The gap between those
     two value systems (the unpriced 6-pt QB premium) is exactly the edge
     the expectimax is harvesting when it takes Allen at pick 18.
+
+### Rookies vs ADP (2026-08-25): yes, a keeper-league premium - on benches
+
+  RookieMarket, pick minus national ADP with veterans as the baseline:
+  rookies go 3.0 picks earlier than veterans inside rounds 1-9, and 8.1
+  picks earlier in rounds 10+ - every season, direction stable. The stash
+  economics explain it: a rookie DRAFTED in round 12 keeps at round 12,
+  cheaper than the round-10 cost of an undrafted pickup, so benches bid
+  rookies up (Nacua went pick 177 vs ADP 248 in 2023). Inside the
+  nine-round game the effect is too small to move the selection model
+  (the lab's rookie/stash features already said so); for MY bench rounds
+  it is a live draft-day fact: expect late rookies ~8 picks before ADP.
