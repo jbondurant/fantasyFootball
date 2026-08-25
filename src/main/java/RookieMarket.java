@@ -92,6 +92,55 @@ public class RookieMarket {
             System.out.printf("   %s  %-24s pick %3d, adp %5.1f  (%+.0f)%n", reach.season(),
                     reach.name(), reach.pick(), reach.adp(), reach.pick() - reach.adp());
         }
+
+        // ---- the question that decides whether any of this belongs in the
+        // model: does the SHIPPED model misprice rookie survival inside the
+        // nine-round game? Signed gap (observed minus predicted availability)
+        // per subgroup on the tuning season; near-zero means the premium is
+        // already absorbed through ADP and there is nothing left to encode.
+        subgroupBias(configuration);
+    }
+
+    private static void subgroupBias(AAAConfiguration configuration){
+        int trials = Integer.getInteger("trials", 400);
+        Map<String, Double> qbE = SelectionModel.qbEarliness(configuration, 2023);
+        DraftSimulator.Extras extras = DraftSimulator.extrasFor(configuration, "2024", 2023);
+        SelectionModel model = SelectionModel.fit(
+                SelectionModel.loadObservations(configuration, 2021, 2023, qbE,
+                        extras.teEarliness(), extras.rbEarliness()),
+                SelectionModel.shippedFeatures());
+        DraftBacktest.Season season = new DraftBacktest.Season(configuration, "2024");
+        DraftSimulator simulator = DraftSimulator.forSeason(season, model, qbE, extras);
+        Map<String, double[]> predicted = simulator.survivalMatrix(
+                DraftSimulator.gameCheckpoints(), trials, DraftSimulator.SEED);
+        Set<String> rookies = HistoricalProjections.rookiesForSeason(configuration, "2024");
+
+        Map<String, Integer> actualPick = new java.util.HashMap<>();
+        for(JsonElement pickElement : season.picks){
+            JsonObject pick = pickElement.getAsJsonObject();
+            JsonElement isKeeper = pick.get("is_keeper");
+            if(isKeeper != null && !isKeeper.isJsonNull() && isKeeper.getAsBoolean()){
+                continue;
+            }
+            actualPick.put(pick.get("player_id").getAsString(), pick.get("pick_no").getAsInt());
+        }
+
+        double[][] gap = new double[2][2];   // [rookie/vet][sum of (observed-predicted), n]
+        int[] checkpoints = DraftSimulator.gameCheckpoints();
+        for(Map.Entry<String, double[]> entry : predicted.entrySet()){
+            int group = rookies.contains(entry.getKey()) ? 0 : 1;
+            int actual = actualPick.getOrDefault(entry.getKey(), Integer.MAX_VALUE);
+            for(int c = 0; c < checkpoints.length; c++){
+                gap[group][0] += (actual >= checkpoints[c] ? 1 : 0) - entry.getValue()[c];
+                gap[group][1]++;
+            }
+        }
+        System.out.println("\ndoes the shipped model misprice rookie survival in rounds 1-9?");
+        System.out.println("(2024, fit through 2023; observed minus predicted availability)\n");
+        System.out.printf("   rookies   %+6.2f%% signed bias  (N %.0f predictions)%n",
+                100 * gap[0][0] / gap[0][1], gap[0][1]);
+        System.out.printf("   veterans  %+6.2f%% signed bias  (N %.0f predictions)%n",
+                100 * gap[1][0] / gap[1][1], gap[1][1]);
     }
 
     private static double mean(double[] sumAndCount){

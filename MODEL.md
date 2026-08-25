@@ -400,3 +400,15 @@ bucketed predicted-vs-actual survival within ±10 points), and the Allen
   nine-round game the effect is too small to move the selection model
   (the lab's rookie/stash features already said so); for MY bench rounds
   it is a live draft-day fact: expect late rookies ~8 picks before ADP.
+
+  Follow-up (same day): "can we use the rookie premium in the model anyway?"
+  RookieMarket now ends with the deciding diagnostic - signed subgroup bias
+  of the SHIPPED model's rookie survival on 2024: rookies +2.3% (observed
+  minus predicted, N 351, inside noise), veterans -0.6%. The sign means the
+  model already sends rookies slightly TOO early inside rounds 1-9 if
+  anything - hand-encoding the raw -3-pick premium would push the wrong
+  way. The -8.1 bench premium lives outside the game, where there is no
+  prediction to improve. Verdict: using the raw finding to override the
+  failed gate would be double-dipping the same 495 selections; the honest
+  uses are bench-round draft intuition and re-running FeatureLab when the
+  2026 draft adds data.
