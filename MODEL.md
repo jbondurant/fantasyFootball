@@ -62,8 +62,8 @@ get ported here (A and E port the last of them).
 
 ## Open questions (defaults in place until answered)
 
-1. Undeclared opposing keepers (JFMarino): default = fill with his two
-   best-by-our-valuation; sensitivity run with none.
+1. RESOLVED 2026-08-25: JFMarino declared (Trey McBride r3, Chris Olave r5).
+   All eleven opponents are now declared; only my own keepers are open.
 2. Objective: pure expected points (default) or risk-adjusted (penalize thin
    floors)? Matters most for boom/bust candidates.
 3. Injury/news overrides: an overrides file (player → exclude or points
