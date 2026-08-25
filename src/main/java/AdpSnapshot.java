@@ -61,7 +61,8 @@ public class AdpSnapshot {
                     continue;
                 }
                 if(cells[0].equals(today)){
-                    System.out.println("today's snapshot is already recorded; nothing to do");
+                    System.out.println("today's ADP snapshot is already recorded");
+                    archiveProjections(today);
                     return;
                 }
                 if(previousDate == null || cells[0].compareTo(previousDate) >= 0){
@@ -118,6 +119,56 @@ public class AdpSnapshot {
                         mover.to() - mover.from());
             }
         }
+        archiveProjections(today);
+    }
+
+    static final Path PROJECTIONS_CSV = Path.of("data", "projection-snapshots.csv");
+
+    /**
+     * The projection archive that makes a future accuracy shootout possible:
+     * every available feed's league-scored numbers, one row per player per
+     * source per day. Sources only become comparable against actual results
+     * once seasons of this exist - which is why it rides along with the ADP
+     * snapshot Justin already runs.
+     */
+    static void archiveProjections(String today) throws IOException {
+        if(Files.exists(PROJECTIONS_CSV)){
+            for(String line : Files.readAllLines(PROJECTIONS_CSV, StandardCharsets.UTF_8)){
+                if(line.startsWith(today + ",")){
+                    System.out.println("today's projection archive is already recorded");
+                    return;
+                }
+            }
+        }
+        List<String> sources = new ArrayList<>(List.of("sleeper", "borischen"));
+        if(Files.isDirectory(ProjectionBridge.EXTERNAL)){
+            for(Path file : Files.list(ProjectionBridge.EXTERNAL).sorted().toList()){
+                String name = file.getFileName().toString();
+                if(name.endsWith(".csv")){
+                    sources.add(name.substring(0, name.length() - 4));
+                }
+            }
+        }
+        StringBuilder out = new StringBuilder();
+        if(!Files.exists(PROJECTIONS_CSV)){
+            out.append("date,source,sleeper_id,league_points\n");
+        }
+        int rows = 0;
+        for(String source : sources){
+            for(Map.Entry<String, Double> entry : ProjectionSources.resolve(source).entrySet()){
+                if(SleeperProjections.adpOf(entry.getKey()) > 250){
+                    continue;
+                }
+                out.append(String.join(",", today, source, entry.getKey(),
+                        String.format("%.1f", entry.getValue()))).append("\n");
+                rows++;
+            }
+        }
+        Files.createDirectories(PROJECTIONS_CSV.getParent());
+        Files.writeString(PROJECTIONS_CSV, out.toString(), StandardCharsets.UTF_8,
+                StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+        System.out.println("archived " + rows + " projection rows ("
+                + String.join(", ", sources) + ") for " + today);
     }
 
 }
