@@ -137,14 +137,15 @@ public class DraftPlanner {
                 List<Position> prefix = new ArrayList<>(chosenPositions);
                 prefix.add(candidate);
                 double[] outcomes = new double[rollouts];
-                for(int r = 0; r < rollouts; r++){
-                    // Common random numbers: rollout r uses the same opponent
-                    // stream for all four candidates, so branches differ only
-                    // through my choice.
+                // Common random numbers: rollout r uses the same opponent
+                // stream for all four candidates, so branches differ only
+                // through my choice. Rollouts are independent, so they run
+                // across cores; seeds keep the result deterministic.
+                java.util.stream.IntStream.range(0, rollouts).parallel().forEach(r -> {
                     PlanPolicy policy = new PlanPolicy(prefix);
                     simulator.simulateOnce(new Random(seed + 7919L * r), me, policy);
                     outcomes[r] = StartingLineup.bestNine(policy.mine, points);
-                }
+                });
                 Arrays.sort(outcomes);
                 double mean = Arrays.stream(outcomes).average().orElse(0);
                 double p10 = quantile(outcomes, q);
@@ -183,10 +184,12 @@ public class DraftPlanner {
         for(int i = 0; i < picks * POSITIONS.length; i++){
             targetCounts.add(new HashMap<>());
         }
-        for(int r = 0; r < rollouts; r++){
+        Object merge = new Object();
+        java.util.stream.IntStream.range(0, rollouts).parallel().forEach(r -> {
             PlanPolicy policy = new PlanPolicy(plan);
             Map<String, Integer> takenAt = simulator.simulateOnce(
                     new Random(seed + 7919L * r), me, policy);
+            synchronized(merge){
             for(int i = 0; i + 1 < policy.bestSeen.size(); i++){
                 for(int p = 0; p < POSITIONS.length; p++){
                     Position position = POSITIONS[p];
@@ -205,7 +208,8 @@ public class DraftPlanner {
                     }
                 }
             }
-        }
+            }
+        });
         List<SnipeRow> rows = new ArrayList<>();
         for(int i = 0; i + 1 < picks; i++){
             for(int p = 0; p < POSITIONS.length; p++){
@@ -279,14 +283,15 @@ public class DraftPlanner {
      * null plans the no-keeper branch.
      */
     public static DraftPlanner forCurrentSeason(AAAConfiguration configuration, Keeper myKeeper){
-        Map<String, Double> earliness = SelectionModel.qbEarliness(configuration, 2025);
-        SelectionModel model = SelectionModel.fitShipped(configuration, 2025, earliness);
+        int lastCompleted = Integer.parseInt(configuration.getSeason()) - 1;
+        Map<String, Double> earliness = SelectionModel.qbEarliness(configuration, lastCompleted);
+        ChoiceModel model = BoostedSelectionModel.fitShipped(configuration, lastCompleted, earliness);
         return forCurrentSeason(configuration, myKeeper, model, earliness);
     }
 
     /** The same, with the opponent model already fitted - for scenario loops. */
     public static DraftPlanner forCurrentSeason(AAAConfiguration configuration, Keeper myKeeper,
-                                                SelectionModel model, Map<String, Double> earliness){
+                                                ChoiceModel model, Map<String, Double> earliness){
         Map<String, Double> points = SleeperProjections.parseTodaysWebPage();
         Map<String, Double> adp = new HashMap<>();
         for(String sleeperID : points.keySet()){
@@ -351,8 +356,21 @@ public class DraftPlanner {
             board.add(entry.getKey());
         }
 
+        DraftSimulator.Extras base = DraftSimulator.currentSeasonExtras(configuration);
+        Map<String, Set<String>> keeperStacks = new HashMap<>();
+        for(Keeper keeper : keepers){
+            String team = base.teamOf().get(keeper.player.sleeperIDString);
+            if(keeper.player.position.equals(Position.QB) && team != null
+                    && keeper.humanWhoCanKeep != null){
+                keeperStacks.computeIfAbsent(keeper.humanWhoCanKeep, u -> new HashSet<>())
+                        .add(team);
+            }
+        }
+        DraftSimulator.Extras extras = new DraftSimulator.Extras(base.teEarliness(),
+                base.rbEarliness(), base.teamOf(), base.rookies(), base.adpSpreadCentered(),
+                keeperStacks, base.formerPlayersByManager(), base.young(), Map.of());
         DraftSimulator simulator = new DraftSimulator(schedule, board, adp, points, rosters,
-                model, earliness);
+                model, earliness, extras);
         return new DraftPlanner(simulator, me, myKeeperIDs, points);
     }
 

@@ -61,7 +61,7 @@ public class DraftSimulator {
     private final Map<String, Double> adp;
     private final Map<String, Double> points;
     private final Map<String, Map<Position, Integer>> initialRosters;
-    private final SelectionModel model;
+    private final ChoiceModel model;
     private final Map<String, Double> qbEarliness;
     private final Extras extras;
     /** pickNumber -> {firstOfPair, secondOfPair, waitFraction}, from the schedule. */
@@ -71,14 +71,14 @@ public class DraftSimulator {
     public DraftSimulator(List<Slot> schedule, List<String> board,
                           Map<String, Double> adp, Map<String, Double> points,
                           Map<String, Map<Position, Integer>> keeperRosters,
-                          SelectionModel model, Map<String, Double> qbEarliness){
+                          ChoiceModel model, Map<String, Double> qbEarliness){
         this(schedule, board, adp, points, keeperRosters, model, qbEarliness, Extras.none());
     }
 
     public DraftSimulator(List<Slot> schedule, List<String> board,
                           Map<String, Double> adp, Map<String, Double> points,
                           Map<String, Map<Position, Integer>> keeperRosters,
-                          SelectionModel model, Map<String, Double> qbEarliness,
+                          ChoiceModel model, Map<String, Double> qbEarliness,
                           Extras extras){
         this.schedule = new ArrayList<>(schedule);
         this.schedule.sort(Comparator.comparingInt(Slot::pickNumber));
@@ -117,7 +117,7 @@ public class DraftSimulator {
     }
 
     /** A held-out season's setup: its real slots, keepers and market. */
-    public static DraftSimulator forSeason(DraftBacktest.Season season, SelectionModel model,
+    public static DraftSimulator forSeason(DraftBacktest.Season season, ChoiceModel model,
                                            Map<String, Double> qbEarliness){
         return forSeason(season, model, qbEarliness, Extras.none());
     }
@@ -137,8 +137,27 @@ public class DraftSimulator {
                 Map.of());
     }
 
+    /**
+     * Season-level extras for the CURRENT season, from today's feeds - the
+     * production twin of extrasFor, so the shipped model sees the same
+     * feature columns in 2026 that it trained on historically.
+     */
+    public static Extras currentSeasonExtras(AAAConfiguration configuration){
+        int lastCompleted = Integer.parseInt(configuration.getSeason()) - 1;
+        return new Extras(
+                SelectionModel.positionEarliness(configuration, lastCompleted, Position.TE),
+                SelectionModel.positionEarliness(configuration, lastCompleted, Position.RB),
+                SleeperProjections.teamBySleeperID(),
+                SleeperProjections.youngPlayers(0),
+                FFCalculatorSD.centeredSpreadBySleeperID(configuration.getSeason()),
+                Map.of(),
+                SelectionModel.formerPlayersBefore(configuration, configuration.getSeason()),
+                SleeperProjections.youngPlayers(2),
+                Map.of());
+    }
+
     /** The same, with the extras' kept-QB stack teams derived from the picks. */
-    public static DraftSimulator forSeason(DraftBacktest.Season season, SelectionModel model,
+    public static DraftSimulator forSeason(DraftBacktest.Season season, ChoiceModel model,
                                            Map<String, Double> qbEarliness, Extras extras){
         List<Slot> schedule = new ArrayList<>();
         Map<String, Map<Position, Integer>> rosters = new HashMap<>();

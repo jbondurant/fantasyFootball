@@ -19,7 +19,7 @@ import java.util.Map;
  */
 public class FeatureLab {
 
-    static final double SHIP_MARGIN = 0.0010;   // 0.10 calibration points
+    public static final double SHIP_MARGIN = 0.0010;   // 0.10 calibration points
 
     record Candidate(String name, int[] indices){}
 

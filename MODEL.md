@@ -452,3 +452,33 @@ bucketed predicted-vs-actual survival within ±10 points), and the Allen
   probabilities, and the external-corpus transfer (fit a base logit on
   public mock drafts, league correction on top) - highest ceiling, blocked
   on finding bulk draft data.
+
+### The model-class question (2026-08-25): the boosted challenger WINS
+
+  Justin asked why not pytorch / LightGBM / CatBoost / sklearn / HF. Answer
+  by construction: nets and pretrained models have nothing to offer at ~500
+  selections, but gradient-boosted trees - interaction discovery over the
+  full feature set - were the one class with a real argument. Implemented in
+  plain Java (BoostedSelectionModel: listwise-softmax boosting, XGBoost-style
+  Newton leaves, quantile splits, deterministic, dependency-free), given ALL
+  23 features including every one the linear lab rejected, and judged by
+  BoostLab exactly like every feature: hyperparameters on 2024, one look at
+  2025.
+
+  Verdict - the boosted model swept every gate on held-out 2025:
+    calibration 0.57% vs linear 1.52%; my slots 0.50% vs 1.17%;
+    QB-timing MAE 1.91 vs 2.08 (constant 3.19).
+  The unit test pins the capacity claim (trees learn an XOR interaction the
+  linear utility cannot represent). SHIPPED: BoostedSelectionModel.fitShipped
+  (300 trees, depth 2, lr 0.1) is now the simulator's brain everywhere -
+  planner, keeper tools, smoke gates - with currentSeasonExtras() feeding
+  production the same feature columns training saw. Rollouts run parallel
+  across cores to pay for the 300-tree scoring. The linear SelectionModel
+  stays in the repo as the interpretable companion (its coefficients still
+  name the league's behaviors; the trees only out-predict it).
+
+  Lesson recorded: twelve features failed to improve the LINEAR model, yet
+  the trees extracted real signal from the same columns - the information
+  was in the interactions, not the margins. And deeper training (rounds
+  1-13) was shipped the same day; both "more data" and "more model" won,
+  in that order.

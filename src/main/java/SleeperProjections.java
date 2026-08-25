@@ -142,6 +142,48 @@ public class SleeperProjections {
         return false;
     }
 
+    /** Sleeper player id -> current NFL team, from today's projections. */
+    public static HashMap<String, String> teamBySleeperID(){
+        HashMap<String, String> out = new HashMap<>();
+        for(JsonElement jsonPlayer : getTodaysProjections()){
+            JsonObject row = jsonPlayer.getAsJsonObject();
+            JsonElement team = row.get("team");
+            JsonElement id = row.get("player_id");
+            if(id != null && !id.isJsonNull() && team != null && !team.isJsonNull()){
+                out.put(id.getAsString(), team.getAsString());
+            }
+        }
+        return out;
+    }
+
+    /** Players within their first maxYears seasons right now (0 = rookies). */
+    public static java.util.HashSet<String> youngPlayers(int maxYears){
+        java.util.HashSet<String> out = new java.util.HashSet<>();
+        int season = Integer.parseInt(getSeason());
+        for(JsonElement jsonPlayer : getTodaysProjections()){
+            JsonObject row = jsonPlayer.getAsJsonObject();
+            JsonElement playerElement = row.get("player");
+            if(playerElement == null || !playerElement.isJsonObject()){
+                continue;
+            }
+            JsonElement metadata = playerElement.getAsJsonObject().get("metadata");
+            if(metadata == null || !metadata.isJsonObject()){
+                continue;
+            }
+            JsonElement rookieYear = metadata.getAsJsonObject().get("rookie_year");
+            if(rookieYear == null || rookieYear.isJsonNull()){
+                continue;
+            }
+            try {
+                if(season - Integer.parseInt(rookieYear.getAsString()) <= maxYears){
+                    out.add(row.get("player_id").getAsString());
+                }
+            } catch (NumberFormatException ignored){
+            }
+        }
+        return out;
+    }
+
     private static HashMap<String, Double> cachedAdp;
 
     /**

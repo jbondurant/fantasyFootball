@@ -69,7 +69,7 @@ import java.util.Set;
  *
  *     ./gradlew run -Pmain=SelectionModel
  */
-public class SelectionModel {
+public class SelectionModel implements ChoiceModel {
 
     public static final int FEATURES = 23;
     public static final int GAME_ROUNDS = 9;
@@ -192,6 +192,7 @@ public class SelectionModel {
         return total;
     }
 
+    @Override
     public double[] choiceProbabilities(double[][] features){
         double[] utilities = new double[features.length];
         double max = Double.NEGATIVE_INFINITY;
