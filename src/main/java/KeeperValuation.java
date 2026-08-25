@@ -2,6 +2,7 @@ import PlayerImportAndSetup.Position;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -51,6 +52,8 @@ public class KeeperValuation {
         public final List<Valued> candidates = new ArrayList<>();
         /** Candidates with no published projection, so not gradeable. */
         public final List<String> unprojected = new ArrayList<>();
+        /** Replacement drawn with reach risk, per position. */
+        public final Map<Position, Double> riskAwareReplacement = new EnumMap<>(Position.class);
         public ReplacementLevel replacement;
         public double freedPickValue;
         public String freedPickDescription = "";
@@ -64,6 +67,17 @@ public class KeeperValuation {
         Report report = new Report();
         report.replacement = ReplacementLevel.forLeague(configuration, points);
         report.freedPickNumber = configuration.pickNumberFor(StartingLineup.lastStarterRound());
+
+        // Replacement with reach risk in it, rather than a fixed rank.
+        Map<Position, Double> bias = new EnumMap<>(Position.class);
+        bias.put(Position.QB, 20.4); bias.put(Position.RB, -0.1);
+        bias.put(Position.WR, -11.7); bias.put(Position.TE, 16.3);
+        AvailabilityModel availability = AvailabilityModel.build(points, bias);
+        int myLastStarterPick = configuration.pickNumberFor(StartingLineup.lastStarterRound());
+        for(Position position : List.of(Position.QB, Position.RB, Position.WR, Position.TE)){
+            report.riskAwareReplacement.put(position,
+                    availability.expectedBestAvailable(position, myLastStarterPick, 400, 20260824L));
+        }
 
         Valued freed = bestAvailableAt(configuration, report, points);
         report.freedPickValue = freed == null ? 0.0 : freed.valueOverReplacement;
@@ -84,7 +98,11 @@ public class KeeperValuation {
                 report.unprojected.add(candidate.player.firstName + " " + candidate.player.lastName);
                 continue;
             }
-            double vorp = report.replacement.valueOver(candidate.player, projected);
+            // Against what you would realistically still get at that position,
+            // not against a fixed replacement rank.
+            double replacement = report.riskAwareReplacement.getOrDefault(position,
+                    report.replacement.of(position));
+            double vorp = projected - replacement;
             report.candidates.add(new Valued(candidate, projected, vorp, report.freedPickValue));
         }
         report.candidates.sort(Comparator.comparingDouble((Valued v) -> v.net()).reversed());
@@ -127,10 +145,13 @@ public class KeeperValuation {
         System.out.println("Optimising the nine skill starting slots: QB, RB, RB, WR, WR, WR, TE, FLEX, FLEX");
         System.out.println("(the defense slot is filled late and is not part of this)\n");
 
-        System.out.println("replacement level - the last starter at each position:");
-        for(Map.Entry<Position, Double> entry : report.replacement.all().entrySet()){
-            System.out.printf("   %s%-3d %8.1f%n", entry.getKey(),
-                    report.replacement.rankOf(entry.getKey()), entry.getValue());
+        System.out.println("replacement level, at your round-" + StartingLineup.lastStarterRound()
+                + " pick, drawn 400 times so a reach costs you what it really costs:");
+        for(Map.Entry<Position, Double> entry : report.riskAwareReplacement.entrySet()){
+            Position position = entry.getKey();
+            System.out.printf("   %-3s  %7.1f   (fixed %s%d would have said %.1f)%n",
+                    position, entry.getValue(), position, report.replacement.rankOf(position),
+                    report.replacement.of(position));
         }
 
         System.out.printf("%nkeeping frees your round-%d pick (overall %d), which returns %s = %+.0f%n",
