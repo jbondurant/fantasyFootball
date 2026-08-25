@@ -14,3 +14,6 @@
 
 # FantasyPros CSV exports, downloaded by hand.
 /FantasyPros_*.csv
+
+# Subscriber projection exports are personal-use data - never committed.
+data/external-projections/*.csv

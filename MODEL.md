@@ -511,3 +511,30 @@ bucketed predicted-vs-actual survival within ±10 points), and the Allen
   any one site's table wholesale. Cross-source level differences run +20
   to +40 points on elites (FP vs Sleeper), but plans depend on RANKS, so
   the decision test is running KeeperPlan under both feeds.
+
+### Projection source slots (2026-08-25, built while Justin was out)
+
+  All fifteen requested sources are registered, selectable slots
+  (ProjectionSources; -Pprojections=<name> on the planner and keeper tools,
+  blend:<a>,<b> averages feeds). Two are automatic: sleeper (default) and
+  borischen - his half-PPR tiers fetch free from S3 and transplant onto
+  Sleeper's points curve with tier-mates sharing their rank-range mean, so
+  tier structure survives. The paywalled thirteen (ETR, Fantasy Points,
+  PFF, Draft Sharks, 4for4, Footballguys, FTN, RotoViz, Unexpected Points,
+  FantasyOmatic, Action Network, NumberFire, RotoGrinders) go live the
+  moment a subscriber CSV export lands in data/external-projections/ -
+  points sheets bridge, stat/props sheets score directly; the directory is
+  gitignored because subscriber exports are personal-use data. No paywalls
+  were scraped; NumberFire/RotoGrinders/Fantasy Points render their tables
+  in-app, so even their free views have no clean fetch.
+
+  First sensitivity finding: on Boris Chen's values the no-keeper plan
+  flips to RB,RB,RB,WR,WR,QB,... - the QB waits for round 6, because his
+  QB tier 1 holds three names sharing one value, which erases the Allen
+  cliff that makes the Sleeper plan take QB in round 2. The QB decision is
+  source-sensitive; the keeper table's sensitivity is one
+  -Pprojections=borischen KeeperPlan run away.
+
+  Accuracy ranking between sources is deliberately deferred (Justin's
+  call): sources plug in now, get archived by daily runs going forward,
+  and the shootout happens when actuals exist to score them against.

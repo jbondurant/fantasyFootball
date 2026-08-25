@@ -296,7 +296,7 @@ public class DraftPlanner {
         // source (see ProjectionBridge); opponents keep behaving off the
         // consensus market either way, which the information-set test showed
         // is what they actually do.
-        Map<String, Double> points = ProjectionBridge.pointsForSource(
+        Map<String, Double> points = ProjectionSources.resolve(
                 System.getProperty("projections", "sleeper"));
         Map<String, Double> adp = new HashMap<>();
         for(String sleeperID : points.keySet()){

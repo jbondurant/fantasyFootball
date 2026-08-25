@@ -12,7 +12,9 @@ settings, the season - is read back from the API.
 ## Running
 
 ```
+./gradlew run -Pmain=ProjectionSources    # projection feeds: status, and where they disagree
 ./gradlew run -Pmain=KeeperPlan           # the keeper decision, whole-draft optimized
+./gradlew run -Pmain=KeeperPlan -Pprojections=borischen   # ...valued on another source's numbers
 ./gradlew run -Pmain=DraftPlanner         # position to take each round, with risk + snipe odds
 ./gradlew run -Pmain=DraftPlanner -Ptrials=500 -Prisk=0.5   # ...risk-averse, tighter error bars
 ./gradlew run -Pmain=TradeFinder          # trades worth proposing
