@@ -128,4 +128,60 @@ public class AvailabilityModel {
         return total / trials;
     }
 
+
+    /**
+     * How often this player is still on the board at this pick.
+     *
+     * The decision this exists for: take him now, or gamble he lasts until your
+     * next pick and spend this one elsewhere. That trade only has an answer if
+     * you can put a number on the gamble.
+     */
+    public double probabilityAvailable(String sleeperID, int pick, int trials, long seed){
+        if(!expectedPick.containsKey(sleeperID)){
+            return 0.0;
+        }
+        Random random = new Random(seed);
+        List<String> everyone = new ArrayList<>(expectedPick.keySet());
+        int gone = Math.max(pick - 1, 0);
+        int survived = 0;
+
+        for(int trial = 0; trial < trials; trial++){
+            List<double[]> drawn = new ArrayList<>(everyone.size());
+            for(int i = 0; i < everyone.size(); i++){
+                drawn.add(new double[]{
+                        expectedPick.get(everyone.get(i)) + random.nextGaussian() * PICK_STANDARD_DEVIATION,
+                        i});
+            }
+            drawn.sort((a, b) -> Double.compare(a[0], b[0]));
+            for(int rank = gone; rank < drawn.size(); rank++){
+                if(everyone.get((int) drawn.get(rank)[1]).equals(sleeperID)){
+                    survived++;
+                    break;
+                }
+            }
+        }
+        return survived / (double) trials;
+    }
+
+    /**
+     * What waiting is worth: take him now, or spend this pick elsewhere and
+     * hope he lasts. Returns the expected points at the position if you wait,
+     * which is his value when he survives and the next best when he does not.
+     */
+    public double expectedIfYouWait(String sleeperID, Position position,
+                                    int nextPick, int trials, long seed){
+        double survives = probabilityAvailable(sleeperID, nextPick, trials, seed);
+        double him = points.getOrDefault(sleeperID, 0.0);
+        double fallback = expectedBestAvailable(position, nextPick, trials, seed + 1);
+        return survives * him + (1 - survives) * fallback;
+    }
+
+    public double pointsOf(String sleeperID){
+        return points.getOrDefault(sleeperID, 0.0);
+    }
+
+    public java.util.Set<String> known(){
+        return points.keySet();
+    }
+
 }

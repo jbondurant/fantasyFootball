@@ -57,6 +57,62 @@ class AvailabilityModelTest {
     }
 
     @Test
+    void aBetterPlayerIsLessLikelyToLast(){
+        AvailabilityModel model = model();
+        String best = null, worse = null;
+        for(String sleeperID : model.known()){
+            Player player = Player.getPlayerFromSIDV2(sleeperID);
+            if(player == null || !player.position.equals(Position.RB)){
+                continue;
+            }
+            if(best == null || model.pointsOf(sleeperID) > model.pointsOf(best)){
+                best = sleeperID;
+            }
+        }
+        for(String sleeperID : model.known()){
+            Player player = Player.getPlayerFromSIDV2(sleeperID);
+            if(player != null && player.position.equals(Position.RB)
+                    && model.pointsOf(sleeperID) > 100 && model.pointsOf(sleeperID) < 150){
+                worse = sleeperID;
+                break;
+            }
+        }
+        Assertions.assertNotNull(best);
+        Assertions.assertNotNull(worse);
+        Assertions.assertTrue(
+                model.probabilityAvailable(best, 40, 800, 5L)
+                        < model.probabilityAvailable(worse, 40, 800, 5L),
+                "the best back should be gone more often than a middling one");
+    }
+
+    @Test
+    void survivalFallsAsTheDraftGoesOn(){
+        AvailabilityModel model = model();
+        String anyone = model.known().iterator().next();
+        double early = model.probabilityAvailable(anyone, 5, 500, 9L);
+        double late = model.probabilityAvailable(anyone, 150, 500, 9L);
+        Assertions.assertTrue(early >= late, "nobody becomes more available later");
+    }
+
+    @Test
+    void waitingIsNeverWorthMoreThanHavingHim(){
+        // If he survives you get him; if not you get less. Waiting cannot beat
+        // taking him, only cost little.
+        AvailabilityModel model = model();
+        String best = null;
+        for(String sleeperID : model.known()){
+            Player player = Player.getPlayerFromSIDV2(sleeperID);
+            if(player != null && player.position.equals(Position.QB)
+                    && (best == null || model.pointsOf(sleeperID) > model.pointsOf(best))){
+                best = sleeperID;
+            }
+        }
+        double waiting = model.expectedIfYouWait(best, Position.QB, 31, 500, 11L);
+        Assertions.assertTrue(waiting <= model.pointsOf(best) + 0.001,
+                "waiting returned more than the player himself");
+    }
+
+    @Test
     void repeatedDrawsWithTheSameSeedAgree(){
         AvailabilityModel model = model();
         double a = model.expectedBestAvailable(Position.WR, 103, 200, 42L);
