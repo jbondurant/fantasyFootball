@@ -141,6 +141,68 @@ class KeeperChooserSmokeTest {
     }
 
     @Test
+    void aSimulatedTeamCanFieldEveryStartingSlot(){
+        // The league starts QB, RB, RB, WR, WR, WR, TE, FLEX, FLEX, DEF. The
+        // draft plan was built from a helper that only emits QB/RB/WR/TE, so
+        // the simulated team never drafted a defense and scored a permanent
+        // zero in that slot - which made keeping one look like the best move
+        // available.
+        AAAConfiguration configuration = AAAConfiguration.getInstance();
+        SleeperLeague league = SleeperLeague.getSeriousLeague();
+
+        KeeperChooser.rank(configuration, 1, 3, 18);
+
+        for(User user : league.sleeperDraftInfo.usersInfo){
+            if(!user.userID.equals(HumanOfInterest.humanID())){
+                continue;
+            }
+            java.util.Map<PlayerImportAndSetup.Position, Integer> have = new java.util.HashMap<>();
+            for(Player player : user.roster.draftedPlayers){
+                have.merge(player.position, 1, Integer::sum);
+            }
+            java.util.Map<PlayerImportAndSetup.Position, Integer> need = java.util.Map.of(
+                    PlayerImportAndSetup.Position.QB, 1,
+                    PlayerImportAndSetup.Position.RB, 2,
+                    PlayerImportAndSetup.Position.WR, 3,
+                    PlayerImportAndSetup.Position.TE, 1,
+                    PlayerImportAndSetup.Position.DEF, 1);
+            for(java.util.Map.Entry<PlayerImportAndSetup.Position, Integer> slot : need.entrySet()){
+                Assertions.assertTrue(have.getOrDefault(slot.getKey(), 0) >= slot.getValue(),
+                        "simulated roster cannot fill the " + slot.getKey() + " slot: got "
+                                + have.getOrDefault(slot.getKey(), 0) + " of " + slot.getValue()
+                                + ", roster is " + have);
+            }
+        }
+    }
+
+    @Test
+    void scoringCountsTheLineupRatherThanTheWholeRoster(){
+        // Sixteen drafted players, ten of whom start. A score that sums all
+        // sixteen rewards depth that never plays.
+        AAAConfiguration configuration = AAAConfiguration.getInstance();
+        SleeperLeague league = SleeperLeague.getSeriousLeague();
+
+        double score = SimulationDraft.getSimulationPermPartialWithHardcodedKeepers(
+                new java.util.HashSet<>(), HumanStrategy.nonPermutedPositions(1, 4, 4, 1),
+                new ArrayList<>(), configuration.getDraftRounds(), 18,
+                configuration.getTodaysKeepers()).scoreDraft();
+
+        double wholeRoster = 0.0;
+        java.util.ArrayList<Score> scoreList = SleeperLeague.getScoreList();
+        for(User user : league.sleeperDraftInfo.usersInfo){
+            if(user.userID.equals(HumanOfInterest.humanID())){
+                for(Player player : user.roster.draftedPlayers){
+                    wholeRoster += Player.scorePlayer(scoreList, player);
+                }
+            }
+        }
+        Assertions.assertTrue(score < wholeRoster,
+                "the lineup score (" + Math.round(score) + ") should be below the whole-roster sum ("
+                        + Math.round(wholeRoster) + ")");
+        System.out.println("lineup " + Math.round(score) + " vs whole roster " + Math.round(wholeRoster));
+    }
+
+    @Test
     void twoKeepersNeverShareARound(){
         AAAConfiguration configuration = AAAConfiguration.getInstance();
 

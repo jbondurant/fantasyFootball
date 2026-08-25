@@ -41,19 +41,9 @@ public class SimulationDraft {
         return new SimulationDraft(sl, scoreDraftHumanFun);
     }
 
+    /** My best startable lineup, not the sum of all sixteen picks. */
     public double scoreDraft(){
-        ArrayList<Score> scoreList = SleeperLeague.getScoreList();
-        double totalScore = 0;
-        for(User user : sleeperLeague.sleeperDraftInfo.usersInfo) {
-            if (user.userID.equals(myID())) {
-                Roster roster = user.roster;
-                for(Player player : roster.draftedPlayers){
-                    double playerScore = Player.scorePlayer(scoreList, player);
-                    totalScore += playerScore;
-                }
-            }
-        }
-        return totalScore;
+        return SleeperLeague.scoreSleeperDraft(sleeperLeague, false);
     }
 
 
