@@ -31,7 +31,7 @@ public class AvailabilityModel {
     private final double pickStandardDeviation;
     private final double valueWeight;
     /** Null means Gaussian; set means bootstrap the learned residuals. */
-    private PickDisplacement learnedDisplacement;
+    private DisplacementModel learnedDisplacement;
     private final List<String> ids = new ArrayList<>();
     private final Map<String, Integer> indexOf = new HashMap<>();
     private final Map<String, Double> expectedPick = new HashMap<>();
@@ -61,7 +61,7 @@ public class AvailabilityModel {
      */
     public static AvailabilityModel buildLearned(Map<String, Double> projectedPoints,
                                                  Map<String, Double> adpBySleeperID,
-                                                 PickDisplacement displacement){
+                                                 DisplacementModel displacement){
         AvailabilityModel model = build(projectedPoints, Map.of(), adpBySleeperID, 0.0, 0.0);
         // Relocate everyone to par rank in selection space.
         List<Map.Entry<String, Double>> byAdp = new ArrayList<>();
@@ -115,6 +115,16 @@ public class AvailabilityModel {
             model.positions.put(sleeperID, player.position);
         }
         return model;
+    }
+
+    /**
+     * Keep the standard blended locations but draw deviations from the given
+     * model instead of a Gaussian - for testing whether the learned SHAPE
+     * helps once the location layer is held fixed.
+     */
+    public AvailabilityModel withDisplacement(DisplacementModel displacement){
+        this.learnedDisplacement = displacement;
+        return this;
     }
 
     /**

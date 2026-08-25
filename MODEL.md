@@ -93,9 +93,16 @@ bucketed predicted-vs-actual survival within ±10 points), and the Allen
 - Production now removes the 22 declared keepers from the draftable pool and
   marks their rounds as consuming nobody. That thinned board moved the keeper
   numbers: Flowers +30, Tuten +12, Purdy -3.
-- Learned displacement (PickDisplacement): the ML challenger for availability,
-  fitted on 814 picks in structural keeper-thinned rank space - no
-  season-centering constant. Lost the gate on 2025: 1.4% weighted vs the
-  Gaussian's 0.4%, mid-buckets off 15-21 points. Known flaw is censoring (fit
-  only sees drafted players); a censored-likelihood fit may re-challenge. It
-  stays in the repo and DraftBacktest prints the head-to-head every run.
+- The learned-availability challenger ladder, all tuned on 2024 and scored
+  once on 2025 (weighted error / mid-bucket gap):
+      gaussian (shipped)     0.45% / 2.6%
+      empirical bootstrap    1.38% / 9.2%   (censoring flaw)
+      censored MLE           1.20% / 8.3%   (censoring fixed - helped)
+      + dispersion rescale   falsified: scale 1.0 optimal, wider strictly worse
+      hybrid (gaussian location + learned asymmetric shape)
+                             0.64% / 6.0%
+  Conclusion: the LOCATION layer (blended ADP + fitted bias + value rank) is
+  what wins; the noise shape adds nothing measurable on five seasons of data.
+  A learned model's remaining path to the gate is a better location signal -
+  which is exactly step B's order-aware board with manager timing. All four
+  models print head-to-head on every DraftBacktest run.

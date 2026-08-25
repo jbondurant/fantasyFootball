@@ -39,7 +39,7 @@ import java.util.Set;
  *
  *     ./gradlew run -Pmain=PickDisplacement
  */
-public class PickDisplacement {
+public class PickDisplacement implements DisplacementModel {
 
     public record ResidualRow(String season, Position position, int parDepth, double residual) {}
 
@@ -150,6 +150,7 @@ public class PickDisplacement {
     }
 
     /** One draw of how far this player lands from his par selection. */
+    @Override
     public double sample(Random random, int parDepth, Position position){
         List<Double> bin = centeredByBin.get(binOf(parDepth));
         if(bin.isEmpty()){

@@ -65,7 +65,7 @@ public class DraftBacktest {
                     .withOccupiedPicks(keeperPickNumbers);
         }
 
-        AvailabilityModel learnedModel(PickDisplacement displacement){
+        AvailabilityModel learnedModel(DisplacementModel displacement){
             Map<String, Double>[] pools = pools();
             return AvailabilityModel.buildLearned(pools[0], pools[1], displacement)
                     .withOccupiedPicks(keeperPickNumbers);
@@ -282,11 +282,125 @@ public class DraftBacktest {
             System.out.printf("   %3d-%3d%%     %8.1f%% %+9.1f%% %8.0f%n",
                     b * 10, b * 10 + 10, observed * 100, (observed - predicted) * 100, learnedBuckets[b][2]);
         }
-        System.out.printf("%n   learned %.1f%% vs gaussian %.1f%% weighted error%n",
-                learnedError * 100, defaultsError * 100);
-        System.out.println(learnedError < defaultsError
-                ? "   -> the learned displacement wins the gate"
-                : "   -> the gaussian keeps the gate; the learned model does not ship");
+        // ---- the censored challenger, with its dispersion scale tuned the
+        // same way the gaussian's sigma was: on 2024, through the simulator ----
+        CensoredDisplacement censoredForTuning = CensoredDisplacement.fitThroughSeason(configuration, 2023);
+        double bestScale = 1.0;
+        double bestScaleError = 1.0;
+        System.out.println("\nTuning the censored model's dispersion scale on 2024:\n");
+        for(double scale : new double[]{1.0, 1.25, 1.5, 1.75, 2.0, 2.5}){
+            double scaleError = calibrationErrorFor(
+                    tuneSeason.learnedModel(censoredForTuning.scaled(scale)),
+                    tuneSeason, TRIALS / 3, null);
+            System.out.printf("   scale %.2f  calib error %5.1f%%%n", scale, scaleError * 100);
+            if(scaleError < bestScaleError){
+                bestScaleError = scaleError;
+                bestScale = scale;
+            }
+        }
+        System.out.printf("   chosen scale %.2f%n", bestScale);
+
+        CensoredDisplacement censored = CensoredDisplacement.fitThroughSeason(configuration, 2024);
+        double[][] censoredBuckets = new double[10][3];
+        double censoredError = calibrationErrorFor(
+                testSeason.learnedModel(censored.scaled(bestScale)),
+                testSeason, TRIALS, censoredBuckets);
+        System.out.println("\nCensored MLE displacement (fit 2021-2024) on 2025:\n");
+        printBuckets(censoredBuckets);
+
+        // ---- hybrid: gaussian location, learned asymmetry ----
+        // The MLE says falls outrun reaches about 1.8 to 1 at every depth; a
+        // zero-mean split normal with that ratio, total scale tuned on 2024.
+        double asymmetry = 1.8;
+        double bestHybridScale = 18;
+        double bestHybridError = 1.0;
+        System.out.println("\nTuning the hybrid's scale on 2024:\n");
+        for(double scale : new double[]{12, 15, 18, 21, 24}){
+            double hybridTuneError = calibrationErrorFor(
+                    tuneSeason.model(tuneProfiles, AvailabilityModel.PICK_STANDARD_DEVIATION,
+                            AvailabilityModel.VALUE_WEIGHT)
+                        .withDisplacement(splitNoise(scale, asymmetry)),
+                    tuneSeason, TRIALS / 3, null);
+            System.out.printf("   scale %4.0f  calib error %5.1f%%%n", scale, hybridTuneError * 100);
+            if(hybridTuneError < bestHybridError){
+                bestHybridError = hybridTuneError;
+                bestHybridScale = scale;
+            }
+        }
+        double[][] hybridBuckets = new double[10][3];
+        double hybridError = calibrationErrorFor(
+                testSeason.model(testProfiles, AvailabilityModel.PICK_STANDARD_DEVIATION,
+                        AvailabilityModel.VALUE_WEIGHT)
+                    .withDisplacement(splitNoise(bestHybridScale, asymmetry)),
+                testSeason, TRIALS, hybridBuckets);
+
+        System.out.println("\nHead-to-head on 2025:\n");
+        System.out.printf("   %-28s %10s %14s%n", "MODEL", "WEIGHTED", "MID-BUCKETS");
+        System.out.printf("   %-28s %9.2f%% %13.1f%%%n", "gaussian (shipped)",
+                defaultsError * 100, midBucketGap(gaussianBuckets(configuration, testSeason, testProfiles)) * 100);
+        System.out.printf("   %-28s %9.2f%% %13.1f%%%n", "empirical bootstrap",
+                learnedError * 100, midBucketGap(learnedBuckets) * 100);
+        System.out.printf("   %-28s %9.2f%% %13.1f%%%n",
+                String.format("censored MLE x%.2f", bestScale),
+                censoredError * 100, midBucketGap(censoredBuckets) * 100);
+        System.out.printf("   %-28s %9.2f%% %13.1f%%%n",
+                String.format("hybrid split x%.0f", bestHybridScale),
+                hybridError * 100, midBucketGap(hybridBuckets) * 100);
+        System.out.println("\n   gate metric is WEIGHTED error; mid-buckets (10-90% predictions,");
+        System.out.println("   the hard region) shown so an easy-bucket flood cannot hide anything.");
+        double bestChallenger = Math.min(hybridError, Math.min(learnedError, censoredError));
+        System.out.println(bestChallenger < defaultsError
+                ? "   -> a learned model wins the gate"
+                : "   -> the gaussian keeps the gate");
+    }
+
+    /** Zero-mean split normal: falls outrun reaches by the given ratio. */
+    static DisplacementModel splitNoise(double scale, double asymmetry){
+        double left = scale;
+        double right = scale * asymmetry;
+        double meanShift = Math.sqrt(2.0 / Math.PI) * (right - left) / 2.0;
+        return (random, depth, position) -> {
+            double raw = random.nextDouble() < left / (left + right)
+                    ? -Math.abs(random.nextGaussian()) * left
+                    : Math.abs(random.nextGaussian()) * right;
+            return raw - meanShift;
+        };
+    }
+
+    private static double[][] gaussianBuckets(AAAConfiguration configuration, Season season,
+                                              ManagerProfiles profiles){
+        double[][] buckets = new double[10][3];
+        calibrationError(configuration, season, profiles,
+                AvailabilityModel.PICK_STANDARD_DEVIATION, AvailabilityModel.VALUE_WEIGHT,
+                TRIALS, buckets);
+        return buckets;
+    }
+
+    /** Mean absolute gap over the 10-90% predicted buckets with enough data. */
+    static double midBucketGap(double[][] buckets){
+        double total = 0.0;
+        int counted = 0;
+        for(int b = 1; b <= 8; b++){
+            if(buckets[b][2] < 20){
+                continue;
+            }
+            total += Math.abs(buckets[b][0] / buckets[b][2] - buckets[b][1] / buckets[b][2]);
+            counted++;
+        }
+        return counted == 0 ? 0.0 : total / counted;
+    }
+
+    private static void printBuckets(double[][] buckets){
+        System.out.printf("   %-12s %10s %10s %8s%n", "PREDICTED", "OBSERVED", "GAP", "N");
+        for(int b = 0; b < 10; b++){
+            if(buckets[b][2] < 20){
+                continue;
+            }
+            double predicted = buckets[b][0] / buckets[b][2];
+            double observed = buckets[b][1] / buckets[b][2];
+            System.out.printf("   %3d-%3d%%     %8.1f%% %+9.1f%% %8.0f%n",
+                    b * 10, b * 10 + 10, observed * 100, (observed - predicted) * 100, buckets[b][2]);
+        }
     }
 
 }
