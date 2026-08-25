@@ -65,6 +65,23 @@ public class InOutUtilities {
         }
     }
 
+    /**
+     * Cache with no date suffix, for data that never changes - a finished
+     * season's projections, a completed draft. Fetched once, kept forever.
+     */
+    public static String getCachedForever(String webURL, String filepathStart){
+        String filePath = "./" + filepathStart + ".txt";
+        File f = new File(filePath);
+        if(!f.exists() || f.isDirectory()) {
+            writeContentToFile(WebUrlUtility.urlToString(webURL), filePath);
+        }
+        try {
+            return Files.readString(Path.of(filePath));
+        } catch (IOException e) {
+            throw new RuntimeException("could not read cached " + filePath, e);
+        }
+    }
+
     public static void downloadTodaysWebPage(String webURL, String filepathStart){
 
         // Fetch first, write second: a failed fetch now throws instead of

@@ -16,6 +16,9 @@ import java.util.Map;
  *
  * That also means a defense can never be worth a keeper slot here, because it
  * cannot fill any of the nine.
+ *
+ * The flex split is not assumed here; ReplacementLevel fills flex greedily
+ * from the projection pool, so the split is an output, not a constant.
  */
 public class StartingLineup {
 
@@ -30,27 +33,8 @@ public class StartingLineup {
         FIXED.put(Position.TE, 1);
     }
 
-    /** How the two flex slots per team tend to be filled, league-wide. */
-    private static final Map<Position, Double> FLEX_SHARE = new EnumMap<>(Position.class);
-    static {
-        FLEX_SHARE.put(Position.RB, 0.5);
-        FLEX_SHARE.put(Position.WR, 0.42);
-        FLEX_SHARE.put(Position.TE, 0.08);
-    }
-
     public static boolean isSkillPosition(Position position){
         return FIXED.containsKey(position);
-    }
-
-    /**
-     * How many of a position the league starts in total, which is where
-     * replacement level sits: the last player at that position who starts
-     * somewhere.
-     */
-    public static int startedLeagueWide(Position position, int teams, int flexSlots){
-        int fixed = FIXED.getOrDefault(position, 0) * teams;
-        double flex = FLEX_SHARE.getOrDefault(position, 0.0) * flexSlots * teams;
-        return fixed + (int) Math.round(flex);
     }
 
     /** Counts the FLEX slots the league actually rosters. */

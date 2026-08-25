@@ -27,13 +27,11 @@ public class WaitOrTake {
     private static final int TRIALS = Integer.getInteger("trials", 4000);
     private static final long SEED = 20260824L;
 
+    /** Fitted from the league's own drafts; the pasted constants are gone. */
     public static Map<Position, Double> leagueBias(){
-        Map<Position, Double> bias = new EnumMap<>(Position.class);
-        bias.put(Position.QB, 20.4);
-        bias.put(Position.RB, -0.1);
-        bias.put(Position.WR, -11.7);
-        bias.put(Position.TE, 16.3);
-        return bias;
+        AAAConfiguration configuration = AAAConfiguration.getInstance();
+        int lastCompleted = Integer.parseInt(configuration.getSeason()) - 1;
+        return ManagerProfiles.fitThroughSeason(configuration, lastCompleted).leagueBiasMap();
     }
 
     public static void main(String[] args){

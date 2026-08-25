@@ -68,10 +68,11 @@ public class KeeperValuation {
         report.replacement = ReplacementLevel.forLeague(configuration, points);
         report.freedPickNumber = configuration.pickNumberFor(StartingLineup.lastStarterRound());
 
-        // Replacement with reach risk in it, rather than a fixed rank.
-        Map<Position, Double> bias = new EnumMap<>(Position.class);
-        bias.put(Position.QB, 20.4); bias.put(Position.RB, -0.1);
-        bias.put(Position.WR, -11.7); bias.put(Position.TE, 16.3);
+        // Replacement with reach risk in it, rather than a fixed rank. The
+        // bias is fitted from the league's own drafts, not hand-set.
+        int lastCompleted = Integer.parseInt(configuration.getSeason()) - 1;
+        Map<Position, Double> bias =
+                ManagerProfiles.fitThroughSeason(configuration, lastCompleted).leagueBiasMap();
         AvailabilityModel availability = AvailabilityModel.build(points, bias);
         int myLastStarterPick = configuration.pickNumberFor(StartingLineup.lastStarterRound());
         for(Position position : List.of(Position.QB, Position.RB, Position.WR, Position.TE)){
