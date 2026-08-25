@@ -140,7 +140,7 @@ public class AdpSnapshot {
                 }
             }
         }
-        List<String> sources = new ArrayList<>(List.of("sleeper", "borischen"));
+        List<String> sources = new ArrayList<>(ProjectionSources.automaticSources());
         if(Files.isDirectory(ProjectionBridge.EXTERNAL)){
             for(Path file : Files.list(ProjectionBridge.EXTERNAL).sorted().toList()){
                 String name = file.getFileName().toString();

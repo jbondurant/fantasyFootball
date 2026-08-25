@@ -26,6 +26,8 @@ public class ProjectionSources {
     static final List<Slot> SLOTS = List.of(
             new Slot("sleeper", "Rotowire stat lines via Sleeper (the default)", "automatic"),
             new Slot("borischen", "Boris Chen tiers mapped onto the points curve", "automatic"),
+            new Slot("espn", "ESPN stat lines via their fantasy API", "automatic"),
+            new Slot("cbs", "CBS Sports stat-line projection tables", "automatic"),
             new Slot("etr", "Establish The Run projections", "subscriber CSV export"),
             new Slot("fantasypoints", "Fantasy Points projections", "subscriber CSV export"),
             new Slot("pff", "Pro Football Focus projections", "subscriber CSV export"),
@@ -40,6 +42,11 @@ public class ProjectionSources {
             new Slot("numberfire", "NumberFire/FanDuel Research projections", "hand-keyed CSV (page is app-rendered)"),
             new Slot("rotogrinders", "RotoGrinders (DFS-oriented) numbers", "hand-keyed CSV"),
             new Slot("props", "Sportsbook season props as stat counts", "hand-keyed props CSV"));
+
+    /** The feeds that fetch themselves - archived daily by AdpSnapshot. */
+    public static List<String> automaticSources(){
+        return List.of("sleeper", "borischen", "espn", "cbs");
+    }
 
     /** The planner's feed resolver, blends included. */
     public static Map<String, Double> resolve(String source){
@@ -63,10 +70,16 @@ public class ProjectionSources {
             }
             return blended;
         }
-        if("borischen".equals(source)){
+        Map<String, Double> automatic = switch(source == null ? "" : source){
+            case "borischen" -> BorisChenTiers.leaguePointsBySleeperID();
+            case "espn" -> EspnProjections.leaguePointsBySleeperID();
+            case "cbs" -> CbsProjections.leaguePointsBySleeperID();
+            default -> null;
+        };
+        if(automatic != null){
             Map<String, Double> merged = new LinkedHashMap<>(
                     SleeperProjections.parseTodaysWebPage());
-            merged.putAll(BorisChenTiers.leaguePointsBySleeperID());
+            merged.putAll(automatic);
             return merged;
         }
         return ProjectionBridge.pointsForSource(source);
@@ -94,29 +107,35 @@ public class ProjectionSources {
         System.out.println("scoring declared (# passTD=4 rec=0.5) or a stat sheet with Sleeper");
         System.out.println("stat keys as headers. Files there stay out of git on purpose.");
 
-        // The live second opinion: where Boris Chen's tiers disagree with the
-        // default feed's ordering, on the decision-relevant board.
-        Map<String, Double> chen = BorisChenTiers.leaguePointsBySleeperID();
-        record Gap(String name, String position, double chenPoints, double sleeperPoints){}
-        List<Gap> gaps = new ArrayList<>();
-        for(Map.Entry<String, Double> entry : chen.entrySet()){
-            Double base = sleeper.get(entry.getKey());
-            Player player = Player.getPlayerFromSIDV2(entry.getKey());
-            if(base == null || player == null
-                    || SleeperProjections.adpOf(entry.getKey()) > 120){
+        // The live second opinions: where each automatic feed disagrees with
+        // the default on the decision-relevant board.
+        record Gap(String name, String position, double feed, double sleeperPoints){}
+        for(String source : automaticSources()){
+            if(source.equals("sleeper")){
                 continue;
             }
-            gaps.add(new Gap(player.firstName + " " + player.lastName,
-                    player.position.toString(), entry.getValue(), base));
-        }
-        gaps.sort(java.util.Comparator.comparingDouble(
-                (Gap gap) -> -Math.abs(gap.chenPoints() - gap.sleeperPoints())));
-        System.out.println("\nborischen vs sleeper, largest value disagreements (ADP <= 120):\n");
-        for(int i = 0; i < 12 && i < gaps.size(); i++){
-            Gap gap = gaps.get(i);
-            System.out.printf("   %-24s %-3s  chen %6.1f  sleeper %6.1f  %+7.1f%n",
-                    gap.name(), gap.position(), gap.chenPoints(), gap.sleeperPoints(),
-                    gap.chenPoints() - gap.sleeperPoints());
+            Map<String, Double> feed = resolve(source);
+            List<Gap> gaps = new ArrayList<>();
+            for(Map.Entry<String, Double> entry : feed.entrySet()){
+                Double base = sleeper.get(entry.getKey());
+                Player player = Player.getPlayerFromSIDV2(entry.getKey());
+                if(base == null || player == null
+                        || SleeperProjections.adpOf(entry.getKey()) > 120){
+                    continue;
+                }
+                gaps.add(new Gap(player.firstName + " " + player.lastName,
+                        player.position.toString(), entry.getValue(), base));
+            }
+            gaps.sort(java.util.Comparator.comparingDouble(
+                    (Gap gap) -> -Math.abs(gap.feed() - gap.sleeperPoints())));
+            System.out.printf("%n%s vs sleeper, largest value disagreements (ADP <= 120):%n%n",
+                    source);
+            for(int i = 0; i < 8 && i < gaps.size(); i++){
+                Gap gap = gaps.get(i);
+                System.out.printf("   %-24s %-3s  %s %6.1f  sleeper %6.1f  %+7.1f%n",
+                        gap.name(), gap.position(), source, gap.feed(), gap.sleeperPoints(),
+                        gap.feed() - gap.sleeperPoints());
+            }
         }
     }
 

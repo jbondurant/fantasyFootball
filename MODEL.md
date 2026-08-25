@@ -551,3 +551,16 @@ bucketed predicted-vs-actual survival within ±10 points), and the Allen
   Tuten. Purdy's case depends on believing Sleeper/Rotowire's QB spread
   over Chen's tiers - exactly the kind of dependence the slots exist to
   expose.
+
+  More automatic feeds (same day, on request): probed ESPN, CBS, NFL.com,
+  FantasySharks, FFToday, NumberFire for free fetchability. Two landed:
+  espn (their fantasy API, 480 players, full stat lines via the
+  X-Fantasy-Filter endpoint, stat ids verified against a known QB) and cbs
+  (server-rendered stat tables, 373 players, fixed column layouts with a
+  loud parse sanity-check). Both score under league settings through the
+  one shared scorer. NFL.com's old API is dead; FantasySharks ignores its
+  JSON flag; NumberFire renders in-app. Four automatic feeds now archive
+  daily (940 rows today). Notable pattern: ESPN and CBS both project
+  elites 40-65 points HIGHER than Sleeper/Rotowire - Rotowire is the
+  conservative outlier on stars, which matters for cliff-driven decisions
+  like the Allen round-2 call; CBS has Purdy at 384 vs Sleeper's 363.
