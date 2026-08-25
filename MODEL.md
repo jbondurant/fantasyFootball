@@ -54,6 +54,83 @@ number should be far higher — and B/E will compute it. The QB threats (Renteez
 slot 3, patekxwater slot 6, BHier slot 2) all pick BEFORE my 1.07, so the
 danger is Allen never reaching me at all, not being sniped between my picks.
 
+## The nine-round game (assumptions set 2026-08-25)
+
+Justin's clarified rules for the model:
+
+  1. League-scored Sleeper projections (6-pt passing TDs) are treated as exact
+     season outcomes. No boom/bust modeling.
+  2. No injury differential between players.
+  3. No in-season trades.
+  4. Nothing after round 9 matters: the game is 12 teams x 9 rounds = 108
+     selections, minus keeper-occupied slots.
+  5. Nobody drafts a defense - which matches history inside rounds 1-9, where
+     the league has never taken one.
+
+Two structural consequences:
+
+  - Assumptions 4+5 dissolve the deep-board censoring problem and the DEF
+    pollution that sank the first learned models. Rounds 1-9 are ~500
+    historical selections, essentially all with solid ADP.
+  - A keeper costing round 10+ consumes NONE of the nine picks: the player is
+    off the board for everyone else and the slot he occupies is worthless.
+    Under these rules a r12/r13 keeper is close to pure free VORP, and keeper
+    valuation flips accordingly. CONFIRM before building on it.
+
+### B - the selection model (replaces the landing-draw architecture)
+
+The lesson from the challenger ladder: fitting marginal displacement learns
+true facts about the wrong quantity. The fix is structural - model the thing
+that actually happens, one SELECTION at a time:
+
+  P(manager m takes player p | board state) = conditional logit over the
+  remaining board, with features per (m, p, state):
+    - market score: ADP (+ per-player market spread where available)
+    - league-value score (points over positional replacement)
+    - position x depth terms
+    - manager timing covariates (their fitted positional tendencies)
+    - roster need: what m already holds, keepers included
+
+  Simulating from this fitted process IS the generative model - players are
+  coupled by construction (every selection removes one), so there is no
+  independent-draw-then-sort artifact and no marginal-vs-simulator mismatch.
+  Availability = Monte Carlo over the process, restricted to the 9-round game
+  in true serpentine order with keeper-occupied slots skipped.
+
+"Player-by-player models", honestly: with one draft per season, a free-standing
+model per player has n<=5 observations and is not identifiable. Player-by-player
+means player-specific COVARIATES through a shared model - each player still gets
+his own distinct survival curve (a Purdy with value-rank 6 / ADP-rank 15 gets
+mixture-like behavior through the value feature), which is the deliverable that
+matters. Candidate per-player spread input: FantasyFootballCalculator publishes
+per-player ADP stdev, per season, already reachable via FFCalculatorSD - a
+gated feature, not an assumption.
+
+Fitting: maximum likelihood (concave for conditional logit), plain-Java
+gradient ascent, on rounds 1-9 of 2021-2024. Seconds, not hours - the
+compute-heavy part is the Monte Carlo, which Justin has approved.
+
+### B gates (all on 2025, rounds 1-9 only, fit through 2024)
+
+  1. Selection likelihood / top-k vs the incumbent gaussian board ordering.
+  2. Per-player availability calibration at my nine historical pick slots.
+  3. Per-manager position-timing calibration (does simulated tommyrads wait on
+     QB like real tommyrads).
+  Ship only what beats the incumbent; the incumbent stays printed beside it.
+
+### C - the optimizer on top
+
+  - State: my pick index + positional counts already held (keepers included).
+  - Policy: position-priority per pick, player = best available at the chosen
+    position under the same choice model; policy search over sequences,
+    evaluated by simulation.
+  - Objective: mean of best-9 total, or mean - lambda*(mean - p10), knobs
+    -Prisk/-Pquantile. Availability risk only, per instruction.
+  - Keeper value: V(K) - V(none), both branches optimized, with the r10+
+    keeper consequence above.
+  - Acceptance test: the round-3-good vs round-8-amazing-but-sometimes-sniped
+    case produces two distributions whose ranking flips as lambda rises.
+
 ## Standing rule
 
 Every numerical answer comes from code committed to this repo — a runnable
