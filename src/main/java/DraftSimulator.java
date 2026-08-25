@@ -105,8 +105,19 @@ public class DraftSimulator {
                 model, qbEarliness);
     }
 
+    /** How my own slots pick when a planner drives them instead of the model. */
+    public interface MyPolicy {
+        /** The remaining board in ADP order; returns the sleeper id to take. */
+        String choose(List<String> board, Slot slot);
+    }
+
     /** One simulated draft: sleeper id -> the pick number that took the player. */
     public Map<String, Integer> simulateOnce(Random random){
+        return simulateOnce(random, null, null);
+    }
+
+    /** The same, with the given manager's picks driven by a policy. */
+    public Map<String, Integer> simulateOnce(Random random, String me, MyPolicy myPolicy){
         List<String> board = new ArrayList<>(initialBoard);
         Map<String, Map<Position, Integer>> rosters = new HashMap<>();
         for(Map.Entry<String, Map<Position, Integer>> entry : initialRosters.entrySet()){
@@ -117,18 +128,29 @@ public class DraftSimulator {
             if(slot.keeperSlot() || board.isEmpty()){
                 continue;
             }
-            List<String> choiceSet = new ArrayList<>(
-                    board.subList(0, Math.min(board.size(), SelectionModel.CHOICE_SET)));
             Map<Position, Integer> roster = rosters.computeIfAbsent(
                     slot.manager(), u -> new EnumMap<>(Position.class));
-            double[] probabilities = model.choiceProbabilities(SelectionModel.features(
-                    choiceSet, adp, points, roster, qbEarliness.getOrDefault(slot.manager(), 0.0)));
-            String chosen = choiceSet.get(sample(probabilities, random));
+            String chosen;
+            if(myPolicy != null && slot.manager().equals(me)){
+                chosen = myPolicy.choose(java.util.Collections.unmodifiableList(board), slot);
+            }
+            else {
+                List<String> choiceSet = new ArrayList<>(
+                        board.subList(0, Math.min(board.size(), SelectionModel.CHOICE_SET)));
+                double[] probabilities = model.choiceProbabilities(SelectionModel.features(
+                        choiceSet, adp, points, roster,
+                        qbEarliness.getOrDefault(slot.manager(), 0.0)));
+                chosen = choiceSet.get(sample(probabilities, random));
+            }
             takenAt.put(chosen, slot.pickNumber());
             board.remove(chosen);
             roster.merge(Player.getPlayerFromSIDV2(chosen).position, 1, Integer::sum);
         }
         return takenAt;
+    }
+
+    public Slot slotAt(int pickNumber){
+        return slotByPickNumber.get(pickNumber);
     }
 
     private static int sample(double[] probabilities, Random random){

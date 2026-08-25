@@ -57,4 +57,49 @@ public class StartingLineup {
         return SKILL_SLOTS;
     }
 
+    /** FLEX slots in the nine (RB/WR/TE; a QB can never flex). */
+    public static final int FLEX_SLOTS = 2;
+
+    /**
+     * The scoring rule of the nine-round game: the best legal fill of
+     * QB, RB, RB, WR, WR, WR, TE, FLEX, FLEX from these players. Greedy is
+     * optimal here - fixed slots take the best at their position, the flexes
+     * take the best two left over - and unfilled slots score zero. A round-13
+     * keeper "costing a round 9" is emergent: he only displaces the weakest
+     * of the nine, never a specific pick.
+     */
+    public static double bestNine(java.util.Collection<String> sleeperIDs,
+                                  Map<String, Double> points){
+        Map<Position, java.util.List<Double>> byPosition = new EnumMap<>(Position.class);
+        for(Position position : FIXED.keySet()){
+            byPosition.put(position, new java.util.ArrayList<>());
+        }
+        for(String sleeperID : sleeperIDs){
+            Player player = Player.getPlayerFromSIDV2(sleeperID);
+            if(player == null || !isSkillPosition(player.position)){
+                continue;
+            }
+            byPosition.get(player.position).add(points.getOrDefault(sleeperID, 0.0));
+        }
+        double total = 0;
+        java.util.List<Double> flexPool = new java.util.ArrayList<>();
+        for(Map.Entry<Position, Integer> slot : FIXED.entrySet()){
+            java.util.List<Double> have = byPosition.get(slot.getKey());
+            have.sort(java.util.Comparator.reverseOrder());
+            for(int s = 0; s < slot.getValue() && s < have.size(); s++){
+                total += have.get(s);
+            }
+            if(!slot.getKey().equals(Position.QB)){
+                for(int s = slot.getValue(); s < have.size(); s++){
+                    flexPool.add(have.get(s));
+                }
+            }
+        }
+        flexPool.sort(java.util.Comparator.reverseOrder());
+        for(int s = 0; s < FLEX_SLOTS && s < flexPool.size(); s++){
+            total += flexPool.get(s);
+        }
+        return total;
+    }
+
 }
