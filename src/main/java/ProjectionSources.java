@@ -25,7 +25,7 @@ public class ProjectionSources {
 
     static final List<Slot> SLOTS = List.of(
             new Slot("sleeper", "Rotowire stat lines via Sleeper (the default)", "automatic"),
-            new Slot("borischen", "Boris Chen tiers mapped onto the points curve", "automatic"),
+            new Slot("borischen", "FP-consensus ranks (Chen tiers) on the points curve - not independent of espn/cbs", "automatic"),
             new Slot("espn", "ESPN stat lines via their fantasy API", "automatic"),
             new Slot("cbs", "CBS Sports stat-line projection tables", "automatic"),
             new Slot("etr", "Establish The Run projections", "subscriber CSV export"),

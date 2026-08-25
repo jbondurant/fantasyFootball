@@ -8,7 +8,13 @@ import java.util.Map;
 
 /**
  * Boris Chen's half-PPR draft tiers - free, current, and fetchable as plain
- * text. Tiers are ranks, not points, so they become a value feed by
+ * text. PROVENANCE MATTERS: Chen clusters FantasyPros ECR, the aggregated
+ * expert consensus ranks - so this feed is NOT independent of the expert
+ * ecosystem (ESPN and CBS analysts are among the rankers ECR aggregates).
+ * Treat it as "the consensus, tiered", never as a fourth opinion alongside
+ * the three genuinely distinct model shops (Rotowire, ESPN, CBS).
+ *
+ * Tiers are ranks, not points, so they become a value feed by
  * transplanting them onto Sleeper's points curve: the r-th ranked player at
  * a position gets the r-th best Sleeper league-scored projection there,
  * except that everyone in the same TIER gets the tier's average - which is

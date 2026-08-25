@@ -577,3 +577,15 @@ bucketed predicted-vs-actual survival within ±10 points), and the Allen
   The keeper question is settled as robustly as it can be before the
   declaration deadline: keep Tuten (pair decision pending Justin's second
   slot, all keeper values move as leaguemates declare).
+
+  Correction (Justin's catch, same day): borischen is clustered FantasyPros
+  ECR - consensus expert RANKS, whose panel includes ESPN and CBS analysts.
+  The repo therefore has THREE genuinely distinct projection shops
+  (Rotowire via sleeper, ESPN, CBS) plus one consensus-of-ranks feed, not
+  five independent opinions. Evidence properly weighted: Tuten still ranks
+  first under each of the three primary shops SEPARATELY (+15.8 / +20.6 /
+  +8.9), which is real triangulation; Chen and the blend agreeing adds
+  little new. Purdy's fragility also survives - it is primary-shop
+  disagreement (Rotowire +14 vs ESPN -1 vs CBS -1), not a consensus
+  artifact. For blending, blend:sleeper,espn,cbs is the independent-shops
+  average; adding borischen double-counts the consensus.
