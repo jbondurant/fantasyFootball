@@ -64,6 +64,16 @@ public class KeeperValuation {
         String myID = configuration.getMyID();
         Map<String, Double> points = SleeperProjections.parseTodaysWebPage();
 
+        // Other managers' keepers start for THEIR teams, so they count toward
+        // replacement level - but nobody can draft them, so they leave the
+        // availability pool, and the picks their rounds occupy consume no one.
+        java.util.Set<String> keptByOthers = new java.util.HashSet<>();
+        for(Keeper declared : configuration.getTodaysKeepers()){
+            keptByOthers.add(declared.player.sleeperIDString);
+        }
+        Map<String, Double> draftable = new HashMap<>(points);
+        draftable.keySet().removeAll(keptByOthers);
+
         Report report = new Report();
         report.replacement = ReplacementLevel.forLeague(configuration, points);
         report.freedPickNumber = configuration.pickNumberFor(StartingLineup.lastStarterRound());
@@ -73,14 +83,15 @@ public class KeeperValuation {
         int lastCompleted = Integer.parseInt(configuration.getSeason()) - 1;
         Map<Position, Double> bias =
                 ManagerProfiles.fitThroughSeason(configuration, lastCompleted).leagueBiasMap();
-        AvailabilityModel availability = AvailabilityModel.build(points, bias);
+        AvailabilityModel availability = AvailabilityModel.build(draftable, bias)
+                .withOccupiedPicks(configuration.keeperOccupiedPickNumbers());
         int myLastStarterPick = configuration.pickNumberFor(StartingLineup.lastStarterRound());
         for(Position position : List.of(Position.QB, Position.RB, Position.WR, Position.TE)){
             report.riskAwareReplacement.put(position,
                     availability.expectedBestAvailable(position, myLastStarterPick, 400, 20260824L));
         }
 
-        Valued freed = bestAvailableAt(configuration, report, points);
+        Valued freed = bestAvailableAt(configuration, report, draftable);
         report.freedPickValue = freed == null ? 0.0 : freed.valueOverReplacement;
         report.freedPickDescription = freed == null ? "nothing"
                 : freed.keeper.player.firstName + " " + freed.keeper.player.lastName

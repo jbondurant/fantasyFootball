@@ -28,11 +28,11 @@ Scope decisions (Justin's, deliberate):
 
 | # | Component | Status | Replaces |
 |---|-----------|--------|----------|
-| A | `ManagerProfiles` — per-manager positional timing fitted from 2021-25 with shrinkage to the league mean; flex-share fitted, not assumed | new | the bias constants (20.4/-0.1/-11.7/16.3) hand-pasted in three files; the 50/42/8 flex guess |
+| A | `ManagerProfiles` — per-manager positional timing fitted from 2021-25 with shrinkage to the league mean; flex-share fitted, not assumed | DONE | the bias constants (20.4/-0.1/-11.7/16.3) hand-pasted in three files; the 50/42/8 flex guess |
 | B | `BoardSimulator` — true serpentine order from the real draft_order; keeper-occupied slots skip their round; each opponent picks a position from their profile *conditioned on their roster so far and their declared keepers*, then the best player at it by blended ADP/league-value with noise | new | AvailabilityModel's order-blind Gaussian draw; the fixed-script StrategyBot sim |
 | C | `MyPickOptimizer` — enumerate my position-sequences over simulated boards, maximize expected 9-starter total; outputs the recommended position per pick, per-player survival at each of my picks, and V(K) | new | KeeperChooser.draftPlan's fixed script; WaitOrTake (subsumed) |
 | D | `KeeperValuation` v2 = V(K) − V(none) | rewrite | all previous keeper metrics — one number ships |
-| E | `Backtest2025` — fit on ≤2024, replay 2025; report position-timing calibration per manager and availability calibration (of players scored 70-80% available, how many were?). PICK_SD and VALUE_WEIGHT get tuned here, never hand-set | formalize | scratch Python backtest |
+| E | `Backtest2025` — fit on ≤2024, replay 2025; report position-timing calibration per manager and availability calibration (of players scored 70-80% available, how many were?). PICK_SD and VALUE_WEIGHT get tuned here, never hand-set | DONE (`DraftBacktest`) | scratch Python backtest |
 | F | Draft-day mode — C conditioned on live picks | later | SleeperLiveDraft's current advice path |
 
 Order: A → E baseline → B (gate: must beat the order-blind model on E's
@@ -78,3 +78,18 @@ get ported here (A and E port the last of them).
 E reports availability calibration on 2025 within agreed error (proposal:
 bucketed predicted-vs-actual survival within ±10 points), and the Allen
 7→18 survival is produced order-aware. Then: second projection source.
+
+## Results so far (2026-08-25)
+
+- A fitted: league bias QB +20.0, RB +1.2, WR -10.4, TE +17.5 (season-centered,
+  pinned by smoke test). Per-manager ADP-residual offsets are small after
+  shrinkage (-3..+6); the timing hazard for B is a separate fit.
+- E on 2025 (fit 2021-24): pick prediction ADP 14.7/42.9 (top-1/top-5) ->
+  +league 16.0/50.6 -> +manager 16.0/51.3. Availability calibration weighted
+  error 0.4-0.7%, worst bucket 9.3 points - inside the +/-10 gate. Tuning grid
+  is a flat plateau (SD 16-24, VW 0-0.25 all within noise; the 2024-chosen
+  point transfers worse to 2025 than the defaults), so SD=20 / VW=0.25 stand
+  and `DraftBacktest` prints the surface every run.
+- Production now removes the 22 declared keepers from the draftable pool and
+  marks their rounds as consuming nobody. That thinned board moved the keeper
+  numbers: Flowers +30, Tuten +12, Purdy -3.

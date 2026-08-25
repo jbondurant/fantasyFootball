@@ -37,7 +37,16 @@ public class WaitOrTake {
     public static void main(String[] args){
         AAAConfiguration configuration = AAAConfiguration.getInstance();
         Map<String, Double> points = SleeperProjections.parseTodaysWebPage();
-        AvailabilityModel model = AvailabilityModel.build(points, leagueBias());
+
+        // Kept players are not draftable and keeper rounds consume nobody.
+        java.util.Set<String> kept = new java.util.HashSet<>();
+        for(Keeper declared : configuration.getTodaysKeepers()){
+            kept.add(declared.player.sleeperIDString);
+        }
+        Map<String, Double> draftable = new java.util.HashMap<>(points);
+        draftable.keySet().removeAll(kept);
+        AvailabilityModel model = AvailabilityModel.build(draftable, leagueBias())
+                .withOccupiedPicks(configuration.keeperOccupiedPickNumbers());
 
         int rounds = configuration.getDraftRounds();
         List<Integer> myPicks = new ArrayList<>();
