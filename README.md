@@ -15,6 +15,7 @@ settings, the season - is read back from the API.
 ./gradlew run -Pmain=TradeFinder          # trades worth proposing
 ./gradlew run -Pmain=SleeperLiveDraft     # draft-day advice
 ./gradlew run -Pmain=KeeperValuation      # which keepers are worth a slot
+./gradlew run -Pmain=KeeperEligibility    # who is keeping whom, and for how long
 ./gradlew run -Pmain=KeeperChooser        # the same question by simulation
 ./gradlew run -Pmain=KeeperChooser -Psims=200   # ...with tighter error bars
 ./gradlew run -Pmain=KeeperAudit          # check keeper costs before the draft
