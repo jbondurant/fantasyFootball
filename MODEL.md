@@ -564,3 +564,16 @@ bucketed predicted-vs-actual survival within ±10 points), and the Allen
   elites 40-65 points HIGHER than Sleeper/Rotowire - Rotowire is the
   conservative outlier on stars, which matters for cliff-driven decisions
   like the Allen round-2 call; CBS has Purdy at 384 vs Sleeper's 363.
+
+  Keeper sensitivity, all five feeds (200 rollouts each):
+
+                sleeper  borischen   espn    cbs   blend(all 4)
+    Tuten r12    +15.8     +20.2    +20.6   +8.9      +26.2    <- FIRST under
+    Purdy r13    +14.0      +0.1     -1.2   -0.6      +19.4       every feed
+    Flowers r4    +5.4      +8.7     +8.6    n/a      +16.8
+
+  Tuten ranks first on every projection source that exists in the repo.
+  Purdy spans -1.2 to +19.4 - he is a bet on Rotowire's specific QB spread.
+  The keeper question is settled as robustly as it can be before the
+  declaration deadline: keep Tuten (pair decision pending Justin's second
+  slot, all keeper values move as leaguemates declare).
