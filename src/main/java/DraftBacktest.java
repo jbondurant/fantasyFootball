@@ -98,13 +98,17 @@ public class DraftBacktest {
     /** The same measurement for any availability model - Gaussian or learned. */
     public static double calibrationErrorFor(AvailabilityModel model, Season season,
                                              int trials, double[][] bucketReportOut){
-
         int[] checkpoints = new int[15];
         for(int c = 0; c < 15; c++){
             checkpoints[c] = 13 + 12 * c;
         }
-        Map<String, double[]> predicted = model.survivalMatrix(checkpoints, trials, SEED);
+        return calibrationOfMatrix(model.survivalMatrix(checkpoints, trials, SEED),
+                checkpoints, season, bucketReportOut);
+    }
 
+    /** And for ANY predicted survival matrix, however it was produced. */
+    public static double calibrationOfMatrix(Map<String, double[]> predicted, int[] checkpoints,
+                                             Season season, double[][] bucketReportOut){
         Map<String, Integer> actualPick = new HashMap<>();
         for(JsonElement pickElement : season.picks){
             JsonObject pick = pickElement.getAsJsonObject();
@@ -404,7 +408,7 @@ public class DraftBacktest {
         return counted == 0 ? 0.0 : total / counted;
     }
 
-    private static void printBuckets(double[][] buckets){
+    static void printBuckets(double[][] buckets){
         System.out.printf("   %-12s %10s %10s %8s%n", "PREDICTED", "OBSERVED", "GAP", "N");
         for(int b = 0; b < 10; b++){
             if(buckets[b][2] < 20){

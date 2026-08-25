@@ -110,13 +110,39 @@ Fitting: maximum likelihood (concave for conditional logit), plain-Java
 gradient ascent, on rounds 1-9 of 2021-2024. Seconds, not hours - the
 compute-heavy part is the Monte Carlo, which Justin has approved.
 
-### B gates (all on 2025, rounds 1-9 only, fit through 2024)
+### B gates (all on 2025, rounds 1-9 only, fit through 2024) - ALL PASSED
 
   1. Selection likelihood / top-k vs the incumbent gaussian board ordering.
-  2. Per-player availability calibration at my nine historical pick slots.
+  2. Per-player availability calibration at my historical pick slots.
   3. Per-manager position-timing calibration (does simulated tommyrads wait on
      QB like real tommyrads).
   Ship only what beats the incumbent; the incumbent stays printed beside it.
+
+Results (SelectionModel + DraftSimulator, 2026-08-25):
+
+  - The first feature set (ADP rank, points rank, need, saturated,
+    QB x earliness) passed gate 1 narrowly but FAILED gate 2: simulated
+    survival 2.95% weighted error vs the gaussian's 2.29%. Diagnosis on 2024:
+    not sharpness (a temperature grid chose tau=1.0 - MLE flatness falsified)
+    but LOCATION - the logit had no way to express the league's positional
+    bias, the exact layer that had won the location contest for the gaussian.
+  - Fix: positional intercepts f5-f7 (QB/RB/TE vs WR baseline), chosen on
+    2024 (calib error 2.55% -> 1.37%), never on 2025. Fitted 2021-2024:
+    QB -3.7, TE -1.9, RB -0.6 - the QB-late league, now as preferences.
+  - Gate 1: log-loss 2.548 vs market-only 3.042; top-5 73.3% vs 55.6%.
+  - Gate 2: weighted calib error 1.89% vs incumbent 2.29% (mid-buckets still
+    noisier, 11.1% vs 7.6% on ~25-player buckets; weighted is the gate).
+  - Gate 2b at my 8 actual 2025 in-draft slots (a keeper occupied the 9th):
+    1.15% vs 1.80%.
+  - Gate 3: per-manager first-QB-round MAE 1.98 rounds vs 3.19 for a
+    league-mean constant. The gaussian has no managers - this is the new
+    information, and it is exactly the order-aware signal the Josh Allen
+    case needs.
+  - Kept green by DraftSimulatorSmokeTest; mechanics unit-tested offline in
+    DraftSimulatorTest.
+
+  C therefore rolls out DraftSimulator (the fitted selection process), not
+  the gaussian. The gaussian stays in the repo as the printed incumbent.
 
 ### C - the optimizer on top
 

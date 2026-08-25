@@ -27,6 +27,9 @@ import java.util.Set;
  *   f2  unfilled starter slots at the player's position (roster need)
  *   f3  position already saturated (QB in hand and this is a QB, etc.)
  *   f4  isQB times the manager's fitted QB-timing earliness
+ *   f5-f7  positional intercepts (QB, RB, TE; WR is the baseline) - the
+ *          league-bias layer that won the location contest, expressed as
+ *          preferences rather than pick offsets
  *
  * Fitting is concave maximum likelihood; plain gradient ascent converges in
  * seconds on ~500 in-game selections.
@@ -35,7 +38,7 @@ import java.util.Set;
  */
 public class SelectionModel {
 
-    public static final int FEATURES = 5;
+    public static final int FEATURES = 8;
     public static final int GAME_ROUNDS = 9;
     static final int CHOICE_SET = 60;
     static final double ADP_LIMIT = 250.0;
@@ -51,6 +54,20 @@ public class SelectionModel {
 
     public double[] beta(){
         return beta.clone();
+    }
+
+    /**
+     * The same preferences, sharpened. MLE optimizes per-pick log-loss, which
+     * can leave the choice distribution flatter than real drafts compound to;
+     * utilities are linear, so a temperature is just a scaled beta. Tuned on a
+     * held-out season by the simulator, exactly like the gaussian's sigma was.
+     */
+    public SelectionModel scaled(double temperature){
+        double[] scaled = beta.clone();
+        for(int f = 0; f < scaled.length; f++){
+            scaled[f] *= temperature;
+        }
+        return new SelectionModel(scaled);
     }
 
     public double utility(double[] features){
@@ -319,6 +336,9 @@ public class SelectionModel {
             features[a][2] = need;
             features[a][3] = held >= starterSlots.get(position) ? 1.0 : 0.0;
             features[a][4] = position.equals(Position.QB) ? managerQBEarliness : 0.0;
+            features[a][5] = position.equals(Position.QB) ? 1.0 : 0.0;
+            features[a][6] = position.equals(Position.RB) ? 1.0 : 0.0;
+            features[a][7] = position.equals(Position.TE) ? 1.0 : 0.0;
         }
         return features;
     }
@@ -349,13 +369,16 @@ public class SelectionModel {
         System.out.printf("train %d selections (2021-2024, rounds 1-%d), test %d (2025)%n%n",
                 train.size(), GAME_ROUNDS, test.size());
 
-        boolean[] marketOnly = {true, false, false, false, false};
-        boolean[] full = {true, true, true, true, true};
+        boolean[] marketOnly = new boolean[FEATURES];
+        marketOnly[0] = true;
+        boolean[] full = new boolean[FEATURES];
+        java.util.Arrays.fill(full, true);
         SelectionModel market = fit(train, marketOnly);
         SelectionModel model = fit(train, full);
 
         System.out.println("fitted coefficients (full model):");
-        String[] names = {"log ADP rank", "log points rank", "starter need", "saturated", "QB x earliness"};
+        String[] names = {"log ADP rank", "log points rank", "starter need", "saturated",
+                "QB x earliness", "QB intercept", "RB intercept", "TE intercept"};
         for(int f = 0; f < FEATURES; f++){
             System.out.printf("   %-16s %+7.3f%n", names[f], model.beta()[f]);
         }
