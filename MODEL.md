@@ -142,6 +142,25 @@ compute-heavy part is the Monte Carlo, which Justin has approved.
   - Acceptance test: the round-3-good vs round-8-amazing-but-sometimes-sniped
     case produces two distributions whose ranking flips as lambda rises.
 
+### Mock drafts - investigated 2026-08-25, not recoverable
+
+The hypothesis (players a manager reaches for in late mocks get reached for
+again in the real draft) is good but untestable: Sleeper's per-user drafts
+endpoint returns LEAGUE drafts only - verified across all twelve managers and
+seasons 2021-2026, exactly one real draft each per season and nothing else -
+and historical mocks 404 even by a known draft id, so they are ephemeral.
+Leaguemates' mocks cannot be collected retroactively or enumerated going
+forward.
+
+Two substitutes:
+  - FFC per-player ADP stdev (per season, backtestable) - the gated feature
+    already planned for the selection model.
+  - Late-market ADP drift: AdpSnapshot appends today's Sleeper ADP to
+    data/adp-snapshots.csv; run every day or two before the draft and the
+    risers are the market's reaches. REPORT-ONLY: there is no historical
+    drift series to backtest, so it cannot pass a gate and never feeds the
+    fitted model - it informs the human.
+
 ## Standing rule
 
 Every numerical answer comes from code committed to this repo — a runnable
