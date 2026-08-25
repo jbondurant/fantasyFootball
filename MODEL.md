@@ -538,3 +538,16 @@ bucketed predicted-vs-actual survival within ±10 points), and the Allen
   Accuracy ranking between sources is deliberately deferred (Justin's
   call): sources plug in now, get archived by daily runs going forward,
   and the shootout happens when actuals exist to score them against.
+
+  Keeper sensitivity across feeds (200 rollouts, noise ~+/-1.8):
+
+                     sleeper   borischen   blend
+    Tuten r12         +15.8      +20.2     +20.4   <- first under EVERY feed
+    Purdy r13         +14.0       +0.1     +12.0   <- source-fragile: his value
+    Flowers r4         +5.4       +8.7      +9.8      rides on the Allen cliff,
+                                                      which Chen's flat QB
+                                                      tier 1 erases
+  The robust conclusion survives the projection-source question: keep
+  Tuten. Purdy's case depends on believing Sleeper/Rotowire's QB spread
+  over Chen's tiers - exactly the kind of dependence the slots exist to
+  expose.
