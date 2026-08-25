@@ -315,3 +315,22 @@ bucketed predicted-vs-actual survival within ±10 points), and the Allen
   ~1.7 vs +/-1.0 noise - still effectively a tie), Flowers +5.6.
   Observational caveat: one league, ~500 selections - "no detectable
   herding" is the claim, not "impossible".
+
+### The tier-cliff question (Justin's TE observation, 2026-08-25)
+
+  Observation: recent TE boards had substantial drops between few players.
+  TierCliffs confirms it in the projections the managers saw: TE 2022 fell
+  37 then 50 points across the top three; 2023 36/22; 2025 24/26. The 2026
+  TE board is gradual (16/14/14) - and under league scoring the big 2026
+  cliff is at QB: Allen 415 -> 380, which is why the planner fights for him.
+
+  As an OPPONENT-behavior feature (f9: the drop below the best remaining
+  player at his position), the cliff fit to -0.12 and the chooser rejected
+  it (1.25% vs 1.19%): national ADP already prices tiers, so the local gap
+  magnitude predicts nothing extra about who gets taken. It also dissolves
+  the TE anti-herding puzzle - post-cliff TEs are just low-ADP, low-value
+  players; no chase mechanism needed. The feature stays in the code with
+  the chooser variant for re-verdicts, but out of shippedFeatures().
+
+  My OWN decisions feel cliffs fully regardless: best-nine scoring uses
+  point magnitudes, and the snipe table's drop-if-gone IS the local cliff.

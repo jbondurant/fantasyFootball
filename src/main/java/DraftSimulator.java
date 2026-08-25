@@ -345,12 +345,15 @@ public class DraftSimulator {
         }
         boolean[] withIntercepts = withoutIntercepts.clone();
         withIntercepts[5] = withIntercepts[6] = withIntercepts[7] = true;
-        boolean[] withRun = new boolean[SelectionModel.FEATURES];
-        Arrays.fill(withRun, true);
+        boolean[] withRun = withIntercepts.clone();
+        withRun[8] = true;
+        boolean[] withCliff = new boolean[SelectionModel.FEATURES];
+        Arrays.fill(withCliff, true);
         Map<boolean[], String> labels = new java.util.LinkedHashMap<>();
         labels.put(withoutIntercepts, "no intercepts");
         labels.put(withIntercepts, "with intercepts");
         labels.put(withRun, "intercepts + QB run");
+        labels.put(withCliff, "QB run + cliff");
 
         System.out.println("Choosing features and temperature on 2024 (model fitted 2021-2023):\n");
         boolean[] bestFeatures = withoutIntercepts;

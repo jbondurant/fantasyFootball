@@ -171,6 +171,25 @@ class DraftSimulatorTest {
     }
 
     @Test
+    void theCliffBelongsOnlyToTheBestAtHisPosition(){
+        // RB_A 280 over RB_B 250: a 30-point cliff, scaled by the 100 cap.
+        // WR_A 270 over WR_B 240 likewise; the seconds carry no cliff.
+        List<String> choiceSet = List.of("103", "104", "105", "106");
+        double[][] features = SelectionModel.features(choiceSet, adp(), points(),
+                new EnumMap<>(Position.class), 0.0, List.of());
+
+        Assertions.assertEquals(0.30, features[0][9], 1e-9, "RB_A carries the RB cliff");
+        Assertions.assertEquals(0.0, features[1][9], 1e-9, "RB_B carries none");
+        Assertions.assertEquals(0.30, features[2][9], 1e-9, "WR_A carries the WR cliff");
+        Assertions.assertEquals(0.0, features[3][9], 1e-9);
+
+        // A position with a single representative counts as a full cliff.
+        double[][] lonely = SelectionModel.features(List.of("101", "103", "104"), adp(), points(),
+                new EnumMap<>(Position.class), 0.0, List.of());
+        Assertions.assertEquals(1.0, lonely[0][9], 1e-9, "the only QB is a full cliff");
+    }
+
+    @Test
     void realFirstRoundIgnoresKeepersAndLateRounds(){
         JsonArray picks = new JsonArray();
         picks.add(pick("101", "alice", 1, 1, true));    // kept QB does not count

@@ -36,6 +36,11 @@ import java.util.Set;
  *          because a pooled version fit to +0.01: the raw run rates go
  *          opposite ways by position (QB +5 points, TE -7) and a shared
  *          coefficient cancels itself
+ *   f9     the cliff: for the best remaining player at his position, the
+ *          projected-points drop to the next one (capped, scaled) - Justin's
+ *          tier observation ("the drop between many TEs was substantial").
+ *          Rank features cannot see gap magnitudes; this one is the
+ *          fall-off itself
  *
  * Fitting is concave maximum likelihood; plain gradient ascent converges in
  * seconds on ~500 in-game selections.
@@ -44,12 +49,14 @@ import java.util.Set;
  */
 public class SelectionModel {
 
-    public static final int FEATURES = 9;
+    public static final int FEATURES = 10;
     public static final int GAME_ROUNDS = 9;
     static final int CHOICE_SET = 60;
     static final double ADP_LIMIT = 250.0;
     /** Selections that count as "recent" for the run feature. */
     public static final int RUN_WINDOW = 6;
+    /** Point drop that counts as a full cliff for f9. */
+    public static final double CLIFF_CAP = 100.0;
 
     /**
      * The feature set that won the leakage-safe 2024 chooser in
@@ -60,10 +67,17 @@ public class SelectionModel {
      * cell). The fitted run coefficient is NEGATIVE (-0.57): a recent QB run
      * suppresses the next QB pick once ADP, need and saturation are held
      * fixed - the opposite of the herding story the raw counts suggest.
+     * The cliff feature f9 is OUT: it fit to -0.12 (a full cliff moves
+     * utility a tenth of what one ADP rank does) and the chooser scored
+     * 1.25% with it versus 1.19% without. National ADP already prices the
+     * tiers, so the local gap adds nothing about OPPONENT behavior - my own
+     * decisions still feel cliffs fully, through the planner's point values
+     * and the snipe decomposition's drop-if-gone.
      */
     public static boolean[] shippedFeatures(){
         boolean[] active = new boolean[FEATURES];
         java.util.Arrays.fill(active, true);
+        active[9] = false;
         return active;
     }
 
@@ -385,6 +399,29 @@ public class SelectionModel {
             features[a][8] = position.equals(Position.QB)
                     ? runCount(recentPicks, Position.QB) : 0.0;
         }
+        // The cliff: only the best remaining player at each position carries
+        // it - he is the one a fall-off makes urgent.
+        Map<Position, Integer> bestAt = new EnumMap<>(Position.class);
+        Map<Position, Double> bestPoints = new EnumMap<>(Position.class);
+        Map<Position, Double> secondPoints = new EnumMap<>(Position.class);
+        for(int a = 0; a < n; a++){
+            Position position = Player.getPlayerFromSIDV2(choiceSet.get(a)).position;
+            double value = points.getOrDefault(choiceSet.get(a), 0.0);
+            if(value > bestPoints.getOrDefault(position, Double.NEGATIVE_INFINITY)){
+                secondPoints.put(position, bestPoints.getOrDefault(position, Double.NEGATIVE_INFINITY));
+                bestPoints.put(position, value);
+                bestAt.put(position, a);
+            }
+            else if(value > secondPoints.getOrDefault(position, Double.NEGATIVE_INFINITY)){
+                secondPoints.put(position, value);
+            }
+        }
+        for(Map.Entry<Position, Integer> entry : bestAt.entrySet()){
+            double second = secondPoints.getOrDefault(entry.getKey(), Double.NEGATIVE_INFINITY);
+            double drop = second == Double.NEGATIVE_INFINITY
+                    ? CLIFF_CAP : bestPoints.get(entry.getKey()) - second;
+            features[entry.getValue()][9] = Math.min(Math.max(drop, 0), CLIFF_CAP) / CLIFF_CAP;
+        }
         return features;
     }
 
@@ -424,7 +461,7 @@ public class SelectionModel {
         System.out.println("fitted coefficients (full model):");
         String[] names = {"log ADP rank", "log points rank", "starter need", "saturated",
                 "QB x earliness", "QB intercept", "RB intercept", "TE intercept",
-                "QB run"};
+                "QB run", "cliff"};
         for(int f = 0; f < FEATURES; f++){
             System.out.printf("   %-16s %+7.3f%n", names[f], model.beta()[f]);
         }
