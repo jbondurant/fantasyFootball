@@ -21,9 +21,7 @@ class DraftSimulatorSmokeTest {
     private static DraftSimulator fittedSimulator(AAAConfiguration configuration,
                                                   DraftBacktest.Season season){
         Map<String, Double> earliness = SelectionModel.qbEarliness(configuration, 2024);
-        SelectionModel model = SelectionModel.fit(
-                SelectionModel.loadObservations(configuration, 2021, 2024, earliness),
-                SelectionModel.shippedFeatures());
+        SelectionModel model = SelectionModel.fitShipped(configuration, 2024, earliness);
         return DraftSimulator.forSeason(season, model, earliness);
     }
 

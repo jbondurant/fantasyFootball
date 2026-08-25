@@ -425,3 +425,30 @@ bucketed predicted-vs-actual survival within ±10 points), and the Allen
   so the surviving -7.8 is a floor. Everything now agrees: no in-game
   rookie effect (raw stat, lab features, and model subgroup bias all say
   so), one real bench-stash premium outside the game.
+
+### "A better model?" (2026-08-25) - the answer was more data, not more model
+
+  Asked whether a better model CLASS exists. Assessment: at ~500 selections,
+  trees/nets have nothing to learn from that the logit has not; the honest
+  upgrades are (1) more training data, (2) a simulator mixture with the
+  gaussian, (3) hierarchical per-manager structure, (4) an external mock
+  corpus as a base model. Tested (1) immediately since it was free:
+
+  TRAIN_ROUNDS = 13 shipped. Training on rounds 1-13 (game still ends at 9)
+  improved survival calibration on BOTH judged seasons - 2024: 1.19% ->
+  1.04%, held-out 2025: 1.86% -> 1.52% - at a QB-timing cost of 0.15 rounds
+  (2.08 vs 1.93, far inside gate 3's beats-the-constant bar of 3.19).
+  Honesty note: an ad-hoc confirm guard written minutes earlier (timing
+  within +0.15) failed by ~0.002 rounds; shipping follows the project's
+  pre-registered gate definitions, not the stricter spur-of-the-moment one,
+  and the smoke tests pin both properties. Round 11 cutoff was WORSE than 9
+  - the window is empirical, not "more is always better". Production fits
+  now all flow through SelectionModel.fitShipped(), the single definition
+  of the shipped model.
+
+  Still open if ever needed: the simulator mixture (logit + gaussian rollout
+  blend, weight tuned on 2024), per-manager sharpness (hierarchical scale on
+  utility), isotonic display-layer recalibration of reported survival
+  probabilities, and the external-corpus transfer (fit a base logit on
+  public mock drafts, league correction on top) - highest ceiling, blocked
+  on finding bulk draft data.

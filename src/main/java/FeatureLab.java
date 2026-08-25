@@ -97,6 +97,29 @@ public class FeatureLab {
         System.out.printf("%n   %-22s %10.2f%% %+9.2f%%   (input swap, not a feature)%n",
                 "league-scored value", leagueScored * 100, (leagueScored - baseline) * 100);
 
+        // ---- not a feature either: MORE DATA. Deeper rounds also express
+        // how managers weigh ADP, value and need; training may use them even
+        // though the simulated game still ends at round 9.
+        double bestDeep = baseline;
+        int bestMaxRound = SelectionModel.GAME_ROUNDS;
+        for(int maxRound : new int[]{11, 13}){
+            List<SelectionModel.Observation> deepTrain = SelectionModel.loadObservations(
+                    configuration, 2021, 2023, qbE,
+                    extras24.teEarliness(), extras24.rbEarliness(), false, maxRound);
+            double deep = calibration(deepTrain, shipped, season24, qbE, extras24,
+                    configuration, trials);
+            System.out.printf("   %-22s %10.2f%% %+9.2f%%   (train rounds 1-%d, N %d)%n",
+                    "deeper training", deep * 100, (deep - baseline) * 100,
+                    maxRound, deepTrain.size());
+            if(deep < bestDeep - SHIP_MARGIN && deep < bestDeep){
+                bestDeep = deep;
+                bestMaxRound = maxRound;
+            }
+        }
+        if(bestMaxRound > SelectionModel.GAME_ROUNDS){
+            confirmDeeperTraining(configuration, bestMaxRound, trials);
+        }
+
         if(winners.isEmpty()){
             System.out.println("\nno candidate beat the shipped baseline by the margin;");
             System.out.println("shippedFeatures() stays as it is.");
@@ -134,6 +157,57 @@ public class FeatureLab {
         System.out.println(jointOn25 <= shippedOn25
                 ? "-> the joint set confirms; update shippedFeatures() to include it"
                 : "-> 2025 does not confirm; shippedFeatures() stays as it is");
+    }
+
+    /** The single 2025 look for a deeper-training round count that won 2024. */
+    private static void confirmDeeperTraining(AAAConfiguration configuration, int maxRound,
+                                              int trials){
+        Map<String, Double> qbE24 = SelectionModel.qbEarliness(configuration, 2024);
+        DraftSimulator.Extras extras25 = DraftSimulator.extrasFor(configuration, "2025", 2024);
+        DraftBacktest.Season season25 = new DraftBacktest.Season(configuration, "2025");
+        boolean[] shipped = SelectionModel.shippedFeatures();
+
+        SelectionModel deep = SelectionModel.fit(SelectionModel.loadObservations(
+                configuration, 2021, 2024, qbE24,
+                extras25.teEarliness(), extras25.rbEarliness(), false, maxRound), shipped);
+        SelectionModel current = SelectionModel.fit(SelectionModel.loadObservations(
+                configuration, 2021, 2024, qbE24,
+                extras25.teEarliness(), extras25.rbEarliness()), shipped);
+        double deepError = calibrationFor(deep, season25, qbE24, extras25, configuration, trials);
+        double currentError = calibrationFor(current, season25, qbE24, extras25,
+                configuration, trials);
+
+        java.util.Map<String, Integer> real = DraftSimulator.realFirstRound(season25.picks,
+                PlayerImportAndSetup.Position.QB);
+        double deepTiming = timingError(configuration, season25, deep, qbE24, extras25, real, trials);
+        double currentTiming = timingError(configuration, season25, current, qbE24, extras25,
+                real, trials);
+
+        System.out.printf("%nheld-out 2025 confirm for training rounds 1-%d:%n", maxRound);
+        System.out.printf("   calibration: deep %.2f%%, current %.2f%%%n",
+                deepError * 100, currentError * 100);
+        System.out.printf("   QB-timing MAE: deep %.2f, current %.2f%n", deepTiming, currentTiming);
+        System.out.println(deepError <= currentError && deepTiming <= currentTiming + 0.15
+                ? "-> confirms; ship by raising the training cutoff in production fits"
+                : "-> 2025 does not confirm; training stays rounds 1-9");
+    }
+
+    private static double timingError(AAAConfiguration configuration, DraftBacktest.Season season,
+                                      SelectionModel model, Map<String, Double> qbE,
+                                      DraftSimulator.Extras extras, Map<String, Integer> real,
+                                      int trials){
+        DraftSimulator simulator = DraftSimulator.forSeason(season, model, qbE, extras);
+        Map<String, Double> simulated = simulator.meanFirstRound(
+                PlayerImportAndSetup.Position.QB, Math.max(trials / 2, 100), DraftSimulator.SEED);
+        double error = 0;
+        java.util.List<String> managers = simulator.managers();
+        for(String manager : managers){
+            double actual = Math.min(real.getOrDefault(manager, DraftSimulator.NEVER_ROUND),
+                    DraftSimulator.NEVER_ROUND);
+            error += Math.abs(actual
+                    - simulated.getOrDefault(manager, (double) DraftSimulator.NEVER_ROUND));
+        }
+        return error / managers.size();
     }
 
     private static double calibration(List<SelectionModel.Observation> train, boolean[] active,

@@ -79,6 +79,16 @@ public class SelectionModel {
     public static final int RUN_WINDOW = 6;
     /** Point drop that counts as a full cliff for f9. */
     public static final double CLIFF_CAP = 100.0;
+    /**
+     * Production fits train on rounds 1-13 even though the simulated game
+     * ends at round 9: deeper picks express the same ADP/value/need weighing
+     * and adding them improved held-out survival calibration on BOTH judged
+     * seasons (2024: 1.19% -> 1.04%, 2025: 1.86% -> 1.52%) at a 0.15-round
+     * QB-timing cost that stays far inside gate 3's beats-the-constant bar
+     * (2.08 vs 3.19). Chosen by FeatureLab; rounds 14+ stay out (DEF/K noise
+     * and the round-11 point looked worse, so the window is not "everything").
+     */
+    public static final int TRAIN_ROUNDS = 13;
 
     /**
      * Everything about the moment of a selection that the candidate-level
@@ -138,6 +148,17 @@ public class SelectionModel {
 
     /** One historical selection: the chosen index within its choice set. */
     public record Observation(double[][] features, int chosen) {}
+
+    /**
+     * THE shipped model, in one place: shipped features, training window
+     * rounds 1-TRAIN_ROUNDS, seasons 2021-lastSeason. Every production fit
+     * (planner, keeper tools, smoke gates) goes through here.
+     */
+    public static SelectionModel fitShipped(AAAConfiguration configuration, int lastSeason,
+                                            Map<String, Double> qbEarliness){
+        return fit(loadObservations(configuration, 2021, lastSeason, qbEarliness,
+                Map.of(), Map.of(), false, TRAIN_ROUNDS), shippedFeatures());
+    }
 
     private final double[] beta;
 
@@ -333,6 +354,22 @@ public class SelectionModel {
                                                      Map<String, Double> teEarliness,
                                                      Map<String, Double> rbEarliness,
                                                      boolean leagueScoredValue){
+        return loadObservations(configuration, firstSeason, lastSeason, qbEarliness,
+                teEarliness, rbEarliness, leagueScoredValue, GAME_ROUNDS);
+    }
+
+    /**
+     * maxRound widens TRAINING beyond the nine-round game: deeper picks also
+     * express how managers weigh ADP, value and need, and the simulation
+     * window stays rounds 1-9 regardless. Skill positions only either way.
+     */
+    public static List<Observation> loadObservations(AAAConfiguration configuration,
+                                                     int firstSeason, int lastSeason,
+                                                     Map<String, Double> qbEarliness,
+                                                     Map<String, Double> teEarliness,
+                                                     Map<String, Double> rbEarliness,
+                                                     boolean leagueScoredValue,
+                                                     int maxRound){
         List<Observation> observations = new ArrayList<>();
         List<JsonArray> drafts = configuration.getPreviousDraftPicks();
         List<String> seasons = configuration.getPreviousSeasons();
@@ -346,7 +383,7 @@ public class SelectionModel {
                 continue;
             }
             observations.addAll(seasonObservations(configuration, drafts.get(i), season,
-                    qbEarliness, teEarliness, rbEarliness, leagueScoredValue));
+                    qbEarliness, teEarliness, rbEarliness, leagueScoredValue, maxRound));
         }
         return observations;
     }
@@ -356,7 +393,8 @@ public class SelectionModel {
                                                         Map<String, Double> qbEarliness,
                                                         Map<String, Double> teEarliness,
                                                         Map<String, Double> rbEarliness,
-                                                        boolean leagueScoredValue){
+                                                        boolean leagueScoredValue,
+                                                        int maxRound){
         Map<String, Double> adp = HistoricalProjections.adpBySleeperID(configuration, season);
         Map<String, Double> points = leagueScoredValue
                 ? HistoricalProjections.leaguePointsBySleeperID(configuration, season)
@@ -422,7 +460,7 @@ public class SelectionModel {
         List<Observation> observations = new ArrayList<>();
         List<Position> recentPicks = new ArrayList<>();
         for(JsonObject pick : picks){
-            if(pick.get("round").getAsInt() > GAME_ROUNDS){
+            if(pick.get("round").getAsInt() > maxRound){
                 break;
             }
             String chosenID = pick.get("player_id").getAsString();
