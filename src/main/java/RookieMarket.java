@@ -35,6 +35,8 @@ public class RookieMarket {
 
         double[][] pooled = new double[2][2];        // rounds 1-9: [rookie/vet][sum,n]
         double[][] pooledLate = new double[2][2];    // rounds 10+
+        double[][] pooledAdj = new double[2][2];     // keeper-adjusted versions
+        double[][] pooledLateAdj = new double[2][2];
         List<Reach> rookieReaches = new ArrayList<>();
         for(int i = drafts.size() - 1; i >= 0; i--){
             if(i >= seasons.size() || seasons.get(i) == null){
@@ -44,7 +46,26 @@ public class RookieMarket {
             Map<String, Double> adp = HistoricalProjections.adpBySleeperID(configuration, season);
             Set<String> rookies = HistoricalProjections.rookiesForSeason(configuration, season);
 
+            // The keeper distortions, both sides: keeper slots consume pick
+            // numbers, and kept players (veterans by construction) vanish
+            // from the available pool ahead of everyone below them.
+            List<Integer> keeperSlots = new ArrayList<>();
+            List<Double> keptAdps = new ArrayList<>();
+            for(JsonElement pickElement : drafts.get(i)){
+                JsonObject pick = pickElement.getAsJsonObject();
+                JsonElement isKeeper = pick.get("is_keeper");
+                if(isKeeper == null || isKeeper.isJsonNull() || !isKeeper.getAsBoolean()){
+                    continue;
+                }
+                keeperSlots.add(pick.get("pick_no").getAsInt());
+                Double keptAdp = adp.get(pick.get("player_id").getAsString());
+                if(keptAdp != null){
+                    keptAdps.add(keptAdp);
+                }
+            }
+
             double[][] byGroup = new double[2][2];
+            double[][] byGroupAdj = new double[2][2];
             for(JsonElement pickElement : drafts.get(i)){
                 JsonObject pick = pickElement.getAsJsonObject();
                 JsonElement isKeeper = pick.get("is_keeper");
@@ -60,30 +81,45 @@ public class RookieMarket {
                 }
                 int pickNumber = pick.get("pick_no").getAsInt();
                 double residual = pickNumber - marketed;
+                long slotsBefore = keeperSlots.stream().filter(slot -> slot < pickNumber).count();
+                double keptBetter = keptAdps.stream().filter(kept -> kept < marketed).count();
+                double adjusted = (pickNumber - slotsBefore) - (marketed - keptBetter);
                 int group = rookies.contains(sleeperID) ? 0 : 1;
                 boolean inGame = pick.get("round").getAsInt() <= SelectionModel.GAME_ROUNDS;
                 byGroup[group][0] += residual;
                 byGroup[group][1]++;
+                byGroupAdj[group][0] += adjusted;
+                byGroupAdj[group][1]++;
                 double[][] pool = inGame ? pooled : pooledLate;
                 pool[group][0] += residual;
                 pool[group][1]++;
+                double[][] poolAdj = inGame ? pooledAdj : pooledLateAdj;
+                poolAdj[group][0] += adjusted;
+                poolAdj[group][1]++;
                 if(group == 0){
                     rookieReaches.add(new Reach(season,
                             player.firstName + " " + player.lastName, pickNumber, marketed, true));
                 }
             }
-            System.out.printf("   %-8s %8.0f %+9.1f %8.0f %+9.1f %+8.1f%n", season,
+            System.out.printf("   %-8s %8.0f %+9.1f %8.0f %+9.1f %+8.1f  (adj %+5.1f)%n", season,
                     byGroup[0][1], mean(byGroup[0]), byGroup[1][1], mean(byGroup[1]),
-                    mean(byGroup[0]) - mean(byGroup[1]));
+                    mean(byGroup[0]) - mean(byGroup[1]),
+                    mean(byGroupAdj[0]) - mean(byGroupAdj[1]));
         }
 
-        System.out.printf("%n   %-22s rookies %+6.1f (N %.0f)   veterans %+6.1f (N %.0f)   DIFF %+5.1f%n",
+        System.out.printf("%n   %-22s rookies %+6.1f (N %.0f)   veterans %+6.1f (N %.0f)   DIFF %+5.1f  adj %+5.1f%n",
                 "rounds 1-9 pooled:", mean(pooled[0]), pooled[0][1],
-                mean(pooled[1]), pooled[1][1], mean(pooled[0]) - mean(pooled[1]));
-        System.out.printf("   %-22s rookies %+6.1f (N %.0f)   veterans %+6.1f (N %.0f)   DIFF %+5.1f%n",
+                mean(pooled[1]), pooled[1][1], mean(pooled[0]) - mean(pooled[1]),
+                mean(pooledAdj[0]) - mean(pooledAdj[1]));
+        System.out.printf("   %-22s rookies %+6.1f (N %.0f)   veterans %+6.1f (N %.0f)   DIFF %+5.1f  adj %+5.1f%n",
                 "rounds 10+ pooled:", mean(pooledLate[0]), pooledLate[0][1],
                 mean(pooledLate[1]), pooledLate[1][1],
-                mean(pooledLate[0]) - mean(pooledLate[1]));
+                mean(pooledLate[0]) - mean(pooledLate[1]),
+                mean(pooledLateAdj[0]) - mean(pooledLateAdj[1]));
+        System.out.println("\n   adj = both keeper distortions removed: pick numbers reduced by");
+        System.out.println("   keeper slots already passed, ADP reduced by kept players ranked");
+        System.out.println("   ahead. National ADP itself still contains OTHER keeper leagues'");
+        System.out.println("   rookie demand, so any surviving premium is a floor, not a ceiling.");
 
         rookieReaches.sort(Comparator.comparingDouble(reach -> reach.pick() - reach.adp()));
         System.out.println("\nbiggest rookie reaches (picked furthest ahead of ADP):\n");

@@ -412,3 +412,16 @@ bucketed predicted-vs-actual survival within ±10 points), and the Allen
   failed gate would be double-dipping the same 495 selections; the honest
   uses are bench-round draft intuition and re-running FeatureLab when the
   2026 draft adds data.
+
+  Second follow-up: "what if ADP is already shifted by the keepers?" Correct
+  suspicion, both mechanically checkable sides now in RookieMarket: pick
+  numbers reduced by keeper slots passed, ADP reduced by kept players
+  (veterans by construction) ranked ahead. Verdict: the in-game rookie
+  premium was two-thirds artifact - rounds 1-9 DIFF -3.0 collapses to -0.9
+  adjusted, because rookies sit deeper where more kept veterans have
+  vanished ahead of them. The bench premium is genuine - rounds 10+ DIFF
+  -8.1 barely moves (-7.8 adjusted; deep in the draft the two corrections
+  cancel). National ADP still contains other keeper leagues' rookie demand,
+  so the surviving -7.8 is a floor. Everything now agrees: no in-game
+  rookie effect (raw stat, lab features, and model subgroup bias all say
+  so), one real bench-stash premium outside the game.
