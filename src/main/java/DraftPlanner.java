@@ -58,8 +58,11 @@ public class DraftPlanner {
     public record Stage(int pickNumber, int round, List<PositionValue> options, Position chosen){}
     public record SnipeRow(int pickNumber, Position position, String usualTarget,
                            double probabilityGone, double meanDropWhenGone){}
+    /** standardError is the Monte Carlo noise on mean - differences inside
+     *  roughly two of these are ties; raise -Ptrials to shrink it. */
     public record Plan(List<Position> positions, List<Stage> stages,
-                       double mean, double p10, double riskAdjusted, List<SnipeRow> snipes){}
+                       double mean, double p10, double riskAdjusted, double standardError,
+                       List<SnipeRow> snipes){}
 
     /** My picks under a plan: fixed positions first, marginal-greedy after. */
     private class PlanPolicy implements DraftSimulator.MyPolicy {
@@ -150,7 +153,11 @@ public class DraftPlanner {
                 if(adjusted > bestScore){
                     bestScore = adjusted;
                     best = candidate;
-                    bestStats = new double[]{mean, p10, adjusted};
+                    double variance = Arrays.stream(outcomes)
+                            .map(outcome -> (outcome - mean) * (outcome - mean)).sum()
+                            / Math.max(rollouts - 1, 1);
+                    bestStats = new double[]{mean, p10, adjusted,
+                            Math.sqrt(variance / rollouts)};
                 }
             }
             chosenPositions.add(best);
@@ -159,6 +166,7 @@ public class DraftPlanner {
             finalStats = bestStats;
         }
         return new Plan(chosenPositions, stages, finalStats[0], finalStats[1], finalStats[2],
+                finalStats.length > 3 ? finalStats[3] : 0,
                 snipes(chosenPositions, rollouts, seed));
     }
 
@@ -228,6 +236,17 @@ public class DraftPlanner {
      * null plans the no-keeper branch.
      */
     public static DraftPlanner forCurrentSeason(AAAConfiguration configuration, Keeper myKeeper){
+        Map<String, Double> earliness = SelectionModel.qbEarliness(configuration, 2025);
+        boolean[] full = new boolean[SelectionModel.FEATURES];
+        Arrays.fill(full, true);
+        SelectionModel model = SelectionModel.fit(
+                SelectionModel.loadObservations(configuration, 2021, 2025, earliness), full);
+        return forCurrentSeason(configuration, myKeeper, model, earliness);
+    }
+
+    /** The same, with the opponent model already fitted - for scenario loops. */
+    public static DraftPlanner forCurrentSeason(AAAConfiguration configuration, Keeper myKeeper,
+                                                SelectionModel model, Map<String, Double> earliness){
         Map<String, Double> points = SleeperProjections.parseTodaysWebPage();
         Map<String, Double> adp = new HashMap<>();
         for(String sleeperID : points.keySet()){
@@ -292,12 +311,6 @@ public class DraftPlanner {
             board.add(entry.getKey());
         }
 
-        Map<String, Double> earliness = SelectionModel.qbEarliness(configuration, 2025);
-        boolean[] full = new boolean[SelectionModel.FEATURES];
-        Arrays.fill(full, true);
-        SelectionModel model = SelectionModel.fit(
-                SelectionModel.loadObservations(configuration, 2021, 2025, earliness), full);
-
         DraftSimulator simulator = new DraftSimulator(schedule, board, adp, points, rosters,
                 model, earliness);
         return new DraftPlanner(simulator, me, myKeeperIDs, points);
@@ -316,8 +329,10 @@ public class DraftPlanner {
             }
         }
         System.out.printf("%nplan %s%n", plan.positions());
-        System.out.printf("expected best-nine %.1f, p%.0f %.1f, risk-adjusted (lambda %.2f) %.1f%n",
-                plan.mean(), q * 100, plan.p10(), lambda, plan.riskAdjusted());
+        System.out.printf("expected best-nine %.1f (+/- %.1f), p%.0f %.1f, "
+                        + "risk-adjusted (lambda %.2f) %.1f%n",
+                plan.mean(), plan.standardError(), q * 100, plan.p10(), lambda,
+                plan.riskAdjusted());
 
         System.out.println("\nwait-or-take, under this plan (per position: the player I'd wait"
                 + "\nfor, how often he's gone by my next pick, the drop when he is):\n");

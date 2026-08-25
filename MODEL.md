@@ -168,6 +168,33 @@ Results (SelectionModel + DraftSimulator, 2026-08-25):
   - Acceptance test: the round-3-good vs round-8-amazing-but-sometimes-sniped
     case produces two distributions whose ranking flips as lambda rises.
 
+### C results (built 2026-08-25: DraftPlanner + KeeperPlan)
+
+  DraftPlanner is the staged expectimax: at each of my live picks it branches
+  over the four positions, values each branch by full rollouts to round 9
+  (opponents = the gated selection model, my later picks greedy by marginal
+  best-nine), fixes the winner, moves on. Risk knob mean - lambda*(mean-p_q)
+  via -Prisk/-Pquantile; the lambda-flip acceptance case is a unit test in
+  DraftPlannerTest. KeeperPlan runs V(K) - V(none) for every eligible keeper.
+
+  On the real 2026 board (no keeper declared, 500 rollouts, lambda 0):
+
+  - Plan: RB, QB, RB, WR, WR, WR, WR, TE, WR - expected best-nine ~1794.
+    The QB waits for round 2 because Josh Allen survives pick 7 -> 18 in
+    ~96% of rollouts (the original motivating case, now answered by code).
+  - Keeper decision: Tuten r12 +15.8 and Purdy r13 +14.8 are a statistical
+    tie at the top (Monte Carlo +/- ~1.0 each); Flowers r4 +6.0; the r10
+    keepers ~0 (they equal a free 9th-rounder, which the best-nine mostly
+    benches); Godwin/Andrews/Sutton/Kelce negative; Shaheed r9 -23.
+    The old assumption-dependent Purdy spread (-26/-7/+19) collapses to one
+    number under the unified model.
+  - The snipe table prints per pick per position: usual target, P(gone by my
+    next pick), drop when gone - e.g. Breece Hall 90% gone between picks 18
+    and 31 (drop 16), Josh Allen only 4% gone between 7 and 18.
+
+  Keep in mind: valuations move as ADP drifts and as leaguemates declare
+  keepers - rerun KeeperPlan close to the declaration deadline.
+
 ### Mock drafts - investigated 2026-08-25, not recoverable
 
 The hypothesis (players a manager reaches for in late mocks get reached for
