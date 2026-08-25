@@ -15,6 +15,7 @@ settings, the season - is read back from the API.
 ./gradlew run -Pmain=TradeFinder          # trades worth proposing
 ./gradlew run -Pmain=SleeperLiveDraft     # draft-day advice
 ./gradlew run -Pmain=KeeperChooser        # which keepers to declare
+./gradlew run -Pmain=KeeperChooser -Psims=200   # ...with tighter error bars
 ./gradlew run -Pmain=KeeperAudit          # check keeper costs before the draft
 ./gradlew run -Pmain=AAAConfiguration     # what league am I pointed at
 ```

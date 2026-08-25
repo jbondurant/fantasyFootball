@@ -171,11 +171,20 @@ public class AAAConfiguration {
      * to count them. Sleeper links each season to the one before it through
      * previous_league_id.
      */
+    /** Season label alongside each past draft, newest first. */
+    public synchronized List<String> getPreviousSeasons(){
+        getPreviousDraftPicks();
+        return previousSeasons;
+    }
+
+    private List<String> previousSeasons = new ArrayList<>();
+
     public synchronized List<JsonArray> getPreviousDraftPicks(){
         if(previousDraftPicks != null){
             return previousDraftPicks;
         }
         List<JsonArray> history = new ArrayList<>();
+        List<String> seasons = new ArrayList<>();
         String previousLeagueID = getPreviousLeagueID();
         int guard = 0;
         while(previousLeagueID != null && guard++ < MAX_SEASONS_OF_HISTORY){
@@ -188,10 +197,12 @@ public class AAAConfiguration {
                 String picks = InOutUtilities.getTodaysWebPage(draftPicksWebURL(draftID),
                         filepathStartPreviousDraftPicks + draftID);
                 history.add(JsonParser.parseString(picks).getAsJsonArray());
+                seasons.add(optionalString(previousLeague, "season"));
             }
             previousLeagueID = optionalString(previousLeague, "previous_league_id");
         }
         previousDraftPicks = history;
+        previousSeasons = seasons;
         return previousDraftPicks;
     }
 
