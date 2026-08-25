@@ -482,3 +482,32 @@ bucketed predicted-vs-actual survival within ±10 points), and the Allen
   was in the interactions, not the margins. And deeper training (rounds
   1-13) was shipped the same day; both "more data" and "more model" won,
   in that order.
+
+### Other projection sources (2026-08-25): the bridge, validated
+
+  Facts first: "Sleeper's projections" are Rotowire's (the feed rows say
+  company=rotowire) - a single shop, so a second opinion has real value.
+  Justin's proposed trick - adapt any site's points with Sleeper's projected
+  event counts (a 4-pt site is off by exactly 2 x passing TDs) - is now
+  ProjectionBridge, and its validation on the one site publishing both
+  points and stat lines: QB mean abs error 2.5 points (worst 6.6), non-QB
+  0.16. The trick works; TD-count disagreement between sources is the whole
+  residual.
+
+  Usage: data/external-projections/<name>.csv, two formats - a points sheet
+  (# passTD=4 rec=0.5 header, bridged) or sportsbook season props (Sleeper
+  stat keys as columns, scored directly, no bridge needed). Either becomes
+  the planner's value feed via -Pprojections=<name>; uncovered players keep
+  Sleeper's numbers. FantasyPros is parsed only as the validation
+  instrument (top-10 per position server-rendered), per Justin's distrust.
+
+  On sportsbook props as the source (Justin's efficient-market argument):
+  largely right, with the caveats he guessed at - season-long props are
+  low-limit, high-vig markets that books shade toward public star bias, so
+  the arbitrage bound is loose; lines are medians not means (matters for
+  skewed TD counts); and de-vigging asymmetric juice moves the implied
+  number. Still the best public signal for the handful of players a
+  decision hangs on - hand-key those into a props CSV rather than trusting
+  any one site's table wholesale. Cross-source level differences run +20
+  to +40 points on elites (FP vs Sleeper), but plans depend on RANKS, so
+  the decision test is running KeeperPlan under both feeds.

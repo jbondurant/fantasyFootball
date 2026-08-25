@@ -292,7 +292,12 @@ public class DraftPlanner {
     /** The same, with the opponent model already fitted - for scenario loops. */
     public static DraftPlanner forCurrentSeason(AAAConfiguration configuration, Keeper myKeeper,
                                                 ChoiceModel model, Map<String, Double> earliness){
-        Map<String, Double> points = SleeperProjections.parseTodaysWebPage();
+        // -Pprojections=<name> swaps MY value feed to a bridged external
+        // source (see ProjectionBridge); opponents keep behaving off the
+        // consensus market either way, which the information-set test showed
+        // is what they actually do.
+        Map<String, Double> points = ProjectionBridge.pointsForSource(
+                System.getProperty("projections", "sleeper"));
         Map<String, Double> adp = new HashMap<>();
         for(String sleeperID : points.keySet()){
             double value = SleeperProjections.adpOf(sleeperID);
