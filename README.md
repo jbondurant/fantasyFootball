@@ -14,11 +14,26 @@ settings, the season - is read back from the API.
 ```
 ./gradlew run -Pmain=TradeFinder          # trades worth proposing
 ./gradlew run -Pmain=SleeperLiveDraft     # draft-day advice
-./gradlew run -Pmain=KeeperChooser        # which keepers to declare
+./gradlew run -Pmain=KeeperValuation      # which keepers are worth a slot
+./gradlew run -Pmain=KeeperChooser        # the same question by simulation
 ./gradlew run -Pmain=KeeperChooser -Psims=200   # ...with tighter error bars
 ./gradlew run -Pmain=KeeperAudit          # check keeper costs before the draft
 ./gradlew run -Pmain=AAAConfiguration     # what league am I pointed at
 ```
+
+### What a keeper is worth
+
+`KeeperValuation` optimises the nine skill starting slots - QB, RB, RB, WR, WR,
+WR, TE, FLEX, FLEX. The defense is left out on purpose: it comes from a late
+pick every year, it never competes for the picks that decide a season, and the
+whole position spans 19 points from best to twelfth.
+
+Nine slots means nine picks fill them, so keeping a player frees the round-nine
+pick whatever round he nominally costs. He is worth a keeper slot only if he
+beats what that pick returns. Players are compared to replacement at their own
+position, never to each other: quarterbacks outscore receivers by 150 points a
+season, but QB12 already projects near the top of the position, so a big raw
+projection at quarterback is worth far less than it looks.
 
 ### Keeper costs
 
