@@ -25,10 +25,10 @@ public class SimulationDraft {
         return new SimulationDraft(sl, scoreDraftHuman);
     }
 
-    public static SimulationDraft getSimulationPermPartialWithHardcodedKeepers(HashSet<Keeper> keepers, ArrayList<Position> humanPermutation, ArrayList<Player> draftedPlayers, int roundsLeft, int qbADPChange, ArrayList<Keeper> hardcodedKeepers){
+    public static SimulationDraft getSimulationPermPartialWithHardcodedKeepers(HashSet<Keeper> keepers, ArrayList<Position> humanPermutation, ArrayList<Player> draftedPlayers, int roundsLeft, int qbADPChange, ArrayList<Keeper> leagueWideKeepers){
         SleeperLeague sl = SleeperLeague.getSeriousLeague();
         ArrayList<User> xyz = sl.sleeperDraftInfo.usersInfo;
-        double scoreDraftHuman = runSimulationDraftPermPartialWithHardcodedKeepers(keepers, sl, humanPermutation, draftedPlayers, roundsLeft, qbADPChange, hardcodedKeepers);
+        double scoreDraftHuman = runSimulationDraftPermPartialWithHardcodedKeepers(keepers, sl, humanPermutation, draftedPlayers, roundsLeft, qbADPChange, leagueWideKeepers);
         return new SimulationDraft(sl, scoreDraftHuman);
     }
 
@@ -54,7 +54,24 @@ public class SimulationDraft {
     }
 
 
+    /**
+     * Clears every roster before a simulated draft.
+     *
+     * SleeperLeague caches its parsed league, so the User objects persist
+     * between simulations, and addToRoster only ever appends. Without this the
+     * second simulation scores a roster holding both drafts' picks, the third
+     * holds three, and the Monte Carlo average climbs with the number of runs
+     * instead of converging. Measured before the fix: 10 players, then 20,
+     * then 30.
+     */
+    private static void resetRostersForNewSimulation(SleeperLeague sl){
+        for(User user : sl.sleeperDraftInfo.usersInfo){
+            user.setRoster(new Roster());
+        }
+    }
+
     public static double runSimulationDraftPermPartialForKeeperSerious(Keeper keeper, SleeperLeague sl, ArrayList<Position> humanPerm, ArrayList<Player> draftedPlayers, int roundsLeft, int qbADPChange){
+        resetRostersForNewSimulation(sl);
         boolean isFun = false;
         for(User user : sl.sleeperDraftInfo.usersInfo){
             if(user.userID.equals(myID())){
@@ -94,6 +111,9 @@ public class SimulationDraft {
                 }
                 else {
                     draftedPlayer = user.strategy.selectPlayer();
+                    if(draftedPlayer == null){
+                        continue;  // board exhausted
+                    }
                     user.addToRoster(draftedPlayer);
                 }
                 for (User userToAlert : usersAtDraft) {
@@ -124,7 +144,8 @@ public class SimulationDraft {
         throw new RuntimeException("keeper round not matching");
     }
 
-    public static double runSimulationDraftPermPartialWithHardcodedKeepers(HashSet<Keeper> keepers, SleeperLeague sl, ArrayList<Position> humanPerm, ArrayList<Player> draftedPlayers, int roundsLeft, int qbADPChange, ArrayList<Keeper> hardcodedKeepers){
+    public static double runSimulationDraftPermPartialWithHardcodedKeepers(HashSet<Keeper> keepers, SleeperLeague sl, ArrayList<Position> humanPerm, ArrayList<Player> draftedPlayers, int roundsLeft, int qbADPChange, ArrayList<Keeper> leagueWideKeepers){
+        resetRostersForNewSimulation(sl);
         boolean isFun = false;
         for(User user : sl.sleeperDraftInfo.usersInfo){
             if(user.userID.equals(myID())){
@@ -154,19 +175,31 @@ public class SimulationDraft {
             for(Keeper keeper : keepers) {
                 user.strategy.removeDraftedPlayer(keeper.player);
             }
+            // Everyone else's keepers are off the board too. This list was
+            // being passed in and ignored, so all eleven other managers' keepers
+            // sat in the pool - the bots drafted them, my simulated team could
+            // draft them, and every run was optimistic about who was available.
+            if(leagueWideKeepers != null){
+                for(Keeper keeper : leagueWideKeepers){
+                    user.strategy.removeDraftedPlayer(keeper.player);
+                }
+            }
         }
+        HashSet<Integer> roundsWithKeeper = getRoundsOfKeepers(keepers);
         ArrayList<User> usersAtDraft = sl.sleeperDraftInfo.usersInfo;
         for(int i=1; i<= roundsLeft; i++){
             Collections.sort(usersAtDraft, new UserComparator());
             for(User user : usersAtDraft){
                 Player draftedPlayer;
-                HashSet<Integer> roundsWithKeeper = getRoundsOfKeepers(keepers);
                 if(user.userID.equals(myID()) && roundsWithKeeper.contains(i)){
                     draftedPlayer = getKeeperPlayerAtRound(keepers, i);
                     user.addToRoster(draftedPlayer);
                 }
                 else {
                     draftedPlayer = user.strategy.selectPlayer();
+                    if(draftedPlayer == null){
+                        continue;  // board exhausted
+                    }
                     user.addToRoster(draftedPlayer);
                 }
                 for (User userToAlert : usersAtDraft) {
@@ -183,6 +216,7 @@ public class SimulationDraft {
 
 
     public static double runSimulationDraftPermPartial(SleeperLeague sl, boolean isFun, ArrayList<Position> humanPerm, ArrayList<Player> draftedPlayers, int roundsLeft, int qbADPChange){
+        resetRostersForNewSimulation(sl);
         for(User user : sl.sleeperDraftInfo.usersInfo){
             if(user.userID.equals(myID())){
                 user.strategy = HumanStrategy.getFPHumanStrategySeriousFromPerm(humanPerm);

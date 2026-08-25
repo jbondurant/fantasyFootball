@@ -1,6 +1,7 @@
 import PlayerImportAndSetup.Position;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.PriorityQueue;
 
 public class RankOrderedPlayers {
@@ -120,6 +121,23 @@ public class RankOrderedPlayers {
             }
         }
         return false;
+    }
+
+    /** The best ranked player left at any position, or null if the board is empty. */
+    public Player removeBestAvailable(){
+        PriorityQueue<Rank> best = null;
+        for(PriorityQueue<Rank> queue : List.of(quarterbacks, runningBacks, wideReceivers, tightEnds, defenses)){
+            if(queue.isEmpty()){
+                continue;
+            }
+            if(best == null || queue.peek().rankNum < best.peek().rankNum){
+                best = queue;
+            }
+        }
+        if(best == null){
+            return null;
+        }
+        return best.poll().player;
     }
 
     public Player removeTopPlayerOfPos(Position pos){

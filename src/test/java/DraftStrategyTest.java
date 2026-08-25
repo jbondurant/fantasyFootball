@@ -155,6 +155,47 @@ class DraftStrategyTest {
     }
 
     @Test
+void aHumanWhosePlanRunsOutTakesBestAvailable(){
+        // Regression: the plan only covers as many picks as it was built with.
+        // Simulating more rounds than that threw IndexOutOfBoundsException out
+        // of remove(0), which made the keeper chooser unrunnable.
+        HumanStrategy human = new HumanStrategy(new RankOrderedPlayers(board()),
+                HumanStrategy.nonPermutedPositions(1, 0, 0, 0));
+
+        Assertions.assertEquals("Qb1", human.selectPlayer().lastName);
+
+        Player next = human.selectPlayer();
+        Assertions.assertNotNull(next, "should fall back rather than throw");
+        Assertions.assertEquals("Rb1", next.lastName, "best left on the board");
+    }
+
+    @Test
+    void aPlanCallingForAnExhaustedPositionFallsBackToo(){
+        RankOrderedPlayers board = new RankOrderedPlayers(board());
+        board.removeTopPlayerOfPos(Position.QB);  // the only quarterback
+
+        HumanStrategy human = new HumanStrategy(board,
+                HumanStrategy.nonPermutedPositions(1, 0, 0, 0));
+
+        Assertions.assertEquals("Rb1", human.selectPlayer().lastName);
+    }
+
+    @Test
+    void bestAvailableIsTheLowestRankAcrossEveryPosition(){
+        RankOrderedPlayers board = new RankOrderedPlayers(board());
+
+        Assertions.assertEquals("Rb1", board.removeBestAvailable().lastName);
+        Assertions.assertEquals("Wr1", board.removeBestAvailable().lastName);
+        Assertions.assertEquals("Rb2", board.removeBestAvailable().lastName);
+    }
+
+    @Test
+    void anEmptyBoardHandsBackNullRatherThanThrowing(){
+        RankOrderedPlayers board = new RankOrderedPlayers(new ArrayList<>());
+        Assertions.assertNull(board.removeBestAvailable());
+    }
+
+    @Test
     void everyPlayerSurvivesTheDeviation(){
         // Losing players here would quietly shrink the pool every simulated draft.
         PriorityQueue<Rank> deviated = DecimalRank.makeDeviatedRanking(decimalBoard(), noVariance(), 0);

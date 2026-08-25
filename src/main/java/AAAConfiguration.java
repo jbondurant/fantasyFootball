@@ -243,6 +243,69 @@ public class AAAConfiguration {
                 Player::getPlayerFromSIDV2, SleeperProjections::adpOf);
     }
 
+    /** Rounds in this season's draft. */
+    public int getDraftRounds(){
+        JsonObject draft = getDraftJson();
+        JsonObject settings = draft.getAsJsonObject("settings");
+        return settings.get("rounds").getAsInt();
+    }
+
+    public int getMaxKeepers(){
+        JsonElement max = getLeagueJson().getAsJsonObject("settings").get("max_keepers");
+        return max == null || max.isJsonNull() ? 1 : max.getAsInt();
+    }
+
+    /** My slot in this season's draft order, 1-based. */
+    public int getMyDraftSlot(){
+        JsonObject order = getDraftJson().getAsJsonObject("draft_order");
+        if(order == null){
+            throw new IllegalStateException("the draft order has not been set yet");
+        }
+        JsonElement slot = order.get(getMyID());
+        if(slot == null || slot.isJsonNull()){
+            throw new IllegalStateException("I am not in this draft's order");
+        }
+        return slot.getAsInt();
+    }
+
+    /** Which overall pick my selection in a given round is, snaking. */
+    public int pickNumberFor(int round){
+        int teams = getLeagueJson().getAsJsonObject("settings").get("num_teams").getAsInt();
+        int slot = getMyDraftSlot();
+        int slotThisRound = round % 2 == 1 ? slot : teams - slot + 1;
+        return (round - 1) * teams + slotThisRound;
+    }
+
+    private JsonObject draftJson;
+
+    public JsonObject getDraftJson(){
+        if(draftJson == null){
+            String data = InOutUtilities.getTodaysWebPage(draftWebURL(getDraftID()), "draftObject" + getDraftID());
+            draftJson = JsonParser.parseString(data).getAsJsonObject();
+        }
+        return draftJson;
+    }
+
+    /** Player ids on a given manager's roster. */
+    public List<String> getMyRosterPlayerIDs(String userID){
+        List<String> playerIDs = new ArrayList<>();
+        for(JsonElement rosterElement : getTodaysRoster()){
+            JsonObject roster = rosterElement.getAsJsonObject();
+            String owner = optionalString(roster, "owner_id");
+            if(owner == null || !owner.equals(userID)){
+                continue;
+            }
+            JsonElement players = roster.get("players");
+            if(players == null || players.isJsonNull()){
+                continue;
+            }
+            for(JsonElement player : players.getAsJsonArray()){
+                playerIDs.add(player.getAsString());
+            }
+        }
+        return playerIDs;
+    }
+
     public String getDraftFromLeagueIfOnlyOneDraft(){
         String apiData = getTodaysDrafts();
         JsonArray unparsedDrafts = JsonParser.parseString(apiData).getAsJsonArray();
