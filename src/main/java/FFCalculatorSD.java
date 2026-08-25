@@ -29,6 +29,50 @@ public class FFCalculatorSD {
     }
 
 
+    /**
+     * Sleeper player id -> that season's ADP standard deviation, centered on
+     * the season median so a missing player reads as typical (zero). Past
+     * seasons are immutable and cached forever; matching is by name and
+     * position since NFL teams drift. Any fetch or parse trouble returns an
+     * empty map - the feature column just goes dark for that season.
+     */
+    public static java.util.HashMap<String, Double> centeredSpreadBySleeperID(String season){
+        java.util.HashMap<String, Double> bySleeperID = new java.util.HashMap<>();
+        try {
+            String url = "https://fantasyfootballcalculator.com/api/v1/adp/half-ppr?teams=12&year="
+                    + season;
+            String data = season.equals(getSeason())
+                    ? InOutUtilities.getTodaysWebPage(url, filepathStartSerious + season)
+                    : InOutUtilities.getCachedForever(url, "ffCalculatorSDFinal" + season);
+            JsonObject allData = JsonParser.parseString(data).getAsJsonObject();
+            for(JsonElement jsonPlayer : allData.get("players").getAsJsonArray()){
+                JsonObject apiObject = jsonPlayer.getAsJsonObject();
+                String position = apiObject.get("position").getAsString();
+                if(!position.equals("QB") && !position.equals("RB")
+                        && !position.equals("WR") && !position.equals("TE")){
+                    continue;
+                }
+                Player player = Player.getPlayerFromNameAndPos(
+                        apiObject.get("name").getAsString(),
+                        PlayerImportAndSetup.Position.valueOf(position));
+                if(player != null){
+                    bySleeperID.put(player.sleeperIDString,
+                            apiObject.get("stdev").getAsDouble());
+                }
+            }
+            if(bySleeperID.isEmpty()){
+                return bySleeperID;
+            }
+            java.util.ArrayList<Double> values = new java.util.ArrayList<>(bySleeperID.values());
+            values.sort(Double::compareTo);
+            double median = values.get(values.size() / 2);
+            bySleeperID.replaceAll((id, sd) -> sd - median);
+        } catch (RuntimeException problem){
+            bySleeperID.clear();
+        }
+        return bySleeperID;
+    }
+
     private static String getTodaysWebPageSerious(){
         return InOutUtilities.getTodaysWebPage(getWebURLSerious(), filepathStartSerious + getSeason());
     }

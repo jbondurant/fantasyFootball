@@ -38,6 +38,19 @@ public class DraftSimulator {
     /** One slot in the real pick order. Keeper slots select nobody. */
     public record Slot(int pickNumber, int round, String manager, boolean keeperSlot) {}
 
+    /**
+     * Season-level inputs for the FeatureLab candidate features. Everything
+     * defaults empty: an inactive feature's column reads zero either way.
+     */
+    public record Extras(Map<String, Double> teEarliness, Map<String, Double> rbEarliness,
+                         Map<String, String> teamOf, Set<String> rookies,
+                         Map<String, Double> adpSpreadCentered,
+                         Map<String, Set<String>> keeperStackTeams){
+        public static Extras none(){
+            return new Extras(Map.of(), Map.of(), Map.of(), Set.of(), Map.of(), Map.of());
+        }
+    }
+
     private final List<Slot> schedule;
     private final Map<Integer, Slot> slotByPickNumber = new HashMap<>();
     private final List<String> initialBoard;   // ADP order, best first
@@ -46,11 +59,23 @@ public class DraftSimulator {
     private final Map<String, Map<Position, Integer>> initialRosters;
     private final SelectionModel model;
     private final Map<String, Double> qbEarliness;
+    private final Extras extras;
+    /** pickNumber -> {firstOfPair, secondOfPair, waitFraction}, from the schedule. */
+    private final Map<Integer, double[]> turnShape = new HashMap<>();
+    private final double teams;
 
     public DraftSimulator(List<Slot> schedule, List<String> board,
                           Map<String, Double> adp, Map<String, Double> points,
                           Map<String, Map<Position, Integer>> keeperRosters,
                           SelectionModel model, Map<String, Double> qbEarliness){
+        this(schedule, board, adp, points, keeperRosters, model, qbEarliness, Extras.none());
+    }
+
+    public DraftSimulator(List<Slot> schedule, List<String> board,
+                          Map<String, Double> adp, Map<String, Double> points,
+                          Map<String, Map<Position, Integer>> keeperRosters,
+                          SelectionModel model, Map<String, Double> qbEarliness,
+                          Extras extras){
         this.schedule = new ArrayList<>(schedule);
         this.schedule.sort(Comparator.comparingInt(Slot::pickNumber));
         for(Slot slot : this.schedule){
@@ -63,11 +88,51 @@ public class DraftSimulator {
         this.initialRosters = keeperRosters;
         this.model = model;
         this.qbEarliness = qbEarliness;
+        this.extras = extras;
+
+        Map<String, List<Integer>> livePicks = new HashMap<>();
+        for(Slot slot : this.schedule){
+            if(!slot.keeperSlot() && !slot.manager().isEmpty()){
+                livePicks.computeIfAbsent(slot.manager(), u -> new ArrayList<>())
+                        .add(slot.pickNumber());
+            }
+        }
+        this.teams = Math.max(livePicks.size(), 1);
+        for(List<Integer> mine : livePicks.values()){
+            for(int i = 0; i < mine.size(); i++){
+                int pickNumber = mine.get(i);
+                int round = slotByPickNumber.get(pickNumber).round();
+                int next = i + 1 < mine.size() ? mine.get(i + 1) : Integer.MAX_VALUE;
+                int previous = i > 0 ? mine.get(i - 1) : Integer.MIN_VALUE;
+                turnShape.put(pickNumber, new double[]{
+                        next - pickNumber == 1 && round >= 2 ? 1 : 0,
+                        pickNumber - previous == 1 && round >= 3 ? 1 : 0,
+                        next == Integer.MAX_VALUE ? 1.0 : Math.min(next - pickNumber, 24) / 24.0});
+            }
+        }
     }
 
     /** A held-out season's setup: its real slots, keepers and market. */
     public static DraftSimulator forSeason(DraftBacktest.Season season, SelectionModel model,
                                            Map<String, Double> qbEarliness){
+        return forSeason(season, model, qbEarliness, Extras.none());
+    }
+
+    /** Season-level extras from the frozen archives, for the lab features. */
+    public static Extras extrasFor(AAAConfiguration configuration, String season,
+                                   int earlinessCutoff){
+        return new Extras(
+                SelectionModel.positionEarliness(configuration, earlinessCutoff, Position.TE),
+                SelectionModel.positionEarliness(configuration, earlinessCutoff, Position.RB),
+                HistoricalProjections.teamBySleeperID(configuration, season),
+                HistoricalProjections.rookiesForSeason(configuration, season),
+                FFCalculatorSD.centeredSpreadBySleeperID(season),
+                Map.of());
+    }
+
+    /** The same, with the extras' kept-QB stack teams derived from the picks. */
+    public static DraftSimulator forSeason(DraftBacktest.Season season, SelectionModel model,
+                                           Map<String, Double> qbEarliness, Extras extras){
         List<Slot> schedule = new ArrayList<>();
         Map<String, Map<Position, Integer>> rosters = new HashMap<>();
         for(JsonElement pickElement : season.picks){
@@ -101,8 +166,28 @@ public class DraftSimulator {
             }
             board.add(entry.getKey());
         }
+        Map<String, Set<String>> keeperStacks = new HashMap<>();
+        for(JsonElement pickElement : season.picks){
+            JsonObject pick = pickElement.getAsJsonObject();
+            JsonElement isKeeperElement = pick.get("is_keeper");
+            JsonElement pickedBy = pick.get("picked_by");
+            if(isKeeperElement == null || isKeeperElement.isJsonNull()
+                    || !isKeeperElement.getAsBoolean()
+                    || pickedBy == null || pickedBy.isJsonNull()){
+                continue;
+            }
+            String sleeperID = pick.get("player_id").getAsString();
+            Player player = Player.getPlayerFromSIDV2(sleeperID);
+            String team = extras.teamOf().get(sleeperID);
+            if(player != null && player.position.equals(Position.QB) && team != null){
+                keeperStacks.computeIfAbsent(pickedBy.getAsString(), u -> new HashSet<>())
+                        .add(team);
+            }
+        }
+        Extras withStacks = new Extras(extras.teEarliness(), extras.rbEarliness(),
+                extras.teamOf(), extras.rookies(), extras.adpSpreadCentered(), keeperStacks);
         return new DraftSimulator(schedule, board, season.adp, season.rawPoints, rosters,
-                model, qbEarliness);
+                model, qbEarliness, withStacks);
     }
 
     /** How my own slots pick when a planner drives them instead of the model. */
@@ -125,6 +210,10 @@ public class DraftSimulator {
         }
         Map<String, Integer> takenAt = new HashMap<>();
         List<Position> recentPicks = new ArrayList<>();
+        Map<String, Set<String>> stackTeams = new HashMap<>();
+        for(Map.Entry<String, Set<String>> entry : extras.keeperStackTeams().entrySet()){
+            stackTeams.put(entry.getKey(), new java.util.HashSet<>(entry.getValue()));
+        }
         for(Slot slot : schedule){
             if(slot.keeperSlot() || board.isEmpty()){
                 continue;
@@ -138,17 +227,34 @@ public class DraftSimulator {
             else {
                 List<String> choiceSet = new ArrayList<>(
                         board.subList(0, Math.min(board.size(), SelectionModel.CHOICE_SET)));
+                double[] shape = turnShape.getOrDefault(slot.pickNumber(),
+                        new double[]{0, 0, 1.0});
+                long qbHolders = rosters.values().stream()
+                        .filter(counts -> counts.getOrDefault(Position.QB, 0) > 0).count();
                 double[] probabilities = model.choiceProbabilities(SelectionModel.features(
-                        choiceSet, adp, points, roster,
-                        qbEarliness.getOrDefault(slot.manager(), 0.0), recentPicks));
+                        choiceSet, adp, points, new SelectionModel.Context(
+                                roster,
+                                qbEarliness.getOrDefault(slot.manager(), 0.0), recentPicks,
+                                slot.pickNumber(), shape[0] > 0, shape[1] > 0, shape[2],
+                                qbHolders / teams,
+                                extras.teEarliness().getOrDefault(slot.manager(), 0.0),
+                                extras.rbEarliness().getOrDefault(slot.manager(), 0.0),
+                                stackTeams.getOrDefault(slot.manager(), Set.of()),
+                                extras.teamOf(), extras.rookies(),
+                                extras.adpSpreadCentered())));
                 chosen = choiceSet.get(sample(probabilities, random));
             }
             takenAt.put(chosen, slot.pickNumber());
             board.remove(chosen);
             // My policy picks feed the run window too - a deliberate early QB
             // can start the very run the feature measures.
-            recentPicks.add(Player.getPlayerFromSIDV2(chosen).position);
-            roster.merge(Player.getPlayerFromSIDV2(chosen).position, 1, Integer::sum);
+            Position position = Player.getPlayerFromSIDV2(chosen).position;
+            recentPicks.add(position);
+            roster.merge(position, 1, Integer::sum);
+            if(position.equals(Position.QB) && extras.teamOf().containsKey(chosen)){
+                stackTeams.computeIfAbsent(slot.manager(), u -> new java.util.HashSet<>())
+                        .add(extras.teamOf().get(chosen));
+            }
         }
         return takenAt;
     }

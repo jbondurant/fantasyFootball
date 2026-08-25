@@ -334,3 +334,33 @@ bucketed predicted-vs-actual survival within ±10 points), and the Allen
 
   My OWN decisions feel cliffs fully regardless: best-nine scoring uses
   point magnitudes, and the snipe table's drop-if-gone IS the local cliff.
+
+### FeatureLab - the full candidate battery (2026-08-25)
+
+  Ten candidate features, each judged one at a time against the shipped set
+  on 2024 (fit 2021-2023, 400 trials, ship margin 0.10 calibration points
+  because 2024 has now judged many variants). NONE shipped:
+
+    value fall      +0.17%  coef -1.75 (fallers keep falling - falling is
+                            informative, not a discount rack)
+    turn-pair swap  +0.03%  coefs +0.01/-0.16 - Justin's keeper-cost swap
+                            (worse target first at the turn so the better
+                            one keeps cheaper) is NOT visible in league
+                            history; ~40 pair events may be underpowered.
+                            The strategy remains individually rational.
+    wait x adp      +0.00%  coef -0.09, nothing
+    flex need       -0.02%  coef +0.94 - real behavior, best candidate,
+                            below the ship margin
+    QB depletion    +0.16%  coef -0.59, redundant with the shipped QB run
+    TE timing       +0.22%  coef +0.40, calibration worse
+    RB timing       +0.11%  coef +0.14
+    QB stack        +0.04%  coef +0.79 - stacking exists, does not help
+    rookie          +0.18%  coef -0.17
+    ADP spread      +0.23%  coef -1.18 - the long-queued FFC feature FAILED
+                            its gate (159 players matched for 2024)
+
+  The shipped set f0-f8 survives the whole battery - the model is not
+  detectably missing any of these signals at this sample size (304 training
+  selections). Infrastructure kept: Context-based features, positional
+  earliness, team/rookie/spread archives, so any candidate can be re-judged
+  as seasons accumulate. The honest next test is the 2026 draft itself.

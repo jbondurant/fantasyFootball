@@ -41,6 +41,24 @@ import java.util.Set;
  *          tier observation ("the drop between many TEs was substantial").
  *          Rank features cannot see gap magnitudes; this one is the
  *          fall-off itself
+ *   f10    value fall: how far past his ADP the player has slipped - the
+ *          "he's a steal at this pick" pull that rank cannot see
+ *   f11    first pick of a back-to-back turn pair (rounds 2+), interacted
+ *          with ADP rank - Justin's keeper-cost swap: strategic managers
+ *          take the WORSE of their two targets first so the better one
+ *          lands in the later round and keeps cheaper
+ *   f12    second pick of the pair, same interaction - the other half of
+ *          the swap (ADP adherence should RISE here)
+ *   f13    wait until the manager's next pick, interacted with ADP rank -
+ *          long waits should loosen board discipline
+ *   f14    flex need: RB/WR/TE with fixed starters full but FLEX slots open
+ *   f15    QB depletion: for QB candidates, the share of teams already
+ *          holding a QB - demand left in the room
+ *   f16    isTE x the manager's TE-timing earliness (like f4 for QBs)
+ *   f17    isRB x the manager's RB-timing earliness
+ *   f18    stack: WR/TE on the same NFL team as a QB the manager holds
+ *   f19    rookie in that season (from Sleeper's rookie_year metadata)
+ *   f20    per-player ADP spread (FantasyFootballCalculator stdev, centered)
  *
  * Fitting is concave maximum likelihood; plain gradient ascent converges in
  * seconds on ~500 in-game selections.
@@ -49,7 +67,7 @@ import java.util.Set;
  */
 public class SelectionModel {
 
-    public static final int FEATURES = 10;
+    public static final int FEATURES = 21;
     public static final int GAME_ROUNDS = 9;
     static final int CHOICE_SET = 60;
     static final double ADP_LIMIT = 250.0;
@@ -57,6 +75,34 @@ public class SelectionModel {
     public static final int RUN_WINDOW = 6;
     /** Point drop that counts as a full cliff for f9. */
     public static final double CLIFF_CAP = 100.0;
+
+    /**
+     * Everything about the moment of a selection that the candidate-level
+     * features need. Season-level maps (teamOf, rookies, adpSpreadCentered)
+     * may be empty when a feature is inactive - its column just reads zero.
+     */
+    public record Context(Map<Position, Integer> roster,
+                          double qbEarliness,
+                          List<Position> recentPicks,
+                          int pickNumber,
+                          boolean firstOfPair,
+                          boolean secondOfPair,
+                          double waitFraction,
+                          double leagueQBShare,
+                          double teEarliness,
+                          double rbEarliness,
+                          Set<String> stackTeams,
+                          Map<String, String> teamOf,
+                          Set<String> rookies,
+                          Map<String, Double> adpSpreadCentered){
+
+        /** The pre-f10 world: roster, QB timing and the run window only. */
+        public static Context simple(Map<Position, Integer> roster, double qbEarliness,
+                                     List<Position> recentPicks){
+            return new Context(roster, qbEarliness, recentPicks, 1, false, false, 0.0,
+                    0.0, 0.0, 0.0, Set.of(), Map.of(), Set.of(), Map.of());
+        }
+    }
 
     /**
      * The feature set that won the leakage-safe 2024 chooser in
@@ -75,9 +121,12 @@ public class SelectionModel {
      * and the snipe decomposition's drop-if-gone.
      */
     public static boolean[] shippedFeatures(){
+        // f0-f8 shipped; f9 rejected; f10-f20 are FeatureLab candidates and
+        // stay out until a chooser verdict says otherwise.
         boolean[] active = new boolean[FEATURES];
-        java.util.Arrays.fill(active, true);
-        active[9] = false;
+        for(int f = 0; f <= 8; f++){
+            active[f] = true;
+        }
         return active;
     }
 
@@ -200,6 +249,12 @@ public class SelectionModel {
 
     /** QB-timing earliness per manager (positive = takes QBs early), leakage-safe. */
     public static Map<String, Double> qbEarliness(AAAConfiguration configuration, int lastSeason){
+        return positionEarliness(configuration, lastSeason, Position.QB);
+    }
+
+    /** The same construction for any position. */
+    public static Map<String, Double> positionEarliness(AAAConfiguration configuration,
+                                                        int lastSeason, Position position){
         Map<String, List<Integer>> firstRounds = new HashMap<>();
         List<JsonArray> drafts = configuration.getPreviousDraftPicks();
         List<String> seasons = configuration.getPreviousSeasons();
@@ -215,7 +270,7 @@ public class SelectionModel {
                     continue;
                 }
                 Player player = Player.getPlayerFromSIDV2(pick.get("player_id").getAsString());
-                if(player == null || !player.position.equals(Position.QB)){
+                if(player == null || !player.position.equals(position)){
                     continue;
                 }
                 JsonElement pickedBy = pick.get("picked_by");
@@ -251,6 +306,16 @@ public class SelectionModel {
     public static List<Observation> loadObservations(AAAConfiguration configuration,
                                                      int firstSeason, int lastSeason,
                                                      Map<String, Double> qbEarliness){
+        return loadObservations(configuration, firstSeason, lastSeason, qbEarliness,
+                Map.of(), Map.of());
+    }
+
+    /** The same, with TE/RB timing populated for the FeatureLab candidates. */
+    public static List<Observation> loadObservations(AAAConfiguration configuration,
+                                                     int firstSeason, int lastSeason,
+                                                     Map<String, Double> qbEarliness,
+                                                     Map<String, Double> teEarliness,
+                                                     Map<String, Double> rbEarliness){
         List<Observation> observations = new ArrayList<>();
         List<JsonArray> drafts = configuration.getPreviousDraftPicks();
         List<String> seasons = configuration.getPreviousSeasons();
@@ -263,20 +328,27 @@ public class SelectionModel {
             if(year < firstSeason || year > lastSeason){
                 continue;
             }
-            observations.addAll(seasonObservations(configuration, drafts.get(i), season, qbEarliness));
+            observations.addAll(seasonObservations(configuration, drafts.get(i), season,
+                    qbEarliness, teEarliness, rbEarliness));
         }
         return observations;
     }
 
     private static List<Observation> seasonObservations(AAAConfiguration configuration,
                                                         JsonArray draft, String season,
-                                                        Map<String, Double> qbEarliness){
+                                                        Map<String, Double> qbEarliness,
+                                                        Map<String, Double> teEarliness,
+                                                        Map<String, Double> rbEarliness){
         Map<String, Double> adp = HistoricalProjections.adpBySleeperID(configuration, season);
         Map<String, Double> points = HistoricalProjections.rawPointsBySleeperID(configuration, season);
+        Map<String, String> teamOf = HistoricalProjections.teamBySleeperID(configuration, season);
+        Set<String> rookies = HistoricalProjections.rookiesForSeason(configuration, season);
+        Map<String, Double> spread = FFCalculatorSD.centeredSpreadBySleeperID(season);
 
         // Keepers are off the board and on their owner's roster from the start.
         Set<String> kept = new HashSet<>();
         Map<String, Map<Position, Integer>> rosters = new HashMap<>();
+        Map<String, Set<String>> stackTeams = new HashMap<>();
         List<JsonObject> picks = new ArrayList<>();
         for(JsonElement pickElement : draft){
             JsonObject pick = pickElement.getAsJsonObject();
@@ -289,6 +361,10 @@ public class SelectionModel {
                 if(player != null && owner != null && !owner.isJsonNull()){
                     rosters.computeIfAbsent(owner.getAsString(), u -> new EnumMap<>(Position.class))
                             .merge(player.position, 1, Integer::sum);
+                    if(player.position.equals(Position.QB) && teamOf.containsKey(sleeperID)){
+                        stackTeams.computeIfAbsent(owner.getAsString(), u -> new HashSet<>())
+                                .add(teamOf.get(sleeperID));
+                    }
                 }
             }
             else {
@@ -296,6 +372,18 @@ public class SelectionModel {
             }
         }
         picks.sort(Comparator.comparingInt(p -> p.get("pick_no").getAsInt()));
+
+        Map<String, List<Integer>> livePickNumbers = new HashMap<>();
+        Set<String> allManagers = new HashSet<>();
+        for(JsonObject pick : picks){
+            JsonElement by = pick.get("picked_by");
+            if(by != null && !by.isJsonNull() && pick.get("round").getAsInt() <= GAME_ROUNDS){
+                livePickNumbers.computeIfAbsent(by.getAsString(), u -> new ArrayList<>())
+                        .add(pick.get("pick_no").getAsInt());
+                allManagers.add(by.getAsString());
+            }
+        }
+        double teams = Math.max(allManagers.size(), 1);
 
         List<String> board = new ArrayList<>();
         for(Map.Entry<String, Double> entry : adp.entrySet()){
@@ -334,10 +422,28 @@ public class SelectionModel {
             }
             int chosen = choiceSet.indexOf(chosenID);
             if(chosen >= 0){
+                int pickNumber = pick.get("pick_no").getAsInt();
+                int round = pick.get("round").getAsInt();
+                List<Integer> mine = livePickNumbers.getOrDefault(manager, List.of());
+                int slot = mine.indexOf(pickNumber);
+                int next = slot >= 0 && slot + 1 < mine.size() ? mine.get(slot + 1) : Integer.MAX_VALUE;
+                int previous = slot > 0 ? mine.get(slot - 1) : Integer.MIN_VALUE;
+                boolean firstOfPair = next - pickNumber == 1 && round >= 2;
+                boolean secondOfPair = pickNumber - previous == 1 && round >= 3;
+                double waitFraction = next == Integer.MAX_VALUE
+                        ? 1.0 : Math.min(next - pickNumber, 24) / 24.0;
+                long qbHolders = rosters.values().stream()
+                        .filter(counts -> counts.getOrDefault(Position.QB, 0) > 0).count();
                 observations.add(new Observation(
-                        features(choiceSet, adp, points,
+                        features(choiceSet, adp, points, new Context(
                                 rosters.computeIfAbsent(manager, u -> new EnumMap<>(Position.class)),
-                                qbEarliness.getOrDefault(manager, 0.0), recentPicks),
+                                qbEarliness.getOrDefault(manager, 0.0), recentPicks,
+                                pickNumber, firstOfPair, secondOfPair, waitFraction,
+                                qbHolders / teams,
+                                teEarliness.getOrDefault(manager, 0.0),
+                                rbEarliness.getOrDefault(manager, 0.0),
+                                stackTeams.getOrDefault(manager, Set.of()),
+                                teamOf, rookies, spread)),
                         chosen));
             }
             board.remove(chosenID);
@@ -346,6 +452,10 @@ public class SelectionModel {
                         .merge(player.position, 1, Integer::sum);
                 if(StartingLineup.isSkillPosition(player.position)){
                     recentPicks.add(player.position);
+                }
+                if(player.position.equals(Position.QB) && teamOf.containsKey(chosenID)){
+                    stackTeams.computeIfAbsent(manager, u -> new HashSet<>())
+                            .add(teamOf.get(chosenID));
                 }
             }
         }
@@ -363,13 +473,25 @@ public class SelectionModel {
         return count;
     }
 
-    /** The feature matrix for one choice set - also used by the simulator. */
+    /** Convenience for callers and tests that predate the Context. */
     public static double[][] features(List<String> choiceSet,
                                       Map<String, Double> adp,
                                       Map<String, Double> points,
                                       Map<Position, Integer> roster,
                                       double managerQBEarliness,
                                       List<Position> recentPicks){
+        return features(choiceSet, adp, points,
+                Context.simple(roster, managerQBEarliness, recentPicks));
+    }
+
+    /** The feature matrix for one choice set - also used by the simulator. */
+    public static double[][] features(List<String> choiceSet,
+                                      Map<String, Double> adp,
+                                      Map<String, Double> points,
+                                      Context context){
+        Map<Position, Integer> roster = context.roster();
+        double managerQBEarliness = context.qbEarliness();
+        List<Position> recentPicks = context.recentPicks();
         int n = choiceSet.size();
         Integer[] byAdp = rankOrder(choiceSet, adp, true);
         Integer[] byPoints = rankOrder(choiceSet, points, false);
@@ -398,6 +520,26 @@ public class SelectionModel {
             features[a][7] = position.equals(Position.TE) ? 1.0 : 0.0;
             features[a][8] = position.equals(Position.QB)
                     ? runCount(recentPicks, Position.QB) : 0.0;
+
+            double fall = context.pickNumber() - adp.getOrDefault(choiceSet.get(a), 999.0);
+            features[a][10] = Math.min(Math.max(fall, 0), 48) / 24.0;
+            features[a][11] = context.firstOfPair() ? features[a][0] : 0.0;
+            features[a][12] = context.secondOfPair() ? features[a][0] : 0.0;
+            features[a][13] = context.waitFraction() * features[a][0];
+            int flexRemaining = Math.max(0, StartingLineup.FLEX_SLOTS
+                    - Math.max(0, roster.getOrDefault(Position.RB, 0) - 2)
+                    - Math.max(0, roster.getOrDefault(Position.WR, 0) - 3)
+                    - Math.max(0, roster.getOrDefault(Position.TE, 0) - 1));
+            features[a][14] = !position.equals(Position.QB) && need == 0
+                    ? flexRemaining / (double) StartingLineup.FLEX_SLOTS : 0.0;
+            features[a][15] = position.equals(Position.QB) ? context.leagueQBShare() : 0.0;
+            features[a][16] = position.equals(Position.TE) ? context.teEarliness() : 0.0;
+            features[a][17] = position.equals(Position.RB) ? context.rbEarliness() : 0.0;
+            String team = context.teamOf().get(choiceSet.get(a));
+            features[a][18] = (position.equals(Position.WR) || position.equals(Position.TE))
+                    && team != null && context.stackTeams().contains(team) ? 1.0 : 0.0;
+            features[a][19] = context.rookies().contains(choiceSet.get(a)) ? 1.0 : 0.0;
+            features[a][20] = context.adpSpreadCentered().getOrDefault(choiceSet.get(a), 0.0) / 10.0;
         }
         // The cliff: only the best remaining player at each position carries
         // it - he is the one a fall-off makes urgent.
@@ -453,24 +595,27 @@ public class SelectionModel {
 
         boolean[] marketOnly = new boolean[FEATURES];
         marketOnly[0] = true;
-        boolean[] full = new boolean[FEATURES];
-        java.util.Arrays.fill(full, true);
+        boolean[] shipped = shippedFeatures();
         SelectionModel market = fit(train, marketOnly);
-        SelectionModel model = fit(train, full);
+        SelectionModel model = fit(train, shipped);
 
-        System.out.println("fitted coefficients (full model):");
+        System.out.println("fitted coefficients (shipped model; candidates live in FeatureLab):");
         String[] names = {"log ADP rank", "log points rank", "starter need", "saturated",
                 "QB x earliness", "QB intercept", "RB intercept", "TE intercept",
-                "QB run", "cliff"};
+                "QB run", "cliff", "value fall", "pair 1st x adp", "pair 2nd x adp",
+                "wait x adp", "flex need", "QB depletion", "TE x earliness",
+                "RB x earliness", "QB stack", "rookie", "ADP spread"};
         for(int f = 0; f < FEATURES; f++){
-            System.out.printf("   %-16s %+7.3f%n", names[f], model.beta()[f]);
+            if(shipped[f]){
+                System.out.printf("   %-16s %+7.3f%n", names[f], model.beta()[f]);
+            }
         }
 
         System.out.println("\ngate 1 - held-out 2025, per selection:");
         System.out.printf("   %-22s %10s %8s %8s%n", "MODEL", "log-loss", "top-1", "top-5");
         System.out.printf("   %-22s %10.3f %7.1f%% %7.1f%%%n", "market only",
                 meanLogLoss(market, test), topK(market, test, 1) * 100, topK(market, test, 5) * 100);
-        System.out.printf("   %-22s %10.3f %7.1f%% %7.1f%%%n", "full selection model",
+        System.out.printf("   %-22s %10.3f %7.1f%% %7.1f%%%n", "shipped selection model",
                 meanLogLoss(model, test), topK(model, test, 1) * 100, topK(model, test, 5) * 100);
     }
 

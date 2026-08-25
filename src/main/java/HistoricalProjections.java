@@ -4,7 +4,9 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Sleeper's preseason projections for a COMPLETED season - the ADP everyone
@@ -28,6 +30,42 @@ public class HistoricalProjections {
                 + "&order_by=pts_half_ppr";
         String data = InOutUtilities.getCachedForever(url, "sleeperProjectionsFinal" + season);
         return JsonParser.parseString(data).getAsJsonArray();
+    }
+
+    /** Sleeper player id -> NFL team that season, from the frozen snapshot. */
+    public static Map<String, String> teamBySleeperID(AAAConfiguration configuration, String season){
+        Map<String, String> out = new HashMap<>();
+        for(JsonElement row : forSeason(configuration, season)){
+            JsonObject object = row.getAsJsonObject();
+            JsonElement team = object.get("team");
+            JsonElement id = object.get("player_id");
+            if(id != null && !id.isJsonNull() && team != null && !team.isJsonNull()){
+                out.put(id.getAsString(), team.getAsString());
+            }
+        }
+        return out;
+    }
+
+    /** Players who were rookies that season, by Sleeper's rookie_year metadata. */
+    public static Set<String> rookiesForSeason(AAAConfiguration configuration, String season){
+        Set<String> out = new HashSet<>();
+        for(JsonElement row : forSeason(configuration, season)){
+            JsonObject object = row.getAsJsonObject();
+            JsonElement playerElement = object.get("player");
+            if(playerElement == null || !playerElement.isJsonObject()){
+                continue;
+            }
+            JsonElement metadataElement = playerElement.getAsJsonObject().get("metadata");
+            if(metadataElement == null || !metadataElement.isJsonObject()){
+                continue;
+            }
+            JsonElement rookieYear = metadataElement.getAsJsonObject().get("rookie_year");
+            if(rookieYear != null && !rookieYear.isJsonNull()
+                    && season.equals(rookieYear.getAsString())){
+                out.add(object.get("player_id").getAsString());
+            }
+        }
+        return out;
     }
 
     /** Sleeper player id -> that season's preseason half-PPR ADP. */
