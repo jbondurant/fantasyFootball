@@ -142,6 +142,32 @@ public class SleeperProjections {
         return false;
     }
 
+    private static HashMap<String, Double> cachedAdp;
+
+    /**
+     * Average draft position, half PPR, from the same projections response the
+     * scoring uses. Lower means drafted earlier. Players nobody is drafting
+     * come back as Double.MAX_VALUE so they sort last.
+     */
+    public static synchronized double adpOf(String sleeperID){
+        if(cachedAdp == null){
+            HashMap<String, Double> adp = new HashMap<>();
+            for(JsonElement jsonPlayer : getTodaysProjections()){
+                JsonObject playerObject = jsonPlayer.getAsJsonObject();
+                JsonObject stats = playerObject.getAsJsonObject("stats");
+                if(stats == null){
+                    continue;
+                }
+                JsonElement value = stats.get("adp_half_ppr");
+                if(value != null && !value.isJsonNull()){
+                    adp.put(playerObject.get("player_id").getAsString(), value.getAsDouble());
+                }
+            }
+            cachedAdp = adp;
+        }
+        return cachedAdp.getOrDefault(sleeperID, Double.MAX_VALUE);
+    }
+
     public static void main(String[] args){
         HashMap<String, Double> scores = parseTodaysWebPage();
         System.out.println("projected " + scores.size() + " players for the " + getSeason() + " season");

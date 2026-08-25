@@ -18,9 +18,11 @@ public class DraftRoundUtil {
 
     private static synchronized Map<String, Integer> rounds(){
         if(sleeperIDToRound == null){
-            String picks = AAAConfiguration.getInstance().getPreviousSeasonDraftPicks();
-            sleeperIDToRound = KeeperPricing.roundsByPlayerID(
-                    JsonParser.parseString(picks).getAsJsonArray());
+            java.util.List<com.google.gson.JsonArray> history =
+                    AAAConfiguration.getInstance().getPreviousDraftPicks();
+            sleeperIDToRound = history.isEmpty()
+                    ? new java.util.HashMap<>()
+                    : KeeperPricing.roundsByPlayerID(history.get(0));
         }
         return sleeperIDToRound;
     }

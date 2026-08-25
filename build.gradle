@@ -69,6 +69,14 @@ tasks.register('run', JavaExec) {
     mainClass = project.findProperty('main') ?: 'TradeFinder'
     workingDir = project.projectDir
     standardInput = System.in
+
+    // Gradle hands -D to its own daemon, not to the JVM this forks, so the
+    // tuning knobs have to be passed through explicitly as -P.
+    ['sims', 'candidates', 'qbADPChange', 'draftId'].each { knob ->
+        if (project.hasProperty(knob)) {
+            systemProperty knob, project.property(knob)
+        }
+    }
 }
 
 tasks.withType(JavaCompile).configureEach {

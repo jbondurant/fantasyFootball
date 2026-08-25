@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.PriorityQueue;
 
 /**
@@ -155,6 +156,47 @@ class DraftStrategyTest {
     }
 
     @Test
+void aHumanWhosePlanRunsOutTakesBestAvailable(){
+        // Regression: the plan only covers as many picks as it was built with.
+        // Simulating more rounds than that threw IndexOutOfBoundsException out
+        // of remove(0), which made the keeper chooser unrunnable.
+        HumanStrategy human = new HumanStrategy(new RankOrderedPlayers(board()),
+                HumanStrategy.nonPermutedPositions(1, 0, 0, 0));
+
+        Assertions.assertEquals("Qb1", human.selectPlayer().lastName);
+
+        Player next = human.selectPlayer();
+        Assertions.assertNotNull(next, "should fall back rather than throw");
+        Assertions.assertEquals("Rb1", next.lastName, "best left on the board");
+    }
+
+    @Test
+    void aPlanCallingForAnExhaustedPositionFallsBackToo(){
+        RankOrderedPlayers board = new RankOrderedPlayers(board());
+        board.removeTopPlayerOfPos(Position.QB);  // the only quarterback
+
+        HumanStrategy human = new HumanStrategy(board,
+                HumanStrategy.nonPermutedPositions(1, 0, 0, 0));
+
+        Assertions.assertEquals("Rb1", human.selectPlayer().lastName);
+    }
+
+    @Test
+    void bestAvailableIsTheLowestRankAcrossEveryPosition(){
+        RankOrderedPlayers board = new RankOrderedPlayers(board());
+
+        Assertions.assertEquals("Rb1", board.removeBestAvailable().lastName);
+        Assertions.assertEquals("Wr1", board.removeBestAvailable().lastName);
+        Assertions.assertEquals("Rb2", board.removeBestAvailable().lastName);
+    }
+
+    @Test
+    void anEmptyBoardHandsBackNullRatherThanThrowing(){
+        RankOrderedPlayers board = new RankOrderedPlayers(new ArrayList<>());
+        Assertions.assertNull(board.removeBestAvailable());
+    }
+
+    @Test
     void everyPlayerSurvivesTheDeviation(){
         // Losing players here would quietly shrink the pool every simulated draft.
         PriorityQueue<Rank> deviated = DecimalRank.makeDeviatedRanking(decimalBoard(), noVariance(), 0);
@@ -199,6 +241,39 @@ class DraftStrategyTest {
             }
             return taken;
         }
+    }
+
+    @Test
+    void everyManagersKeepersOccupyTheirOwnRounds(){
+        // A keeper costs its owner that round's pick, so they draft one fewer
+        // player per keeper. Only mine used to be placed, which had the other
+        // eleven teams drafting a full sixteen rounds while also holding
+        // keepers, and pulling players out of the pool that were never theirs.
+        Player mineA = TestPlayers.player("My", "Keeper1", "BUF", Position.RB, 100);
+        Player mineB = TestPlayers.player("My", "Keeper2", "BUF", Position.WR, 101);
+        Player theirs = TestPlayers.player("Their", "Keeper", "BUF", Position.TE, 200);
+
+        List<Keeper> mine = List.of(new Keeper("me", mineA, 12), new Keeper("me", mineB, 13));
+        List<Keeper> league = List.of(new Keeper("them", theirs, 6), new Keeper("me", mineA, 4));
+
+        Map<String, Map<Integer, Player>> placed =
+                SimulationDraft.keepersByOwnerAndRound(mine, league, "me");
+
+        Assertions.assertEquals(mineA, placed.get("me").get(12));
+        Assertions.assertEquals(mineB, placed.get("me").get(13));
+        Assertions.assertEquals(theirs, placed.get("them").get(6));
+        Assertions.assertNull(placed.get("me").get(4),
+                "the set being evaluated replaces whatever I had already declared");
+        Assertions.assertEquals(2, placed.get("me").size());
+    }
+
+    @Test
+    void aManagerWithNoKeepersDraftsEveryRound(){
+        Map<String, Map<Integer, Player>> placed = SimulationDraft.keepersByOwnerAndRound(
+                List.of(), List.of(new Keeper("them", TestPlayers.player("A","B","BUF",Position.RB,1), 5)), "me");
+
+        Assertions.assertTrue(placed.getOrDefault("nobody", Map.of()).isEmpty());
+        Assertions.assertEquals(1, placed.get("them").size());
     }
 
     private static ArrayList<DecimalRank> decimalBoard(){

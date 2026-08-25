@@ -3,10 +3,14 @@ import java.util.List;
 
 public class Keeper {
 
-    /** A keeper's price is capped at the last round worth spending. */
-    public static final int MAX_ROUND_COST = 10;
-
-    /** What a keeper who was never drafted (waiver pickup) costs. */
+    /**
+     * What a keeper nobody drafted costs: a fixed 10th-round pick.
+     *
+     * The code used to apply this 10 as a ceiling on every keeper as well,
+     * which is not a rule the league has. Six seasons of drafts contain 31
+     * keepers costing more than a 10th, out to a 16th, so a player taken in the
+     * 14th costs a 14th - cheaper than an undrafted one, which is the point.
+     */
     public static final int UNDRAFTED_ROUND_COST = 10;
 
     public String humanWhoCanKeep;
@@ -28,9 +32,6 @@ public class Keeper {
     public Keeper(String hwck, Player p, int rcbk){
         humanWhoCanKeep = hwck;
         player = p;
-        if(rcbk > MAX_ROUND_COST){
-            rcbk = MAX_ROUND_COST;
-        }
         roundCanBeKept = rcbk;
     }
 

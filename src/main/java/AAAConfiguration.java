@@ -2,6 +2,7 @@ import com.google.gson.*;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -154,13 +155,59 @@ public class AAAConfiguration {
     }
 
     public String getPreviousSeasonDraftPicks(){
-        String previousDraftID = getPreviousDraftID();
-        if(previousDraftID == null){
-            return "[]";
-        }
-        return InOutUtilities.getTodaysWebPage(draftPicksWebURL(previousDraftID),
-                filepathStartPreviousDraftPicks + leagueID);
+        List<JsonArray> history = getPreviousDraftPicks();
+        return history.isEmpty() ? "[]" : history.get(0).toString();
     }
+
+    private List<JsonArray> previousDraftPicks;
+
+    /**
+     * Picks from every earlier draft in this league's history, most recent
+     * first.
+     *
+     * Keeper pricing needs more than last season: a player kept two years
+     * running costs a round more than one kept once, and the ruleset caps that
+     * at three consecutive years, so the chain has to be walked back far enough
+     * to count them. Sleeper links each season to the one before it through
+     * previous_league_id.
+     */
+    /** Season label alongside each past draft, newest first. */
+    public synchronized List<String> getPreviousSeasons(){
+        getPreviousDraftPicks();
+        return previousSeasons;
+    }
+
+    private List<String> previousSeasons = new ArrayList<>();
+
+    public synchronized List<JsonArray> getPreviousDraftPicks(){
+        if(previousDraftPicks != null){
+            return previousDraftPicks;
+        }
+        List<JsonArray> history = new ArrayList<>();
+        List<String> seasons = new ArrayList<>();
+        String previousLeagueID = getPreviousLeagueID();
+        int guard = 0;
+        while(previousLeagueID != null && guard++ < MAX_SEASONS_OF_HISTORY){
+            String leagueData = InOutUtilities.getTodaysWebPage(leagueWebURL(previousLeagueID),
+                    filepathStartPreviousLeague + previousLeagueID);
+            JsonObject previousLeague = JsonParser.parseString(leagueData).getAsJsonObject();
+
+            String draftID = optionalString(previousLeague, "draft_id");
+            if(draftID != null){
+                String picks = InOutUtilities.getTodaysWebPage(draftPicksWebURL(draftID),
+                        filepathStartPreviousDraftPicks + draftID);
+                history.add(JsonParser.parseString(picks).getAsJsonArray());
+                seasons.add(optionalString(previousLeague, "season"));
+            }
+            previousLeagueID = optionalString(previousLeague, "previous_league_id");
+        }
+        previousDraftPicks = history;
+        previousSeasons = seasons;
+        return previousDraftPicks;
+    }
+
+    /** Far enough back to settle a three-consecutive-year keeper, with room to spare. */
+    private static final int MAX_SEASONS_OF_HISTORY = 8;
 
     public ArrayList<JsonElement> getTodaysRoster() {
         String websiteData = getTodaysRosterWebPageSerious();
@@ -197,9 +244,94 @@ public class AAAConfiguration {
      * in last season. Empty until somebody declares one.
      */
     public ArrayList<Keeper> getTodaysKeepers(){
+        return priceTodaysKeepers().keepers;
+    }
+
+    /** Keepers plus anything the rules disallow, for reporting. */
+    public KeeperPricing.PricedKeepers priceTodaysKeepers(){
         JsonArray rosters = JsonParser.parseString(getTodaysRosterWebPageSerious()).getAsJsonArray();
-        JsonArray previousPicks = JsonParser.parseString(getPreviousSeasonDraftPicks()).getAsJsonArray();
-        return KeeperPricing.priceKeepers(rosters, previousPicks, Player::getPlayerFromSIDV2);
+        return KeeperPricing.price(rosters, getPreviousDraftPicks(),
+                Player::getPlayerFromSIDV2, SleeperProjections::adpOf);
+    }
+
+    /** Rounds in this season's draft. */
+    public int getDraftRounds(){
+        JsonObject draft = getDraftJson();
+        JsonObject settings = draft.getAsJsonObject("settings");
+        return settings.get("rounds").getAsInt();
+    }
+
+    public int getMaxKeepers(){
+        JsonElement max = getLeagueJson().getAsJsonObject("settings").get("max_keepers");
+        return max == null || max.isJsonNull() ? 1 : max.getAsInt();
+    }
+
+    /** My slot in this season's draft order, 1-based. */
+    public int getMyDraftSlot(){
+        JsonObject order = getDraftJson().getAsJsonObject("draft_order");
+        if(order == null){
+            throw new IllegalStateException("the draft order has not been set yet");
+        }
+        JsonElement slot = order.get(getMyID());
+        if(slot == null || slot.isJsonNull()){
+            throw new IllegalStateException("I am not in this draft's order");
+        }
+        return slot.getAsInt();
+    }
+
+    /** Which overall pick my selection in a given round is, snaking. */
+    public int pickNumberFor(int round){
+        int teams = getLeagueJson().getAsJsonObject("settings").get("num_teams").getAsInt();
+        int slot = getMyDraftSlot();
+        int slotThisRound = round % 2 == 1 ? slot : teams - slot + 1;
+        return (round - 1) * teams + slotThisRound;
+    }
+
+    private JsonObject draftJson;
+
+    public JsonObject getDraftJson(){
+        if(draftJson == null){
+            String data = InOutUtilities.getTodaysWebPage(draftWebURL(getDraftID()), "draftObject" + getDraftID());
+            draftJson = JsonParser.parseString(data).getAsJsonObject();
+        }
+        return draftJson;
+    }
+
+    /** Player ids on a given manager's roster. */
+    public List<String> getMyRosterPlayerIDs(String userID){
+        List<String> playerIDs = new ArrayList<>();
+        for(JsonElement rosterElement : getTodaysRoster()){
+            JsonObject roster = rosterElement.getAsJsonObject();
+            String owner = optionalString(roster, "owner_id");
+            if(owner == null || !owner.equals(userID)){
+                continue;
+            }
+            JsonElement players = roster.get("players");
+            if(players == null || players.isJsonNull()){
+                continue;
+            }
+            for(JsonElement player : players.getAsJsonArray()){
+                playerIDs.add(player.getAsString());
+            }
+        }
+        return playerIDs;
+    }
+
+    /** Display names of managers who have not declared any keepers yet. */
+    public List<String> getManagersWithoutKeepers(){
+        List<String> waiting = new ArrayList<>();
+        for(JsonElement rosterElement : getTodaysRoster()){
+            JsonObject roster = rosterElement.getAsJsonObject();
+            JsonElement keepers = roster.get("keepers");
+            String owner = optionalString(roster, "owner_id");
+            if(owner == null){
+                continue;
+            }
+            if(keepers == null || keepers.isJsonNull() || keepers.getAsJsonArray().isEmpty()){
+                waiting.add(HumanOfInterest.getHumanFromID(owner));
+            }
+        }
+        return waiting;
     }
 
     public String getDraftFromLeagueIfOnlyOneDraft(){
@@ -222,11 +354,15 @@ public class AAAConfiguration {
         System.out.println("previous league:\t" + aaaConfiguration.getPreviousLeagueID()
                 + "\tprevious draft:\t" + aaaConfiguration.getPreviousDraftID());
         System.out.println("me:\t" + aaaConfiguration.getMyID());
-        for(Keeper keeper : aaaConfiguration.getTodaysKeepers()){
+        KeeperPricing.PricedKeepers priced = aaaConfiguration.priceTodaysKeepers();
+        for(Keeper keeper : priced.keepers){
             System.out.println("keeper:\t"
                     + HumanOfInterest.getHumanFromID(keeper.humanWhoCanKeep) + "\t"
                     + keeper.player.firstName + " " + keeper.player.lastName
                     + "\tround " + keeper.roundCanBeKept);
+        }
+        for(String rejection : priced.rejected){
+            System.out.println("not a legal keeper:\t" + rejection);
         }
     }
 

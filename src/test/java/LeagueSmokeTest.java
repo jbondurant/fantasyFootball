@@ -70,20 +70,44 @@ class LeagueSmokeTest {
     @Test
     void whateverKeepersHaveBeenDeclaredPriceCleanly(){
         // Declarations trickle in, so the count is not fixed. What matters is
-        // that each one resolves to a real player with a sane price.
-        ArrayList<Keeper> keepers = CONFIG.getTodaysKeepers();
+        // that each one resolves to a real player at a price the rules allow.
+        KeeperPricing.PricedKeepers priced = CONFIG.priceTodaysKeepers();
 
-        System.out.println("keepers declared so far: " + keepers.size());
-        for(Keeper keeper : keepers){
+        System.out.println("keepers declared so far: " + priced.keepers.size());
+        for(Keeper keeper : priced.keepers){
             Assertions.assertNotNull(keeper.player, "a keeper resolved to no player");
             Assertions.assertNotNull(keeper.humanWhoCanKeep, "a keeper belongs to nobody");
-            Assertions.assertTrue(keeper.roundCanBeKept >= 1 && keeper.roundCanBeKept <= Keeper.MAX_ROUND_COST,
+            Assertions.assertTrue(keeper.roundCanBeKept >= 1 && keeper.roundCanBeKept <= 20,
                     keeper.player.lastName + " priced at round " + keeper.roundCanBeKept);
             System.out.println("  " + HumanOfInterest.getHumanFromID(keeper.humanWhoCanKeep)
                     + "\t" + keeper.player.firstName + " " + keeper.player.lastName
                     + "\tround " + keeper.roundCanBeKept);
         }
-        Assertions.assertTrue(keepers.size() <= 24, "12 teams keeping at most 2 each");
+        for(String rejection : priced.rejected){
+            System.out.println("  not a legal keeper: " + rejection);
+        }
+        Assertions.assertTrue(priced.keepers.size() <= 24, "12 teams keeping at most 2 each");
+    }
+
+    @Test
+    void nobodyIsKeepingAPlayerTheRulesDoNotAllow(){
+        // A declared keeper the rules reject is worth knowing about before the
+        // draft, not during it.
+        KeeperPricing.PricedKeepers priced = CONFIG.priceTodaysKeepers();
+        Assertions.assertTrue(priced.rejected.isEmpty(),
+                "declared keepers that the ruleset does not permit: " + priced.rejected);
+    }
+
+    @Test
+    void theHistoryGoesBackFarEnoughToPriceConsecutiveKeepers(){
+        // A player held three years running needs three seasons of drafts
+        // behind them to be priced and to hit the limit.
+        List<com.google.gson.JsonArray> history = CONFIG.getPreviousDraftPicks();
+        Assertions.assertTrue(history.size() >= KeeperPricing.MAX_CONSECUTIVE_YEARS,
+                "only " + history.size() + " previous drafts reachable through previous_league_id");
+        for(com.google.gson.JsonArray draft : history){
+            Assertions.assertTrue(draft.size() > 0, "a previous draft came back empty");
+        }
     }
 
     @Test
