@@ -149,8 +149,12 @@ again in the real draft) is good but untestable: Sleeper's per-user drafts
 endpoint returns LEAGUE drafts only - verified across all twelve managers and
 seasons 2021-2026, exactly one real draft each per season and nothing else -
 and historical mocks 404 even by a known draft id, so they are ephemeral.
-Leaguemates' mocks cannot be collected retroactively or enumerated going
-forward.
+Settled by live experiment 2026-08-25: Justin created a fresh mock while
+logged in and it did NOT appear on his own per-user draft list, immediately or
+after propagation delay - mocks never attach to the public list at all. (They
+DO serve at /v1/draft/{id} while live, which is how this repo's 2023 code read
+them - by pasted id.) The missing capability is enumeration: leaguemates' mock
+ids can never be discovered, so their mocks cannot be collected, period.
 
 Two substitutes:
   - FFC per-player ADP stdev (per season, backtestable) - the gated feature
