@@ -1,6 +1,9 @@
 import PlayerImportAndSetup.Position;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Collections;
 import java.util.HashSet;
 
@@ -64,6 +67,46 @@ public class SimulationDraft {
      * instead of converging. Measured before the fix: 10 players, then 20,
      * then 30.
      */
+    /**
+     * Which round each manager's keepers take up, mine included.
+     *
+     * A keeper costs its owner that round's pick, so the manager makes one
+     * fewer selection for each keeper they hold. Previously only my own keepers
+     * were placed: everyone else drafted all sixteen rounds while also holding
+     * two keepers, which had the other eleven teams taking twenty-two more
+     * players out of the pool than they really would.
+     *
+     * The rounds come from KeeperPricing, so escalation, the first-two-rounds
+     * rule and the same-round bump are all already applied.
+     *
+     * @param mine        the set being evaluated, which replaces anything I have
+     *                    already declared
+     * @param leagueWide  every keeper declared in the league
+     * @param myID        my sleeper user id
+     */
+    static Map<String, Map<Integer, Player>> keepersByOwnerAndRound(Collection<Keeper> mine,
+                                                                    Collection<Keeper> leagueWide,
+                                                                    String myID){
+        Map<String, Map<Integer, Player>> byOwner = new HashMap<>();
+        if(leagueWide != null){
+            for(Keeper keeper : leagueWide){
+                if(keeper.humanWhoCanKeep == null || keeper.humanWhoCanKeep.equals(myID)){
+                    continue;
+                }
+                byOwner.computeIfAbsent(keeper.humanWhoCanKeep, owner -> new HashMap<>())
+                        .put(keeper.roundCanBeKept, keeper.player);
+            }
+        }
+        if(mine != null){
+            Map<Integer, Player> myRounds = new HashMap<>();
+            for(Keeper keeper : mine){
+                myRounds.put(keeper.roundCanBeKept, keeper.player);
+            }
+            byOwner.put(myID, myRounds);
+        }
+        return byOwner;
+    }
+
     private static void resetRostersForNewSimulation(SleeperLeague sl){
         for(User user : sl.sleeperDraftInfo.usersInfo){
             user.setRoster(new Roster());
@@ -185,14 +228,17 @@ public class SimulationDraft {
                 }
             }
         }
-        HashSet<Integer> roundsWithKeeper = getRoundsOfKeepers(keepers);
+        Map<String, Map<Integer, Player>> keepersByOwner =
+                keepersByOwnerAndRound(keepers, leagueWideKeepers, myID());
         ArrayList<User> usersAtDraft = sl.sleeperDraftInfo.usersInfo;
         for(int i=1; i<= roundsLeft; i++){
             Collections.sort(usersAtDraft, new UserComparator());
             for(User user : usersAtDraft){
-                Player draftedPlayer;
-                if(user.userID.equals(myID()) && roundsWithKeeper.contains(i)){
-                    draftedPlayer = getKeeperPlayerAtRound(keepers, i);
+                Player draftedPlayer = keepersByOwner
+                        .getOrDefault(user.userID, Map.of())
+                        .get(i);
+                if(draftedPlayer != null){
+                    // This round is spent on their keeper, so they do not pick.
                     user.addToRoster(draftedPlayer);
                 }
                 else {

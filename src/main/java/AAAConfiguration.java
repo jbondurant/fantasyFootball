@@ -306,6 +306,23 @@ public class AAAConfiguration {
         return playerIDs;
     }
 
+    /** Display names of managers who have not declared any keepers yet. */
+    public List<String> getManagersWithoutKeepers(){
+        List<String> waiting = new ArrayList<>();
+        for(JsonElement rosterElement : getTodaysRoster()){
+            JsonObject roster = rosterElement.getAsJsonObject();
+            JsonElement keepers = roster.get("keepers");
+            String owner = optionalString(roster, "owner_id");
+            if(owner == null){
+                continue;
+            }
+            if(keepers == null || keepers.isJsonNull() || keepers.getAsJsonArray().isEmpty()){
+                waiting.add(HumanOfInterest.getHumanFromID(owner));
+            }
+        }
+        return waiting;
+    }
+
     public String getDraftFromLeagueIfOnlyOneDraft(){
         String apiData = getTodaysDrafts();
         JsonArray unparsedDrafts = JsonParser.parseString(apiData).getAsJsonArray();

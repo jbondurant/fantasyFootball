@@ -89,6 +89,58 @@ class KeeperChooserSmokeTest {
     }
 
     @Test
+    void keepersCostTheirOwnerAPickRatherThanBeingFree(){
+        AAAConfiguration configuration = AAAConfiguration.getInstance();
+        SleeperLeague league = SleeperLeague.getSeriousLeague();
+        ArrayList<Keeper> declared = configuration.getTodaysKeepers();
+
+        java.util.Map<String, Integer> keeperCount = new java.util.HashMap<>();
+        for(Keeper keeper : declared){
+            keeperCount.merge(keeper.humanWhoCanKeep, 1, Integer::sum);
+        }
+
+        int rounds = configuration.getDraftRounds();
+        SimulationDraft.getSimulationPermPartialWithHardcodedKeepers(
+                new java.util.HashSet<>(), HumanStrategy.nonPermutedPositions(1, 4, 4, 1),
+                new ArrayList<>(), rounds, 18, declared);
+
+        for(User user : league.sleeperDraftInfo.usersInfo){
+            int kept = keeperCount.getOrDefault(user.userID, 0);
+            Assertions.assertEquals(rounds, user.roster.draftedPlayers.size(),
+                    HumanOfInterest.getHumanFromID(user.userID) + " should finish with one player per round");
+            // Their keepers are on the roster, and they are not duplicated.
+            long distinct = user.roster.draftedPlayers.stream().distinct().count();
+            Assertions.assertEquals(user.roster.draftedPlayers.size(), distinct,
+                    HumanOfInterest.getHumanFromID(user.userID) + " drafted the same player twice");
+            if(kept > 0){
+                Assertions.assertTrue(kept <= configuration.getMaxKeepers());
+            }
+        }
+    }
+
+    @Test
+    void aKeeperIsNeverAlsoDraftedBySomeoneElse(){
+        AAAConfiguration configuration = AAAConfiguration.getInstance();
+        SleeperLeague league = SleeperLeague.getSeriousLeague();
+        ArrayList<Keeper> declared = configuration.getTodaysKeepers();
+
+        SimulationDraft.getSimulationPermPartialWithHardcodedKeepers(
+                new java.util.HashSet<>(), HumanStrategy.nonPermutedPositions(1, 4, 4, 1),
+                new ArrayList<>(), configuration.getDraftRounds(), 18, declared);
+
+        for(Keeper keeper : declared){
+            for(User user : league.sleeperDraftInfo.usersInfo){
+                if(user.userID.equals(keeper.humanWhoCanKeep)){
+                    continue;
+                }
+                Assertions.assertFalse(user.roster.draftedPlayers.contains(keeper.player),
+                        HumanOfInterest.getHumanFromID(user.userID) + " drafted "
+                                + keeper.player.lastName + ", who is somebody else's keeper");
+            }
+        }
+    }
+
+    @Test
     void twoKeepersNeverShareARound(){
         AAAConfiguration configuration = AAAConfiguration.getInstance();
 

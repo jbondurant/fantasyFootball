@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.PriorityQueue;
 
 /**
@@ -240,6 +241,39 @@ void aHumanWhosePlanRunsOutTakesBestAvailable(){
             }
             return taken;
         }
+    }
+
+    @Test
+    void everyManagersKeepersOccupyTheirOwnRounds(){
+        // A keeper costs its owner that round's pick, so they draft one fewer
+        // player per keeper. Only mine used to be placed, which had the other
+        // eleven teams drafting a full sixteen rounds while also holding
+        // keepers, and pulling players out of the pool that were never theirs.
+        Player mineA = TestPlayers.player("My", "Keeper1", "BUF", Position.RB, 100);
+        Player mineB = TestPlayers.player("My", "Keeper2", "BUF", Position.WR, 101);
+        Player theirs = TestPlayers.player("Their", "Keeper", "BUF", Position.TE, 200);
+
+        List<Keeper> mine = List.of(new Keeper("me", mineA, 12), new Keeper("me", mineB, 13));
+        List<Keeper> league = List.of(new Keeper("them", theirs, 6), new Keeper("me", mineA, 4));
+
+        Map<String, Map<Integer, Player>> placed =
+                SimulationDraft.keepersByOwnerAndRound(mine, league, "me");
+
+        Assertions.assertEquals(mineA, placed.get("me").get(12));
+        Assertions.assertEquals(mineB, placed.get("me").get(13));
+        Assertions.assertEquals(theirs, placed.get("them").get(6));
+        Assertions.assertNull(placed.get("me").get(4),
+                "the set being evaluated replaces whatever I had already declared");
+        Assertions.assertEquals(2, placed.get("me").size());
+    }
+
+    @Test
+    void aManagerWithNoKeepersDraftsEveryRound(){
+        Map<String, Map<Integer, Player>> placed = SimulationDraft.keepersByOwnerAndRound(
+                List.of(), List.of(new Keeper("them", TestPlayers.player("A","B","BUF",Position.RB,1), 5)), "me");
+
+        Assertions.assertTrue(placed.getOrDefault("nobody", Map.of()).isEmpty());
+        Assertions.assertEquals(1, placed.get("them").size());
     }
 
     private static ArrayList<DecimalRank> decimalBoard(){

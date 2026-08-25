@@ -194,6 +194,7 @@ public class KeeperChooser {
 
     public static void main(String[] args) {
         AAAConfiguration configuration = AAAConfiguration.getInstance();
+        String myID = configuration.getMyID();
         int simulations = Integer.getInteger("sims", 40);
         int candidates = Integer.getInteger("candidates", 8);
         int qbADPChange = Integer.getInteger("qbADPChange", 18);
@@ -202,7 +203,7 @@ public class KeeperChooser {
                 + ", keeping " + configuration.getMaxKeepers()
                 + " of " + configuration.getDraftRounds() + " rounds\n");
 
-        List<Keeper> eligible = eligibleCandidates(configuration, configuration.getMyID());
+        List<Keeper> eligible = eligibleCandidates(configuration, myID);
         eligible.sort(Comparator.comparingDouble((Keeper k) -> adpSurplus(configuration, k)).reversed());
         System.out.println("eligible on my roster, best value first:");
         for(Keeper keeper : eligible){
@@ -212,6 +213,16 @@ public class KeeperChooser {
                     configuration.pickNumberFor(keeper.roundCanBeKept),
                     SleeperProjections.adpOf(keeper.player.sleeperIDString),
                     adpSurplus(configuration, keeper));
+        }
+
+        // My own pair is always placed, so only other managers skew the pool.
+        List<String> waiting = new ArrayList<>(configuration.getManagersWithoutKeepers());
+        waiting.remove(HumanOfInterest.getHumanFromID(myID));
+        if(!waiting.isEmpty()){
+            System.out.println("\nnote: " + String.join(", ", waiting)
+                    + " has not declared keepers yet, so the simulation has them drafting every"
+                    + " round. Expect them to take a couple more players out of the pool here than"
+                    + " they really will.");
         }
 
         System.out.println("\nsimulating " + simulations + " drafts for each pair of the top "
