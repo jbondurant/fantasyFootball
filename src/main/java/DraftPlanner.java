@@ -54,6 +54,22 @@ public class DraftPlanner {
         this.myPickNumbers = simulator.pickNumbersOf(me);
     }
 
+    DraftSimulator simulator(){
+        return simulator;
+    }
+
+    List<String> myKeeperIDs(){
+        return myKeeperIDs;
+    }
+
+    Map<String, Double> points(){
+        return points;
+    }
+
+    String me(){
+        return me;
+    }
+
     public record PositionValue(Position position, double mean, double p10, double riskAdjusted){}
     public record Stage(int pickNumber, int round, List<PositionValue> options, Position chosen){}
     public record SnipeRow(int pickNumber, Position position, String usualTarget,

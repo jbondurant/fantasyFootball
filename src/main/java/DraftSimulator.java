@@ -223,6 +223,78 @@ public class DraftSimulator {
     public interface MyPolicy {
         /** The remaining board in ADP order; returns the sleeper id to take. */
         String choose(List<String> board, Slot slot);
+
+        /**
+         * The same choice with the full mid-draft state visible, for policies
+         * that branch hypotheticals (copy the state before mutating it - the
+         * one passed in is the live rollout).
+         */
+        default String choose(List<String> board, Slot slot, SimState state){
+            return choose(board, slot);
+        }
+    }
+
+    /**
+     * A draft in progress: everything simulateFrom needs to play it to the
+     * end. copy() is a deep copy, so a policy can branch "what if I took X
+     * here" without disturbing the rollout it lives in.
+     */
+    public static final class SimState {
+        int scheduleIndex;
+        final List<String> board;
+        final Map<String, Integer> takenAt;
+        final Map<String, Map<Position, Integer>> rosters;
+        final List<Position> recentPicks;
+        final Map<String, Set<String>> stackTeams;
+
+        SimState(int scheduleIndex, List<String> board, Map<String, Integer> takenAt,
+                 Map<String, Map<Position, Integer>> rosters, List<Position> recentPicks,
+                 Map<String, Set<String>> stackTeams){
+            this.scheduleIndex = scheduleIndex;
+            this.board = board;
+            this.takenAt = takenAt;
+            this.rosters = rosters;
+            this.recentPicks = recentPicks;
+            this.stackTeams = stackTeams;
+        }
+
+        public SimState copy(){
+            Map<String, Map<Position, Integer>> rosterCopy = new HashMap<>();
+            for(Map.Entry<String, Map<Position, Integer>> entry : rosters.entrySet()){
+                rosterCopy.put(entry.getKey(), new EnumMap<>(entry.getValue()));
+            }
+            Map<String, Set<String>> stackCopy = new HashMap<>();
+            for(Map.Entry<String, Set<String>> entry : stackTeams.entrySet()){
+                stackCopy.put(entry.getKey(), new HashSet<>(entry.getValue()));
+            }
+            return new SimState(scheduleIndex, new ArrayList<>(board), new HashMap<>(takenAt),
+                    rosterCopy, new ArrayList<>(recentPicks), stackCopy);
+        }
+    }
+
+    /** The state a rollout starts from. */
+    public SimState initialState(){
+        Map<String, Map<Position, Integer>> rosters = new HashMap<>();
+        for(Map.Entry<String, Map<Position, Integer>> entry : initialRosters.entrySet()){
+            rosters.put(entry.getKey(), new EnumMap<>(entry.getValue()));
+        }
+        Map<String, Set<String>> stackTeams = new HashMap<>();
+        for(Map.Entry<String, Set<String>> entry : extras.keeperStackTeams().entrySet()){
+            stackTeams.put(entry.getKey(), new HashSet<>(entry.getValue()));
+        }
+        return new SimState(0, new ArrayList<>(initialBoard), new HashMap<>(),
+                rosters, new ArrayList<>(), stackTeams);
+    }
+
+    /**
+     * A copy of the state with `chosen` taken at the state's current slot -
+     * the branch point for a policy pricing one of its own candidate picks.
+     */
+    public SimState branchWith(SimState state, String chosen){
+        SimState branch = state.copy();
+        applyPick(branch, schedule.get(branch.scheduleIndex), chosen);
+        branch.scheduleIndex++;
+        return branch;
     }
 
     /** One simulated draft: sleeper id -> the pick number that took the player. */
@@ -232,26 +304,32 @@ public class DraftSimulator {
 
     /** The same, with the given manager's picks driven by a policy. */
     public Map<String, Integer> simulateOnce(Random random, String me, MyPolicy myPolicy){
-        List<String> board = new ArrayList<>(initialBoard);
-        Map<String, Map<Position, Integer>> rosters = new HashMap<>();
-        for(Map.Entry<String, Map<Position, Integer>> entry : initialRosters.entrySet()){
-            rosters.put(entry.getKey(), new EnumMap<>(entry.getValue()));
-        }
-        Map<String, Integer> takenAt = new HashMap<>();
-        List<Position> recentPicks = new ArrayList<>();
-        Map<String, Set<String>> stackTeams = new HashMap<>();
-        for(Map.Entry<String, Set<String>> entry : extras.keeperStackTeams().entrySet()){
-            stackTeams.put(entry.getKey(), new java.util.HashSet<>(entry.getValue()));
-        }
-        for(Slot slot : schedule){
-            if(slot.keeperSlot() || board.isEmpty()){
+        return simulateFrom(initialState(), random, me, myPolicy).takenAt;
+    }
+
+    /**
+     * Plays a draft from wherever `state` stands to the end, mutating and
+     * returning it. The resumable core: simulateOnce is this from the start,
+     * and an adaptive policy prices candidates by branching mid-draft states
+     * and completing them (the same primitive a live draft-day mode needs).
+     */
+    public SimState simulateFrom(SimState state, Random random, String me, MyPolicy myPolicy){
+        while(state.scheduleIndex < schedule.size()){
+            Slot slot = schedule.get(state.scheduleIndex);
+            if(slot.keeperSlot() || state.board.isEmpty()){
+                state.scheduleIndex++;
                 continue;
             }
+            List<String> board = state.board;
+            Map<String, Map<Position, Integer>> rosters = state.rosters;
+            Map<String, Set<String>> stackTeams = state.stackTeams;
+            List<Position> recentPicks = state.recentPicks;
             Map<Position, Integer> roster = rosters.computeIfAbsent(
                     slot.manager(), u -> new EnumMap<>(Position.class));
             String chosen;
             if(myPolicy != null && slot.manager().equals(me)){
-                chosen = myPolicy.choose(java.util.Collections.unmodifiableList(board), slot);
+                chosen = myPolicy.choose(java.util.Collections.unmodifiableList(board), slot,
+                        state);
             }
             else {
                 List<String> choiceSet = new ArrayList<>(
@@ -276,19 +354,42 @@ public class DraftSimulator {
                                 extras.young())));
                 chosen = choiceSet.get(sample(probabilities, random));
             }
-            takenAt.put(chosen, slot.pickNumber());
-            board.remove(chosen);
-            // My policy picks feed the run window too - a deliberate early QB
-            // can start the very run the feature measures.
-            Position position = Player.getPlayerFromSIDV2(chosen).position;
-            recentPicks.add(position);
-            roster.merge(position, 1, Integer::sum);
-            if(position.equals(Position.QB) && extras.teamOf().containsKey(chosen)){
-                stackTeams.computeIfAbsent(slot.manager(), u -> new java.util.HashSet<>())
-                        .add(extras.teamOf().get(chosen));
-            }
+            applyPick(state, slot, chosen);
+            state.scheduleIndex++;
         }
-        return takenAt;
+        return state;
+    }
+
+    // My policy picks feed the run window too - a deliberate early QB
+    // can start the very run the feature measures.
+    private void applyPick(SimState state, Slot slot, String chosen){
+        state.takenAt.put(chosen, slot.pickNumber());
+        state.board.remove(chosen);
+        Position position = Player.getPlayerFromSIDV2(chosen).position;
+        state.recentPicks.add(position);
+        state.rosters.computeIfAbsent(slot.manager(), u -> new EnumMap<>(Position.class))
+                .merge(position, 1, Integer::sum);
+        if(position.equals(Position.QB) && extras.teamOf().containsKey(chosen)){
+            state.stackTeams.computeIfAbsent(slot.manager(), u -> new HashSet<>())
+                    .add(extras.teamOf().get(chosen));
+        }
+    }
+
+    /**
+     * The same world with the given manager's slots in `rounds` flipped to
+     * keeper slots (they select nobody). PolicyTournament pins Justin's
+     * out-of-game keepers onto his rounds 8-9 with this, per his spec: seven
+     * live picks plus the two kept players is exactly a starting nine.
+     */
+    public DraftSimulator withKeeperSlots(String manager, Set<Integer> rounds){
+        List<Slot> adjusted = new ArrayList<>();
+        for(Slot slot : schedule){
+            boolean flip = rounds.contains(slot.round()) && slot.manager().equals(manager);
+            adjusted.add(flip
+                    ? new Slot(slot.pickNumber(), slot.round(), slot.manager(), true) : slot);
+        }
+        return new DraftSimulator(adjusted, initialBoard, adp, points, initialRosters,
+                model, qbEarliness, extras);
     }
 
     public Slot slotAt(int pickNumber){
