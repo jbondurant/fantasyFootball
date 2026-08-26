@@ -19,7 +19,11 @@ public class AdaptiveCeiling {
     public static void main(String[] args){
         AAAConfiguration configuration = AAAConfiguration.getInstance();
         int trials = Integer.getInteger("trials", 60);
-        int[] inners = {16, 48, 144};
+        String[] innerText = System.getProperty("inners", "16,48,144").split(",");
+        int[] inners = new int[innerText.length];
+        for(int i = 0; i < inners.length; i++){
+            inners[i] = Integer.parseInt(innerText[i].trim());
+        }
 
         PolicyTournament tournament = PolicyTournament.forCurrentGame(configuration, 150);
 
