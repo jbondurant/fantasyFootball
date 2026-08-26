@@ -705,3 +705,30 @@ bucketed predicted-vs-actual survival within ±10 points), and the Allen
   closer to a floor. Flowers counterfactual (-Pkeepers=Tuten,Flowers,
   r4 burned + Tuten pinned r9, 2520 sequences) queued as the test of
   whether depth starts mattering once QB timing re-enters.
+
+  FLOWERS COUNTERFACTUAL (Tuten r9-pinned + Flowers r4 burned, QB open,
+  2520 sequences, 800 trials): the QB dimension detonates exactly where
+  the theory said. greedy-raw COLLAPSES to -38.7 (the raw-points trap:
+  it grabs ~340-pt QBs early; in the Purdy game it was +7.6 and tied for
+  best) while greedy-vorp holds +1.8 - the waiting table is worth ~40
+  points here. The staged one-round frontier SPRINGS THE VALLEY TRAP
+  Justin predicted: it commits QB at round 2 (RQBRWWTW, -10.3) because
+  its greedy-raw tails take QBs early and undervalue every wait branch,
+  while exhaustive-committed finds QB at the LAST live pick (RRRWWTQB,
+  1817.6) - his 1500-now/1400-valley/1800-late scenario, live in real
+  numbers. Adaptive family leads again (+5.9 to +9.8), and oldschool's
+  RANDOM tails BEAT adaptive-greedy's raw-greedy tails (+9.8 vs +5.9):
+  a uniformly-random stand-in is unbiased about QB timing where greedy-
+  raw is confidently wrong - being wrong at random beats being wrong
+  systematically. Depth no longer ladders (9.8/9.5/8.8 at d1/2/3,
+  +/-1.1): at inner=16, more heads spread the same rollouts thinner.
+  CAUTION on cross-game reads: Flowers-world means (~1827) vs Purdy-world
+  (~1818) do NOT reopen the keeper decision - the two games charge
+  different pick prices (r4+r9 burned vs r8+r9) and hold different boards
+  (Purdy returns to the pool); the decision-relevant comparison was the
+  10k ledger's real-rules game (Purdy +10.4 > Flowers +5.6), and keepers
+  are locked besides. ACTION ITEM the trap exposes: DraftPlanner's staged
+  search with raw-greedy tails is exactly this vulnerable for QB-open
+  seats (LeagueOutlook keeperless seats, V(none) branches) - fix is
+  VORP-aware tails and/or explicit QB-round enumeration, then diff all
+  twelve seats' plans.

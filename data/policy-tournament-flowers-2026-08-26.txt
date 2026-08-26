@@ -1,0 +1,30 @@
+policy tournament: 7 live picks + keepers on rounds 8-9, composition 1QB/2RB/3WR/1TE/2FLEX
+my picks [7, 18, 31, 55, 66, 79, 90], keepers [Tuten, Flowers]
+
+2520 feasible committed sequences; searching all of them at 150 CRN rollouts each...
+exhaustive winner [RB, RB, RB, WR, WR, TE, QB], search mean 1817.0 (1319s)
+staged-frontier winner [RB, QB, RB, WR, WR, TE, WR]
+   evaluated random-feasible                            1719.7  (800 trials, 3s)
+   evaluated adp-follower                               1792.8  (800 trials, 3s)
+   evaluated greedy-raw                                 1779.0  (800 trials, 3s)
+   evaluated greedy-vorp                                1819.4  (800 trials, 3s)
+   evaluated staged-frontier RQBRWWTW                   1807.4  (800 trials, 3s)
+   evaluated exhaustive-committed RRRWWTQB              1817.6  (800 trials, 3s)
+   evaluated oldschool-1 (random tails)                 1827.2  (150 trials, 109s)
+   evaluated oldschool-2 (random tails)                 1826.9  (150 trials, 348s)
+   evaluated oldschool-3 (random tails)                 1826.2  (150 trials, 1285s)
+   evaluated adaptive-greedy (d1)                       1823.2  (150 trials, 126s)
+
+POLICY                                             MEAN  +/-SE      vs exhaustive
+oldschool-1 (random tails)                       1827.2    2.0        9.8 +/- 1.1
+oldschool-2 (random tails)                       1826.9    2.0        9.5 +/- 1.1
+oldschool-3 (random tails)                       1826.2    2.0        8.8 +/- 1.1
+adaptive-greedy (d1)                             1823.2    2.0        5.9 +/- 1.4
+greedy-vorp                                      1819.4    0.9        1.8 +/- 0.6
+exhaustive-committed RRRWWTQB                    1817.6    0.9        0.0 +/- 0.0
+staged-frontier RQBRWWTW                         1807.4    0.8      -10.3 +/- 0.8
+adp-follower                                     1792.8    1.0      -24.9 +/- 0.8
+greedy-raw                                       1779.0    0.7      -38.7 +/- 0.9
+random-feasible                                  1719.7    1.9      -97.9 +/- 2.0
+
+search 150 rollouts (seeds disjoint from eval), eval 800 trials (adaptive 150, inner 16); all policies share the eval streams, so the vs-exhaustive column is a paired difference.
