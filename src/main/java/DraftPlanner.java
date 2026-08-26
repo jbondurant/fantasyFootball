@@ -292,6 +292,19 @@ public class DraftPlanner {
     /** The same, with the opponent model already fitted - for scenario loops. */
     public static DraftPlanner forCurrentSeason(AAAConfiguration configuration, Keeper myKeeper,
                                                 ChoiceModel model, Map<String, Double> earliness){
+        return forCurrentSeason(configuration,
+                myKeeper == null ? List.of() : List.of(myKeeper), model, earliness);
+    }
+
+    /**
+     * The pair form - the league allows two keepers. Hypothetical keepers
+     * already visible among the declared ones are not double-counted, so the
+     * -Pkeepers knob keeps working unchanged after the commissioner enters
+     * the declaration into Sleeper.
+     */
+    public static DraftPlanner forCurrentSeason(AAAConfiguration configuration,
+                                                List<Keeper> myKeepers,
+                                                ChoiceModel model, Map<String, Double> earliness){
         // -Pprojections=<name> swaps MY value feed to a bridged external
         // source (see ProjectionBridge); opponents keep behaving off the
         // consensus market either way, which the information-set test showed
@@ -308,8 +321,12 @@ public class DraftPlanner {
 
         String me = configuration.getMyID();
         List<Keeper> keepers = new ArrayList<>(configuration.getTodaysKeepers());
-        if(myKeeper != null){
-            keepers.add(myKeeper);
+        for(Keeper mine : myKeepers){
+            boolean alreadyDeclared = keepers.stream().anyMatch(declared ->
+                    declared.player.sleeperIDString.equals(mine.player.sleeperIDString));
+            if(!alreadyDeclared){
+                keepers.add(mine);
+            }
         }
 
         JsonObject draftOrder = configuration.getDraftJson().getAsJsonObject("draft_order");
@@ -414,8 +431,26 @@ public class DraftPlanner {
         double lambda = Double.parseDouble(System.getProperty("risk", "0"));
         double q = Double.parseDouble(System.getProperty("quantile", "0.10"));
 
-        DraftPlanner planner = forCurrentSeason(configuration, null);
-        System.out.printf("nine-round plan, no keeper, %d rollouts, lambda %.2f, quantile %.2f%n",
+        List<Keeper> myKeepers = new ArrayList<>();
+        String keeperNames = System.getProperty("keepers", "");
+        if(!keeperNames.isEmpty()){
+            for(String name : keeperNames.split(",")){
+                for(Keeper candidate : KeeperChooser.eligibleCandidates(configuration,
+                        configuration.getMyID())){
+                    if(candidate.player.lastName.equalsIgnoreCase(name.trim())){
+                        myKeepers.add(candidate);
+                    }
+                }
+            }
+        }
+        int lastCompleted = Integer.parseInt(configuration.getSeason()) - 1;
+        Map<String, Double> earliness = SelectionModel.qbEarliness(configuration, lastCompleted);
+        ChoiceModel model = BoostedSelectionModel.fitShipped(configuration, lastCompleted, earliness);
+        DraftPlanner planner = forCurrentSeason(configuration, myKeepers, model, earliness);
+        System.out.printf("nine-round plan, keepers %s, %d rollouts, lambda %.2f, quantile %.2f%n",
+                myKeepers.isEmpty() ? "as declared on Sleeper"
+                        : myKeepers.stream().map(keeper -> keeper.player.lastName
+                                + " r" + keeper.roundCanBeKept).toList().toString(),
                 rollouts, lambda, q);
         System.out.printf("my picks: %s%n", Arrays.toString(planner.myPickNumbers));
         Plan plan = planner.plan(rollouts, lambda, q, DraftSimulator.SEED);

@@ -49,7 +49,7 @@ public class KeeperWhy {
         Map<String, Double> earliness = SelectionModel.qbEarliness(configuration, 2025);
         ChoiceModel model = BoostedSelectionModel.fitShipped(configuration, 2025, earliness);
 
-        DraftPlanner without = DraftPlanner.forCurrentSeason(configuration, null,
+        DraftPlanner without = DraftPlanner.forCurrentSeason(configuration, (Keeper) null,
                 model, earliness);
         DraftPlanner with = DraftPlanner.forCurrentSeason(configuration, keeper,
                 model, earliness);

@@ -589,3 +589,28 @@ bucketed predicted-vs-actual survival within ±10 points), and the Allen
   disagreement (Rotowire +14 vs ESPN -1 vs CBS -1), not a consensus
   artifact. For blending, blend:sleeper,espn,cbs is the independent-shops
   average; adding borischen double-counts the consensus.
+
+## DECISION LOCKED (2026-08-25): keepers = Tuten r12 + Purdy r13
+
+  Justin declared Tuten (first under every feed) and Purdy (best under the
+  default feed and the blend; ESPN/CBS rated him ~0; Flowers was the
+  alternative not fully analyzed for lack of time). Both cost r10+, so all
+  nine picks stay live. Sleeper does not show the declaration yet - the
+  commissioner hand-enters keepers - so the planner grew a pair-aware
+  -Pkeepers=Tuten,Purdy knob that dedupes automatically once the
+  declaration lands in the API.
+
+  The locked plan (500 rollouts, sleeper feed):
+    [RB, WR, RB, WR, WR, WR, TE, QB, RB] - best-nine 1807.6 (+/- 1.1),
+    p10 1779.8.
+  Structure: no early QB (Purdy holds the slot); round 2 is effectively a
+  coin flip between WR (1816.0) and taking Allen anyway (1810.9) when he
+  survives - Allen is 72% gone by pick 18 under this plan, so the pivot
+  only exists at pick 7; round 8's QB is a cheap Purdy-upgrade lottery
+  (Dak-tier, ~1 point of expectation); round 9 is flat across all
+  positions - a free bench/stash pick, where the rookie bench premium
+  says to expect late rookies a round early.
+
+  Remaining pre-draft work: rerun DraftPlanner as leaguemates declare and
+  ADP drifts (AdpSnapshot daily); component F (live draft mode) is the
+  last unbuilt piece of the roadmap.

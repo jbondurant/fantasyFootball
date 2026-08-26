@@ -32,7 +32,7 @@ public class KeeperPlan {
         Map<String, Double> earliness = SelectionModel.qbEarliness(configuration, 2025);
         ChoiceModel model = BoostedSelectionModel.fitShipped(configuration, 2025, earliness);
 
-        DraftPlanner noKeeper = DraftPlanner.forCurrentSeason(configuration, null,
+        DraftPlanner noKeeper = DraftPlanner.forCurrentSeason(configuration, (Keeper) null,
                 model, earliness);
         DraftPlanner.Plan base = noKeeper.plan(rollouts, lambda, q, DraftSimulator.SEED);
         System.out.printf("no keeper: best-nine %.1f (p%.0f %.1f), plan %s%n%n",
