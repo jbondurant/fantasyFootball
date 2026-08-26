@@ -57,6 +57,25 @@ public class PolicyTournamentTest {
     }
 
     @Test
+    void swappingTheQuarterbackKeeperForAReceiverGrowsTheSpaceTo2520(){
+        // Keepers RB+WR (Tuten+Flowers) leave 7 picks owing QB1, RB1, WR2,
+        // TE1 and two flexes: orderings 420+210+420+420+630+420 = 2520.
+        // Justin's intuition, pinned: the QB dimension re-enters the game.
+        EnumMap<Position, Integer> dedicated = new EnumMap<>(Position.class);
+        dedicated.put(Position.QB, 1);
+        dedicated.put(Position.RB, 1);
+        dedicated.put(Position.WR, 2);
+        dedicated.put(Position.TE, 1);
+        List<List<Position>> sequences = PolicyTournament.allSequences(
+                new PolicyTournament.Needs(dedicated, 2), 7);
+        assertEquals(2520, sequences.size());
+        for(List<Position> sequence : sequences){
+            assertEquals(1, sequence.stream().filter(p -> p == Position.QB).count(),
+                    "exactly one QB in every sequence, never flexed");
+        }
+    }
+
+    @Test
     void headsAreFeasiblePrefixesAtAnyDepth(){
         List<List<Position>> heads = PolicyTournament.allSequences(tournamentNeeds(), 2);
         assertEquals(9, heads.size(), "3 positions x 3 positions, all feasible early");

@@ -667,3 +667,24 @@ bucketed predicted-vs-actual survival within ±10 points), and the Allen
   making BHier's kept pair worth ~-3 combined against +37 unkept - the
   league's worst keeper decision; McBride confirmed -2.6. Nine of twelve
   teams kept their exact top two.
+
+### The policy tournament (2026-08-26): every architecture, one game
+
+  The conversation that produced it: Justin re-derived, from first
+  principles, why max-over-committed-heads is legitimate (the max ranges
+  over strategies you control, priced by averages that already contain
+  availability odds) while max-inside-rollouts is clairvoyant, and asked
+  what his old shuffled-tail design at depths 1-3 was actually worth. So:
+  PolicyTournament races 11 policies for MY seat in one shared game -
+  7 live picks, Tuten+Purdy pinned on my rounds 8-9 (withKeeperSlots),
+  composition exactly 1QB/2RB/3WR/1TE/2FLEX enforced by a Needs ledger,
+  opponents by the shipped boosted model. With QB removed by Purdy the
+  committed space is only 742 sequences (the multiset sum
+  140+105+210+42+105+140, pinned by test), so the exhaustive-committed
+  entry IS the converged architecture's committed half: every full
+  commitment priced on CRN, winner re-priced fresh. The adaptive family
+  (oldschool-1/2/3 with shuffled tails = his 2022/2023 design as actually
+  used live; adaptive-greedy = same depth-1 lookahead, greedy tails)
+  runs on the new resumable-simulation primitive (SimState/simulateFrom/
+  branchWith) - the same primitive component F needs. Paired eval on
+  shared fresh seeds; vs-exhaustive column is a paired difference.

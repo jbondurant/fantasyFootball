@@ -55,7 +55,14 @@ public class PolicyTournament {
     static final long SEARCH_SEED = DraftSimulator.SEED + 41_000_000L;
     static final long EVAL_SEED = DraftSimulator.SEED + 42_000_000L;
     static final long POLICY_SEED = DraftSimulator.SEED + 43_000_000L;
-    private static final Position[] SKILL = {Position.RB, Position.WR, Position.TE};
+    /**
+     * Candidate positions everywhere; feasibility trims the list per game.
+     * With a kept QB the QB slot is consumed up front and QB never appears
+     * (it is not flex-eligible); swap the QB keeper out (-Pkeepers) and the
+     * QB dimension - and its whole timing problem - re-enters the game.
+     */
+    private static final Position[] SKILL =
+            {Position.QB, Position.RB, Position.WR, Position.TE};
 
     private final DraftSimulator simulator;
     private final String me;
@@ -265,7 +272,7 @@ public class PolicyTournament {
                               DraftSimulator.SimState state){
             for(String sleeperID : board){   // board arrives in ADP order
                 Position position = Player.getPlayerFromSIDV2(sleeperID).position;
-                if(needs.feasible(position) && position != Position.QB){
+                if(needs.feasible(position)){
                     return position;
                 }
             }
@@ -528,10 +535,40 @@ public class PolicyTournament {
         Map<String, Double> earliness = SelectionModel.qbEarliness(configuration, lastCompleted);
         ChoiceModel model = BoostedSelectionModel.fitShipped(configuration, lastCompleted,
                 earliness);
-        DraftPlanner planner = DraftPlanner.forCurrentSeason(configuration, List.of(),
-                model, earliness);
-        DraftSimulator pinned = planner.simulator()
-                .withKeeperSlots(planner.me(), Set.of(8, 9));
+
+        // -Pkeepers=Tuten,Flowers races the same roster in a counterfactual
+        // keeper world: my declared pair leaves, the named pair enters at its
+        // real cost rounds. A swapped-out QB keeper reopens the QB dimension
+        // (2520 feasible sequences instead of 742).
+        List<Keeper> scenario = DraftPlanner.keepersFromProperty(configuration);
+        java.util.Set<String> excluded = new java.util.HashSet<>();
+        List<Keeper> myEffective = new ArrayList<>();
+        for(Keeper keeper : configuration.getTodaysKeepers()){
+            if(configuration.getMyID().equals(keeper.humanWhoCanKeep)){
+                if(scenario.isEmpty()){
+                    myEffective.add(keeper);
+                }
+                else {
+                    excluded.add(keeper.player.sleeperIDString);
+                }
+            }
+        }
+        myEffective.addAll(scenario);
+        DraftPlanner planner = DraftPlanner.forCurrentSeasonAs(configuration,
+                configuration.getMyID(), scenario, excluded, model, earliness);
+
+        // In-game keeper costs already occupy their rounds; out-of-game
+        // keepers pin onto my LAST live rounds (9 first, then 8) - the
+        // tournament's "keepers on rounds 8-9" rule, made generic.
+        int outOfGame = (int) myEffective.stream()
+                .filter(keeper -> keeper.roundCanBeKept > SelectionModel.GAME_ROUNDS).count();
+        DraftSimulator base = planner.simulator();
+        int[] liveBefore = base.pickNumbersOf(planner.me());
+        java.util.Set<Integer> pinRounds = new java.util.HashSet<>();
+        for(int i = 0; i < outOfGame; i++){
+            pinRounds.add(base.slotAt(liveBefore[liveBefore.length - 1 - i]).round());
+        }
+        DraftSimulator pinned = base.withKeeperSlots(planner.me(), pinRounds);
         PolicyTournament tournament = new PolicyTournament(pinned, planner.me(),
                 planner.myKeeperIDs(), planner.points());
         Map<String, Double> adp = new HashMap<>();
@@ -601,36 +638,40 @@ public class PolicyTournament {
         // ---- the roster, evaluated on the shared fresh stream ----
         Map<String, double[]> results = new LinkedHashMap<>();
         Map<String, Integer> trialsUsed = new LinkedHashMap<>();
-        List<Object[]> roster = List.of(
-                new Object[]{"random-feasible", trials,
-                        (Factory) named("random-feasible",
-                                seed -> tournament.new RandomFeasible(seed))},
-                new Object[]{"adp-follower", trials,
-                        named("adp-follower", seed -> tournament.new AdpFollower(adp))},
-                new Object[]{"greedy-raw", trials,
-                        named("greedy-raw", seed -> tournament.new GreedyRaw())},
-                new Object[]{"greedy-vorp", trials,
-                        named("greedy-vorp", seed -> tournament.new GreedyVorp())},
-                new Object[]{"shipped-plan " + label(shipped), trials,
-                        named("shipped-plan", seed -> tournament.new SequencePolicy(shipped))},
-                new Object[]{"staged-frontier " + label(stagedBest), trials,
-                        named("staged-frontier",
-                                seed -> tournament.new SequencePolicy(stagedBest))},
-                new Object[]{"exhaustive-committed " + label(exhaustiveBest), trials,
-                        named("exhaustive",
-                                seed -> tournament.new SequencePolicy(exhaustiveBest))},
-                new Object[]{"oldschool-1 (random tails)", adaptiveTrials,
-                        named("oldschool-1",
-                                seed -> tournament.new Lookahead(1, inner, true, seed))},
-                new Object[]{"oldschool-2 (random tails)", adaptiveTrials,
-                        named("oldschool-2",
-                                seed -> tournament.new Lookahead(2, inner, true, seed))},
-                new Object[]{"oldschool-3 (random tails)", adaptiveTrials,
-                        named("oldschool-3",
-                                seed -> tournament.new Lookahead(3, inner, true, seed))},
-                new Object[]{"adaptive-greedy (d1)", adaptiveTrials,
-                        named("adaptive-greedy",
-                                seed -> tournament.new Lookahead(1, inner, false, seed))});
+        List<Object[]> roster = new ArrayList<>();
+        roster.add(new Object[]{"random-feasible", trials,
+                (Factory) named("random-feasible",
+                        seed -> tournament.new RandomFeasible(seed))});
+        roster.add(new Object[]{"adp-follower", trials,
+                named("adp-follower", seed -> tournament.new AdpFollower(adp))});
+        roster.add(new Object[]{"greedy-raw", trials,
+                named("greedy-raw", seed -> tournament.new GreedyRaw())});
+        roster.add(new Object[]{"greedy-vorp", trials,
+                named("greedy-vorp", seed -> tournament.new GreedyVorp())});
+        // The locked plan belongs to the declared-keeper game; in a scenario
+        // whose composition it cannot legally fill, it sits out.
+        if(feasibleSequence(start.copy(), shipped)){
+            roster.add(new Object[]{"shipped-plan " + label(shipped), trials,
+                    named("shipped-plan", seed -> tournament.new SequencePolicy(shipped))});
+        }
+        roster.add(new Object[]{"staged-frontier " + label(stagedBest), trials,
+                named("staged-frontier",
+                        seed -> tournament.new SequencePolicy(stagedBest))});
+        roster.add(new Object[]{"exhaustive-committed " + label(exhaustiveBest), trials,
+                named("exhaustive",
+                        seed -> tournament.new SequencePolicy(exhaustiveBest))});
+        roster.add(new Object[]{"oldschool-1 (random tails)", adaptiveTrials,
+                named("oldschool-1",
+                        seed -> tournament.new Lookahead(1, inner, true, seed))});
+        roster.add(new Object[]{"oldschool-2 (random tails)", adaptiveTrials,
+                named("oldschool-2",
+                        seed -> tournament.new Lookahead(2, inner, true, seed))});
+        roster.add(new Object[]{"oldschool-3 (random tails)", adaptiveTrials,
+                named("oldschool-3",
+                        seed -> tournament.new Lookahead(3, inner, true, seed))});
+        roster.add(new Object[]{"adaptive-greedy (d1)", adaptiveTrials,
+                named("adaptive-greedy",
+                        seed -> tournament.new Lookahead(1, inner, false, seed))});
 
         for(Object[] entry : roster){
             String name = (String) entry[0];
@@ -664,6 +705,17 @@ public class PolicyTournament {
                         + "(adaptive %d, inner %d); all policies share the eval streams, so "
                         + "the vs-exhaustive column is a paired difference.%n",
                 search, trials, adaptiveTrials, inner);
+    }
+
+    /** Can the sequence be played to completion under the composition? */
+    static boolean feasibleSequence(Needs needs, List<Position> sequence){
+        for(Position position : sequence){
+            if(!needs.feasible(position)){
+                return false;
+            }
+            needs.consume(position);
+        }
+        return true;
     }
 
     private static String label(List<Position> sequence){
