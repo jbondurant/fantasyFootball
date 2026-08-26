@@ -614,3 +614,26 @@ bucketed predicted-vs-actual survival within ±10 points), and the Allen
   Remaining pre-draft work: rerun DraftPlanner as leaguemates declare and
   ADP drifts (AdpSnapshot daily); component F (live draft mode) is the
   last unbuilt piece of the roadmap.
+
+### LeagueOutlook (2026-08-25, late): every seat optimized - and everyone
+### has declared
+
+  All 12 managers' keepers are now in Sleeper. LeagueOutlook runs the
+  expectimax from every seat (their slot, their keepers, everyone else on
+  the fitted model) and decomposes: keeperless seat value (the slot alone)
+  and per-keeper marginal deltas (drop one, re-optimize, diff).
+
+  Findings at 150 rollouts:
+  - Justin's seat ranks 10th of 12 (1809.6). His keeper haul (+24.4) is
+    third-worst; the league's class is led by JakeSK's Nacua at r13
+    (+112 alone), jerem9604's Taylor r4 + Bowers r7 (+128 total),
+    itsabust's JSN r5 (+75), patekxwater's Collins r8 (+74).
+  - Slot value (keeperless column): slot 1 1828 down to slot 12 1763 -
+    serpentine position is worth ~65 points this year; slot 7 sits at 1785.
+  - Purdy's marginal value GIVEN Tuten is +6 (vs +14 standalone): the two
+    keepers' freed-pick cascades overlap - marginal keeper value
+    diminishes, which the pair decomposition now shows directly.
+  - The strategic read: the keeper gap to the leaders (~80-100 points) is
+    sunk; the catch-up levers are draft execution (the model's edge - the
+    unpriced 6-pt QB premium among them) and the two flat rounds (8-9)
+    the plan leaves for upside.

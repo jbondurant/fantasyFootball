@@ -305,6 +305,23 @@ public class DraftPlanner {
     public static DraftPlanner forCurrentSeason(AAAConfiguration configuration,
                                                 List<Keeper> myKeepers,
                                                 ChoiceModel model, Map<String, Double> earliness){
+        return forCurrentSeasonAs(configuration, configuration.getMyID(), myKeepers,
+                Set.of(), model, earliness);
+    }
+
+    /**
+     * Any manager's seat: the planner optimizes THEIR picks while everyone
+     * else, Justin included, plays by the fitted model. excludeKeeperIDs
+     * removes keepers from the world entirely (player back on the board,
+     * slot freed, off the roster) - the counterfactual a keeper's value is
+     * measured against.
+     */
+    public static DraftPlanner forCurrentSeasonAs(AAAConfiguration configuration,
+                                                  String perspective,
+                                                  List<Keeper> extraKeepers,
+                                                  Set<String> excludeKeeperIDs,
+                                                  ChoiceModel model,
+                                                  Map<String, Double> earliness){
         // -Pprojections=<name> swaps MY value feed to a bridged external
         // source (see ProjectionBridge); opponents keep behaving off the
         // consensus market either way, which the information-set test showed
@@ -319,15 +336,16 @@ public class DraftPlanner {
             }
         }
 
-        String me = configuration.getMyID();
+        String me = perspective;
         List<Keeper> keepers = new ArrayList<>(configuration.getTodaysKeepers());
-        for(Keeper mine : myKeepers){
+        for(Keeper extra : extraKeepers){
             boolean alreadyDeclared = keepers.stream().anyMatch(declared ->
-                    declared.player.sleeperIDString.equals(mine.player.sleeperIDString));
+                    declared.player.sleeperIDString.equals(extra.player.sleeperIDString));
             if(!alreadyDeclared){
-                keepers.add(mine);
+                keepers.add(extra);
             }
         }
+        keepers.removeIf(keeper -> excludeKeeperIDs.contains(keeper.player.sleeperIDString));
 
         JsonObject draftOrder = configuration.getDraftJson().getAsJsonObject("draft_order");
         int teams = configuration.getLeagueJson().getAsJsonObject("settings")
@@ -396,6 +414,23 @@ public class DraftPlanner {
         return new DraftPlanner(simulator, me, myKeeperIDs, points);
     }
 
+    /** Justin's locked-but-not-yet-entered keepers, from -Pkeepers=A,B. */
+    public static List<Keeper> keepersFromProperty(AAAConfiguration configuration){
+        List<Keeper> myKeepers = new ArrayList<>();
+        String keeperNames = System.getProperty("keepers", "");
+        if(!keeperNames.isEmpty()){
+            for(String name : keeperNames.split(",")){
+                for(Keeper candidate : KeeperChooser.eligibleCandidates(configuration,
+                        configuration.getMyID())){
+                    if(candidate.player.lastName.equalsIgnoreCase(name.trim())){
+                        myKeepers.add(candidate);
+                    }
+                }
+            }
+        }
+        return myKeepers;
+    }
+
     public void print(Plan plan, double lambda, double q){
         for(Stage stage : plan.stages()){
             System.out.printf("%nround %d (overall pick %d):%n",
@@ -431,18 +466,7 @@ public class DraftPlanner {
         double lambda = Double.parseDouble(System.getProperty("risk", "0"));
         double q = Double.parseDouble(System.getProperty("quantile", "0.10"));
 
-        List<Keeper> myKeepers = new ArrayList<>();
-        String keeperNames = System.getProperty("keepers", "");
-        if(!keeperNames.isEmpty()){
-            for(String name : keeperNames.split(",")){
-                for(Keeper candidate : KeeperChooser.eligibleCandidates(configuration,
-                        configuration.getMyID())){
-                    if(candidate.player.lastName.equalsIgnoreCase(name.trim())){
-                        myKeepers.add(candidate);
-                    }
-                }
-            }
-        }
+        List<Keeper> myKeepers = keepersFromProperty(configuration);
         int lastCompleted = Integer.parseInt(configuration.getSeason()) - 1;
         Map<String, Double> earliness = SelectionModel.qbEarliness(configuration, lastCompleted);
         ChoiceModel model = BoostedSelectionModel.fitShipped(configuration, lastCompleted, earliness);

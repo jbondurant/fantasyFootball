@@ -12,6 +12,7 @@ settings, the season - is read back from the API.
 ## Running
 
 ```
+./gradlew run -Pmain=LeagueOutlook        # every seat optimized: rankings, keeper deltas, slot value
 ./gradlew run -Pmain=ProjectionSources    # projection feeds: status, and where they disagree
 ./gradlew run -Pmain=KeeperPlan           # the keeper decision, whole-draft optimized
 ./gradlew run -Pmain=KeeperPlan -Pprojections=borischen   # ...valued on another source's numbers
