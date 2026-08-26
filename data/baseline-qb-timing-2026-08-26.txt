@@ -1,0 +1,16 @@
+my keeperless baseline: staged plan [RB, QB, RB, WR, WR, WR, WR, TE, WR] (QB round 2), 10000-rollout evaluation on fresh seeds:
+
+   QB rd  PLAN                           mean    vs staged
+   1      [QB, RB, RB, WR, WR, WR, WR, TE, WR]     1746.2        -38.8
+   2      [RB, QB, RB, WR, WR, WR, WR, TE, WR]     1785.0         +0.0   <- staged search chose this
+   3      [RB, RB, QB, WR, WR, WR, WR, TE, WR]     1769.2        -15.8
+   4      [RB, RB, WR, QB, WR, WR, WR, TE, WR]     1769.0        -16.0
+   5      [RB, RB, WR, WR, QB, WR, WR, TE, WR]     1768.3        -16.7
+   6      [RB, RB, WR, WR, WR, QB, WR, TE, WR]     1779.8         -5.2
+   7      [RB, RB, WR, WR, WR, WR, QB, TE, WR]     1782.6         -2.4
+   8      [RB, RB, WR, WR, WR, WR, TE, QB, WR]     1783.6         -1.4
+   9      [RB, RB, WR, WR, WR, WR, TE, WR, QB]     1784.6         -0.4
+
+A positive vs-staged number at a late QB round is the amount
+the ledger's V(base) is understated for this seat - and the amount
+every QB keeper's delta is inflated.

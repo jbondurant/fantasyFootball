@@ -732,3 +732,29 @@ bucketed predicted-vs-actual survival within ±10 points), and the Allen
   seats (LeagueOutlook keeperless seats, V(none) branches) - fix is
   VORP-aware tails and/or explicit QB-round enumeration, then diff all
   twelve seats' plans.
+
+### The baseline audit: alarm, quantification, acquittal (2026-08-26)
+
+  Justin's question - "why doesn't this affect keeper logic?" - exposed
+  that every ledger delta's V(base) branch is a QB-open seat planned by
+  the same staged search the tournament just caught mistiming QB.
+  BaselinePlanAudit: ALL TWELVE keeperless baselines commit QB in rounds
+  1-3 (mine RQRWWWWTW, QB r2; itsabust QB r1). Alarm justified. But
+  BaselineQbTimingCheck (my seat, QB slid through all nine rounds, 10k
+  fresh-seed evaluations) ACQUITS the search: QB r2 = 1785.0 is the true
+  global peak - late QB loses (r9 -0.4, r8 -1.4), and the REAL valley is
+  the middle (r3-5, about -16). The keeperless QB landscape is BIMODAL:
+  elite QB at pick 18 or shelf QB at r8-9, never between - and the two
+  peaks are within ~1 point, so V(base) is priced right, delta ~= 0, and
+  Purdy +10.4 > Flowers +5.6 STANDS. Cross-validation: 1785.0 here
+  matches the 10k ledger's keeperless-seat value exactly. Why the
+  tournament's trap didn't transfer: the Flowers game burns r4 and locks
+  a WR, thinning the early skill allocation until QB-late wins by 10;
+  the real 9-pick baseline game keeps QB-early and QB-late in a near-tie
+  with QB-early on top. Lesson recorded: the tournament diagnosed a real
+  MECHANISM (raw-greedy tails cannot see across valleys), but whether a
+  given game HAS a valley is an empirical question - audit before fixing.
+  Residual caveats: variants held the skill order fixed (a jointly
+  re-optimized QB-late plan might close its ~1-point gap, never by ~10);
+  other seats unverified at 10k, itsabust's QB-r1 the one outlier worth
+  a spot-check if their numbers ever matter.
