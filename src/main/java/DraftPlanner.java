@@ -338,14 +338,16 @@ public class DraftPlanner {
 
         String me = perspective;
         List<Keeper> keepers = new ArrayList<>(configuration.getTodaysKeepers());
+        // Exclusions strip DECLARED keepers only; explicit extras always land,
+        // so a ledger can re-evaluate a kept player as its own hypothetical.
+        keepers.removeIf(keeper -> excludeKeeperIDs.contains(keeper.player.sleeperIDString));
         for(Keeper extra : extraKeepers){
-            boolean alreadyDeclared = keepers.stream().anyMatch(declared ->
+            boolean alreadyPresent = keepers.stream().anyMatch(declared ->
                     declared.player.sleeperIDString.equals(extra.player.sleeperIDString));
-            if(!alreadyDeclared){
+            if(!alreadyPresent){
                 keepers.add(extra);
             }
         }
-        keepers.removeIf(keeper -> excludeKeeperIDs.contains(keeper.player.sleeperIDString));
 
         JsonObject draftOrder = configuration.getDraftJson().getAsJsonObject("draft_order");
         int teams = configuration.getLeagueJson().getAsJsonObject("settings")
