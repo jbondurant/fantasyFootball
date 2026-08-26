@@ -7,15 +7,14 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Explains a keeper's value instead of just asserting it: the same two
- * optimized branches KeeperPlan compares - keep him versus don't - decomposed
- * by lineup slot group, plus who actually ends up as my lineup quarterback in
- * each branch. This answers "why is a QB keeper worth anything when the
- * league drafts QBs late and Allen is reachable": the delta shows whether the
- * value comes from the QB slot itself (it should not, if Allen is reachable
- * either way) or from the extra skill pick the keeper frees.
+ * Explains a keeper's value instead of just asserting it: keep him versus
+ * don't, both branches optimized from the OWNER's seat with his declared
+ * keepers stripped (the ledger's standalone convention), decomposed by
+ * lineup slot group - plus who actually mans the lineup QB slot in each
+ * branch, which is where the draft-a-late-QB-anyway option shows itself.
+ * -Pas runs it from any manager's seat, not just mine.
  *
- *     ./gradlew run -Pmain=KeeperWhy -Pwhy=Purdy [-Ptrials=300]
+ *     ./gradlew run -Pmain=KeeperWhy -Pwhy=Purdy [-Pas=JFMarino] [-Ptrials=300]
  */
 public class KeeperWhy {
 
@@ -26,8 +25,18 @@ public class KeeperWhy {
         double q = Double.parseDouble(System.getProperty("quantile", "0.10"));
         String who = System.getProperty("why", "");
 
+        String perspective = configuration.getMyID();
+        String asName = System.getProperty("as", "");
+        if(!asName.isEmpty()){
+            for(String userID : HumanOfInterest.getAllUserIDs()){
+                if(HumanOfInterest.getHumanFromID(userID).equalsIgnoreCase(asName)){
+                    perspective = userID;
+                }
+            }
+        }
+
         List<Keeper> candidates =
-                KeeperChooser.eligibleCandidates(configuration, configuration.getMyID());
+                KeeperChooser.eligibleCandidates(configuration, perspective);
         Keeper keeper = null;
         for(Keeper candidate : candidates){
             String full = candidate.player.firstName + " " + candidate.player.lastName;
@@ -49,10 +58,19 @@ public class KeeperWhy {
         Map<String, Double> earliness = SelectionModel.qbEarliness(configuration, 2025);
         ChoiceModel model = BoostedSelectionModel.fitShipped(configuration, 2025, earliness);
 
-        DraftPlanner without = DraftPlanner.forCurrentSeason(configuration, (Keeper) null,
-                model, earliness);
-        DraftPlanner with = DraftPlanner.forCurrentSeason(configuration, keeper,
-                model, earliness);
+        // The standalone convention: the owner's DECLARED keepers leave the
+        // world entirely, then the candidate alone comes back - so a declared
+        // keeper can be explained the same way as a hypothetical one.
+        java.util.Set<String> declared = new java.util.HashSet<>();
+        for(Keeper existing : configuration.getTodaysKeepers()){
+            if(perspective.equals(existing.humanWhoCanKeep)){
+                declared.add(existing.player.sleeperIDString);
+            }
+        }
+        DraftPlanner without = DraftPlanner.forCurrentSeasonAs(configuration, perspective,
+                List.of(), declared, model, earliness);
+        DraftPlanner with = DraftPlanner.forCurrentSeasonAs(configuration, perspective,
+                List.of(keeper), declared, model, earliness);
         DraftPlanner.Plan planWithout = without.plan(rollouts, lambda, q, DraftSimulator.SEED);
         DraftPlanner.Plan planWith = with.plan(rollouts, lambda, q, DraftSimulator.SEED);
         DraftPlanner.Profile profileWithout =
@@ -61,8 +79,10 @@ public class KeeperWhy {
                 with.profile(planWith.positions(), rollouts, DraftSimulator.SEED);
 
         String name = keeper.player.firstName + " " + keeper.player.lastName;
-        System.out.printf("keeping %s (r%d) versus not, %d rollouts each, both branches optimized:%n%n",
-                name, keeper.roundCanBeKept, rollouts);
+        System.out.printf("keeping %s (r%d) versus not, for %s, %d rollouts each,%n"
+                + "both branches optimized (owner's declared keepers stripped):%n%n",
+                name, keeper.roundCanBeKept,
+                HumanOfInterest.getHumanFromID(perspective), rollouts);
         System.out.printf("   %-12s %12s %12s %10s%n", "SLOTS", "no keeper", "keep", "delta");
         row("QB", profileWithout.slots().qb(), profileWith.slots().qb());
         row("RB x2", profileWithout.slots().rb(), profileWith.slots().rb());
