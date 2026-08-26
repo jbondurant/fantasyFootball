@@ -124,6 +124,22 @@ public class DraftPlanner {
         return sortedAscending[index];
     }
 
+    /**
+     * High-precision value of a FIXED plan - the search/evaluate split: find
+     * the plan with plan() at survey rollouts, then price it here with many
+     * more, on DIFFERENT seeds so the search's lucky draws cannot inflate
+     * the valuation (winner's curse).
+     */
+    public double evaluate(List<Position> plan, int rollouts, long seed){
+        double[] outcomes = new double[rollouts];
+        java.util.stream.IntStream.range(0, rollouts).parallel().forEach(r -> {
+            PlanPolicy policy = new PlanPolicy(plan);
+            simulator.simulateOnce(new Random(seed + 7919L * r), me, policy);
+            outcomes[r] = StartingLineup.bestNine(policy.mine, points);
+        });
+        return Arrays.stream(outcomes).average().orElse(0);
+    }
+
     public Plan plan(int rollouts, double lambda, double q, long seed){
         List<Position> chosenPositions = new ArrayList<>();
         List<Stage> stages = new ArrayList<>();
