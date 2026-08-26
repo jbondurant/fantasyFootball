@@ -1,0 +1,48 @@
+policy tournament: 7 live picks + keepers on rounds 8-9, composition 1QB/2RB/3WR/1TE/2FLEX
+my picks [7, 18, 31, 55, 66, 79, 90], keepers [Tuten, Flowers]
+
+2520 feasible committed sequences; searching all of them at 150 CRN rollouts each...
+exhaustive winner [RB, RB, RB, WR, WR, TE, QB], search mean 1817.0 (1542s)
+staged-frontier winner [RB, QB, RB, WR, WR, TE, WR]
+timing-committed winner QB@r8 TE@r7 over 42 heads, search mean 1823.1
+learned strategies trained (623s); cem [RB, RB, RB, WR, WR, TE, QB], evolution [RB, WR, RB, WR, WR, TE, QB]
+   evaluated random-feasible                            1719.7  (800 trials, 3s)
+   evaluated adp-follower                               1792.8  (800 trials, 3s)
+   evaluated greedy-raw                                 1779.0  (800 trials, 3s)
+   evaluated greedy-vorp                                1819.4  (800 trials, 3s)
+   evaluated staged-frontier RQBRWWTW                   1807.4  (800 trials, 3s)
+   evaluated exhaustive-committed RRRWWTQB              1817.6  (800 trials, 3s)
+   evaluated timing-committed QB@r8 TE@r7               1822.9  (800 trials, 3s)
+   evaluated ml-fittedq                                 1822.6  (800 trials, 3s)
+   evaluated ml-imitation (of oldschool-2-vorp)         1826.3  (800 trials, 3s)
+   evaluated ml-reinforce                               1817.7  (800 trials, 3s)
+   evaluated ml-cem RRRWWTQB                            1817.6  (800 trials, 3s)
+   evaluated ml-evolution RWRWWTQB                      1813.4  (800 trials, 3s)
+   evaluated oldschool-1 (random tails)                 1827.2  (150 trials, 101s)
+   evaluated oldschool-2 (random tails)                 1826.9  (150 trials, 344s)
+   evaluated oldschool-3 (random tails)                 1826.2  (150 trials, 1678s)
+   evaluated oldschool-1 (vorp tails)                   1826.7  (150 trials, 151s)
+   evaluated oldschool-2 (vorp tails)                   1827.1  (150 trials, 418s)
+   evaluated adaptive-greedy (d1, raw tails)            1823.2  (150 trials, 100s)
+
+POLICY                                             MEAN  +/-SE      vs exhaustive
+oldschool-1 (random tails)                       1827.2    2.0        9.8 +/- 1.1
+oldschool-2 (vorp tails)                         1827.1    2.0        9.7 +/- 1.2
+oldschool-2 (random tails)                       1826.9    2.0        9.5 +/- 1.1
+oldschool-1 (vorp tails)                         1826.7    1.9        9.3 +/- 1.3
+ml-imitation (of oldschool-2-vorp)               1826.3    0.8        8.7 +/- 0.5
+oldschool-3 (random tails)                       1826.2    2.0        8.8 +/- 1.1
+adaptive-greedy (d1, raw tails)                  1823.2    2.0        5.9 +/- 1.4
+timing-committed QB@r8 TE@r7                     1822.9    0.8        5.2 +/- 0.4
+ml-fittedq                                       1822.6    0.8        5.0 +/- 0.5
+greedy-vorp                                      1819.4    0.9        1.8 +/- 0.6
+ml-reinforce                                     1817.7    0.8        0.0 +/- 0.7
+exhaustive-committed RRRWWTQB                    1817.6    0.9        0.0 +/- 0.0
+ml-cem RRRWWTQB                                  1817.6    0.9        0.0 +/- 0.0
+ml-evolution RWRWWTQB                            1813.4    0.8       -4.2 +/- 0.7
+staged-frontier RQBRWWTW                         1807.4    0.8      -10.3 +/- 0.8
+adp-follower                                     1792.8    1.0      -24.9 +/- 0.8
+greedy-raw                                       1779.0    0.7      -38.7 +/- 0.9
+random-feasible                                  1719.7    1.9      -97.9 +/- 2.0
+
+search 150 rollouts (seeds disjoint from eval), eval 800 trials (adaptive 150, inner 16); all policies share the eval streams, so the vs-exhaustive column is a paired difference.

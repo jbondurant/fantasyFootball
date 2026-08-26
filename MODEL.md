@@ -758,3 +758,33 @@ bucketed predicted-vs-actual survival within ±10 points), and the Allen
   re-optimized QB-late plan might close its ~1-point gap, never by ~10);
   other seats unverified at 10k, itsabust's QB-r1 the one outlier worth
   a spot-check if their numbers ever matter.
+
+### Tournament v2 (2026-08-26): vorp tails, timing heads, five ML entries
+
+  Declared game: oldschool-2-vorp WINS (+8.7) - Justin's combo, ahead of
+  both parents. Flowers game: the oldschool family clusters on top
+  (+8.8..+9.8, depth and tail variants within noise; RAW tails remain
+  the only handicap - adaptive-greedy +5.9). The three v2 verdicts:
+
+  1. timing-committed (Justin's structured head: commit QB round + TE
+     round only, RB/WR live by VORP): finds QB@r8 TE@r7 over just 42
+     heads in the Flowers game - the valley problem solved at 1/60th of
+     exhaustive's search cost - and BEATS exhaustive-committed +5.2,
+     because its smooth dimension stays adaptive. Best value-per-compute
+     on the board; the natural draft-night engine.
+  2. ml-imitation (distilled oldschool-2-vorp): +7.8 and +8.7 in the two
+     games, within noise of its teacher, at O(trees) per pick with the
+     tightest SEs in the adaptive tier. Distillation works: judgment of
+     the slow lookahead, none of its clock.
+  3. The rest of the ML family: ml-cem found the exhaustive optimum
+     exactly in the Flowers game but mode-collapsed onto the shipped
+     plan in the declared game (evolution mirrored: optimum there, -4.2
+     here) - learned searches are cheap but need restarts; ml-fittedq
+     +5.7/+5.0 (escapes its VORP guide only in the QB-open game);
+     ml-reinforce +7.3 declared but 0.0 Flowers - the QB-open surface
+     is where linearity dies, which is QB timing in one sentence.
+
+  Draft-night architecture that falls out: precompute timing-committed
+  search + imitation distillation; live picks by oldschool-2-vorp with
+  clock-scaled inner rollouts; greedy-vorp as the never-time-out floor;
+  never raw-greedy anything.
