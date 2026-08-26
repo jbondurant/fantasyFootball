@@ -788,3 +788,99 @@ bucketed predicted-vs-actual survival within ±10 points), and the Allen
   search + imitation distillation; live picks by oldschool-2-vorp with
   clock-scaled inner rollouts; greedy-vorp as the never-time-out floor;
   never raw-greedy anything.
+
+## The improvement plan (2026-08-26, planned before building - Justin's call)
+
+Every item carries its test; nothing ships without one. Priorities assume
+the draft is ~1-2 weeks out: P0 = before draft night, P1 = if time allows,
+P2 = post-season / 2027 infrastructure.
+
+### A. Projection models - the input everything multiplies through
+
+  A1 (P1) Historical accuracy shootout NOW, not post-season: the repo has
+      HistoricalProjections and 2025 actuals - score whatever feeds can be
+      reconstructed for 2025 (MAE + rank correlation, per position).
+      TEST: per-feed error table on 2025; decides whether the blend or a
+      single feed drives draft night.
+  A2 (P1, gated on A1 showing spread) Learned blend: regress actuals on
+      multi-feed projections, position-aware weights - the FIRST genuinely
+      open ML problem in the repo (real data, unknown process). LightGBM/
+      PyTorch belong here, not in the policy game.
+      TEST: held-out season MAE must beat the best single feed.
+  A3 (P2) Projection uncertainty: per-player variance from feed
+      disagreement + FFC spread; makes the risk knobs mean something
+      beyond availability. TEST: interval calibration on actuals.
+  A4 (P2) Boom/bust + injury: currently assumed away by the nine-round
+      spec. Before modeling anything, run the DECISION-SENSITIVITY test:
+      perturb projections within realistic variance, count how often any
+      actual decision (keeper ranks, plan positions) flips. If decisions
+      are stable, the assumption stays; model accuracy without decision
+      impact is decoration.
+
+### B. Opponent model / simulation fidelity
+
+  B1 (P0) Robustness sweep, cheap and decisive: re-run the planner and
+      tournament winners across an ensemble of plausible opponent brains
+      (temperature x TRAIN_ROUNDS x bootstrap refits). TEST: do MY
+      decisions change across ensemble members? Stable = draft night is
+      safe; unstable rows name exactly which decisions are fragile.
+  B2 (P0) Stress suite: opponents deviating on purpose (a manager goes
+      QB-early, a WR run starts round 3, one seat autodrafts pure ADP).
+      TEST: value of my plan under each stress vs the model world -
+      quantifies brittleness the ensemble cannot see.
+  B3 (P1) Autodraft detection for draft night: an absent manager's picks
+      follow ADP nearly deterministically - detectable live after 2-3
+      picks, and exploitable (their future picks become near-certain).
+      TEST: rehearse against a Sleeper mock with autodrafters.
+  B4 (P2) Boundary checks: CHOICE_SET and ADP_LIMIT truncations - widen
+      both, TEST plan/value invariance.
+
+### C. Policy layer - mostly solved, transfer what won
+
+  C1 (in flight) Flowers-game ceiling: decides if ANY policy headroom
+      remains where valleys live. Declared game already measured flat.
+  C2 (P0, the big one) REAL-GAME TRANSFER: the tournament's lessons live
+      in the mock-room abstraction; DraftPlanner's real game still
+      searches with raw-greedy tails and a one-round frontier. Port the
+      winning stack - VORP tails + timing-committed (QB round x TE round)
+      heads - into the real-game search. TEST: paired 10k evaluate of
+      old-search vs new-search plans for all 12 seats; ship if any seat
+      improves, keep if none regress.
+  C3 (P1) Risk columns for free: the tournament already stores per-trial
+      scores - report p10/p25 alongside means, decide whether draft-night
+      policy maximizes mean or mean minus lambda x downside. TEST: none
+      needed beyond the report; it is a decision, informed by A3 later.
+  C4 (P2) ml-general: one policy trained across randomized worlds
+      (keeper configs, projection noise, seats), frozen, entered in BOTH
+      tournament games. TEST: matches per-game specialists in both =
+      learned the mechanism; its value is robustness + speed, not points.
+
+### D. Component F - draft-day mode (P0, the build that remains)
+
+  The stack is tournament-decided: precompute (round-1 opening book,
+  timing-committed search, imitation model) + live loop (oldschool-2-vorp,
+  clock-scaled inner) + floor (greedy-vorp, never raw). Pieces: wire
+  SleeperLiveDraft's board into the resumable-sim primitives; snipe-
+  conditional pre-plans between picks; per-pick latency budget.
+  TEST: full end-to-end rehearsal against a Sleeper mock via -PdraftId -
+  recommendations sane vs offline plan, every pick under the 60s clock.
+
+### E. Infrastructure and process
+
+  E1 (P1) Simulator speed: profile simulateOnce (boosted inference and
+      board mutation are the suspects); a 2-5x speedup multiplies every
+      experiment above. TEST: benchmark harness before/after, identical
+      outputs on fixed seeds.
+  E2 (P1) Persist per-trial score arrays from tournament runs (enables
+      C3 and post-hoc stats without reruns).
+  E3 (P0) Open the keeper-rules -> master PR (~50 commits) once Justin
+      wants review; keep AdpSnapshot daily.
+
+### F. Facts needed from Justin (elicitation, P0)
+
+  - Exact draft date and time (schedules the precompute window and the
+    final night-before run).
+  - Are in-draft pick trades allowed/likely in this league?
+  - Who might be absent or autodrafting? Any known strategy chatter?
+  - Is the keeper board locked, or can managers still switch (Kevin
+    switched once already)?
