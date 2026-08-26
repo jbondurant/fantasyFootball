@@ -994,22 +994,19 @@ public class PolicyTournament {
         return Math.sqrt(sumSquares / (scores.length - 1) / scores.length);
     }
 
-    public static void main(String[] args){
-        AAAConfiguration configuration = AAAConfiguration.getInstance();
-        int trials = Integer.getInteger("trials", 800);
-        int search = Integer.getInteger("search", 150);
-        int adaptiveTrials = Integer.getInteger("adaptiveTrials", 150);
-        int inner = Integer.getInteger("inner", 16);
-
+    /**
+     * The tournament's world, buildable by any diagnostic: the -Pkeepers
+     * scenario resolved (declared pair excluded, named pair at real cost
+     * rounds), out-of-game keepers pinned onto my last live rounds, the
+     * waiting table filled. A swapped-out QB keeper reopens the QB dimension
+     * (2520 feasible sequences instead of 742).
+     */
+    static PolicyTournament forCurrentGame(AAAConfiguration configuration, int waitingTrials){
         int lastCompleted = Integer.parseInt(configuration.getSeason()) - 1;
         Map<String, Double> earliness = SelectionModel.qbEarliness(configuration, lastCompleted);
         ChoiceModel model = BoostedSelectionModel.fitShipped(configuration, lastCompleted,
                 earliness);
 
-        // -Pkeepers=Tuten,Flowers races the same roster in a counterfactual
-        // keeper world: my declared pair leaves, the named pair enters at its
-        // real cost rounds. A swapped-out QB keeper reopens the QB dimension
-        // (2520 feasible sequences instead of 742).
         List<Keeper> scenario = DraftPlanner.keepersFromProperty(configuration);
         java.util.Set<String> excluded = new java.util.HashSet<>();
         List<Keeper> myEffective = new ArrayList<>();
@@ -1041,22 +1038,31 @@ public class PolicyTournament {
         DraftSimulator pinned = base.withKeeperSlots(planner.me(), pinRounds);
         PolicyTournament tournament = new PolicyTournament(pinned, planner.me(),
                 planner.myKeeperIDs(), planner.points());
+        System.out.printf("game: my picks %s, keepers %s%n",
+                java.util.Arrays.toString(tournament.myPicks),
+                tournament.myKeeperIDs.stream()
+                        .map(id -> Player.getPlayerFromSIDV2(id).lastName).toList());
+        tournament.fillWaitingTable(waitingTrials);
+        return tournament;
+    }
+
+    public static void main(String[] args){
+        AAAConfiguration configuration = AAAConfiguration.getInstance();
+        int trials = Integer.getInteger("trials", 800);
+        int search = Integer.getInteger("search", 150);
+        int adaptiveTrials = Integer.getInteger("adaptiveTrials", 150);
+        int inner = Integer.getInteger("inner", 16);
+
+        System.out.println("policy tournament: 7 live picks + keepers pinned late, "
+                + "composition 1QB/2RB/3WR/1TE/2FLEX");
+        PolicyTournament tournament = forCurrentGame(configuration, Math.max(search, 100));
         Map<String, Double> adp = new HashMap<>();
-        for(String sleeperID : planner.points().keySet()){
+        for(String sleeperID : tournament.points.keySet()){
             double value = SleeperProjections.adpOf(sleeperID);
             if(value < Double.MAX_VALUE){
                 adp.put(sleeperID, value);
             }
         }
-
-        System.out.printf("policy tournament: 7 live picks + keepers on rounds 8-9, "
-                        + "composition 1QB/2RB/3WR/1TE/2FLEX%n"
-                        + "my picks %s, keepers %s%n",
-                java.util.Arrays.toString(tournament.myPicks),
-                tournament.myKeeperIDs.stream()
-                        .map(id -> Player.getPlayerFromSIDV2(id).lastName).toList());
-
-        tournament.fillWaitingTable(Math.max(search, 100));
 
         // ---- offline searches, on their own seeds ----
         Needs start = Needs.afterKeepers(tournament.myKeeperIDs);
