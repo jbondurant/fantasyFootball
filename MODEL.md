@@ -654,3 +654,16 @@ bucketed predicted-vs-actual survival within ±10 points), and the Allen
   1692 and jerem9604 1697 trail (late slots plus r3-r7 keeper rounds
   burned); Justin 1740, mid-low. res-vorp prices in the real cost of
   WHERE each team's keeper rounds sit, which the clean curve cannot see.
+
+### The 10,000-rollout ledger (overnight 2026-08-26, +/-0.6)
+
+  Search/evaluate split, top-8 per team, results committed in
+  data/keeper-ledger-10k-2026-08-26.txt. Precision resolved the open
+  puzzles: Herbert collapses to +0.4 (the 60-rollout +8.4 was noise - a QB
+  below the round-6 shelf is pure unclaimed insurance) while Purdy holds
+  +10.4, a ten-point gap matching the waterline math exactly. Justin's
+  pair is decisively optimal: Tuten +16.3, Purdy +10.4, Flowers +5.6
+  (Purdy over Flowers by 4.8 at +/-0.85). Daniels flips NEGATIVE (-5.2),
+  making BHier's kept pair worth ~-3 combined against +37 unkept - the
+  league's worst keeper decision; McBride confirmed -2.6. Nine of twelve
+  teams kept their exact top two.
