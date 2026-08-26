@@ -688,3 +688,20 @@ bucketed predicted-vs-actual survival within ±10 points), and the Allen
   runs on the new resumable-simulation primitive (SimState/simulateFrom/
   branchWith) - the same primitive component F needs. Paired eval on
   shared fresh seeds; vs-exhaustive column is a paired difference.
+
+  RESULTS (declared game, 800 trials, paired vs exhaustive RRRWWWT 1810.1):
+  adaptivity is worth +6 to +8 - every adaptive/reactive policy beat every
+  committed plan. greedy-raw and adaptive-greedy tie on top at 1817.7
+  (+7.6/+8.1); the oldschool ladder reads +6.0/+7.0/+7.8 at depths 1/2/3,
+  each level buying ~1 point - Justin's 13-second depth-2 tool was already
+  near-optimal, and depth 3 would have added ~0.8 within +/-1.2 noise. The
+  staged one-round frontier found the exhaustive optimum exactly (no
+  valley: with Purdy killing the QB dimension the landscape is smooth,
+  which is also why plain greed captures the whole adaptive premium).
+  Shipped RWRWWWT scores -3.4 in THIS game - not an indictment: it was
+  optimized for the real 9-pick free-keeper game, a different ruleset.
+  adp-follower -9.6 prices the market-mimicry penalty; random floor -96.
+  Inner=16 argmax noise mildly understates the adaptive rows, so +8 is
+  closer to a floor. Flowers counterfactual (-Pkeepers=Tuten,Flowers,
+  r4 burned + Tuten pinned r9, 2520 sequences) queued as the test of
+  whether depth starts mattering once QB timing re-enters.
