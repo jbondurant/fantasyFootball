@@ -322,6 +322,46 @@ public class DraftPlanner {
                                                   Set<String> excludeKeeperIDs,
                                                   ChoiceModel model,
                                                   Map<String, Double> earliness){
+        return forCurrentSeasonAs(configuration, perspective, extraKeepers, excludeKeeperIDs,
+                false, model, earliness);
+    }
+
+    /**
+     * phantomOwnKeepers plays the rules out without the keepers' points: the
+     * perspective manager's kept players stay OFF the board (the world stays
+     * fixed for everyone else), but they vanish from his lineup and their
+     * occupied slots become LIVE picks - the board bumps up one player for
+     * him, exactly as if he had drafted instead of kept. Full minus phantom
+     * is then pure keeper worth: player value above what the freed pick
+     * returns, with no dead-slot penalty.
+     */
+    public static DraftPlanner forCurrentSeasonAs(AAAConfiguration configuration,
+                                                  String perspective,
+                                                  List<Keeper> extraKeepers,
+                                                  Set<String> excludeKeeperIDs,
+                                                  boolean phantomOwnKeepers,
+                                                  ChoiceModel model,
+                                                  Map<String, Double> earliness){
+        return forCurrentSeasonAs(configuration, perspective, extraKeepers, excludeKeeperIDs,
+                phantomOwnKeepers, false, model, earliness);
+    }
+
+    /**
+     * mockRoomSlots builds the world the way the league's draft room displays
+     * it: every keeper is pinned onto a draft slot - in-game keepers at their
+     * cost round, out-of-game keepers onto their team's round 9 (a second one
+     * takes round 8, or the next free round up). One shared world for every
+     * seat; subtracting keeper projections afterwards is then a clean
+     * decomposition (Justin's construction).
+     */
+    public static DraftPlanner forCurrentSeasonAs(AAAConfiguration configuration,
+                                                  String perspective,
+                                                  List<Keeper> extraKeepers,
+                                                  Set<String> excludeKeeperIDs,
+                                                  boolean phantomOwnKeepers,
+                                                  boolean mockRoomSlots,
+                                                  ChoiceModel model,
+                                                  Map<String, Double> earliness){
         // -Pprojections=<name> swaps MY value feed to a bridged external
         // source (see ProjectionBridge); opponents keep behaving off the
         // consensus market either way, which the information-set test showed
@@ -361,8 +401,13 @@ public class DraftPlanner {
         Set<String> keptIDs = new HashSet<>();
         Map<String, Map<Position, Integer>> rosters = new HashMap<>();
         List<String> myKeeperIDs = new ArrayList<>();
+        Map<String, Set<Integer>> roundsTaken = new HashMap<>();
         for(Keeper keeper : keepers){
+            boolean phantomed = phantomOwnKeepers && me.equals(keeper.humanWhoCanKeep);
             keptIDs.add(keeper.player.sleeperIDString);
+            if(phantomed){
+                continue;   // off the board, but no lineup credit, no slot burned
+            }
             rosters.computeIfAbsent(keeper.humanWhoCanKeep, u -> new EnumMap<>(Position.class))
                     .merge(keeper.player.position, 1, Integer::sum);
             if(me.equals(keeper.humanWhoCanKeep)){
@@ -370,10 +415,21 @@ public class DraftPlanner {
             }
             JsonElement slot = keeper.humanWhoCanKeep == null
                     ? null : draftOrder.get(keeper.humanWhoCanKeep);
-            if(slot != null && !slot.isJsonNull()
-                    && keeper.roundCanBeKept <= SelectionModel.GAME_ROUNDS){
-                occupied.add(AAAConfiguration.pickNumber(
-                        keeper.roundCanBeKept, slot.getAsInt(), teams));
+            if(slot == null || slot.isJsonNull()){
+                continue;
+            }
+            Set<Integer> taken = roundsTaken.computeIfAbsent(keeper.humanWhoCanKeep,
+                    u -> new HashSet<>());
+            int round = keeper.roundCanBeKept;
+            if(round > SelectionModel.GAME_ROUNDS && mockRoomSlots){
+                round = SelectionModel.GAME_ROUNDS;
+                while(round >= 1 && taken.contains(round)){
+                    round--;
+                }
+            }
+            if(round >= 1 && round <= SelectionModel.GAME_ROUNDS){
+                occupied.add(AAAConfiguration.pickNumber(round, slot.getAsInt(), teams));
+                taken.add(round);
             }
         }
 

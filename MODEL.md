@@ -637,3 +637,20 @@ bucketed predicted-vs-actual survival within ±10 points), and the Allen
     sunk; the catch-up levers are draft execution (the model's edge - the
     unpriced 6-pt QB premium among them) and the two flat rounds (8-9)
     the plan leaves for upside.
+
+### Slot value, settled (2026-08-25, late): three constructions and a fix
+
+  Justin's question - why the keeperless column had bumps at slots 3/10 -
+  exposed that per-seat counterfactuals live in different worlds. Clean
+  curve (no keepers anywhere): monotone 1888 -> 1838, no U shape, no
+  bumps; the anomalies were board-return and pass-through artifacts. His
+  final construction (SlotValue): the MOCK-ROOM world - every keeper
+  pinned to a slot, out-of-game keepers onto round 9 (second onto 8), one
+  shared world, keeper projections subtracted post-hoc. Raw subtraction
+  (his spec) makes the four QB-keeper seats the bottom four - the
+  cross-positional baseline trap - so the res-vorp column subtracts value
+  over replacement at each seat's round-9 pick instead. Result: JakeSK
+  1805 and BHier 1799 lead (early slots, cheap burned rounds); JFMarino
+  1692 and jerem9604 1697 trail (late slots plus r3-r7 keeper rounds
+  burned); Justin 1740, mid-low. res-vorp prices in the real cost of
+  WHERE each team's keeper rounds sit, which the clean curve cannot see.
