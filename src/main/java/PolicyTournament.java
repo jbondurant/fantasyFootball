@@ -280,22 +280,49 @@ public class PolicyTournament {
         }
     }
 
+    /** Best raw-points position among those `needs` still allows. */
+    Position bestRawPosition(Needs needs, List<String> board){
+        Map<Position, String> best = bestByPosition(board, points);
+        Position top = null;
+        double topPoints = -1;
+        for(Position position : needs.feasibleSkill()){
+            String candidate = best.get(position);
+            double projected = candidate == null ? -1 : points.getOrDefault(candidate, 0.0);
+            if(projected > topPoints){
+                topPoints = projected;
+                top = position;
+            }
+        }
+        return top;
+    }
+
+    /** Best points-minus-waiting position - the depletion-aware greedy. */
+    Position bestVorpPosition(Needs needs, List<String> board, int pickNumber){
+        Map<Position, String> best = bestByPosition(board, points);
+        int next = nextPickAfter(pickNumber);
+        Position top = null;
+        double topValue = -Double.MAX_VALUE;
+        for(Position position : needs.feasibleSkill()){
+            String candidate = best.get(position);
+            if(candidate == null){
+                continue;
+            }
+            double replacement = next < 0 ? 0.0
+                    : waitingTable.getOrDefault(next, Map.of()).getOrDefault(position, 0.0);
+            double value = points.getOrDefault(candidate, 0.0) - replacement;
+            if(value > topValue){
+                topValue = value;
+                top = position;
+            }
+        }
+        return top;
+    }
+
     class GreedyRaw extends TournamentPolicy {
         @Override
         Position pickPosition(List<String> board, DraftSimulator.Slot slot,
                               DraftSimulator.SimState state){
-            Map<Position, String> best = bestByPosition(board, points);
-            Position top = null;
-            double topPoints = -1;
-            for(Position position : needs.feasibleSkill()){
-                String candidate = best.get(position);
-                double projected = candidate == null ? -1 : points.getOrDefault(candidate, 0.0);
-                if(projected > topPoints){
-                    topPoints = projected;
-                    top = position;
-                }
-            }
-            return top;
+            return bestRawPosition(needs, board);
         }
     }
 
@@ -303,46 +330,32 @@ public class PolicyTournament {
         @Override
         Position pickPosition(List<String> board, DraftSimulator.Slot slot,
                               DraftSimulator.SimState state){
-            Map<Position, String> best = bestByPosition(board, points);
-            int next = nextPickAfter(slot.pickNumber());
-            Position top = null;
-            double topValue = -Double.MAX_VALUE;
-            for(Position position : needs.feasibleSkill()){
-                String candidate = best.get(position);
-                if(candidate == null){
-                    continue;
-                }
-                double replacement = next < 0 ? 0.0
-                        : waitingTable.getOrDefault(next, Map.of())
-                                .getOrDefault(position, 0.0);
-                double value = points.getOrDefault(candidate, 0.0) - replacement;
-                if(value > topValue){
-                    topValue = value;
-                    top = position;
-                }
-            }
-            return top;
+            return bestVorpPosition(needs, board, slot.pickNumber());
         }
     }
+
+    /** What plays the rounds a lookahead head does not commit. */
+    enum Tail { RANDOM, RAW, VORP }
 
     /**
      * The adaptive family: at each of my picks, enumerate feasible position
      * heads `depth` deep, value each head by `inner` completions of the live
      * state (my remaining picks played head-then-tail), take the winning
-     * head's first position. randomTail=true is Justin's 2022-23 design; the
-     * greedy tail is the modern stand-in. Inner seeds are common across heads
-     * (paired), and disjoint from the rollout's own stream.
+     * head's first position. RANDOM tails are Justin's 2022-23 design -
+     * unbiased about timing; RAW is the modern-but-QB-poisoned stand-in;
+     * VORP is competent AND unbiased, the combo Justin proposed. Inner seeds
+     * are common across heads (paired), disjoint from the rollout's stream.
      */
     class Lookahead extends TournamentPolicy {
         final int depth;
         final int inner;
-        final boolean randomTail;
+        final Tail tail;
         final long seed;
 
-        Lookahead(int depth, int inner, boolean randomTail, long seed){
+        Lookahead(int depth, int inner, Tail tail, long seed){
             this.depth = depth;
             this.inner = inner;
-            this.randomTail = randomTail;
+            this.tail = tail;
             this.seed = seed;
         }
 
@@ -360,9 +373,8 @@ public class PolicyTournament {
                 double total = 0;
                 for(int r = 0; r < inner; r++){
                     long innerSeed = seed + 101L * decision + 7919L * r;
-                    TournamentPolicy completion = randomTail
-                            ? new HeadThenRandom(head, needs, mine, new Random(innerSeed ^ 0x5DEECE66DL))
-                            : new HeadThenGreedy(head, needs, mine);
+                    HeadThenTail completion = new HeadThenTail(head, tail, needs, mine,
+                            new Random(innerSeed ^ 0x5DEECE66DL));
                     DraftSimulator.SimState branch = state.copy();
                     simulator.simulateFrom(branch, new Random(innerSeed), me, completion);
                     total += completion.score();
@@ -377,14 +389,16 @@ public class PolicyTournament {
         }
     }
 
-    /** Inner completion: follow the head, then shuffled-random feasible. */
-    class HeadThenRandom extends TournamentPolicy {
+    /** Inner completion: follow the head, then the chosen tail stand-in. */
+    class HeadThenTail extends TournamentPolicy {
         final List<Position> head;
+        final Tail tail;
         final Random random;
 
-        HeadThenRandom(List<Position> head, Needs outerNeeds, List<String> outerMine,
-                       Random random){
+        HeadThenTail(List<Position> head, Tail tail, Needs outerNeeds,
+                     List<String> outerMine, Random random){
             this.head = head;
+            this.tail = tail;
             this.random = random;
             this.needs.dedicated.clear();
             this.needs.dedicated.putAll(outerNeeds.dedicated);
@@ -399,43 +413,499 @@ public class PolicyTournament {
             if(decision < head.size()){
                 return head.get(decision);
             }
-            List<Position> open = needs.feasibleSkill();
-            return open.get(random.nextInt(open.size()));
+            switch(tail){
+                case RAW:
+                    return bestRawPosition(needs, board);
+                case VORP:
+                    return bestVorpPosition(needs, board, slot.pickNumber());
+                default:
+                    List<Position> open = needs.feasibleSkill();
+                    return open.get(random.nextInt(open.size()));
+            }
         }
     }
 
-    /** Inner completion: follow the head, then greedy-raw. */
-    class HeadThenGreedy extends TournamentPolicy {
-        final List<Position> head;
+    /**
+     * Justin's structured tail (2026-08-26): commit ONLY the treacherous
+     * dimensions - which of my decisions takes the QB (if one is owed) and
+     * which the dedicated TE - and let every other round choose RB-vs-WR
+     * live by VORP. The head space is tiny (at most decisions^2), the QB
+     * round is priced globally instead of slid to locally, and the smooth
+     * dimension stays adaptive. qbAt/teAt are decision indices; -1 = no QB
+     * owed. Extra TEs beyond the dedicated one are not explored - the flexes
+     * stay RB/WR.
+     */
+    class TimingCommitted extends TournamentPolicy {
+        final int qbAt;
+        final int teAt;
 
-        HeadThenGreedy(List<Position> head, Needs outerNeeds, List<String> outerMine){
-            this.head = head;
-            this.needs.dedicated.clear();
-            this.needs.dedicated.putAll(outerNeeds.dedicated);
-            this.needs.flex = outerNeeds.flex;
-            this.mine.clear();
-            this.mine.addAll(outerMine);
+        TimingCommitted(int qbAt, int teAt){
+            this.qbAt = qbAt;
+            this.teAt = teAt;
         }
 
         @Override
         Position pickPosition(List<String> board, DraftSimulator.Slot slot,
                               DraftSimulator.SimState state){
-            if(decision < head.size()){
-                return head.get(decision);
+            if(decision == qbAt){
+                return Position.QB;
             }
+            if(decision == teAt){
+                return Position.TE;
+            }
+            // Every unreserved round is RB-vs-WR, decided live by VORP; the
+            // counts work out exactly (unreserved rounds = RB+WR+flex owed).
             Map<Position, String> best = bestByPosition(board, points);
+            int next = nextPickAfter(slot.pickNumber());
             Position top = null;
-            double topPoints = -1;
-            for(Position position : needs.feasibleSkill()){
+            double topValue = -Double.MAX_VALUE;
+            for(Position position : new Position[]{Position.RB, Position.WR}){
                 String candidate = best.get(position);
-                double projected = candidate == null ? -1 : points.getOrDefault(candidate, 0.0);
-                if(projected > topPoints){
-                    topPoints = projected;
+                if(!needs.feasible(position) || candidate == null){
+                    continue;
+                }
+                double replacement = next < 0 ? 0.0
+                        : waitingTable.getOrDefault(next, Map.of())
+                                .getOrDefault(position, 0.0);
+                double value = points.getOrDefault(candidate, 0.0) - replacement;
+                if(value > topValue){
+                    topValue = value;
+                    top = position;
+                }
+            }
+            return top != null ? top : needs.feasibleSkill().get(0);
+        }
+    }
+
+    // ---- the learned strategies ----
+
+    static final long TRAIN_SEED = DraftSimulator.SEED + 44_000_000L;
+    static final int ML_FEATURES = 11;
+
+    /**
+     * One row per (state, candidate position) for the learned policies:
+     * where we are, what we still owe, what the board offers at the position
+     * now, and what waiting would return.
+     */
+    double[] mlFeatures(TournamentPolicy self, List<String> board, int pickNumber,
+                        Position position){
+        Map<Position, String> best = bestByPosition(board, points);
+        String candidate = best.get(position);
+        double available = candidate == null ? 0 : points.getOrDefault(candidate, 0.0);
+        int next = nextPickAfter(pickNumber);
+        double waiting = next < 0 ? 0.0
+                : waitingTable.getOrDefault(next, Map.of()).getOrDefault(position, 0.0);
+        double bestFeasible = 0;
+        for(Position open : self.needs.feasibleSkill()){
+            String other = best.get(open);
+            if(other != null){
+                bestFeasible = Math.max(bestFeasible, points.getOrDefault(other, 0.0));
+            }
+        }
+        double rosterTotal = 0;
+        for(String sleeperID : self.mine){
+            rosterTotal += points.getOrDefault(sleeperID, 0.0);
+        }
+        return new double[]{
+                self.decision / (double) myPicks.length,
+                self.needs.dedicated.getOrDefault(position, 0),
+                self.needs.flex,
+                available / 100.0,
+                (available - waiting) / 10.0,
+                rosterTotal / 100.0,
+                position == Position.QB ? 1 : 0,
+                position == Position.RB ? 1 : 0,
+                position == Position.WR ? 1 : 0,
+                position == Position.TE ? 1 : 0,
+                (available - bestFeasible) / 100.0};
+    }
+
+    /** Acts greedily on a learned (state, position) -> score model. */
+    class ModelPolicy extends TournamentPolicy {
+        final BoostedRegressor model;
+
+        ModelPolicy(BoostedRegressor model){
+            this.model = model;
+        }
+
+        @Override
+        Position pickPosition(List<String> board, DraftSimulator.Slot slot,
+                              DraftSimulator.SimState state){
+            Position top = null;
+            double topValue = -Double.MAX_VALUE;
+            for(Position position : needs.feasibleSkill()){
+                double value = model.predict(mlFeatures(this, board,
+                        slot.pickNumber(), position));
+                if(value > topValue){
+                    topValue = value;
                     top = position;
                 }
             }
             return top;
         }
+    }
+
+    /** Linear-softmax policy over the same features (REINFORCE's actor). */
+    class SoftmaxPolicy extends TournamentPolicy {
+        final double[] weights;
+        final Random random;   // null = act greedily (argmax score)
+        double[][] chosenFeatures;
+        double[][][] optionFeatures;
+        double[][] optionProbabilities;
+
+        SoftmaxPolicy(double[] weights, Random random, boolean record){
+            this.weights = weights;
+            this.random = random;
+            if(record){
+                chosenFeatures = new double[myPicks.length][];
+                optionFeatures = new double[myPicks.length][][];
+                optionProbabilities = new double[myPicks.length][];
+            }
+        }
+
+        @Override
+        Position pickPosition(List<String> board, DraftSimulator.Slot slot,
+                              DraftSimulator.SimState state){
+            List<Position> open = needs.feasibleSkill();
+            double[][] rows = new double[open.size()][];
+            double[] scores = new double[open.size()];
+            double max = -Double.MAX_VALUE;
+            for(int a = 0; a < open.size(); a++){
+                rows[a] = mlFeatures(this, board, slot.pickNumber(), open.get(a));
+                for(int f = 0; f < ML_FEATURES; f++){
+                    scores[a] += weights[f] * rows[a][f];
+                }
+                max = Math.max(max, scores[a]);
+            }
+            double total = 0;
+            double[] probabilities = new double[open.size()];
+            for(int a = 0; a < open.size(); a++){
+                probabilities[a] = Math.exp(scores[a] - max);
+                total += probabilities[a];
+            }
+            int chosen = 0;
+            if(random == null){
+                for(int a = 1; a < open.size(); a++){
+                    if(probabilities[a] > probabilities[chosen]){
+                        chosen = a;
+                    }
+                }
+            }
+            else {
+                double u = random.nextDouble() * total;
+                double cumulative = 0;
+                for(int a = 0; a < open.size(); a++){
+                    cumulative += probabilities[a];
+                    if(u < cumulative){
+                        chosen = a;
+                        break;
+                    }
+                    chosen = a;
+                }
+            }
+            if(chosenFeatures != null && decision < chosenFeatures.length){
+                chosenFeatures[decision] = rows[chosen];
+                optionFeatures[decision] = rows;
+                double[] normalized = new double[open.size()];
+                for(int a = 0; a < open.size(); a++){
+                    normalized[a] = probabilities[a] / total;
+                }
+                optionProbabilities[decision] = normalized;
+            }
+            return open.get(chosen);
+        }
+    }
+
+    /** Behavior policy for fitted-Q data: explore around a guide policy. */
+    class ExploringPolicy extends TournamentPolicy {
+        final BoostedRegressor guide;   // null = guide by VORP
+        final Random random;
+        final double epsilon;
+        final List<double[]> visited = new ArrayList<>();
+
+        ExploringPolicy(BoostedRegressor guide, Random random, double epsilon){
+            this.guide = guide;
+            this.random = random;
+            this.epsilon = epsilon;
+        }
+
+        @Override
+        Position pickPosition(List<String> board, DraftSimulator.Slot slot,
+                              DraftSimulator.SimState state){
+            List<Position> open = needs.feasibleSkill();
+            Position chosen;
+            if(random.nextDouble() < epsilon){
+                chosen = open.get(random.nextInt(open.size()));
+            }
+            else if(guide == null){
+                chosen = bestVorpPosition(needs, board, slot.pickNumber());
+            }
+            else {
+                chosen = null;
+                double topValue = -Double.MAX_VALUE;
+                for(Position position : open){
+                    double value = guide.predict(mlFeatures(this, board,
+                            slot.pickNumber(), position));
+                    if(value > topValue){
+                        topValue = value;
+                        chosen = position;
+                    }
+                }
+            }
+            visited.add(mlFeatures(this, board, slot.pickNumber(), chosen));
+            return chosen;
+        }
+    }
+
+    /**
+     * Fitted Q: Monte-Carlo returns of an exploratory policy regressed onto
+     * (state, action) features, then act greedily - one approximate policy
+     * improvement step per iteration, the second iteration exploring around
+     * the first iteration's greedy policy.
+     */
+    BoostedRegressor trainFittedQ(int episodesPerIteration, int iterations){
+        BoostedRegressor model = null;
+        for(int iteration = 0; iteration < iterations; iteration++){
+            BoostedRegressor guide = model;
+            long iterationBase = TRAIN_SEED + 1_000_000L * iteration;
+            List<ExploringPolicy> episodes =
+                    IntStream.range(0, episodesPerIteration).parallel().mapToObj(episode -> {
+                        long seed = iterationBase + 7919L * episode;
+                        ExploringPolicy policy = new ExploringPolicy(guide,
+                                new Random(seed ^ 0x9E3779B9L), 0.35);
+                        simulator.simulateOnce(new Random(seed), me, policy);
+                        return policy;
+                    }).toList();
+            List<double[]> rows = new ArrayList<>();
+            List<Double> targets = new ArrayList<>();
+            for(ExploringPolicy policy : episodes){
+                double score = policy.score();
+                for(double[] row : policy.visited){
+                    rows.add(row);
+                    targets.add(score);
+                }
+            }
+            double[][] rowArray = rows.toArray(new double[0][]);
+            double[] targetArray = new double[targets.size()];
+            for(int i = 0; i < targetArray.length; i++){
+                targetArray[i] = targets.get(i);
+            }
+            model = BoostedRegressor.fit(rowArray, targetArray, 120, 3, 0.15);
+        }
+        return model;
+    }
+
+    /**
+     * Imitation: distill a slow, strong teacher - Justin's oldschool-2 with
+     * VORP tails - into a per-position score model that answers in O(trees).
+     * The draft-night thesis: keep the lookahead's judgment, lose its clock.
+     */
+    BoostedRegressor trainImitation(int episodes, int inner){
+        List<List<double[]>> perEpisodeRows = IntStream.range(0, episodes).parallel()
+                .mapToObj(episode -> {
+                    long seed = TRAIN_SEED + 5_000_000L + 7919L * episode;
+                    List<double[]> recorded = new ArrayList<>();
+                    Lookahead teacher = new Lookahead(2, inner, Tail.VORP,
+                            seed ^ 0x7F4A7C15L){
+                        @Override
+                        Position pickPosition(List<String> board, DraftSimulator.Slot slot,
+                                              DraftSimulator.SimState state){
+                            Position chosen = super.pickPosition(board, slot, state);
+                            for(Position position : needs.feasibleSkill()){
+                                double[] row = mlFeatures(this, board,
+                                        slot.pickNumber(), position);
+                                double[] labeled = new double[row.length + 1];
+                                System.arraycopy(row, 0, labeled, 0, row.length);
+                                labeled[row.length] = position == chosen ? 1.0 : 0.0;
+                                recorded.add(labeled);
+                            }
+                            return chosen;
+                        }
+                    };
+                    simulator.simulateOnce(new Random(seed), me, teacher);
+                    return recorded;
+                }).toList();
+        List<double[]> rows = new ArrayList<>();
+        List<Double> targets = new ArrayList<>();
+        for(List<double[]> episodeRows : perEpisodeRows){
+            for(double[] labeled : episodeRows){
+                rows.add(java.util.Arrays.copyOf(labeled, ML_FEATURES));
+                targets.add(labeled[ML_FEATURES]);
+            }
+        }
+        double[][] rowArray = rows.toArray(new double[0][]);
+        double[] targetArray = new double[targets.size()];
+        for(int i = 0; i < targetArray.length; i++){
+            targetArray[i] = targets.get(i);
+        }
+        return BoostedRegressor.fit(rowArray, targetArray, 120, 3, 0.15);
+    }
+
+    /** REINFORCE with a running baseline on the linear-softmax actor. */
+    double[] trainReinforce(int episodes){
+        double[] weights = new double[ML_FEATURES];
+        double baseline = 0;
+        boolean baselineSet = false;
+        for(int episode = 0; episode < episodes; episode++){
+            long seed = TRAIN_SEED + 9_000_000L + 7919L * episode;
+            SoftmaxPolicy policy = new SoftmaxPolicy(weights,
+                    new Random(seed ^ 0x2545F491L), true);
+            simulator.simulateOnce(new Random(seed), me, policy);
+            double score = policy.score();
+            if(!baselineSet){
+                baseline = score;
+                baselineSet = true;
+            }
+            double advantage = score - baseline;
+            baseline += 0.02 * (score - baseline);
+            double step = 0.02 / (1.0 + episode / 800.0);
+            for(int d = 0; d < policy.chosenFeatures.length; d++){
+                if(policy.chosenFeatures[d] == null){
+                    continue;
+                }
+                double[][] options = policy.optionFeatures[d];
+                double[] probabilities = policy.optionProbabilities[d];
+                for(int f = 0; f < ML_FEATURES; f++){
+                    double expected = 0;
+                    for(int a = 0; a < options.length; a++){
+                        expected += probabilities[a] * options[a][f];
+                    }
+                    weights[f] += step * advantage
+                            * (policy.chosenFeatures[d][f] - expected);
+                }
+            }
+        }
+        return weights;
+    }
+
+    /**
+     * Cross-entropy method over committed sequences: sample legal sequences
+     * from a per-decision position distribution, score on CRN rollouts, refit
+     * the distribution to the elite - a learned search, judged like any other
+     * committed plan on the fresh eval stream.
+     */
+    List<Position> trainCem(int iterations, int population, int elite, int rollouts){
+        double[][] probabilities = new double[myPicks.length][SKILL.length];
+        for(double[] row : probabilities){
+            java.util.Arrays.fill(row, 1.0 / SKILL.length);
+        }
+        Random random = new Random(TRAIN_SEED + 13_000_000L);
+        List<Position> bestSequence = null;
+        double bestMean = -Double.MAX_VALUE;
+        for(int iteration = 0; iteration < iterations; iteration++){
+            List<List<Position>> samples = new ArrayList<>();
+            for(int s = 0; s < population; s++){
+                samples.add(sampleSequence(probabilities, random));
+            }
+            double[] means = samples.parallelStream()
+                    .mapToDouble(sequence -> searchMean(sequence, rollouts)).toArray();
+            Integer[] order = new Integer[population];
+            for(int s = 0; s < population; s++){
+                order[s] = s;
+            }
+            java.util.Arrays.sort(order, (a, b) -> Double.compare(means[b], means[a]));
+            if(means[order[0]] > bestMean){
+                bestMean = means[order[0]];
+                bestSequence = samples.get(order[0]);
+            }
+            double[][] refit = new double[myPicks.length][SKILL.length];
+            for(int e = 0; e < elite; e++){
+                List<Position> sequence = samples.get(order[e]);
+                for(int d = 0; d < sequence.size(); d++){
+                    refit[d][sequence.get(d).ordinal()]++;
+                }
+            }
+            for(int d = 0; d < myPicks.length; d++){
+                for(int p = 0; p < SKILL.length; p++){
+                    probabilities[d][p] = 0.4 * probabilities[d][p]
+                            + 0.6 * (refit[d][p] + 0.5) / (elite + 0.5 * SKILL.length);
+                }
+            }
+        }
+        return bestSequence;
+    }
+
+    /** Population hill-climb over sequences: swap mutations plus fresh blood. */
+    List<Position> trainEvolution(int generations, int population, int rollouts){
+        Random random = new Random(TRAIN_SEED + 17_000_000L);
+        List<List<Position>> pool = new ArrayList<>();
+        Needs start = Needs.afterKeepers(myKeeperIDs);
+        for(int s = 0; s < population; s++){
+            pool.add(randomSequence(start.copy(), random));
+        }
+        List<Position> best = null;
+        double bestMean = -Double.MAX_VALUE;
+        for(int generation = 0; generation < generations; generation++){
+            List<List<Position>> generationPool = pool;
+            double[] means = generationPool.parallelStream()
+                    .mapToDouble(sequence -> searchMean(sequence, rollouts)).toArray();
+            Integer[] order = new Integer[generationPool.size()];
+            for(int s = 0; s < order.length; s++){
+                order[s] = s;
+            }
+            java.util.Arrays.sort(order, (a, b) -> Double.compare(means[b], means[a]));
+            if(means[order[0]] > bestMean){
+                bestMean = means[order[0]];
+                best = generationPool.get(order[0]);
+            }
+            List<List<Position>> next = new ArrayList<>();
+            for(int keep = 0; keep < population / 3; keep++){
+                next.add(generationPool.get(order[keep]));
+            }
+            while(next.size() < population){
+                if(random.nextDouble() < 0.15){
+                    next.add(randomSequence(start.copy(), random));
+                }
+                else {
+                    List<Position> parent = next.get(random.nextInt(population / 3));
+                    List<Position> child = new ArrayList<>(parent);
+                    int a = random.nextInt(child.size());
+                    int b = random.nextInt(child.size());
+                    Position swap = child.get(a);
+                    child.set(a, child.get(b));
+                    child.set(b, swap);
+                    next.add(child);
+                }
+            }
+            pool = next;
+        }
+        return best;
+    }
+
+    private List<Position> sampleSequence(double[][] probabilities, Random random){
+        Needs needs = Needs.afterKeepers(myKeeperIDs);
+        List<Position> sequence = new ArrayList<>();
+        for(int d = 0; d < myPicks.length; d++){
+            List<Position> open = needs.feasibleSkill();
+            double total = 0;
+            for(Position position : open){
+                total += probabilities[d][position.ordinal()];
+            }
+            double u = random.nextDouble() * total;
+            Position chosen = open.get(open.size() - 1);
+            double cumulative = 0;
+            for(Position position : open){
+                cumulative += probabilities[d][position.ordinal()];
+                if(u < cumulative){
+                    chosen = position;
+                    break;
+                }
+            }
+            needs.consume(chosen);
+            sequence.add(chosen);
+        }
+        return sequence;
+    }
+
+    private List<Position> randomSequence(Needs needs, Random random){
+        List<Position> sequence = new ArrayList<>();
+        while(sequence.size() < myPicks.length){
+            List<Position> open = needs.feasibleSkill();
+            Position chosen = open.get(random.nextInt(open.size()));
+            needs.consume(chosen);
+            sequence.add(chosen);
+        }
+        return sequence;
     }
 
     // ---- search and evaluation ----
@@ -616,8 +1086,9 @@ public class PolicyTournament {
                 List<Position> prefix = new ArrayList<>(stagedBest);
                 prefix.add(candidate);
                 double value = IntStream.range(0, search).parallel().mapToDouble(r -> {
-                    TournamentPolicy policy = tournament.new HeadThenGreedy(prefix,
-                            start.copy(), new ArrayList<>(tournament.myKeeperIDs));
+                    TournamentPolicy policy = tournament.new HeadThenTail(prefix,
+                            Tail.RAW, start.copy(),
+                            new ArrayList<>(tournament.myKeeperIDs), new Random(0));
                     tournament.simulator.simulateOnce(
                             new Random(SEARCH_SEED + 7919L * r), tournament.me, policy);
                     return policy.score();
@@ -631,6 +1102,71 @@ public class PolicyTournament {
             stagedNeeds.consume(best);
         }
         System.out.printf("staged-frontier winner %s%n", stagedBest);
+
+        // ---- Justin's structured head: (QB round, TE round), RB/WR live ----
+        boolean qbOwed = start.dedicated.getOrDefault(Position.QB, 0) > 0;
+        boolean teOwed = start.dedicated.getOrDefault(Position.TE, 0) > 0;
+        List<int[]> timingHeads = new ArrayList<>();
+        int picks = tournament.myPicks.length;
+        for(int qbAt : qbOwed
+                ? IntStream.range(0, picks).toArray() : new int[]{-1}){
+            if(teOwed){
+                for(int teAt = 0; teAt < picks; teAt++){
+                    if(teAt != qbAt){
+                        timingHeads.add(new int[]{qbAt, teAt});
+                    }
+                }
+            }
+            else {
+                timingHeads.add(new int[]{qbAt, -1});
+            }
+        }
+        double[] timingMeans = IntStream.range(0, timingHeads.size()).parallel()
+                .mapToDouble(h -> {
+                    int[] head = timingHeads.get(h);
+                    double total = 0;
+                    for(int r = 0; r < search; r++){
+                        TournamentPolicy policy =
+                                tournament.new TimingCommitted(head[0], head[1]);
+                        tournament.simulator.simulateOnce(
+                                new Random(SEARCH_SEED + 7919L * r), tournament.me, policy);
+                        total += policy.score();
+                    }
+                    return total / search;
+                }).toArray();
+        int timingArgmax = 0;
+        for(int h = 1; h < timingMeans.length; h++){
+            if(timingMeans[h] > timingMeans[timingArgmax]){
+                timingArgmax = h;
+            }
+        }
+        int[] bestTiming = timingHeads.get(timingArgmax);
+        String timingLabel = String.format("QB@%s TE@%s",
+                bestTiming[0] < 0 ? "none" : "r" + tournament.simulator
+                        .slotAt(tournament.myPicks[bestTiming[0]]).round(),
+                bestTiming[1] < 0 ? "none" : "r" + tournament.simulator
+                        .slotAt(tournament.myPicks[bestTiming[1]]).round());
+        System.out.printf("timing-committed winner %s over %d heads, search mean %.1f%n",
+                timingLabel, timingHeads.size(), timingMeans[timingArgmax]);
+
+        // ---- train the learned strategies (their own seed block) ----
+        // -PmlScale=0.05 shrinks every training budget for smoke runs.
+        double mlScale = Double.parseDouble(System.getProperty("mlScale", "1.0"));
+        long trainStart = System.currentTimeMillis();
+        BoostedRegressor fittedQ = tournament.trainFittedQ(
+                (int) Math.max(100, 2000 * mlScale), 2);
+        BoostedRegressor imitation = tournament.trainImitation(
+                (int) Math.max(5, 150 * mlScale), 12);
+        double[] reinforceWeights = tournament.trainReinforce(
+                (int) Math.max(200, 4000 * mlScale));
+        List<Position> cemBest = tournament.trainCem(20,
+                (int) Math.max(8, 80 * mlScale), (int) Math.max(3, 16 * mlScale),
+                (int) Math.max(4, 40 * mlScale));
+        List<Position> evolutionBest = tournament.trainEvolution(30,
+                (int) Math.max(6, 30 * mlScale), (int) Math.max(4, 40 * mlScale));
+        System.out.printf("learned strategies trained (%.0fs); cem %s, evolution %s%n",
+                (System.currentTimeMillis() - trainStart) / 1000.0,
+                cemBest, evolutionBest);
 
         List<Position> shipped = List.of(Position.RB, Position.WR, Position.RB,
                 Position.WR, Position.WR, Position.WR, Position.TE);
@@ -660,18 +1196,39 @@ public class PolicyTournament {
         roster.add(new Object[]{"exhaustive-committed " + label(exhaustiveBest), trials,
                 named("exhaustive",
                         seed -> tournament.new SequencePolicy(exhaustiveBest))});
+        roster.add(new Object[]{"timing-committed " + timingLabel, trials,
+                named("timing-committed", seed -> tournament.new TimingCommitted(
+                        bestTiming[0], bestTiming[1]))});
+        roster.add(new Object[]{"ml-fittedq", trials,
+                named("ml-fittedq", seed -> tournament.new ModelPolicy(fittedQ))});
+        roster.add(new Object[]{"ml-imitation (of oldschool-2-vorp)", trials,
+                named("ml-imitation", seed -> tournament.new ModelPolicy(imitation))});
+        roster.add(new Object[]{"ml-reinforce", trials,
+                named("ml-reinforce", seed -> tournament.new SoftmaxPolicy(
+                        reinforceWeights, null, false))});
+        roster.add(new Object[]{"ml-cem " + label(cemBest), trials,
+                named("ml-cem", seed -> tournament.new SequencePolicy(cemBest))});
+        roster.add(new Object[]{"ml-evolution " + label(evolutionBest), trials,
+                named("ml-evolution",
+                        seed -> tournament.new SequencePolicy(evolutionBest))});
         roster.add(new Object[]{"oldschool-1 (random tails)", adaptiveTrials,
                 named("oldschool-1",
-                        seed -> tournament.new Lookahead(1, inner, true, seed))});
+                        seed -> tournament.new Lookahead(1, inner, Tail.RANDOM, seed))});
         roster.add(new Object[]{"oldschool-2 (random tails)", adaptiveTrials,
                 named("oldschool-2",
-                        seed -> tournament.new Lookahead(2, inner, true, seed))});
+                        seed -> tournament.new Lookahead(2, inner, Tail.RANDOM, seed))});
         roster.add(new Object[]{"oldschool-3 (random tails)", adaptiveTrials,
                 named("oldschool-3",
-                        seed -> tournament.new Lookahead(3, inner, true, seed))});
-        roster.add(new Object[]{"adaptive-greedy (d1)", adaptiveTrials,
+                        seed -> tournament.new Lookahead(3, inner, Tail.RANDOM, seed))});
+        roster.add(new Object[]{"oldschool-1 (vorp tails)", adaptiveTrials,
+                named("oldschool-1-vorp",
+                        seed -> tournament.new Lookahead(1, inner, Tail.VORP, seed))});
+        roster.add(new Object[]{"oldschool-2 (vorp tails)", adaptiveTrials,
+                named("oldschool-2-vorp",
+                        seed -> tournament.new Lookahead(2, inner, Tail.VORP, seed))});
+        roster.add(new Object[]{"adaptive-greedy (d1, raw tails)", adaptiveTrials,
                 named("adaptive-greedy",
-                        seed -> tournament.new Lookahead(1, inner, false, seed))});
+                        seed -> tournament.new Lookahead(1, inner, Tail.RAW, seed))});
 
         for(Object[] entry : roster){
             String name = (String) entry[0];
