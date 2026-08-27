@@ -1266,3 +1266,24 @@ P2 = post-season / 2027 infrastructure.
      mechanics (keepers remove chalk), partly real strategy drift -
      separate the two in the reach model tonight. NFL.com and Yahoo
      rank last everywhere; nobody reads them.
+
+### Abusing Draft Rankings: real, current, and the causal artifact (2026-08-27)
+
+  Justin's screenshot overruled my dead-lead verdict: the reddit series
+  EXISTS (firstseedsports.com, weekly Google Sheet, 2026 edition posted
+  six days ago), and it captures the thing our resemblance fit could
+  only proxy - the platforms' DEFAULT DRAFT-ROOM RANKINGS, the literal
+  on-screen order. Sleeper ADP won the resemblance race because the
+  room follows the defaults; this sheet IS the defaults. Corrections on
+  the record: Gemini's item 3 was real (my searches whiffed; Google
+  found it instantly), and item 4 too - BeatADP is real and is the
+  sheet's upstream source for Sleeper rankings. Harvested and
+  committed: data/sleeper-defaults-2026-20260820.csv - 200 players,
+  consensus ADP vs FP ECR vs Sleeper default rank vs the sheet's
+  "Landmine Score" (a per-player early-in-YOUR-room risk rating = an
+  independent snipe-risk signal to compare against our snipes()).
+  Sheet updates Fridays: grab the Aug-28 refresh, 4 days before the
+  draft, and check BeatADP directly for fresher dailies. Historical
+  editions being recovered from archived pages (background); if the old
+  sheets are live, "sleeper-defaults" joins FeedResemblance to test
+  defaults-vs-ADP as the true causal feed.
