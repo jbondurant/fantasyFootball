@@ -92,48 +92,40 @@ public class DecisionSensitivity {
                 truth.put(entry.getKey(), entry.getValue() * ratio);
             }
 
-            // my search under truth: world unchanged, my values = truth
+            // Pre-registered candidates only - no argmax over 90 noisy heads
+            // (that inflated the winner and made "regret" meaningless). Each
+            // candidate is priced under THIS truth on the SAME seeds, so the
+            // comparison is paired and the noise cancels.
             TimingPlanner truthPlanner = new TimingPlanner(planner, truth);
             truthPlanner.fillWaitingTable(150);
-            int picks = 9;
-            List<int[]> heads = new ArrayList<>();
-            for(int qbAt = -1; qbAt < picks; qbAt++){
-                for(int teAt = 0; teAt < picks; teAt++){
-                    if(teAt != qbAt){
-                        heads.add(new int[]{qbAt, teAt});
-                    }
-                }
+            int[][] candidates = {{-1, 6}, {-1, 7}, {1, 6}, {5, 6}, {7, 6}, {7, 8}};
+            String[] labels = {"QB@none TE@r7", "QB@none TE@r8", "QB@r2 TE@r7",
+                    "QB@r6 TE@r7", "QB@r8 TE@r7", "QB@r8 TE@r9"};
+            double[] values = new double[candidates.length];
+            for(int c = 0; c < candidates.length; c++){
+                values[c] = headMean(truthPlanner, planner, candidates[c], priceRollouts);
             }
-            double[] means = IntStream.range(0, heads.size()).parallel()
-                    .mapToDouble(h -> headMean(truthPlanner, planner,
-                            heads.get(h), search)).toArray();
             int argmax = 0;
-            for(int h = 1; h < means.length; h++){
-                if(means[h] > means[argmax]){
-                    argmax = h;
+            for(int c = 1; c < values.length; c++){
+                if(values[c] > values[argmax]){
+                    argmax = c;
                 }
             }
-            int[] best = heads.get(argmax);
-            boolean qbNone = best[0] < 0;
-            boolean qbLate = best[0] >= 6;
-            if(qbNone){
+            int[] best = candidates[argmax];
+            if(best[0] < 0){
                 qbNoneWins[0]++;
             }
-            if(qbNone || qbLate){
+            if(best[0] < 0 || best[0] >= 6){
                 qbLateWins[0]++;
             }
-            headLog.add(String.format("QB@%s TE@r%d",
-                    best[0] < 0 ? "none" : "r" + (best[0] + 1), best[1] + 1));
-
-            // regret: price the projection plan and truth's best, both under truth
-            double truthOfProjectionPlan = headMean(truthPlanner, planner,
-                    new int[]{-1, 6}, priceRollouts);
-            double truthOfTruthPlan = headMean(truthPlanner, planner, best,
-                    priceRollouts);
+            headLog.add(labels[argmax]);
+            double truthOfProjectionPlan = values[0];
+            double truthOfTruthPlan = values[argmax];
             regretSum[0] += truthOfTruthPlan - truthOfProjectionPlan;
         }
 
-        System.out.printf("fog draws %d, search %d rollouts per head:%n%n", draws, search);
+        System.out.printf("fog draws %d, %d rollouts per candidate (paired):%n%n",
+                draws, priceRollouts);
         System.out.printf("   QB@none best under truth:      %d/%d (%.0f%%)%n",
                 qbNoneWins[0], draws, 100.0 * qbNoneWins[0] / draws);
         System.out.printf("   QB none-or-late (r7+) best:    %d/%d (%.0f%%)%n",
