@@ -898,3 +898,25 @@ P2 = post-season / 2027 infrastructure.
   4. Precompute artifacts: pick-7 opening book, pick-18 snipe branches,
      real-game imitation model, latency benchmark.
   5. Morning report; commits between phases.
+
+### Overnight phases 2-3 (2026-08-27): the premium is real, the plan is robust
+
+  ADAPTIVE PREMIUM, full-rules game, paired at 10k/300: adaptive depth-2
+  lookahead with VORP tails scores +12.4 (+/-1.4) over the shipped
+  committed plan - BIGGER than the lab's +6..+10. Hierarchy: adaptive
+  +12.4 >> timing QB@none/TE@r7 +1.8 > shipped 0 > reactive vorp -3.5
+  (reactive alone loses in the real game; the bench changes its
+  calculus). Committed-vs-committed stays a dead heat; the value lives
+  entirely in re-deciding from the live board. Component F is worth a
+  dozen points. That is the draft-night mandate, priced.
+
+  WORLDS RACE, six worlds x four candidates at 2000 rollouts: the best
+  timing head is QB@none TE@r6-or-r7 in EVERY world - the structure of
+  the answer is world-invariant. The shipped plan sits within ~1.5 of
+  each world's own optimum in five of six worlds, including both QB
+  appetite shifts (draft-proof against being wrong about QB hunger).
+  The one exception: a SHARPER league (linear t0.7) - there the shipped
+  plan leaves ~16 points and reactive VORP leads (1883.4): the more
+  predictable the room, the more adaptation pays. Consistent with the
+  premium: if draft night looks scripted, trust the live tool more, not
+  less.

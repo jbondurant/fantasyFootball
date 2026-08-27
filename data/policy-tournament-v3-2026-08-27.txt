@@ -1,10 +1,1 @@
 policy tournament: 7 live picks + keepers pinned late, composition 1QB/2RB/3WR/1TE/2FLEX
-game: my picks [7, 18, 31, 42, 55, 66, 79], keepers [Tuten, Purdy]
-
-742 feasible committed sequences; searching all of them at 150 CRN rollouts each...
-exhaustive winner [RB, RB, RB, WR, WR, WR, TE], search mean 1813.7 (674s)
-staged-frontier winner [RB, RB, RB, WR, WR, WR, TE]
-dp-composition [RB, RB, RB, WR, WR, WR, TE], CE 1246.9 vs enumerated max CE 1246.9 (EXACT, as proved)
-bnb screen: evaluated 44 of 742 sequences, found the true optimum: true, regret 0.0
-sa [RB, RB, RB, WR, WR, WR, TE], nrpa [RB, RB, RB, WR, WR, WR, TE]
-timing-committed winner QB@none TE@r7 over 7 heads, search mean 1820.4
