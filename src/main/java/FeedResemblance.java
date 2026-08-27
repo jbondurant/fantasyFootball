@@ -66,6 +66,16 @@ public class FeedResemblance {
                             .add(new Feed("sleeper-dated", date, sleeper));
                 }
             }
+            else if(name.matches("sleeper-defaults-\\d{4}-\\d{8}\\.csv")){
+                String[] parts = name.replace(".csv", "").split("-");
+                String season = parts[2];
+                int date = Integer.parseInt(parts[3]);
+                Map<String, Integer> defaults = csvColumns(file).get("sleeper_rank");
+                if(defaults != null){
+                    feedsBySeason.computeIfAbsent(season, u -> new ArrayList<>())
+                            .add(new Feed("sleeper-DEFAULTS", date, defaults));
+                }
+            }
             else if(name.matches("fp-ecr-dated-\\d{4}-\\d{8}\\.json")){
                 String[] parts = name.replace(".json", "").split("-");
                 String season = parts[3];

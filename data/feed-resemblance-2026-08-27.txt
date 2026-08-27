@@ -24,6 +24,7 @@
 
 2024 (draft 20240901): feed, capture gap in days, coverage, mean rank, mean log2, top1, top3
    ffc-api                    ?      83%      21.2      4.07      2%      4%
+   sleeper-DEFAULTS          1d      99%      21.5      4.11      3%      4%
    sleeper-dated             3d      99%      21.6      4.11      3%      4%
    std-Sleeper               4d      99%      21.6      4.11      3%      4%
    sleeper-stored             ?     100%      23.1      4.13      3%      4%
@@ -44,6 +45,7 @@
 
 2023 (draft 20230905): feed, capture gap in days, coverage, mean rank, mean log2, top1, top3
    sleeper-stored             ?     100%      21.2      3.92      1%      5%
+   sleeper-DEFAULTS          4d      95%      18.8      3.93      1%      3%
    ffc-api                    ?      84%      19.2      3.95      3%      4%
    sleeper-dated             6d      97%      19.4      3.97      1%      3%
    sleeper-dated             4d      97%      19.6      3.97      1%      4%
@@ -63,6 +65,7 @@
    ffc-api                    ?      62%      11.8      3.19      3%      7%
    halfppr-Sleeper           9d      94%      12.1      3.28      3%      7%
    sleeper-dated             9d      94%      12.1      3.28      3%      7%
+   sleeper-DEFAULTS          3d      93%      12.7      3.32      4%      6%
    sleeper-stored             ?     100%      36.8      3.44      4%      6%
    std-Sleeper               1d      94%      14.6      3.47      3%      6%
    ppr-Sleeper               9d      93%      14.4      3.49      3%      6%
