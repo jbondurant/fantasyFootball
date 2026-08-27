@@ -1033,3 +1033,26 @@ P2 = post-season / 2027 infrastructure.
 
   Still owed by Justin: draft date/time, in-draft pick trades allowed?,
   likely autodrafters, keeper-board lock status.
+
+### Data integrity (2026-08-27, Justin's call): dated ADP + draft dates
+
+  DRAFT DATE, answered from the API: the 2026 draft object carries
+  start_time = Tuesday 2026-09-01, 20:45 local. Five days out.
+
+  ADP PROVENANCE, audited: historical ADP = Sleeper's per-season
+  adp_half_ppr from the season projections record - ONE frozen snapshot
+  per season, not dated to the league's draft day. Justin's concern is
+  legitimate: every model trained on past seasons inherits whatever
+  timing that snapshot has. Docket item D4: walk the previous-league
+  chain's /drafts collections, print every season's draft start_time,
+  and bound the snapshot-vs-draft-date mismatch; cross-check FFC
+  per-season ADP where it disagrees. For the draft that matters, the
+  problem is already solved forward: our own AdpSnapshot archive
+  (daily since 2026-08-25) gives exact-dated ADP through draft eve,
+  and the final night-before run uses the freshest snapshot.
+
+  PURDY, on the record: the keeper pair is conditioned on as FACT
+  (locked, entered), never as optimal. Justin declared under time
+  pressure; no model assumes the call was right, the counterfactual
+  machinery (-Pkeepers) treats it as a variable, and 2027 keeps get
+  decided from scratch by the full machinery with dated ADP.
