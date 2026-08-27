@@ -1,0 +1,15 @@
+rounds 1-7 fixed at the starting-nine fill [RB, WR, RB, WR, WR, WR, TE];
+only the two insurance rounds vary. 40 fog draws, 300 rollouts, paired.
+
+   r8 + r9            no fog    under fog  insurance
+   QB+RB              1812.0       1543.6       +0.0   <- best under fog
+   QB+WR              1812.0       1529.2      -14.4
+   WR+WR              1811.0       1500.4      -43.2
+   WR+RB              1811.0       1514.6      -29.0
+   RB+RB              1811.0       1527.0      -16.6
+   TE+WR              1811.0       1528.3      -15.4
+   QB+QB              1812.0       1512.1      -31.5
+
+'insurance' is relative to the shipped QB+RB tail. The
+no-fog column shows what the exact-projection model saw: nearly
+nothing, which is why it could not choose between these.

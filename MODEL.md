@@ -1562,3 +1562,34 @@ P2 = post-season / 2027 infrastructure.
   So the +39 insurance premium is the value of a genuine backup
   against Purdy's measured 12% bust rate, and the shipped plan's
   round-8 QB is a live pick that already buys it.
+
+### The insurance test (2026-08-27): Justin's WR hypothesis, measured
+
+  Justin's challenge: rounds 8-9 are pure insurance, and a WR should
+  be promoted more often than a backup QB (three WR slots plus flexes
+  = many more chances someone busts). Frequency versus severity, so:
+  hold rounds 1-7 at the starting-nine fill, vary only the two
+  insurance rounds, 40 fog draws paired.
+
+     QB+RB  1543.6   +0.0   <- shipped tail, best under fog
+     QB+WR  1529.2  -14.4
+     TE+WR  1528.3  -15.4
+     RB+RB  1527.0  -16.6
+     WR+RB  1514.6  -29.0
+     QB+QB  1512.1  -31.5
+     WR+WR  1500.4  -43.2   <- worst
+
+  Frequency loses to structure. After 7 picks + 2 keepers the roster
+  is 1 QB / 3 RB / 4 WR / 1 TE and ALL NINE START (the two flexes
+  absorb the spare RB and WR). A WR bust is indeed likelier, but the
+  flex structure already covers it - the 4th WR slides up or an RB
+  takes the flex. QB is the ONLY slot with no redundancy: nobody else
+  on the roster can fill it, so Purdy's collapse is a ~250-point hole
+  a backup fills completely. QB+QB (-31.5) confirms the shape: one
+  backup covers the 12%, a second needs BOTH to bust. No-fog column
+  spans one point across all seven tails - the exactness fiction could
+  never have decided this.
+
+  CAVEAT, sharpest here: no waiver wire in the model, and QB is the
+  most streamable position in reality. The ranking is sound; the
+  magnitude of QB insurance specifically is the most overstated.
