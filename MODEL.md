@@ -1657,3 +1657,31 @@ P2 = post-season / 2027 infrastructure.
     4. Precompute (opening book for pick 7, snipe branches)
     5. RUNBOOK.md + printable one-pager
     6. Monday: final dated-ADP run; smokeTest; KeeperAudit
+
+### Insurance, settled with a real wire (2026-08-27) + COMPONENT F BUILT
+
+  Replacement measured from five FULL historical drafts: QB21, RB61,
+  WR81, TE19 (the nine-round version had said QB8 - absurdly rich).
+  With that wire the round 8-9 choice is nearly a free one:
+
+     QB+RB   1571.3   +0.0     TE+WR  1570.4   -0.9
+     RB+RB   1568.6   -2.7     QB+WR  1557.6  -13.7
+     WR+RB   1557.0  -14.3     WR+WR  1542.2  -29.1
+     QB+QB   1540.1  -31.1
+
+  Justin was right to push back: the +43 QB premium was an artifact of
+  a model with no streaming. Top three within 3 points = take whoever
+  is best available. The only surviving advice is negative: do NOT
+  double WR (already four on the roster) and do NOT take two QBs.
+
+  COMPONENT F (LiveDraft) is built and verified against the live board.
+  Reads Sleeper, replays picks into a SimState (stateAfter/slotOf),
+  recommends by depth-2 lookahead with VORP tails - the engine that
+  won both lab worlds - and prints every alternative with margins so
+  near-ties reach the human. Timings on this machine: 36s engine warm,
+  13.4s per decision at 150 rollouts (inside the 15s preference; 300
+  rollouts takes 21s, inside the 30s cap). Bug found and fixed on the
+  first live read: keeper entries were consuming live schedule slots.
+
+  NEXT (F polish): a persistent loop that warms ONCE and then polls,
+  so the 36s fit is paid before the draft rather than at every pick.
