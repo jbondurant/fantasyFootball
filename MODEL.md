@@ -884,3 +884,17 @@ P2 = post-season / 2027 infrastructure.
   - Who might be absent or autodrafting? Any known strategy chatter?
   - Is the keeper board locked, or can managers still switch (Kevin
     switched once already)?
+
+## Overnight run plan (2026-08-26 night, Justin asleep; objective = MY draft
+## score under exact Sleeper projections, draft in ~5 days)
+
+  Priorities re-ranked for that objective: projection work parked
+  (projections declared exact), lab games parked (lessons extracted).
+  1. TimingPlanner: (QB round x TE round) heads + roster-aware VORP fill,
+     in the FULL-RULES game; 10k paired vs the shipped plan.
+  2. Real-game adaptive premium: receding-horizon vs committed, 10k-ish.
+  3. Opponent-model ensemble + stress suite -> stability verdict or an
+     if-then deviation sheet for draft night.
+  4. Precompute artifacts: pick-7 opening book, pick-18 snipe branches,
+     real-game imitation model, latency benchmark.
+  5. Morning report; commits between phases.
