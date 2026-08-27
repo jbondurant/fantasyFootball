@@ -1405,3 +1405,17 @@ P2 = post-season / 2027 infrastructure.
   needs the penalized version (learned-value penalty), worth building
   only if a decision ever hinges on it. Note: 400 futures solved
   exactly in 1-3 seconds - the scenario walker is draft-night fast.
+
+### Sniper mixture: REJECTED by its own gates (2026-08-27 evening)
+
+  The scale grid chose 0.0 on the train side - every nonzero mixture
+  moved the simulated reach shape AWAY from reality (0.31 -> 0.43 ->
+  0.49 -> 0.56), and the 2025 confirmation agreed. The boosted brain's
+  fitted softmax already reproduces the room's within-position reach
+  distribution; the calibration gates had implicitly priced the chaos.
+  Justin's reach phenomenon is real (40% of picks take the 5th+ best
+  at position) and ALREADY MODELED. No re-derivation cascade needed.
+  Fingerprints kept for draft-night color: BHier .47 / KevinDA .46
+  loosest, Renteez .33 / jerem .32 most scripted. A finer reach-mode
+  (within-position, need-preserving) could be tried post-season; the
+  discipline says the brain stands.
