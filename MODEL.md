@@ -1454,3 +1454,21 @@ P2 = post-season / 2027 infrastructure.
   validated twice, fog measured, gap certified); tomorrow is
   consequences - error distribution, decision-sensitivity, regime
   gate + re-derivation, scale study, committee, late rounds, runbook.
+
+### Draft Sharks injury data, harvested (2026-08-27 night)
+
+  Justin remembered an injury-risk column; it is Draft Sharks' Injury
+  Predictor, and the per-player data ships in the clear inside their
+  page JSON: injury_prob, proj_games_missed, durability for 329
+  QB/RB/WR/TE (update stamp 2026-07-07 - July vintage; re-harvest
+  closer to the draft). Committed: data/draftsharks-injury-2026-0707
+  .csv. Sanity: McCaffrey 78%, Goedert 83%, Bowers 81%, Mariota 88%.
+
+  Integration, respecting the game spec: the spec says "no injury
+  differential," so this does NOT enter the main projections without
+  an explicit spec change. Two uses that respect the boundary:
+  (1) DecisionSensitivity v2 - player-specific fog (injury_prob and
+  proj games missed replacing tier-average bust rates where available)
+  so the stress test uses the best per-player reality model we hold;
+  (2) the draft-night one-pager - an injury flag as the tiebreak
+  between near-tied players, surfaced to the human, who decides.
