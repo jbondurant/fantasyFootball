@@ -26,10 +26,10 @@ learned strategies trained (1120s); cem [RB, RB, WR, WR, WR, TE, QB], evolution 
    evaluated nrpa RRWWWTQB                              1816.8  (800 trials, 5s)
    evaluated mcts (budget 192, vorp tails)              1831.2  (150 trials, 587s)
    evaluated oldschool-1 (random tails)                 1830.3  (150 trials, 173s)
-   evaluated oldschool-2 (random tails)                 1830.6  (150 trials, 593s)   evaluated oldschool-3 (random tails)                 1831.5  (150 trials, 1905s)
-   evaluated oldschool-1 (vorp tails)                   1830.5  (150 trials, 183s)
-   evaluated oldschool-2 (vorp tails)                   1831.3  (150 trials, 626s)
-   evaluated adaptive-greedy (d1, raw tails)            1823.8  (150 trials, 175s)
+   evaluated oldschool-2 (random tails)                 1830.6  (150 trials, 593s)    evaluated oldschool-3 (random tails)                 1831.5  (150 trials, 1614s)
+   evaluated oldschool-1 (vorp tails)                   1830.5  (150 trials, 105s)
+   evaluated oldschool-2 (vorp tails)                   1831.3  (150 trials, 343s)
+   evaluated adaptive-greedy (d1, raw tails)            1823.8  (150 trials, 98s)
 
 POLICY                                             MEAN  +/-SE      vs exhaustive
 oldschool-3 (random tails)                       1831.5    2.1        7.1 +/- 1.1

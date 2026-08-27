@@ -1,0 +1,18 @@
+game: my picks [7, 18, 31, 42, 55, 66, 79], keepers [Tuten, Purdy]
+game: my picks [7, 18, 31, 42, 55, 66, 79], keepers [Tuten, Purdy]
+game: my picks [7, 18, 31, 42, 55, 66, 79], keepers [Tuten, Purdy]
+game: my picks [7, 18, 31, 42, 55, 66, 79], keepers [Tuten, Purdy]
+game: my picks [7, 18, 31, 42, 55, 66, 79], keepers [Tuten, Purdy]
+game: my picks [7, 18, 31, 42, 55, 66, 79], keepers [Tuten, Purdy]
+scoring 742 sequences across 3 assumed worlds at 40 CRN rollouts...
+base plan [RB, RB, RB, WR, WR, WR, TE], bayes plan [RB, RB, RB, WR, WR, WR, TE], robust plan [RB, RB, RB, WR, WR, WR, TE]
+
+POLICY                          base    linear    drones     chaos   qb-rush   qb-lazy      MEAN       MIN
+committed-base                1812.3    1821.5    1784.5    1884.2    1814.3    1812.0    1821.5    1784.5
+committed-bayes               1812.3    1821.5    1784.5    1884.2    1814.3    1812.0    1821.5    1784.5
+committed-robust              1812.3    1821.5    1784.5    1884.2    1814.3    1812.0    1821.5    1784.5
+vorp (base beliefs)           1817.1    1830.0    1784.2    1888.8    1818.8    1816.9    1826.0    1784.2
+pace-vorp (online)            1816.5    1830.3    1782.3    1887.9    1818.2    1816.2    1825.2    1782.3
+lookahead-1v (base model)     1820.0    1832.2    1783.5    1893.2    1821.1    1819.9    1828.3    1783.5
+
+assumed ensemble = {base, linear, chaos}; true worlds add drones and the QB shifts the planner never imagined. 1200 trials per cell (150 for the lookahead), shared eval seeds per column.

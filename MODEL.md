@@ -948,3 +948,36 @@ P2 = post-season / 2027 infrastructure.
   amplifies option value. Draft-night engine choice unchanged:
   oldschool-2-vorp (or MCTS at scale) live, imitation as instant
   answer, B&B screening for any committed pre-search.
+
+### Morning report (2026-08-27): the night's verdict
+
+  ADDENDUM: the last three challengers all reached the top tier.
+  exit-agent (lookahead on twice-distilled tails) nominally tops BOTH
+  games (1821.4 / 1831.5); exit-policy is the best instant policy in
+  both (1820.5 / 1827.5), beating single-cycle imitation - the second
+  ExIt cycle paid. hop and saa-replan TIE the top flat lookaheads at
+  ~1/30th their compute (50s per 150 trials vs oldschool-3's 1900s):
+  solving sampled futures exactly beats rolling out per head. And
+  saa-committed found the TRUE valley-game optimum RRRWWTQB in 2
+  SECONDS (exhaustive: 31 minutes) - the scenario-DP keeps
+  distributions and does not fall into the valley CE-DP fell into.
+  Committed search is a solved, instant problem now.
+
+  ARENA (the 4-5 scoreboard): honest negatives. Base, Bayes and robust
+  committed plans are IDENTICAL (RRRWWWT maximizes mean, min and base
+  alike) - the plan is too world-invariant for hedging to buy anything.
+  pace-vorp v1 never beats plain vorp - its depletion-pace signal
+  barely moves across these worlds and its correction is crude. The
+  base-model lookahead wins the MEAN column and every non-drone world:
+  ADAPTIVITY TO THE BOARD SUBSUMES MODEL HUMILITY - the board reflects
+  whatever world is true, so a board-adaptive policy is implicitly
+  world-adaptive, and explicit inference on top added nothing this
+  game can measure.
+
+  THE COMPUTATION, chosen: live engine = hindsight/saa-replan (S=100+
+  per pick, sub-second) cross-checked by oldschool-2-vorp when the
+  clock allows; exit-policy as the zero-latency answer; saa-committed
+  (seconds) for any committed search; bnb screen when rollout-priced
+  search is wanted. Committed plan for the real game: shipped RWRWWWT
+  +QB8+RB9 stands (dead heat with all challengers, +12.4 below live
+  play). Tonight: precompute on this stack + wire component F.

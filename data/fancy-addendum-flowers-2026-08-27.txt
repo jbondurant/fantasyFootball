@@ -1,0 +1,14 @@
+game: my picks [7, 18, 31, 55, 66, 79, 90], keepers [Tuten, Flowers]
+saa-committed plan [RB, RB, RB, WR, WR, TE, QB] (2s)
+expert iteration trained, 2 cycles (414s)
+
+POLICY                                         trials       mean    +/-SE
+hop (S=24, exact futures)                         150     1831.2      2.0   (56s)
+saa-replan (S=24)                                 150     1831.1      2.0   (57s)
+saa-committed [RB, RB, RB, WR, WR, TE, QB]        800     1820.9      0.9   (2s)
+exit-policy (2 cycles)                            800     1827.5      0.8   (3s)
+exit-agent (lookahead on distilled tails)         150     1831.5      2.1   (265s)
+greedy-vorp (anchor to v3 table)                  800     1818.4      0.8   (2s)
+
+Same eval seeds as the tournament tables - rows are directly
+comparable to tonight's v3 rankings.
