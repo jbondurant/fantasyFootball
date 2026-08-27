@@ -1237,3 +1237,32 @@ P2 = post-season / 2027 infrastructure.
   Timeline holds: nights of 27th-28th = reality program; 29th-30th =
   component F + precompute on whatever the reality program certifies;
   31st = final dated-ADP run; draft Sep 1 20:45.
+
+### Feed resemblance verdict (2026-08-27): the room reads Sleeper's board
+
+  FeedResemblance walks every real draft in pick order and scores each
+  dated feed by the chosen player's rank among that feed's available
+  players (mean log2; data/feed-resemblance-2026-08-27.txt). Verdicts:
+
+  1. SLEEPER'S OWN BOARD WINS every season - sleeper-dated/stored and
+     the FP-page Sleeper columns own the top cluster (2025: 3.94 vs
+     fp-ecr 4.22; 2023: 3.92-3.97 vs 4.05; 2022: 3.28 vs 3.60). The
+     room drafts in the Sleeper app and follows the Sleeper defaults.
+     Justin's FP-rankings testimony is NOT supported at the aggregate
+     level (per-manager blend fit tonight may still find individual FP
+     readers). The model's incumbent market feature is thereby
+     VALIDATED as the right base; consensus+deltas proceeds with
+     Sleeper as the base and the rest as deltas.
+  2. ffc-api tops tables at 62-84% coverage - partly a coverage
+     artifact (only chalkier picks scored); treat with suspicion.
+  3. Dated-vs-stored: near-tie in 2023/2025, dated clearly better in
+     2022 (3.28 vs 3.44) - stored snapshots fine, dated preferred
+     where held.
+  4. Format-vs-date tradeoff is real but format usually wins: halfppr
+     at 9d beats std at 1d in 2022; std at 4d beats ppr at 0d in 2024.
+     Use nearest-in-format, fall back across formats beyond ~2 weeks.
+  5. THE ROOM IS GETTING INDEPENDENT: league-wide mean log2 rose 2.5
+     (2021) -> 3.2-3.4 (2022) -> ~3.9-4.2 (2023-25). Partly keeper
+     mechanics (keepers remove chalk), partly real strategy drift -
+     separate the two in the reach model tonight. NFL.com and Yahoo
+     rank last everywhere; nobody reads them.
