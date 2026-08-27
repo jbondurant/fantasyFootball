@@ -981,3 +981,55 @@ P2 = post-season / 2027 infrastructure.
   search is wanted. Committed plan for the real game: shipped RWRWWWT
   +QB8+RB9 stands (dead heat with all challengers, +12.4 below live
   play). Tonight: precompute on this stack + wire component F.
+
+## Tonight's docket (2026-08-27, final - the reaches/certificates/engine night)
+
+  DIAGNOSIS (cheap, first):
+  D1 Gap certificate: clairvoyant bound (mean of per-scenario exact
+     optima, machinery exists in hop) minus best policy value, real
+     game. THE number that says how much algorithm work remains.
+  D2 ReachAudit: real vs simulated reach-size distributions, league and
+     per manager - the tail-calibration defect quantified, and each
+     manager's reach fingerprint (epsilon) measured.
+  D3 AppetiteAudit - DONE, run today: league first-QB round 6.1 -> 4.1
+     -> 3.7 -> 5.4 -> 5.6. NOT monotone drift and NOT always-low: a
+     2022-23 early-QB ERA (mean ~4) that cooled back to ~5.5. Matches
+     Justin's own lore - his first-QB rounds were 5,2,1,2,2: he helped
+     cause the era he remembered. Renteez is the one permanent early
+     drafter (4,3,2,3,2); patekxwater cooled (3,3,4 -> 8); itsabust and
+     JFMarino always late. Kept-QB composition co-moves (5 kept in the
+     hottest year). Verdict: recency/regime weighting IS justified -
+     pooled earliness overstates current QB appetite; 2026 (4 kept QBs)
+     most resembles 2024.
+
+  MODELING (gated on D2, judged on 2025 TAIL calibration, fit <=2024):
+  M1 Sniper mixture: pick = chalk with prob 1-eps, reach-mode with prob
+     eps; league eps + per-manager eps shrunk. The heavy-tail fix.
+  M2 Graveyard resurrection under the tail metric: loyalty, FFC spread,
+     QB-stack, rookie - all "real but unhelpful" for AVERAGE metrics,
+     never judged on tails. (Clarified: the boosted brain already
+     consumes all rejected features - rejection was the linear model's
+     verdict; what is new here is per-manager submodel structure and
+     the tail-metric judgment, plus multiple-testing debt honestly
+     carried.)
+  M3 Regime weighting of earliness per D3.
+  M4 Ensemble + sniper scenario sampling -> survival BANDS; a sniper
+     world in the robustness suite; decision-impact check (expect
+     wait-or-take rows to shift toward take; plan structure to hold).
+
+  ENGINES (the 15-30s budget, preferably 15):
+  E1 Real-game scale study: premium vs compute (inner 16/64/256, hop
+     S 24/500/5000) - does +12.4 grow with the clock?
+  E2 Committee engine: hop + saa-replan + oldschool-2-vorp + mcts +
+     exit-agent vote; agreement = confidence, disagreement = surfaced
+     with numbers for the human.
+  E3 Online filter: per-observed-pick posterior updates of eps and
+     earliness, scenario refresh; tested in mismatch + sniper worlds.
+  E4 Pondering harness + generalized opening book (precompute answers
+     for plausible boards between picks; live search as fallback).
+  E5 Component F wiring + full mock rehearsal, latency logged.
+  E6 AlphaZero wires (priors + leaf values) ONLY if E1 shows rollout
+     starvation. C1: re-run the certificate after upgrades.
+
+  Still owed by Justin: draft date/time, in-draft pick trades allowed?,
+  likely autodrafters, keeper-board lock status.
