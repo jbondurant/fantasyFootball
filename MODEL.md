@@ -1097,3 +1097,18 @@ P2 = post-season / 2027 infrastructure.
   a Sleeper column - being verified. Fallback unchanged: FFC preseason
   ADP with the gates adjudicating. Either way D4b proceeds tonight
   with three candidate market feeds where the archive delivers.
+
+### League intel (Justin, 2026-08-27): the artifact on their screens
+
+  "Many people in the league may be using FantasyPros half-PPR
+  rankings." This names the probable TRUE market feed: FP half-PPR ECR
+  - a national consensus at standard 4-pt passing TDs, which is exactly
+  the information-set the model already inferred behaviorally (league-
+  scored values DEGRADED calibration; national consensus explained
+  picks). The 6-pt QB edge survives unchanged; the feed gets named.
+  D4b grows a third candidate: dated FP half-PPR ECR from near-draft
+  Wayback captures per season, adjudicated by the same held-out gates -
+  whichever feed best explains their actual August picks is what they
+  were looking at. If FP wins, the LIVE tool's opponent model switches
+  to current FP ECR on draft night (repo already has FantasyPros
+  plumbing; smokeTest covers it).
