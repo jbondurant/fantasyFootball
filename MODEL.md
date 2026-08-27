@@ -1549,3 +1549,16 @@ P2 = post-season / 2027 infrastructure.
   a busted QB gets streamed, so drafted insurance is worth somewhat
   less than +39 - the direction is right, the magnitude is an upper
   bound. It does not change the ranking: keep the round-8 QB.
+
+  CLARIFICATION (Justin, same evening): the two games differ in what
+  rounds 8-9 mean, and it matters for reading the fog table. In the
+  TOURNAMENT (lab) game the keepers are PINNED onto rounds 8-9 by
+  construction, so "QB at 8" there is Purdy's slot and only 7 picks
+  are live. In the FULL-RULES game - which is what the fog study ran -
+  Tuten (r12) and Purdy (r13) cost rounds outside the nine-round game
+  and consume NO slot: nine live picks plus two free keepers, eleven
+  players, best nine. Verified by printing a rollout roster: round 8
+  drafts a real second QB (Trevor Lawrence in that draw), not Purdy.
+  So the +39 insurance premium is the value of a genuine backup
+  against Purdy's measured 12% bust rate, and the shipped plan's
+  round-8 QB is a live pick that already buys it.
