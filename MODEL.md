@@ -1380,3 +1380,28 @@ P2 = post-season / 2027 infrastructure.
      if news breaks. Runbook items.
   G. STILL OWED BY JUSTIN: in-draft pick trades allowed? likely
      autodrafters? keeper board locked or can managers still switch?
+
+### Afternoon results (2026-08-27): reaches fingerprinted, the gap certified
+
+  REACH AUDIT (vs the defaults sheet the room sees): league median
+  reach 10 (2022) -> 16 -> 18 -> 18 (2025); share>=10 rose 51% -> ~80%.
+  The room-gets-looser trend is confirmed on the causal sheet. CAVEAT
+  for tonight's sniper fit: this metric conflates positional need with
+  true deviation (taking the best RB past ten higher-ranked WRs counts
+  as reach 10) - fit epsilon on WITHIN-POSITION reach, and let the
+  choice model keep owning position selection. Fingerprints are
+  surprisingly uniform (medians 13-18); BHier loosest (>=25: 30%),
+  and justinb314's 35% share of 25+ reaches is the league's largest -
+  the model's own past recommendations register as reaches against the
+  room's sheet, as they should.
+
+  GAP CERTIFICATES (unpenalized information-relaxation): declared game
+  22.1 +/- 1.7; Flowers 19.5 +/- 1.8. Read correctly: this bounds
+  clairvoyance, not collectible skill - the bound pays for KNOWING the
+  future, and three prior measurements say most of it is uncollectible
+  by any causal policy (flat compute-scaling curve; HOP scoring level
+  with lookahead, not 10 above; adaptive tier clustered within ~2).
+  Actionable headroom is a small slice of 22; tightening the bound
+  needs the penalized version (learned-value penalty), worth building
+  only if a decision ever hinges on it. Note: 400 futures solved
+  exactly in 1-3 seconds - the scenario walker is draft-night fast.

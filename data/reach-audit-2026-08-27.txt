@@ -1,0 +1,24 @@
+2025: n=156, median reach 18, p80 28, p95 41, max 63, share>=10: 76%, share>=25: 27%
+2024: n=155, median reach 18, p80 29, p95 41, max 70, share>=10: 81%, share>=25: 31%
+2023: n=147, median reach 16, p80 25, p95 36, max 68, share>=10: 82%, share>=25: 24%
+2022: n=156, median reach 10, p80 18, p95 28, max 44, share>=10: 51%, share>=25: 10%
+2021: no defaults/dated feed, skipped
+
+MANAGER                    n  median   p80   p95     >=10     >=25   per-season medians
+KevinDA                   51      14    26    36      75%      24%   22:12 23:14 24:16 25:19 
+d0ddi                     51      15    24    31      73%      20%   22:6 23:17 24:16 25:17 
+itsabust                  52      15    21    34      83%      15%   22:11 23:15 24:18 25:17 
+Renteez                   51      14    23    34      67%      18%   22:6 23:17 24:21 25:19 
+justinb314                49      16    26    37      69%      35%   22:12 23:16 24:16 25:17 
+JFMarino                  39      15    24    36      77%      21%   23:14 24:18 25:18 
+user not found            13       7    13    19      38%       8%   22:7 
+tommyrads                 51      15    27    38      75%      25%   22:10 23:18 24:17 25:15 
+JakeSK                    50      15    29    39      74%      30%   22:10 23:18 24:19 25:18 
+jerem9604                 52      13    21    35      71%      17%   22:9 23:21 24:13 25:20 
+Hamrliks                  50      16    23    48      70%      20%   22:8 23:16 24:18 25:16 
+patekxwater               52      15    25    39      69%      23%   22:11 23:14 24:21 25:18 
+BHier                     53      18    28    45      75%      30%   22:12 23:13 24:19 25:21 
+
+reach = chosen player's rank among the defaults feed's still-
+available players (0 = chalk). share>=10 approximates each manager's
+sniper epsilon; p95 sizes the tail the mixture must reproduce.
