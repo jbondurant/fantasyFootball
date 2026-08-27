@@ -65,7 +65,35 @@ public class InsuranceTest {
             }
         }
 
+        // Waiver replacement, measured from the league's FULL historical
+        // drafts (16 rounds), not the nine-round window: by kickoff every
+        // team has drafted its backups, so the wire is far shallower than
+        // the nine-round board suggests. Counting only rounds 10+ picks in
+        // the earlier version left the wire absurdly rich (QB8, TE5).
+        Map<Position, Integer> drafted = new EnumMap<>(Position.class);
+        int seasonsCounted = 0;
+        List<com.google.gson.JsonArray> pastDrafts = configuration.getPreviousDraftPicks();
+        for(com.google.gson.JsonArray picks : pastDrafts){
+            seasonsCounted++;
+            for(com.google.gson.JsonElement element : picks){
+                Player player = Player.getPlayerFromSIDV2(element.getAsJsonObject()
+                        .get("player_id").getAsString());
+                if(player != null && StartingLineup.isSkillPosition(player.position)){
+                    drafted.merge(player.position, 1, Integer::sum);
+                }
+            }
+        }
+        Map<Position, Integer> replacementRank = new EnumMap<>(Position.class);
+        for(Map.Entry<Position, Integer> e : drafted.entrySet()){
+            replacementRank.put(e.getKey(),
+                    e.getValue() / Math.max(seasonsCounted, 1) + 1);
+        }
+        System.out.println("replacement ranks from " + seasonsCounted
+                + " full historical drafts (next man up off the wire): "
+                + replacementRank);
+
         double[] totals = new double[TAILS.length];
+        double[] withWire = new double[TAILS.length];
         double[] noFog = new double[TAILS.length];
         for(int t = 0; t < TAILS.length; t++){
             noFog[t] = value(timing, planner, sequence(t), rollouts);
@@ -90,14 +118,26 @@ public class InsuranceTest {
             for(int t = 0; t < TAILS.length; t++){
                 totals[t] += value(timing, planner, sequence(t), rollouts);
             }
+            // the same truth, now with a waiver wire available
+            Map<Position, Double> wire = new EnumMap<>(Position.class);
+            for(Map.Entry<Position, Integer> e : replacementRank.entrySet()){
+                List<String> pool = byPosition.get(e.getKey());
+                int index = Math.min(e.getValue(), pool.size() - 1);
+                wire.put(e.getKey(), truth.getOrDefault(pool.get(index), 0.0));
+            }
+            timing.replacementLevel(wire);
+            for(int t = 0; t < TAILS.length; t++){
+                withWire[t] += value(timing, planner, sequence(t), rollouts);
+            }
+            timing.replacementLevel(null);
         }
         timing.scoreUnder(null);
 
         System.out.printf("rounds 1-7 fixed at the starting-nine fill %s;%n"
                 + "only the two insurance rounds vary. %d fog draws, %d rollouts, "
                 + "paired.%n%n", BASE, draws, rollouts);
-        System.out.printf("   %-14s %10s %12s %10s%n", "r8 + r9", "no fog",
-                "under fog", "insurance");
+        System.out.printf("   %-14s %10s %12s %10s %12s %10s%n", "r8 + r9", "no fog",
+                "no wire", "insurance", "with wire", "insurance");
         int best = 0;
         for(int t = 1; t < TAILS.length; t++){
             if(totals[t] > totals[best]){
@@ -105,10 +145,11 @@ public class InsuranceTest {
             }
         }
         for(int t = 0; t < TAILS.length; t++){
-            System.out.printf("   %-14s %10.1f %12.1f %+10.1f%s%n",
+            System.out.printf("   %-14s %10.1f %12.1f %+10.1f %12.1f %+10.1f%s%n",
                     TAILS[t][0] + "+" + TAILS[t][1], noFog[t], totals[t] / draws,
-                    totals[t] / draws - totals[0] / draws,
-                    t == best ? "   <- best under fog" : "");
+                    totals[t] / draws - totals[0] / draws, withWire[t] / draws,
+                    withWire[t] / draws - withWire[0] / draws,
+                    t == best ? "   <- best, no wire" : "");
         }
         System.out.println("\n'insurance' is relative to the shipped QB+RB tail. The"
                 + "\nno-fog column shows what the exact-projection model saw: nearly"

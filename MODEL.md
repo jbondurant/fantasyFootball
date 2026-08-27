@@ -1593,3 +1593,38 @@ P2 = post-season / 2027 infrastructure.
   CAVEAT, sharpest here: no waiver wire in the model, and QB is the
   most streamable position in reality. The ranking is sound; the
   magnitude of QB insurance specifically is the most overstated.
+
+## THE TWO-MODEL SPLIT (Justin, 2026-08-27) - architecture decision
+
+  Mixing risk into the optimizer muddied three answers tonight. From
+  here they are separate models with separate jobs:
+
+  MODEL A - THE OPTIMIZER (primary; decides rounds 1-7)
+    Objective: maximize the STARTING NINE, no defense.
+    Roster: 9 spots. Keepers fill 2 of them, pinned at rounds <=8 and
+    9 (mock-room convention); 7 live picks fill the rest.
+    Assumptions: projections EXACT. No injuries. No replacement level.
+    No waivers. This is the original nine-round spec, unchanged.
+    Implementation: PolicyTournament (already built and validated -
+    742 sequences, 8 search families, ~28 policies, both keeper
+    worlds). Its answer IS the pick plan for rounds 1-7.
+
+  MODEL B - THE RISK MODEL (secondary; advises rounds 8+)
+    Keepers in their TRUE spots (Tuten r12, Purdy r13), so rounds 1-9
+    are all live picks and the roster is 11 deep.
+    Adds: measured fog (FogFit), per-player injury risk (Draft Sharks),
+    waiver replacement level. Answers what the optimizer cannot see -
+    what the picks BEYOND the starting nine are worth as insurance.
+    Implementation: FogFit + DecisionSensitivity + InsuranceTest.
+
+  DIVISION OF LABOUR, and it matches how the draft actually goes:
+  picks 1-7 build the starting nine (Model A); picks 8-9 (and 10-16)
+  buy depth and insurance against the season (Model B). Neither model
+  overrides the other because they answer different questions.
+
+  CONSEQUENCE for tonight's findings: the QB-insurance result (+39 no
+  wire, smaller with one) is a MODEL B statement about round 8 - it
+  never contradicted Model A's round 1-7 plan. And the replacement
+  level in Model B must come from the FULL 16-round draft, not the
+  nine-round window; the nine-round version put the wire at QB8, which
+  is why its insurance numbers looked too generous. Fix pending.

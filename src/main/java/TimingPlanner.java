@@ -66,9 +66,36 @@ public class TimingPlanner {
         this.truth = seasonTruth;
     }
 
+    /** Per-position waiver replacement values, when the season allows it. */
+    private Map<Position, Double> replacement;
+
+    /**
+     * The waiver wire, modeled: a slot whose owner collapses can be refilled
+     * from the pool nobody drafted. Setting this turns the fog study from
+     * "value over a busted player" into Justin's value over REPLACEMENT -
+     * the honest lower bound on insurance, since it assumes the pickup is
+     * instant and free.
+     */
+    void replacementLevel(Map<Position, Double> perPosition){
+        this.replacement = perPosition;
+    }
+
     /** Best-nine of a roster under truth when set, else the planner's own. */
     double scoreMine(List<String> mine){
-        return StartingLineup.bestNine(mine, truth == null ? points : truth);
+        Map<String, Double> valuation = truth == null ? points : truth;
+        if(replacement == null){
+            return StartingLineup.bestNine(mine, valuation);
+        }
+        // Every player is worth at least what the wire would have given at
+        // his position - a collapsed starter gets replaced, not carried.
+        List<double[]> players = new ArrayList<>();
+        for(String sleeperID : mine){
+            Position position = Player.getPlayerFromSIDV2(sleeperID).position;
+            players.add(new double[]{position.ordinal(),
+                    Math.max(valuation.getOrDefault(sleeperID, 0.0),
+                            replacement.getOrDefault(position, 0.0))});
+        }
+        return bestNine(players);
     }
 
     // ---- a best-nine that accepts phantoms (position + points, no ID) ----
