@@ -62,6 +62,9 @@ public class DraftSimulator {
     private final Map<String, Double> points;
     private final Map<String, Map<Position, Integer>> initialRosters;
     private final ChoiceModel model;
+    /** Per-manager brains override the shared model - sniper mixtures with
+     *  manager-specific reach rates, autodraft drones, mismatch worlds. */
+    private final Map<String, ChoiceModel> managerModels = new HashMap<>();
     private final Map<String, Double> qbEarliness;
     private final Extras extras;
     /** pickNumber -> {firstOfPair, secondOfPair, waitFraction}, from the schedule. */
@@ -338,7 +341,8 @@ public class DraftSimulator {
                         new double[]{0, 0, 1.0});
                 long qbHolders = rosters.values().stream()
                         .filter(counts -> counts.getOrDefault(Position.QB, 0) > 0).count();
-                double[] probabilities = model.choiceProbabilities(SelectionModel.features(
+                double[] probabilities = managerModels.getOrDefault(slot.manager(), model)
+                        .choiceProbabilities(SelectionModel.features(
                         choiceSet, adp, points, new SelectionModel.Context(
                                 roster,
                                 qbEarliness.getOrDefault(slot.manager(), 0.0), recentPicks,
@@ -373,6 +377,15 @@ public class DraftSimulator {
             state.stackTeams.computeIfAbsent(slot.manager(), u -> new HashSet<>())
                     .add(extras.teamOf().get(chosen));
         }
+    }
+
+    /** The same world with per-manager brains layered over the shared model. */
+    public DraftSimulator withManagerModels(Map<String, ChoiceModel> overrides){
+        DraftSimulator copy = new DraftSimulator(schedule, initialBoard, adp, points,
+                initialRosters, model, qbEarliness, extras);
+        copy.managerModels.putAll(managerModels);
+        copy.managerModels.putAll(overrides);
+        return copy;
     }
 
     /**
