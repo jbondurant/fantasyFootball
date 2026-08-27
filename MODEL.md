@@ -1131,3 +1131,35 @@ P2 = post-season / 2027 infrastructure.
   vs FP-ECR is a question about which artifact the LEAGUE follows, not
   about data quality - Justin's testimony says FP rankings, the gates
   will say.
+
+### The stray taxonomy (Justin, 2026-08-27) - M2 finalized
+
+  Justin's behavioral spec: the league follows various rankings feeds
+  but strays from them systematically. Two mechanisms, cleanly split:
+  systematic strays are FEATURES (shift the mean of the choice model);
+  idiosyncratic strays are the sniper EPSILON (widen the tails). The
+  named hypotheses, mapped:
+
+  - QB-cool: TESTED and SHIPPED (QB intercept + QB x earliness; the
+    drone gap prices it at 8-20 picks vs market, every season).
+  - Rookies: tested for AVERAGE calibration (rejected); retest under
+    tails + interact with keeper-eligibility (rookie reaches in a
+    keeper league are stash bets - the keeper-stash feature also
+    retests here). Data: rookiesForSeason exists.
+  - Older players: NEW - never tested. Age feature from Sleeper player
+    records; hypothesis is age-fade beyond what rankings already price.
+  - Big names that dropped: partially tested as value-fall (-1.75,
+    "fallers keep falling" - the league LETS fallers fall, i.e. fades
+    faded names rather than buying them); retest as a distinct
+    last-season-ADP-vs-this-season-ADP drop feature, both metrics.
+  - Team biases (homers): NEW - infer each manager's favorite teams
+    from five seasons of draft history vs baseline (shrunk hard; 45ish
+    picks per manager), then a player-team x manager-affinity feature.
+    teamOf data exists; the stacks machinery already walks it.
+
+  Feed heterogeneity ("various adp rankings"): D4b upgrades from
+  pick-one-feed to FITTED BLEND - market feature = learned convex
+  combination of sleeper-dated/FFC/FP-ECR (and per-manager feed
+  assignment if the likelihood supports it; ~45 obs per manager,
+  shrunk). Whichever mixture best explains held-out 2025 picks is the
+  league's information diet, measured rather than assumed.
