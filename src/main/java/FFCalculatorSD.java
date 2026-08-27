@@ -36,6 +36,41 @@ public class FFCalculatorSD {
      * position since NFL teams drift. Any fetch or parse trouble returns an
      * empty map - the feature column just goes dark for that season.
      */
+    /**
+     * FFC's per-season half-PPR ADP by sleeper id - aggregated from PRESEASON
+     * mock drafts by construction, which makes it the reference for auditing
+     * whether Sleeper's stored per-season ADP snapshot is preseason too.
+     */
+    public static java.util.HashMap<String, Double> adpBySleeperID(String season){
+        java.util.HashMap<String, Double> bySleeperID = new java.util.HashMap<>();
+        try {
+            String url = "https://fantasyfootballcalculator.com/api/v1/adp/half-ppr?teams=12&year="
+                    + season;
+            String data = season.equals(getSeason())
+                    ? InOutUtilities.getTodaysWebPage(url, filepathStartSerious + season)
+                    : InOutUtilities.getCachedForever(url, "ffCalculatorSDFinal" + season);
+            JsonObject allData = JsonParser.parseString(data).getAsJsonObject();
+            for(JsonElement jsonPlayer : allData.get("players").getAsJsonArray()){
+                JsonObject apiObject = jsonPlayer.getAsJsonObject();
+                String position = apiObject.get("position").getAsString();
+                if(!position.equals("QB") && !position.equals("RB")
+                        && !position.equals("WR") && !position.equals("TE")){
+                    continue;
+                }
+                Player player = Player.getPlayerFromNameAndPos(
+                        apiObject.get("name").getAsString(),
+                        PlayerImportAndSetup.Position.valueOf(position));
+                if(player != null){
+                    bySleeperID.put(player.sleeperIDString,
+                            apiObject.get("adp").getAsDouble());
+                }
+            }
+        } catch (RuntimeException problem){
+            bySleeperID.clear();
+        }
+        return bySleeperID;
+    }
+
     public static java.util.HashMap<String, Double> centeredSpreadBySleeperID(String season){
         java.util.HashMap<String, Double> bySleeperID = new java.util.HashMap<>();
         try {

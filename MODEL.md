@@ -1056,3 +1056,24 @@ P2 = post-season / 2027 infrastructure.
   pressure; no model assumes the call was right, the counterfactual
   machinery (-Pkeepers) treats it as a variable, and 2027 keeps get
   decided from scratch by the full machinery with dated ADP.
+
+### ADP provenance verdict (2026-08-27): partially contaminated - adjudicate by gates
+
+  Sleeper-vs-FFC per season: spearman .94-.98, mean rank gap 6-10 - not
+  a season-end table, but the disagreement TAILS lean the contamination
+  way: Josh Jacobs 2022 at sleeper 44 vs ffc 111 (preseason afterthought,
+  led the league in rushing - rank 44 "preseason" is a smoking gun),
+  Addison/Thomas promoted in 2024, the 2025 QB demotions. 2021 reads as
+  pure noise (rho .981). Mild, season-dependent pollution - and the
+  tails are exactly where reach modeling lives, and the negative board-
+  wide surplus in QbMarketGap now has a candidate explanation.
+
+  THE DECISIVE TEST (tonight, D4b): make the historical market feature
+  switchable (sleeper stored vs FFC preseason), refit the brain both
+  ways, judge on held-out 2025 calibration. The league drafted off what
+  their draft room showed - if FFC-preseason explains their August picks
+  BETTER than the stored snapshot, the snapshot was polluted and FFC
+  ships as the historical market input. The model's own gates adjudicate
+  provenance. 2026 is unaffected either way: live preseason ADP + our
+  dated AdpSnapshot archive through draft eve. Also rerun QbMarketGap
+  under FFC ADP as a cross-check of the coolness magnitudes.
