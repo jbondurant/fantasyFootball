@@ -1308,3 +1308,30 @@ P2 = post-season / 2027 infrastructure.
   specific snipe-risk signal to cross-check snipes() and feed the
   sniper model; (b) freshness: Friday sheet refresh Aug 28 + BeatADP
   dailies, alongside our own dated archive, through draft eve.
+
+### The fog, measured (2026-08-27): the accuracy shootout
+
+  Every source scored as a predictor of actual half-PPR outcomes,
+  top-150, five seasons (data/accuracy-shootout-2026-08-27.txt):
+
+  1. SLEEPER'S PROJECTIONS WIN EVERY SEASON: spearman .60-.70 vs the
+     market feeds' .34-.50. Against the wisdom-of-crowds literature,
+     the projection feed this project optimizes on beats every ADP and
+     ranking sheet as an outcome predictor, all five years. The input
+     was the right one.
+  2. THE EDGE, QUANTIFIED AT THE INFORMATION LAYER: the room drafts on
+     its sheet (a ~.40-.48 predictor); Justin drafts on projections
+     (~.60). The project's advantage is that correlation gap, now a
+     measured number instead of a thesis.
+  3. THE FOG IS LARGE: even the best source hits only 14-16 of its
+     top-24; a third of everyone's "first two rounds" busts annually.
+     Projections-exact is a strong fiction - Night 2 fits the residual
+     distribution and finds which decisions survive it.
+  4. POSITION FOG IS NOT STABLE: QB predictability collapsed in 2025
+     (.45 proj, ~.1 market, vs .74 in 2021); TE 2025 went NEGATIVE for
+     everyone; RB 2025 was unusually clean. Fixed position-risk
+     constants are wrong; year-varying humility is right.
+  5. Market feeds cluster tightly (.34-.50) - one consensus, mediocre
+     at outcomes, excellent at behavior (the resemblance race). Two
+     jobs, two winners; the architecture's split (points feed vs
+     market feature) was correct all along.

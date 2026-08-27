@@ -1,0 +1,185 @@
+import PlayerImportAndSetup.Position;
+
+import java.io.File;
+import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * Night 1 of the reality program: how accurate was anything, actually?
+ * Every source the repo holds - Sleeper's stored projections, and every
+ * dated feed harvested near each draft (ADPs, ECR, Sleeper defaults) - is
+ * scored as a PREDICTOR of actual season half-PPR points, per season:
+ *
+ *   spearman   rank correlation with the actual outcome ranking, over the
+ *              source's top 150
+ *   top24hit   of the source's top-24 skill players, how many finished
+ *              top-24 (the "did your early rounds exist" measure)
+ *   rb/wr/qb/te subgroup spearman - where predictability actually lives
+ *
+ * The point is not to crown a site; it is to measure the fog: the gap
+ * between every number this project optimizes and what the season did.
+ *
+ *   ./gradlew run -Pmain=AccuracyShootout
+ */
+public class AccuracyShootout {
+
+    record Source(String label, Map<String, Double> valueBySleeperID, boolean lowerIsBetter){}
+
+    public static void main(String[] args) throws Exception {
+        AAAConfiguration configuration = AAAConfiguration.getInstance();
+        for(String season : new String[]{"2021", "2022", "2023", "2024", "2025"}){
+            Map<String, Double> actual = HistoricalActuals.pointsBySleeperID(season);
+            List<Source> sources = new ArrayList<>();
+            try {
+                sources.add(new Source("sleeper-projections",
+                        HistoricalProjections.rawPointsBySleeperID(configuration, season),
+                        false));
+                sources.add(new Source("sleeper-stored-adp",
+                        HistoricalProjections.adpBySleeperID(configuration, season), true));
+            }
+            catch(Exception missing){ /* keep going */ }
+            Map<String, Double> ffc = FFCalculatorSD.adpBySleeperID(season);
+            if(!ffc.isEmpty()){
+                sources.add(new Source("ffc-adp", ffc, true));
+            }
+            for(File file : new File("data").listFiles()){
+                String name = file.getName();
+                if(name.matches("sleeper-adp-dated-" + season + "-\\d{8}\\.csv")){
+                    sources.add(new Source("sleeper-dated-" + name.substring(
+                            name.length() - 12, name.length() - 4),
+                            csvValues(file, "sleeper_adp"), true));
+                }
+                else if(name.matches("sleeper-defaults-" + season + "-\\d{8}\\.csv")){
+                    sources.add(new Source("sleeper-DEFAULTS",
+                            csvValues(file, "sleeper_rank"), true));
+                }
+                else if(name.matches("fp-adp-halfppr-" + season + "-\\d{8}\\.csv")){
+                    Map<String, Double> avg = csvValues(file, "AVG");
+                    if(!avg.isEmpty()){
+                        sources.add(new Source("fp-consensus-adp", avg, true));
+                    }
+                }
+            }
+
+            System.out.printf("%n%s: source, n, spearman, top24 hits, QB, RB, WR, TE%n",
+                    season);
+            for(Source source : sources){
+                double[] score = score(source, actual);
+                if(score == null){
+                    continue;
+                }
+                System.out.printf("   %-26s %4.0f %8.3f %8.0f/24 %7.2f %6.2f %6.2f %6.2f%n",
+                        source.label(), score[0], score[1], score[2], score[3], score[4],
+                        score[5], score[6]);
+            }
+        }
+        System.out.println("\nspearman = rank correlation of the source's top-150 with what"
+                + "\nactually happened. The fog, measured.");
+    }
+
+    /** n, overall spearman, top-24 hits, then per-position spearman. */
+    static double[] score(Source source, Map<String, Double> actual){
+        List<String> top = new ArrayList<>();
+        for(String sleeperID : source.valueBySleeperID().keySet()){
+            Player player = Player.getPlayerFromSIDV2(sleeperID);
+            if(player != null && StartingLineup.isSkillPosition(player.position)
+                    && actual.containsKey(sleeperID)){
+                top.add(sleeperID);
+            }
+        }
+        Comparator<String> bySource = Comparator.comparingDouble(
+                id -> source.valueBySleeperID().get(id));
+        top.sort(source.lowerIsBetter() ? bySource : bySource.reversed());
+        if(top.size() > 150){
+            top = new ArrayList<>(top.subList(0, 150));
+        }
+        if(top.size() < 60){
+            return null;
+        }
+        double overall = spearman(top, actual);
+
+        List<String> byActual = new ArrayList<>(top);
+        byActual.sort(Comparator.comparingDouble(
+                (String id) -> actual.get(id)).reversed());
+        int hits = 0;
+        for(int i = 0; i < 24 && i < top.size(); i++){
+            if(byActual.subList(0, Math.min(24, byActual.size())).contains(top.get(i))){
+                hits++;
+            }
+        }
+
+        double[] result = new double[]{top.size(), overall, hits, 0, 0, 0, 0};
+        Position[] positions = {Position.QB, Position.RB, Position.WR, Position.TE};
+        for(int p = 0; p < positions.length; p++){
+            List<String> subset = new ArrayList<>();
+            for(String sleeperID : top){
+                if(Player.getPlayerFromSIDV2(sleeperID).position == positions[p]){
+                    subset.add(sleeperID);
+                }
+            }
+            result[3 + p] = subset.size() >= 8 ? spearman(subset, actual) : Double.NaN;
+        }
+        return result;
+    }
+
+    static double spearman(List<String> orderedBySource, Map<String, Double> actual){
+        int n = orderedBySource.size();
+        List<String> byActual = new ArrayList<>(orderedBySource);
+        byActual.sort(Comparator.comparingDouble(
+                (String id) -> actual.get(id)).reversed());
+        double sum = 0;
+        for(int i = 0; i < n; i++){
+            int actualRank = byActual.indexOf(orderedBySource.get(i));
+            sum += (double) (i - actualRank) * (i - actualRank);
+        }
+        return 1 - 6 * sum / ((double) n * (n * n - 1));
+    }
+
+    static Map<String, Double> csvValues(File file, String column) throws Exception {
+        List<String> lines = Files.readAllLines(file.toPath());
+        String[] header = lines.get(0).split(",");
+        int nameCol = -1;
+        int posCol = -1;
+        int valueCol = -1;
+        for(int c = 0; c < header.length; c++){
+            if(header[c].equals("name")){
+                nameCol = c;
+            }
+            if(header[c].equals("position")){
+                posCol = c;
+            }
+            if(header[c].equals(column)){
+                valueCol = c;
+            }
+        }
+        Map<String, Double> values = new LinkedHashMap<>();
+        if(valueCol < 0){
+            return values;
+        }
+        for(String line : lines.subList(1, lines.size())){
+            String[] cells = line.split(",");
+            if(cells.length <= Math.max(valueCol, Math.max(nameCol, posCol))
+                    || cells[valueCol].isEmpty()
+                    || !cells[valueCol].matches("\\d+(\\.\\d+)?")){
+                continue;
+            }
+            Position position;
+            try {
+                position = Position.valueOf(cells[posCol].trim());
+            }
+            catch(IllegalArgumentException notSkill){
+                continue;
+            }
+            Player player = Player.getPlayerFromNameAndPos(cells[nameCol], position);
+            if(player != null){
+                values.putIfAbsent(player.sleeperIDString,
+                        Double.parseDouble(cells[valueCol]));
+            }
+        }
+        return values;
+    }
+}
