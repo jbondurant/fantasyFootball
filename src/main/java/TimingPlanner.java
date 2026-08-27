@@ -39,6 +39,9 @@ public class TimingPlanner {
     /** my pick number -> position -> mean best-available points if I wait. */
     private final Map<Integer, Map<Position, Double>> waitingTable = new HashMap<>();
 
+    /** What the season actually did - scoring only, never visible to picks. */
+    private Map<String, Double> truth;
+
     TimingPlanner(DraftPlanner planner){
         this(planner, planner.points());
     }
@@ -53,9 +56,19 @@ public class TimingPlanner {
         this.myPicks = simulator.pickNumbersOf(me);
     }
 
-    /** Best-nine of a roster under THIS planner's valuation. */
+    /**
+     * Decisions use `points` (the projections I can see at the draft);
+     * scoring uses `truth` (what the season did). Without this split a fog
+     * study is clairvoyant - the policy would dodge exactly the players it
+     * could not have known would bust.
+     */
+    void scoreUnder(Map<String, Double> seasonTruth){
+        this.truth = seasonTruth;
+    }
+
+    /** Best-nine of a roster under truth when set, else the planner's own. */
     double scoreMine(List<String> mine){
-        return StartingLineup.bestNine(mine, points);
+        return StartingLineup.bestNine(mine, truth == null ? points : truth);
     }
 
     // ---- a best-nine that accepts phantoms (position + points, no ID) ----

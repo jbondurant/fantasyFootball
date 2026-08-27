@@ -96,8 +96,13 @@ public class DecisionSensitivity {
             // (that inflated the winner and made "regret" meaningless). Each
             // candidate is priced under THIS truth on the SAME seeds, so the
             // comparison is paired and the noise cancels.
-            TimingPlanner truthPlanner = new TimingPlanner(planner, truth);
+            // The policy sees PROJECTIONS (what I have on draft night); only
+            // the final best-nine is scored under truth. Scoring under truth
+            // while also PICKING under truth would let the policy dodge
+            // busts it could not have known about - clairvoyance.
+            TimingPlanner truthPlanner = new TimingPlanner(planner);
             truthPlanner.fillWaitingTable(150);
+            truthPlanner.scoreUnder(truth);
             int[][] candidates = {{-1, 6}, {-1, 7}, {1, 6}, {5, 6}, {7, 6}, {7, 8}};
             String[] labels = {"QB@none TE@r7", "QB@none TE@r8", "QB@r2 TE@r7",
                     "QB@r6 TE@r7", "QB@r8 TE@r7", "QB@r8 TE@r9"};
