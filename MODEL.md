@@ -1628,3 +1628,32 @@ P2 = post-season / 2027 infrastructure.
   level in Model B must come from the FULL 16-round draft, not the
   nine-round window; the nine-round version put the wire at QB8, which
   is why its insurance numbers looked too generous. Fix pending.
+
+### Where the two models stand (2026-08-27, end of night 2)
+
+  MODEL A (rounds 1-7, exact projections, keepers pinned 8-9):
+    committed plan  RB, RB, RB, WR, WR, WR, TE  - agreed by SEVEN
+      independent searches (exhaustive/742, staged, DP, SA, NRPA,
+      CEM, evolution)
+    live policy     oldschool-2-vorp, +7.2 +/- 1.1 over committing
+    instant fallback ml-imitation, +7.5 +/- 0.5 (tightest error bars)
+    NOTE: differs from the older "shipped" plan RWRWWWT, which came
+    from the nine-live-pick framing. Model A goes RB-heavy (4 RB
+    feeding the flexes) rather than WR-heavy. Needs one confirmation
+    run under the settled spec before Tuesday - it is the plan.
+
+  MODEL B (rounds 8+, fog/injury/replacement, keepers at r12/r13):
+    round 8 insurance ranking, no wire: QB+RB best, WR+WR worst
+      (-43) - QB is the only slot with no flex redundancy
+    with a wire the spread narrows; the wire level must be recomputed
+      from the FULL 16-round draft (pending - the nine-round version
+      put replacement at QB8, far too rich)
+    per-player injury risk (Draft Sharks, 329 players) plugs in here
+
+  REMAINING BEFORE TUESDAY:
+    1. Model A confirmation run at high rollouts -> the final plan
+    2. Model B wire fix -> the round 8-9 recommendation
+    3. Component F wiring + mock rehearsal (-PdraftId)
+    4. Precompute (opening book for pick 7, snipe branches)
+    5. RUNBOOK.md + printable one-pager
+    6. Monday: final dated-ADP run; smokeTest; KeeperAudit
