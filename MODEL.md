@@ -920,3 +920,31 @@ P2 = post-season / 2027 infrastructure.
   predictable the room, the more adaptation pays. Consistent with the
   premium: if draft night looks scripted, trust the live tool more, not
   less.
+
+### v3 championships (overnight 2026-08-27): every family, both games
+
+  DECLARED GAME - total consensus: seven independent committed searches
+  (exhaustive, staged, DP-with-proof, SA, NRPA, CEM, evolution) all
+  found RRRWWWT. bnb screen: 44 of 742 evaluated, true optimum, regret
+  0.0. Adaptive tier +5..+7.5 with ml-imitation +7.5 (+/-0.5) and
+  oldschool-2-vorp +7.2 on top; MCTS +5.9 does NOT beat flat lookahead
+  at equal budget in a game this small (and costs 4x the clock).
+
+  FLOWERS GAME - the valley grades everyone: the EXACT DP fell in
+  (-12.9): its proof passed (CE = enumerated max) but certainty-
+  equivalence is the wrong objective in a correlated-availability
+  valley - it commits QB r2. Lesson of the night: exactness is only as
+  good as its objective. bnb (CE bounds + rollout evaluation) is the
+  sound hybrid: 106 of 2520, regret 0.0 again. All four metaheuristics
+  found the same near-optimum RRWWWTQB (-4.1): they jump valleys but
+  land beside the peak. MCTS 1831.2 (+6.7) TIES the top flat lookaheads
+  in the bigger game (oldschool-3 +7.1, oldschool-2-vorp +6.8) - tree
+  allocation starts paying exactly where the space grows. Raw-greedy
+  tails remain the one poison (adaptive-greedy -0.6). ml-reinforce
+  jumped to +5.2 (the depth-table features fixed its QB blindness).
+
+  Combined with the real-game premium (+12.4): the lab adaptive ceiling
+  is ~+7, the real game rewards adaptation nearly double - bench slack
+  amplifies option value. Draft-night engine choice unchanged:
+  oldschool-2-vorp (or MCTS at scale) live, imitation as instant
+  answer, B&B screening for any committed pre-search.
