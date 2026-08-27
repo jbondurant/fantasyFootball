@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -73,6 +74,10 @@ public class PolicyTournament {
     /** my pick number -> position -> mean k-th-best available, k=1..5 - the
      *  certainty-equivalent availability the DP and the B&B bound consume. */
     private final Map<Integer, Map<Position, double[]>> depthTable = new HashMap<>();
+    /** my pick number -> position -> mean count already drafted - the pace
+     *  expectations the online corrector compares the live board against. */
+    private final Map<Integer, Map<Position, Double>> expectedGone = new HashMap<>();
+    private final Map<Position, Integer> initialCounts = new EnumMap<>(Position.class);
     private final int[] myPicks;
     static final int DEPTH_K = 5;
 
@@ -83,6 +88,14 @@ public class PolicyTournament {
         this.myKeeperIDs = myKeeperIDs;
         this.points = points;
         this.myPicks = simulator.pickNumbersOf(me);
+    }
+
+    List<String> myKeeperIDs(){
+        return myKeeperIDs;
+    }
+
+    int myPickCount(){
+        return myPicks.length;
     }
 
     // ---- the composition ledger ----
@@ -339,7 +352,173 @@ public class PolicyTournament {
     }
 
     /** What plays the rounds a lookahead head does not commit. */
-    enum Tail { RANDOM, RAW, VORP }
+    enum Tail { RANDOM, RAW, VORP, MODEL }
+
+    // ---- hindsight machinery: determinized futures, solved exactly ----
+
+    /** Per-position points-sorted alive lists at each of my remaining picks
+     *  in ONE determinized future. */
+    static final class Scenario {
+        final Map<Integer, Map<Position, List<String>>> alive = new HashMap<>();
+    }
+
+    /** Plays out a future while interfering minimally (my slots take the
+     *  bottom of the board, invisible to opponents' truncated choice sets),
+     *  recording who is alive at each of my picks. */
+    class ScenarioRecorder implements DraftSimulator.MyPolicy {
+        final Scenario scenario = new Scenario();
+
+        @Override
+        public String choose(List<String> board, DraftSimulator.Slot slot){
+            Map<Position, List<String>> top = new EnumMap<>(Position.class);
+            for(Position position : SKILL){
+                top.put(position, new ArrayList<>());
+            }
+            for(String sleeperID : board){
+                top.get(Player.getPlayerFromSIDV2(sleeperID).position).add(sleeperID);
+            }
+            for(Position position : SKILL){
+                List<String> ids = top.get(position);
+                ids.sort((a, b) -> Double.compare(points.getOrDefault(b, 0.0),
+                        points.getOrDefault(a, 0.0)));
+                if(ids.size() > 8){
+                    top.put(position, new ArrayList<>(ids.subList(0, 8)));
+                }
+            }
+            scenario.alive.put(slot.pickNumber(), top);
+            return board.get(board.size() - 1);
+        }
+    }
+
+    Scenario sampleScenario(DraftSimulator.SimState state, long seed){
+        ScenarioRecorder recorder = new ScenarioRecorder();
+        simulator.simulateFrom(state.copy(), new Random(seed), me, recorder);
+        return recorder.scenario;
+    }
+
+    /** Exact value of playing `sequence` from `fromDecision` inside one
+     *  determinized future. */
+    double scenarioValue(Scenario scenario, List<String> mineSoFar, int fromDecision,
+                         List<Position> sequence){
+        List<String> mine = new ArrayList<>(mineSoFar);
+        Set<String> taken = new HashSet<>(mineSoFar);
+        for(int i = 0; i < sequence.size(); i++){
+            List<String> alive = scenario.alive
+                    .getOrDefault(myPicks[fromDecision + i], Map.of())
+                    .getOrDefault(sequence.get(i), List.of());
+            for(String sleeperID : alive){
+                if(taken.add(sleeperID)){
+                    mine.add(sleeperID);
+                    break;
+                }
+            }
+        }
+        return StartingLineup.bestNine(mine, points);
+    }
+
+    /**
+     * Hindsight-family adaptive policy. maxInside=true is classic hindsight
+     * optimization (HOP): each sampled future is solved EXACTLY and actions
+     * are scored by the average of their per-future optima - no stand-in
+     * tail at all, at the price of mild clairvoyance in the comparison.
+     * maxInside=false is receding-horizon SAA: sequences are scored by their
+     * scenario-average first (max outside), the unbiased committed cousin.
+     */
+    class HindsightPolicy extends TournamentPolicy {
+        final int scenarios;
+        final boolean maxInside;
+        final long seed;
+
+        HindsightPolicy(int scenarios, boolean maxInside, long seed){
+            this.scenarios = scenarios;
+            this.maxInside = maxInside;
+            this.seed = seed;
+        }
+
+        @Override
+        Position pickPosition(List<String> board, DraftSimulator.Slot slot,
+                              DraftSimulator.SimState state){
+            int remaining = myPicks.length - decision;
+            List<List<Position>> sequences = allSequences(needs.copy(), remaining);
+            if(sequences.size() == 1){
+                return sequences.get(0).get(0);
+            }
+            Map<Position, Double> actionTotals = new EnumMap<>(Position.class);
+            double[] sequenceTotals = new double[sequences.size()];
+            for(int s = 0; s < scenarios; s++){
+                Scenario scenario = sampleScenario(state,
+                        seed + 101L * decision + 7919L * s);
+                Map<Position, Double> bestByFirst = new EnumMap<>(Position.class);
+                for(int q = 0; q < sequences.size(); q++){
+                    double value = scenarioValue(scenario, mine, decision,
+                            sequences.get(q));
+                    sequenceTotals[q] += value;
+                    bestByFirst.merge(sequences.get(q).get(0), value, Math::max);
+                }
+                for(Map.Entry<Position, Double> entry : bestByFirst.entrySet()){
+                    actionTotals.merge(entry.getKey(), entry.getValue(), Double::sum);
+                }
+            }
+            if(maxInside){
+                Position top = null;
+                double topValue = -Double.MAX_VALUE;
+                for(Map.Entry<Position, Double> entry : actionTotals.entrySet()){
+                    if(entry.getValue() > topValue){
+                        topValue = entry.getValue();
+                        top = entry.getKey();
+                    }
+                }
+                return top;
+            }
+            int argmax = 0;
+            for(int q = 1; q < sequences.size(); q++){
+                if(sequenceTotals[q] > sequenceTotals[argmax]){
+                    argmax = q;
+                }
+            }
+            return sequences.get(argmax).get(0);
+        }
+    }
+
+    /** SAA-committed: full sequences scored by their mean exact value over
+     *  scenarios sampled from the draft's start - the distribution-aware DP,
+     *  scenario form. */
+    List<Position> saaPlan(int scenarioCount){
+        List<Scenario> futures = new ArrayList<>();
+        for(int s = 0; s < scenarioCount; s++){
+            futures.add(sampleScenario(simulator.initialState(),
+                    TRAIN_SEED + 31_000_000L + 7919L * s));
+        }
+        Needs start = Needs.afterKeepers(myKeeperIDs);
+        List<List<Position>> sequences = allSequences(start, myPicks.length);
+        List<String> keepers = new ArrayList<>(myKeeperIDs);
+        double[] means = IntStream.range(0, sequences.size()).parallel()
+                .mapToDouble(q -> {
+                    double total = 0;
+                    for(Scenario scenario : futures){
+                        total += scenarioValue(scenario, keepers, 0, sequences.get(q));
+                    }
+                    return total / futures.size();
+                }).toArray();
+        int argmax = 0;
+        for(int q = 1; q < sequences.size(); q++){
+            if(means[q] > means[argmax]){
+                argmax = q;
+            }
+        }
+        return sequences.get(argmax);
+    }
+
+    /** Expert iteration: distill the lookahead, then look ahead WITH the
+     *  distilled tails, and distill again - policy iteration toward the
+     *  fixed point, each cycle provably no worse in expectation. */
+    BoostedRegressor trainExit(int iterations, int episodes, int inner){
+        BoostedRegressor model = null;
+        for(int iteration = 0; iteration < iterations; iteration++){
+            model = trainImitation(episodes, inner, model);
+        }
+        return model;
+    }
 
     /**
      * The adaptive family: at each of my picks, enumerate feasible position
@@ -355,12 +534,18 @@ public class PolicyTournament {
         final int inner;
         final Tail tail;
         final long seed;
+        final BoostedRegressor tailModel;
 
         Lookahead(int depth, int inner, Tail tail, long seed){
+            this(depth, inner, tail, seed, null);
+        }
+
+        Lookahead(int depth, int inner, Tail tail, long seed, BoostedRegressor tailModel){
             this.depth = depth;
             this.inner = inner;
             this.tail = tail;
             this.seed = seed;
+            this.tailModel = tailModel;
         }
 
         @Override
@@ -378,7 +563,7 @@ public class PolicyTournament {
                 for(int r = 0; r < inner; r++){
                     long innerSeed = seed + 101L * decision + 7919L * r;
                     HeadThenTail completion = new HeadThenTail(head, tail, needs, mine,
-                            new Random(innerSeed ^ 0x5DEECE66DL));
+                            new Random(innerSeed ^ 0x5DEECE66DL), tailModel);
                     DraftSimulator.SimState branch = state.copy();
                     simulator.simulateFrom(branch, new Random(innerSeed), me, completion);
                     total += completion.score();
@@ -398,12 +583,19 @@ public class PolicyTournament {
         final List<Position> head;
         final Tail tail;
         final Random random;
+        final BoostedRegressor tailModel;
 
         HeadThenTail(List<Position> head, Tail tail, Needs outerNeeds,
                      List<String> outerMine, Random random){
+            this(head, tail, outerNeeds, outerMine, random, null);
+        }
+
+        HeadThenTail(List<Position> head, Tail tail, Needs outerNeeds,
+                     List<String> outerMine, Random random, BoostedRegressor tailModel){
             this.head = head;
             this.tail = tail;
             this.random = random;
+            this.tailModel = tailModel;
             this.needs.dedicated.clear();
             this.needs.dedicated.putAll(outerNeeds.dedicated);
             this.needs.flex = outerNeeds.flex;
@@ -422,6 +614,18 @@ public class PolicyTournament {
                     return bestRawPosition(needs, board);
                 case VORP:
                     return bestVorpPosition(needs, board, slot.pickNumber());
+                case MODEL:
+                    Position top = null;
+                    double topValue = -Double.MAX_VALUE;
+                    for(Position position : needs.feasibleSkill()){
+                        double value = tailModel.predict(mlFeatures(this, board,
+                                slot.pickNumber(), position));
+                        if(value > topValue){
+                            topValue = value;
+                            top = position;
+                        }
+                    }
+                    return top;
                 default:
                     List<Position> open = needs.feasibleSkill();
                     return open.get(random.nextInt(open.size()));
@@ -705,12 +909,19 @@ public class PolicyTournament {
      * The draft-night thesis: keep the lookahead's judgment, lose its clock.
      */
     BoostedRegressor trainImitation(int episodes, int inner){
+        return trainImitation(episodes, inner, null);
+    }
+
+    /** With a tailModel, the teacher looks ahead using the PREVIOUS distilled
+     *  policy as its tails - the expert-iteration cycle. */
+    BoostedRegressor trainImitation(int episodes, int inner, BoostedRegressor tailModel){
         List<List<double[]>> perEpisodeRows = IntStream.range(0, episodes).parallel()
                 .mapToObj(episode -> {
                     long seed = TRAIN_SEED + 5_000_000L + 7919L * episode;
                     List<double[]> recorded = new ArrayList<>();
-                    Lookahead teacher = new Lookahead(2, inner, Tail.VORP,
-                            seed ^ 0x7F4A7C15L){
+                    Lookahead teacher = new Lookahead(2, inner,
+                            tailModel == null ? Tail.VORP : Tail.MODEL,
+                            seed ^ 0x7F4A7C15L, tailModel){
                         @Override
                         Position pickPosition(List<String> board, DraftSimulator.Slot slot,
                                               DraftSimulator.SimState state){
@@ -1303,6 +1514,113 @@ public class PolicyTournament {
             waitingTable.put(pick, row);
             depthTable.put(pick, depth);
         }
+
+        // Pace expectations: how many of each position are usually gone by
+        // each of my picks, and the board's starting counts per position.
+        for(Position position : SKILL){
+            initialCounts.put(position, 0);
+        }
+        for(String sleeperID : onBoard){
+            initialCounts.merge(Player.getPlayerFromSIDV2(sleeperID).position, 1,
+                    Integer::sum);
+        }
+        Random paceRandom = new Random(SEARCH_SEED + 10_000_000L);
+        Map<Integer, Map<Position, Double>> goneSums = new HashMap<>();
+        int paceTrials = Math.min(trials, 150);
+        for(int trial = 0; trial < paceTrials; trial++){
+            Map<String, Integer> takenAt = simulator.simulateOnce(paceRandom);
+            for(int pick : myPicks){
+                Map<Position, Double> gone = goneSums.computeIfAbsent(pick,
+                        u -> new EnumMap<>(Position.class));
+                for(Map.Entry<String, Integer> entry : takenAt.entrySet()){
+                    if(entry.getValue() < pick && onBoard.contains(entry.getKey())){
+                        gone.merge(Player.getPlayerFromSIDV2(entry.getKey()).position,
+                                1.0, Double::sum);
+                    }
+                }
+            }
+        }
+        for(int pick : myPicks){
+            Map<Position, Double> row = new EnumMap<>(Position.class);
+            for(Position position : SKILL){
+                row.put(position, goneSums.get(pick).getOrDefault(position, 0.0)
+                        / paceTrials);
+            }
+            expectedGone.put(pick, row);
+        }
+    }
+
+    /**
+     * The online-inference corrector (algorithm 5, v1): plays VORP off the
+     * base beliefs, but measures the LIVE board's depletion pace against the
+     * base expectation and shifts each position's waiting value down the
+     * depth table by the excess. Knows nothing about the true world - it
+     * reads the world off the board, which is exactly what draft night
+     * allows.
+     */
+    class PaceVorp extends TournamentPolicy {
+        @Override
+        Position pickPosition(List<String> board, DraftSimulator.Slot slot,
+                              DraftSimulator.SimState state){
+            Map<Position, String> best = bestByPosition(board, points);
+            Map<Position, Integer> remaining = new EnumMap<>(Position.class);
+            for(String sleeperID : board){
+                remaining.merge(Player.getPlayerFromSIDV2(sleeperID).position, 1,
+                        Integer::sum);
+            }
+            int next = nextPickAfter(slot.pickNumber());
+            Position top = null;
+            double topValue = -Double.MAX_VALUE;
+            for(Position position : needs.feasibleSkill()){
+                String candidate = best.get(position);
+                if(candidate == null){
+                    continue;
+                }
+                double replacement = 0;
+                if(next > 0){
+                    double gone = initialCounts.getOrDefault(position, 0)
+                            - remaining.getOrDefault(position, 0);
+                    double expected = expectedGone
+                            .getOrDefault(slot.pickNumber(), Map.of())
+                            .getOrDefault(position, 0.0);
+                    int excess = (int) Math.round(Math.max(0, gone - expected));
+                    double[] depth = depthTable.getOrDefault(next, Map.of())
+                            .get(position);
+                    replacement = depth == null ? 0
+                            : depth[Math.min(excess, DEPTH_K - 1)];
+                }
+                double value = points.getOrDefault(candidate, 0.0) - replacement;
+                if(value > topValue){
+                    topValue = value;
+                    top = position;
+                }
+            }
+            return top;
+        }
+    }
+
+    /** Evaluate a policy bound to THIS tournament's beliefs inside another
+     *  world's simulator - the mismatch protocol: plan with your model, live
+     *  in the true one. */
+    double[] evaluateIn(PolicyTournament trueWorld, Factory factory, int trials){
+        return IntStream.range(0, trials).parallel().mapToDouble(r -> {
+            TournamentPolicy policy = factory.create(POLICY_SEED + 7919L * r);
+            trueWorld.simulator.simulateOnce(new Random(EVAL_SEED + 7919L * r),
+                    trueWorld.me, policy);
+            return policy.score();
+        }).toArray();
+    }
+
+    /** A committed sequence's CRN mean inside another world's simulator. */
+    double searchMeanIn(PolicyTournament trueWorld, List<Position> sequence, int rollouts){
+        double total = 0;
+        for(int r = 0; r < rollouts; r++){
+            SequencePolicy policy = new SequencePolicy(sequence);
+            trueWorld.simulator.simulateOnce(new Random(SEARCH_SEED + 7919L * r),
+                    trueWorld.me, policy);
+            total += policy.score();
+        }
+        return total / rollouts;
     }
 
     /** Mean score of a committed sequence over CRN search rollouts. */
@@ -1354,7 +1672,12 @@ public class PolicyTournament {
         Map<String, Double> earliness = SelectionModel.qbEarliness(configuration, lastCompleted);
         ChoiceModel model = BoostedSelectionModel.fitShipped(configuration, lastCompleted,
                 earliness);
+        return forCurrentGame(configuration, waitingTrials, model, earliness);
+    }
 
+    /** The same world under a different brain - ensembles and mismatch tests. */
+    static PolicyTournament forCurrentGame(AAAConfiguration configuration, int waitingTrials,
+                                           ChoiceModel model, Map<String, Double> earliness){
         List<Keeper> scenario = DraftPlanner.keepersFromProperty(configuration);
         java.util.Set<String> excluded = new java.util.HashSet<>();
         List<Keeper> myEffective = new ArrayList<>();

@@ -1,1 +1,11 @@
 best timing head QB@none TE@r7 (search mean 1814.2)
+adaptive evaluated in 1522s
+
+POLICY                                     trials       mean    +/-SE     vs shipped
+adaptive d2 (inner 16, vorp tails)            300     1824.3      1.4          +12.4
+timing QB@none TE@r7                        10000     1812.8      0.3           +1.8
+vorp reactive                               10000     1807.6      0.4           -3.5
+shipped [RB, WR, RB, WR, WR, WR, TE, QB, RB]    10000     1811.0      0.2           +0.0
+
+All rows share the eval seed stream (vs-shipped is paired
+over the common prefix); search seeds disjoint.
