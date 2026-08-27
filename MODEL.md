@@ -1519,3 +1519,33 @@ P2 = post-season / 2027 infrastructure.
   scoring sees TRUTH. The lesson generalizes - any study that samples
   an outcome and then optimizes must keep the optimizer blind to the
   sample. Worth remembering for the 2027 keeper analysis.
+
+### Fog robustness (v4, 2026-08-27): QB insurance is real, and the shipped
+### plan already had it
+
+  Six pre-registered timings, decisions on projections only, scored
+  under 40 sampled truths (paired), mean value:
+
+     QB@r8 TE@r9   1553.3   +45.3      <- best under fog
+     QB@r8 TE@r7   1547.1   +39.1      <- THE SHIPPED PLAN
+     QB@r6 TE@r7   1536.8   +28.8
+     QB@none TE@r8 1520.2   +12.1
+     QB@r2 TE@r7   1511.5    +3.5
+     QB@none TE@r7 1508.1     0.0      <- the fog-free optimizer's pick
+
+  THE FINDING: with projections treated as exact, a second QB adds ~0
+  and the timing search prefers QB@none. Under MEASURED fog it is worth
+  +39, because Purdy is not a certain 363 - he carries the measured
+  12% tier-1 QB bust rate, and a late QB is a cheap option on that
+  collapse (best-nine takes the max, so the backup only ever helps).
+  The exactness fiction was hiding an insurance premium, and the
+  SHIPPED PLAN ALREADY BUYS IT: shipped is RB,WR,RB,WR,WR,WR,TE,QB,RB
+  - QB at round 8, exactly the winning family. The plan Justin locked
+  is fog-robust; the fog-free optimizer's QB@none was the artifact.
+  TE r7 -> r9 is the only suggested tweak (+6, needs SEs before it
+  means anything).
+
+  HONEST CAVEAT: the nine-round game has no waivers. In a real season
+  a busted QB gets streamed, so drafted insurance is worth somewhat
+  less than +39 - the direction is right, the magnitude is an upper
+  bound. It does not change the ranking: keep the round-8 QB.
