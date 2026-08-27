@@ -244,6 +244,7 @@ public class DraftSimulator {
      */
     public static final class SimState {
         int scheduleIndex;
+        String lastTaken;
         final List<String> board;
         final Map<String, Integer> takenAt;
         final Map<String, Map<Position, Integer>> rosters;
@@ -259,6 +260,11 @@ public class DraftSimulator {
             this.rosters = rosters;
             this.recentPicks = recentPicks;
             this.stackTeams = stackTeams;
+        }
+
+        /** The most recent player this state took. */
+        public String lastTaken(){
+            return lastTaken;
         }
 
         /** The pick number that took a player in this state, or null. */
@@ -345,6 +351,46 @@ public class DraftSimulator {
         applyPick(branch, schedule.get(branch.scheduleIndex), chosen);
         branch.scheduleIndex++;
         return branch;
+    }
+
+    /** Advances exactly one slot of the given state, model-driven. */
+    public void simulateOneFrom(SimState state, Random random){
+        int before = state.takenAt.size();
+        while(state.scheduleIndex < schedule.size() && state.takenAt.size() == before){
+            Slot slot = schedule.get(state.scheduleIndex);
+            if(slot.keeperSlot() || state.board.isEmpty()){
+                state.scheduleIndex++;
+                continue;
+            }
+            List<String> choiceSet = new ArrayList<>(
+                    state.board.subList(0, Math.min(state.board.size(),
+                            SelectionModel.CHOICE_SET)));
+            double[] shape = turnShape.getOrDefault(slot.pickNumber(),
+                    new double[]{0, 0, 1.0});
+            long qbHolders = state.rosters.values().stream()
+                    .filter(counts -> counts.getOrDefault(Position.QB, 0) > 0).count();
+            Map<Position, Integer> roster = state.rosters.computeIfAbsent(
+                    slot.manager(), u -> new EnumMap<>(Position.class));
+            double[] probabilities = managerModels.getOrDefault(slot.manager(), model)
+                    .choiceProbabilities(SelectionModel.features(choiceSet, adp, points,
+                            new SelectionModel.Context(roster,
+                                    qbEarliness.getOrDefault(slot.manager(), 0.0),
+                                    state.recentPicks, slot.pickNumber(),
+                                    shape[0] > 0, shape[1] > 0, shape[2],
+                                    qbHolders / teams,
+                                    extras.teEarliness().getOrDefault(slot.manager(), 0.0),
+                                    extras.rbEarliness().getOrDefault(slot.manager(), 0.0),
+                                    state.stackTeams.getOrDefault(slot.manager(), Set.of()),
+                                    extras.teamOf(), extras.rookies(),
+                                    extras.adpSpreadCentered(),
+                                    extras.formerPlayersByManager()
+                                            .getOrDefault(slot.manager(), Set.of()),
+                                    extras.young())));
+            String chosen = choiceSet.get(sample(probabilities, random));
+            applyPick(state, slot, chosen);
+            state.lastTaken = chosen;
+            state.scheduleIndex++;
+        }
     }
 
     /** One simulated draft: sleeper id -> the pick number that took the player. */

@@ -87,7 +87,17 @@ public class LiveDraft {
         }
         System.out.println();
 
-        // ---- the engine: depth-2 lookahead, VORP tails, from the live state ----
+        recommend(timing, planner, simulator, state, roster, rollouts);
+    }
+
+    /**
+     * The decision itself, shared by the live path and the rehearsal: depth-2
+     * lookahead over positions from the given state, VORP-completed tails,
+     * every alternative printed with its margin.
+     */
+    static Position recommend(TimingPlanner timing, DraftPlanner planner,
+                              DraftSimulator simulator, DraftSimulator.SimState state,
+                              List<String> roster, int rollouts){
         long decisionStart = System.currentTimeMillis();
         Position[] positions = {Position.QB, Position.RB, Position.WR, Position.TE};
         Map<Position, Double> value = new EnumMap<>(Position.class);
@@ -110,7 +120,6 @@ public class LiveDraft {
             }
             value.put(first, top);
         }
-
         List<Position> ranked = new ArrayList<>(value.keySet());
         ranked.sort(Comparator.comparingDouble(p -> -value.get(p)));
         System.out.printf("%nRECOMMENDATION (%.1fs, %d rollouts x depth 2):%n%n",
@@ -130,6 +139,7 @@ public class LiveDraft {
             System.out.printf("%n   NEAR TIE (%.1f apart) - either is defensible; "
                     + "take the scarcer position.%n", margin);
         }
+        return ranked.get(0);
     }
 
     /** Player ids in pick order from the live draft. */
