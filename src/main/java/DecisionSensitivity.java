@@ -130,15 +130,13 @@ public class DecisionSensitivity {
 
     static double headMean(TimingPlanner truthPlanner, DraftPlanner planner,
                            int[] head, int rollouts){
-        double total = 0;
-        for(int r = 0; r < rollouts; r++){
+        return IntStream.range(0, rollouts).parallel().mapToDouble(r -> {
             TimingPlanner.TimingPolicy policy = truthPlanner.new TimingPolicy(
                     head[0], head[1]);
             planner.simulator().simulateOnce(
                     new Random(TimingPlanner.SEARCH_SEED + 7919L * r),
                     planner.me(), policy);
-            total += truthPlanner.scoreMine(policy.mine);
-        }
-        return total / rollouts;
+            return truthPlanner.scoreMine(policy.mine);
+        }).sum() / rollouts;
     }
 }
