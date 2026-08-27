@@ -28,6 +28,11 @@ import java.util.stream.IntStream;
  */
 public class DecisionSensitivity {
 
+    static final int[][] CANDIDATES = {{-1, 6}, {-1, 7}, {1, 6}, {5, 6}, {7, 6}, {7, 8}};
+    static final String[] LABELS = {"QB@none TE@r7", "QB@none TE@r8", "QB@r2 TE@r7",
+            "QB@r6 TE@r7", "QB@r8 TE@r7", "QB@r8 TE@r9"};
+
+
     public static void main(String[] args){
         AAAConfiguration configuration = AAAConfiguration.getInstance();
         int draws = Integer.getInteger("draws", 40);
@@ -65,10 +70,7 @@ public class DecisionSensitivity {
         TimingPlanner projectionPlanner = new TimingPlanner(planner);
         projectionPlanner.fillWaitingTable(200);
 
-        int[] qbNoneWins = {0};
-        int[] qbLateWins = {0};
-        double[] regretSum = {0};
-        List<String> headLog = new ArrayList<>();
+        double[] values = new double[CANDIDATES.length];
         for(int draw = 0; draw < draws; draw++){
             Random random = new Random(DraftSimulator.SEED + 91_000_000L + 7919L * draw);
             Map<String, Double> truth = new HashMap<>();
@@ -100,52 +102,30 @@ public class DecisionSensitivity {
             // the final best-nine is scored under truth. Scoring under truth
             // while also PICKING under truth would let the policy dodge
             // busts it could not have known about - clairvoyance.
-            TimingPlanner truthPlanner = new TimingPlanner(planner);
-            truthPlanner.fillWaitingTable(150);
+            TimingPlanner truthPlanner = projectionPlanner;
             truthPlanner.scoreUnder(truth);
-            int[][] candidates = {{-1, 6}, {-1, 7}, {1, 6}, {5, 6}, {7, 6}, {7, 8}};
-            String[] labels = {"QB@none TE@r7", "QB@none TE@r8", "QB@r2 TE@r7",
-                    "QB@r6 TE@r7", "QB@r8 TE@r7", "QB@r8 TE@r9"};
-            double[] values = new double[candidates.length];
-            for(int c = 0; c < candidates.length; c++){
-                values[c] = headMean(truthPlanner, planner, candidates[c], priceRollouts);
+            for(int c = 0; c < CANDIDATES.length; c++){
+                values[c] += headMean(truthPlanner, planner, CANDIDATES[c],
+                        priceRollouts);
             }
-            int argmax = 0;
-            for(int c = 1; c < values.length; c++){
-                if(values[c] > values[argmax]){
-                    argmax = c;
-                }
-            }
-            int[] best = candidates[argmax];
-            if(best[0] < 0){
-                qbNoneWins[0]++;
-            }
-            if(best[0] < 0 || best[0] >= 6){
-                qbLateWins[0]++;
-            }
-            headLog.add(labels[argmax]);
-            double truthOfProjectionPlan = values[0];
-            double truthOfTruthPlan = values[argmax];
-            regretSum[0] += truthOfTruthPlan - truthOfProjectionPlan;
         }
 
-        System.out.printf("fog draws %d, %d rollouts per candidate (paired):%n%n",
-                draws, priceRollouts);
-        System.out.printf("   QB@none best under truth:      %d/%d (%.0f%%)%n",
-                qbNoneWins[0], draws, 100.0 * qbNoneWins[0] / draws);
-        System.out.printf("   QB none-or-late (r7+) best:    %d/%d (%.0f%%)%n",
-                qbLateWins[0], draws, 100.0 * qbLateWins[0] / draws);
-        System.out.printf("   mean regret of the projection plan under truth: %.1f "
-                + "points%n", regretSum[0] / draws);
-        Map<String, Integer> headCounts = new HashMap<>();
-        for(String head : headLog){
-            headCounts.merge(head, 1, Integer::sum);
+        System.out.printf("fog draws %d, %d rollouts per candidate, paired on the\n"
+                + "same truths - each row is that strategy's MEAN value under fog,\n"
+                + "decisions made on projections only:%n%n", draws, priceRollouts);
+        int argmax = 0;
+        for(int c = 1; c < values.length; c++){
+            if(values[c] > values[argmax]){
+                argmax = c;
+            }
         }
-        System.out.println("   winning heads across truths:");
-        headCounts.entrySet().stream()
-                .sorted((a, b) -> b.getValue() - a.getValue()).limit(8)
-                .forEach(entry -> System.out.printf("      %-18s %d%n",
-                        entry.getKey(), entry.getValue()));
+        for(int c = 0; c < CANDIDATES.length; c++){
+            System.out.printf("   %-18s %8.1f  %+6.1f vs QB@none TE@r7%s%n", LABELS[c],
+                    values[c] / draws, (values[c] - values[0]) / draws,
+                    c == argmax ? "   <- best under fog" : "");
+        }
+        System.out.println("\nA small spread means the timing decision is fog-proof: the"
+                + "\nsame plan is right whether or not the projections come true.");
     }
 
     static double headMean(TimingPlanner truthPlanner, DraftPlanner planner,

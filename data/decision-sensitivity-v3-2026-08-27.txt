@@ -1,0 +1,12 @@
+fog draws 40, 300 rollouts per candidate (paired):
+
+   QB@none best under truth:      9/40 (23%)
+   QB none-or-late (r7+) best:    22/40 (55%)
+   mean regret of the projection plan under truth: 94.6 points
+   winning heads across truths:
+      QB@r2 TE@r7        10
+      QB@r8 TE@r9        10
+      QB@r6 TE@r7        8
+      QB@none TE@r8      5
+      QB@none TE@r7      4
+      QB@r8 TE@r7        3
