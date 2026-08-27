@@ -1495,3 +1495,27 @@ P2 = post-season / 2027 infrastructure.
   whether prior-injury history predicts next-season busts at all. That
   is a post-season model upgrade with a real gate, not a draft-week
   scramble.
+
+### The scale study answers the clock question (2026-08-27)
+
+  Real-game adaptive premium vs inner rollouts: inner 16 = +12.4,
+  inner 64 = +11.4 (paired, +/-2). FLAT - four times the compute buys
+  nothing. Justin's 15-30s budget is therefore luxurious: the engine
+  needs well under a second per pick to collect the full premium, and
+  the surplus clock goes to the committee (several engines voting, so
+  disagreement flags contested picks) and to pondering between picks,
+  not to deeper single-engine search. Draft-night config settled.
+
+### Clairvoyance, caught twice in one night (2026-08-27)
+
+  DecisionSensitivity v1 reported 186 points of regret; v2 kept it
+  after removing the argmax. The cause was not noise - it was the same
+  clairvoyance this project spent two days eliminating from the
+  planner, reintroduced in a new place: the fog study let the POLICY
+  pick players under the sampled truth, so it dodged exactly the busts
+  it could not have known about. "QB@none loses 90% of truths" really
+  meant "if you knew Purdy would bust, you would draft a QB" -
+  unactionable. v3 splits the two roles: decisions see PROJECTIONS,
+  scoring sees TRUTH. The lesson generalizes - any study that samples
+  an outcome and then optimizes must keep the optimizer blind to the
+  sample. Worth remembering for the 2027 keeper analysis.
