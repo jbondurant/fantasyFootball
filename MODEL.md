@@ -1437,3 +1437,20 @@ P2 = post-season / 2027 infrastructure.
   tommyrads GB/HOU/JAX, Hamrliks SF/SEA, itsabust DET. M3 (regime-
   weighted earliness) deferred into Night 2's re-gate cascade where a
   brain change belongs.
+
+### Per-manager feed table (2026-08-27): ties, as honesty predicted
+
+  At ~45 picks per manager, the consensus feeds are indistinguishable
+  for most rows (differences under 0.1 = ties). No manager demonstrably
+  reads FP-ECR over Sleeper - Justin's testimony finds no per-manager
+  support either. Mild ESPN leans for Renteez (3.54 vs 3.70) and
+  jerem (borderline); JFMarino and patekxwater are clearly Sleeper-
+  sheet drafters. The one big separation is justinb314 (espn 3.21 vs
+  sleeper 3.82) and it is an artifact worth smiling at: my model-driven
+  picks happen to align with ESPN's idiosyncratic ordering - the table
+  correctly detects that I am the one manager not reading the room's
+  sheet. Market feature stays global Sleeper. NIGHT 1 CLOSES: the
+  brain survived every challenge (sniper rejected, strays null, feed
+  validated twice, fog measured, gap certified); tomorrow is
+  consequences - error distribution, decision-sensitivity, regime
+  gate + re-derivation, scale study, committee, late rounds, runbook.
