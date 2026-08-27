@@ -1472,3 +1472,26 @@ P2 = post-season / 2027 infrastructure.
   so the stress test uses the best per-player reality model we hold;
   (2) the draft-night one-pager - an injury flag as the tiebreak
   between near-tied players, surfaced to the human, who decides.
+
+### Draft Sharks historical: dead, with a consolation prize (2026-08-27)
+
+  Historical DS ADP and historical injury PREDICTIONS are unavailable:
+  Wayback excludes draftsharks.com entirely (zero snapshots by CDX
+  wildcard, www variant and availability API - a subscription-site
+  exclusion), their own ?year= params are ignored (all 415 profiles
+  identical to today's), and archive.today rate-limited. Consequence
+  for honesty: DS injury_prob enters the stack as UNVALIDATED external
+  opinion - we cannot audit their model the way we audited Sleeper's
+  projections, so it informs the one-pager and the sensitivity draws
+  but never silently reweights a projection.
+
+  The consolation is better than the loss: their pages embed real
+  injury EVENT history - 1,422 named NFL events across the 329
+  profiled players, 2019-2026, with dates, games missed, body part and
+  condition (data/injury-history-2019-2026.csv). That is ground truth,
+  joinable to the actuals already ingested, so the fog can be
+  decomposed: how much of the measured bust mass (RB tier-1 5%, deep
+  TE 54%) is injury versus role loss versus projection error - and
+  whether prior-injury history predicts next-season busts at all. That
+  is a post-season model upgrade with a real gate, not a draft-week
+  scramble.
