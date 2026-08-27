@@ -1335,3 +1335,20 @@ P2 = post-season / 2027 infrastructure.
      at outcomes, excellent at behavior (the resemblance race). Two
      jobs, two winners; the architecture's split (points feed vs
      market feature) was correct all along.
+
+### Justin's display-discrepancy hypothesis (2026-08-27, mid-shootout)
+
+  The Sleeper room shows two things side by side: the default rank
+  order (4-pt national consensus) and each player's PROJECTED POINTS
+  UNDER LEAGUE SCORING - 6-pt passing TDs, so QBs' displayed points
+  look rich relative to their rank. Justin's hypothesis: part of the
+  league's QB deviation from ADP is a response to that visible
+  discrepancy. The old information-set test rejected league-scored
+  values as the SOLE market input (calibration degraded 1.19->1.59) -
+  the room mostly follows ranks, which IS the exploited edge - but a
+  MIXTURE was never tested: rank-following plus a small, possibly
+  per-manager response to the displayed-points-vs-rank gap,
+  concentrated at QB. Tonight's stray taxonomy gains feature #6:
+  (league-scored points rank minus market rank) x position, per
+  manager. If some managers read the points column, the model finds
+  them; if the coefficient is ~0, the edge is even safer than assumed.
