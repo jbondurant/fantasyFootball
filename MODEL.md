@@ -1077,3 +1077,23 @@ P2 = post-season / 2027 infrastructure.
   provenance. 2026 is unaffected either way: live preseason ADP + our
   dated AdpSnapshot archive through draft eve. Also rerun QbMarketGap
   under FFC ADP as a cross-check of the coolness magnitudes.
+
+### Historical Sleeper ADP, hunted online (2026-08-27)
+
+  Wayback CDX: exactly ONE archived Sleeper projections API capture
+  exists - 2021-08-09, full 1978-player response with adp_half_ppr,
+  harvested and committed (data/sleeper-projections-dated-2021-08-09
+  .json.gz; it also carries DATED projections - shootout fuel). The
+  dated-vs-stored diff DATES the stored 2021 snapshot: Dobbins (rank
+  26->335) and Etienne (48->342) crashed on their late-August season-
+  ending injuries, Edwards SPIKED 116->73 (post-Dobbins, pre-his-own
+  Sep 9 injury), Robinson spiked 70->33 (post-Etienne). Stored 2021 =
+  Aug 28-Sep 9 window: DRAFT-EVE, well-timed, clean for our purposes.
+  Contamination is therefore season-dependent: 2021 clean; 2022 stands
+  accused by Jacobs (44 vs FFC 111 - inexplicable preseason); 2023-25
+  tails mixed. Remaining route for 2022-25: FantasyPros' archived ADP
+  pages (near-draft captures exist for every season: Aug 6+Sep 13 '22,
+  Aug 30+Sep 1 '23, Aug 3 '24, Aug 1+Sep 3 '25) IF their table carries
+  a Sleeper column - being verified. Fallback unchanged: FFC preseason
+  ADP with the gates adjudicating. Either way D4b proceeds tonight
+  with three candidate market feeds where the archive delivers.
