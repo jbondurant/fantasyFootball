@@ -100,8 +100,13 @@ public class TimingPlanner {
 
     // ---- the policies ----
 
+    /** A policy that can report the roster it drafted. */
+    interface RosterPolicy extends DraftSimulator.MyPolicy {
+        List<String> mine();
+    }
+
     /** Follows (qbAt, teAt); RB-vs-WR live by roster-aware VORP elsewhere. */
-    class TimingPolicy implements DraftSimulator.MyPolicy {
+    class TimingPolicy implements RosterPolicy {
         final int qbAt;
         final int teAt;
         final List<String> mine = new ArrayList<>(myKeeperIDs);
@@ -164,10 +169,167 @@ public class TimingPlanner {
             }
             return top;
         }
+
+        @Override
+        public List<String> mine(){
+            return mine;
+        }
+    }
+
+    /**
+     * Real-game reactive VORP over all four positions: marginal best-nine of
+     * taking the best at a position now, minus the marginal of its phantom
+     * waiter at my next pick. Roster-aware by construction: an Allen only
+     * out-marginals Purdy by their difference, an empty TE slot screams.
+     */
+    /** The shared chooser: best marginal-now minus marginal-of-waiting. */
+    Position vorpPosition(List<String> mine, Map<Position, String> best, int pickNumber){
+        List<double[]> roster = rosterPairs(mine);
+        double baseline = bestNine(roster);
+        int next = nextPickAfter(pickNumber);
+        Position top = Position.WR;
+        double topValue = -Double.MAX_VALUE;
+        for(Position position : new Position[]{Position.QB, Position.RB,
+                Position.WR, Position.TE}){
+            String candidate = best.get(position);
+            if(candidate == null){
+                continue;
+            }
+            List<double[]> withNow = new ArrayList<>(roster);
+            withNow.add(new double[]{position.ordinal(),
+                    points.getOrDefault(candidate, 0.0)});
+            double value = bestNine(withNow) - baseline;
+            if(next > 0){
+                List<double[]> withWaiter = new ArrayList<>(roster);
+                withWaiter.add(new double[]{position.ordinal(),
+                        waitingTable.getOrDefault(next, Map.of())
+                                .getOrDefault(position, 0.0)});
+                value -= bestNine(withWaiter) - baseline;
+            }
+            if(value > topValue){
+                topValue = value;
+                top = position;
+            }
+        }
+        return top;
+    }
+
+    class VorpPolicy implements RosterPolicy {
+        final List<String> mine = new ArrayList<>(myKeeperIDs);
+
+        @Override
+        public String choose(List<String> board, DraftSimulator.Slot slot){
+            Map<Position, String> best = bestAvailable(board);
+            String chosen = best.get(vorpPosition(mine, best, slot.pickNumber()));
+            mine.add(chosen);
+            return chosen;
+        }
+
+        @Override
+        public List<String> mine(){
+            return mine;
+        }
+    }
+
+    /**
+     * The receding-horizon policy in the full-rules game: at each of my
+     * picks, enumerate ordered position pairs two deep, price each head by
+     * `inner` completions of the live state (head, then VorpPolicy plays the
+     * rest), take the winning head's first position. The real-game measure
+     * of the lab's +6..+10 adaptive premium - and the draft-night engine.
+     */
+    class AdaptivePolicy implements RosterPolicy {
+        final int inner;
+        final long seed;
+        final List<String> mine = new ArrayList<>(myKeeperIDs);
+        int decision = 0;
+
+        AdaptivePolicy(int inner, long seed){
+            this.inner = inner;
+            this.seed = seed;
+        }
+
+        @Override
+        public String choose(List<String> board, DraftSimulator.Slot slot){
+            throw new IllegalStateException("adaptive policy needs the stateful path");
+        }
+
+        @Override
+        public String choose(List<String> board, DraftSimulator.Slot slot,
+                             DraftSimulator.SimState state){
+            Position[] positions = {Position.QB, Position.RB, Position.WR, Position.TE};
+            int remaining = myPicks.length - decision;
+            Position top = null;
+            double topValue = -Double.MAX_VALUE;
+            Map<Position, String> best = bestAvailable(board);
+            for(Position first : positions){
+                if(best.get(first) == null){
+                    continue;
+                }
+                Position[] seconds = remaining > 1
+                        ? positions : new Position[]{null};
+                for(Position second : seconds){
+                    double total = 0;
+                    for(int r = 0; r < inner; r++){
+                        long innerSeed = seed + 101L * decision + 7919L * r;
+                        HeadPolicy completion = new HeadPolicy(
+                                second == null ? List.of(first) : List.of(first, second),
+                                mine);
+                        DraftSimulator.SimState branch = state.copy();
+                        simulator.simulateFrom(branch, new Random(innerSeed), me,
+                                completion);
+                        total += StartingLineup.bestNine(completion.mine, points);
+                    }
+                    double value = total / inner;
+                    if(value > topValue){
+                        topValue = value;
+                        top = first;
+                    }
+                }
+            }
+            String chosen = best.get(top);
+            decision++;
+            mine.add(chosen);
+            return chosen;
+        }
+
+        @Override
+        public List<String> mine(){
+            return mine;
+        }
+    }
+
+    /** Inner completion: play the head positions, then the VORP chooser. */
+    class HeadPolicy implements RosterPolicy {
+        final List<Position> head;
+        final List<String> mine;
+        int decision = 0;
+
+        HeadPolicy(List<Position> head, List<String> outerMine){
+            this.head = head;
+            this.mine = new ArrayList<>(outerMine);
+        }
+
+        @Override
+        public String choose(List<String> board, DraftSimulator.Slot slot){
+            Map<Position, String> best = bestAvailable(board);
+            String chosen = decision < head.size() ? best.get(head.get(decision)) : null;
+            if(chosen == null){
+                chosen = best.get(vorpPosition(mine, best, slot.pickNumber()));
+            }
+            decision++;
+            mine.add(chosen);
+            return chosen;
+        }
+
+        @Override
+        public List<String> mine(){
+            return mine;
+        }
     }
 
     /** Follows a committed nine-position sequence, best player each time. */
-    class CommittedPolicy implements DraftSimulator.MyPolicy {
+    class CommittedPolicy implements RosterPolicy {
         final List<Position> sequence;
         final List<String> mine = new ArrayList<>(myKeeperIDs);
         int decision = 0;
@@ -193,6 +355,11 @@ public class TimingPlanner {
             decision++;
             mine.add(chosen);
             return chosen;
+        }
+
+        @Override
+        public List<String> mine(){
+            return mine;
         }
     }
 
@@ -252,14 +419,12 @@ public class TimingPlanner {
     }
 
     /** Per-trial best-nine scores of a policy on a given seed stream. */
-    double[] evaluate(java.util.function.IntFunction<DraftSimulator.MyPolicy> factory,
+    double[] evaluate(java.util.function.IntFunction<RosterPolicy> factory,
                       int trials, long baseSeed){
         return IntStream.range(0, trials).parallel().mapToDouble(r -> {
-            DraftSimulator.MyPolicy policy = factory.apply(r);
+            RosterPolicy policy = factory.apply(r);
             simulator.simulateOnce(new Random(baseSeed + 7919L * r), me, policy);
-            List<String> mine = policy instanceof TimingPolicy timing ? timing.mine
-                    : ((CommittedPolicy) policy).mine;
-            return StartingLineup.bestNine(mine, points);
+            return StartingLineup.bestNine(policy.mine(), points);
         }).toArray();
     }
 
