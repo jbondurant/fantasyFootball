@@ -62,8 +62,8 @@ public class DraftRehearsal {
             System.out.printf("%n================ pick %d (round %d), %d players gone "
                     + "================", slot.pickNumber(), slot.round(), taken.size());
             long start = System.currentTimeMillis();
-            Position choice = LiveDraft.recommend(timing, planner, simulator, state,
-                    roster, rollouts);
+            Position choice = LiveCommittee.vote(timing, planner, simulator, state,
+                    roster, rollouts, Integer.getInteger("scenarios", 60));
             slowest = Math.max(slowest, (System.currentTimeMillis() - start) / 1000.0);
 
             String chosen = timing.bestAvailable(state.boardView()).get(choice);

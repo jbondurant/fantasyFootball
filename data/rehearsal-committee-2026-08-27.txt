@@ -1,0 +1,110 @@
+engine warm in 17.3s (paid once, before the draft)
+
+================ pick 7 (round 1), 6 players gone ================
+ENGINE                 QB         RB         WR         TE     secs   says
+lookahead-2        1764.0     1792.3     1822.9     1721.2      5.4   WR
+lookahead-1        1769.3     1786.7     1819.3     1712.6      1.3   WR
+hindsight          1768.7     1783.7     1815.5     1709.5      0.6   WR
+vorp-greedy           0.0        0.0        1.0        0.0      0.0   WR
+
+   4 of 4 engines say WR -> Ja'Marr Chase
+   -> took Ja'Marr Chase (WR)
+
+================ pick 18 (round 2), 17 players gone ================
+ENGINE                 QB         RB         WR         TE     secs   says
+lookahead-2        1813.0     1810.2     1825.6     1772.2      4.8   WR
+lookahead-1        1813.0     1809.3     1826.0     1771.9      1.2   WR
+hindsight          1810.1     1807.8     1822.9     1773.4      0.5   WR
+vorp-greedy           1.0        0.0        0.0        0.0      0.0   QB
+
+   3 of 4 engines say WR -> Drake London
+   SPLIT COMMITTEE - this pick is genuinely contested; the alternatives above are live options, your call.
+   -> took Drake London (WR)
+
+================ pick 31 (round 3), 30 players gone ================
+ENGINE                 QB         RB         WR         TE     secs   says
+lookahead-2        1826.0     1826.7     1817.3     1787.7      4.0   RB
+lookahead-1        1829.4     1830.7     1824.5     1791.0      1.0   RB
+hindsight          1828.4     1831.3     1826.1     1790.9      0.4   RB
+vorp-greedy           1.0        0.0        0.0        0.0      0.0   QB
+
+   3 of 4 engines say RB -> Travis Etienne
+   SPLIT COMMITTEE - this pick is genuinely contested; the alternatives above are live options, your call.
+   -> took Travis Etienne (RB)
+
+================ pick 42 (round 4), 39 players gone ================
+ENGINE                 QB         RB         WR         TE     secs   says
+lookahead-2        1838.5     1805.8     1821.2     1800.5      3.6   QB
+lookahead-1        1839.2     1806.5     1823.1     1800.1      1.0   QB
+hindsight          1837.5     1802.6     1818.5     1797.4      0.4   QB
+vorp-greedy           1.0        0.0        0.0        0.0      0.0   QB
+
+   4 of 4 engines say QB -> Josh Allen
+   -> took Josh Allen (QB)
+
+================ pick 55 (round 5), 50 players gone ================
+ENGINE                 QB         RB         WR         TE     secs   says
+lookahead-2        1801.6     1820.8     1819.4     1813.8      2.9   RB
+lookahead-1        1802.0     1820.4     1816.9     1813.3      0.7   RB
+hindsight          1803.4     1820.5     1816.7     1813.5      0.3   RB
+vorp-greedy           0.0        1.0        0.0        0.0      0.0   RB
+
+   4 of 4 engines say RB -> Jaylen Warren
+   -> took Jaylen Warren (RB)
+
+================ pick 66 (round 6), 59 players gone ================
+ENGINE                 QB         RB         WR         TE     secs   says
+lookahead-2        1802.6     1817.0     1822.9     1812.8      2.4   WR
+lookahead-1        1804.2     1816.9     1822.5     1812.6      0.6   WR
+hindsight          1807.5     1819.4     1822.0     1814.1      0.2   WR
+vorp-greedy           0.0        0.0        1.0        0.0      0.0   WR
+
+   4 of 4 engines say WR -> Jayden Reed
+   -> took Jayden Reed (WR)
+
+================ pick 79 (round 7), 70 players gone ================
+ENGINE                 QB         RB         WR         TE     secs   says
+lookahead-2        1817.0     1821.6     1819.6     1820.1      1.7   RB
+lookahead-1        1812.4     1821.6     1819.7     1819.8      0.4   RB
+hindsight          1810.8     1821.5     1819.5     1819.7      0.2   RB
+vorp-greedy           0.0        1.0        0.0        0.0      0.0   RB
+
+   4 of 4 engines say RB -> Jordan Mason
+   -> took Jordan Mason (RB)
+
+================ pick 90 (round 8), 79 players gone ================
+ENGINE                 QB         RB         WR         TE     secs   says
+lookahead-2        1819.4     1819.3     1819.2     1821.1      1.2   TE
+lookahead-1        1819.4     1819.3     1819.2     1821.1      0.3   TE
+hindsight          1819.3     1819.3     1819.1     1821.1      0.1   TE
+vorp-greedy           0.0        0.0        0.0        1.0      0.0   TE
+
+   4 of 4 engines say TE -> Travis Kelce
+   -> took Travis Kelce (TE)
+
+================ pick 103 (round 9), 90 players gone ================
+ENGINE                 QB         RB         WR         TE     secs   says
+lookahead-2        1821.1     1821.1     1821.1     1821.1      0.4   QB
+lookahead-1        1821.1     1821.1     1821.1     1821.1      0.1   QB
+hindsight          1821.1     1821.1     1821.1     1821.1      0.0   QB
+vorp-greedy           1.0        0.0        0.0        0.0      0.0   QB
+
+   4 of 4 engines say QB -> Trevor Lawrence
+   -> took Trevor Lawrence (QB)
+
+
+rehearsal complete. Final roster:
+   RB   Bhayshul Tuten               158.8
+   QB   Brock Purdy                  363.2
+   WR   Ja'Marr Chase                256.6
+   WR   Drake London                 205.2
+   RB   Travis Etienne               189.7
+   QB   Josh Allen                   415.5
+   RB   Jaylen Warren                152.6
+   WR   Jayden Reed                  162.6
+   RB   Jordan Mason                 143.7
+   TE   Travis Kelce                 136.4
+   QB   Trevor Lawrence              355.4
+
+   best nine: 1821.1   (roster total 2539.7 over 11 players)
+   slowest decision: 7.3s  (budget 15s preferred, 30s cap)
