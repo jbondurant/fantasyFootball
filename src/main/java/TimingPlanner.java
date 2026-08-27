@@ -40,11 +40,22 @@ public class TimingPlanner {
     private final Map<Integer, Map<Position, Double>> waitingTable = new HashMap<>();
 
     TimingPlanner(DraftPlanner planner){
+        this(planner, planner.points());
+    }
+
+    /** With my valuation overridden - fog draws value under a sampled TRUTH
+     *  while the world keeps drafting off its unchanged sheet. */
+    TimingPlanner(DraftPlanner planner, Map<String, Double> pointsOverride){
         this.simulator = planner.simulator();
         this.me = planner.me();
         this.myKeeperIDs = planner.myKeeperIDs();
-        this.points = planner.points();
+        this.points = pointsOverride;
         this.myPicks = simulator.pickNumbersOf(me);
+    }
+
+    /** Best-nine of a roster under THIS planner's valuation. */
+    double scoreMine(List<String> mine){
+        return StartingLineup.bestNine(mine, points);
     }
 
     // ---- a best-nine that accepts phantoms (position + points, no ID) ----
