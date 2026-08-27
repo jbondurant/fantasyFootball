@@ -1163,3 +1163,34 @@ P2 = post-season / 2027 infrastructure.
   assignment if the likelihood supports it; ~45 obs per manager,
   shrunk). Whichever mixture best explains held-out 2025 picks is the
   league's information diet, measured rather than assumed.
+
+### Feed taxonomy and the consensus+deltas reparameterization (Justin, 2026-08-27)
+
+  Justin's recursion catch, generalized: the feed universe is mostly one
+  consensus factor wearing different logos. Taxonomy:
+  - PRIMARY BEHAVIORAL: platform ADPs - real drafts by distinct user
+    populations (Sleeper, Yahoo, ESPN, CBS, NFL, Fantrax, FFC mocks).
+  - PRIMARY EDITORIAL: in-house ranking sets (ESPN's rankers etc.) that
+    shape their platform's defaults.
+  - DERIVED/RECURSIVE: FP ECR (average of whichever analysts are
+    checkmarked that day), FP AVG (average of platforms), Boris Chen
+    (clusters of FP ECR) - consensus of consensus, near-zero new
+    information, and COLLINEAR in any naive blend fit.
+
+  The fix: reparameterize D4b as CONSENSUS + DELTAS. Market feature =
+  consensus factor (any aggregate; they are the same object) + weighted
+  deltas of primary feeds from consensus. Recursive feeds have ~zero
+  delta and drop out automatically; the blend weights live on the
+  deltas, which are the identifying variation and well-conditioned.
+  The behavioral question becomes "whose DEVIATIONS from consensus do
+  the league's picks track?" - sharper than raw feed weights.
+
+  Honest identification limit: ~45 in-game picks per manager can
+  identify Sleeper-vs-ESPN-scale deltas, not FP-vs-BorisChen-scale
+  ones; near-duplicates get collapsed into equivalence groups rather
+  than pretending the fit can tell them apart.
+
+  ESPN, per Justin's gut: likely the most independent delta in the
+  universe (idiosyncratic in-house ranks + captive drafter population).
+  Kept in the fit even though its league weight probably lands near
+  zero - the fit decides, not the gut, in either direction.
