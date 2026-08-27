@@ -1194,3 +1194,46 @@ P2 = post-season / 2027 infrastructure.
   universe (idiosyncratic in-house ranks + captive drafter population).
   Kept in the fit even though its league weight probably lands near
   zero - the fit decides, not the gut, in either direction.
+
+## The reality program (2026-08-27, Justin's two nights): what is projection
+## accuracy actually, and who audits the auditors
+
+  External auditors that exist and are partially meaningful:
+  FantasyPros Accuracy Awards (scores ~140 experts' preseason draft
+  rankings vs outcomes annually - real, public, but their own metric and
+  champions do not repeat year over year), FantasyFootballAnalytics'
+  projection studies (R-squared by source; the robust finding: composite
+  beats every individual source), and the wisdom-of-crowds ADP
+  literature (ADP is roughly as predictive as expert consensus).
+  Consensus of that whole literature: preseason projections explain
+  maybe R2 0.2-0.4 of season outcomes (QB most predictable, RB least -
+  injuries dominate), no source reliably beats the aggregate, and
+  year-to-year accuracy crowns are mostly luck. "Sleeper projections
+  100% accurate" is therefore a fiction of convenience - useful for
+  ranking POLICIES (everyone optimizes the same fiction), dangerous if
+  it ever decides between near-tied PLAYERS.
+
+  We audit it ourselves - dated data, our methodology, in-repo:
+
+  NIGHT 1 (with the feed harvest + D4b bake-off):
+  - Ingest ACTUAL season points 2021-2025 from Sleeper stats.
+  - Score every source we hold against actuals, per season and
+    position: Sleeper projections (stored + the dated 2021 capture),
+    the league-scored bridge, and every dated feed as a predictor
+    (Sleeper/Yahoo/FFC/ESPN/CBS ADP, FP ECR, Boris Chen) - our own
+    accuracy audit of the ranking sites, with capture dates known.
+  - Deliverable: the reality table - R2 / rank correlation / MAE by
+    source, position, season; consensus-vs-individuals verdict.
+
+  NIGHT 2 (the decision consequences):
+  - Fit the ERROR DISTRIBUTION per position (variance + injury/bust
+    tail mixture) from five seasons of projection residuals.
+  - Decision-sensitivity: rerun keeper ledger + plan search under
+    projections perturbed by the measured errors - which decisions
+    flip, which are noise-proof. The exactness fiction gets replaced
+    by measured error bars ONLY where decisions actually move.
+  - Risk knobs get real inputs at last (A3 delivered by data).
+
+  Timeline holds: nights of 27th-28th = reality program; 29th-30th =
+  component F + precompute on whatever the reality program certifies;
+  31st = final dated-ADP run; draft Sep 1 20:45.
