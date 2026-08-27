@@ -94,6 +94,10 @@ public class PolicyTournament {
         return myKeeperIDs;
     }
 
+    DraftSimulator.SimState simulatorState(){
+        return simulator.initialState();
+    }
+
     int myPickCount(){
         return myPicks.length;
     }
