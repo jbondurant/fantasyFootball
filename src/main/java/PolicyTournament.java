@@ -70,7 +70,11 @@ public class PolicyTournament {
     private final Map<String, Double> points;
     /** my pick number -> position -> mean best-available points if I wait. */
     private final Map<Integer, Map<Position, Double>> waitingTable = new HashMap<>();
+    /** my pick number -> position -> mean k-th-best available, k=1..5 - the
+     *  certainty-equivalent availability the DP and the B&B bound consume. */
+    private final Map<Integer, Map<Position, double[]>> depthTable = new HashMap<>();
     private final int[] myPicks;
+    static final int DEPTH_K = 5;
 
     PolicyTournament(DraftSimulator simulator, String me, List<String> myKeeperIDs,
                      Map<String, Double> points){
@@ -908,6 +912,335 @@ public class PolicyTournament {
         return sequence;
     }
 
+    // ---- the exact family: DP, CE values, branch-and-bound screening ----
+
+    /**
+     * Certainty-equivalent value of a committed sequence: my k-th pick at a
+     * position is worth the mean k-th-best available at that pick number.
+     * The exact family optimizes THIS objective - fast and valley-proof,
+     * blind to availability correlations. The lab's rollout ground truth
+     * measures exactly how much that blindness costs.
+     */
+    double ceValue(List<Position> sequence){
+        Map<Position, Integer> taken = new EnumMap<>(Position.class);
+        double total = 0;
+        for(int d = 0; d < sequence.size(); d++){
+            Position position = sequence.get(d);
+            int k = taken.merge(position, 1, Integer::sum) - 1;
+            double[] depth = depthTable.get(myPicks[d]).get(position);
+            total += depth[Math.min(k, DEPTH_K - 1)];
+        }
+        return total;
+    }
+
+    /**
+     * Exact dynamic program over (decision, positions-taken) under the CE
+     * objective - global in every timing dimension at once, so no valley can
+     * exist for it. Returns the argmax committed sequence.
+     */
+    List<Position> dpPlan(){
+        Needs start = Needs.afterKeepers(myKeeperIDs);
+        Map<Long, double[]> memo = new HashMap<>();
+        int[] counts = new int[SKILL.length];
+        dpValue(0, counts, start, memo);
+        List<Position> sequence = new ArrayList<>();
+        Needs needs = start.copy();
+        for(int d = 0; d < myPicks.length; d++){
+            double[] entry = memo.get(dpKey(d, counts));
+            Position chosen = SKILL[(int) entry[1]];
+            sequence.add(chosen);
+            counts[(int) entry[1]]++;
+            needs.consume(chosen);
+        }
+        return sequence;
+    }
+
+    private long dpKey(int decision, int[] counts){
+        long key = decision;
+        for(int count : counts){
+            key = key * 16 + count;
+        }
+        return key;
+    }
+
+    private double dpValue(int decision, int[] counts, Needs needs, Map<Long, double[]> memo){
+        if(decision == myPicks.length){
+            return 0;
+        }
+        long key = dpKey(decision, counts);
+        double[] cached = memo.get(key);
+        if(cached != null){
+            return cached[0];
+        }
+        double best = -Double.MAX_VALUE;
+        int bestIndex = 0;
+        for(int p = 0; p < SKILL.length; p++){
+            Position position = SKILL[p];
+            if(!needs.feasible(position)){
+                continue;
+            }
+            double[] depth = depthTable.get(myPicks[decision]).get(position);
+            double now = depth[Math.min(counts[p], DEPTH_K - 1)];
+            Needs next = needs.copy();
+            next.consume(position);
+            counts[p]++;
+            double value = now + dpValue(decision + 1, counts, next, memo);
+            counts[p]--;
+            if(value > best){
+                best = value;
+                bestIndex = p;
+            }
+        }
+        memo.put(key, new double[]{best, bestIndex});
+        return best;
+    }
+
+    /**
+     * Branch-and-bound screening of the rollout search: evaluate sequences
+     * in descending CE-value order, stop once the next CE value (plus the
+     * measured CE-vs-rollout calibration slack) cannot beat the incumbent
+     * rollout mean. In the lab the exhaustive truth grades it: regret and
+     * fraction pruned are both printed, not assumed.
+     */
+    int[] bnbScreen(List<List<Position>> sequences, double[] rolloutMeans, int argmaxTruth){
+        Integer[] order = new Integer[sequences.size()];
+        double[] bounds = new double[sequences.size()];
+        for(int s = 0; s < sequences.size(); s++){
+            order[s] = s;
+            bounds[s] = ceValue(sequences.get(s));
+        }
+        java.util.Arrays.sort(order, (a, b) -> Double.compare(bounds[b], bounds[a]));
+        double slack = 0;
+        for(int s = 0; s < sequences.size(); s++){
+            slack = Math.max(slack, rolloutMeans[s] - bounds[s]);
+        }
+        double incumbent = -Double.MAX_VALUE;
+        int evaluated = 0;
+        int found = -1;
+        for(Integer s : order){
+            if(bounds[s] + slack <= incumbent){
+                break;
+            }
+            evaluated++;
+            if(rolloutMeans[s] > incumbent){
+                incumbent = rolloutMeans[s];
+                found = s;
+            }
+        }
+        return new int[]{evaluated, found, found == argmaxTruth ? 1 : 0};
+    }
+
+    // ---- fancier metaheuristics: annealing and NRPA ----
+
+    /** Simulated annealing over committed sequences, swap moves, CRN scores. */
+    List<Position> saPlan(int steps, int rollouts){
+        Random random = new Random(TRAIN_SEED + 23_000_000L);
+        Needs start = Needs.afterKeepers(myKeeperIDs);
+        List<Position> current = randomSequence(start.copy(), random);
+        double currentScore = searchMean(current, rollouts);
+        List<Position> best = current;
+        double bestScore = currentScore;
+        for(int step = 0; step < steps; step++){
+            double temperature = 8.0 * Math.pow(0.995, step);
+            List<Position> candidate = new ArrayList<>(current);
+            if(random.nextDouble() < 0.2){
+                candidate = randomSequence(start.copy(), random);
+            }
+            else {
+                int a = random.nextInt(candidate.size());
+                int b = random.nextInt(candidate.size());
+                Position swap = candidate.get(a);
+                candidate.set(a, candidate.get(b));
+                candidate.set(b, swap);
+            }
+            double score = searchMean(candidate, rollouts);
+            if(score > currentScore
+                    || random.nextDouble() < Math.exp((score - currentScore) / temperature)){
+                current = candidate;
+                currentScore = score;
+            }
+            if(score > bestScore){
+                bestScore = score;
+                best = candidate;
+            }
+        }
+        return best;
+    }
+
+    /**
+     * Nested Rollout Policy Adaptation (Cazenave): a softmax policy over
+     * (decision, position) is adapted toward the best sequence found, nested
+     * one level. Scores are CRN means, so the stochastic game looks
+     * deterministic to the adaptation.
+     */
+    List<Position> nrpaPlan(int iterations, int playouts, int rollouts){
+        double[][] weights = new double[myPicks.length][SKILL.length];
+        Random random = new Random(TRAIN_SEED + 29_000_000L);
+        List<Position> best = null;
+        double bestScore = -Double.MAX_VALUE;
+        for(int iteration = 0; iteration < iterations; iteration++){
+            List<Position> iterationBest = null;
+            double iterationScore = -Double.MAX_VALUE;
+            for(int playout = 0; playout < playouts; playout++){
+                List<Position> sequence = softmaxSequence(weights, random);
+                double score = searchMean(sequence, rollouts);
+                if(score > iterationScore){
+                    iterationScore = score;
+                    iterationBest = sequence;
+                }
+            }
+            if(iterationScore > bestScore){
+                bestScore = iterationScore;
+                best = iterationBest;
+            }
+            // adapt toward the best sequence seen this iteration
+            Needs needs = Needs.afterKeepers(myKeeperIDs);
+            for(int d = 0; d < best.size(); d++){
+                List<Position> open = needs.feasibleSkill();
+                double total = 0;
+                double[] probabilities = new double[SKILL.length];
+                for(Position position : open){
+                    probabilities[indexOf(position)] =
+                            Math.exp(weights[d][indexOf(position)]);
+                    total += probabilities[indexOf(position)];
+                }
+                for(Position position : open){
+                    int p = indexOf(position);
+                    weights[d][p] -= probabilities[p] / total;
+                }
+                weights[d][indexOf(best.get(d))] += 1.0;
+                needs.consume(best.get(d));
+            }
+        }
+        return best;
+    }
+
+    private List<Position> softmaxSequence(double[][] weights, Random random){
+        Needs needs = Needs.afterKeepers(myKeeperIDs);
+        List<Position> sequence = new ArrayList<>();
+        for(int d = 0; d < myPicks.length; d++){
+            List<Position> open = needs.feasibleSkill();
+            double total = 0;
+            double[] cumulative = new double[open.size()];
+            for(int a = 0; a < open.size(); a++){
+                total += Math.exp(weights[d][indexOf(open.get(a))]);
+                cumulative[a] = total;
+            }
+            double u = random.nextDouble() * total;
+            Position chosen = open.get(open.size() - 1);
+            for(int a = 0; a < open.size(); a++){
+                if(u < cumulative[a]){
+                    chosen = open.get(a);
+                    break;
+                }
+            }
+            needs.consume(chosen);
+            sequence.add(chosen);
+        }
+        return sequence;
+    }
+
+    private static int indexOf(Position position){
+        for(int p = 0; p < SKILL.length; p++){
+            if(SKILL[p] == position){
+                return p;
+            }
+        }
+        throw new IllegalArgumentException(position.name());
+    }
+
+    /**
+     * MCTS over my remaining position choices (UCT): the tree is the
+     * sequence prefix tree, a simulation walks it by UCB1, completes the
+     * prefix with a greedy-raw tail rollout from the LIVE state, and
+     * backpropagates the score. Same budget as the flat lookahead, spent
+     * asymmetrically - dominated lines die after a few visits, contested
+     * lines get the depth. Adaptive: re-run at every one of my picks.
+     */
+    class MctsPolicy extends TournamentPolicy {
+        final int budget;
+        final long seed;
+
+        MctsPolicy(int budget, long seed){
+            this.budget = budget;
+            this.seed = seed;
+        }
+
+        final class Node {
+            final Map<Position, Node> children = new EnumMap<>(Position.class);
+            int visits;
+            double total;
+        }
+
+        @Override
+        Position pickPosition(List<String> board, DraftSimulator.Slot slot,
+                              DraftSimulator.SimState state){
+            List<Position> open = needs.feasibleSkill();
+            if(open.size() == 1){
+                return open.get(0);
+            }
+            Node root = new Node();
+            for(int simulation = 0; simulation < budget; simulation++){
+                long innerSeed = seed + 101L * decision + 7919L * simulation;
+                List<Position> prefix = new ArrayList<>();
+                Needs walk = needs.copy();
+                Node node = root;
+                while(true){
+                    List<Position> walkOpen = walk.feasibleSkill();
+                    if(walkOpen.isEmpty()
+                            || prefix.size() + decision >= myPicks.length){
+                        break;
+                    }
+                    Position pick = null;
+                    double bestUcb = -Double.MAX_VALUE;
+                    for(Position option : walkOpen){
+                        Node child = node.children.get(option);
+                        double ucb = child == null || child.visits == 0
+                                ? Double.MAX_VALUE
+                                : child.total / child.visits + 25.0 * Math.sqrt(
+                                        Math.log(node.visits + 1) / child.visits);
+                        if(ucb > bestUcb){
+                            bestUcb = ucb;
+                            pick = option;
+                        }
+                    }
+                    prefix.add(pick);
+                    walk.consume(pick);
+                    Node child = node.children.computeIfAbsent(pick, u -> new Node());
+                    boolean expand = child.visits == 0;
+                    node = child;
+                    if(expand){
+                        break;
+                    }
+                }
+                HeadThenTail completion = new HeadThenTail(prefix, Tail.VORP, needs, mine,
+                        new Random(innerSeed ^ 0x5DEECE66DL));
+                DraftSimulator.SimState branch = state.copy();
+                simulator.simulateFrom(branch, new Random(innerSeed), me, completion);
+                double score = completion.score();
+                Node backprop = root;
+                backprop.visits++;
+                backprop.total += score;
+                for(Position step : prefix){
+                    backprop = backprop.children.get(step);
+                    backprop.visits++;
+                    backprop.total += score;
+                }
+            }
+            Position top = open.get(0);
+            int topVisits = -1;
+            for(Position option : open){
+                Node child = root.children.get(option);
+                int visits = child == null ? 0 : child.visits;
+                if(visits > topVisits){
+                    topVisits = visits;
+                    top = option;
+                }
+            }
+            return top;
+        }
+    }
+
     // ---- search and evaluation ----
 
     int nextPickAfter(int pickNumber){
@@ -919,13 +1252,13 @@ public class PolicyTournament {
         return -1;
     }
 
-    /** Mean best-available points per position at each of my picks. */
+    /** Mean k-th-best available points per position at each of my picks. */
     void fillWaitingTable(int trials){
         Map<Integer, Map<Position, double[]>> sums = new HashMap<>();
         for(int pick : myPicks){
             Map<Position, double[]> perPosition = new EnumMap<>(Position.class);
             for(Position position : SKILL){
-                perPosition.put(position, new double[]{0});
+                perPosition.put(position, new double[DEPTH_K]);
             }
             sums.put(pick, perPosition);
         }
@@ -934,26 +1267,41 @@ public class PolicyTournament {
         for(int trial = 0; trial < trials; trial++){
             Map<String, Integer> takenAt = simulator.simulateOnce(random);
             for(int pick : myPicks){
-                Map<Position, Double> best = new EnumMap<>(Position.class);
+                Map<Position, List<Double>> alive = new EnumMap<>(Position.class);
+                for(Position position : SKILL){
+                    alive.put(position, new ArrayList<>());
+                }
                 for(String sleeperID : onBoard){
-                    int taken = takenAt.getOrDefault(sleeperID, Integer.MAX_VALUE);
-                    if(taken < pick){
+                    if(takenAt.getOrDefault(sleeperID, Integer.MAX_VALUE) < pick){
                         continue;
                     }
-                    best.merge(Player.getPlayerFromSIDV2(sleeperID).position,
-                            points.getOrDefault(sleeperID, 0.0), Math::max);
+                    alive.get(Player.getPlayerFromSIDV2(sleeperID).position)
+                            .add(points.getOrDefault(sleeperID, 0.0));
                 }
                 for(Position position : SKILL){
-                    sums.get(pick).get(position)[0] += best.getOrDefault(position, 0.0);
+                    List<Double> values = alive.get(position);
+                    values.sort(java.util.Collections.reverseOrder());
+                    double[] sum = sums.get(pick).get(position);
+                    for(int k = 0; k < DEPTH_K && k < values.size(); k++){
+                        sum[k] += values.get(k);
+                    }
                 }
             }
         }
         for(int pick : myPicks){
             Map<Position, Double> row = new EnumMap<>(Position.class);
+            Map<Position, double[]> depth = new EnumMap<>(Position.class);
             for(Position position : SKILL){
-                row.put(position, sums.get(pick).get(position)[0] / trials);
+                double[] sum = sums.get(pick).get(position);
+                double[] means = new double[DEPTH_K];
+                for(int k = 0; k < DEPTH_K; k++){
+                    means[k] = sum[k] / trials;
+                }
+                row.put(position, means[0]);
+                depth.put(position, means);
             }
             waitingTable.put(pick, row);
+            depthTable.put(pick, depth);
         }
     }
 
@@ -1109,6 +1457,25 @@ public class PolicyTournament {
         }
         System.out.printf("staged-frontier winner %s%n", stagedBest);
 
+        // ---- the exact family and the fancier searches, graded by truth ----
+        List<Position> dpBest = tournament.dpPlan();
+        double maxCe = -Double.MAX_VALUE;
+        for(List<Position> sequence : sequences){
+            maxCe = Math.max(maxCe, tournament.ceValue(sequence));
+        }
+        System.out.printf("dp-composition %s, CE %.1f vs enumerated max CE %.1f%s%n",
+                dpBest, tournament.ceValue(dpBest), maxCe,
+                Math.abs(tournament.ceValue(dpBest) - maxCe) < 1e-6
+                        ? " (EXACT, as proved)" : " (MISMATCH - bug!)");
+        int[] screen = tournament.bnbScreen(sequences, sequenceMeans, argmax);
+        System.out.printf("bnb screen: evaluated %d of %d sequences, found the true "
+                        + "optimum: %s, regret %.1f%n", screen[0], sequences.size(),
+                screen[2] == 1, sequenceMeans[argmax] - sequenceMeans[screen[1]]);
+        List<Position> saBest = tournament.saPlan(1200, 20);
+        List<Position> nrpaBest = tournament.nrpaPlan(40, 10, 20);
+        System.out.printf("sa %s, nrpa %s%n", saBest, nrpaBest);
+        int mctsBudget = Integer.getInteger("mcts", 192);
+
         // ---- Justin's structured head: (QB round, TE round), RB/WR live ----
         boolean qbOwed = start.dedicated.getOrDefault(Position.QB, 0) > 0;
         boolean teOwed = start.dedicated.getOrDefault(Position.TE, 0) > 0;
@@ -1217,6 +1584,15 @@ public class PolicyTournament {
         roster.add(new Object[]{"ml-evolution " + label(evolutionBest), trials,
                 named("ml-evolution",
                         seed -> tournament.new SequencePolicy(evolutionBest))});
+        roster.add(new Object[]{"dp-composition " + label(dpBest), trials,
+                named("dp-composition", seed -> tournament.new SequencePolicy(dpBest))});
+        roster.add(new Object[]{"sa " + label(saBest), trials,
+                named("sa", seed -> tournament.new SequencePolicy(saBest))});
+        roster.add(new Object[]{"nrpa " + label(nrpaBest), trials,
+                named("nrpa", seed -> tournament.new SequencePolicy(nrpaBest))});
+        roster.add(new Object[]{"mcts (budget " + mctsBudget + ", vorp tails)",
+                adaptiveTrials,
+                named("mcts", seed -> tournament.new MctsPolicy(mctsBudget, seed))});
         roster.add(new Object[]{"oldschool-1 (random tails)", adaptiveTrials,
                 named("oldschool-1",
                         seed -> tournament.new Lookahead(1, inner, Tail.RANDOM, seed))});
