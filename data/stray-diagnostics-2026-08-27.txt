@@ -1,0 +1,25 @@
+stray signals (response = within-position reach; positive
+difference = that group gets reached FOR earlier):
+
+   rookies vs veterans                    n=110/504  mean reach 4.6 vs 4.4  diff +0.2 (+/- 0.4)
+   young (<=2yr) vs older                 n=246/368  mean reach 4.8 vs 4.2  diff +0.6 (+/- 0.3)
+   faded names (ADP fell 30+) vs rest     n=120/403  mean reach 4.8 vs 4.3  diff +0.5 (+/- 0.4)
+   high-passTD QBs (top half) vs low      n=34/31  mean reach 1.5 vs 2.0  diff -0.5 (+/- 0.5)
+
+homer pairs (manager x NFL team, picks vs league share):
+   KevinDA              DAL  4 picks (expected 1.8)
+   d0ddi                JAX  5 picks (expected 1.9)
+   d0ddi                WAS  4 picks (expected 1.5)
+   itsabust             DET  5 picks (expected 1.6)
+   itsabust             LV   4 picks (expected 1.3)
+   JFMarino             LAC  4 picks (expected 1.4)
+   tommyrads            GB   5 picks (expected 1.8)
+   tommyrads            HOU  4 picks (expected 1.5)
+   tommyrads            JAX  4 picks (expected 1.9)
+   JakeSK               PHI  5 picks (expected 1.6)
+   jerem9604            CIN  4 picks (expected 1.2)
+   Hamrliks             SEA  4 picks (expected 1.5)
+   Hamrliks             SF   5 picks (expected 1.7)
+   patekxwater          DET  4 picks (expected 1.6)
+   patekxwater          WAS  4 picks (expected 1.5)
+   BHier                MIN  7 picks (expected 1.8)

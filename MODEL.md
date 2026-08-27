@@ -1419,3 +1419,21 @@ P2 = post-season / 2027 infrastructure.
   loosest, Renteez .33 / jerem .32 most scripted. A finer reach-mode
   (within-position, need-preserving) could be tried post-season; the
   discipline says the brain stands.
+
+### Stray diagnostics: five nulls and a homer list (2026-08-27 evening)
+
+  Within-position reach as response, need controlled: rookies +0.2
+  (+/-0.4) nothing; young +0.6 (+/-0.3) borderline-tiny (and the brain
+  already ingests the young column); faded names +0.5 (+/-0.4) noise -
+  mild brand-loyalty direction, opposite of old value-fall, unproven;
+  6-PT DISPLAY (#6): -0.5 (+/-0.5) at n=65 - NO detectable response to
+  the richer QB points column. Justin's edge is certified safer: the
+  room ignores the display, exactly as the info-set test implied. The
+  QB-cool remains the league's single big systematic stray, already
+  shipped. M2 closes with the model UNCHANGED - consistent with the
+  sniper rejection: the brain was already adequate. Homer pairs kept
+  as runbook color, not features (416 pairs tested, expect false
+  positives): BHier x MIN 7 picks vs 1.8 expected is the standout;
+  tommyrads GB/HOU/JAX, Hamrliks SF/SEA, itsabust DET. M3 (regime-
+  weighted earliness) deferred into Night 2's re-gate cascade where a
+  brain change belongs.

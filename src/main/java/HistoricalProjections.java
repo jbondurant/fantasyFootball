@@ -131,6 +131,12 @@ public class HistoricalProjections {
         return statBySleeperID(configuration, season, "pts_half_ppr");
     }
 
+    /** Projected passing TDs - the 6-pt display-discrepancy diagnostic's input. */
+    public static Map<String, Double> passTdBySleeperID(AAAConfiguration configuration,
+                                                        String season){
+        return statBySleeperID(configuration, season, "pass_td");
+    }
+
     private static Map<String, Double> statBySleeperID(AAAConfiguration configuration,
                                                        String season, String stat){
         Map<String, Double> out = new HashMap<>();
