@@ -1112,3 +1112,22 @@ P2 = post-season / 2027 infrastructure.
   were looking at. If FP wins, the LIVE tool's opponent model switches
   to current FP ECR on draft night (repo already has FantasyPros
   plumbing; smokeTest covers it).
+
+### Provenance verdict REVERSED (2026-08-27, same day - the audit worked)
+
+  The dated harvest acquits the stored snapshots. Jacobs 2022: dated
+  Aug-6 Sleeper ADP rank 47, dated Sep-13 rank 45, stored 44 - the
+  stored value matches dated preseason Sleeper almost exactly. The
+  "smoking gun" was a CROSS-PLATFORM split (Sleeper's crowd loved
+  Jacobs at ~46 while FFC's mock population had him 111), not
+  contamination - and Sleeper's crowd was the one vindicated by the
+  season. Combined with 2021's injury-forensics dating (draft-eve),
+  the working conclusion flips: stored per-season Sleeper ADP is
+  draft-eve clean until proven otherwise. Tonight's D4 still diffs
+  stored-vs-dated for every season systematically (8 dated CSVs now
+  committed, 2021-2025), and the negative board-wide surplus in
+  QbMarketGap needs a new explanation (platform scale, not pollution).
+  The D4b bake-off is UNCHANGED and now cleaner: sleeper-stored vs FFC
+  vs FP-ECR is a question about which artifact the LEAGUE follows, not
+  about data quality - Justin's testimony says FP rankings, the gates
+  will say.
