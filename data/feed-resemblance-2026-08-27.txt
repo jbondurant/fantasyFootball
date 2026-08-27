@@ -4,6 +4,7 @@
    sleeper-dated            11d      99%      20.0      3.94      4%      8%
    halfppr-Sleeper          11d      99%      20.0      3.94      4%      8%
    sleeper-stored             ?     100%      27.2      3.97      4%      8%
+   sleeper-dated             0d      99%      20.5      3.99      3%      6%
    ppr-RTSports              4d      98%      21.5      4.00      3%      6%
    ppr-CBS                   4d      89%      21.9      4.04      4%      6%
    ppr-ESPN                  4d      87%      22.7      4.07      3%      7%
@@ -23,6 +24,7 @@
 
 2024 (draft 20240901): feed, capture gap in days, coverage, mean rank, mean log2, top1, top3
    ffc-api                    ?      83%      21.2      4.07      2%      4%
+   sleeper-dated             3d      99%      21.6      4.11      3%      4%
    std-Sleeper               4d      99%      21.6      4.11      3%      4%
    sleeper-stored             ?     100%      23.1      4.13      3%      4%
    ppr-RTSports              0d      97%      23.1      4.16      2%      5%
