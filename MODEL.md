@@ -1352,3 +1352,31 @@ P2 = post-season / 2027 infrastructure.
   (league-scored points rank minus market rank) x position, per
   manager. If some managers read the points column, the model finds
   them; if the coefficient is ~0, the edge is even safer than assumed.
+
+### Docket audit (2026-08-27): what was missing
+
+  A. THE RE-DERIVATION CASCADE (the big one): after D4b + sniper + strays
+     produce an upgraded brain, it must be RE-GATED (held-out 2025, both
+     average and tail metrics) and every downstream number re-derived
+     under it - plan, adaptive premium, snipe odds, worlds stability.
+     Implied everywhere, scheduled nowhere. Now: Night 2, after the fits.
+  B. ROUNDS 10-16 (the forgotten half of draft night): the game ends at
+     r9 but the draft does not. Bench picks in a keeper league carry
+     real option value - Tuten IS a former late-round stash. Build the
+     late-round recommender: 2027 keeper-cost-aware stash values (cheap
+     rounds = cheap 2027 keeps), upside/spread/age fliers, DEF+K timing
+     per league norms. Night 2/3.
+  C. E1 scale study (does +12.4 grow at the 15-30s budget) - was "first
+     thing," got displaced by the data campaign. Explicitly Night 2; it
+     decides the engine config the precompute bakes in.
+  D. D1 gap certificate - approved, still unbuilt; 20 lines on the hop
+     machinery. Tonight.
+  E. DRAFT-NIGHT RUNBOOK + PAPER FALLBACK: RUNBOOK.md (launch commands,
+     fallback ladder, what to do on an API hiccup, timezone check) plus
+     a printable one-pager (plan, per-round targets, snipe list,
+     Landmine flags) in case the laptop dies. Precompute night.
+  F. THE 31ST SANITY SUITE: smokeTest (feed rot), KeeperAudit (board
+     changes), draft-order confirmation, fresh projections morning-of
+     if news breaks. Runbook items.
+  G. STILL OWED BY JUSTIN: in-draft pick trades allowed? likely
+     autodrafters? keeper board locked or can managers still switch?
