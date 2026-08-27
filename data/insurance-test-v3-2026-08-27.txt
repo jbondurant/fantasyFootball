@@ -1,1 +1,16 @@
 replacement ranks from 5 full historical drafts (next man up off the wire): {QB=21, RB=61, WR=81, TE=19}
+rounds 1-7 fixed at the starting-nine fill [RB, WR, RB, WR, WR, WR, TE];
+only the two insurance rounds vary. 40 fog draws, 300 rollouts, paired.
+
+   r8 + r9            no fog      no wire  insurance    with wire  insurance
+   QB+RB              1812.0       1543.6       +0.0       1571.3       +0.0   <- best, no wire
+   QB+WR              1812.0       1529.2      -14.4       1557.6      -13.7
+   WR+WR              1811.0       1500.4      -43.2       1542.2      -29.1
+   WR+RB              1811.0       1514.6      -29.0       1557.0      -14.3
+   RB+RB              1811.0       1527.0      -16.6       1568.6       -2.7
+   TE+WR              1811.0       1528.3      -15.4       1570.4       -0.9
+   QB+QB              1812.0       1512.1      -31.5       1540.1      -31.1
+
+'insurance' is relative to the shipped QB+RB tail. The
+no-fog column shows what the exact-projection model saw: nearly
+nothing, which is why it could not choose between these.

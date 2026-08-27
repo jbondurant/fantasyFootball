@@ -261,6 +261,16 @@ public class DraftSimulator {
             this.stackTeams = stackTeams;
         }
 
+        /** The pick number that took a player in this state, or null. */
+        public Integer takenAtOf(String sleeperID){
+            return takenAt.get(sleeperID);
+        }
+
+        /** The remaining board, for engines that plan from a live state. */
+        public List<String> boardView(){
+            return java.util.Collections.unmodifiableList(board);
+        }
+
         public SimState copy(){
             Map<String, Map<Position, Integer>> rosterCopy = new HashMap<>();
             for(Map.Entry<String, Map<Position, Integer>> entry : rosters.entrySet()){
@@ -273,6 +283,43 @@ public class DraftSimulator {
             return new SimState(scheduleIndex, new ArrayList<>(board), new HashMap<>(takenAt),
                     rosterCopy, new ArrayList<>(recentPicks), stackCopy);
         }
+    }
+
+    /**
+     * Draft night's entry point: replay the picks that have really happened
+     * into a SimState, so the live board becomes the root the engine plans
+     * from. Picks arrive in pick_no order; anything not on our board (a
+     * defense, a kicker, an unknown id) advances the schedule without
+     * touching the pool.
+     */
+    public SimState stateAfter(List<String> takenInOrder){
+        SimState state = initialState();
+        for(String sleeperID : takenInOrder){
+            while(state.scheduleIndex < schedule.size()
+                    && schedule.get(state.scheduleIndex).keeperSlot()){
+                state.scheduleIndex++;
+            }
+            if(state.scheduleIndex >= schedule.size()){
+                break;
+            }
+            // A player already off the board is a keeper the schedule has
+            // accounted for; consuming a live slot for him would shift every
+            // later pick by one and corrupt the state.
+            if(state.board.contains(sleeperID)){
+                applyPick(state, schedule.get(state.scheduleIndex), sleeperID);
+                state.scheduleIndex++;
+            }
+        }
+        return state;
+    }
+
+    /** The slot the given state is about to fill, or null past the game. */
+    public Slot slotOf(SimState state){
+        int index = state.scheduleIndex;
+        while(index < schedule.size() && schedule.get(index).keeperSlot()){
+            index++;
+        }
+        return index < schedule.size() ? schedule.get(index) : null;
     }
 
     /** The state a rollout starts from. */
