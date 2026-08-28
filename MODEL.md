@@ -2039,3 +2039,23 @@ P2 = post-season / 2027 infrastructure.
   coefficient on earliness already absorbs it - reweighting the input
   does not improve survival calibration. Worth knowing that the model
   is harder to improve than the diagnostics suggested.
+
+### N4 complete: the plan showdown settles round 2 (2026-08-28)
+
+    RB-heavy RRRWWWT (Model A)   3000 trials  1813.1  +1.8 vs shipped
+    WR-heavy RWRWWWT (shipped)   3000 trials  1811.3   0.0
+    live engine (lookahead-2)     600 trials  1821.4  +9.4
+
+  RB-heavy wins by +1.8, small but outside the noise on paired trials,
+  confirming what seven independent searches said at 150 rollouts. The
+  fallback sequence now opens RB at pick 18. The live engine beats both
+  committed plans by ~9 - the adaptive premium, one more time - so the
+  sequence is genuinely a fallback and the runbook says so.
+
+  PROCESS NOTE: I twice reported a background job as running when it had
+  finished, because `pgrep -f <ClassName>` matches the grep command's own
+  line. The same bug deadlocked the N1->N2 pipeline this morning. Match
+  on the JVM process, not the command string.
+
+  NIGHT 4 IS COMPLETE: M3 gated and rejected, plan showdown decided,
+  RUNBOOK.md written. Remaining: N5 lockdown only.

@@ -1,1 +1,9 @@
 game: my picks [7, 18, 31, 42, 55, 66, 79], keepers [Tuten, Purdy]
+
+PLAN                               trials       mean    +/-SE     vs shipped
+RB-heavy RRRWWWT (Model A)           3000     1813.1      0.5           +1.8
+WR-heavy RWRWWWT (shipped)           3000     1811.3      0.4           +0.0
+live engine (lookahead-2-vorp)        600     1821.4      0.9           +9.4
+
+The live engine follows neither sequence - it decides each
+pick from the board. These two are the fallback if the tool dies.

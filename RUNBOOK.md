@@ -39,12 +39,15 @@ Reading the output:
 
 ## The committed plan (laptop-dies fallback)
 
-Rounds 1–7 fill the starting nine (Purdy and Tuten already hold QB and one RB):
+Rounds 1–7 fill the starting nine (Purdy and Tuten already hold QB and one RB).
+RB-heavy beat WR-heavy by +1.8 on 3,000 paired trials, so round 2 is an RB.
+This sequence is worth about **9 points less** than letting the live tool
+decide each pick — use it only if the tool is unavailable.
 
 | Round | Pick | Position |
 |-------|------|----------|
 | 1 | 7 | RB |
-| 2 | 18 | RB *(or WR — see showdown)* |
+| 2 | 18 | RB |
 | 3 | 31 | RB |
 | 4 | 42 | WR |
 | 5 | 55 | WR |
