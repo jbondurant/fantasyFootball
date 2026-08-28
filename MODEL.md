@@ -1809,3 +1809,53 @@ P2 = post-season / 2027 infrastructure.
      a strategic engine to the penalized certificate.
 
   A cheap test that saved a night of building the wrong thing.
+
+### N1 results (2026-08-28): the algorithm hunt closes empirically
+
+  Four new engines against the incumbent, 400 trials, paired:
+
+                            standard   rich(100 scen, inner 32)
+    two-stage-recourse         +2.7      +2.9   <- nominally best
+    blend mean-0.35xdownside   +2.6      +2.7
+    oldschool-2-vorp           +2.3      +2.7   <- incumbent
+    depth3-vorp                +2.3      +2.6
+    regret-match               +0.6      -0.2
+    greedy-vorp (floor)         0.0       0.0     +/-1.2 SE
+
+  DEPTH IS EXHAUSTED: depth-3 exactly matches depth-2, so more plies
+  buy nothing - now measured, not argued. Two-stage recourse leads by
+  0.2-0.3 in both runs (inside noise, but consistently on top, and it
+  is the local form of what computes the ceiling - if anything ships
+  it is this). REGRET-MATCH IS A REAL LOSER: minimising worst-case
+  regret costs mean points, so the downside protection is not free.
+  Seven independent families now converge within ~0.5 points. The
+  hunt is closed empirically, if not provably.
+
+### N2 first result: the late-round rule is QB, and it is not close
+
+  255 late picks (rounds 10-16) over four seasons, joined to the
+  FOLLOWING season's actuals. "Hit" = scored at or above a starter's
+  line the next year (QB12/RB24/WR36/TE12):
+
+    QB   n=39   41% hit   mean 219.9   best 383.0
+    RB   n=77   16% hit   mean  78.1
+    WR   n=107  15% hit   mean  69.8
+    TE   n=32   19% hit   mean  70.7
+    young(<=2yr) 24% vs veterans 15%; round band irrelevant (19/20%)
+
+  NINE OF THE TEN BEST LATE STASHES THIS LEAGUE EVER MADE ARE QBs:
+  Hurts r14 2021 -> 383, Burrow r13 -> 366, Stafford r13 -> 358,
+  Prescott r10 -> 352, Lawrence r12 -> 350, Goff r15 -> 336, Caleb
+  Williams r11 -> 324, Murray r15 -> 308, Goff again r12 -> 305.
+
+  This is QB-coolness surfacing in a THIRD place (after the drone gap
+  and the survival table): because the room will not draft quarter-
+  backs, startable ones fall to rounds 10-15 every single year, and
+  stashing one is the highest-hit-rate late move available.
+
+  CAVEAT: the hit rate measures "became startable", not "was worth
+  keeping to me". Justin already has Purdy, so a stashed QB competes
+  with him - the value is the 2027 KEEPER option (kept at his draft
+  round), which is exactly the Tuten trade. That option is worth most
+  for a young QB taken late, which is precisely the Hurts/Burrow/
+  Williams pattern.

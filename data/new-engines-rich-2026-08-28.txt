@@ -1,1 +1,11 @@
 game: my picks [7, 18, 31, 42, 55, 66, 79], keepers [Tuten, Purdy]
+
+ENGINE                                 mean    +/-SE     vs floor
+two-stage-recourse                   1821.6      1.2         +2.9
+oldschool-2-vorp (incumbent)         1821.4      1.2         +2.7
+blend mean-0.35xdownside             1821.3      1.2         +2.7
+depth3-vorp                          1821.3      1.2         +2.6
+greedy-vorp (floor)                  1818.7      1.2         +0.0
+regret-match                         1818.4      1.2         -0.2
+
+400 trials, shared eval seeds; scenarios=100 for the two-stage family.

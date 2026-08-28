@@ -1,0 +1,29 @@
+255 late picks (rounds 10-16) across 4 seasons, joined to the FOLLOWING season's actual points.
+
+POS         n   hit rate  mean next  best next
+QB         39        41%      219.9      383.0
+RB         77        16%       78.1      255.2
+WR        107        15%       69.8      221.4
+TE         32        19%       70.7      160.7
+
+GROUP                   n   hit rate  mean next
+rookies                73        23%       97.9
+young (<=2yr)         129        24%      107.2
+veterans              126        15%       83.2
+rounds 10-12          119        19%       93.6
+rounds 13-16          136        20%       96.9
+
+the ten best late stashes this league ever made:
+   Jalen Hurts              QB   r14  2021 -> 383.0 pts in 2022
+   Joe Burrow               QB   r13  2021 -> 366.0 pts in 2022
+   Matthew Stafford         QB   r13  2024 -> 358.4 pts in 2025
+   Dak Prescott             QB   r10  2022 -> 351.8 pts in 2023
+   Trevor Lawrence          QB   r12  2024 -> 350.2 pts in 2025
+   Jared Goff               QB   r15  2023 -> 336.0 pts in 2024
+   Caleb Williams           QB   r11  2024 -> 324.2 pts in 2025
+   Kyler Murray             QB   r15  2023 -> 308.2 pts in 2024
+   Jared Goff               QB   r12  2024 -> 305.1 pts in 2025
+   Kirk Cousins             QB   r16  2021 -> 304.6 pts in 2022
+
+'hit' = scored at or above a starter's line the FOLLOWING
+season (QB12/RB24/WR36/TE12), i.e. would have been worth keeping.
