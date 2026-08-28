@@ -1879,3 +1879,22 @@ P2 = post-season / 2027 infrastructure.
   work - ranking THIS year's rounds 10-16 candidates by the measured
   base rates plus 2027 keeper option value - and F's polish (warm
   loop, insurance fall-through).
+
+### N3 (early): the 2026 late-round target list
+
+  data/late-round-targets-2026-08-28.txt. The top SEVENTEEN are all
+  quarterbacks; the first skill player is 18th with a score six times
+  lower. Nix (348 proj, 83% survives), Dart (341, 65%), Shough (315,
+  100%) lead among young QBs; Mahomes (345, 69%), Stafford (344, 65%)
+  and Goff (343, 98%) are startable-quality at a stash price.
+
+  FORMULA IS CRUDE, honestly: projection x measured position hit rate
+  x youth bonus proxies "expected startable-ness next year", not true
+  keeper surplus. It ignores that only TWO players can be kept (so a
+  stash competes with Tuten), uses no 2027 projections, and QB's raw
+  numbers are inflated by the 6-pt passing TDs relative to a QB12 bar.
+  Ordering WITHIN quarterbacks is soft. The direction is not: three
+  independent measurements now agree (drone gap, survival table, and
+  nine of the ten best stashes in league history).
+
+  TUESDAY RULE, rounds 10-16: take young quarterbacks who fell.
