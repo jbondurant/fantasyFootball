@@ -1965,3 +1965,39 @@ P2 = post-season / 2027 infrastructure.
   Prescott 100%) - an ADP robot does not reach that deep in two rounds.
   The live committee handles this automatically once his pick 8 is on
   the board; this is the WHY behind the shift.
+
+### KN wired into the live committee (2026-08-28), with two corrections
+
+  Kim-Nelson ranking and selection now arbitrates every live pick.
+  Per-decision cost measured across a full draft: 0.00-1.2s, spending
+  45-64 rollouts on the contested early picks and 0-8 on settled late
+  ones - the adaptive budget allocation equal-allocation cannot do.
+
+  CORRECTION 1 - delta matters enormously. At delta=1 KN reported
+  "tie" at pick 1 while all four engines had RB ahead of WR by 24
+  points. That is not a tie: draft outcomes are high-variance, so
+  proving separation inside a 1-point indifference zone needs more
+  evidence than 64 rollouts can supply. At delta=3 it PROVES RB in 50
+  rollouts. Shipped setting: delta=3, alpha=.05.
+
+  CORRECTION 2 - KN never overrides the engines. A KN "tie" means it
+  could not PROVE separation within budget, NOT that the candidates
+  are equal; the first draft of the wiring printed "this pick does not
+  matter much - take the scarcer position", which would have given
+  actively bad advice on a 24-point edge. Absence of proof is not
+  proof of absence. KN is now advisory: it reports its verdict beside
+  the vote and never replaces it.
+
+  JUSTIN'S QUESTION - why does KN say PROVEN when committed models
+  underperform? Because KN is NOT committed. It runs fresh at every
+  pick from the live board (compute-at-every-round family); "PROVEN"
+  is a local claim about THIS board, not a sequence. The real caveat
+  is different: KN proves the ranking of ITS OWN depth-1 VORP-tail
+  estimates, so a biased tail would make it confidently wrong - which
+  is exactly why it advises alongside four independent engines rather
+  than replacing them.
+
+  Also settled tonight: dFBA-as-draft-policy scores 1820.1 against
+  greedy-vorp's 1820.3 - indistinguishable. The LP relaxation of a
+  draft IS marginal-value greedy; stoichiometry is a costume. A joke
+  with a real structural punchline.

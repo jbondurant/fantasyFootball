@@ -229,6 +229,25 @@ public class PolicyTournament {
         public String choose(List<String> board, DraftSimulator.Slot slot,
                              DraftSimulator.SimState state){
             Position position = pickPosition(board, slot, state);
+            if(position == null){
+                // The LIVE game hands me nine picks while the starting nine
+                // needs only seven beyond the keepers, so the ledger empties
+                // before the picks do. Those extra picks are bench: take the
+                // best player available and consume no slot.
+                Map<Position, String> available = bestByPosition(board, points);
+                String bench = null;
+                double top = -1;
+                for(String candidate : available.values()){
+                    double projected = points.getOrDefault(candidate, 0.0);
+                    if(projected > top){
+                        top = projected;
+                        bench = candidate;
+                    }
+                }
+                mine.add(bench);
+                decision++;
+                return bench;
+            }
             String chosen = bestByPosition(board, points).get(position);
             if(chosen == null){   // board bare at that position: take best feasible
                 Map<Position, String> best = bestByPosition(board, points);
@@ -515,6 +534,11 @@ public class PolicyTournament {
         final long seed;
         int lastUsed;
         boolean lastProven;
+        Position lastChoice;
+
+        Position lastChoice(){
+            return lastChoice;
+        }
 
         RankingSelection(double delta, double alpha, int firstStage, int budget,
                          long seed){
@@ -532,6 +556,7 @@ public class PolicyTournament {
             if(alive.size() == 1){
                 lastUsed = 0;
                 lastProven = true;
+                lastChoice = alive.get(0);
                 return alive.get(0);
             }
             int k = alive.size();
@@ -598,6 +623,7 @@ public class PolicyTournament {
                     best = position;
                 }
             }
+            lastChoice = best;
             return best;
         }
 
@@ -1906,6 +1932,39 @@ public class PolicyTournament {
         return total / rollouts;
     }
 
+    /** Runs one draft with a RankingSelection policy, printing per-pick
+     *  diagnostics: rollouts spent, whether selection was proven, seconds. */
+    void simulateWithProbe(RankingSelection policy, long[] timing){
+        DraftSimulator.SimState state = simulator.initialState();
+        Random random = new Random(DraftSimulator.SEED + 4242);
+        int pickIndex = 0;
+        while(true){
+            DraftSimulator.Slot slot = simulator.slotOf(state);
+            if(slot == null){
+                break;
+            }
+            if(slot.manager().equals(me)){
+                long start = System.currentTimeMillis();
+                Position choice = policy.pickPosition(
+                        java.util.Collections.unmodifiableList(state.boardView()),
+                        slot, state);
+                double seconds = (System.currentTimeMillis() - start) / 1000.0;
+                System.out.printf("%-6d %-16s %10d %10s %12.2f%n", slot.pickNumber(),
+                        choice, policy.lastUsed, policy.lastProven ? "PROVEN" : "tie",
+                        seconds);
+                String taken = bestByPosition(state.boardView(), points).get(choice);
+                policy.needs.consume(choice);
+                policy.mine.add(taken);
+                policy.decision++;
+                state = simulator.branchWith(state, taken);
+                pickIndex++;
+            }
+            else {
+                simulator.simulateOneFrom(state, random);
+            }
+        }
+    }
+
     /** Per-trial scores of a policy on the shared fresh eval stream. */
     double[] evaluate(Factory factory, int trials){
         return IntStream.range(0, trials).parallel().mapToDouble(r -> {
@@ -1930,6 +1989,28 @@ public class PolicyTournament {
             sumSquares += (score - center) * (score - center);
         }
         return Math.sqrt(sumSquares / (scores.length - 1) / scores.length);
+    }
+
+    /**
+     * A tournament view of the LIVE game, so draft-night code can borrow the
+     * ranking-and-selection machinery: same simulator and points as the live
+     * planner, with my roster so far standing in for the keepers.
+     */
+    static PolicyTournament forLiveArbitration(DraftPlanner planner,
+                                               List<String> rosterSoFar){
+        // Only skill players consume roster slots; a defence or an unknown id
+        // would break the Needs ledger with an infeasible consume.
+        List<String> skill = new ArrayList<>();
+        for(String id : rosterSoFar){
+            Player player = Player.getPlayerFromSIDV2(id);
+            if(player != null && StartingLineup.isSkillPosition(player.position)){
+                skill.add(id);
+            }
+        }
+        PolicyTournament tournament = new PolicyTournament(planner.simulator(),
+                planner.me(), skill, planner.points());
+        tournament.fillWaitingTable(120);
+        return tournament;
     }
 
     /**
