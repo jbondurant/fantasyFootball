@@ -2025,3 +2025,17 @@ P2 = post-season / 2027 infrastructure.
   this machinery is ~1 point of resolution per pick in under 3s, and
   below that the differences stop being meaningful rather than merely
   unproven.
+
+### N4: M3 recency weighting REJECTED (2026-08-28)
+
+  Half-life chosen on 2024 (brain through 2023): pooled 0.75%, every
+  weighted variant 0.94%. Confirmation on held-out 2025: pooled 0.57%,
+  recency-weighted 0.57% - a tie. Pooled earliness stands, so NO
+  re-derivation cascade is triggered.
+
+  Third consecutive "the brain is already adequate" verdict, after the
+  sniper mixture (scale 0 chosen) and the five null strays. The
+  appetite audit's era finding is real, but the boosted brain's fitted
+  coefficient on earliness already absorbs it - reweighting the input
+  does not improve survival calibration. Worth knowing that the model
+  is harder to improve than the diagnostics suggested.

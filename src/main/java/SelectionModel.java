@@ -281,6 +281,51 @@ public class SelectionModel implements ChoiceModel {
     }
 
     /** The same construction for any position. */
+    /**
+     * The same, with recent seasons weighted more heavily. Justin's appetite
+     * audit found the league's QB timing was a 2022-23 ERA (league mean first
+     * QB round 6.1 -> 4.1 -> 3.7 -> 5.4 -> 5.6), not a trend, so pooling all
+     * seasons equally overstates today's QB appetite. halfLife is in seasons:
+     * a season h back gets weight 0.5^(age/h). M3 on the docket.
+     */
+    public static Map<String, Double> positionEarlinessWeighted(
+            AAAConfiguration configuration, int lastSeason, Position position,
+            double halfLife){
+        Map<String, List<double[]>> observations = new HashMap<>();
+        List<JsonArray> drafts = configuration.getPreviousDraftPicks();
+        List<String> seasons = configuration.getPreviousSeasons();
+        double leagueTotal = 0;
+        double leagueWeight = 0;
+        for(int i = 0; i < drafts.size() && i < seasons.size(); i++){
+            if(seasons.get(i) == null || Integer.parseInt(seasons.get(i)) > lastSeason){
+                continue;
+            }
+            double age = lastSeason - Integer.parseInt(seasons.get(i));
+            double weight = Math.pow(0.5, age / halfLife);
+            for(Map.Entry<String, Integer> entry
+                    : DraftSimulator.realFirstRound(drafts.get(i), position).entrySet()){
+                observations.computeIfAbsent(entry.getKey(), u -> new ArrayList<>())
+                        .add(new double[]{entry.getValue(), weight});
+                leagueTotal += entry.getValue() * weight;
+                leagueWeight += weight;
+            }
+        }
+        double leagueMean = leagueWeight == 0 ? 7.0 : leagueTotal / leagueWeight;
+        Map<String, Double> earliness = new HashMap<>();
+        for(Map.Entry<String, List<double[]>> entry : observations.entrySet()){
+            double total = 0;
+            double weight = 0;
+            for(double[] row : entry.getValue()){
+                total += row[0] * row[1];
+                weight += row[1];
+            }
+            double mean = weight == 0 ? leagueMean : total / weight;
+            earliness.put(entry.getKey(),
+                    (leagueMean - mean) * weight / (weight + 2.0));
+        }
+        return earliness;
+    }
+
     public static Map<String, Double> positionEarliness(AAAConfiguration configuration,
                                                         int lastSeason, Position position){
         Map<String, List<Integer>> firstRounds = new HashMap<>();
