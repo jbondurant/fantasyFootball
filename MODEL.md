@@ -1859,3 +1859,23 @@ P2 = post-season / 2027 infrastructure.
   round), which is exactly the Tuten trade. That option is worth most
   for a young QB taken late, which is precisely the Hurts/Burrow/
   Williams pattern.
+
+### N2 complete (2026-08-28)
+
+  TREE CONVERGED: adaptive floor +5.6 (400 scenarios) -> +6.0 (1000),
+  clairvoyance +5.5. Stable, so the floor is real; our engine's +7.2
+  sits above it because the engine sees the whole board while the tree
+  observes four bucketed numbers.
+
+  COMMITTEE SPLITS DO NOT REPRODUCE: seed 7 split at rounds 3 and 7,
+  seed 11 at 2 and 4, seed 23 at 2 and 7. So Tuesday should bring
+  roughly TWO genuinely contested picks, but which rounds they fall in
+  depends on the board - they are real uncertainty, not a fixed weak
+  spot that could be pre-solved.
+
+  N3 REPRIORITISED: the penalised certificate would tighten a bound
+  that no longer changes a decision (the engine hunt closed
+  empirically at N1). N3 becomes the actionable half of the late-round
+  work - ranking THIS year's rounds 10-16 candidates by the measured
+  base rates plus 2027 keeper option value - and F's polish (warm
+  loop, insurance fall-through).
