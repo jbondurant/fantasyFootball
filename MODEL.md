@@ -1751,3 +1751,38 @@ P2 = post-season / 2027 infrastructure.
   actions, so none of them price the blocking channel (my pick changes
   what opponents take, changing what returns to me). That channel is
   outside every bound computed this week.
+
+## THE FIVE NIGHTS (2026-08-27 23:54 -> draft Tue 2026-09-01 20:45)
+
+  Ordered by expected points on Tuesday, not by interest.
+
+  N1 tonight   four new engines (depth3, two-stage recourse, regret-
+               match, mean-minus-downside) + tree at 400 + THE BLOCKING
+               MEASUREMENT: does my pick shift next-round availability?
+               That test decides whether the un-ceilinged strategic
+               class is real or an illusion.
+  N2 Aug 28    ROUNDS 10-16 - the largest unbuilt thing and not
+               algorithmic. Seven more picks with zero coverage today;
+               Tuten was a round-12 stash and became the best keeper in
+               the league. Needs 2027 keeper-cost-aware stash values,
+               upside ranking (spread/age/rookie), DEF+K timing.
+  N3 Aug 29    branch on N1: blocking real -> build the strategic
+               engine (models opponent RESPONSE; no bound constrains
+               it). Blocking null -> penalized certificate done
+               properly, closing the bound question.
+  N4 Aug 30    the re-derivation cascade promised and skipped: M3
+               recency-weighted earliness fitted and gated, and if it
+               ships, re-derive plan/premium/snipes/robustness under
+               the new brain. Plus WorldsRace under Model A (the
+               existing robustness check used the nine-pick framing).
+  N5 Aug 31    LOCKDOWN. Fresh ADP, smokeTest, KeeperAudit, final plan
+               run, full rehearsal, printable one-pager. Nothing
+               experimental.
+
+  Daytime, minutes not hours: persistent warm loop for F (pay the 17s
+  fit once, not per pick); fall-through to insurance ranking when
+  Model A's margins go flat in the late rounds.
+
+  HONEST EV NOTE: nights 1 and 3 chase 1-2 points out of ~1830.
+  Rounds 10-16 and execution reliability are worth more in
+  expectation, which is why they hold the protected slots.
