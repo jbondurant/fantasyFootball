@@ -47,20 +47,54 @@ public class LateRoundTargets {
         hitRate.put(Position.WR, 0.15);
         hitRate.put(Position.TE, 0.19);
 
+        // With -PdraftId this runs from the LIVE board instead of the
+        // pre-draft one. That matters because LiveCommittee now sends bench
+        // picks here: at pick 90 there are 89 players gone, and a list that
+        // cannot see them will confidently name someone drafted an hour ago.
+        String draftID = System.getProperty("draftId");
+        DraftSimulator.SimState live = null;
+        java.util.Collection<String> pool = simulator.players();
+        if(draftID != null){
+            try {
+                live = simulator.stateAfter(LiveDraft.livePicks(draftID));
+                pool = new ArrayList<>(live.boardView());
+                System.out.printf("live board: %d players gone, %d left%n",
+                        simulator.players().size() - pool.size(), pool.size());
+            }
+            catch(Exception unreachable){
+                System.out.println("could not read draft " + draftID
+                        + " - falling back to the pre-draft board: "
+                        + unreachable.getMessage());
+            }
+        }
+
         // survival: who is still there after nine rounds?
         Map<String, Integer> survived = new HashMap<>();
         Random random = new Random(DraftSimulator.SEED + 777);
         for(int t = 0; t < trials; t++){
-            Map<String, Integer> takenAt = simulator.simulateOnce(random);
-            for(String id : simulator.players()){
-                if(!takenAt.containsKey(id)){
-                    survived.merge(id, 1, Integer::sum);
+            if(live == null){
+                Map<String, Integer> takenAt = simulator.simulateOnce(random);
+                for(String id : pool){
+                    if(!takenAt.containsKey(id)){
+                        survived.merge(id, 1, Integer::sum);
+                    }
+                }
+            }
+            else {
+                DraftSimulator.SimState branch = live.copy();
+                while(simulator.slotOf(branch) != null){
+                    simulator.simulateOneFrom(branch, random);
+                }
+                for(String id : pool){
+                    if(branch.takenAtOf(id) == null){
+                        survived.merge(id, 1, Integer::sum);
+                    }
                 }
             }
         }
 
         List<Object[]> rows = new ArrayList<>();
-        for(String id : simulator.players()){
+        for(String id : pool){
             double survival = survived.getOrDefault(id, 0) / (double) trials;
             if(survival < 0.60){
                 continue;   // will not reach the late rounds
