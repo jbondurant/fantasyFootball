@@ -2115,3 +2115,25 @@ P2 = post-season / 2027 infrastructure.
   trades a measured edge for an unmeasured one. Scope is limited
   anyway: this affects only the FALLBACK sequence - the live engine
   reads the real board and never follows a fixed order.
+
+### Committee robustness across wrong-model worlds (2026-08-28)
+
+    TRUE WORLD      committee  greedy-vorp  committed   engine-greedy
+    base               1823.1     1821.0     1816.1        +2.1
+    linear             1834.7     1832.3     1822.9        +2.3
+    drones             1785.7     1784.2     1783.7        +1.4
+    chaos              1896.9     1885.7     1888.9       +11.2
+    all-autodraft      1807.5     1791.4     1805.6       +16.1
+    qb-hungry          1824.5     1822.5     1817.6        +2.0
+
+  THE ENGINE NEVER LOSES TO GREEDY. That was the failure mode worth
+  hunting - a tool that wins in the world it was fitted to and loses
+  when the model is wrong would be unsafe to trust on draft night. It
+  does not happen in any of six worlds.
+
+  And the edge GROWS as the world gets strange: +11.2 in a chaotic
+  room, +16.1 when everyone autodrafts, versus ~+2 in familiar worlds.
+  Adaptation is worth most exactly when the board misbehaves, because
+  a fixed plan cannot notice. The all-autodraft column also answers
+  Justin's JFMarino worry from the other side: an autodrafting room
+  makes the live tool MORE valuable, not less.

@@ -6,3 +6,12 @@ linear                   1834.7         1832.3         1822.9            2.3
 game: my picks [7, 18, 31, 42, 55, 66, 79], keepers [Tuten, Purdy]
 drones                   1785.7         1784.2         1783.7            1.4
 game: my picks [7, 18, 31, 42, 55, 66, 79], keepers [Tuten, Purdy]
+chaos                    1896.9         1885.7         1888.9           11.2
+game: my picks [7, 18, 31, 42, 55, 66, 79], keepers [Tuten, Purdy]
+all-autodraft            1807.5         1791.4         1805.6           16.1
+game: my picks [7, 18, 31, 42, 55, 66, 79], keepers [Tuten, Purdy]
+qb-hungry                1824.5         1822.5         1817.6            2.0
+
+The engine must beat greedy in EVERY world, not just the
+one it was fitted to. A tool that wins by 9 at home and loses when
+the model is wrong is not safe to trust on draft night.
