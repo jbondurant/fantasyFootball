@@ -492,6 +492,180 @@ public class PolicyTournament {
     }
 
     /**
+     * Kim-Nelson ranking and selection with an indifference zone. Instead of
+     * giving every candidate the same fixed number of rollouts and comparing
+     * means, this runs them SEQUENTIALLY on common random numbers and
+     * eliminates a candidate the moment it is statistically dominated,
+     * spending the remaining budget only on contenders.
+     *
+     * The guarantee: whichever candidate survives is the true best with
+     * probability at least 1-alpha, unless the true gap is smaller than delta
+     * (the indifference zone), in which case we do not care which we take -
+     * which is exactly the draft-night situation where a "split committee"
+     * means the pick genuinely does not matter.
+     *
+     * Reports its own confidence: it either eliminates down to one (selection
+     * proven) or exhausts the budget (a real tie, human's call).
+     */
+    class RankingSelection extends TournamentPolicy {
+        final double delta;      // indifference zone, in points
+        final double alpha;      // tolerated probability of wrong selection
+        final int firstStage;    // n0
+        final int budget;        // max rollouts per candidate
+        final long seed;
+        int lastUsed;
+        boolean lastProven;
+
+        RankingSelection(double delta, double alpha, int firstStage, int budget,
+                         long seed){
+            this.delta = delta;
+            this.alpha = alpha;
+            this.firstStage = firstStage;
+            this.budget = budget;
+            this.seed = seed;
+        }
+
+        @Override
+        Position pickPosition(List<String> board, DraftSimulator.Slot slot,
+                              DraftSimulator.SimState state){
+            List<Position> alive = new ArrayList<>(needs.feasibleSkill());
+            if(alive.size() == 1){
+                lastUsed = 0;
+                lastProven = true;
+                return alive.get(0);
+            }
+            int k = alive.size();
+            Map<Position, List<Double>> samples = new EnumMap<>(Position.class);
+            for(Position position : alive){
+                samples.put(position, new ArrayList<>());
+            }
+            // first stage: n0 paired replications for everyone
+            for(int r = 0; r < firstStage; r++){
+                sampleAll(alive, samples, state, r);
+            }
+            double eta = 0.5 * (Math.pow(2 * alpha / (k - 1), -2.0 / (firstStage - 1)) - 1);
+            double hSquared = 2 * eta * (firstStage - 1);
+
+            int used = firstStage;
+            while(alive.size() > 1 && used < budget){
+                // eliminate dominated candidates
+                List<Position> survivors = new ArrayList<>();
+                for(Position i : alive){
+                    boolean eliminated = false;
+                    for(Position j : alive){
+                        if(i == j){
+                            continue;
+                        }
+                        double sum = 0;
+                        double sumSquares = 0;
+                        List<Double> a = samples.get(i);
+                        List<Double> b = samples.get(j);
+                        for(int r = 0; r < used; r++){
+                            double d = a.get(r) - b.get(r);
+                            sum += d;
+                            sumSquares += d * d;
+                        }
+                        double variance = Math.max((sumSquares - sum * sum / used)
+                                / Math.max(used - 1, 1), 1e-9);
+                        double bound = Math.max(0,
+                                hSquared * variance / (2 * delta) - delta * used / 2);
+                        if(sum < -bound){
+                            eliminated = true;
+                            break;
+                        }
+                    }
+                    if(!eliminated){
+                        survivors.add(i);
+                    }
+                }
+                if(survivors.size() == alive.size() || survivors.isEmpty()){
+                    // nobody could be eliminated: buy one more replication each
+                    sampleAll(alive, samples, state, used);
+                    used++;
+                    continue;
+                }
+                alive = survivors;
+            }
+            lastUsed = used;
+            lastProven = alive.size() == 1;
+            Position best = alive.get(0);
+            double top = -Double.MAX_VALUE;
+            for(Position position : alive){
+                double mean = samples.get(position).stream()
+                        .mapToDouble(Double::doubleValue).average().orElse(0);
+                if(mean > top){
+                    top = mean;
+                    best = position;
+                }
+            }
+            return best;
+        }
+
+        private void sampleAll(List<Position> alive, Map<Position, List<Double>> samples,
+                               DraftSimulator.SimState state, int replication){
+            long innerSeed = seed + 101L * decision + 7919L * replication;
+            for(Position position : alive){
+                HeadThenTail completion = new HeadThenTail(List.of(position), Tail.VORP,
+                        needs, mine, new Random(innerSeed ^ 0x5DEECE66DL));
+                DraftSimulator.SimState branch = state.copy();
+                simulator.simulateFrom(branch, new Random(innerSeed), me, completion);
+                samples.get(position).add(completion.score());
+            }
+        }
+    }
+
+
+    /**
+     * dFBA's flux allocation, one timestep. Solves for the integer flux
+     * vector over positions that maximises "biomass" (best-nine points)
+     * given current substrate levels (the depth table), subject to the
+     * stoichiometric constraint that every pick fills exactly one slot and
+     * no position absorbs more than its open slots. Then takes the
+     * highest-flux reaction - the standard dFBA step - and re-solves next
+     * round with depleted substrate.
+     */
+    class FluxPolicy extends TournamentPolicy {
+        @Override
+        Position pickPosition(List<String> board, DraftSimulator.Slot slot,
+                              DraftSimulator.SimState state){
+            int remaining = myPicks.length - decision;
+            List<Position> open = needs.feasibleSkill();
+            if(open.size() == 1){
+                return open.get(0);
+            }
+            Map<Position, String> best = bestByPosition(board, points);
+            List<List<Position>> allocations = allSequences(needs.copy(), remaining);
+            double bestYield = -Double.MAX_VALUE;
+            Position bestReaction = open.get(0);
+            for(List<Position> allocation : allocations){
+                double yield = 0;
+                Map<Position, Integer> used = new EnumMap<>(Position.class);
+                for(int step = 0; step < allocation.size(); step++){
+                    Position position = allocation.get(step);
+                    int k = used.merge(position, 1, Integer::sum) - 1;
+                    if(step == 0){
+                        String candidate = best.get(position);
+                        yield += candidate == null ? 0
+                                : points.getOrDefault(candidate, 0.0);
+                    }
+                    else {
+                        double[] depth = depthTable
+                                .getOrDefault(myPicks[decision + step], Map.of())
+                                .get(position);
+                        yield += depth == null ? 0 : depth[Math.min(k, DEPTH_K - 1)];
+                    }
+                }
+                if(yield > bestYield){
+                    bestYield = yield;
+                    bestReaction = allocation.get(0);
+                }
+            }
+            return bestReaction;
+        }
+    }
+
+
+    /**
      * The two-stage stochastic program, solved at every pick: sample futures,
      * and for each candidate action solve the recourse EXACTLY inside each
      * future (availability is known there), then aggregate. lambda selects
