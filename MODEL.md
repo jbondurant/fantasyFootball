@@ -1716,3 +1716,38 @@ P2 = post-season / 2027 infrastructure.
   algorithm can collect. Remaining headroom is 1-2 points at most.
   A knob bug found here: `buckets` was never forwarded in build.gradle,
   so the first sweep silently ran three identical configurations.
+
+### CORRECTION (2026-08-28): the tree is a floor, not a ceiling
+
+  The 400-scenario run exposes a labelling error in the entry above.
+  ScenarioTree restricts the policy to a four-number bucketed
+  observation; the live engines see the whole board. A better-informed
+  policy can beat a worse-informed one, so the tree's "ADAPTIVE" row is
+  a LOWER bound on what is achievable - not the ceiling it was called.
+
+  The tell was in the numbers: tree adaptive = +5.6 over committed at
+  400 scenarios, while oldschool-2-vorp measures +7.2. A policy cannot
+  exceed a genuine ceiling. What it exceeded was a handicapped
+  observer's optimum.
+
+  HONEST STATE OF THE BOUND:
+    valid upper   clairvoyant, ~+12.5 over committed (loose - contains
+                  future knowledge nobody can collect)
+    valid lower   our measured engine, +7.2
+    true optimum  unestablished, somewhere between
+  Tightening the tree toward full-board observation does not fix this:
+  it trades the information handicap for in-sample overfitting (the
+  120-scenario run read +6.9, the 400-scenario run +5.6 - the earlier
+  number was partly fitting noise).
+
+  CONSEQUENCE: the algorithm hunt is NOT formally closed, and the
+  earlier "1-2 points left at most" was overconfident. Up to ~5 points
+  separate our engine from the only valid upper bound.
+
+  Justin's question - "how do we know the ceiling?" - was the right
+  one, and the answer is that we do not. What we have is a floor we
+  are standing on and a loose roof. Also worth recording: every
+  scenario-based bound here samples futures INDEPENDENTLY of my
+  actions, so none of them price the blocking channel (my pick changes
+  what opponents take, changing what returns to me). That channel is
+  outside every bound computed this week.

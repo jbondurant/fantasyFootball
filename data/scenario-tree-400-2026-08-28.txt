@@ -1,0 +1,16 @@
+game: my picks [7, 18, 31, 42, 55, 66, 79], keepers [Tuten, Purdy]
+400 scenarios, 7 picks, 6-bucket observations
+   distinct observations per pick: 7, 7, 4, 3, 4, 4, 6
+
+   committed        1828.9   (best single sequence)
+   ADAPTIVE         1834.4   (exact optimum of the tree)
+   clairvoyant      1841.4   (sees the future)
+
+   value of adapting          +5.6   <- capturable, in principle
+   pure clairvoyance          +7.0   <- provably uncapturable
+
+   committed plan on these scenarios: [RB, RB, RB, WR, WR, WR, TE]
+
+The adaptive row is the ceiling for ANY non-anticipative
+policy on this scenario set. Compare it to the live engines'
+measured values: what is left is what an algorithm could still win.
