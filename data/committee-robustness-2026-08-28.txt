@@ -1,0 +1,8 @@
+TRUE WORLD            committee    greedy-vorp      committed   engine vs greedy
+game: my picks [7, 18, 31, 42, 55, 66, 79], keepers [Tuten, Purdy]
+base                     1823.1         1821.0         1816.1            2.1
+game: my picks [7, 18, 31, 42, 55, 66, 79], keepers [Tuten, Purdy]
+linear                   1834.7         1832.3         1822.9            2.3
+game: my picks [7, 18, 31, 42, 55, 66, 79], keepers [Tuten, Purdy]
+drones                   1785.7         1784.2         1783.7            1.4
+game: my picks [7, 18, 31, 42, 55, 66, 79], keepers [Tuten, Purdy]

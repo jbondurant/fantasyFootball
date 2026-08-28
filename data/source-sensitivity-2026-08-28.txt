@@ -1,3 +1,21 @@
-SOURCE         its best sequence               value   how the OTHER sources' plans score under it
-projection source 'sleeper,espn,cbs,blend:sleeper,espn,cbs' not found - using sleeper
+separator fixed
+sleeper        RRRWWWT                        1813.4
 game: my picks [7, 18, 31, 42, 55, 66, 79], keepers [Tuten, Purdy]
+espn           RRRWWWT                        1943.6
+game: my picks [7, 18, 31, 42, 55, 66, 79], keepers [Tuten, Purdy]
+cbs            RWRWWTT                        2040.6
+game: my picks [7, 18, 31, 42, 55, 66, 79], keepers [Tuten, Purdy]
+blend          RWRWRWT                        1904.2
+
+under ->            sleeper         espn          cbs        blend     (rows = plan, cols = the numbers scoring it)
+RRRWWWT              1814.6       1942.3       1996.9       1897.7
+RRRWWWT              1814.6       1942.3       1996.9       1897.7
+RWRWWTT              1794.2       1898.6       2038.1       1889.1
+RWRWRWT              1802.5       1922.6       2030.2       1902.1
+
+If every row picks the same shape, the plan is source-proof:
+the three shops disagree by 40-65 points on elite players, so
+agreement here means the SEQUENCE does not depend on whose numbers
+I trust.
+
+[exited with code 0]

@@ -2089,3 +2089,29 @@ P2 = post-season / 2027 infrastructure.
   on the AVERAGE board. If the real board at 18 has a receiver clearly
   ahead of the best RB, take the receiver - and the live tool will say
   so, because it reads the actual board rather than the average one.
+
+### Source sensitivity of the PLAN (2026-08-28)
+
+  The keeper decision was stress-tested across three shops in August;
+  the plan never was. Best sequence under each feed, then every plan
+  scored under every feed (within-column only - CBS projects ~200
+  higher in absolute terms):
+
+    plan        sleeper    espn      cbs     blend
+    RRRWWWT      1814.6   1942.3   1996.9   1897.7   <- best: sleeper, espn
+    RWRWWTT      1794.2   1898.6   2038.1   1889.1   <- best: CBS (+41)
+    RWRWRWT      1802.5   1922.6   2030.2   1902.1   <- best: blend (+4.4)
+
+  THREE OF FOUR AGREE. Sleeper and ESPN both choose RRRWWWT, and under
+  the blend it loses by 4.4 - inside noise. CBS is the real dissenter:
+  under its numbers a TWO-TIGHT-END plan beats ours by 41, because CBS
+  is structurally bullish on TEs rather than merely higher overall.
+
+  NOT CHANGING THE PLAN. The accuracy shootout established Sleeper's
+  projections as the best outcome predictor we hold (spearman .60-.70
+  vs actuals, five seasons); CBS's projections have NO such validation
+  because we only began scraping them this year and cannot score them
+  against past outcomes. Switching to satisfy an unvalidated source
+  trades a measured edge for an unmeasured one. Scope is limited
+  anyway: this affects only the FALLBACK sequence - the live engine
+  reads the real board and never follows a fixed order.
