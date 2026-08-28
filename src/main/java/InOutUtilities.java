@@ -65,7 +65,7 @@ public class InOutUtilities {
     public static String getLiveWebPage(String webURL, String filepathStart){
         String todaysFilePath = "./" + filepathStart + DateUtility.getTodaysDate() + ".txt";
         try {
-            String content = WebUrlUtility.urlToString(webURL);
+            String content = WebUrlUtility.urlToStringUncached(webURL);
             writeContentToFile(content, todaysFilePath);
             return content;
         }

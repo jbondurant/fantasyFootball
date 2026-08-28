@@ -48,7 +48,52 @@ public class WebUrlUtility {
         }
     }
 
+    /**
+     * A fetch that refuses every cache between here and the server.
+     *
+     * The 2026-08-28 mock rehearsal caught the live draft board arriving 13
+     * picks stale: curl saw 70 picks while the Java client, fetching seconds
+     * later, got 59. Sleeper sits behind a CDN, and urlToString sends no
+     * cache directives, so an edge was free to hand back a stored copy. On
+     * draft night that is the same failure as the day-cache bug - a healthy
+     * looking recommendation computed against a board that has moved on.
+     *
+     * Belt and braces: disable the client cache, ask every proxy not to serve
+     * a stored copy, and make the URL unique so a cache has nothing to match.
+     */
+    public static String urlToStringUncached(String webURL){
+        String busted = webURL + (webURL.contains("?") ? "&" : "?")
+                + "_=" + System.currentTimeMillis();
+        try {
+            URL url = URI.create(busted).toURL();
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setUseCaches(false);
+            connection.setRequestProperty("User-Agent", USER_AGENT);
+            connection.setRequestProperty("Accept", "*/*");
+            connection.setRequestProperty("Cache-Control", "no-cache, no-store, max-age=0");
+            connection.setRequestProperty("Pragma", "no-cache");
+            connection.setConnectTimeout(CONNECT_TIMEOUT_MS);
+            connection.setReadTimeout(READ_TIMEOUT_MS);
+            connection.setInstanceFollowRedirects(true);
+
+            int responseCode = connection.getResponseCode();
+            if(responseCode < 200 || responseCode >= 300){
+                throw new RuntimeException("HTTP " + responseCode + " from " + busted);
+            }
+            String content;
+            try (InputStream in = connection.getInputStream()) {
+                content = new String(in.readAllBytes(), StandardCharsets.UTF_8);
+            }
+            if(content.isBlank()){
+                throw new RuntimeException("empty response from " + busted);
+            }
+            return content;
+        } catch (IOException e) {
+            throw new RuntimeException("could not fetch " + busted, e);
+        }
+    }
+
     public static String getLiveWebPage(String webURL){
-        return urlToString(webURL);
+        return urlToStringUncached(webURL);
     }
 }
