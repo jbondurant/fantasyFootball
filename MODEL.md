@@ -2137,3 +2137,36 @@ P2 = post-season / 2027 infrastructure.
   a fixed plan cannot notice. The all-autodraft column also answers
   Justin's JFMarino worry from the other side: an autodrafting room
   makes the live tool MORE valuable, not less.
+
+### The Landmine score is not a new signal (2026-08-28, correction)
+
+  MODEL.md recorded the ADR Landmine column on 2026-08-27 as "an
+  independent, room-specific snipe-risk signal to cross-check
+  snipes()". That was written without reading the author's own
+  definition, which sits on the sheet's Main tab: a 1-10 rating of
+  "how much earlier they're ranked on your platform versus expert
+  consensus (ADP + FantasyPros)".
+
+  Both of those are columns in the same CSV, so the claim is testable.
+  LandmineCheck regresses the score on the gaps we already hold
+  (200 players, the 2026-08-27 sheet):
+
+    platform gap (consensus ADP - Sleeper rank)     R2 = 0.734
+    + FantasyPros gap (ECR - Sleeper rank)          R2 = 0.975
+    + where on the board he sits (log rank)         R2 = 0.975
+
+  NOT INDEPENDENT. 97.5% of the column is a restatement of two feeds
+  already in the model. It must not be fed in as a third opinion, and
+  it cannot validate snipes() - agreement would only prove that both
+  read the same two feeds.
+
+  The residual is real but tiny (max 0.8 on a 1-10 scale) and is
+  almost entirely QBs: Love +0.8, Goff +0.6, Jones +0.4, Mahomes +0.4,
+  Ward -0.4, Maye +0.3, Lawrence +0.3, Purdy -0.3, Mayfield +0.3. That
+  is the author's stated positional damping ("adjusted so it doesn't
+  overreact when the gap is just position-based"), not knowledge about
+  any room. Nothing here to harvest.
+
+  What the ADR find still buys is therefore only freshness: dated
+  default boards, which AdrProvenance now scores against real draft
+  dates.
