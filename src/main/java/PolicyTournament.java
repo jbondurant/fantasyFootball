@@ -491,6 +491,93 @@ public class PolicyTournament {
         }
     }
 
+    /**
+     * The two-stage stochastic program, solved at every pick: sample futures,
+     * and for each candidate action solve the recourse EXACTLY inside each
+     * future (availability is known there), then aggregate. lambda selects
+     * the objective: 0 = expected value, negative = minimise worst-case
+     * regret, positive = mean minus lambda x downside (mean - p25).
+     */
+    class TwoStage extends TournamentPolicy {
+        final int scenarioCount;
+        final long seed;
+        final double lambda;
+
+        TwoStage(int scenarioCount, long seed, double lambda){
+            this.scenarioCount = scenarioCount;
+            this.seed = seed;
+            this.lambda = lambda;
+        }
+
+        @Override
+        Position pickPosition(List<String> board, DraftSimulator.Slot slot,
+                              DraftSimulator.SimState state){
+            int remaining = myPicks.length - decision;
+            List<Position> open = needs.feasibleSkill();
+            if(open.size() == 1 || remaining == 0){
+                return open.get(0);
+            }
+            List<Scenario> futures = new ArrayList<>();
+            for(int s = 0; s < scenarioCount; s++){
+                futures.add(sampleScenario(state, seed + 101L * decision + 7919L * s));
+            }
+            // per action: its exactly-solved value in each future
+            Map<Position, double[]> perAction = new EnumMap<>(Position.class);
+            for(Position action : open){
+                Needs after = needs.copy();
+                after.consume(action);
+                List<List<Position>> completions = allSequences(after, remaining - 1);
+                double[] values = new double[futures.size()];
+                for(int f = 0; f < futures.size(); f++){
+                    double best = -Double.MAX_VALUE;
+                    for(List<Position> completion : completions){
+                        List<Position> full = new ArrayList<>();
+                        full.add(action);
+                        full.addAll(completion);
+                        best = Math.max(best, scenarioValue(futures.get(f), mine,
+                                decision, full));
+                    }
+                    values[f] = best;
+                }
+                perAction.put(action, values);
+            }
+            Position top = null;
+            double topScore = -Double.MAX_VALUE;
+            for(Position action : open){
+                double[] values = perAction.get(action);
+                double score;
+                if(lambda < 0){
+                    // minimise the worst regret against the best action per future
+                    double worst = 0;
+                    for(int f = 0; f < values.length; f++){
+                        double bestHere = -Double.MAX_VALUE;
+                        for(Position other : open){
+                            bestHere = Math.max(bestHere, perAction.get(other)[f]);
+                        }
+                        worst = Math.max(worst, bestHere - values[f]);
+                    }
+                    score = -worst;
+                }
+                else {
+                    double mean = 0;
+                    for(double value : values){
+                        mean += value;
+                    }
+                    mean /= values.length;
+                    double[] sorted = values.clone();
+                    java.util.Arrays.sort(sorted);
+                    double downside = mean - sorted[sorted.length / 4];
+                    score = mean - lambda * downside;
+                }
+                if(score > topScore){
+                    topScore = score;
+                    top = action;
+                }
+            }
+            return top;
+        }
+    }
+
     /** SAA-committed: full sequences scored by their mean exact value over
      *  scenarios sampled from the draft's start - the distribution-aware DP,
      *  scenario form. */
