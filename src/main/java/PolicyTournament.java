@@ -1761,6 +1761,12 @@ public class PolicyTournament {
         return -1;
     }
 
+    /** Mean k-th best available at a pick, for diagnostics. */
+    double[] depthAt(int pickNumber, Position position){
+        double[] depth = depthTable.getOrDefault(pickNumber, Map.of()).get(position);
+        return depth == null ? new double[DEPTH_K] : depth;
+    }
+
     /** Mean k-th-best available points per position at each of my picks. */
     void fillWaitingTable(int trials){
         Map<Integer, Map<Position, double[]>> sums = new HashMap<>();

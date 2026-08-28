@@ -2059,3 +2059,33 @@ P2 = post-season / 2027 infrastructure.
 
   NIGHT 4 IS COMPLETE: M3 gated and rejected, plan showdown decided,
   RUNBOOK.md written. Remaining: N5 lockdown only.
+
+### The RB/WR crossover (2026-08-28) - Justin's challenge, and he was right
+
+  Mean best-available projection at my picks:
+
+    pick     RB               WR
+      7    249/236/228     222/210/206    RB +27
+     18    203/192/190     200/192/189    even
+     31    190/187/178     187/185/181    even
+     42    169/158/153     184/177/176    WR +15
+     55    156/150/146     170/162/155    WR +14
+     66    147/143/140     161/149/143    WR +14
+     79    141/133/127     153/142/139    WR +12
+
+  Justin's claim holds: WRs out-project RBs at equal draft position
+  FROM PICK 42 ON. The crossover is between picks 31 and 42.
+
+  "Four RBs filling the flex" was my sloppy description and it misled
+  him. The two plans differ at exactly ONE pick:
+    RB-heavy  RB(7) RB(18) RB(31) WR(42) WR(55) WR(66) TE(79)
+    WR-heavy  RB(7) WR(18) RB(31) WR(42) WR(55) WR(66) TE(79)
+  Both take receivers at 42/55/66 - correctly harvesting the side of
+  the crossover Justin identified. The only question is pick 18, where
+  the board offers RB 203 vs WR 200. A three-point edge, which is why
+  the measured plan gap was +1.8 and not something dramatic.
+
+  PRACTICAL: the fallback says RB at 18 because it is worth ~2 points
+  on the AVERAGE board. If the real board at 18 has a receiver clearly
+  ahead of the best RB, take the receiver - and the live tool will say
+  so, because it reads the actual board rather than the average one.
