@@ -129,6 +129,38 @@ public class LiveCommittee {
                 consensus = entry.getKey();
             }
         }
+        // When the starting nine is full, no available player can move the
+        // objective, so every column reads the same number and the "winner" is
+        // whichever position map iteration reached first. Reporting that as
+        // "4 of 4 engines agree" dresses zero information as unanimity - the
+        // 2026-08-28 rehearsal produced exactly that at pick 89, all four
+        // columns identically 1808.4. Say so instead.
+        double widest = 0;
+        for(Map.Entry<String, Map<Position, Double>> engine : votes.entrySet()){
+            if(engine.getKey().equals("vorp-greedy")){
+                continue;   // an indicator, not a score - always 0/1
+            }
+            double low = Double.MAX_VALUE;
+            double high = -Double.MAX_VALUE;
+            for(Double value : engine.getValue().values()){
+                if(value != null){
+                    low = Math.min(low, value);
+                    high = Math.max(high, value);
+                }
+            }
+            widest = Math.max(widest, high - low);
+        }
+        if(widest < 0.05){
+            System.out.printf("%n   BENCH PICK - the starting nine is already full, so no"
+                    + " position%n   changes the projection (every engine reads %.1f"
+                    + " across the board).%n   The committee has NO opinion here and the"
+                    + " name it would print%n   is map order, not football. Use"
+                    + " LateRoundTargets instead:%n   handcuffs, upside stashes, and the"
+                    + " late-QB edge (41%% hit rate).%n",
+                    votes.get("lookahead-2").values().iterator().next());
+            return consensus;
+        }
+
         Player player = Player.getPlayerFromSIDV2(best.get(consensus));
         System.out.printf("%n   %d of %d engines say %s -> %s%n", most, votes.size(),
                 consensus, player.firstName + " " + player.lastName);
@@ -182,6 +214,11 @@ public class LiveCommittee {
             DraftSimulator.Slot slot = simulator.slotOf(state);
             kn.pickPosition(state.boardView(), slot, state);
             return kn;
+        }
+        catch(IndexOutOfBoundsException nothingToCompare){
+            // No contenders: every position scores the same, so KN has an
+            // empty candidate list. That is a bench pick, not a failure.
+            return null;
         }
         catch(RuntimeException problem){
             System.out.println("   (KN arbiter unavailable: " + problem.getMessage()
