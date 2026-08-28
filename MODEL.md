@@ -1898,3 +1898,34 @@ P2 = post-season / 2027 infrastructure.
   nine of the ten best stashes in league history).
 
   TUESDAY RULE, rounds 10-16: take young quarterbacks who fell.
+
+### Justin's league intel, priced (2026-08-28)
+
+  1. IN-DRAFT TRADES: never happened; ignored. No modelling change.
+  2. KEEPER BOARD: re-audited fresh (cache cleared) - 24 matching the
+     rules, 0 disagreeing. Unchanged. Re-verify Monday.
+  3. AUTODRAFT: JFMarino is SLOT 8, adjacent to Justin's slot 7, and
+     Justin puts him at ~50/50 to autodraft the first five rounds.
+     Serpentine order makes that decisive: at slot 8 he picks 17th -
+     the last pick before Justin's 18th.
+
+     Human vs drone JFMarino, survival to MY pick 18, 600 trials:
+       Josh Allen    415 proj   90% -> 50%   <- the headline
+       Ashton Jeanty 211        20% ->  1%
+       Pickens       206        27% -> 39%   (MORE available)
+       London        205        30% -> 38%
+       Rice          185        71% -> 80%
+
+     WHY: a human JFMarino is one of the league's latest QB drafters
+     and walks past Allen; a drone takes best-ADP, and Allen sits near
+     the top of NATIONAL adp because the rest of the world does not
+     share this league's QB aversion. The drone eats him. It also eats
+     Jeanty, while spending nothing on receivers - so the WR board
+     gets BETTER at pick 18 in the drone world.
+
+     DRAFT-NIGHT RULE: watch JFMarino's first two or three picks. If
+     they match ADP exactly he is autodrafting -> Allen will not reach
+     18, take him at 7 if wanted, and expect a richer WR board at 18.
+     If his picks deviate from ADP he is live and the normal survival
+     table applies. This is a live-detectable, decision-changing
+     signal - the first one the project has found.

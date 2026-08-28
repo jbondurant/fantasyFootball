@@ -29,6 +29,24 @@ public class OpponentVariants {
         };
     }
 
+    /**
+     * A Sleeper autodrafter: takes the best remaining player by ADP, every
+     * time. The choice set arrives in ADP order, so that is index 0. Justin
+     * reports JFMarino (slot 8, adjacent to his own slot 7) is ~50/50 to
+     * autodraft the first five rounds - and an autodrafter is a DETERMINISTIC
+     * opponent, which is strictly more predictable than a human and therefore
+     * exploitable in wait-or-take decisions.
+     */
+    public static ChoiceModel autodraft(){
+        return features -> {
+            double[] probabilities = new double[features.length];
+            if(probabilities.length > 0){
+                probabilities[0] = 1.0;
+            }
+            return probabilities;
+        };
+    }
+
     public static ChoiceModel chaos(ChoiceModel base, double epsilon){
         return features -> {
             double[] probabilities = base.choiceProbabilities(features);
