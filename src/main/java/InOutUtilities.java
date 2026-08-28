@@ -51,6 +51,41 @@ public class InOutUtilities {
         writeContentToFile(myID, thisMonthsFilePath);
     }
 
+    /**
+     * Always refetch, and keep the day-cache only as a lifeboat.
+     *
+     * A live draft board changes every few seconds, so the day-cache that is
+     * right for a projections feed is exactly wrong here: the 2026-08-28 mock
+     * rehearsal showed the second run of LiveCommittee reading the board that
+     * the first run had written, and on draft night that would have frozen
+     * every recommendation after the first pick at a board nobody was looking
+     * at any more. Fetch fresh; if the network drops mid-draft, fall back to
+     * the last good copy rather than dying on the clock.
+     */
+    public static String getLiveWebPage(String webURL, String filepathStart){
+        String todaysFilePath = "./" + filepathStart + DateUtility.getTodaysDate() + ".txt";
+        try {
+            String content = WebUrlUtility.urlToString(webURL);
+            writeContentToFile(content, todaysFilePath);
+            return content;
+        }
+        catch(RuntimeException unreachable){
+            File cached = new File(todaysFilePath);
+            if(cached.exists() && !cached.isDirectory()){
+                System.out.println("WARNING: " + webURL + " unreachable - using the "
+                        + "last cached copy, which may be several picks stale.");
+                try {
+                    return Files.readString(Path.of(todaysFilePath));
+                }
+                catch(IOException unreadable){
+                    throw new RuntimeException("could not read cached " + todaysFilePath,
+                            unreadable);
+                }
+            }
+            throw unreachable;
+        }
+    }
+
     public static String getTodaysWebPage(String webURL, String filepathStart){
         String todaysFilePath = "./" + filepathStart + DateUtility.getTodaysDate() + ".txt";
         File f = new File(todaysFilePath);

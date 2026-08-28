@@ -144,7 +144,7 @@ public class LiveDraft {
 
     /** Player ids in pick order from the live draft. */
     static List<String> livePicks(String draftID) throws Exception {
-        String data = InOutUtilities.getTodaysWebPage(
+        String data = InOutUtilities.getLiveWebPage(
                 "https://api.sleeper.app/v1/draft/" + draftID + "/picks",
                 "livePicks" + draftID);
         JsonArray picks = JsonParser.parseString(data).getAsJsonArray();
