@@ -1,0 +1,13 @@
+at pick 7: comparing Cook vs Barkley (both RB, 245 vs 228 pts)
+
+mean best-available at pick 18, by arm:
+   POS       took Cook took Barkley      shift
+   QB            412.6        412.2      +0.35
+   RB            202.4        202.2      +0.14
+   WR            199.3        199.2      +0.06
+   TE            143.4        143.4      +0.00
+
+   largest positional shift: 0.35 points
+   Under ~1 point the blocking channel is negligible and every
+   bound computed this week stands. Several points and the strategic
+   class is real - and unbounded by anything we have measured.

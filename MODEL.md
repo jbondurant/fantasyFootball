@@ -1786,3 +1786,26 @@ P2 = post-season / 2027 infrastructure.
   HONEST EV NOTE: nights 1 and 3 chase 1-2 points out of ~1830.
   Rounds 10-16 and execution reliability are worth more in
   expectation, which is why they hold the protected slots.
+
+### The blocking channel is negligible (2026-08-28) - N1 result
+
+  Took Cook vs Barkley at pick 7 (same position, roster effect held),
+  same random stream, measured best-available at pick 18 over 600
+  trials. Largest positional shift: 0.35 points. QB +0.35, RB +0.14,
+  WR +0.06, TE 0.00.
+
+  WHY: eleven picks separate my turns, made by twelve managers reading
+  a shared sheet, so one player's removal is absorbed by board depth
+  long before it returns to me. Denial does not propagate in a league
+  this size.
+
+  TWO CONSEQUENCES:
+  1. Every bound computed this week is VALID. The action-independence
+     assumption I flagged as "false in reality" holds empirically here
+     to within a third of a point - the certificate, the tree,
+     hindsight and two-stage are all uncompromised.
+  2. The strategic/blocking class - the one family no bound
+     constrained - has nothing in it to win. N3 switches from building
+     a strategic engine to the penalized certificate.
+
+  A cheap test that saved a night of building the wrong thing.
