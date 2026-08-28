@@ -1,0 +1,1 @@
+game: my picks [7, 18, 31, 42, 55, 66, 79], keepers [Tuten, Purdy]
