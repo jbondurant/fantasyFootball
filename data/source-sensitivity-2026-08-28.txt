@@ -1,0 +1,3 @@
+SOURCE         its best sequence               value   how the OTHER sources' plans score under it
+projection source 'sleeper,espn,cbs,blend:sleeper,espn,cbs' not found - using sleeper
+game: my picks [7, 18, 31, 42, 55, 66, 79], keepers [Tuten, Purdy]
