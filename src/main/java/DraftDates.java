@@ -17,6 +17,38 @@ import java.time.format.DateTimeFormatter;
  */
 public class DraftDates {
 
+    /**
+     * season -> the day that season's draft started, walked from the live
+     * league chain. Shared so nothing has to keep a second copy of these
+     * dates in a file that could go stale.
+     */
+    public static java.util.Map<String, java.time.LocalDate> byLeagueSeason(){
+        AAAConfiguration configuration = AAAConfiguration.getInstance();
+        java.util.Map<String, java.time.LocalDate> dates = new java.util.TreeMap<>();
+        String leagueID = configuration.getLeagueJson().get("league_id").getAsString();
+        while(leagueID != null){
+            String leagueData = InOutUtilities.getCachedForever(
+                    "https://api.sleeper.app/v1/league/" + leagueID,
+                    "leagueChain" + leagueID);
+            JsonObject league = JsonParser.parseString(leagueData).getAsJsonObject();
+            String season = league.get("season").getAsString();
+            String draftsData = InOutUtilities.getCachedForever(
+                    "https://api.sleeper.app/v1/league/" + leagueID + "/drafts",
+                    "draftsChain" + leagueID);
+            for(JsonElement draftElement : JsonParser.parseString(draftsData).getAsJsonArray()){
+                JsonElement start = draftElement.getAsJsonObject().get("start_time");
+                if(start != null && !start.isJsonNull()){
+                    dates.put(season, Instant.ofEpochMilli(start.getAsLong())
+                            .atZone(ZoneId.systemDefault()).toLocalDate());
+                }
+            }
+            JsonElement previous = league.get("previous_league_id");
+            leagueID = previous == null || previous.isJsonNull()
+                    || previous.getAsString().equals("0") ? null : previous.getAsString();
+        }
+        return dates;
+    }
+
     public static void main(String[] args){
         AAAConfiguration configuration = AAAConfiguration.getInstance();
         DateTimeFormatter format = DateTimeFormatter.ofPattern("EEE yyyy-MM-dd HH:mm")
