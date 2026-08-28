@@ -1685,3 +1685,34 @@ P2 = post-season / 2027 infrastructure.
 
   NEXT (F polish): a persistent loop that warms ONCE and then polls,
   so the 36s fit is paid before the draft rather than at every pick.
+
+### The certificate, decomposed (2026-08-27): ScenarioTree
+
+  Class 1 and Class 2 turned out to be one build: a conditional-
+  expectation penalty needs branching scenarios, and branching
+  scenarios ARE the tree. Solved by backward induction with
+  non-anticipativity (scenarios sharing an observation share an
+  action), 120 futures, 7 picks:
+
+    buckets  distinct obs/pick   committed  ADAPTIVE  clairvoyant
+      2      1,1,1,1,2,2,3         1827.6    1827.6      1841.1
+      6      5,7,3,3,4,3,3         1827.6    1834.6      1841.1
+     12      10,10,4,7,11,10,4     1827.6    1836.5      1841.1
+
+  The adaptive row is the exact optimum of the tree - the ceiling for
+  ANY non-anticipative policy on that information structure. It rises
+  with observation granularity, as it must: coarse buckets hide board
+  detail a real drafter sees. HONEST LIMIT: at fine granularity with
+  only 120 scenarios each group holds ~12 futures, so part of the rise
+  is in-sample overfitting rather than real information. The true
+  adaptive optimum is bracketed at roughly +7 to +9 over committed,
+  with clairvoyance taking the remaining ~5-7 of the 22.1 gap.
+
+  MEASURED AGAINST OUR ENGINES: oldschool-2-vorp scores +7.2 over
+  committed in the tournament. That sits AT the tree's adaptive
+  estimate. So the honest verdict on five days of "can anything beat
+  this?": the live engine is at or very near the achievable ceiling,
+  and the residual is dominated by knowing-the-future value that no
+  algorithm can collect. Remaining headroom is 1-2 points at most.
+  A knob bug found here: `buckets` was never forwarded in build.gradle,
+  so the first sweep silently ran three identical configurations.

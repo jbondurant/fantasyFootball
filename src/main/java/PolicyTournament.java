@@ -400,6 +400,13 @@ public class PolicyTournament {
         return recorder.scenario;
     }
 
+    /** Best available points at a position at one of my picks in a future. */
+    double scenarioBest(Scenario scenario, int epoch, Position position){
+        List<String> alive = scenario.alive.getOrDefault(myPicks[epoch], Map.of())
+                .getOrDefault(position, List.of());
+        return alive.isEmpty() ? 0.0 : points.getOrDefault(alive.get(0), 0.0);
+    }
+
     /** Exact value of playing `sequence` from `fromDecision` inside one
      *  determinized future. */
     double scenarioValue(Scenario scenario, List<String> mineSoFar, int fromDecision,
