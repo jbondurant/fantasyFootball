@@ -22,11 +22,14 @@ public class KnLiveProbe {
 
         System.out.printf("%-6s %-16s %10s %10s %12s%n", "pick", "KN picks",
                 "rollouts", "proven?", "seconds");
-        for(double delta : new double[]{1.0, 3.0}){
-            System.out.printf("%n--- indifference zone delta = %.0f point%s ---%n",
-                    delta, delta == 1 ? "" : "s");
+        int budget = Integer.getInteger("budget", 64);
+        String deltaList = System.getProperty("deltas", "1,3");
+        for(String text : deltaList.split(",")){
+            double delta = Double.parseDouble(text.trim());
+            System.out.printf("%n--- delta = %.1f points, budget = %d rollouts ---%n",
+                    delta, budget);
             PolicyTournament.RankingSelection policy =
-                    tournament.new RankingSelection(delta, 0.05, 8, 64,
+                    tournament.new RankingSelection(delta, 0.05, 8, budget,
                             DraftSimulator.SEED);
             long[] timing = {0};
             tournament.simulateWithProbe(policy, timing);

@@ -144,7 +144,7 @@ public class LiveCommittee {
         Position proven = kn == null ? null : kn.lastChoice();
         double knSeconds = (System.currentTimeMillis() - knStart) / 1000.0;
         if(kn != null){
-            System.out.printf("%n   KN arbiter (delta=3pt, alpha=.05): %s after %d "
+            System.out.printf("%n   KN arbiter (delta=1pt, alpha=.05, budget 600): %s after %d "
                             + "rollouts, %.2fs%n",
                     kn.lastProven ? "PROVEN " + proven : "TIE - within 1 point",
                     kn.lastUsed, knSeconds);
@@ -178,7 +178,7 @@ public class LiveCommittee {
             PolicyTournament tournament = PolicyTournament.forLiveArbitration(
                     planner, roster);
             PolicyTournament.RankingSelection kn = tournament.new RankingSelection(
-                    3.0, 0.05, 8, 64, DraftSimulator.SEED);
+                    1.0, 0.05, 8, 600, DraftSimulator.SEED);
             DraftSimulator.Slot slot = simulator.slotOf(state);
             kn.pickPosition(state.boardView(), slot, state);
             return kn;

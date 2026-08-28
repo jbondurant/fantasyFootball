@@ -2001,3 +2001,27 @@ P2 = post-season / 2027 infrastructure.
   greedy-vorp's 1820.3 - indistinguishable. The LP relaxation of a
   draft IS marginal-value greedy; stoichiometry is a costume. A joke
   with a real structural punchline.
+
+### KN with a real budget (2026-08-28): 1-point resolution, under 3s
+
+  Justin asked what 10 seconds of rollouts would buy. Measured across
+  a full draft, budget 600:
+
+    delta    pick 7      pick 18       pick 31      worst pick
+    0.5    73 PROVEN   518 PROVEN    431 PROVEN    8.0s, one TIE
+    1.0    45 PROVEN   179 PROVEN    145 PROVEN    2.8s, all proven
+    2.0    25 PROVEN    76 PROVEN     72 PROVEN    1.2s, all proven
+
+  At delta=1 EVERY pick resolves, including 18 and 31 - the two the
+  rehearsal independently flagged as contested and which budget 64
+  could not settle. They need ~180 and ~145 rollouts, 2.8s and 1.7s.
+  SHIPPED SETTING CHANGED: delta=1, budget=600 (was delta=3, budget
+  64).
+
+  delta=0.5 is where it breaks: pick 18 needs 518 rollouts and 8s, and
+  pick 55 exhausts 600 without resolving. That is the procedure being
+  honest - at half-point resolution the candidates are inside the
+  noise, and no affordable sampling separates them. So the ceiling of
+  this machinery is ~1 point of resolution per pick in under 3s, and
+  below that the differences stop being meaningful rather than merely
+  unproven.
