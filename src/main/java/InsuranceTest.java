@@ -34,6 +34,34 @@ public class InsuranceTest {
             {Position.RB, Position.RB}, {Position.TE, Position.WR},
             {Position.QB, Position.QB}};
 
+    /**
+     * Where the waiver wire actually starts, per position: one past the
+     * average number of that position drafted across the league's FULL
+     * 16-round history. Shared with LiveInsurance so the two never disagree
+     * about how rich the wire is - counting only rounds 10+ once put the wire
+     * at QB8 and made insurance look absurdly generous.
+     */
+    public static Map<Position, Integer> replacementRanks(AAAConfiguration configuration){
+        Map<Position, Integer> drafted = new EnumMap<>(Position.class);
+        int seasonsCounted = 0;
+        for(com.google.gson.JsonArray picks : configuration.getPreviousDraftPicks()){
+            seasonsCounted++;
+            for(com.google.gson.JsonElement element : picks){
+                Player player = Player.getPlayerFromSIDV2(element.getAsJsonObject()
+                        .get("player_id").getAsString());
+                if(player != null && StartingLineup.isSkillPosition(player.position)){
+                    drafted.merge(player.position, 1, Integer::sum);
+                }
+            }
+        }
+        Map<Position, Integer> ranks = new EnumMap<>(Position.class);
+        for(Map.Entry<Position, Integer> entry : drafted.entrySet()){
+            ranks.put(entry.getKey(),
+                    entry.getValue() / Math.max(seasonsCounted, 1) + 1);
+        }
+        return ranks;
+    }
+
     public static void main(String[] args){
         AAAConfiguration configuration = AAAConfiguration.getInstance();
         int draws = Integer.getInteger("draws", 40);
@@ -70,27 +98,9 @@ public class InsuranceTest {
         // team has drafted its backups, so the wire is far shallower than
         // the nine-round board suggests. Counting only rounds 10+ picks in
         // the earlier version left the wire absurdly rich (QB8, TE5).
-        Map<Position, Integer> drafted = new EnumMap<>(Position.class);
-        int seasonsCounted = 0;
-        List<com.google.gson.JsonArray> pastDrafts = configuration.getPreviousDraftPicks();
-        for(com.google.gson.JsonArray picks : pastDrafts){
-            seasonsCounted++;
-            for(com.google.gson.JsonElement element : picks){
-                Player player = Player.getPlayerFromSIDV2(element.getAsJsonObject()
-                        .get("player_id").getAsString());
-                if(player != null && StartingLineup.isSkillPosition(player.position)){
-                    drafted.merge(player.position, 1, Integer::sum);
-                }
-            }
-        }
-        Map<Position, Integer> replacementRank = new EnumMap<>(Position.class);
-        for(Map.Entry<Position, Integer> e : drafted.entrySet()){
-            replacementRank.put(e.getKey(),
-                    e.getValue() / Math.max(seasonsCounted, 1) + 1);
-        }
-        System.out.println("replacement ranks from " + seasonsCounted
-                + " full historical drafts (next man up off the wire): "
-                + replacementRank);
+        Map<Position, Integer> replacementRank = replacementRanks(configuration);
+        System.out.println("replacement ranks from the full historical drafts"
+                + " (next man up off the wire): " + replacementRank);
 
         double[] totals = new double[TAILS.length];
         double[] withWire = new double[TAILS.length];

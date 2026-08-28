@@ -154,9 +154,12 @@ public class LiveCommittee {
             System.out.printf("%n   BENCH PICK - the starting nine is already full, so no"
                     + " position%n   changes the projection (every engine reads %.1f"
                     + " across the board).%n   The committee has NO opinion here and the"
-                    + " name it would print%n   is map order, not football. Use"
-                    + " LateRoundTargets instead:%n   handcuffs, upside stashes, and the"
-                    + " late-QB edge (41%% hit rate).%n",
+                    + " name it would print%n   is map order, not football."
+                    + "%n%n   Model A is done; hand over to MODEL B:"
+                    + "%n     rounds 8-9   -Pmain=LiveInsurance   (what a bench man is"
+                    + " worth over the wire)"
+                    + "%n     rounds 10+   -Pmain=LateRoundTargets (keeper option: a"
+                    + " round-R stash is keepable at R)%n",
                     votes.get("lookahead-2").values().iterator().next());
             return consensus;
         }

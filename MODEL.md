@@ -2170,3 +2170,50 @@ P2 = post-season / 2027 infrastructure.
   What the ADR find still buys is therefore only freshness: dated
   default boards, which AdrProvenance now scores against real draft
   dates.
+
+### Model B goes live, and says nothing (2026-08-28)
+
+  Justin, mid-rehearsal: "didn't we have another model for after we
+  have 9 players?" Yes - and it had no live implementation. Model A
+  had LiveCommittee; Model B had InsuranceTest, a study over FIXED
+  position sequences on an AVERAGE board, unreachable from a draft.
+  So at the mock's pick 89 the honest state was: Model A correctly
+  silent (flat 1808.4), and a day-old offline table being hand-
+  translated by the assistant. LiveInsurance closes that gap.
+
+  Three measured ingredients, all now actually wired: FogFit's
+  per-tier ratios (bust rate included), the waiver wire measured from
+  FULL 16-round histories (shared with InsuranceTest via
+  replacementRanks so they cannot diverge), and Draft Sharks' games-
+  missed applied RELATIVE to the pool average - the absolute injury
+  level is already inside the fog constants, which were fitted on
+  outcomes that contained injuries. MODEL.md had claimed the injury
+  file "plugs in here"; nothing had ever read it until now.
+
+  THE RESULT IS A NULL, and it took error bars to see it:
+
+    draws    1st  2nd  3rd  4th   spread
+      40      RB   TE   WR   QB     11.6
+     120      QB   TE   RB   WR      5.5
+     600      TE   WR   RB   QB      2.1  (+/- 3.8)
+
+  Three runs, three different winners, gaps shrinking with the noise.
+  At 600 draws every position is inside every other one's interval.
+  Model B has NO preference at a bench pick - which independently
+  reproduces the offline finding ("top three within 3 points") on a
+  live board. The 40-draw run was nearly reported as "RB, not QB";
+  the paired standard error is what stopped it.
+
+  Why it is flat: the wire sits at QB21/RB61/WR81/TE19. A 12-team
+  league with one QB slot makes QB21 a startable free quarterback, so
+  a backup QB adds little; RB61 is junk, so a bench RB adds more. The
+  two effects cancel.
+
+  CONSEQUENCE for the handover. LiveCommittee's bench message now
+  routes by round rather than sending everything to LateRoundTargets:
+  rounds 8-9 -> LiveInsurance, rounds 10+ -> LateRoundTargets, whose
+  keeper-option logic is calibrated for the cheap late rounds. With
+  Model B indifferent, the keeper option is the only signal at pick
+  89 with real separation (Nix 228 vs the best non-QB at 35) - though
+  a round-8 keeper price is dear, so it is worth less than a score
+  tuned for rounds 10-16 suggests.
