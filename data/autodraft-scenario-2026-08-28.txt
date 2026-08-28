@@ -1,0 +1,32 @@
+my picks   [7, 18, 31, 42, 55, 66, 79, 90, 103]
+JFMarino   [8, 17, 41, 65, 80, 89, 104]  <- pick 17 lands immediately before my 18
+
+=== human world ===
+   his pick 17, most likely:
+      George Pickens           WR      11%
+      Drake London             WR       9%
+      Malik Nabers             WR       9%
+      Ashton Jeanty            RB       9%
+   best players still alive at my pick 18:
+      Josh Allen               QB     415 pts    90% alive
+      Lamar Jackson            QB     380 pts   100% alive
+      Joe Burrow               QB     372 pts   100% alive
+      Dak Prescott             QB     366 pts   100% alive
+      Trevor Lawrence          QB     355 pts   100% alive
+
+=== autodraft world ===
+   his pick 17, most likely:
+      Josh Allen               QB      45%
+      Ashton Jeanty            RB      25%
+      Kenneth Walker           RB       9%
+      Omarion Hampton          RB       9%
+   best players still alive at my pick 18:
+      Josh Allen               QB     415 pts    49% alive
+      Lamar Jackson            QB     380 pts    99% alive
+      Joe Burrow               QB     372 pts   100% alive
+      Dak Prescott             QB     366 pts   100% alive
+      Trevor Lawrence          QB     355 pts   100% alive
+
+value of my shipped plan in each world (400 rollouts):
+   human          1812.4
+   autodraft      1810.4

@@ -1929,3 +1929,39 @@ P2 = post-season / 2027 infrastructure.
      If his picks deviate from ADP he is live and the normal survival
      table applies. This is a live-detectable, decision-changing
      signal - the first one the project has found.
+
+### Justin's three answers, resolved (2026-08-28)
+
+  IN-DRAFT TRADES: technically possible, never happened - ignored, and
+  correctly so; modelling them would add a branch nobody uses.
+
+  KEEPER BOARD: VERIFIED unchanged. 24 keepers, all matching the
+  rules, Tuten r12 / Purdy r13 intact, BHier still Daniels r7 + Pitts
+  r13. No repeat of last week's Kevin switch. Re-verify Monday.
+
+  JFMARINO AUTODRAFT (~50/50 for rounds 1-5) - the big one, because of
+  WHERE he sits. Justin slot 7, JFMarino slot 8, and the snake puts
+  him at pick 17: immediately before Justin's pick 18.
+
+    human world      his pick 17 scattered (Pickens 11%, London 9%,
+                     Nabers 9%); JOSH ALLEN 90% ALIVE at my 18
+    autodraft world  his pick 17 is ALLEN 45% of the time; Allen
+                     drops to 49% alive at my 18
+
+  The mechanism is the league's own edge running backwards: an
+  autodrafter takes the ADP-best player and does NOT share the room's
+  QB-coolness. Allen sits there precisely because humans here will not
+  take him; a robot has no such hangup. So the one manager sitting
+  immediately before Justin's second pick is the most likely person to
+  break the QB shelf.
+
+  Damage is contained: shipped plan 1812.4 human vs 1810.4 autodraft,
+  about two points - the plan does not depend on Allen.
+
+  DRAFT NIGHT: check whether JFMarino is present before pick 7 (his
+  pick 8 lands right after Justin's - an instant ADP-perfect pick is
+  the tell). If he is autodrafting, discount Allen-at-18 from ~90% to
+  ~50%. The QBs behind Allen are unaffected (Jackson 99%, Burrow 100%,
+  Prescott 100%) - an ADP robot does not reach that deep in two rounds.
+  The live committee handles this automatically once his pick 8 is on
+  the board; this is the WHY behind the shift.
