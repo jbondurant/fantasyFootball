@@ -152,6 +152,11 @@ public class PlayoffOdds {
                     offset * currentAverage, 100 * probability, 100 * slope, bar);
         }
 
+        String outlook = System.getProperty("outlook");
+        if(outlook != null){
+            seatOdds(pooled, outlook, currentAverage, draws, seed);
+        }
+
         String deltas = System.getProperty("deltas", "44");
         System.out.printf("%n%swhat a draft pick buys, at each starting position:%n",
                 System.lineSeparator());
@@ -170,6 +175,108 @@ public class PlayoffOdds {
                 + " either tail.\nthat is the whole argument for ignoring seasons already"
                 + " lost - but note\nhow wide the live band is when six of twelve"
                 + " qualify.");
+    }
+
+    /**
+     * Every seat's playoff odds, from a LeagueOutlook table.
+     *
+     * A draft-day best-nine projection is not a season total: it knows nothing
+     * about waivers, byes, weekly start/sit or luck. So the spread across seats
+     * here is much narrower than the spread across real finished seasons, and
+     * reading a projection straight off the historical curve would pretend the
+     * draft settles the season.
+     *
+     * Instead, decompose. History gives the variance of finished seasons; the
+     * outlook table gives the variance the draft explains. What is left is
+     * in-season noise, and every team gets an independent draw of it on top of
+     * its projection. Then simulate the whole twelve-team league forward and
+     * count top-six finishes.
+     */
+    static void seatOdds(List<TeamSeason> pooled, String path, double currentAverage,
+                         int draws, long seed){
+        List<String> names = new ArrayList<>();
+        List<Double> projected = new ArrayList<>();
+        java.util.regex.Pattern row = java.util.regex.Pattern.compile(
+                "^\\s*\\d+\\s+(\\S+)\\s+\\d+\\s+(\\d+\\.\\d+)\\s+(\\d+\\.\\d+)");
+        try {
+            for(String line : java.nio.file.Files.readAllLines(
+                    java.nio.file.Path.of(path))){
+                java.util.regex.Matcher matcher = row.matcher(line);
+                if(matcher.find()){
+                    names.add(matcher.group(1));
+                    projected.add(Double.parseDouble(matcher.group(2)));
+                }
+            }
+        }
+        catch(Exception unreadable){
+            System.out.println("could not read " + path + ": " + unreadable.getMessage());
+            return;
+        }
+        if(names.size() != LEAGUE_SIZE){
+            System.out.printf("%nexpected %d seats in %s, found %d - skipping seat odds%n",
+                    LEAGUE_SIZE, path, names.size());
+            return;
+        }
+
+        double projectedMean = projected.stream()
+                .mapToDouble(Double::doubleValue).average().orElse(1);
+        double[] deviation = new double[LEAGUE_SIZE];
+        for(int i = 0; i < LEAGUE_SIZE; i++){
+            deviation[i] = projected.get(i) / projectedMean - 1.0;
+        }
+        double draftVariance = 0;
+        for(double d : deviation){
+            draftVariance += d * d;
+        }
+        draftVariance /= LEAGUE_SIZE - 1;
+        double outcomeVariance = 0;
+        for(TeamSeason team : pooled){
+            outcomeVariance += team.deviation() * team.deviation();
+        }
+        outcomeVariance /= pooled.size() - 1;
+        double noise = Math.sqrt(Math.max(0, outcomeVariance - draftVariance));
+
+        System.out.printf("%n%nPROJECTED PLAYOFF ODDS  (from %s)%n", path);
+        System.out.printf("draft explains sd %.1f%% of a season; finished seasons vary"
+                + " sd %.1f%%.%nso %.1f%% is in-season noise - waivers, byes, injuries,"
+                + " luck - and every%nteam gets an independent draw of it.%n%n",
+                100 * Math.sqrt(draftVariance), 100 * Math.sqrt(outcomeVariance),
+                100 * noise);
+
+        Random random = new Random(seed);
+        int[] made = new int[LEAGUE_SIZE];
+        double[] outcome = new double[LEAGUE_SIZE];
+        for(int draw = 0; draw < draws; draw++){
+            for(int i = 0; i < LEAGUE_SIZE; i++){
+                outcome[i] = deviation[i] + random.nextGaussian() * noise;
+            }
+            for(int i = 0; i < LEAGUE_SIZE; i++){
+                int better = 0;
+                for(int j = 0; j < LEAGUE_SIZE; j++){
+                    if(j != i && outcome[j] > outcome[i]){
+                        better++;
+                    }
+                }
+                if(better < PLAYOFF_TEAMS){
+                    made[i]++;
+                }
+            }
+        }
+        Integer[] order = new Integer[LEAGUE_SIZE];
+        for(int i = 0; i < LEAGUE_SIZE; i++){
+            order[i] = i;
+        }
+        java.util.Arrays.sort(order, (a, b) -> Integer.compare(made[b], made[a]));
+        System.out.printf("%-16s %10s %12s %12s%n", "MANAGER", "best-9",
+                "vs average", "P(top 6)");
+        for(int i : order){
+            System.out.printf("%-16s %10.1f %+11.0f %11.0f%%%n", names.get(i),
+                    projected.get(i), deviation[i] * currentAverage,
+                    100.0 * made[i] / draws);
+        }
+        System.out.println("\nthe draft explains only a fraction of the variance, so"
+                + " even the top seat\nis far from safe and the bottom seat is far"
+                + " from out.");
     }
 
     /** Draw eleven opponents from history; how often does the focal team finish top six? */
