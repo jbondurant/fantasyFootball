@@ -38,7 +38,24 @@ import java.util.Random;
  */
 public class TightEndTiming {
 
-    record Seen(String name, Position position, double adp, double points, int games){}
+    public record Seen(String name, Position position, double adp, double points,
+                       int games){}
+
+    /** Every joined season, exposed so StarterContribution can reuse the join. */
+    public static Map<String, List<Seen>> load() throws Exception {
+        Map<String, List<Seen>> bySeason = new LinkedHashMap<>();
+        for(File file : new File("data").listFiles()){
+            String name = file.getName();
+            if(!name.matches("fp-adp-halfppr-\\d{4}-\\d{8}\\.csv")){
+                continue;
+            }
+            List<Seen> seen = join(file, name.split("-")[3]);
+            if(seen.size() > 100){
+                bySeason.put(name.split("-")[3], seen);
+            }
+        }
+        return bySeason;
+    }
 
     /** ADP ranks that stand in for my real picks, rounds 5 through 11. */
     static final int[] EARLY = {55, 66, 79};
@@ -457,6 +474,11 @@ public class TightEndTiming {
                 + " week instead of adding up\n   seasons. Missed weeks are scattered at"
                 + " random - the data says how many\n   games each man missed, never"
                 + " which ones.");
+        System.out.println("\n   Read the bars, not the means. An earlier version of this"
+                + " started a rostered\n   player even when the waiver wire scored more,"
+                + " which punished whichever\n   option owned the weakest man and made"
+                + " these gaps look roughly twice the\n   size they are. Fixed"
+                + " 2026-08-29.");
     }
 
     /** A season of weekly lineups, given who was available when. */
@@ -500,28 +522,43 @@ public class TightEndTiming {
                 total += fill(availableWr, 3, Position.WR, wire, flexPool);
                 total += fill(availableTe, 1, Position.TE, wire, flexPool);
                 flexPool.sort(byRate);
+                double flexWire = wire.getOrDefault(Position.WR, 0.0);
                 for(int slot = 0; slot < 2; slot++){
-                    total += slot < flexPool.size() ? perGame(flexPool.get(slot))
-                            : wire.getOrDefault(Position.WR, 0.0);
+                    total += slot < flexPool.size()
+                            ? Math.max(perGame(flexPool.get(slot)), flexWire)
+                            : flexWire;
                 }
             }
         }
         return total / draws;
     }
 
-    /** Fill n slots from the available list; leftovers go to the flex pool. */
+    /**
+     * Fill n slots at a position with the best available, where "available"
+     * includes the waiver wire.
+     *
+     * The first version took rostered players first and only fell back to the
+     * wire when it ran out, which meant adding a tight end who scored less than
+     * the wire's tight end LOWERED the score - it benched a better free player
+     * to start a worse owned one. Nobody plays that way. A rostered man starts
+     * only if he beats the wire; otherwise he drops to the flex pool and the
+     * wire takes the slot.
+     */
     static double fill(List<Seen> available, int slots, Position position,
                        Map<Position, Double> wire, List<Seen> flexPool){
+        double wireRate = wire.getOrDefault(position, 0.0);
         double points = 0;
+        int used = 0;
         for(int slot = 0; slot < slots; slot++){
-            if(slot < available.size()){
-                points += perGame(available.get(slot));
+            if(used < available.size() && perGame(available.get(used)) >= wireRate){
+                points += perGame(available.get(used));
+                used++;
             }
             else {
-                points += wire.getOrDefault(position, 0.0);
+                points += wireRate;
             }
         }
-        for(int extra = slots; extra < available.size(); extra++){
+        for(int extra = used; extra < available.size(); extra++){
             flexPool.add(available.get(extra));
         }
         return points;
@@ -531,7 +568,7 @@ public class TightEndTiming {
         return player.games() > 0 ? player.points() / player.games() : 0;
     }
 
-    static Seen bestAtExcluding(List<Seen> season, Position position, double minimumAdp,
+    public static Seen bestAtExcluding(List<Seen> season, Position position, double minimumAdp,
                                 List<Seen> taken){
         return season.stream()
                 .filter(s -> s.position() == position && s.adp() >= minimumAdp)
@@ -541,7 +578,7 @@ public class TightEndTiming {
     }
 
     /** The best man at a position that this league leaves undrafted. */
-    static double wireLevel(List<Seen> season, Position position){
+    public static double wireLevel(List<Seen> season, Position position){
         int drafted = position == Position.TE ? 18 : 80;
         List<Seen> ranked = season.stream()
                 .filter(s -> s.position() == position)

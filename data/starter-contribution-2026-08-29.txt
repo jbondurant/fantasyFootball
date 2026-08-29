@@ -1,0 +1,35 @@
+
+measured over 5 seasons: a drafted starter misses RB 3.1, WR 2.9, TE 3.0 games
+that is the 1.0x world below; the others scale it.
+
+EXPECTED CONTRIBUTION TO WEEKLY STARTING LINEUPS
+(marginal points a pick at 79 adds over leaving the slot to the wire)
+
+INJURY WORLD           TE         WR         RB   take
+0x  none              6.3       40.5       44.4   RB
+0.5x                  6.0       38.2       51.3   RB
+1.0x                  5.2       33.4       53.2   RB
+1.5x                  4.8       31.0       53.4   RB
+2.0x                  4.1       26.2       52.1   RB
+3.0x                  3.0       19.1       43.8   RB
+
+The crossover never happens, and the reason is the FLEX.
+
+The intuition says that with nobody injured a bench player is useless, so the
+pick should fill the empty starting slot - the tight end. That holds only if
+the extra receiver really is a bench player. He is not: two flex slots mean a
+fourth receiver or third back starts every week regardless, so he is a starter
+bought at pick 79, not insurance.
+
+Meanwhile the tight end adds almost nothing even at 0x, because the slot he
+fills is not empty - the waiver wire fills it nearly as well for free. That is
+the same result the streaming table found, arrived at from the other side.
+
+Injuries still matter, they just do not decide THIS question: they push the
+back's value from 44.4 to 53.4 and then back down, because past some point
+everyone is hurt including the man you drafted, and the wire fills more of
+the lineup either way.
+
+Failure here is games missed only. Bust - a healthy player scoring far under
+his projection - would widen the gap further, because a bust starter is a slot
+a bench man takes without anyone getting hurt.
