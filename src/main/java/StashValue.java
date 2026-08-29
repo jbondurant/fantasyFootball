@@ -32,6 +32,78 @@ import java.util.Map;
  */
 public class StashValue {
 
+    private static BenchValue.History cached;
+    private static Map<Integer, Double> cachedPrice;
+    private static double cachedCapture;
+
+    private static synchronized void load(AAAConfiguration configuration){
+        if(cached != null){
+            return;
+        }
+        cached = BenchValue.gather(configuration);
+        cachedCapture = KeeperOrigin.captureRate(configuration);
+        cachedPrice = new HashMap<>();
+        for(int round = 8; round <= 16; round++){
+            final int r = round;
+            List<BenchValue.Bench> band = cached.benches().stream()
+                    .filter(b -> b.round() == r).toList();
+            cachedPrice.put(round, band.isEmpty() ? 0
+                    : band.stream().mapToDouble(BenchValue.Bench::overWire)
+                        .average().orElse(0));
+        }
+    }
+
+    /**
+     * The measured keeper term for a position at a round - what a stash there
+     * has historically been worth NEXT season, over the price of the pick it
+     * costs to keep him, scaled by how often the drafter is the keeper.
+     *
+     * This is a base rate, not a per-player estimate: it is the level history
+     * sets, and the caller supplies the ranking within it.
+     */
+    public static double keeperTermFor(AAAConfiguration configuration,
+                                       Position position, int round){
+        load(configuration);
+        int low = round <= 9 ? 8 : round <= 12 ? 10 : 13;
+        int high = round <= 9 ? 9 : round <= 12 ? 12 : 16;
+        List<BenchValue.Bench> group = cached.benches().stream()
+                .filter(b -> b.hasNextSeason() && b.position() == position
+                        && b.round() >= low && b.round() <= high)
+                .toList();
+        if(group.size() < 4){
+            return 0.0;
+        }
+        return group.stream()
+                .mapToDouble(b -> keeperSurplus(b, cachedPrice, cachedCapture))
+                .average().orElse(0);
+    }
+
+    /**
+     * How much more (or less) a young stash's keeper term has been worth than
+     * the average one, measured across all of rounds 8-16 rather than inside a
+     * position and band, where the counts collapse.
+     *
+     * Without this the keeper term is a flat position constant, which credits
+     * a 30-year-old journeyman quarterback with exactly what it credits a
+     * second-year starter. That is plainly wrong and the fix is measurable.
+     */
+    public static double youthMultiplier(AAAConfiguration configuration, boolean young){
+        load(configuration);
+        List<BenchValue.Bench> scored = cached.benches().stream()
+                .filter(BenchValue.Bench::hasNextSeason).toList();
+        double overall = scored.stream()
+                .mapToDouble(b -> keeperSurplus(b, cachedPrice, cachedCapture))
+                .average().orElse(0);
+        List<BenchValue.Bench> group = scored.stream()
+                .filter(b -> b.young() == young).toList();
+        if(group.size() < 10 || overall <= 0){
+            return 1.0;
+        }
+        return group.stream()
+                .mapToDouble(b -> keeperSurplus(b, cachedPrice, cachedCapture))
+                .average().orElse(0) / overall;
+    }
+
     public static void main(String[] args){
         AAAConfiguration configuration = AAAConfiguration.getInstance();
         List<BenchValue.Bench> all = BenchValue.gather(configuration).benches();

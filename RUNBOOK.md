@@ -91,6 +91,20 @@ TE   10-12       11        15.8          1.4        17.2      9.7
 TE   13-16       21        13.3          1.9        15.2     11.9
 ```
 
+**At each pick from round 8 on, run the combiner:**
+
+    ./gradlew run -Pmain=LateWaitOrTake -PdraftId=<id>
+
+It values every available player (per-player projection over the wire, plus a
+measured keeper base rate scaled by youth — young x1.44, veteran x0.61), runs
+the board to round 16, and prints the expected cost of waiting on each. Read
+the verdict column: TAKE NOW, lean take, or wait.
+
+Its known weakness, printed in its own output: a player projecting 0.0 this
+season still draws the full keeper base rate, because that rate came from
+players who had a real role when drafted. A zero there means UNPROVEN, not
+safe.
+
 **The rule, in order of how much the data actually supports it:**
 
 1. **Never take a tight end from round 10 on.** The most robust result in the
