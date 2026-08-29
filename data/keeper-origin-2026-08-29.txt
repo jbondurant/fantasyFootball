@@ -1,0 +1,39 @@
+
+24 keepers declared for the 2026 season.
+
+   drafted by the manager keeping him:   21  (88%)
+   acquired from another manager:         3  (13%)
+   never drafted in league history:       0  (0%)
+
+keepers that did NOT come from that manager's draft:
+   Colston Loveland       TE  r10  kept by KevinDA        drafted by patekxwater
+   Bhayshul Tuten         RB  r12  kept by justinb314     drafted by Hamrliks
+   Drake Maye             QB  r13  kept by Hamrliks       drafted by KevinDA
+
+keepers the manager drafted himself:
+   De'Von Achane          RB  r5   kept by KevinDA       
+   Ladd McConkey          WR  r6   kept by Renteez       
+   Javonte Williams       RB  r5   kept by Renteez       
+   Trey McBride           TE  r3   kept by JFMarino      
+   Chris Olave            WR  r5   kept by JFMarino      
+   Bucky Irving           RB  r13  kept by itsabust      
+   Jaxon Smith-Njigba     WR  r5   kept by itsabust      
+   Tucker Kraft           TE  r11  kept by JakeSK        
+   Puka Nacua             WR  r13  kept by JakeSK        
+   Jayden Daniels         QB  r7   kept by BHier         
+   Kyle Pitts             TE  r13  kept by BHier         
+   Caleb Williams         QB  r14  kept by tommyrads     
+   Tyler Warren           TE  r8   kept by tommyrads     
+   Rico Dowdle            RB  r13  kept by patekxwater   
+   Nico Collins           WR  r8   kept by patekxwater   
+   Brock Bowers           TE  r7   kept by jerem9604     
+   Jonathan Taylor        RB  r4   kept by jerem9604     
+   Sam LaPorta            TE  r11  kept by d0ddi         
+   Kyren Williams         RB  r8   kept by d0ddi         
+   Brock Purdy            QB  r13  kept by justinb314    
+   Chase Brown            RB  r14  kept by Hamrliks      
+
+StashValue's keeper term assumes the drafter captures it.
+He does 88% of the time here, so that term should be scaled by about
+0.88 - and the rest of a keeper's value is reachable by trade, at no cost
+in draft picks.

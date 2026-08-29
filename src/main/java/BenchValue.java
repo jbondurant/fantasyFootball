@@ -41,7 +41,8 @@ public class BenchValue {
 
     /** A bench pick and what actually became of him that same season. */
     record Bench(String name, Position position, int round, String season,
-                 double points, double overWire, boolean rookie, boolean young){}
+                 double points, double overWire, boolean rookie, boolean young,
+                 boolean hasNextSeason, double nextOverWire){}
 
     /** Everything the join produced: the picks and the two lines they are judged against. */
     record History(List<Bench> benches, Map<String, Map<Position, Double>> starterBar,
@@ -100,6 +101,37 @@ public class BenchValue {
             if(actuals.isEmpty()){
                 continue;
             }
+            // The keeper term needs the FOLLOWING season too. The most recent
+            // season has no following season yet; those picks are marked rather
+            // than scored zero, so an unplayable year cannot masquerade as a bust.
+            Map<String, Double> nextActuals = new HashMap<>();
+            try {
+                nextActuals = HistoricalActuals.pointsBySleeperID(
+                        String.valueOf(Integer.parseInt(season) + 1));
+            }
+            catch(Exception noNextSeason){
+                nextActuals = new HashMap<>();
+            }
+            boolean hasNext = !nextActuals.isEmpty();
+            Map<Position, Double> nextWire = new EnumMap<>(Position.class);
+            if(hasNext){
+                Map<Position, List<Double>> nextByPosition = new EnumMap<>(Position.class);
+                for(Map.Entry<String, Double> entry : nextActuals.entrySet()){
+                    Player player = Player.getPlayerFromSIDV2(entry.getKey());
+                    if(player != null && StartingLineup.isSkillPosition(player.position)){
+                        nextByPosition.computeIfAbsent(player.position,
+                                u -> new ArrayList<>()).add(entry.getValue());
+                    }
+                }
+                for(List<Double> values : nextByPosition.values()){
+                    values.sort(Comparator.reverseOrder());
+                }
+                for(Position position : new Position[]{Position.QB, Position.RB,
+                        Position.WR, Position.TE}){
+                    nextWire.put(position, atRank(nextByPosition.get(position),
+                            wireRanks.getOrDefault(position, 24)));
+                }
+            }
             Map<Position, List<Double>> byPosition = new EnumMap<>(Position.class);
             for(Map.Entry<String, Double> entry : actuals.entrySet()){
                 Player player = Player.getPlayerFromSIDV2(entry.getKey());
@@ -147,9 +179,14 @@ public class BenchValue {
                 double points = actuals.getOrDefault(id, 0.0);
                 double overWire = Math.max(0.0,
                         points - wire.getOrDefault(player.position, 0.0));
+                double nextOverWire = hasNext
+                        ? Math.max(0.0, nextActuals.getOrDefault(id, 0.0)
+                            - nextWire.getOrDefault(player.position, 0.0))
+                        : 0.0;
                 benches.add(new Bench(player.firstName + " " + player.lastName,
                         player.position, round, season, points, overWire,
-                        rookies.contains(id), young.contains(id)));
+                        rookies.contains(id), young.contains(id), hasNext,
+                        nextOverWire));
             }
         }
 
