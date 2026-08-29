@@ -39,7 +39,11 @@ public class StarterContribution {
     static final int[] EARLY_PICKS = {7, 18, 31, 42, 55, 66};
     static final Position[] EARLY_SHAPE = {Position.RB, Position.WR, Position.RB,
             Position.WR, Position.WR, Position.WR};
-    static final int PICK_IN_QUESTION = 79;
+    /** Model A calls the tight end here; -Ppick moves it. */
+    static final int PICK_IN_QUESTION = Integer.getInteger("pick", 79);
+
+    /** The picks the crossover sweep walks. */
+    static final int[] PICK_SWEEP = {79, 90, 103, 114, 127, 140, 151, 162, 175};
 
     record Player(String name, Position position, double perGame, int games){}
 
@@ -149,7 +153,7 @@ public class StarterContribution {
 
         for(double scale : injuryWorlds){
             Map<Position, Double> marginal = marginals(history, baselineMissed, scale,
-                    1.0, expectation, draws);
+                    1.0, expectation, draws, PICK_IN_QUESTION);
             Position best = marginal.entrySet().stream()
                     .max(Map.Entry.comparingByValue()).map(Map.Entry::getKey).orElse(null);
             System.out.printf("%-14s %10.1f %10.1f %10.1f   %s%n",
@@ -172,7 +176,7 @@ public class StarterContribution {
             System.out.printf("%-13s", String.format("%.1fx", scale));
             for(double bust : bustWorlds){
                 Map<Position, Double> marginal = marginals(history, baselineMissed, scale,
-                        bust, expectation, draws);
+                        bust, expectation, draws, PICK_IN_QUESTION);
                 double te = marginal.getOrDefault(Position.TE, 0.0);
                 double alternative = Math.max(marginal.getOrDefault(Position.WR, 0.0),
                         marginal.getOrDefault(Position.RB, 0.0));
@@ -185,6 +189,38 @@ public class StarterContribution {
                 + " promised;%n1.0x = what they really did; 2.0x = deviations doubled.%n");
         System.out.printf("%nthe tight end wins in %s of the %d worlds tried.%n",
                 everWins ? "SOME" : "NONE", injuryWorlds.length * bustWorlds.length);
+
+        System.out.println("\n\nDOES IT WIN LATER? (TE minus the best of WR/RB, by pick)");
+        System.out.println("the plateau says a tight end barely gets worse with the"
+                + " rounds while a\nreceiver falls off, so the gap should close as the"
+                + " pick moves back");
+        System.out.printf("%n%-8s %16s %16s %14s %8s%n", "PICK", "no failure", "measured",
+                "TE / best alt", "seasons");
+        for(int pick : PICK_SWEEP){
+            int usable = 0;
+            for(List<TightEndTiming.Seen> each : history.values()){
+                if(marginalOf(each, Position.TE, baselineMissed, 0, 0, expectation, 1,
+                        pick) != null){
+                    usable++;
+                }
+            }
+            Map<Position, Double> clean = marginals(history, baselineMissed, 0.0, 0.0,
+                    expectation, draws, pick);
+            Map<Position, Double> real = marginals(history, baselineMissed, 1.0, 1.0,
+                    expectation, draws, pick);
+            double cleanGap = clean.getOrDefault(Position.TE, 0.0)
+                    - Math.max(clean.getOrDefault(Position.WR, 0.0),
+                               clean.getOrDefault(Position.RB, 0.0));
+            double realGap = real.getOrDefault(Position.TE, 0.0)
+                    - Math.max(real.getOrDefault(Position.WR, 0.0),
+                               real.getOrDefault(Position.RB, 0.0));
+            System.out.printf("%-8d %+16.1f %+16.1f %8.1f / %-6.1f %5d/%d%s%n", pick,
+                    cleanGap, realGap, clean.getOrDefault(Position.TE, 0.0),
+                    Math.max(clean.getOrDefault(Position.WR, 0.0),
+                             clean.getOrDefault(Position.RB, 0.0)),
+                    usable, history.size(),
+                    usable < history.size() ? "  <- thin" : "");
+        }
 
         System.out.println("\nYOUR TWO WORLDS, AND WHERE THEY LAND");
         System.out.println("\nThe idealised corner - nobody hurt, nobody busting - is the"
@@ -215,14 +251,15 @@ public class StarterContribution {
     static Map<Position, Double> marginals(Map<String, List<TightEndTiming.Seen>> history,
                                            Map<Position, Double> baselineMissed,
                                            double injuryScale, double bustScale,
-                                           Map<Position, double[]> expectation, int draws){
+                                           Map<Position, double[]> expectation, int draws,
+                                           int pick){
         Map<Position, Double> marginal = new EnumMap<>(Position.class);
         for(Position candidate : new Position[]{Position.TE, Position.WR, Position.RB}){
             double total = 0;
             int seasons = 0;
             for(List<TightEndTiming.Seen> each : history.values()){
                 Double value = marginalOf(each, candidate, baselineMissed, injuryScale,
-                        bustScale, expectation, draws);
+                        bustScale, expectation, draws, pick);
                 if(value != null){
                     total += value;
                     seasons++;
@@ -240,21 +277,21 @@ public class StarterContribution {
     static Double marginalOf(List<TightEndTiming.Seen> season, Position candidate,
                              Map<Position, Double> baselineMissed, double injuryScale,
                              double bustScale, Map<Position, double[]> expectation,
-                             int draws){
+                             int draws, int pick){
         List<TightEndTiming.Seen> taken = new ArrayList<>();
         List<Player> roster = new ArrayList<>();
         for(int i = 0; i < EARLY_PICKS.length; i++){
-            TightEndTiming.Seen pick = TightEndTiming.bestAtExcluding(season,
+            TightEndTiming.Seen starter = TightEndTiming.bestAtExcluding(season,
                     EARLY_SHAPE[i], EARLY_PICKS[i], taken);
-            if(pick == null){
+            if(starter == null){
                 return null;
             }
-            taken.add(pick);
-            roster.add(scaled(pick, baselineMissed, injuryScale, bustScale, expectation,
-                    rankOf(season, pick)));
+            taken.add(starter);
+            roster.add(scaled(starter, baselineMissed, injuryScale, bustScale, expectation,
+                    rankOf(season, starter)));
         }
         TightEndTiming.Seen extra = TightEndTiming.bestAtExcluding(season, candidate,
-                PICK_IN_QUESTION, taken);
+                pick, taken);
         if(extra == null){
             return null;
         }

@@ -142,7 +142,7 @@ public class TightEndTiming {
     static void streamers(Map<String, List<Seen>> bySeason){
         System.out.println("\n\nCOULD YOU JUST STREAM IT?");
         System.out.printf("%-8s %14s %14s %14s %12s%n", "SEASON", "TE1", "TE10",
-                "best undrafted", "TE10 - wire");
+                "wire (mean)", "TE10 - wire");
         double totalGap = 0;
         int counted = 0;
         List<Double> gapList = new ArrayList<>();
@@ -154,8 +154,7 @@ public class TightEndTiming {
                 continue;
             }
             // "undrafted" = beyond the tight ends this league actually drafts
-            double wire = ranked.subList(18, Math.min(ranked.size(), 30)).stream()
-                    .mapToDouble(Seen::points).max().orElse(0);
+            double wire = wireLevel(entry.getValue(), Position.TE);
             double gap = ranked.get(9).points() - wire;
             totalGap += gap;
             gapList.add(gap);
@@ -577,7 +576,20 @@ public class TightEndTiming {
                 .orElse(null);
     }
 
-    /** The best man at a position that this league leaves undrafted. */
+    /**
+     * What the waiver wire realistically supplies at a position.
+     *
+     * This used to take the MAXIMUM of the undrafted band - the single best
+     * tight end nobody drafted, chosen with hindsight. No manager picks that
+     * man in advance, and handing him to the streaming option for free made
+     * streaming look far stronger than it is; it also drove the candidate's
+     * marginal value to exactly zero, because a real drafted tight end could
+     * never beat the best undrafted one after the fact.
+     *
+     * The mean of the band is the honest version: what you get by streaming
+     * without knowing which of them will hit. Still generous - a real streamer
+     * churns and misses - but no longer clairvoyant.
+     */
     public static double wireLevel(List<Seen> season, Position position){
         int drafted = position == Position.TE ? 18 : 80;
         List<Seen> ranked = season.stream()
@@ -587,7 +599,7 @@ public class TightEndTiming {
             return 0;
         }
         return ranked.subList(drafted, Math.min(ranked.size(), drafted + 12)).stream()
-                .mapToDouble(Seen::points).max().orElse(0);
+                .mapToDouble(Seen::points).average().orElse(0);
     }
 
     static Seen bestAt(List<Seen> season, Position position, double minimumAdp){
@@ -603,6 +615,7 @@ public class TightEndTiming {
                 .orElse(null);
     }
 
+    /** The line a player has to clear to have been worth a starting slot. */
     static double replacement(List<Seen> ranked, Position position){
         int rank = position == Position.TE ? 19 : position == Position.RB ? 48 : 60;
         List<Double> points = ranked.stream().map(Seen::points)

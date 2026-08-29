@@ -33,49 +33,49 @@ WR       37-42      142.6       9.9     15.2      10%      30
 
 
 COULD YOU JUST STREAM IT?
-SEASON              TE1           TE10 best undrafted  TE10 - wire
-2022              261.3           92.1          141.3        -49.2
-2023              172.9          160.7          141.6         19.1
-2024              144.6          116.5          178.3        -61.8
-2021              215.8          136.0          140.6         -4.6
-2025              144.2          150.5          136.7         13.8
+SEASON              TE1           TE10    wire (mean)  TE10 - wire
+2022              261.3           92.1           88.4          3.7
+2023              172.9          160.7           73.4         87.3
+2024              144.6          116.5           84.1         32.4
+2021              215.8          136.0           66.3         69.7
+2025              144.2          150.5           77.7         72.8
 
-the TE10 you draft beat the best tight end left on the wire by -16.5 points
-a season, +/- 33.0. That is the whole prize for spending a pick on one,
+the TE10 you draft beat the best tight end left on the wire by 53.2 points
+a season, +/- 30.6. That is the whole prize for spending a pick on one,
 and it does not clear its own error bar in either direction.
 
 
 THE SWAP - two picks, three ways to spend them
 (every option fields three lineup slots; the third comes off the wire)
 EARLY   LATE     A: TE early   B: TE late C: stream TE   best
-55      90             356.9        446.0        396.5   B - wait on TE
-55      103            397.6        431.5        437.2   C - never draft one
-55      114            393.3        425.1        432.9   C - never draft one
-55      127            336.4        415.3        376.0   B - wait on TE
-66      90             331.8        408.9        359.4   B - wait on TE
-66      103            372.5        394.4        400.1   C - never draft one
-66      114            368.2        388.0        395.8   C - never draft one
-66      127            311.3        378.2        338.9   B - wait on TE
-79      90             319.6        413.0        363.6   B - wait on TE
-79      103            360.2        398.5        404.2   C - never draft one
-79      114            356.0        392.2        399.9   C - never draft one
-79      127            299.0        382.4        343.0   B - wait on TE
+55      90             279.6        368.6        326.8   B - wait on TE
+55      103            320.2        354.1        367.4   C - never draft one
+55      114            315.9        347.8        363.2   C - never draft one
+55      127            259.0        338.0        306.3   B - wait on TE
+66      90             254.5        331.5        289.7   B - wait on TE
+66      103            295.1        317.0        330.3   C - never draft one
+66      114            290.9        310.7        326.1   C - never draft one
+66      127            233.9        300.9        269.2   B - wait on TE
+79      90             242.2        335.6        293.8   B - wait on TE
+79      103            282.9        321.2        334.5   C - never draft one
+79      114            278.6        314.8        330.2   C - never draft one
+79      127            221.7        305.0        273.3   B - wait on TE
 
 
 THE SWAP AGAIN, WITH THE EARLY STARTERS' REAL INJURIES
 (rounds 1-6 as Model A shapes them: RB WR RB WR WR WR; 17 weeks, actual games played)
 
 SEASON     A: TE at 79   B: TE at 90  C: stream TE games lost
-2022            1456.7        1510.1        1501.1          9
-2023            1654.3        1760.4        1733.0          5
-2024            1550.6        1621.0        1592.6         15
-2021            1415.8        1382.6        1415.8         21
-2025            1590.1        1590.1        1590.1         21
+2022            1326.6        1443.5        1403.4          9
+2023            1607.5        1741.9        1655.1          5
+2024            1379.2        1575.9        1469.5         15
+2021            1221.3        1212.2        1211.5         21
+2025            1242.2        1285.9        1274.6         21
 
                                     points        vs A      +/-2se  seasons won
-   A  TE at 79                     1533.5
-   B  TE at 90                     1572.8       +39.3        49.9         3/5
-   C  stream TE                    1566.5       +33.0        29.9         3/5
+   A  TE at 79                     1355.4
+   B  TE at 90                     1451.9       +96.5        71.9         4/5
+   C  stream TE                    1402.8       +47.5        35.2         4/5
 
    This is the comparison that can see injuries to the players drafted in
    rounds 1-6, because it fields a lineup every week instead of adding up
@@ -106,9 +106,9 @@ SHOULD I LISTEN TO MODEL A WHEN IT CALLS TE AT PICK 79?
 to trust: it is the only one that can see the early starters' injuries.)
 
                                     points        vs A       +/-2se  seasons won
-   A  take the TE at 79                 319.6
-   B  wait, take one at 90              413.0       +93.4         80.9         5/5
-   C  never draft one, stream         363.6       +44.0         68.9         3/5
+   A  take the TE at 79                 242.2
+   B  wait, take one at 90              335.6       +93.4         80.9         5/5
+   C  never draft one, stream         293.8       +51.6         45.1         4/5
 
    B beat A in 5 of 5 seasons. The mean is noisy; that count is not,
    and it is the part worth trusting.
