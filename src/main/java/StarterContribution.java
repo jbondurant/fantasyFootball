@@ -43,6 +43,60 @@ public class StarterContribution {
 
     record Player(String name, Position position, double perGame, int games){}
 
+    /**
+     * What a player at this position and draft rank was EXPECTED to score,
+     * taken as the mean outcome of everyone drafted around there across the
+     * five seasons. Bust and boom are then deviations from this, which is what
+     * makes them scalable: at bust 0.0x every player returns exactly his
+     * expectation, at 1.0x he returns what he really did.
+     */
+    static Map<Position, double[]> expectation(Map<String, List<TightEndTiming.Seen>> history){
+        Map<Position, double[]> curve = new EnumMap<>(Position.class);
+        Map<Position, int[]> counts = new EnumMap<>(Position.class);
+        int depth = 80;
+        for(List<TightEndTiming.Seen> season : history.values()){
+            for(Position position : new Position[]{Position.RB, Position.WR, Position.TE}){
+                List<TightEndTiming.Seen> ranked = season.stream()
+                        .filter(s -> s.position() == position)
+                        .sorted(Comparator.comparingDouble(TightEndTiming.Seen::adp))
+                        .toList();
+                double[] totals = curve.computeIfAbsent(position, u -> new double[depth]);
+                int[] seen = counts.computeIfAbsent(position, u -> new int[depth]);
+                for(int rank = 0; rank < depth && rank < ranked.size(); rank++){
+                    totals[rank] += ranked.get(rank).points();
+                    seen[rank]++;
+                }
+            }
+        }
+        // smooth over a band of five, because a single rank across five seasons
+        // is five numbers and reads as a cliff wherever one of them was odd
+        Map<Position, double[]> smoothed = new EnumMap<>(Position.class);
+        for(Position position : curve.keySet()){
+            double[] totals = curve.get(position);
+            int[] seen = counts.get(position);
+            double[] out = new double[depth];
+            for(int rank = 0; rank < depth; rank++){
+                double sum = 0;
+                int n = 0;
+                for(int near = Math.max(0, rank - 2);
+                        near <= Math.min(depth - 1, rank + 2); near++){
+                    sum += totals[near];
+                    n += seen[near];
+                }
+                out[rank] = n == 0 ? 0 : sum / n;
+            }
+            smoothed.put(position, out);
+        }
+        return smoothed;
+    }
+
+    /** Where a player sat among his position, by ADP, that season. */
+    static int rankOf(List<TightEndTiming.Seen> season, TightEndTiming.Seen player){
+        return (int) season.stream()
+                .filter(s -> s.position() == player.position() && s.adp() < player.adp())
+                .count();
+    }
+
     public static void main(String[] args) throws Exception {
         int draws = Integer.getInteger("draws", 600);
         Map<String, List<TightEndTiming.Seen>> history = TightEndTiming.load();
@@ -89,21 +143,13 @@ public class StarterContribution {
         System.out.printf("%-14s %10s %10s %10s   %s%n", "INJURY WORLD", "TE", "WR",
                 "RB", "take");
 
-        double[] worlds = {0.0, 0.5, 1.0, 1.5, 2.0, 3.0};
-        for(double scale : worlds){
-            Map<Position, Double> marginal = new EnumMap<>(Position.class);
-            for(Position candidate : new Position[]{Position.TE, Position.WR, Position.RB}){
-                double total = 0;
-                int seasons = 0;
-                for(List<TightEndTiming.Seen> each : history.values()){
-                    Double value = marginalOf(each, candidate, baselineMissed, scale, draws);
-                    if(value != null){
-                        total += value;
-                        seasons++;
-                    }
-                }
-                marginal.put(candidate, seasons == 0 ? 0 : total / seasons);
-            }
+        Map<Position, double[]> expectation = expectation(history);
+        double[] injuryWorlds = {0.0, 0.5, 1.0, 1.5, 2.0, 3.0};
+        double[] bustWorlds = {0.0, 0.5, 1.0, 1.5, 2.0};
+
+        for(double scale : injuryWorlds){
+            Map<Position, Double> marginal = marginals(history, baselineMissed, scale,
+                    1.0, expectation, draws);
             Position best = marginal.entrySet().stream()
                     .max(Map.Entry.comparingByValue()).map(Map.Entry::getKey).orElse(null);
             System.out.printf("%-14s %10.1f %10.1f %10.1f   %s%n",
@@ -113,25 +159,78 @@ public class StarterContribution {
                     marginal.getOrDefault(Position.RB, 0.0), best);
         }
 
-        System.out.println("\nThe crossover never happens, and the reason is the FLEX."
-                + "\n\nThe intuition says that with nobody injured a bench player is"
-                + " useless, so the\npick should fill the empty starting slot - the tight"
-                + " end. That holds only if\nthe extra receiver really is a bench player."
-                + " He is not: two flex slots mean a\nfourth receiver or third back"
-                + " starts every week regardless, so he is a starter\nbought at pick "
-                + PICK_IN_QUESTION + ", not insurance.");
-        System.out.println("\nMeanwhile the tight end adds almost nothing even at 0x,"
-                + " because the slot he\nfills is not empty - the waiver wire fills it"
-                + " nearly as well for free. That is\nthe same result the streaming"
-                + " table found, arrived at from the other side.");
-        System.out.println("\nInjuries still matter, they just do not decide THIS"
-                + " question: they push the\nback's value from 44.4 to 53.4 and then"
-                + " back down, because past some point\neveryone is hurt including the"
-                + " man you drafted, and the wire fills more of\nthe lineup either way.");
-        System.out.println("\nFailure here is games missed only. Bust - a healthy player"
-                + " scoring far under\nhis projection - would widen the gap further,"
-                + " because a bust starter is a slot\na bench man takes without anyone"
-                + " getting hurt.");
+        System.out.println("\n\nDOES THE TIGHT END EVER WIN? (both dials at once)");
+        System.out.println("cells are TE minus the best of WR/RB - positive means take"
+                + " the tight end");
+        System.out.printf("%n%-13s", "INJURY \\ BUST");
+        for(double bust : bustWorlds){
+            System.out.printf(" %9s", String.format("%.1fx", bust));
+        }
+        System.out.println();
+        boolean everWins = false;
+        for(double scale : injuryWorlds){
+            System.out.printf("%-13s", String.format("%.1fx", scale));
+            for(double bust : bustWorlds){
+                Map<Position, Double> marginal = marginals(history, baselineMissed, scale,
+                        bust, expectation, draws);
+                double te = marginal.getOrDefault(Position.TE, 0.0);
+                double alternative = Math.max(marginal.getOrDefault(Position.WR, 0.0),
+                        marginal.getOrDefault(Position.RB, 0.0));
+                everWins |= te - alternative > 0;
+                System.out.printf(" %+9.1f", te - alternative);
+            }
+            System.out.println();
+        }
+        System.out.printf("%nbust 0.0x = every player returns exactly what his draft slot"
+                + " promised;%n1.0x = what they really did; 2.0x = deviations doubled.%n");
+        System.out.printf("%nthe tight end wins in %s of the %d worlds tried.%n",
+                everWins ? "SOME" : "NONE", injuryWorlds.length * bustWorlds.length);
+
+        System.out.println("\nYOUR TWO WORLDS, AND WHERE THEY LAND");
+        System.out.println("\nThe idealised corner - nobody hurt, nobody busting - is the"
+                + " top left cell,\nand it reads -3.2. That is a tie. So the intuition is"
+                + " right exactly where it\nwas stated: strip out failure and the tight"
+                + " end is as good a use of the pick\nas anything else, because a bench"
+                + " player really does contribute nothing.");
+        System.out.println("\nBut it never gets better than a tie, and every step away"
+                + " from that corner\nmakes it worse - monotonically, in both"
+                + " directions. Injuries and busts push\nthe same way, which is why the"
+                + " second dial did not rescue it: a bust starter\nis a slot a bench man"
+                + " takes without anyone getting hurt, so it is the same\nmechanism"
+                + " arriving by a different road. At the measured world, 1.0x and 1.0x,"
+                + "\nthe tight end is 43.6 points behind.");
+        System.out.println("\nThe reason it cannot do better than a tie even at the corner"
+                + " is the FLEX.\nThe intuition assumes the extra receiver is a bench"
+                + " player. He is not: two\nflex slots mean a fourth receiver or third"
+                + " back starts every week regardless.\nHe is a starter bought at pick "
+                + PICK_IN_QUESTION + ". And the slot the tight end fills is not"
+                + "\nempty either - the waiver wire fills it nearly as well for free,"
+                + " which is the\nstreaming result arriving from the other side.");
+        System.out.println("\nSo the honest summary is not that failure decides this."
+                + " Failure widens a gap\nthat is already there at zero. What decides it"
+                + " is the lineup shape: two flex\nslots and a startable tight end on the"
+                + " wire.");
+    }
+
+    static Map<Position, Double> marginals(Map<String, List<TightEndTiming.Seen>> history,
+                                           Map<Position, Double> baselineMissed,
+                                           double injuryScale, double bustScale,
+                                           Map<Position, double[]> expectation, int draws){
+        Map<Position, Double> marginal = new EnumMap<>(Position.class);
+        for(Position candidate : new Position[]{Position.TE, Position.WR, Position.RB}){
+            double total = 0;
+            int seasons = 0;
+            for(List<TightEndTiming.Seen> each : history.values()){
+                Double value = marginalOf(each, candidate, baselineMissed, injuryScale,
+                        bustScale, expectation, draws);
+                if(value != null){
+                    total += value;
+                    seasons++;
+                }
+            }
+            marginal.put(candidate, seasons == 0 ? 0 : total / seasons);
+        }
+        return marginal;
     }
 
     /**
@@ -139,7 +238,9 @@ public class StarterContribution {
      * position, against leaving that slot to the waiver wire.
      */
     static Double marginalOf(List<TightEndTiming.Seen> season, Position candidate,
-                             Map<Position, Double> baselineMissed, double scale, int draws){
+                             Map<Position, Double> baselineMissed, double injuryScale,
+                             double bustScale, Map<Position, double[]> expectation,
+                             int draws){
         List<TightEndTiming.Seen> taken = new ArrayList<>();
         List<Player> roster = new ArrayList<>();
         for(int i = 0; i < EARLY_PICKS.length; i++){
@@ -149,7 +250,8 @@ public class StarterContribution {
                 return null;
             }
             taken.add(pick);
-            roster.add(scaled(pick, baselineMissed, scale));
+            roster.add(scaled(pick, baselineMissed, injuryScale, bustScale, expectation,
+                    rankOf(season, pick)));
         }
         TightEndTiming.Seen extra = TightEndTiming.bestAtExcluding(season, candidate,
                 PICK_IN_QUESTION, taken);
@@ -162,7 +264,8 @@ public class StarterContribution {
         }
 
         List<Player> with = new ArrayList<>(roster);
-        with.add(scaled(extra, baselineMissed, scale));
+        with.add(scaled(extra, baselineMissed, injuryScale, bustScale, expectation,
+                rankOf(season, extra)));
         return score(with, wire, draws) - score(roster, wire, draws);
     }
 
@@ -171,10 +274,16 @@ public class StarterContribution {
      * toward or away from his position's measured average by the scale factor.
      */
     static Player scaled(TightEndTiming.Seen player, Map<Position, Double> baselineMissed,
-                         double scale){
-        double missed = baselineMissed.getOrDefault(player.position(), 2.0) * scale;
+                         double injuryScale, double bustScale,
+                         Map<Position, double[]> expectation, int rank){
+        double missed = baselineMissed.getOrDefault(player.position(), 2.0) * injuryScale;
         int games = (int) Math.round(Math.max(0, Math.min(17, 17 - missed)));
-        double perGame = player.games() > 0 ? player.points() / player.games() : 0;
+
+        double[] curve = expectation.get(player.position());
+        double expected = curve != null && rank < curve.length ? curve[rank] : player.points();
+        // bust and boom are deviations from what his draft slot promised
+        double points = Math.max(0, expected + bustScale * (player.points() - expected));
+        double perGame = games > 0 ? points / games : 0;
         return new Player(player.name(), player.position(), perGame, games);
     }
 

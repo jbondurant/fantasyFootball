@@ -6,30 +6,51 @@ EXPECTED CONTRIBUTION TO WEEKLY STARTING LINEUPS
 (marginal points a pick at 79 adds over leaving the slot to the wire)
 
 INJURY WORLD           TE         WR         RB   take
-0x  none              6.3       40.5       44.4   RB
-0.5x                  6.0       38.2       51.3   RB
-1.0x                  5.2       33.4       53.2   RB
-1.5x                  4.8       31.0       53.4   RB
-2.0x                  4.1       26.2       52.1   RB
-3.0x                  3.0       19.1       43.8   RB
+0x  none              6.3       36.0       31.9   WR
+0.5x                  8.0       40.7       47.8   RB
+1.0x                 11.3       50.2       55.0   RB
+1.5x                 13.7       55.0       70.1   RB
+2.0x                 20.4       64.5       77.5   RB
+3.0x                 36.0       78.7       98.6   RB
 
-The crossover never happens, and the reason is the FLEX.
 
-The intuition says that with nobody injured a bench player is useless, so the
-pick should fill the empty starting slot - the tight end. That holds only if
-the extra receiver really is a bench player. He is not: two flex slots mean a
-fourth receiver or third back starts every week regardless, so he is a starter
-bought at pick 79, not insurance.
+DOES THE TIGHT END EVER WIN? (both dials at once)
+cells are TE minus the best of WR/RB - positive means take the tight end
 
-Meanwhile the tight end adds almost nothing even at 0x, because the slot he
-fills is not empty - the waiver wire fills it nearly as well for free. That is
-the same result the streaming table found, arrived at from the other side.
+INJURY \ BUST      0.0x      0.5x      1.0x      1.5x      2.0x
+0.0x               -3.2     -15.8     -29.6     -41.7     -53.7
+0.5x              -25.0     -30.6     -39.8     -44.8     -56.8
+1.0x              -35.7     -37.5     -43.7     -50.9     -62.9
+1.5x              -54.2     -54.0     -56.3     -59.3     -65.1
+2.0x              -48.0     -54.3     -57.2     -58.6     -67.9
+3.0x              -53.3     -62.6     -62.6     -66.7     -72.2
 
-Injuries still matter, they just do not decide THIS question: they push the
-back's value from 44.4 to 53.4 and then back down, because past some point
-everyone is hurt including the man you drafted, and the wire fills more of
-the lineup either way.
+bust 0.0x = every player returns exactly what his draft slot promised;
+1.0x = what they really did; 2.0x = deviations doubled.
 
-Failure here is games missed only. Bust - a healthy player scoring far under
-his projection - would widen the gap further, because a bust starter is a slot
-a bench man takes without anyone getting hurt.
+the tight end wins in NONE of the 30 worlds tried.
+
+YOUR TWO WORLDS, AND WHERE THEY LAND
+
+The idealised corner - nobody hurt, nobody busting - is the top left cell,
+and it reads -3.2. That is a tie. So the intuition is right exactly where it
+was stated: strip out failure and the tight end is as good a use of the pick
+as anything else, because a bench player really does contribute nothing.
+
+But it never gets better than a tie, and every step away from that corner
+makes it worse - monotonically, in both directions. Injuries and busts push
+the same way, which is why the second dial did not rescue it: a bust starter
+is a slot a bench man takes without anyone getting hurt, so it is the same
+mechanism arriving by a different road. At the measured world, 1.0x and 1.0x,
+the tight end is 43.6 points behind.
+
+The reason it cannot do better than a tie even at the corner is the FLEX.
+The intuition assumes the extra receiver is a bench player. He is not: two
+flex slots mean a fourth receiver or third back starts every week regardless.
+He is a starter bought at pick 79. And the slot the tight end fills is not
+empty either - the waiver wire fills it nearly as well for free, which is the
+streaming result arriving from the other side.
+
+So the honest summary is not that failure decides this. Failure widens a gap
+that is already there at zero. What decides it is the lineup shape: two flex
+slots and a startable tight end on the wire.
