@@ -31,15 +31,30 @@ public class AccuracyShootout {
 
     public static void main(String[] args) throws Exception {
         AAAConfiguration configuration = AAAConfiguration.getInstance();
+        Map<String, double[]> weekOneBySeason = new LinkedHashMap<>();
+        Map<String, double[]> bestAdpBySeason = new LinkedHashMap<>();
+        Map<String, String> bestAdpName = new LinkedHashMap<>();
         for(String season : new String[]{"2021", "2022", "2023", "2024", "2025"}){
             Map<String, Double> actual = HistoricalActuals.pointsBySleeperID(season);
             List<Source> sources = new ArrayList<>();
             try {
-                sources.add(new Source("sleeper-projections",
+                // NOT a forecast. The season endpoint serves rest-of-season
+                // values frozen at season end, so this source knows the
+                // outcome - which is why it has topped this table every year.
+                // Kept, renamed, so the leak stays visible instead of being
+                // quietly deleted and rediscovered later.
+                sources.add(new Source("sleeper-season-LEAKED",
                         HistoricalProjections.rawPointsBySleeperID(configuration, season),
                         false));
                 sources.add(new Source("sleeper-stored-adp",
                         HistoricalProjections.adpBySleeperID(configuration, season), true));
+            }
+            catch(Exception missing){ /* keep going */ }
+            try {
+                Map<String, Double> week1 = WeeklyProjections.pointsBySleeperID(season, 1);
+                if(!week1.isEmpty()){
+                    sources.add(new Source("sleeper-week1-proj", week1, false));
+                }
             }
             catch(Exception missing){ /* keep going */ }
             Map<String, Double> ffc = FFCalculatorSD.adpBySleeperID(season);
@@ -72,10 +87,63 @@ public class AccuracyShootout {
                 if(score == null){
                     continue;
                 }
+                // Experiment 1: the honest preseason projection against the
+                // best honest market rank. The leaked source is excluded from
+                // the comparison entirely - it is not a forecast.
+                if(source.label().equals("sleeper-week1-proj")){
+                    weekOneBySeason.put(season, score);
+                }
+                else if(!source.label().contains("LEAKED")){
+                    double[] best = bestAdpBySeason.get(season);
+                    if(best == null || score[1] > best[1]){
+                        bestAdpBySeason.put(season, score);
+                        bestAdpName.put(season, source.label());
+                    }
+                }
                 System.out.printf("   %-26s %4.0f %8.3f %8.0f/24 %7.2f %6.2f %6.2f %6.2f%n",
                         source.label(), score[0], score[1], score[2], score[3], score[4],
                         score[5], score[6]);
             }
+        }
+        System.out.printf("%n%nEXPERIMENT 1: does a week-1 projection beat the market"
+                + " rank?%n(the leaked season feed is excluded - it is not a"
+                + " forecast)%n%n");
+        System.out.printf("%-8s %14s %14s %10s   %-22s%n", "SEASON", "week-1 proj",
+                "best ADP rank", "delta", "which ADP");
+        double totalDelta = 0;
+        int seasons = 0;
+        double[] positionDelta = new double[4];
+        int[] positionCount = new int[4];
+        for(String season : weekOneBySeason.keySet()){
+            double[] week = weekOneBySeason.get(season);
+            double[] adp = bestAdpBySeason.get(season);
+            if(adp == null){
+                continue;
+            }
+            System.out.printf("%-8s %14.3f %14.3f %+10.3f   %-22s%n", season, week[1],
+                    adp[1], week[1] - adp[1], bestAdpName.get(season));
+            totalDelta += week[1] - adp[1];
+            seasons++;
+            for(int p = 0; p < 4; p++){
+                if(!Double.isNaN(week[3 + p]) && !Double.isNaN(adp[3 + p])){
+                    positionDelta[p] += week[3 + p] - adp[3 + p];
+                    positionCount[p]++;
+                }
+            }
+        }
+        System.out.printf("%nmean delta %+.3f over %d seasons - week-1 projection %s%n",
+                totalDelta / Math.max(1, seasons), seasons,
+                totalDelta > 0 ? "WINS" : "loses");
+        System.out.printf("%nby position (week-1 minus best ADP):%n");
+        String[] names = {"QB", "RB", "WR", "TE"};
+        for(int p = 0; p < 4; p++){
+            if(positionCount[p] == 0){
+                continue;
+            }
+            double delta = positionDelta[p] / positionCount[p];
+            System.out.printf("   %-4s %+7.3f   %s%n", names[p], delta,
+                    delta > 0.05 ? "week-1 projection is better"
+                            : delta < -0.05 ? "MARKET RANK IS BETTER" : "no difference");
         }
         System.out.println("\nspearman = rank correlation of the source's top-150 with what"
                 + "\nactually happened. The fog, measured.");

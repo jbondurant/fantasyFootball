@@ -2367,3 +2367,53 @@ rather than ignoring it.
    September ranks cover the same seasons, so Justin's premise - that a
    month-out projection carries more preseason-injury risk - becomes a number
    instead of a reasonable belief.
+
+### Experiment 1 result: week-1 projection vs market rank (2026-08-29)
+
+    SEASON      week-1 proj  best ADP rank      delta   which ADP
+    2021              0.588          0.415     +0.173   sleeper-dated-20210907
+    2022              0.570          0.504     +0.066   fp-consensus-adp
+    2023              0.579          0.479     +0.100   ffc-adp
+    2024              0.558          0.405     +0.153   sleeper-DEFAULTS
+    2025              0.559          0.452     +0.107   sleeper-stored-adp
+
+    mean delta +0.120 over 5 seasons - week-1 projection WINS (5 of 5)
+
+    by position (week-1 minus best ADP):
+       QB    -0.000   no difference
+       RB    -0.036   no difference
+       WR    -0.027   no difference
+       TE    -0.210   MARKET RANK IS BETTER
+
+**It wins across positions and loses within them.** That is not a
+contradiction, it is the whole finding. The overall spearman rewards ordering
+players ACROSS positions - is this back worth more than that receiver - and a
+projection in points does that natively while a market rank encodes draft
+convention and positional scarcity instead. Within a position, where the
+question is which of these four tight ends, the projection adds nothing at
+QB/RB/WR and is much worse at TE.
+
+**Design consequence, and it is concrete:**
+
+- cross-position comparisons (when to take a tight end or a defence, the whole
+  point of the 1-16 model) -> week-1 projection
+- within-position ordering (WHICH tight end) -> market rank
+- never rank tight ends by week-1 projection: 0.20, 0.23, 0.22, 0.19, 0.02
+  spearman across the five seasons, against 0.35-0.53 for ADP
+
+The market appears to know something about tight ends that the projection does
+not, which is plausible: tight end production concentrates in a few roles, and
+human consensus reads role better than a stat line does.
+
+### A pre-existing leak this exposed
+
+`AccuracyShootout` has been scoring `sleeper-projections` - the season endpoint
+- as a predictor since it was written, and it topped the table every year:
+0.603, 0.699, 0.602, 0.613, 0.597, against 0.34-0.50 for every honest feed,
+and 14-16 of 24 top-24 hits against 6-12. It was not forecasting. It is
+renamed `sleeper-season-LEAKED` and excluded from the experiment rather than
+deleted, so the leak stays visible.
+
+Anything previously concluded from "Sleeper's projections beat ADP by a mile"
+rested on that source and should be re-derived. The honest version of that
+claim is the +0.120 above - real, consistent, and a third the size.
