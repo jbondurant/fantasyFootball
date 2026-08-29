@@ -64,9 +64,44 @@ decide each pick — use it only if the tool is unavailable.
 | 4 | 42 | WR |
 | 5 | 55 | WR |
 | 6 | 66 | WR |
-| 7 | 79 | TE |
-| 8 | 90 | RB if reasonable, else WR — **never** TE, **not** a backup QB |
-| 9 | 103 | RB if reasonable, else WR |
+| 7 | 79 | RB or WR — **not** TE |
+| 8 | 90 | **TE** |
+| 9 | 103 | RB or WR, highest upside — **not** a backup QB |
+
+### Round 7 is no longer the tight end (2026-08-29)
+
+Model A calls TE at 79. It maximises expected best-nine points from
+projections, so it cannot see the three things that decide this pick. Two
+models built from five seasons of dated ADP joined to actual outcomes both say
+move it back a round.
+
+Scoring a lineup **week by week** off real games played — the only way to see
+injuries to the rounds 1–6 starters, since a season total has already absorbed
+them:
+
+```
+                        points        vs A      +/-2se  seasons won
+   A  TE at 79         1355.4
+   B  TE at 90         1451.9       +96.5        71.9          4/5
+   C  stream TE        1402.8       +47.5        35.2          4/5
+```
+
+**B > C > A: draft one, just later.** Both alternatives beat taking him at 79;
+waiting beats streaming.
+
+Do NOT skip the tight end entirely. The TE10 you draft beat what streaming
+actually supplies by **+53.2 ± 30.6** points a season — that clears its bar.
+(An earlier version of this said the wire was *better*. It was scoring the
+wire as the single best undrafted tight end chosen with hindsight, which
+nobody can pick in advance.)
+
+**Why the flex makes waiting right.** Valuing a pick by the starter-slots it
+fills, and sweeping injuries and busts from zero to triple, the tight end
+loses in all 30 worlds — and at the frictionless corner, nobody hurt and
+nobody busting, it is still −36.3. The reason is that two flex slots mean the
+extra receiver is not a bench player at all; he starts every week. The gap
+does close as the pick moves back (−36.3 at 79 → −16.9 at 127), exactly the
+plateau effect, but it never reaches zero.
 
 ## Rounds 8–16 — one model, both halves of the value
 
@@ -112,10 +147,10 @@ safe.
 
 **The rule, in order of how much the data actually supports it:**
 
-1. **Never take a tight end from round 10 on.** The most robust result in the
-   table — TE reads 17.2 and 15.2 against RB's 63.7 and 66.0, and the error
-   bars do not come close. (At rounds 8–9 the TE cell is n=11 and only
-   marginally separated, so this is a 10+ rule, not an 8+ rule.)
+1. **Never take a SECOND tight end from round 10 on.** The most robust result
+   in the table — TE reads 17.2 and 15.2 against RB's 63.7 and 66.0, and the
+   error bars do not come close. This is about a bench tight end once the
+   starting slot is filled; your starter comes at 90, above.
 2. **Prefer RB.** It holds up across all three bands. Against WR the margin is
    real but only marginally significant — RB 63.7 ±21.2 versus WR 38.2 ±13.0 —
    so take the better player when it is close rather than forcing position.

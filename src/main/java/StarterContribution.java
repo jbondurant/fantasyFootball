@@ -172,6 +172,8 @@ public class StarterContribution {
         }
         System.out.println();
         boolean everWins = false;
+        double cornerGap = Double.NaN;
+        double measuredGap = Double.NaN;
         for(double scale : injuryWorlds){
             System.out.printf("%-13s", String.format("%.1fx", scale));
             for(double bust : bustWorlds){
@@ -181,6 +183,12 @@ public class StarterContribution {
                 double alternative = Math.max(marginal.getOrDefault(Position.WR, 0.0),
                         marginal.getOrDefault(Position.RB, 0.0));
                 everWins |= te - alternative > 0;
+                if(scale == 0.0 && bust == 0.0){
+                    cornerGap = te - alternative;
+                }
+                if(scale == 1.0 && bust == 1.0){
+                    measuredGap = te - alternative;
+                }
                 System.out.printf(" %+9.1f", te - alternative);
             }
             System.out.println();
@@ -223,29 +231,32 @@ public class StarterContribution {
         }
 
         System.out.println("\nYOUR TWO WORLDS, AND WHERE THEY LAND");
-        System.out.println("\nThe idealised corner - nobody hurt, nobody busting - is the"
-                + " top left cell,\nand it reads -3.2. That is a tie. So the intuition is"
-                + " right exactly where it\nwas stated: strip out failure and the tight"
-                + " end is as good a use of the pick\nas anything else, because a bench"
-                + " player really does contribute nothing.");
-        System.out.println("\nBut it never gets better than a tie, and every step away"
-                + " from that corner\nmakes it worse - monotonically, in both"
-                + " directions. Injuries and busts push\nthe same way, which is why the"
-                + " second dial did not rescue it: a bust starter\nis a slot a bench man"
-                + " takes without anyone getting hurt, so it is the same\nmechanism"
-                + " arriving by a different road. At the measured world, 1.0x and 1.0x,"
-                + "\nthe tight end is 43.6 points behind.");
-        System.out.println("\nThe reason it cannot do better than a tie even at the corner"
-                + " is the FLEX.\nThe intuition assumes the extra receiver is a bench"
-                + " player. He is not: two\nflex slots mean a fourth receiver or third"
-                + " back starts every week regardless.\nHe is a starter bought at pick "
-                + PICK_IN_QUESTION + ". And the slot the tight end fills is not"
-                + "\nempty either - the waiver wire fills it nearly as well for free,"
-                + " which is the\nstreaming result arriving from the other side.");
-        System.out.println("\nSo the honest summary is not that failure decides this."
-                + " Failure widens a gap\nthat is already there at zero. What decides it"
-                + " is the lineup shape: two flex\nslots and a startable tight end on the"
-                + " wire.");
+        System.out.printf("%nThe idealised corner - nobody hurt, nobody busting - is the"
+                + " top left cell,%nand it reads %+.1f. %s%n", cornerGap,
+                Math.abs(cornerGap) < 5
+                        ? "That is close enough to a tie that the intuition holds"
+                          + " exactly\nwhere it was stated: strip out failure and a bench"
+                          + " player contributes\nnothing, so the pick may as well fill"
+                          + " the empty slot."
+                        : "So even with failure switched off entirely the tight\nend"
+                          + " loses, and the intuition does not survive contact with this"
+                          + " lineup.");
+        System.out.printf("%nAt the measured world - 1.0x injuries, 1.0x busts - the gap"
+                + " is %+.1f.%nBoth dials push the same way, which is why the second did"
+                + " not rescue it: a%nbust starter is a slot a bench man takes without"
+                + " anyone getting hurt, so it%nis the same mechanism arriving by a"
+                + " different road.%n", measuredGap);
+        System.out.printf("%nWhat stops the tight end even at the corner is the FLEX. The"
+                + " intuition assumes%nthe extra receiver is a bench player. He is not:"
+                + " two flex slots mean a fourth%nreceiver or third back starts every week"
+                + " regardless, so he is a starter bought%nat pick %d, and his marginal"
+                + " never falls to the wire the way a tight end's%ndoes.%n",
+                PICK_IN_QUESTION);
+        System.out.println("\nThe pick sweep above is the part that moves: the gap closes"
+                + " steadily as the\npick moves back, because a tight end barely gets"
+                + " worse with the rounds while\na receiver falls off a cliff. That is"
+                + " the plateau, and it is real - it just\ndoes not reach zero before the"
+                + " ADP data thins out.");
     }
 
     static Map<Position, Double> marginals(Map<String, List<TightEndTiming.Seen>> history,

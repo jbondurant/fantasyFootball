@@ -49,24 +49,21 @@ PICK           no failure         measured  TE / best alt  seasons
 YOUR TWO WORLDS, AND WHERE THEY LAND
 
 The idealised corner - nobody hurt, nobody busting - is the top left cell,
-and it reads -3.2. That is a tie. So the intuition is right exactly where it
-was stated: strip out failure and the tight end is as good a use of the pick
-as anything else, because a bench player really does contribute nothing.
+and it reads -36.3. So even with failure switched off entirely the tight
+end loses, and the intuition does not survive contact with this lineup.
 
-But it never gets better than a tie, and every step away from that corner
-makes it worse - monotonically, in both directions. Injuries and busts push
-the same way, which is why the second dial did not rescue it: a bust starter
-is a slot a bench man takes without anyone getting hurt, so it is the same
-mechanism arriving by a different road. At the measured world, 1.0x and 1.0x,
-the tight end is 43.6 points behind.
+At the measured world - 1.0x injuries, 1.0x busts - the gap is -55.3.
+Both dials push the same way, which is why the second did not rescue it: a
+bust starter is a slot a bench man takes without anyone getting hurt, so it
+is the same mechanism arriving by a different road.
 
-The reason it cannot do better than a tie even at the corner is the FLEX.
-The intuition assumes the extra receiver is a bench player. He is not: two
-flex slots mean a fourth receiver or third back starts every week regardless.
-He is a starter bought at pick 79. And the slot the tight end fills is not
-empty either - the waiver wire fills it nearly as well for free, which is the
-streaming result arriving from the other side.
+What stops the tight end even at the corner is the FLEX. The intuition assumes
+the extra receiver is a bench player. He is not: two flex slots mean a fourth
+receiver or third back starts every week regardless, so he is a starter bought
+at pick 79, and his marginal never falls to the wire the way a tight end's
+does.
 
-So the honest summary is not that failure decides this. Failure widens a gap
-that is already there at zero. What decides it is the lineup shape: two flex
-slots and a startable tight end on the wire.
+The pick sweep above is the part that moves: the gap closes steadily as the
+pick moves back, because a tight end barely gets worse with the rounds while
+a receiver falls off a cliff. That is the plateau, and it is real - it just
+does not reach zero before the ADP data thins out.

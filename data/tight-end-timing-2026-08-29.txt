@@ -40,9 +40,13 @@ SEASON              TE1           TE10    wire (mean)  TE10 - wire
 2021              215.8          136.0           66.3         69.7
 2025              144.2          150.5           77.7         72.8
 
-the TE10 you draft beat the best tight end left on the wire by 53.2 points
+the TE10 you draft beat what streaming actually supplies by 53.2 points
 a season, +/- 30.6. That is the whole prize for spending a pick on one,
-and it does not clear its own error bar in either direction.
+and it does clear its own error bar - drafting one is worth something.
+
+the wire figure is the MEAN of the tight ends this league leaves undrafted,
+not the best of them. Taking the best was hindsight - nobody picks that man
+in advance - and it made streaming look far better than it is.
 
 
 THE SWAP - two picks, three ways to spend them

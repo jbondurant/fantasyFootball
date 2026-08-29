@@ -166,11 +166,18 @@ public class TightEndTiming {
         for(int i = 0; i < gaps.length; i++){
             gaps[i] = gapList.get(i);
         }
-        System.out.printf("%nthe TE10 you draft beat the best tight end left on the wire"
-                + " by %.1f points%na season, +/- %.1f. That is the whole prize for"
-                + " spending a pick on one,%nand it does not clear its own error bar in"
-                + " either direction.%n",
-                totalGap / Math.max(1, counted), twoStandardErrors(gaps));
+        double gap = totalGap / Math.max(1, counted);
+        double bar = twoStandardErrors(gaps);
+        System.out.printf("%nthe TE10 you draft beat what streaming actually supplies by"
+                + " %.1f points%na season, +/- %.1f. That is the whole prize for spending"
+                + " a pick on one,%nand it %s.%n", gap, bar,
+                Math.abs(gap) > bar
+                        ? "does clear its own error bar - drafting one is worth something"
+                        : "does not clear its own error bar in either direction");
+        System.out.println("\nthe wire figure is the MEAN of the tight ends this league"
+                + " leaves undrafted,\nnot the best of them. Taking the best was"
+                + " hindsight - nobody picks that man\nin advance - and it made streaming"
+                + " look far better than it is.");
     }
 
     /**
