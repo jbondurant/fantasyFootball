@@ -2310,3 +2310,60 @@ Four usable seasons, and three once 2025 is held out. Several questions here
 are not answerable at that n, and the deliverable of Phase 4 may well be "the
 folk rules were fine". That is a real result and cheaper to accept than to
 discover in week 6.
+
+### Historical Sleeper projections: what is actually reachable (2026-08-29)
+
+Three suggested routes, tested rather than taken on trust.
+
+**Full-season endpoint `/v1/projections/nfl/regular/<year>` - UNUSABLE.**
+Against the real dated 2021-08-09 snapshot only 27% of 453 overlapping players
+match; one reads 323.66 in August and -5.28 today. Rest-of-season values frozen
+at season end.
+
+**Week-1 endpoint `/v1/projections/nfl/regular/<year>/1` - USABLE, and it is
+the find.** A week-1 projection can only have been made before week 1. Tested
+on 2021:
+
+    week-1 projection vs AUG-9 preseason snapshot : r = 0.914  (n=302)
+    week-1 projection vs ACTUAL week-1 outcome    : r = 0.703  (n=425)
+
+It tracks the preseason snapshot far more closely than the outcome, which is
+what a real projection does and what the contaminated season feed does not.
+Coverage is 755-970 players in every season 2021-2025.
+
+**League matchup archives - FALSE.** `/v1/league/<id>/matchups/1` returns
+`custom_points, matchup_id, players, players_points, points, roster_id,
+starters, starters_points`. Actual points only; no projections anywhere.
+
+Untested and deliberately not pursued: ffverse/ffscrapr (`dp_sleeper_players`
+is a player-id map, not projections), RotoWire's subscriber archive, and
+community GitHub/Kaggle dumps - third-party provenance is exactly the thing
+this section exists to guard against.
+
+**How the week-1 projection must be used.** NOT scaled to a season. It is a
+single game against a specific defence, so multiplying by 17 propagates one
+matchup into a season estimate. Use it as a preseason-vintage RANKING signal,
+and map rank to expected season points with the historical curve the repo
+already fits - the same treatment ADP gets. Matchup effects are then noise
+across a position group rather than bias in a total.
+
+Only week 1 is safe. Week 2's projection is made after week 1 is played, so
+for a 1 September draft it leaks results.
+
+**The leak that remains, stated.** Only one player projected above 10 points
+scored zero in week 1 of 2021, which suggests the feed reflects final inactives
+- so it may carry up to 8 days of news the drafter on 1 September did not have.
+That bias runs one way: it makes projections look more reliable than they were,
+and therefore understates bust risk, which is the very thing being modelled.
+Bound it in Phase 0 by comparing how well the 2021 week-1 projection and the
+2021-08-09 snapshot each predict the season, and carry the gap as a correction
+rather than ignoring it.
+
+**Two experiments this makes possible**, both falsifiable:
+
+1. Does week-1-projection rank beat consensus ADP rank at predicting end-of-
+   season points? If not, the simpler input wins and this whole route is moot.
+2. Does a later vintage bust less? ADR's July ranks and FantasyPros' early-
+   September ranks cover the same seasons, so Justin's premise - that a
+   month-out projection carries more preseason-injury risk - becomes a number
+   instead of a reasonable belief.
