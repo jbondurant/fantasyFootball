@@ -42,10 +42,11 @@ public class PlayoffOdds {
     static final int PLAYOFF_TEAMS = 6;
     static final int LEAGUE_SIZE = 12;
 
-    public static void main(String[] args){
-        AAAConfiguration configuration = AAAConfiguration.getInstance();
-        int draws = Integer.getInteger("draws", 200_000);
+    /** Every completed team-season on the league chain, pooled and de-inflated. */
+    public record History(List<TeamSeason> pooled, Map<String, List<TeamSeason>> bySeason,
+                          Map<String, Double> seasonMean){}
 
+    public static History history(AAAConfiguration configuration){
         List<TeamSeason> pooled = new ArrayList<>();
         Map<String, List<TeamSeason>> bySeason = new TreeMap<>();
         Map<String, Double> seasonMean = new TreeMap<>();
@@ -91,6 +92,40 @@ public class PlayoffOdds {
             leagueID = previous == null || previous.isJsonNull()
                     || previous.getAsString().equals("0") ? null : previous.getAsString();
         }
+
+        return new History(pooled, bySeason, seasonMean);
+    }
+
+    /**
+     * The relative standard deviation of a finished season that the DRAFT does
+     * not explain - waivers, byes, injuries, weekly start/sit, luck. Measured
+     * as what is left of the historical variance after removing the variance
+     * across the projected seats.
+     */
+    public static double inSeasonNoise(List<TeamSeason> pooled, double[] projected){
+        double mean = java.util.Arrays.stream(projected).average().orElse(1);
+        double draftVariance = 0;
+        for(double value : projected){
+            double deviation = value / mean - 1.0;
+            draftVariance += deviation * deviation;
+        }
+        draftVariance /= projected.length - 1;
+        double outcomeVariance = 0;
+        for(TeamSeason team : pooled){
+            outcomeVariance += team.deviation() * team.deviation();
+        }
+        outcomeVariance /= pooled.size() - 1;
+        return Math.sqrt(Math.max(0, outcomeVariance - draftVariance));
+    }
+
+    public static void main(String[] args){
+        AAAConfiguration configuration = AAAConfiguration.getInstance();
+        int draws = Integer.getInteger("draws", 200_000);
+
+        History history = history(configuration);
+        List<TeamSeason> pooled = history.pooled();
+        Map<String, List<TeamSeason>> bySeason = history.bySeason();
+        Map<String, Double> seasonMean = history.seasonMean();
 
         if(pooled.isEmpty()){
             System.out.println("no completed seasons on the chain");
