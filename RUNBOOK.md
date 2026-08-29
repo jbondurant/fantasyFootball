@@ -6,12 +6,17 @@ nine-round game. Nine live picks: **7, 18, 31, 42, 55, 66, 79, 90, 103**.
 ## Before the draft (Monday evening, ~30 min)
 
     ./gradlew run -Pmain=AdpSnapshot          # fresh ADP + all four feeds
-    ./gradlew smokeTest                       # feeds still shaped as expected
+    ./gradlew smokeTest -PdraftId=<mock id>   # feeds AND the live-draft path
     ./gradlew run -Pmain=KeeperAudit          # board still 24/24 rules-clean
     ./gradlew run -Pmain=DraftNight           # warms the engine, then holds it open
 
 If `KeeperAudit` reports anything other than 24 matching the rules, STOP and
 read it — a commissioner edit invalidates the keeper-dependent numbers.
+
+**Always pass a draft id to `smokeTest`.** Without one, seven `MockDraftSmokeTest`
+checks silently SKIP — the entire live-draft path, which is where every
+draft-night defect this project has found actually lived. With the id it runs
+53 checks. Any paused mock will do.
 
 ## During the draft
 
