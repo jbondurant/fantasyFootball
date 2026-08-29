@@ -155,9 +155,9 @@ public class LiveCommittee {
                     + " position%n   changes the projection (every engine reads %.1f"
                     + " across the board).%n   The committee has NO opinion here and the"
                     + " name it would print%n   is map order, not football."
-                    + "%n%n   Model A is done; hand over to MODEL B:"
-                    + "%n     rounds 8-9   -Pmain=LiveInsurance   (what a bench man is"
-                    + " worth over the wire)"
+                    + "%n%n   Model A is done. There is no engine for rounds 8+:"
+                    + "%n     rounds 8-9   BenchValue's measured base rates, which"
+                    + " DraftNight prints"
                     + "%n     rounds 10+   -Pmain=LateRoundTargets (keeper option: a"
                     + " round-R stash is keepable at R)%n",
                     votes.get("lookahead-2").values().iterator().next());

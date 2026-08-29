@@ -8,21 +8,28 @@ nine-round game. Nine live picks: **7, 18, 31, 42, 55, 66, 79, 90, 103**.
     ./gradlew run -Pmain=AdpSnapshot          # fresh ADP + all four feeds
     ./gradlew smokeTest                       # feeds still shaped as expected
     ./gradlew run -Pmain=KeeperAudit          # board still 24/24 rules-clean
-    ./gradlew run -Pmain=LiveCommittee        # warms the engine, sanity output
+    ./gradlew run -Pmain=DraftNight           # warms the engine, then holds it open
 
 If `KeeperAudit` reports anything other than 24 matching the rules, STOP and
 read it — a commissioner edit invalidates the keeper-dependent numbers.
 
 ## During the draft
 
-At each of your picks:
+Start this ONCE, before pick 7, and leave it running all night:
 
-    ./gradlew run -Pmain=LiveCommittee
+    ./gradlew run -Pmain=DraftNight
 
-Reads the live board, replays it into the simulator, runs four engines plus
-the Kim-Nelson arbiter, prints a vote table with margins. **~10 seconds**,
-inside the 15s preference. Engine warm-up is ~18s and is paid on the first
-invocation, so run it once before your first pick.
+Then press **enter** at each of your picks. It re-reads the live board
+(uncached) and prints the committee vote plus the wait-or-take table from the
+current state.
+
+Warm-up is **~55s and is paid once**; each pick after that costs **4-7s**,
+measured against the paused mock on 2026-08-29. Running the tools separately
+costs 25-45s per pick, because each one pays the warm-up again — that was the
+single biggest draft-night risk before this existed.
+
+If a cycle throws, it says so and returns you to the prompt rather than
+dying: press enter and go again.
 
 Reading the output:
 - **All four engines agree + KN says PROVEN** → take it, no thought required.
@@ -53,8 +60,23 @@ decide each pick — use it only if the tool is unavailable.
 | 5 | 55 | WR |
 | 6 | 66 | WR |
 | 7 | 79 | TE |
-| 8 | 90 | QB — backup insurance |
-| 9 | 103 | best available |
+| 8 | 90 | highest upside available — **not** a backup QB |
+| 9 | 103 | highest upside available |
+
+### Why round 8 is no longer "QB — backup insurance" (2026-08-29)
+
+Three measurements, all pointing the same way. `BenchValue` joined 111 of this
+league's own rounds 8-9 picks to what they actually scored that season: the
+position means (RB 46.1, WR 39.6, TE 24.8 points over the wire) overlap inside
+two standard errors, so **position does not decide this pick**. `StarterRisk`
+put this nine at 0.90x the injury exposure of an average nine — Henry and
+Nabers are unusually durable — which shrinks bench cover further. And Purdy
+missing his projected 2.7 games costs only his weekly edge over QB21, who is
+startable off the wire for free.
+
+Take the highest-upside player instead. A bust costs only the roster spot,
+because you drop him in week 4 and stream — that right is worth 9.4 of the
+44 points a rounds 8-9 pick averages.
 
 ## Rounds 10–16 — the stash rule
 

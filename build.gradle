@@ -72,7 +72,7 @@ tasks.register('run', JavaExec) {
 
     // Gradle hands -D to its own daemon, not to the JVM this forks, so the
     // tuning knobs have to be passed through explicitly as -P.
-    ['sims', 'candidates', 'qbADPChange', 'draftId', 'trials', 'risk', 'quantile', 'why', 'projections', 'keepers', 'as', 'search', 'adaptiveTrials', 'inner', 'mlScale', 'inners', 'mcts', 'scenarios', 'buckets', 'draws', 'pos', 'seed', 'budget', 'deltas', 'roster', 'outlook'].each { knob ->
+    ['sims', 'candidates', 'qbADPChange', 'draftId', 'trials', 'risk', 'quantile', 'why', 'projections', 'keepers', 'as', 'search', 'adaptiveTrials', 'inner', 'mlScale', 'inners', 'mcts', 'scenarios', 'buckets', 'draws', 'pos', 'seed', 'budget', 'deltas', 'roster', 'outlook', 'waitTrials'].each { knob ->
         if (project.hasProperty(knob)) {
             systemProperty knob, project.property(knob)
         }

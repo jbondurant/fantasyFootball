@@ -47,11 +47,22 @@ public class WaitCheck {
 
         List<String> taken = LiveDraft.livePicks(draftID);
         DraftSimulator.SimState state = simulator.stateAfter(taken);
-        DraftSimulator.Slot slot = simulator.slotOf(state);
-        if(slot == null){
+        if(simulator.slotOf(state) == null){
             System.out.println("The nine-round game is over.");
             return;
         }
+        report(timing, planner, simulator, state, points, rollouts);
+    }
+
+    /**
+     * The wait-or-take table, factored out of main so DraftNight can call it on
+     * an engine that is already warm instead of paying the start-up again. The
+     * mock measured that start-up at 17-20 seconds against a 60-second clock.
+     */
+    public static void report(TimingPlanner timing, DraftPlanner planner,
+                              DraftSimulator simulator, DraftSimulator.SimState state,
+                              Map<String, Double> points, int rollouts){
+        DraftSimulator.Slot slot = simulator.slotOf(state);
         Map<Position, String> best = timing.bestAvailable(state.boardView());
         System.out.printf("%non the clock at pick %d (round %d); %d rollouts to my next pick%n",
                 slot.pickNumber(), slot.round(), rollouts);
