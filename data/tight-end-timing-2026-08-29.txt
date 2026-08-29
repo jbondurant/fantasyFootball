@@ -62,6 +62,27 @@ EARLY   LATE     A: TE early   B: TE late C: stream TE   best
 79      127            299.0        382.4        343.0   B - wait on TE
 
 
+THE SWAP AGAIN, WITH THE EARLY STARTERS' REAL INJURIES
+(rounds 1-6 as Model A shapes them: RB WR RB WR WR WR; 17 weeks, actual games played)
+
+SEASON     A: TE at 79   B: TE at 90  C: stream TE games lost
+2022            1370.2        1510.1        1467.7          9
+2023            1622.0        1760.4        1723.8          5
+2024            1461.2        1621.0        1583.6         15
+2021            1409.8        1370.6        1405.0         21
+2025            1390.9        1483.6        1431.0         21
+
+                                    points        vs A      +/-2se  seasons won
+   A  TE at 79                     1450.8
+   B  TE at 90                     1549.1       +98.3        72.2         4/5
+   C  stream TE                    1522.2       +71.4        46.9         4/5
+
+   This is the comparison that can see injuries to the players drafted in
+   rounds 1-6, because it fields a lineup every week instead of adding up
+   seasons. Missed weeks are scattered at random - the data says how many
+   games each man missed, never which ones.
+
+
 WHO EACH OPTION ACTUALLY GOT (the join, shown so it can be checked)
    2022   TE@79 Dawson Knox             111.7 | WR@79 Chris Godwin            170.8
           TE@90 Zach Ertz                92.1 | WR@90 Elijah Moore             69.6
@@ -76,7 +97,8 @@ WHO EACH OPTION ACTUALLY GOT (the join, shown so it can be checked)
 
 
 SHOULD I LISTEN TO MODEL A WHEN IT CALLS TE AT PICK 79?
-
+(season totals - the weaker of the two. The weekly table above is the one
+to trust: it is the only one that can see the early starters' injuries.)
 
                                     points        vs A       +/-2se  seasons won
    A  take the TE at 79                 319.6

@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 /**
  * Is it right to leave tight end until very late?
@@ -65,6 +66,7 @@ public class TightEndTiming {
         curve(bySeason);
         streamers(bySeason);
         swap(bySeason);
+        injuryAwareSwap(bySeason);
         verdict(bySeason);
     }
 
@@ -264,7 +266,9 @@ public class TightEndTiming {
 
         System.out.printf("%n%nSHOULD I LISTEN TO MODEL A WHEN IT CALLS TE AT PICK %d?%n",
                 modelAPick);
-        System.out.println();
+        System.out.println("(season totals - the weaker of the two. The weekly table"
+                + " above is the one\nto trust: it is the only one that can see the"
+                + " early starters' injuries.)");
         // With five seasons and one player an option, the MEAN is at the mercy
         // of a single outcome - 2024's Brock Bowers at pick 90 scored 206.7 and
         // drags the average on his own. How often an option won is the sturdier
@@ -335,6 +339,205 @@ public class TightEndTiming {
         }
         variance /= n - 1;
         return 2 * Math.sqrt(variance / n);
+    }
+
+    /**
+     * The same swap, scored week by week off ACTUAL games played.
+     *
+     * Season totals have already absorbed the games a starter missed, so a
+     * total-based swap cannot see the thing that decides it: a fourth receiver
+     * covers for a first-rounder who misses six games, while a lone tight end
+     * has no cover at all. The early rounds are where that exposure lives, and
+     * scoring totals hides it completely.
+     *
+     * So field a lineup. Each player is available for the games he really
+     * played that season - measured, not modelled - scoring at his real
+     * per-game rate, with the missed weeks scattered at random since the data
+     * says how many he missed but not which. Every week fills 2 RB, 3 WR, 1 TE
+     * and 2 flex from whoever is up, and any slot nobody can fill takes the
+     * waiver wire's rate.
+     */
+    static void injuryAwareSwap(Map<String, List<Seen>> bySeason){
+        int[] earlyPicks = {7, 18, 31, 42, 55, 66};
+        Position[] earlyShape = {Position.RB, Position.WR, Position.RB,
+                Position.WR, Position.WR, Position.WR};
+        int draws = Integer.getInteger("draws", 400);
+
+        System.out.println("\n\nTHE SWAP AGAIN, WITH THE EARLY STARTERS' REAL INJURIES");
+        System.out.println("(rounds 1-6 as Model A shapes them: RB WR RB WR WR WR;"
+                + " 17 weeks, actual games played)");
+        System.out.printf("%n%-8s %13s %13s %13s %10s%n", "SEASON", "A: TE at 79",
+                "B: TE at 90", "C: stream TE", "games lost");
+        double a = 0;
+        double b = 0;
+        double c = 0;
+        int counted = 0;
+        List<double[]> perSeason = new ArrayList<>();
+        for(Map.Entry<String, List<Seen>> entry : bySeason.entrySet()){
+            List<Seen> season = entry.getValue();
+            List<Seen> early = new ArrayList<>();
+            boolean complete = true;
+            for(int i = 0; i < earlyPicks.length; i++){
+                Seen pick = bestAtExcluding(season, earlyShape[i], earlyPicks[i], early);
+                if(pick == null){
+                    complete = false;
+                    break;
+                }
+                early.add(pick);
+            }
+            Seen teEarly = bestAtExcluding(season, Position.TE, 79, early);
+            Seen wrEarly = bestAtExcluding(season, Position.WR, 79, early);
+            if(!complete || teEarly == null || wrEarly == null){
+                continue;
+            }
+            List<Seen> usedA = new ArrayList<>(early);
+            usedA.add(teEarly);
+            Seen wrLateA = bestAtExcluding(season, Position.WR, 90, usedA);
+            List<Seen> usedB = new ArrayList<>(early);
+            usedB.add(wrEarly);
+            Seen teLateB = bestAtExcluding(season, Position.TE, 90, usedB);
+            Seen wrLateC = bestAtExcluding(season, Position.WR, 90, usedB);
+            if(wrLateA == null || teLateB == null || wrLateC == null){
+                continue;
+            }
+            Map<Position, Double> wire = new EnumMap<>(Position.class);
+            for(Position position : new Position[]{Position.RB, Position.WR, Position.TE}){
+                wire.put(position, wireLevel(season, position) / 17.0);
+            }
+
+            List<Seen> rosterA = new ArrayList<>(early);
+            rosterA.add(teEarly);
+            rosterA.add(wrLateA);
+            List<Seen> rosterB = new ArrayList<>(early);
+            rosterB.add(wrEarly);
+            rosterB.add(teLateB);
+            List<Seen> rosterC = new ArrayList<>(early);
+            rosterC.add(wrEarly);
+            rosterC.add(wrLateC);
+
+            double scoreA = weeklyScore(rosterA, wire, draws, 31_000L);
+            double scoreB = weeklyScore(rosterB, wire, draws, 31_000L);
+            double scoreC = weeklyScore(rosterC, wire, draws, 31_000L);
+            int gamesLost = 0;
+            for(Seen player : early){
+                gamesLost += Math.max(0, 17 - player.games());
+            }
+            System.out.printf("%-8s %13.1f %13.1f %13.1f %10d%n", entry.getKey(),
+                    scoreA, scoreB, scoreC, gamesLost);
+            perSeason.add(new double[]{scoreA, scoreB, scoreC});
+            a += scoreA;
+            b += scoreB;
+            c += scoreC;
+            counted++;
+        }
+        if(counted == 0){
+            System.out.println("   not enough joined seasons");
+            return;
+        }
+        a /= counted;
+        b /= counted;
+        c /= counted;
+        double[] bMinusA = new double[perSeason.size()];
+        double[] cMinusA = new double[perSeason.size()];
+        for(int i = 0; i < perSeason.size(); i++){
+            bMinusA[i] = perSeason.get(i)[1] - perSeason.get(i)[0];
+            cMinusA[i] = perSeason.get(i)[2] - perSeason.get(i)[0];
+        }
+        long bWins = java.util.Arrays.stream(bMinusA).filter(d -> d > 0).count();
+        long cWins = java.util.Arrays.stream(cMinusA).filter(d -> d > 0).count();
+        System.out.printf("%n%-30s %11s %11s %11s %12s%n", "", "points", "vs A",
+                "+/-2se", "seasons won");
+        System.out.printf("   A  TE at 79                %11.1f%n", a);
+        System.out.printf("   B  TE at 90                %11.1f %+11.1f %11.1f %9d/%d%n",
+                b, b - a, twoStandardErrors(bMinusA), bWins, perSeason.size());
+        System.out.printf("   C  stream TE               %11.1f %+11.1f %11.1f %9d/%d%n",
+                c, c - a, twoStandardErrors(cMinusA), cWins, perSeason.size());
+        System.out.println("\n   This is the comparison that can see injuries to the"
+                + " players drafted in\n   rounds 1-6, because it fields a lineup every"
+                + " week instead of adding up\n   seasons. Missed weeks are scattered at"
+                + " random - the data says how many\n   games each man missed, never"
+                + " which ones.");
+    }
+
+    /** A season of weekly lineups, given who was available when. */
+    static double weeklyScore(List<Seen> roster, Map<Position, Double> wire,
+                              int draws, long seed){
+        Random random = new Random(seed);
+        double total = 0;
+        for(int draw = 0; draw < draws; draw++){
+            boolean[][] up = new boolean[roster.size()][17];
+            for(int p = 0; p < roster.size(); p++){
+                List<Integer> weeks = new ArrayList<>();
+                for(int week = 0; week < 17; week++){
+                    weeks.add(week);
+                }
+                java.util.Collections.shuffle(weeks, random);
+                int plays = Math.min(17, Math.max(0, roster.get(p).games()));
+                for(int i = 0; i < plays; i++){
+                    up[p][weeks.get(i)] = true;
+                }
+            }
+            for(int week = 0; week < 17; week++){
+                List<Seen> availableRb = new ArrayList<>();
+                List<Seen> availableWr = new ArrayList<>();
+                List<Seen> availableTe = new ArrayList<>();
+                for(int p = 0; p < roster.size(); p++){
+                    if(!up[p][week]){
+                        continue;
+                    }
+                    Seen player = roster.get(p);
+                    (player.position() == Position.RB ? availableRb
+                            : player.position() == Position.WR ? availableWr
+                            : availableTe).add(player);
+                }
+                Comparator<Seen> byRate = Comparator.comparingDouble(
+                        (Seen s) -> perGame(s)).reversed();
+                availableRb.sort(byRate);
+                availableWr.sort(byRate);
+                availableTe.sort(byRate);
+                List<Seen> flexPool = new ArrayList<>();
+                total += fill(availableRb, 2, Position.RB, wire, flexPool);
+                total += fill(availableWr, 3, Position.WR, wire, flexPool);
+                total += fill(availableTe, 1, Position.TE, wire, flexPool);
+                flexPool.sort(byRate);
+                for(int slot = 0; slot < 2; slot++){
+                    total += slot < flexPool.size() ? perGame(flexPool.get(slot))
+                            : wire.getOrDefault(Position.WR, 0.0);
+                }
+            }
+        }
+        return total / draws;
+    }
+
+    /** Fill n slots from the available list; leftovers go to the flex pool. */
+    static double fill(List<Seen> available, int slots, Position position,
+                       Map<Position, Double> wire, List<Seen> flexPool){
+        double points = 0;
+        for(int slot = 0; slot < slots; slot++){
+            if(slot < available.size()){
+                points += perGame(available.get(slot));
+            }
+            else {
+                points += wire.getOrDefault(position, 0.0);
+            }
+        }
+        for(int extra = slots; extra < available.size(); extra++){
+            flexPool.add(available.get(extra));
+        }
+        return points;
+    }
+
+    static double perGame(Seen player){
+        return player.games() > 0 ? player.points() / player.games() : 0;
+    }
+
+    static Seen bestAtExcluding(List<Seen> season, Position position, double minimumAdp,
+                                List<Seen> taken){
+        return season.stream()
+                .filter(s -> s.position() == position && s.adp() >= minimumAdp)
+                .filter(s -> taken.stream().noneMatch(t -> t.name().equals(s.name())))
+                .min(Comparator.comparingDouble(Seen::adp))
+                .orElse(null);
     }
 
     /** The best man at a position that this league leaves undrafted. */
