@@ -90,16 +90,34 @@ class MockDraftSmokeTest {
 
         // Sleeper stamps each pick with its round; ours is derived from the
         // count. They have to agree, or the simulator plans the wrong rounds.
-        int lastPickRound = 0;
+        //
+        // Keepers are NOT sequential progress. This league pre-places them at
+        // their cost rounds - the 2026-08-29 mock held twelve of them at rounds
+        // 10 to 14, pick numbers up to 159, while the draft itself had only
+        // reached round 8. Counting those made the raw pick total say round 9
+        // and the highest stamped round say 14, and the test failed on a draft
+        // that was behaving correctly. LiveDraft.livePicks filters them for the
+        // same reason; so must this.
+        java.util.Set<Integer> filled = new java.util.HashSet<>();
+        int lastSelectionRound = 0;
+        int selections = 0;
         for(JsonElement pickElement : picks){
-            lastPickRound = Math.max(lastPickRound, pickElement.getAsJsonObject().get("round").getAsInt());
+            JsonObject pick = pickElement.getAsJsonObject();
+            filled.add(pick.get("pick_no").getAsInt());
+            JsonElement keeper = pick.get("is_keeper");
+            if(keeper == null || keeper.isJsonNull() || !keeper.getAsBoolean()){
+                selections++;
+                lastSelectionRound = Math.max(lastSelectionRound,
+                        pick.get("round").getAsInt());
+            }
         }
+        Assumptions.assumeTrue(selections > 0, "only keepers are in so far");
 
-        int ourRound = DraftProgress.currentRound(picks.size(), teams);
-        boolean roundJustCompleted = picks.size() % teams == 0;
-        int expected = roundJustCompleted ? lastPickRound + 1 : lastPickRound;
+        int ourRound = DraftProgress.currentRoundOfKeeperDraft(filled, teams);
+        int expected = lastSelectionRound;
 
-        System.out.println(picks.size() + " picks made, sleeper's last pick is round " + lastPickRound
+        System.out.println(selections + " selections plus " + (picks.size() - selections)
+                + " keepers; sleeper's last selection is round " + lastSelectionRound
                 + ", we are on round " + ourRound);
         Assertions.assertEquals(expected, ourRound);
     }

@@ -39,4 +39,44 @@ class DraftProgressTest {
     void anEmptyLeagueIsRejectedRatherThanDividingByZero(){
         Assertions.assertThrows(IllegalArgumentException.class, () -> DraftProgress.currentRound(0, 0));
     }
+
+    @org.junit.jupiter.api.Test
+    void aKeeperDraftsRoundComesFromSlotsNotCounts(){
+        // The 2026-08-29 mock: rounds 1-8 filled through pick 91, plus keepers
+        // pre-placed on later slots. 103 rows, 79 selections, truly round 8.
+        java.util.Set<Integer> filled = new java.util.HashSet<>();
+        for(int pick = 1; pick <= 91; pick++){
+            filled.add(pick);
+        }
+        for(int keeperSlot : new int[]{117, 121, 125, 138, 145, 146, 159}){
+            filled.add(keeperSlot);
+        }
+        Assertions.assertEquals(8,
+                DraftProgress.currentRoundOfKeeperDraft(filled, 12),
+                "counting rows says 9 and counting selections says 7; the draft is in 8");
+    }
+
+    @org.junit.jupiter.api.Test
+    void anEmptyKeeperDraftIsInRoundOne(){
+        Assertions.assertEquals(1,
+                DraftProgress.currentRoundOfKeeperDraft(java.util.Set.of(), 12));
+    }
+
+    @org.junit.jupiter.api.Test
+    void aKeeperOnPickOneDoesNotHoldTheDraftInRoundOne(){
+        Assertions.assertEquals(1,
+                DraftProgress.currentRoundOfKeeperDraft(java.util.Set.of(1), 12));
+        Assertions.assertEquals(2,
+                DraftProgress.currentRoundOfKeeperDraft(
+                        java.util.stream.IntStream.rangeClosed(1, 12).boxed()
+                                .collect(java.util.stream.Collectors.toSet()), 12));
+    }
+
+    @org.junit.jupiter.api.Test
+    void roundOfPickIsOneBased(){
+        Assertions.assertEquals(1, DraftProgress.roundOfPick(1, 12));
+        Assertions.assertEquals(1, DraftProgress.roundOfPick(12, 12));
+        Assertions.assertEquals(2, DraftProgress.roundOfPick(13, 12));
+        Assertions.assertEquals(8, DraftProgress.roundOfPick(92, 12));
+    }
 }
