@@ -1,0 +1,39 @@
+434 picks in rounds 8-16 across 5 seasons, joined to the SAME season's actual points.
+wire line = the best undrafted man at each position: QB21 RB61 WR81 TE19
+
+ROUNDS 8-9 ONLY - the two picks in question
+POS        n  hit rate   mean pts    over wire   +/-2se if it hits
+QB        10       70%      279.8         87.7     36.8      119.2
+RB        33       18%      100.1         46.1     17.8      133.5
+WR        54       24%      100.1         39.6     12.2      109.7
+TE        14       43%      110.6         24.8     17.7       52.8
+
+GROUP                   n  hit rate   mean pts    over wire
+rounds 8-9            111       29%      117.6         44.0
+rounds 10-12          154       19%      102.3         32.8
+rounds 13-16          169       18%      109.9         31.2
+rookies (8-9)          15       40%      127.2         59.5
+young <=2yr (8-9)      43       28%      116.4         49.2
+veterans (8-9)         68       29%      118.4         40.7
+
+the ten best rounds 8-9 picks this league ever made:
+   Jayden Daniels           QB  r8   2024 -> 364.8 pts (172.5 over wire)
+   James Conner             RB  r8   2021 -> 237.2 pts (166.7 over wire)
+   Chuba Hubbard            RB  r8   2024 -> 220.1 pts (165.5 over wire)
+   Dak Prescott             QB  r9   2023 -> 351.8 pts (146.6 over wire)
+   Mike Williams            WR  r8   2021 -> 208.6 pts (136.1 over wire)
+   Christian Kirk           WR  r8   2022 -> 199.9 pts (129.7 over wire)
+   Brian Robinson           RB  r8   2023 -> 180.1 pts (128.3 over wire)
+   De'Von Achane            RB  r8   2023 -> 177.2 pts (125.4 over wire)
+   Tyler Lockett            WR  r8   2022 -> 195.3 pts (125.1 over wire)
+   Matthew Stafford         QB  r9   2021 -> 341.7 pts (124.6 over wire)
+
+held all season, a rounds 8-9 pick averaged 34.6 over the wire.
+with the right to drop him, 44.0. the difference, 9.4 pts,
+is what dropping busts is worth - and it is why a bench pick is
+an option, not an asset.
+
+'hit' = reached a startable line THAT season (QB12/RB24/WR36/TE12).
+hit rates are NOT comparable across positions - QB12 of ~32 starting quarterbacks is a far
+easier bar than WR36 of ~90. only the over-wire column compares, and it is
+in raw points, which flatters QB because this league pays 6 per passing TD.
