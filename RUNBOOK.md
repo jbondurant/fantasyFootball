@@ -108,9 +108,30 @@ TE   13-16       21        13.3          1.9        15.2     11.9
    n=7 and n=14 with ±43.5 and ±40.6 — they do not separate from RB. Rounds
    10–12 is the band where the QB keeper term peaks.
 
-2026 QB stash targets, in order: **Bo Nix, Jaxson Dart, Tyler Shough, Cam
-Ward**. If Mahomes, Stafford or Goff somehow last, they are startable quality
-at a stash price.
+2026 QB stash targets — but **the order is a deadline, not a preference**.
+`LateSurvival` runs the board to round 16 (the old tool stopped at round 9 and
+so called everything safe):
+
+```
+PICK  ROUND      Bo Nix   Jaxson Dart   Tyler Shough   Cam Ward
+114   10            74%           73%           100%       100%
+127   11            42%           50%            99%       100%
+162   14             6%            8%            95%       100%   <- 35-pick gap
+175   15             0%            2%            78%       100%
+186   16             0%            1%            63%        98%
+```
+
+**Take Nix or Dart at 114, or at 127 at the latest.** There is no round 14 for
+either of them — 6% and 8%. Shough and Ward survive the gap (95%, 100%), so
+they are the ones to wait on, and taking either early wastes a pick you could
+have spent on someone who would not have lasted.
+
+The 127 → 162 gap is the structural fact of your draft: keepers at r12 and r13
+mean thirty-five picks pass with no selection of yours. Anything you want
+after 127 must be taken **at** 127.
+
+If Mahomes, Stafford or Goff somehow last, they are startable quality at a
+stash price.
 
 **How much of this is next year:** 30%. This season is worth 36.3 on average
 and the keeper option 15.6, after scaling the keeper term by 0.88 — the share

@@ -39,6 +39,26 @@ public class DraftPlanner {
     private static final Position[] POSITIONS =
             {Position.QB, Position.RB, Position.WR, Position.TE};
 
+    /**
+     * How many rounds of the real pick order to build a board for.
+     *
+     * This is NOT the objective. The score is still the best legal NINE; this
+     * only says how far the simulated board runs. They were the same number
+     * until 2026-08-29, which quietly made every late-round survival question
+     * unanswerable: LateRoundTargets reported "Bo Nix survives 87%" meaning
+     * survival to the end of round 9, pick 108, when the pick actually being
+     * asked about was round 14, pick 163. Everything survives a race that
+     * stops before the finish.
+     *
+     * Defaults to GAME_ROUNDS so rounds 1-7 behave exactly as before; raise it
+     * with -PscheduleRounds=16 to ask a late-round question. Note the choice
+     * model is fitted on rounds 1-13 (SelectionModel.TRAIN_ROUNDS), so rounds
+     * 14-16 extrapolate.
+     */
+    public static int scheduleRounds(){
+        return Integer.getInteger("scheduleRounds", SelectionModel.GAME_ROUNDS);
+    }
+
     private final DraftSimulator simulator;
     private final String me;
     private final List<String> myKeeperIDs;
@@ -460,20 +480,20 @@ public class DraftPlanner {
             Set<Integer> taken = roundsTaken.computeIfAbsent(keeper.humanWhoCanKeep,
                     u -> new HashSet<>());
             int round = keeper.roundCanBeKept;
-            if(round > SelectionModel.GAME_ROUNDS && mockRoomSlots){
-                round = SelectionModel.GAME_ROUNDS;
+            if(round > scheduleRounds() && mockRoomSlots){
+                round = scheduleRounds();
                 while(round >= 1 && taken.contains(round)){
                     round--;
                 }
             }
-            if(round >= 1 && round <= SelectionModel.GAME_ROUNDS){
+            if(round >= 1 && round <= scheduleRounds()){
                 occupied.add(AAAConfiguration.pickNumber(round, slot.getAsInt(), teams));
                 taken.add(round);
             }
         }
 
         List<DraftSimulator.Slot> schedule = new ArrayList<>();
-        for(int round = 1; round <= SelectionModel.GAME_ROUNDS; round++){
+        for(int round = 1; round <= scheduleRounds(); round++){
             for(int slot = 1; slot <= teams; slot++){
                 int pickNumber = AAAConfiguration.pickNumber(round, slot, teams);
                 schedule.add(new DraftSimulator.Slot(pickNumber, round,
