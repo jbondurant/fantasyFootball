@@ -14,6 +14,31 @@ import java.util.Map;
  */
 public class HistoricalActuals {
 
+    /** sleeper id -> games actually played that season. */
+    public static Map<String, Integer> gamesPlayedBySleeperID(String season){
+        JsonArray rows = JsonParser.parseString(raw(season)).getAsJsonArray();
+        Map<String, Integer> played = new HashMap<>();
+        for(JsonElement element : rows){
+            JsonObject row = element.getAsJsonObject();
+            JsonObject stats = row.getAsJsonObject("stats");
+            if(stats == null || !row.has("player_id")){
+                continue;
+            }
+            JsonElement games = stats.get("gp");
+            if(games != null && !games.isJsonNull()){
+                played.put(row.get("player_id").getAsString(), games.getAsInt());
+            }
+        }
+        return played;
+    }
+
+    static String raw(String season){
+        String url = "https://api.sleeper.app/stats/nfl/" + season
+                + "?season_type=regular&position[]=QB&position[]=RB&position[]=TE"
+                + "&position[]=WR&order_by=pts_half_ppr";
+        return InOutUtilities.getCachedForever(url, "sleeperActualsFinal" + season);
+    }
+
     /** sleeper id -> actual half-PPR points for the season. */
     public static Map<String, Double> pointsBySleeperID(String season){
         String url = "https://api.sleeper.app/stats/nfl/" + season

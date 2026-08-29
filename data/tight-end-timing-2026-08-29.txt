@@ -1,0 +1,92 @@
+5 seasons joined: [2022, 2023, 2024, 2021, 2025]
+
+
+WHAT EACH POSITION ACTUALLY SCORED, BY PRE-SEASON RANK BAND
+(pooled over seasons; the gap column is what the band above was worth)
+
+TE        BAND     points       gap    games     bust       n
+TE         1-3      160.0               14.1       7%      15
+TE         4-6      135.0     -25.0     14.1      33%      15
+TE         7-9       97.1     -37.8     13.7      47%      15
+TE       10-12      127.8      30.6     14.1       7%      15
+TE       13-15       90.9     -36.9     14.0      53%      15
+TE       16-18       99.4       8.5     14.5      53%      15
+TE       19-21       97.1      -2.3     15.0      40%      15
+
+RB        BAND     points       gap    games     bust       n
+RB         1-6      232.9               14.4       7%      30
+RB        7-12      218.6     -14.3     15.2       3%      30
+RB       13-18      171.3     -47.2     13.5      10%      30
+RB       19-24      130.5     -40.8     12.8      30%      30
+RB       25-30      130.4      -0.1     13.9      27%      30
+RB       31-36      133.4       2.9     13.9      20%      30
+RB       37-42       96.6     -36.8     13.2      40%      30
+
+WR        BAND     points       gap    games     bust       n
+WR         1-6      217.1               14.6       7%      30
+WR        7-12      182.0     -35.1     14.6      10%      30
+WR       13-18      160.8     -21.2     13.9      10%      30
+WR       19-24      161.2       0.4     14.8      13%      30
+WR       25-30      141.8     -19.3     13.5      23%      30
+WR       31-36      132.7      -9.1     13.2      23%      30
+WR       37-42      142.6       9.9     15.2      10%      30
+
+
+COULD YOU JUST STREAM IT?
+SEASON              TE1           TE10 best undrafted  TE10 - wire
+2022              261.3           92.1          141.3        -49.2
+2023              172.9          160.7          141.6         19.1
+2024              144.6          116.5          178.3        -61.8
+2021              215.8          136.0          140.6         -4.6
+2025              144.2          150.5          136.7         13.8
+
+the TE10 you draft beat the best tight end left on the wire by -16.5 points
+a season, +/- 33.0. That is the whole prize for spending a pick on one,
+and it does not clear its own error bar in either direction.
+
+
+THE SWAP - two picks, three ways to spend them
+(every option fields three lineup slots; the third comes off the wire)
+EARLY   LATE     A: TE early   B: TE late C: stream TE   best
+55      90             356.9        446.0        396.5   B - wait on TE
+55      103            397.6        431.5        437.2   C - never draft one
+55      114            393.3        425.1        432.9   C - never draft one
+55      127            336.4        415.3        376.0   B - wait on TE
+66      90             331.8        408.9        359.4   B - wait on TE
+66      103            372.5        394.4        400.1   C - never draft one
+66      114            368.2        388.0        395.8   C - never draft one
+66      127            311.3        378.2        338.9   B - wait on TE
+79      90             319.6        413.0        363.6   B - wait on TE
+79      103            360.2        398.5        404.2   C - never draft one
+79      114            356.0        392.2        399.9   C - never draft one
+79      127            299.0        382.4        343.0   B - wait on TE
+
+
+WHO EACH OPTION ACTUALLY GOT (the join, shown so it can be checked)
+   2022   TE@79 Dawson Knox             111.7 | WR@79 Chris Godwin            170.8
+          TE@90 Zach Ertz                92.1 | WR@90 Elijah Moore             69.6
+   2023   TE@79 Evan Engram             173.3 | WR@79 Mike Evans              243.0
+          TE@90 David Njoku             160.7 | WR@90 Jahan Dotson            100.3
+   2024   TE@79 Jake Ferguson            74.9 | WR@79 Jayden Reed             169.5
+          TE@90 Brock Bowers            206.7 | WR@90 Diontae Johnson          72.6
+   2021   TE@79 Logan Thomas             43.6 | WR@79 JuJu Smith-Schuster      27.3
+          TE@90 Dallas Goedert          136.0 | WR@90 Antonio Brown           100.1
+   2025   TE@79 Evan Engram              77.8 | WR@79 Ricky Pearsall           70.6
+          TE@90 David Njoku              69.8 | WR@90 Matthew Golden           55.5
+
+
+SHOULD I LISTEN TO MODEL A WHEN IT CALLS TE AT PICK 79?
+
+
+                                    points        vs A       +/-2se  seasons won
+   A  take the TE at 79                 319.6
+   B  wait, take one at 90              413.0       +93.4         80.9         5/5
+   C  never draft one, stream         363.6       +44.0         68.9         3/5
+
+   B beat A in 5 of 5 seasons. The mean is noisy; that count is not,
+   and it is the part worth trusting.
+
+   5 seasons, one player per option per season - so the bars are wide
+   on purpose. A difference inside its own bar is not a difference.
+
+   OVERRIDE IT: waiting beat taking one at 79, by more than the noise.
