@@ -43,8 +43,41 @@ public class BenchValue {
     record Bench(String name, Position position, int round, String season,
                  double points, double overWire, boolean rookie, boolean young){}
 
+    /** Everything the join produced: the picks and the two lines they are judged against. */
+    record History(List<Bench> benches, Map<String, Map<Position, Double>> starterBar,
+                   Map<String, Map<Position, Double>> wireBar){}
+
+    /**
+     * Mean points over the wire for a rounds 8-9 pick at each position, floored
+     * at zero. This is the base rate other tools adjust; it lives here so there
+     * is one source of truth for it rather than a number copied out of output.
+     */
+    public static Map<Position, Double> overWireByPosition(AAAConfiguration configuration){
+        Map<Position, List<Double>> collected = new EnumMap<>(Position.class);
+        for(Bench bench : gather(configuration).benches()){
+            if(bench.round() <= 9){
+                collected.computeIfAbsent(bench.position(), u -> new ArrayList<>())
+                        .add(bench.overWire());
+            }
+        }
+        Map<Position, Double> means = new EnumMap<>(Position.class);
+        for(Map.Entry<Position, List<Double>> entry : collected.entrySet()){
+            means.put(entry.getKey(), entry.getValue().stream()
+                    .mapToDouble(Double::doubleValue).average().orElse(0));
+        }
+        return means;
+    }
+
     public static void main(String[] args){
         AAAConfiguration configuration = AAAConfiguration.getInstance();
+        History history = gather(configuration);
+        List<Bench> benches = history.benches();
+        Map<String, Map<Position, Double>> starterBar = history.starterBar();
+        Map<String, Map<Position, Double>> wireBar = history.wireBar();
+        report(benches, starterBar, wireBar);
+    }
+
+    static History gather(AAAConfiguration configuration){
         List<JsonArray> drafts = configuration.getPreviousDraftPicks();
         List<String> seasons = configuration.getPreviousSeasons();
         Map<Position, Integer> wireRanks = InsuranceTest.replacementRanks(configuration);
@@ -120,8 +153,15 @@ public class BenchValue {
             }
         }
 
+        return new History(benches, starterBar, wireBar);
+    }
+
+    static void report(List<Bench> benches, Map<String, Map<Position, Double>> starterBar,
+                       Map<String, Map<Position, Double>> wireBar){
         System.out.printf("%d picks in rounds 8-16 across %d seasons, joined to the"
                 + " SAME season's actual points.%n", benches.size(), starterBar.size());
+        Map<Position, Integer> wireRanks = InsuranceTest.replacementRanks(
+                AAAConfiguration.getInstance());
         System.out.printf("wire line = the best undrafted man at each position:"
                 + " QB%d RB%d WR%d TE%d%n%n",
                 wireRanks.getOrDefault(Position.QB, 0),
