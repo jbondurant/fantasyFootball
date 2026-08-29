@@ -94,6 +94,82 @@ public class StarterContribution {
         return smoothed;
     }
 
+    /**
+     * The per-player outcome distributions, bootstrapped from history.
+     *
+     * The scalar dials this class started with gave every back the same games
+     * and every player his one realized deviation, rescaled. That throws away
+     * the dispersion BETWEEN players, and dispersion is most of the point: a
+     * lineup takes the best available man each week, so its value is convex in
+     * spread. A model with no spread cannot see why a fourth receiver is worth
+     * anything.
+     *
+     * So sample instead. For a player at a position and tier, draw his games
+     * played from what players there actually played, and draw his scoring
+     * from what they actually returned against expectation. Both are empirical
+     * - no distributional family assumed - and independent, which is itself an
+     * approximation: a man who misses eight games often disappoints in the
+     * other nine too.
+     */
+    record Outcomes(List<Integer> games, List<Double> ratios){}
+
+    static final int TIER = 12;
+
+    static Map<String, Outcomes> distributions(Map<String, List<TightEndTiming.Seen>> history,
+                                               Map<Position, double[]> expectation){
+        Map<String, List<Integer>> games = new java.util.HashMap<>();
+        Map<String, List<Double>> ratios = new java.util.HashMap<>();
+        for(List<TightEndTiming.Seen> season : history.values()){
+            for(Position position : new Position[]{Position.RB, Position.WR, Position.TE}){
+                List<TightEndTiming.Seen> ranked = season.stream()
+                        .filter(s -> s.position() == position)
+                        .sorted(Comparator.comparingDouble(TightEndTiming.Seen::adp))
+                        .toList();
+                for(int rank = 0; rank < ranked.size(); rank++){
+                    String key = position + ":" + (rank / TIER);
+                    double[] curve = expectation.get(position);
+                    double expected = curve != null && rank < curve.length ? curve[rank] : 0;
+                    if(expected <= 0){
+                        continue;
+                    }
+                    games.computeIfAbsent(key, u -> new ArrayList<>())
+                            .add(ranked.get(rank).games());
+                    ratios.computeIfAbsent(key, u -> new ArrayList<>())
+                            .add(ranked.get(rank).points() / expected);
+                }
+            }
+        }
+        Map<String, Outcomes> out = new java.util.HashMap<>();
+        for(String key : games.keySet()){
+            out.put(key, new Outcomes(games.get(key), ratios.get(key)));
+        }
+        return out;
+    }
+
+    /** One sampled season for a player, from his tier's empirical outcomes. */
+    static Player sample(TightEndTiming.Seen player, int rank,
+                         Map<Position, double[]> expectation,
+                         Map<String, Outcomes> distributions, double spread,
+                         double availability, Random random){
+        double[] curve = expectation.get(player.position());
+        double expected = curve != null && rank < curve.length ? curve[rank] : player.points();
+        Outcomes outcomes = distributions.get(player.position() + ":" + (rank / TIER));
+        if(outcomes == null || outcomes.games().isEmpty()){
+            return new Player(player.name(), player.position(), expected / 17.0, 17);
+        }
+        int drawnGames = outcomes.games().get(random.nextInt(outcomes.games().size()));
+        double drawnRatio = outcomes.ratios().get(random.nextInt(outcomes.ratios().size()));
+
+        // spread and availability scale the DEVIATION from the middle, so 1.0x
+        // is the measured world and 0.0x collapses everyone onto it
+        double ratio = 1.0 + spread * (drawnRatio - 1.0);
+        int games = (int) Math.round(17 - availability * (17 - drawnGames));
+        games = Math.max(0, Math.min(17, games));
+        double points = Math.max(0, expected * ratio);
+        return new Player(player.name(), player.position(), games > 0 ? points / games : 0,
+                games);
+    }
+
     /** Where a player sat among his position, by ADP, that season. */
     static int rankOf(List<TightEndTiming.Seen> season, TightEndTiming.Seen player){
         return (int) season.stream()
@@ -230,6 +306,46 @@ public class StarterContribution {
                     usable < history.size() ? "  <- thin" : "");
         }
 
+        System.out.println("\n\nSAME QUESTION, WITH PER-PLAYER DISTRIBUTIONS");
+        System.out.println("games played and points-against-expectation drawn from what"
+                + " players at that\nposition and tier actually did, rather than every"
+                + " man getting the average");
+        Map<String, Outcomes> distributions = distributions(history, expectation);
+        System.out.printf("%n%-8s %16s %16s %14s%n", "PICK", "scalar model",
+                "sampled model", "TE / best alt");
+        for(int pick : PICK_SWEEP){
+            Map<Position, Double> scalar = marginals(history, baselineMissed, 1.0, 1.0,
+                    expectation, draws, pick);
+            Map<Position, Double> sampled = marginalsSampled(history, expectation,
+                    distributions, 1.0, 1.0, Math.max(60, draws / 4), pick);
+            double scalarGap = scalar.getOrDefault(Position.TE, 0.0)
+                    - Math.max(scalar.getOrDefault(Position.WR, 0.0),
+                               scalar.getOrDefault(Position.RB, 0.0));
+            double sampledGap = sampled.getOrDefault(Position.TE, 0.0)
+                    - Math.max(sampled.getOrDefault(Position.WR, 0.0),
+                               sampled.getOrDefault(Position.RB, 0.0));
+            System.out.printf("%-8d %+16.1f %+16.1f %8.1f / %.1f%n", pick, scalarGap,
+                    sampledGap, sampled.getOrDefault(Position.TE, 0.0),
+                    Math.max(sampled.getOrDefault(Position.WR, 0.0),
+                             sampled.getOrDefault(Position.RB, 0.0)));
+        }
+
+        System.out.println("\nSampling changes the magnitudes and steadies the tail."
+                + " The scalar model swung\nfrom -66.8 to +16.3 and back across three"
+                + " adjacent picks, which was one\nrealized season showing through;"
+                + " drawing from a tier's distribution smooths\nthat into a monotone"
+                + " curve. Both marginals rise, because dispersion creates\nstarts - and"
+                + " the alternative rises more, because a receiver has a flex slot"
+                + "\nwaiting and a tight end does not.");
+        System.out.println("\nRead this as WHICH position for one pick, not WHEN to take"
+                + " the tight end.\nThe roster here is fixed at the six early picks plus"
+                + " one candidate, so it\nnever asks what happens after you have taken"
+                + " four receivers and the flex is\nfull. TightEndTiming's swap is the"
+                + " sequential question and answers 'when';\nthis answers 'what is this"
+                + " one pick worth'. They agree that 79 is too early\nand disagree about"
+                + " how much better 90 is - under sampling, 90 is barely an\nimprovement"
+                + " on 79, and the gap only really closes past 127.");
+
         System.out.println("\nYOUR TWO WORLDS, AND WHERE THEY LAND");
         System.out.printf("%nThe idealised corner - nobody hurt, nobody busting - is the"
                 + " top left cell,%nand it reads %+.1f. %s%n", cornerGap,
@@ -257,6 +373,65 @@ public class StarterContribution {
                 + " worse with the rounds while\na receiver falls off a cliff. That is"
                 + " the plateau, and it is real - it just\ndoes not reach zero before the"
                 + " ADP data thins out.");
+    }
+
+    /** The marginal value of the pick under sampled per-player outcomes. */
+    static Map<Position, Double> marginalsSampled(
+            Map<String, List<TightEndTiming.Seen>> history,
+            Map<Position, double[]> expectation, Map<String, Outcomes> distributions,
+            double spread, double availability, int draws, int pick){
+        Map<Position, Double> marginal = new EnumMap<>(Position.class);
+        for(Position candidate : new Position[]{Position.TE, Position.WR, Position.RB}){
+            double total = 0;
+            int seasons = 0;
+            for(List<TightEndTiming.Seen> season : history.values()){
+                List<TightEndTiming.Seen> taken = new ArrayList<>();
+                boolean complete = true;
+                for(int i = 0; i < EARLY_PICKS.length; i++){
+                    TightEndTiming.Seen starter = TightEndTiming.bestAtExcluding(season,
+                            EARLY_SHAPE[i], EARLY_PICKS[i], taken);
+                    if(starter == null){
+                        complete = false;
+                        break;
+                    }
+                    taken.add(starter);
+                }
+                TightEndTiming.Seen extra = TightEndTiming.bestAtExcluding(season,
+                        candidate, pick, taken);
+                if(!complete || extra == null){
+                    continue;
+                }
+                Map<Position, Double> wire = new EnumMap<>(Position.class);
+                for(Position position : new Position[]{Position.RB, Position.WR,
+                        Position.TE}){
+                    wire.put(position, TightEndTiming.wireLevel(season, position) / 17.0);
+                }
+                // common random numbers: the same sampled world with and
+                // without the candidate, so the difference is the candidate
+                double with = 0;
+                double without = 0;
+                Random seedSource = new Random(97_000L);
+                for(int draw = 0; draw < draws; draw++){
+                    long worldSeed = seedSource.nextLong();
+                    Random world = new Random(worldSeed);
+                    List<Player> roster = new ArrayList<>();
+                    for(TightEndTiming.Seen starter : taken){
+                        roster.add(sample(starter, rankOf(season, starter), expectation,
+                                distributions, spread, availability, world));
+                    }
+                    Player added = sample(extra, rankOf(season, extra), expectation,
+                            distributions, spread, availability, world);
+                    List<Player> plus = new ArrayList<>(roster);
+                    plus.add(added);
+                    with += score(plus, wire, 1);
+                    without += score(roster, wire, 1);
+                }
+                total += (with - without) / draws;
+                seasons++;
+            }
+            marginal.put(candidate, seasons == 0 ? 0 : total / seasons);
+        }
+        return marginal;
     }
 
     static Map<Position, Double> marginals(Map<String, List<TightEndTiming.Seen>> history,
