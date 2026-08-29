@@ -90,7 +90,32 @@ public class InOutUtilities {
         String todaysFilePath = "./" + filepathStart + DateUtility.getTodaysDate() + ".txt";
         File f = new File(todaysFilePath);
         if(!f.exists() || f.isDirectory()) {
-            downloadTodaysWebPage(webURL, filepathStart);
+            try {
+                downloadTodaysWebPage(webURL, filepathStart);
+            }
+            catch(RuntimeException unreachable){
+                // A feed being down must not kill the tool on the clock. The
+                // 2026-08-29 lockdown lost the Boris Chen tiers to an SSL
+                // handshake failure, and DraftPlanner reads the same source
+                // through ProjectionSources - so a flaky S3 bucket could have
+                // taken the whole engine down at 20:45 on draft night. These
+                // inputs move slowly; yesterday's copy is worth far more than
+                // an exception. Live draft picks do NOT come through here -
+                // they use getLiveWebPage, which never serves a stale board
+                // silently.
+                String stale = mostRecentCached(filepathStart);
+                if(stale == null){
+                    throw unreachable;
+                }
+                System.out.println("   WARNING: could not fetch " + webURL
+                        + "\n   falling back to " + stale + " - this data is STALE");
+                try {
+                    return Files.readString(Path.of(stale));
+                }
+                catch(IOException unreadable){
+                    throw unreachable;
+                }
+            }
         }
 
         try {
@@ -98,6 +123,30 @@ public class InOutUtilities {
         } catch (IOException e) {
             throw new RuntimeException("could not read cached " + todaysFilePath, e);
         }
+    }
+
+    /**
+     * The newest dated cache file for this prefix, or null if there is none.
+     * Dates are ISO yyyy-MM-dd, so lexicographic order is chronological order.
+     */
+    static String mostRecentCached(String filepathStart){
+        Path prefix = Path.of("./" + filepathStart);
+        Path directory = prefix.getParent() == null ? Path.of(".") : prefix.getParent();
+        String base = prefix.getFileName().toString();
+        String best = null;
+        File[] candidates = directory.toFile().listFiles();
+        if(candidates == null){
+            return null;
+        }
+        for(File candidate : candidates){
+            String name = candidate.getName();
+            if(candidate.isFile() && name.startsWith(base) && name.endsWith(".txt")
+                    && name.length() > base.length() + 4
+                    && (best == null || name.compareTo(best) > 0)){
+                best = name;
+            }
+        }
+        return best == null ? null : directory.resolve(best).toString();
     }
 
     /**
