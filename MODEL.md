@@ -2217,3 +2217,96 @@ P2 = post-season / 2027 infrastructure.
   89 with real separation (Nix 228 vs the best non-QB at 35) - though
   a round-8 keeper price is dear, so it is worth less than a score
   tuned for rounds 10-16 suggests.
+
+## The rounds 1-16 model: plan (2026-08-29, supersedes the plan above)
+
+Justin's ask: keep Model A for rounds 1-7 untouched, and build a second model
+spanning rounds 1-16 with the keepers pinned at r12 and r13, which decides
+when to take a tight end or a defence from historical data, injury and bust
+risk, and the points a player is likely to contribute to STARTING lineups.
+Trained on past seasons, with projections dated near the draft - his league
+drafts 1 September and the season starts 9 September, so a projection from a
+month out carries preseason-injury risk that a week-out projection does not.
+
+The earlier plan in the section above is folded into this one; it was scoped to
+the tight end question alone.
+
+### What the data actually supports (checked, 2026-08-29)
+
+**Sleeper's historical projections endpoint is UNUSABLE for training.** It
+serves something for past seasons, which is the trap. Compared against the
+real dated snapshot in `data/sleeper-projections-dated-2021-08-09.json.gz`,
+only 27% of 453 overlapping players match, and player 333 reads 323.66 in the
+August snapshot against -5.28 today. Those are rest-of-season values frozen at
+season end - a "projection" that already knows who got hurt. Training on them
+would have leaked the outcome into the feature and looked excellent doing it.
+
+**Right-vintage inputs that DO exist**, roughly a week before each season:
+
+| source | seasons at right vintage | carries |
+|---|---|---|
+| `fp-ecr-dated-*` | 2022-09-06, 2023-09-04, 2024-09-03, 2025-09-01 | `rank_ecr`, `pos_rank`, **`rank_std`**, bye |
+| `fp-adp-halfppr-*` | 2021, 2022, 2023, 2025 (2024 is 3 August) | consensus ADP |
+| `sleeper-defaults-*` | 2021-09-01 … 2024-09-02 | positional rank |
+
+**Newly verified as available:** weekly half-PPR at
+`/v1/stats/nfl/regular/<season>/<week>` (463 skill players a week), and
+defence via `position[]=DEF` in both stats and projections.
+
+**The gap:** dated projected POINTS for past seasons barely exist - one 2021
+snapshot at the wrong vintage, a WR-only CBS file, and an empty
+`external-projections/`. So the model's "projection" input has to be RANK at
+the right vintage, mapped to expected points by a curve fitted from history.
+That is how the repo already works, so it is not a compromise, but it does
+mean 2021 is only half-usable and the effective sample is four seasons.
+
+**`rank_std` is the find.** Expert disagreement per player, available at draft
+time, is exactly the per-player uncertainty the scalar dials were faking. It
+has to earn its place out of sample, but it is the right shape.
+
+### Phases
+
+**0 - data foundation (75 min).** Harvest weekly actuals (5 x 18, cached
+forever) and defence actuals/ADP. Build a vintage audit table: every historical
+input, its capture date, that season's start date, the gap in days, and a
+usable/not verdict - `AdrProvenance` for projections. *Gate:* weekly sums must
+reconcile against `HistoricalActuals` season totals.
+
+**1 - per-player draft-time distribution (60 min).** Mean from the rank-to-
+points curve; spread calibrated from `rank_std`; availability from the
+games-played distribution by position and tier, with its correlation to
+scoring MEASURED rather than assumed independent. *Gate:* does `rank_std` beat
+a flat per-tier spread out of sample? If not, drop it and say so.
+
+**2 - the curve layer (45 min).** Peaks, valleys and plateaux per position per
+season, and positional scarcity as the slope between your pick and
+replacement. Tight end and defence timing should FALL OUT of these curves
+rather than be hand-set - defence is folk-wisdom flat, and this is where that
+gets tested instead of repeated.
+
+**3 - the sequential 1-16 model (90 min).** Roll all sixteen rounds with
+keepers pinned at r12 and r13, choosing positions to maximise expected
+weekly-starter contribution. Several candidate policies compared, the way the
+rounds 1-7 committee does, rather than one engine trusted alone.
+
+**4 - train and validate (60 min).** Fit on 2022-2023, tune on 2024, touch
+2025 once. Baselines: Model A's plan plus folk rules for 8-16, best-available
+by ADP, and the committed RUNBOOK plan. Metric is realized weekly-starter
+points on held-out seasons. *If it does not beat the baselines, keep the
+simpler rules and record that it lost.*
+
+**5 - integration (30 min).** Model A is untouched. The new model runs beside
+it, and disagreement in rounds 1-7 is information, exactly as a split
+committee is. RUNBOOK gets only what survived Phase 4.
+
+Six hours, not the four or five hoped for. If it has to fit in five, cut
+Phase 2 to a printed curve with no scarcity term, and keep 0, 1, 3 and 4.
+Phase 4 is not cuttable - nothing built on 2026-08-29 was validated out of
+sample, and four reported results were corrected that day.
+
+### Honest expectations
+
+Four usable seasons, and three once 2025 is held out. Several questions here
+are not answerable at that n, and the deliverable of Phase 4 may well be "the
+folk rules were fine". That is a real result and cheaper to accept than to
+discover in week 6.
