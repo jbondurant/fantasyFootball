@@ -347,6 +347,13 @@ public class DraftPlanner {
      * removes keepers from the world entirely (player back on the board,
      * slot freed, off the roster) - the counterfactual a keeper's value is
      * measured against.
+     *
+     * The two lists are applied in order and are NOT symmetric: exclusion
+     * strips DECLARED keepers, then extraKeepers land regardless. Naming the
+     * same player in both is therefore a float-back, not a removal - which is
+     * how KeeperLedger prices one kept player at a time. If you want him gone,
+     * he has to be absent from extraKeepers too; see LeagueOutlook.baseline,
+     * where passing him in both silently priced a whole seat against itself.
      */
     public static DraftPlanner forCurrentSeasonAs(AAAConfiguration configuration,
                                                   String perspective,
