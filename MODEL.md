@@ -3719,3 +3719,62 @@ better route is Model A's: keep the objective parameter-free, learn only things
 with pick-level or player-level examples, and fix the approximations - starting
 with the greedy search, since Model A's own advantage over greedy is the
 lookahead it has and the 1-16 policy does not.
+
+## Projections as the centre, history as the risk (2026-08-29)
+
+Justin's diagnosis, and it was the real defect. **The model was throwing the
+projections away.** `WeeklyStarterValue` bucketed players into twelve-wide tiers
+and handed each the tier's historical average, so a back projected 300 and one
+projected 200 were the same player to it. Model A uses each player's exact
+projection. The 1-16 model was therefore strictly LESS informed than Model A
+despite carrying a risk layer - which answers his question: it lost to a fixed
+plan because it knew less, not because the plan knew more.
+
+Now the projection is the centre and history supplies only the shape around it.
+A drawn historical season becomes a RATIO - how far that man landed from what
+his slot promised - applied to THIS player's projection, with his games played
+carried along so the measured availability-scoring correlation survives.
+
+**A units bug surfaced immediately.** Players now carried projections while the
+wire still came from historical actuals, and projections run lower, so every
+defence and every deep tight end scored a marginal of exactly 0.0. The wire is
+now the projection of the man at the replacement rank on the same board:
+
+    QB21 18.5   RB61 3.1   WR81 4.5   TE19 6.7   DEF13 5.1  points per week
+
+### It converges on the prior's opening
+
+    starter sum, 400 scen   RB RB RB WR WR WR DEF WR TE WR QB TE TE WR
+    starter sum, 1200 scen  RB WR RB WR WR WR DEF RB TE WR TE QB WR TE
+    other seed              RB RB RB WR WR WR DEF WR TE TE WR QB WR TE
+
+Three of four variants now open **RB RB RB WR WR WR** - the committed plan's
+exact opening, arrived at from projections plus measured risk with no knowledge
+of the plan. That is the convergence Justin asked for, and the position weights
+experiment had already pointed at it (RB x1.30) before overfitting its
+magnitude.
+
+The quarterback also falls to rounds 11-12, because QB21 projects 18.5 a week
+and a startable one is nearly free - which is what every other measurement today
+said.
+
+### What is still wrong: DEF at round 7
+
+Three variants take a defence in round 7, which the placement sweep prices at
+1892 against 1984 for round 16 - about 92 points too early. The cause is not
+valuation, it is LOOKAHEAD: greedy sees a defence worth taking and cannot see
+that an equally good one will still be there in round 16, because defences
+barely decay. Model A has that lookahead; this policy does not.
+
+That is now the single identified defect, and it is the same one behind the
+QB-at-pick-7 behaviour earlier. **Not a data problem and not an overfitting
+problem** - a search problem, fixable without another season.
+
+### Honest limit on validating any of this
+
+The backtest cannot see the improvement. Historical per-player projections do
+not exist at the right vintage - only week-1 projections, which must not be
+scaled to a season - so the backtest substitutes a smoothed per-rank curve and
+scores 1818. The live model is now better specified than history can measure,
+which is an uncomfortable but accurate place to be. **The RUNBOOK still stands
+for Tuesday.**

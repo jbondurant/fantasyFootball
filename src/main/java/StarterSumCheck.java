@@ -52,11 +52,18 @@ public class StarterSumCheck {
         System.out.printf("outcome pool: %d position-tier cells, %d player-seasons%n",
                 pool.size(), pool.values().stream().mapToInt(List::size).sum());
 
-        Map<Position, Double> wire = WeeklyStarterValue.wireRates(
-                AAAConfiguration.getInstance(), pool);
-        for(Map.Entry<Position, Double> entry : wire.entrySet()){
-            System.out.printf("   wire %-3s -> %.1f pts/week (top quartile of the"
-                    + " replacement tier)%n", entry.getKey(), entry.getValue());
+        Map<Position, Integer> replacement =
+                InsuranceTest.replacementRanks(AAAConfiguration.getInstance());
+        Map<Position, Double> wire = new EnumMap<>(Position.class);
+        for(Map.Entry<Position, List<String>> entry : byPosition.entrySet()){
+            List<String> ids = entry.getValue();
+            int rank = replacement.getOrDefault(entry.getKey(),
+                    entry.getKey() == Position.DEF ? 13 : 24);
+            int index = Math.min(Math.max(0, rank - 1), ids.size() - 1);
+            double rate = projections.getOrDefault(ids.get(index), 0.0) / 17.0;
+            wire.put(entry.getKey(), rate);
+            System.out.printf("   wire %-3s = %s%d -> %.1f pts/week (same units as the"
+                    + " players)%n", entry.getKey(), entry.getKey(), rank, rate);
         }
 
         // a plausible starting nine off the current board: Model A's shape
@@ -71,7 +78,7 @@ public class StarterSumCheck {
 
         RosterValue season = new SeasonTotalValue(projections);
         RosterValue weekly = new WeeklyStarterValue(positionOf, tierOf, pool, wire,
-                scenarios, 424_242L);
+                projections, scenarios, 424_242L);
 
         System.out.printf("%n%nTHE TEST: what is a TENTH man worth on a full nine?%n");
         System.out.printf("(the nine is %s)%n%n", names(nine));

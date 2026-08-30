@@ -4,10 +4,10 @@ picks [7, 18, 31, 42, 55, 66, 79, 90, 103, 114, 127, 162, 175, 186]
 
 MODEL                            PLAN                                         defence at
 best-nine season totals          RB WR RB WR WR WR TE QB QB RB RB RB RB RB    NEVER - streams one
-starter sum, 100 scen            RB WR WR RB WR WR RB QB WR TE WR RB RB QB    NEVER - streams one
-starter sum, 400 scen            RB WR WR WR WR WR RB TE QB TE RB WR RB RB    NEVER - streams one
-starter sum, 1200 scen           RB WR WR WR WR WR RB RB TE QB TE RB RB RB    NEVER - streams one
-starter sum, 400 (other seed)    RB WR WR RB WR WR RB TE TE WR QB RB WR RB    NEVER - streams one
+starter sum, 100 scen            RB RB WR RB WR WR WR WR TE WR DEF QB TE TE   pick 11 of 14 (round 11)
+starter sum, 400 scen            RB RB RB WR WR WR DEF WR TE WR QB TE TE WR   pick 7 of 14 (round 7)
+starter sum, 1200 scen           RB WR RB WR WR WR DEF RB TE WR TE QB WR TE   pick 7 of 14 (round 7)
+starter sum, 400 (other seed)    RB RB RB WR WR WR DEF WR TE TE WR QB WR TE   pick 7 of 14 (round 7)
 
 The forced-placement sweep showed what is right: later is better, flat from
 round 14. A model that never takes one is not disagreeing - it is saying the

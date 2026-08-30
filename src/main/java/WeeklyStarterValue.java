@@ -91,10 +91,20 @@ public class WeeklyStarterValue implements RosterValue {
      * @param pool       historical player-seasons, keyed "POSITION:tier"
      * @param wirePerWeek what the wire supplies at each position, per week
      */
+    /**
+     * @param expected each player's own projected season total. THIS is the
+     *                 centre of his distribution; history supplies only the risk
+     *                 around it. Bucketing players into twelve-wide tiers and
+     *                 handing each the tier average threw the projection away - a
+     *                 back projected 300 and one projected 200 were the same
+     *                 player - which made this model strictly LESS informed than
+     *                 Model A and is why a fixed plan could beat it.
+     */
     public WeeklyStarterValue(Map<String, Position> positionOf,
                               Map<String, Integer> tierOf,
                               Map<String, List<OutcomeDistributions.Season>> pool,
                               Map<Position, Double> wirePerWeek,
+                              Map<String, Double> expected,
                               int scenarios, long seed){
         this.scenarios = scenarios;
         this.wirePerWeek = wirePerWeek;
@@ -107,19 +117,38 @@ public class WeeklyStarterValue implements RosterValue {
             if(seasons == null || seasons.isEmpty()){
                 seasons = pool.get(entry.getValue() + ":" + Math.max(0, tier - 1));
             }
+            // the tier's average full-season output, used only to turn a drawn
+            // season into a RATIO - how far that man landed from what his draft
+            // slot promised
+            double tierMean = 0;
+            if(seasons != null && !seasons.isEmpty()){
+                for(OutcomeDistributions.Season season : seasons){
+                    tierMean += season.meanWhenPlaying() * season.games();
+                }
+                tierMean /= seasons.size();
+            }
+            double mine = expected.getOrDefault(id, 0.0);
+
             Draw[] draws = new Draw[scenarios];
             for(int s = 0; s < scenarios; s++){
-                if(seasons == null || seasons.isEmpty()){
+                if(seasons == null || seasons.isEmpty() || tierMean <= 0){
                     draws[s] = new Draw(false, 0, 0);
                     continue;
                 }
-                // ONE observed season drawn whole - games and scoring together
+                // ONE observed season drawn whole - games and scoring together,
+                // so the measured availability-scoring correlation survives -
+                // but applied as a RATIO to HIS projection instead of replacing
+                // it with somebody else's numbers
                 OutcomeDistributions.Season drawn =
                         seasons.get(random.nextInt(seasons.size()));
-                boolean up = random.nextDouble() < drawn.games() / 18.0;
-                double points = Math.max(0, drawn.meanWhenPlaying()
-                        + random.nextGaussian() * drawn.sdWhenPlaying());
-                draws[s] = new Draw(up, drawn.meanWhenPlaying(), up ? points : 0);
+                double ratio = drawn.meanWhenPlaying() * drawn.games() / tierMean;
+                int games = Math.max(1, drawn.games());
+                double rate = mine * ratio / games;
+                double spread = drawn.sdWhenPlaying()
+                        / Math.max(1e-6, drawn.meanWhenPlaying()) * rate;
+                boolean up = random.nextDouble() < games / 18.0;
+                double points = Math.max(0, rate + random.nextGaussian() * spread);
+                draws[s] = new Draw(up, mine / 17.0, up ? points : 0);
             }
             byPlayer.put(id, draws);
         }
@@ -238,8 +267,23 @@ public class WeeklyStarterValue implements RosterValue {
             }
         }
         Map<String, List<OutcomeDistributions.Season>> pool = pool();
-        Map<Position, Double> wire = wireRates(configuration, pool);
-        return new WeeklyStarterValue(positionOf, tierOf, pool, wire, scenarios, seed);
+        // The wire must be in the SAME UNITS as the players it competes with.
+        // Taking it from historical actuals while players carry projections put
+        // them on different scales - projections run lower, so every defence and
+        // every deep tight end read as worse than the wire and scored a marginal
+        // of exactly zero. The wire is now the projection of the man at the
+        // replacement rank on this very board.
+        Map<Position, Integer> replacement = InsuranceTest.replacementRanks(configuration);
+        Map<Position, Double> wire = new EnumMap<>(Position.class);
+        for(Map.Entry<Position, List<String>> entry : byPosition.entrySet()){
+            List<String> ids = entry.getValue();
+            int rank = replacement.getOrDefault(entry.getKey(),
+                    entry.getKey() == Position.DEF ? 13 : 24);
+            int index = Math.min(Math.max(0, rank - 1), ids.size() - 1);
+            wire.put(entry.getKey(), projections.getOrDefault(ids.get(index), 0.0) / 17.0);
+        }
+        return new WeeklyStarterValue(positionOf, tierOf, pool, wire, projections,
+                scenarios, seed);
     }
 
     /**
@@ -290,6 +334,59 @@ public class WeeklyStarterValue implements RosterValue {
                     .mapToDouble(Double::doubleValue).average().orElse(0));
         }
         return wire;
+    }
+
+    /**
+     * A per-player expected season total for a historical board, where no
+     * projection feed survives at the right vintage.
+     *
+     * Smoothed over five neighbouring ranks rather than bucketed into twelves,
+     * so every player carries a distinct number. That distinction is the point:
+     * the tier buckets made the twelfth back at a position identical to the
+     * first, which is exactly the information Model A has and this model was
+     * throwing away.
+     */
+    public static Map<String, Double> expectedFromRank(List<String> board,
+            Map<String, Position> positionOf,
+            Map<String, List<OutcomeDistributions.Season>> pool){
+        // proper sum/count per rank - an earlier version averaged as
+        // (existing + new) / 2, which is not a mean and over-weights whatever
+        // arrived last
+        int depth = 200;
+        Map<Position, double[]> sums = new EnumMap<>(Position.class);
+        Map<Position, int[]> counts = new EnumMap<>(Position.class);
+        for(List<OutcomeDistributions.Season> cell : pool.values()){
+            for(OutcomeDistributions.Season season : cell){
+                if(season.rank() >= depth){
+                    continue;
+                }
+                sums.computeIfAbsent(season.position(), u -> new double[depth])
+                        [season.rank()] += season.meanWhenPlaying() * season.games();
+                counts.computeIfAbsent(season.position(), u -> new int[depth])
+                        [season.rank()]++;
+            }
+        }
+        Map<String, Double> expected = new HashMap<>();
+        Map<Position, Integer> next = new EnumMap<>(Position.class);
+        for(String id : board){
+            Position position = positionOf.get(id);
+            int rank = next.merge(position, 1, Integer::sum) - 1;
+            double[] sum = sums.get(position);
+            int[] seen = counts.get(position);
+            if(sum == null || rank >= depth){
+                expected.put(id, 0.0);
+                continue;
+            }
+            double total = 0;
+            int n = 0;
+            for(int near = Math.max(0, rank - 2);
+                    near <= Math.min(depth - 1, rank + 2); near++){
+                total += sum[near];
+                n += seen[near];
+            }
+            expected.put(id, n == 0 ? 0.0 : total / n);
+        }
+        return expected;
     }
 
     /** Historical player-seasons keyed POSITION:tier, ready to draw from. */

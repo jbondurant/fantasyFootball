@@ -149,7 +149,9 @@ public class PolicyBacktest {
                     / WeeklyStarterValue.TIER);
         }
         WeeklyStarterValue value = new WeeklyStarterValue(positionOf, tierOf, pool,
-                wireFrom(pool), scenarios, 424_242L);
+                wireFrom(pool),
+                WeeklyStarterValue.expectedFromRank(board.ids(), positionOf, pool),
+                scenarios, 424_242L);
 
         Set<String> gone = new HashSet<>();
         List<String> mine = new ArrayList<>();
