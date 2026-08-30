@@ -3676,3 +3676,46 @@ fourteen becomes arguable. Until then, the honest ranking is unchanged:
     starter-sum, best config 1921
     free-choice policy       1859
     best available by ADP    1442
+
+## Why five seasons was never a problem for Model A
+
+Justin's question, and the answer corrects something I implied. It is not that
+Model A had more data. It is that **its unit of observation is a pick, not a
+season.**
+
+    LAYER                                            examples
+    Model A choice model (who gets taken)                 693
+    outcome distributions (games, scoring)               1466
+    Model A objective: best nine of projections             0
+    1-16 objective: weekly starter sum                      0
+    a plan fitted against SEASON outcomes                    5
+
+**Model A never fits anything at the season level.** Its objective has no free
+parameters at all - the best legal nine out of projections is a DEFINITION, not
+a fit - and the two layers it does learn see 693 picks and 1466 player-seasons.
+Its projections come from outside entirely. Five seasons yields hundreds of
+examples when the thing being learned is "who gets taken next".
+
+Everything that overfitted today was fitted against whole SEASON outcomes, of
+which there are five, because a season's roster score is ONE example. Fourteen
+positions against five examples memorised them; four position weights against
+five examples still overfitted.
+
+### The correction this forces
+
+I said the model loses because five seasons cannot re-derive decades of
+knowledge. That is true of the TUNING and false of the model itself. The
+unweighted 1-16 model fits nothing at the season level either - and it still
+loses, 1813 to 2054 on the same holdout, and did better than the tuned version.
+
+So its deficit is NOT overfitting. It is approximation error in the objective:
+tier bucketing twelve players wide, a greedy search with no lookahead, and the
+constraint faults Justin found four times over. Those are fixable by better
+modelling, and they do not need a single extra season.
+
+**Which changes the priority.** The data harvest helps only if the plan is to
+TUNE something, and today's evidence says tuning is the part that fails. The
+better route is Model A's: keep the objective parameter-free, learn only things
+with pick-level or player-level examples, and fix the approximations - starting
+with the greedy search, since Model A's own advantage over greedy is the
+lookahead it has and the 1-16 policy does not.

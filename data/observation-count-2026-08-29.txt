@@ -1,0 +1,20 @@
+
+WHAT EACH LAYER IS FITTED ON
+
+LAYER                                            examples
+Model A choice model (who gets taken)                 693
+outcome distributions (games, scoring)               1466
+Model A objective: best nine of projections             0
+1-16 objective: weekly starter sum                      0
+a plan fitted against SEASON outcomes                   5
+
+Model A never fits anything at the season level. Its objective has NO free
+parameters - the best legal nine out of projections is a definition, not a fit -
+and the two layers it does learn see 693 picks and 1466 player-seasons.
+
+Everything that overfitted today was fitted against whole SEASON outcomes, of
+which there are five. A season's roster score is ONE example. Fourteen
+positions, or even four position weights, against five examples.
+
+So five seasons was never the constraint on Model A. It is the constraint on
+TUNING A PLAN, which Model A never does.
