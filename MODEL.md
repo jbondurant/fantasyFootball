@@ -2738,3 +2738,40 @@ against the starter sum rather than best-nine, at which point the tight end and
 defence timing questions are answered by the objective instead of by rules.
 Then Phase 4, which is not optional: fit on early seasons, judge once on held
 out ones, against Model A's plan, best-available-ADP and the committed plan.
+
+### The 1-16 model runs (2026-08-29)
+
+`RosterValue` is wired into `DraftPlanner`: one field, set in the constructor
+rather than lazily because `valueOf` is called from inside a `parallel()`
+stream and lazy initialisation would have threads racing to create it. Three
+call sites moved. Model A's plan is byte-identical afterwards - `[RB, WR, RB,
+WR, WR, WR, TE, QB, QB]`, 1812.1, p10 1783.6 - so Tuesday's tool is untouched.
+
+First run, 40 rollouts and 100 scenarios, sixteen rounds, keepers at r12/r13:
+
+    objective: best-nine season totals
+       plan  RB WR RB WR WR WR TE QB QB QB QB QB QB QB
+
+    objective: weekly starter sum
+       plan  RB WR WR RB WR WR RB WR QB TE TE WR TE TE
+
+**The old objective degenerates and the new one does not.** Six consecutive
+quarterbacks after round 8 is not a plan; it is the flat-table artifact, the
+same one that made the committee print "4 of 4 engines say QB" at pick 89 when
+every column read 1808.4. Season totals cannot rank a bench pick, so map order
+decides. The starter sum keeps making distinguishable choices through round 16,
+which is the entire reason for the redesign.
+
+**What it says, with a warning attached.** No tight end until pick 114 - round
+10 - which agrees in direction with the independent finding that waiting beats
+taking one at 79, and goes further. But it then takes FOUR of them, and that
+deserves suspicion rather than adoption. A weekly max over four cheap tight ends
+does add value in the model, because some week one of them is up and good; in a
+real season you would drop three of them by October. The objective has no
+roster-churn term and no bench-size limit, so it is free to hoard redundancy at
+whatever position is cheapest. That is a modelling gap, not a discovery.
+
+**Nothing here is validated.** This is one run at low settings against no
+baseline. Phase 4 is what decides whether any of it beats Model A's plan,
+best-available-ADP, or the committed plan, and until then the RUNBOOK should
+not move a single pick on the strength of it.

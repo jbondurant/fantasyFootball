@@ -161,6 +161,49 @@ public class WeeklyStarterValue implements RosterValue {
         return "weekly starter sum (" + scenarios + " scenarios)";
     }
 
+    /**
+     * Build the objective for the season being drafted: every player on the
+     * board placed in a position-and-tier cell, drawing from what players in
+     * that cell historically did, with the wire set at the replacement level
+     * this league actually leaves undrafted.
+     */
+    public static WeeklyStarterValue forCurrentBoard(AAAConfiguration configuration,
+                                                     Map<String, Double> projections,
+                                                     int scenarios, long seed)
+            throws Exception {
+        Map<String, Position> positionOf = new HashMap<>();
+        Map<String, Integer> tierOf = new HashMap<>();
+        Map<Position, List<String>> byPosition = new EnumMap<>(Position.class);
+        for(String id : projections.keySet()){
+            Player player = Player.getPlayerFromSIDV2(id);
+            if(player != null && StartingLineup.isSkillPosition(player.position)){
+                positionOf.put(id, player.position);
+                byPosition.computeIfAbsent(player.position, u -> new ArrayList<>()).add(id);
+            }
+        }
+        for(List<String> ids : byPosition.values()){
+            ids.sort(Comparator.comparingDouble(id -> -projections.get(id)));
+            for(int rank = 0; rank < ids.size(); rank++){
+                tierOf.put(ids.get(rank), rank / TIER);
+            }
+        }
+        Map<String, List<OutcomeDistributions.Season>> pool = pool();
+        Map<Position, Integer> replacement = InsuranceTest.replacementRanks(configuration);
+        Map<Position, Double> wire = new EnumMap<>(Position.class);
+        for(Position position : new Position[]{Position.QB, Position.RB, Position.WR,
+                Position.TE}){
+            int tier = replacement.getOrDefault(position, 24) / TIER;
+            List<OutcomeDistributions.Season> cell = pool.get(position + ":" + tier);
+            while(cell == null && tier > 0){
+                cell = pool.get(position + ":" + (--tier));
+            }
+            wire.put(position, cell == null ? 0 : cell.stream()
+                    .mapToDouble(s -> s.meanWhenPlaying() * s.games() / 18.0)
+                    .average().orElse(0));
+        }
+        return new WeeklyStarterValue(positionOf, tierOf, pool, wire, scenarios, seed);
+    }
+
     /** Historical player-seasons keyed POSITION:tier, ready to draw from. */
     public static Map<String, List<OutcomeDistributions.Season>> pool() throws Exception {
         Map<String, List<OutcomeDistributions.Season>> pool = new HashMap<>();

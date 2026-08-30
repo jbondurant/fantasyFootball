@@ -1,0 +1,17 @@
+
+rounds 1-16, keepers [Tuten r12, Purdy r13]
+my picks: [7, 18, 31, 42, 55, 66, 79, 90, 103, 114, 127, 162, 175, 186]
+
+objective: best-nine season totals 
+   plan RB WR RB WR WR WR TE QB QB QB QB QB QB QB
+   value 1819.0
+
+objective: weekly starter sum (100 scenarios) 
+   plan RB WR WR RB WR WR RB WR QB TE TE WR TE TE
+   value 2115.6
+
+The two are not comparable by VALUE - they are different units, best-nine
+season totals against a season of weekly starter points. What is comparable
+is the PLAN: where the two rules want different positions, the starter sum is
+seeing something season totals cannot, and the round it first diverges is
+the round bench value starts to matter.

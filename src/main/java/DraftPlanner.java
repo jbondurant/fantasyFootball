@@ -63,6 +63,43 @@ public class DraftPlanner {
     private final String me;
     private final List<String> myKeeperIDs;
     private final Map<String, Double> points;
+
+    /**
+     * How a finished roster is scored.
+     *
+     * Defaults to Model A's rule - the best nine season totals - so every
+     * existing caller behaves exactly as it did and Tuesday's tool is
+     * untouched. The 1-16 model injects WeeklyStarterValue instead, which
+     * scores the points a roster's STARTERS put up across a season and can
+     * therefore see a bench player at all. Same search, same board, different
+     * scoring rule; that was the whole point of the seam.
+     */
+    private volatile RosterValue rosterValue;
+
+    /**
+     * Score a roster under whichever rule this planner is carrying.
+     *
+     * Set in the constructor, not lazily: this is called from inside a
+     * parallel() stream, and initialising on first use would have several
+     * threads racing to create it.
+     */
+    public double valueOf(java.util.Collection<String> roster){
+        return rosterValue.of(roster);
+    }
+
+    /** Swap the objective. Null restores Model A's rule. */
+    public void scoreWith(RosterValue value){
+        this.rosterValue = value;
+    }
+
+    /** The pick numbers that are mine, for anything that wants to print them. */
+    public String myPicks(){
+        return java.util.Arrays.toString(myPickNumbers);
+    }
+
+    public String objectiveLabel(){
+        return rosterValue.label();
+    }
     private final int[] myPickNumbers;
 
     public DraftPlanner(DraftSimulator simulator, String me, List<String> myKeeperIDs,
@@ -71,6 +108,7 @@ public class DraftPlanner {
         this.me = me;
         this.myKeeperIDs = List.copyOf(myKeeperIDs);
         this.points = points;
+        this.rosterValue = new SeasonTotalValue(points);
         this.myPickNumbers = simulator.pickNumbersOf(me);
     }
 
@@ -129,7 +167,7 @@ public class DraftPlanner {
             double topScore = -1;
             for(String candidate : best.values()){
                 mine.add(candidate);
-                double score = StartingLineup.bestNine(mine, points);
+                double score = valueOf(mine);
                 mine.remove(mine.size() - 1);
                 if(score > topScore){
                     topScore = score;
@@ -171,7 +209,7 @@ public class DraftPlanner {
         java.util.stream.IntStream.range(0, rollouts).parallel().forEach(r -> {
             PlanPolicy policy = new PlanPolicy(plan);
             simulator.simulateOnce(new Random(seed + 7919L * r), me, policy);
-            outcomes[r] = StartingLineup.bestNine(policy.mine, points);
+            outcomes[r] = valueOf(policy.mine);
         });
         return Arrays.stream(outcomes).average().orElse(0);
     }
@@ -196,7 +234,7 @@ public class DraftPlanner {
                 java.util.stream.IntStream.range(0, rollouts).parallel().forEach(r -> {
                     PlanPolicy policy = new PlanPolicy(prefix);
                     simulator.simulateOnce(new Random(seed + 7919L * r), me, policy);
-                    outcomes[r] = StartingLineup.bestNine(policy.mine, points);
+                    outcomes[r] = valueOf(policy.mine);
                 });
                 Arrays.sort(outcomes);
                 double mean = Arrays.stream(outcomes).average().orElse(0);
