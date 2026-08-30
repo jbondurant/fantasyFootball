@@ -67,8 +67,13 @@ public class LiveLateRounds {
         }
         int nextPick = nextPickAfter(simulator, state, planner, slot.pickNumber());
 
-        System.out.printf("%npick %d (round %d), %d gone, my roster: %s%n",
-                slot.pickNumber(), slot.round(), taken.size(), shape(mine));
+        System.out.printf("%npick %d (round %d) belongs to %s | %d gone, my roster: %s%n",
+                slot.pickNumber(), slot.round(),
+                planner.me().equals(slot.manager()) ? "ME" : "someone else",
+                taken.size(), shape(mine));
+        if(!planner.me().equals(slot.manager())){
+            System.out.println("   (not my pick - this is the read for when it is)");
+        }
         if(slot.round() < 8){
             System.out.printf("%nRound %d is Model A's game - use DraftNight."
                     + " This tool is for rounds 8+.%n", slot.round());
@@ -84,13 +89,15 @@ public class LiveLateRounds {
         Map<Position, Double> adds = new EnumMap<>(Position.class);
         for(Position position : new Position[]{Position.RB, Position.WR, Position.TE,
                 Position.QB, Position.DEF}){
-            // Defences are not on the simulator's board - it is built from skill
-            // positions - so they come off the projections directly, minus
-            // whoever has already been taken. Their survival is not simulated
-            // for the same reason; the column says so rather than guessing.
-            String candidate = position == Position.DEF
-                    ? bestDefence(planner, taken)
-                    : bestAvailable(simulator, state, planner, position);
+            // Defences ARE on the board now, gated on scheduleRounds > 9, so
+            // they are found and their survival simulated like anything else.
+            // The projections fallback stays for the case where none reached
+            // the board - the ADP limit can cut them - so the tool never simply
+            // omits the position.
+            String candidate = bestAvailable(simulator, state, planner, position);
+            if(candidate == null && position == Position.DEF){
+                candidate = bestDefence(planner, taken);
+            }
             if(candidate == null){
                 continue;
             }
@@ -105,7 +112,8 @@ public class LiveLateRounds {
         for(Position position : order){
             String id = best.get(position);
             Player player = Player.getPlayerFromSIDV2(id);
-            boolean simulated = position != Position.DEF;
+            // simulated unless the man came from the projections fallback
+            boolean simulated = simulator.players().contains(id);
             double survives = !simulated || nextPick < 0 ? 0
                     : survival(simulator, state, planner, id, nextPick, trials);
             // what is left at that position if he is gone, valued the same way

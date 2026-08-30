@@ -1,0 +1,23 @@
+
+sweeping the risk dial at 300 rollouts, quantile p10
+11 opponents read from data/league-outlook-500-clean.txt
+
+  LAMBDA  PLAN                                mean       p10   spread   P(top 6)
+   +1.00  RB WR RB WR WR WR QB TE RB        1811.1    1783.6     21.5        37%
+   +0.50  RB WR RB WR WR WR TE QB QB        1812.1    1783.6     22.2        37%
+   +0.00  RB WR RB WR WR WR TE QB QB        1812.1    1783.6     22.2        37%
+   -0.50  RB WR RB WR WR WR TE QB QB        1812.1    1783.6     22.2        37%
+   -1.00  RB RB RB WR WR WR QB TE QB        1809.9    1778.3     24.6        37%
+   -1.50  RB RB RB WR WR WR QB TE QB        1809.9    1778.3     24.6        37%
+
+The plan changes across settings (3 distinct sequences).
+Treat that with suspicion: lambda moves availability risk - how kindly the board
+falls - not whether a player booms or busts. A below-cutoff team wants the
+second kind, and this dial cannot buy it.
+
+spread = (mean - p10) / 1.2816, the plan's own outcome spread in points.
+
+And here is why none of it moves the odds:
+   the whole dial is worth 3 points of spread
+   the season adds 156 points of its own
+The draft's variance is swamped 49 to 1. There is no risk lever here to pull.

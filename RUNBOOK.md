@@ -1,7 +1,14 @@
 # Draft night — Tuesday 2026-09-01, 20:45
 
-Slot 7. Keepers Tuten (RB, r12) and Purdy (QB, r13), both free inside the
-nine-round game. Nine live picks: **7, 18, 31, 42, 55, 66, 79, 90, 103**.
+Slot 7, 16 rounds. Keepers Tuten (RB, r12) and Purdy (QB, r13) occupy rounds 12
+and 13, so you make **fourteen picks**:
+
+    7  18  31  42  55  66  79  90  103  114  127  |  162  175  186
+    r1  r2  r3  r4  r5  r6  r7  r8   r9  r10  r11 |  r14  r15  r16
+
+The bar is the keeper gap: **thirty-five picks pass between 127 and 162**, the
+largest dead zone in your draft. Anything you want after 127 must be taken AT
+127.
 
 ## Before the draft (Monday evening, ~30 min)
 
@@ -67,6 +74,11 @@ decide each pick — use it only if the tool is unavailable.
 | 7 | 79 | RB or WR — **not** TE |
 | 8 | 90 | **TE** |
 | 9 | 103 | RB or WR, highest upside — **not** a backup QB |
+| 10 | 114 | young QB stash (Nix/Dart) if there — else RB/WR |
+| 11 | 127 | **last call** before the 35-pick gap: anything you want, take it here |
+| 14 | 162 | RB/WR, or Shough/Ward if stashing a QB |
+| 15 | 175 | RB/WR |
+| 16 | 186 | **defence** |
 
 ### Round 7 is no longer the tight end (2026-08-29)
 
@@ -151,25 +163,17 @@ DEF  Houston Texans            8.8          -             -   not simulated
 ```
 
 Take the top row unless LOSS IF WAIT is near zero for everything, in which case
-take the highest ADDS. Defence survival is not simulated (the board is built
-from skill positions), but defences go in the last two rounds — take one there.
+take the highest ADDS. It says whose pick it is — if it reads "someone else",
+you are looking at a preview, not your decision.
 
-**Scope:** rounds 8+ only. The same objective driving the WHOLE draft lost a
-five-season backtest to this committed plan by 98 points a season, and 91 of
-those 98 were in rounds 1–7. Its back half was within 7 points — noise. So
-`DraftNight` keeps rounds 1–7 and this takes the rounds where it is competitive.
+**Read it as a prompt, not an oracle.** Every model built on this objective lost
+a five-season backtest to the committed plan below — the best configuration
+reached 1921 against 1998, and the free-choice policy 1859. It has never beaten
+the rules. What it does well is price a SPECIFIC board state you are actually
+looking at, which a written plan cannot. Where it disagrees with the plan,
+prefer the plan unless it shows a large LOSS IF WAIT.
 
 **Superseded:** `LateWaitOrTake` — same idea, weaker value model.
-
-It values every available player (per-player projection over the wire, plus a
-measured keeper base rate scaled by youth — young x1.44, veteran x0.61), runs
-the board to round 16, and prints the expected cost of waiting on each. Read
-the verdict column: TAKE NOW, lean take, or wait.
-
-Its known weakness, printed in its own output: a player projecting 0.0 this
-season still draws the full keeper base rate, because that rate came from
-players who had a real role when drafted. A zero there means UNPROVEN, not
-safe.
 
 **The rule, in order of how much the data actually supports it:**
 
