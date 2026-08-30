@@ -2924,3 +2924,40 @@ That is worth roughly thirty points a season, once, at the final pick. Opening
 the board to defences touches the construction Model A depends on, three days
 before a draft, to reproduce a rule the RUNBOOK already states. Not worth it.
 Recorded here so the next person knows it is a choice rather than an oversight.
+
+### Should a top-four defence be chased? No, and it is not close (2026-08-29)
+
+Justin's own tendency, priced against what the pick costs.
+
+    DID THE PRESEASON TOP FOUR ACTUALLY FINISH THERE?
+    2021     11, 6, 16, 26      0/4
+    2022     5, 15, 3, 19       1/4
+    2023     8, 23, 1, 3        2/4
+    2024     23, 19, 11, 13     0/4
+    2025     5, 7, 9, 16        0/4
+
+    3 of 20 finished top four (15%). Chance alone gives 13%.
+
+That is the whole story in one line: a preseason defence ranking is very nearly
+uninformative about which defences will actually be good. It is the 0.277 rank
+correlation seen from the sharp end.
+
+    SEASON    DEF1-4      adp    vs free    round   skill at that adp      vs free
+    2021       122.8      108      -12.5      r10   Kenyan Drake (RB)         41.6
+    2022       135.3       99        3.1       r9   Melvin Gordon III (RB)   -14.8
+    2023       152.3      108       26.1      r10   Courtland Sutton (WR)     77.3
+    2024       112.3      144       -6.5      r12   Jakobi Meyers (WR)       116.1
+    2025       134.3      141       24.1      r12   Dallas Goedert (TE)       77.4
+
+A top-four defence beat a free one by 6.9 points a season - and in two of five
+seasons it was NEGATIVE. The skill player passed over at that pick beat his own
+replacement by 59.5. The pick is worth **-52.7 +/- 44.4** points a season, and
+the defence won 1 season in 5.
+
+It clears its error bar, but only just, and five seasons with one named player
+a side is thin. The count is the sturdier read and it says the same thing: 1 of
+5, and 15% against a 13% coin.
+
+**Not the same as "never draft a defence."** At the FINAL pick one is still
+worth about +32 over the wire, ahead of a deep tight end at +15. The finding is
+about the round, not the position: take one, take it last, and do not reach.
