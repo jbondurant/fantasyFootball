@@ -50,7 +50,20 @@ public class Draft16 {
         System.out.printf("%n   plan %s%n   value %.1f%n", shape(seasonPlan.positions()),
                 seasonPlan.mean());
 
-        // B: the starter sum
+        // B: Model A's definition, ten slots, one risk multiplier per player
+        RiskDiscountedValue risk = new RiskDiscountedValue(planner.points(),
+                RiskDiscountedValue.positionGamesMissed(),
+                InsuranceTest.replacementRanks(configuration),
+                PositionPredictability.reliability());
+        System.out.printf("%n   an unfilled slot is worth: %s%n", risk.unfilledValues());
+        planner.scoreWith(risk);
+        System.out.printf("%n%-34s ", "objective: " + planner.objectiveLabel());
+        DraftPlanner.Plan riskPlan = planner.plan(rollouts, lambda, q,
+                DraftSimulator.SEED);
+        System.out.printf("%n   plan %s%n   value %.1f%n", shape(riskPlan.positions()),
+                riskPlan.mean());
+
+        // C: the starter sum
         planner.scoreWith(WeeklyStarterValue.forCurrentBoard(configuration,
                 planner.points(), scenarios, 424_242L));
         System.out.printf("%n%-34s ", "objective: " + planner.objectiveLabel());

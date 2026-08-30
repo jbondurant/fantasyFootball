@@ -3778,3 +3778,50 @@ scaled to a season - so the backtest substitutes a smoothed per-rank curve and
 scores 1818. The live model is now better specified than history can measure,
 which is an uncomfortable but accurate place to be. **The RUNBOOK still stands
 for Tuesday.**
+
+## The Model-A-shaped rebuild: right shape, one unresolved disagreement
+
+Justin's judgement was that the starter-sum work "deviated outside of what makes
+sense", and he was right. That objective carried about ten hand-set choices and
+was wrong in eight of them inside a day. Model A's carries none, because its
+objective is a DEFINITION - the best legal lineup out of projections - which
+cannot be wrong, only its inputs can.
+
+`RiskDiscountedValue` keeps the definition and adds three measured numbers, not
+ten judgement calls:
+
+    value(player) = [ mean + trust x (projection - mean) ] x (17 - gamesMissed) / 17
+
+- **games missed** per player from Draft Sharks, or his position's measured
+  average (RB 3.1, WR 2.9, TE 3.0) where he is not in the file
+- **trust** = how far a position's preseason ranking has historically predicted
+  the season: RB 0.632, WR 0.639, QB 0.530, TE 0.509, DEF 0.277. A projection
+  you cannot believe is regressed toward its positional mean
+- **an unfilled slot** scores at the replacement-rank player's own discounted
+  projection, never zero. Zero says a slot you have not drafted for stays empty
+  all season, and it is what made the first version reach for a defence
+
+No sampling, no tiers replacing projections, no wire subsystem, no scenario
+count. Model A's search, ten slots, sixteen rounds.
+
+### It still takes a defence in round 7, and that disagrees with measurement
+
+    RB WR RB WR WR WR DEF TE QB QB TE TE RB RB
+
+The placement sweep, on real outcomes, prices round 7 at 1892 against 1984 for
+round 16. The model disagrees with it by about 92 points and I have not resolved
+why.
+
+The likely cause is not the objective but the OPPONENT model. `LiveLateRounds`
+reports the best available defence surviving to the next pick only 3% of the
+time, so the search believes defences are about to be taken and reaches for one.
+`SelectionModel` was never trained on defence picks - the board only started
+carrying them this afternoon - so its probabilities for them are extrapolation
+from coefficients fitted on skill positions. That is a real and specific
+suspicion, and it is untested.
+
+**So: right shape, three measured parameters instead of ten guesses, and one
+open disagreement with a measurement I trust more than the model.** Not
+draft-ready, and the RUNBOOK is unchanged for Tuesday. The next step is to check
+whether the choice model's defence probabilities are sane, which is a contained
+question with a clear answer.

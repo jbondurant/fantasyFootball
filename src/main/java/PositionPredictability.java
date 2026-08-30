@@ -28,6 +28,44 @@ public class PositionPredictability {
 
     record Seen(Position position, int rank, double actual){}
 
+    /**
+     * How much a preseason ranking at each position is worth believing, as the
+     * mean rank correlation with what actually happened.
+     *
+     * Exposed because a projection you cannot trust should not be taken at face
+     * value: defence rankings correlate 0.277 with the season against 0.63 for
+     * backs and receivers, so a defence projected far above its peers is mostly
+     * noise and should be regressed toward the positional mean before anything
+     * spends a pick on it.
+     */
+    public static Map<Position, Double> reliability() throws Exception {
+        Map<Position, List<Double>> pooled = new EnumMap<>(Position.class);
+        for(File file : new File("data").listFiles()){
+            if(!file.getName().matches("fp-adp-halfppr-\\d{4}-\\d{8}\\.csv")){
+                continue;
+            }
+            List<Seen> season = load(file, file.getName().split("-")[3]);
+            if(season.size() < 100){
+                continue;
+            }
+            for(Position position : new Position[]{Position.QB, Position.RB,
+                    Position.WR, Position.TE, Position.DEF}){
+                List<Seen> group = season.stream()
+                        .filter(s -> s.position() == position).toList();
+                if(group.size() >= 8){
+                    pooled.computeIfAbsent(position, u -> new ArrayList<>())
+                            .add(spearman(group));
+                }
+            }
+        }
+        Map<Position, Double> out = new EnumMap<>(Position.class);
+        for(Map.Entry<Position, List<Double>> entry : pooled.entrySet()){
+            out.put(entry.getKey(), Math.max(0, entry.getValue().stream()
+                    .mapToDouble(Double::doubleValue).average().orElse(0)));
+        }
+        return out;
+    }
+
     public static void main(String[] args) throws Exception {
         Map<String, List<Seen>> bySeason = new java.util.TreeMap<>();
         for(File file : new File("data").listFiles()){
