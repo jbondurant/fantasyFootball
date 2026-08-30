@@ -159,6 +159,7 @@ public class PolicyBacktest {
         }
         for(int pick = 1; pick <= 200 && mine.size() < MY_PICKS.length; pick++){
             if(myPicks.contains(pick)){
+                final int at = mine.size();
                 int taken = mine.size();
                 int nextGap = taken + 1 < MY_PICKS.length
                         ? MY_PICKS[taken + 1] - MY_PICKS[taken] - 1 : 0;
@@ -192,7 +193,10 @@ public class PolicyBacktest {
                     // Pure decay scored 1777 against greedy's 1859: it ignores
                     // the LEVEL, so a position that decays little but is worth
                     // much never gets taken. Level plus scarcity, weighted.
-                    double scored = now;
+                    // the plan's pick starts ahead by DEVIATE; the model has to
+                    // beat that margin to be allowed to disagree
+                    double scored = now + (at < PRIOR.size() && PRIOR.get(at) == position
+                            ? DEVIATE : 0.0);
                     if(SCARCITY > 0 && nextGap > 0){
                         String later = afterGap(board, gone, position, nextGap);
                         if(later != null){
@@ -229,6 +233,28 @@ public class PolicyBacktest {
     // was meant to measure. The policy collapsed to QB QB then twelve running
     // backs and scored 1055, below drafting at random. The greedy evaluation
     // needs real lookahead, not a stand-in.
+
+    /**
+     * How many points of model advantage it takes to leave the committed plan
+     * (-Pdeviate). The plan is a PRIOR built on far more football than five
+     * seasons, and five seasons cannot out-argue it - every attempt today to
+     * replace it lost. So follow it, and deviate only where the model shows an
+     * edge big enough to pay for the deviation.
+     *
+     * Huge means never deviate, which reproduces the committed plan exactly.
+     * Zero means ignore the plan, which is the free-choice policy. The question
+     * is whether anything in between beats both.
+     */
+    static final double DEVIATE =
+            Double.parseDouble(System.getProperty("deviate", "1e9"));
+
+    static final List<Position> PRIOR = new ArrayList<>();
+    static {
+        for(String token : PlanBacktest.STRATEGIES.get("RUNBOOK committed")
+                .trim().split("\\s+")){
+            PRIOR.add(Position.valueOf(token));
+        }
+    }
 
     /**
      * Pin the opening picks to a fixed shape (-PfrontShape="RB RB RB WR ...").

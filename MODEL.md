@@ -3577,3 +3577,51 @@ memorising one.
 **The next session's first job is the harvest, not the model.** Everything tried
 today failed for the same reason, and more model work on five seasons will fail
 the same way.
+
+## Shrinkage: the model cannot improve on the plan at any threshold
+
+The right method for a weak model against a strong prior is not to replace it
+but to follow it and deviate only where the evidence pays for the deviation.
+The committed plan IS a prior, built on far more football than five seasons.
+So: give the plan's pick a head start of DEVIATE points, and let the model
+overrule it only by beating that margin.
+
+    deviate   1e9    200     80     30     10      0
+    score    1998   1998   1998   1956   1746   1859
+
+**At a large threshold it reproduces the committed plan exactly** - 1998, to the
+point - which confirms the harness is right. And then every deviation the model
+wants to make loses. There is no threshold at which it adds anything: 30 costs
+42 points, 10 costs 252.
+
+That is the most direct test yet of whether the model knows anything the plan
+does not, and the answer is no, not one pick's worth.
+
+The dip at deviate=10 scoring below deviate=0 is the composition finding again:
+partial adherence breaks the plan's complementarity without replacing it with
+the model's own coherence. A draft plan is one object; half of one is worse than
+either whole.
+
+### What is still worth having from it
+
+At **deviate=80** the policy made ZERO deviations across all five seasons - it
+scored 1998, the committed plan to the point. So that setting is the plan plus a
+safety valve: it follows the written order, and would only override it for a
+board unlike anything in five seasons. That is shippable in a way the free model
+never was, because its downside is bounded by the plan itself.
+
+### What could still beat it, and it is not modelling
+
+Two routes remain untried, and only one is cheap:
+
+**Imitation, not optimisation.** The rounds 1-7 committee already contains an
+`ml-imitation` policy that scored near the top of the tournament. Learning to
+reproduce plans that WORK, conditioned on board state, is a different problem
+from optimising an objective - and it degrades to the plan rather than away from
+it. That is the right shape for n=5.
+
+**More seasons.** Sleeper actuals reach 2009 and FFC standard ADP reaches 2009;
+half-PPR ADP only starts in 2018. Eight clean seasons, up to seventeen with a
+measured format proxy. Everything tried today failed because fourteen positions
+cannot be fitted on five seasons, and that is the only fix that changes the
+arithmetic.
