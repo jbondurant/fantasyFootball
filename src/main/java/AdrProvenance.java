@@ -33,10 +33,37 @@ public class AdrProvenance {
     static final Path DATA = Path.of("data");
     static final DateTimeFormatter STAMP = DateTimeFormatter.ofPattern("yyyyMMdd");
 
-    record Feed(String season, LocalDate captured, int players, String file) {}
+    /** captured is null when nothing establishes when the feed was taken. */
+    record Feed(String season, LocalDate captured, int players, String file,
+                boolean verified, String source) {}
 
-    /** Every dated defaults CSV on disk, oldest first. */
+    static final Path PROVENANCE = Path.of("data", "adr", "provenance.csv");
+
+    /**
+     * Every dated defaults CSV, with its capture date read from the provenance
+     * manifest rather than from its own filename.
+     *
+     * Filenames were the bug. Commit 2bd97be extracted every 2021-2024 defaults
+     * file from the same mid-July ADR workbooks and named them after each
+     * season's DRAFT date, so this tool read 20220901 off a file holding the
+     * 16 July board and certified it as three days pre-draft. A name is not
+     * provenance; it is a label anyone can type. The manifest records what
+     * actually produced each file, and every entry marked verified was
+     * reproduced rank-for-rank by re-running the extractor on the named
+     * workbook. Anything the manifest does not cover is reported as unverified
+     * rather than believed.
+     */
     static List<Feed> feeds() throws IOException {
+        Map<String, String[]> manifest = new HashMap<>();
+        if(Files.exists(PROVENANCE)){
+            List<String> lines = Files.readAllLines(PROVENANCE, StandardCharsets.UTF_8);
+            for(String line : lines.subList(1, lines.size())){
+                String[] cells = line.split(",", 6);
+                if(cells.length >= 5){
+                    manifest.put(cells[0].trim(), cells);
+                }
+            }
+        }
         List<Feed> found = new ArrayList<>();
         try(var files = Files.list(DATA)){
             for(Path file : files.toList()){
@@ -47,10 +74,23 @@ public class AdrProvenance {
                 String[] parts = name.replace(".csv", "").split("-");
                 int rows = (int) Files.lines(file, StandardCharsets.UTF_8).skip(1)
                         .filter(line -> !line.isBlank()).count();
-                found.add(new Feed(parts[2], LocalDate.parse(parts[3], STAMP), rows, name));
+                String[] row = manifest.get(name);
+                LocalDate captured = null;
+                boolean verified = false;
+                String source = "not in the provenance manifest";
+                if(row != null){
+                    verified = row[4].trim().equalsIgnoreCase("yes");
+                    source = row[3].trim();
+                    if(!row[2].trim().equalsIgnoreCase("UNKNOWN")){
+                        captured = LocalDate.parse(row[2].trim(), STAMP);
+                    }
+                }
+                found.add(new Feed(parts[2], captured, rows, name, verified, source));
             }
         }
-        found.sort(Comparator.comparing(Feed::season).thenComparing(Feed::captured));
+        found.sort(Comparator.comparing(Feed::season)
+                .thenComparing(feed -> feed.captured() == null ? LocalDate.MIN
+                        : feed.captured()));
         return found;
     }
 
@@ -97,6 +137,14 @@ public class AdrProvenance {
                 "SEASON", "CAPTURED", "DRAFT", "DAYS", "PLAYERS", "admissible?");
         for(Feed feed : feeds){
             LocalDate draft = draftDates.get(feed.season());
+            if(feed.captured() == null || !feed.verified()){
+                System.out.printf("%-8s %-12s %-12s %8s %7d  %s%n", feed.season(),
+                        feed.captured() == null ? "UNKNOWN" : feed.captured(),
+                        draft == null ? "unknown" : draft.toString(), "-",
+                        feed.players(),
+                        "NO - provenance unverified (" + feed.source() + ")");
+                continue;
+            }
             if(draft == null){
                 System.out.printf("%-8s %-12s %-12s %8s %7d  %s%n", feed.season(),
                         feed.captured(), "unknown", "-", feed.players(),
@@ -122,6 +170,9 @@ public class AdrProvenance {
             for(int index = 1; index < season.size(); index++){
                 Feed before = season.get(index - 1);
                 Feed after = season.get(index);
+                if(before.captured() == null || after.captured() == null){
+                    continue;   // cannot call it drift without two real dates
+                }
                 Map<String, Double> from = ranks(before.file());
                 Map<String, Double> to = ranks(after.file());
                 List<String> movers = new ArrayList<>(from.keySet());

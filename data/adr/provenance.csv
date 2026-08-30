@@ -1,0 +1,7 @@
+file,season,captured,source,verified,note
+sleeper-defaults-2021-20210717.csv,2021,20210717,data/adr/2021-20210717-live.xlsx,yes,reproduced rank-for-rank from the workbook; filename previously said 20210901
+sleeper-defaults-2022-20220716.csv,2022,20220716,data/adr/2022-20220716-live.xlsx,yes,reproduced rank-for-rank from the workbook; filename previously said 20220901
+sleeper-defaults-2023-20230819.csv,2023,20230819,data/adr/2023-20230819-live.xlsx,yes,reproduced rank-for-rank from the workbook; filename previously said 20230901
+sleeper-defaults-2024-20240902.csv,2024,UNKNOWN,data/adr-2024.xlsx,no,workbook carries no capture date; the 20240902 in the filename was fabricated and is NOT provenance
+sleeper-defaults-2026-20260820.csv,2026,20260820,live Sleeper harvest (commit dc08a07),yes,harvested live at that date
+sleeper-defaults-2026-20260827.csv,2026,20260827,data/adr/2026-20260827-live.xlsx,yes,reproduced rank-for-rank; the 26th and 27th workbooks are identical

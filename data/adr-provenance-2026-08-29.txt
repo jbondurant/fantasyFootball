@@ -1,0 +1,25 @@
+ADR / Sleeper-defaults feeds against the real draft dates
+SEASON   CAPTURED     DRAFT            DAYS PLAYERS  admissible?
+2021     2021-07-17   2021-09-05         50     204  stale - 50d early
+2022     2022-07-16   2022-09-04         50     208  stale - 50d early
+2023     2023-08-19   2023-09-05         17     209  yes
+2024     UNKNOWN      2024-09-01          -     224  NO - provenance unverified (data/adr-2024.xlsx)
+2026     2026-08-20   2026-09-01         12     200  yes
+2026     2026-08-27   2026-09-01          5     200  yes
+
+2026 default-board drift 2026-08-20 -> 2026-08-27 (194 shared players)
+   Keenan Allen                207.0 ->  174.0  -33.0
+   Mike Washington             167.0 ->  143.0  -24.0
+   Malik Washington            178.0 ->  157.0  -21.0
+   Gunnar Helm                 189.0 ->  205.0  +16.0
+   James Conner                176.0 ->  191.0  +15.0
+   Zachariah Branch            173.0 ->  186.0  +13.0
+   Jordyn Tyson                 79.0 ->   91.0  +12.0
+   De'Zhaun Stribling          133.0 ->  122.0  -11.0
+   Chig Okonkwo                157.0 ->  168.0  +11.0
+   AJ Barner                   155.0 ->  166.0  +11.0
+   C.J. Stroud                 169.0 ->  179.0  +10.0
+   Tre Tucker                  172.0 ->  163.0  -9.0
+   Oronde Gadsden              126.0 ->  135.0  +9.0
+   Terrance Ferguson           186.0 ->  178.0  -8.0
+   Kayshon Boutte              205.0 ->  197.0  -8.0

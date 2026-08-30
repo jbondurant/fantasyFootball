@@ -2463,6 +2463,28 @@ Consequences:
 - Experiment 2 now detects two "captures" that score identically to six
   decimals and prints SAME DATA rather than averaging them into an answer.
 
-Not renamed or deleted here - several tools glob those filenames, and the fix
-should be one change that moves the dates and the readers together, proposed
-before it is made.
+**Fixed 2026-08-29.** True dates established empirically - re-running the
+extractor on each ADR workbook and checking which reproduced the file
+rank-for-rank - then the three provably wrong files renamed and provenance
+moved out of filenames into `data/adr/provenance.csv`, which `AdrProvenance`
+now reads. A name is a label anyone can type; the manifest records what
+actually produced each file.
+
+What the tool said before, and what is true:
+
+    BEFORE (filename dates)          AFTER (verified provenance)
+    2021  2021-09-01   4d   yes      2021  2021-07-17   50d  stale
+    2022  2022-09-01   3d   yes      2022  2022-07-16   50d  stale
+    2023  2023-09-01   4d   yes      2023  2023-08-19   17d  yes
+    2024  2024-09-02  -1d   NO       2024  UNKNOWN       -   NO, unverified
+
+2021 and 2022 were being certified as three and four days pre-draft while
+holding a board seven weeks old. 2024 was rejected for the wrong reason - the
+fabricated date happened to fall after the draft.
+
+Two files were checked and left alone: `sleeper-defaults-2024-20240902.csv`
+keeps its name because renaming it to another guess repeats the bug, and the
+manifest marks it UNKNOWN so the tool refuses it; and
+`sleeper-defaults-2026-20260827.csv` turned out to be correctly dated - the
+26 and 27 August workbooks are identical, so the first-match test that flagged
+it was wrong, not the file.
