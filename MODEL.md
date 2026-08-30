@@ -2659,3 +2659,40 @@ cannot see any of it.
 The TE tiers are worth noting against the tight end work: TE1-12 average 9.2 a
 game against 6.0 for TE13-24, about 45 points across a season, which is the
 same order as the +53.2 +/- 30.6 streaming margin measured independently.
+
+### Phase 1 gate: rank_std does NOT earn its place (2026-08-29)
+
+FantasyPros' `rank_std` - how much its contributors disagree about a player -
+was the one per-player uncertainty signal available at draft time, and the
+obvious candidate to replace the scalar dials. It fails.
+
+    PREDICTOR OF THE MISS          mean error
+    tier average (baseline)              29.4
+    rank_std alone                       31.1
+    tier PLUS rank_std                   29.4
+
+Fitted on 2022-2023, judged once on 2024-2025, 480 held-out players. Added on
+top of the tier it improves prediction by 0.01 points, and the fitted slope on
+the residuals is -0.02 - indistinguishable from nothing.
+
+The first version of this test was a straw man: it compared rank_std ALONE
+against the tier alone, which it lost 31.1 to 29.4. That is not the question -
+it would lose on rank information it never carried. Regressing the training
+residuals against how far a player's disagreement sits from his own tier's is
+the honest test, and the verdict came back the same, which is the only reason
+the first answer survives.
+
+The raw diagnostic looked promising in the wrong direction - correlations of
+-0.142, -0.072, -0.168, -0.083 between rank_std and the miss - but that is a
+rank artifact. Disagreement grows with depth, and deep players have smaller
+absolute misses because their expectations are smaller.
+
+**So the per-player distribution has no per-player modifier, and Phase 1 ends
+simpler than it started:**
+
+    draw a whole observed player-season - games, mean when playing, spread when
+    playing - as ONE unit from the pool for that position and tier
+
+Nothing estimated, nothing fitted, and the availability-scoring correlation
+(RB 0.347, WR 0.210, TE 0.102, QB 0.669) is preserved by construction rather
+than modelled. That is the whole of the layer the 1-16 design calls for.
