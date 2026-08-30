@@ -7,6 +7,8 @@ starter-sum (1-16)           1735     1923     1724     2038     2007      1886 
 best-nine (Model A)          1359     1534     1858     1715     1597      1613      +171     3/5
 RUNBOOK committed            2018     1645     2183     1943     2130      1984      +542     5/5
 RB-heavy folk rule           1882     1725     2148     1746     1848      1870      +428     5/5
+RUNBOOK front + SS back      2085     1810     1947     1888     2087      1963      +522     5/5
+ModelA front + SS back       1756     1763     1881     1910     1929      1848      +406     5/5
 best available by ADP        1439     1381     1192     1485     1712      1442        +0     0/5
 
 Every strategy drafts from the same board at the same picks, so the only

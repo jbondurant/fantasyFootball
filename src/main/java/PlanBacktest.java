@@ -49,6 +49,15 @@ public class PlanBacktest {
                 "RB RB RB WR WR WR WR TE WR QB TE QB RB DEF");
         STRATEGIES.put("RB-heavy folk rule",
                 "RB RB RB WR WR WR TE QB WR RB WR TE QB DEF");
+        // The back-half decomposition said the starter-sum model's deficit is
+        // 91 points in rounds 1-7 and 7 points in rounds 8-16 - so its late
+        // picks are already as good as the committed plan's, and only its early
+        // rounds lose. These test whether the halves can simply be bolted
+        // together.
+        STRATEGIES.put("RUNBOOK front + SS back",
+                "RB RB RB WR WR WR WR   WR QB TE TE WR RB DEF");
+        STRATEGIES.put("ModelA front + SS back",
+                "RB WR RB WR WR WR TE   WR QB TE TE WR RB DEF");
         STRATEGIES.put("best available by ADP", null);
     }
 

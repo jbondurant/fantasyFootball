@@ -3064,3 +3064,58 @@ since it stacks nothing.
 That the pathologies were not the reason it was losing is worth knowing. A
 better-behaved model that loses by the same margin is evidence the problem is
 the objective or its inputs, not the search.
+
+## What the models do after round 7, and where the model actually loses (2026-08-29)
+
+    STRATEGY                 rounds 1-7                rounds 8-16
+    starter-sum (1-16)       RB WR WR WR WR WR RB      WR QB TE TE WR RB DEF
+    best-nine (Model A)      RB WR RB WR WR WR TE      QB QB QB QB QB QB DEF
+    RUNBOOK committed        RB RB RB WR WR WR WR      TE WR QB TE QB RB DEF
+    RB-heavy folk rule       RB RB RB WR WR WR TE      QB WR RB WR TE QB DEF
+
+    STRATEGY                     season   from r8-16   share   starts r8-16
+    RUNBOOK committed              1984          684     34%             66
+    RUNBOOK front + SS back        1963          664     34%             66
+    starter-sum (1-16)             1886          677     36%             69
+    RB-heavy folk rule             1870          650     35%             65
+    ModelA front + SS back         1848          664     36%             67
+    best-nine (Model A)            1613          429     27%             34
+    best available by ADP          1442          278     19%             34
+
+**The back half is a third of the season.** 34 to 36% of points for every decent
+strategy, from nine of fourteen picks. The common claim that late rounds barely
+matter is wrong here, and by a wide margin.
+
+**What separates a good back half from a bad one is STARTS, not points.** The
+strategies that score well get 65 to 69 starts out of their late picks; Model A
+and best-available-ADP get 34 each. Model A stacks quarterbacks and you can
+start one; ADP ignores positional fit and ends up with men who cannot enter the
+lineup. A late pick is worth what it STARTS, and the rule that follows is
+simply: take players who can get into your lineup, which in this league means
+flex-eligible ones.
+
+**And the starter-sum model's deficit is almost entirely in rounds 1-7.**
+
+    RUNBOOK minus starter-sum:   front half 91    back half 7    total 98
+
+Its back half is within seven points of the committed plan - noise. It loses in
+the early rounds, taking five receivers in the first six picks where the
+committed plan takes three backs. That is precise and it is good news: the model
+is competitive exactly where it was built to add something, and loses where
+Model A already works and where Justin said not to touch anything.
+
+### But the halves do not compose
+
+The obvious move - the committed plan's front with the model's back - does NOT
+beat the committed plan. 1963 against 1984, ahead in 2 seasons of 5. Twenty-one
+points on two thousand is inside the noise, so the honest reading is that they
+are tied, not that the hybrid is worse.
+
+The reason is worth keeping: **back-half value is not separable from the front
+half.** The committed plan's late picks fill tight end and quarterback because
+its early rounds spent nothing there. The starter-sum's late picks were chosen
+against a receiver-heavy front that needed different things. Bolting one onto
+the other breaks the complementarity that made each work.
+
+That kills the tidy conclusion. There is no "use Model A early and the new model
+late" - the halves were fitted to each other, and a draft plan is one object.
