@@ -3288,3 +3288,42 @@ noise, so the conclusion is unchanged in substance and weaker in strength:
 streaming is AT LEAST AS GOOD as drafting a defence, and nothing supports
 spending a real pick on one. Take a defence last, or stream one and spend the
 pick elsewhere - the evidence does not separate them.
+
+### Correction: you must draft a defence (2026-08-29)
+
+Justin again, and this one voids a row rather than adjusting it. **You need a
+defence in week 1.** Fielding none is not a legal roster, so "never draft one"
+was never a strategy - and the models' unanimous refusal to take one was
+answering a question nobody can act on.
+
+Worse, the rate that row was credited with is the TOP QUARTILE of undrafted
+defences. That assumes you reliably land a good one after eleven other managers
+have taken theirs, which is exactly backwards: the defences left on waivers
+after a sixteen-round draft are the ones nobody wanted.
+
+The row is kept, relabelled `[not legal] no DEF drafted`, because it still
+measures something real - what a DRAFTED defence is worth over a wire-level one,
+which is about 9 points a season. It is not an alternative to drafting.
+
+**So the question was never draft-or-stream. It is only WHERE, and the
+placement sweep already answered it:**
+
+    round    1     3     6     8    10    11    14    15    16
+    mean  1769  1842  1871  1892  1942  1961  1981  1984  1984
+
+Draft one in the last two rounds, then stream by SWAPPING defences during the
+season - which is an in-season activity and costs no pick at all. That is what
+"streaming" actually means here, and nothing measured today argues against it.
+
+### What the models got wrong, and why it is instructive
+
+Five model variants unanimously declined to draft a defence. They were not
+wrong about the VALUE - a drafted defence really is worth only ~9 points over a
+wire one - they were wrong because nothing in the objective knows a lineup slot
+must be FILLED. `V(R)` quietly fills an empty defence slot from the wire every
+week, for free and forever, which is a rule of the model rather than a rule of
+the league.
+
+That is the same class of fault as the roster-spot omission: the objective
+models points well and constraints badly. Any future work on it should start
+there.

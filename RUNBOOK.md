@@ -242,7 +242,9 @@ rounds 8-9 pick averages.
 - **The QB shelf.** Prescott (366 proj), Lawrence (355), Herbert (347) and
   Mahomes (345) essentially never go inside nine rounds. There is no urgency
   at quarterback beyond the round-8 insurance pick.
-- **Defense: last two rounds.** Measured directly — one plan, thirteen picks
+- **Defense: you MUST draft one.** You need a defence in week 1, and by then
+  every other manager has taken the good ones. Stream by SWAPPING it during the
+  season, never by skipping the pick. Where to take it, measured directly — one plan, thirteen picks
   held fixed, the defense slid through every slot and scored on real outcomes:
 
   ```

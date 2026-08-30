@@ -83,8 +83,13 @@ public class PlanBacktest {
                 "RB RB RB WR WR WR WR   WR QB TE TE WR RB DEF");
         STRATEGIES.put("ModelA front + SS back",
                 "RB WR RB WR WR WR TE   WR QB TE TE WR RB DEF");
-        // the models' unanimous choice: never draft one, stream instead
-        STRATEGIES.put("committed, DEF streamed",
+        // NOT A LEGAL PLAN, kept as a measurement. You must field a defence in
+        // week 1, so drafting none is not a strategy - and the rate it is
+        // credited with is the top quartile of undrafted defences, which assumes
+        // you land a good one after eleven other managers have taken theirs.
+        // What this row measures is what a DRAFTED defence is worth over a
+        // wire-level one. It is not an alternative to drafting.
+        STRATEGIES.put("[not legal] no DEF drafted",
                 "RB RB RB WR WR WR WR TE WR QB TE QB RB RB");
         STRATEGIES.put("best available by ADP", null);
     }
