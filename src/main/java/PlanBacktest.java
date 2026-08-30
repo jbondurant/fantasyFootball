@@ -52,7 +52,7 @@ public class PlanBacktest {
         STRATEGIES.put("best available by ADP", null);
     }
 
-    record Board(String season, List<String> ids, Map<String, Position> positionOf,
+    public record Board(String season, List<String> ids, Map<String, Position> positionOf,
                  List<Map<String, Double>> weekly){}
 
     public static void main(String[] args) throws Exception {
@@ -114,7 +114,7 @@ public class PlanBacktest {
                 + " its row as flattered, and a narrow win as none.");
     }
 
-    static Board board(File adpFile, String season) throws Exception {
+    public static Board board(File adpFile, String season) throws Exception {
         Map<String, Double> totals = new HashMap<>(
                 HistoricalActuals.pointsBySleeperID(season));
         totals.putAll(HistoricalActuals.defencePointsBySleeperID(season));
@@ -181,7 +181,7 @@ public class PlanBacktest {
         return new Board(season, ids, positionOf, weekly);
     }
 
-    static double score(Board board, String sequence){
+    public static double score(Board board, String sequence){
         List<Position> wanted = new ArrayList<>();
         if(sequence != null){
             for(String token : sequence.split("\\s+")){
@@ -219,7 +219,7 @@ public class PlanBacktest {
         return seasonPoints(board, mine);
     }
 
-    static String bestAvailable(Board board, Set<String> gone, Position position){
+    public static String bestAvailable(Board board, Set<String> gone, Position position){
         for(String id : board.ids()){
             if(!gone.contains(id)
                     && (position == null || board.positionOf().get(id) == position)){
@@ -229,7 +229,7 @@ public class PlanBacktest {
         return null;
     }
 
-    static String bestAvailableSkill(Board board, Set<String> gone){
+    public static String bestAvailableSkill(Board board, Set<String> gone){
         for(String id : board.ids()){
             if(!gone.contains(id) && board.positionOf().get(id) != Position.DEF){
                 return id;
@@ -239,7 +239,7 @@ public class PlanBacktest {
     }
 
     /** Eighteen weeks of the best lineup these players could actually field. */
-    static double seasonPoints(Board board, List<String> roster){
+    public static double seasonPoints(Board board, List<String> roster){
         double total = 0;
         for(int week = 0; week < WeeklyActuals.WEEKS; week++){
             Map<String, Double> points = board.weekly().get(week);

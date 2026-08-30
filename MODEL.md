@@ -2961,3 +2961,58 @@ a side is thin. The count is the sturdier read and it says the same thing: 1 of
 **Not the same as "never draft a defence."** At the FINAL pick one is still
 worth about +32 over the wire, ahead of a deep tight end at +15. The finding is
 about the round, not the position: take one, take it last, and do not reach.
+
+## The per-season policy is worse still (2026-08-29)
+
+Phase 4 tested a fixed sequence and lost. The fair version - the model as a
+POLICY, drafting on each season's own board, with a LEAVE-ONE-OUT pool so it
+never sees the season it is judged on - was supposed to be the model's best
+case. It is its worst.
+
+    STRATEGY                     2021   2022   2023   2024   2025    mean  vs ADP  wins
+    RUNBOOK committed            2082   1705   2342   2031   2241    2080    +466   5/5
+    RB-heavy folk rule           1975   1789   2300   1908   1946    1983    +369   5/5
+    starter-sum (fixed seq)      1849   1961   1804   2180   2148    1989    +374   5/5
+    starter-sum POLICY           1660   1838   1962   1886   1801    1829    +215   3/5
+    best-nine (Model A)          1506   1671   1976   1783   1701    1727    +113   3/5
+    best available by ADP        1672   1519   1388   1662   1831    1614      +0   0/5
+
+**Against the committed plan: -251 points a season, ahead in 1 season of 5.**
+
+Removing the leakage made it worse, which is the clearest possible confirmation
+that the fixed sequence's better showing was the leakage flattering it. That
+caveat was written before the number was known; it was right.
+
+### The choices are visibly wrong, which matters more than the score
+
+    2021: RB WR WR WR RB QB WR WR WR WR DEF RB TE RB
+    2022: RB RB WR WR QB WR RB WR TE RB RB DEF DEF DEF
+    2023: RB RB RB QB RB WR WR QB WR TE RB DEF WR TE
+    2024: RB RB QB WR QB RB RB RB RB WR DEF DEF TE DEF
+    2025: RB WR WR WR QB WR WR RB RB TE RB DEF DEF WR
+
+Two pathologies stand out and neither is a matter of taste. It takes a
+quarterback in round 3 in 2024 and two in 2023, when the QB wire supplies 15.8
+points a week and the marginal there cannot justify a third-round pick. And it
+takes THREE defences in 2022 and 2024, when only one can ever start - a second
+defence should be worth approximately nothing, so something is scoring it above
+zero.
+
+Those are bugs, not preferences, and they are the leads for anyone continuing.
+But finding them would not rescue the conclusion; it deepens it. A model whose
+choices are visibly wrong and whose score is 251 points behind a folk rule is
+not close to usable.
+
+### The verdict, plainly
+
+Three independent tests now say the same thing. The fixed sequence lost. The
+policy lost by more. Model A extended past round 9 lost worst of all. The only
+robust finding in any of them is that thinking about position at all beats
+drafting blind by 113 to 466 points a season - which every strategy here
+already does, including the RUNBOOK's.
+
+**The RUNBOOK does not change.** The 1-16 model is not draft-ready and should
+not be used on Tuesday. What was worth building is the measurement apparatus
+around it: the weekly actuals, the outcome distributions, the availability-
+scoring correlation, the defence predictability numbers, and this backtest -
+all of which stand on their own and are what caught the model.
