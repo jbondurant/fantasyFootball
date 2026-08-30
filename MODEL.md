@@ -3119,3 +3119,41 @@ the other breaks the complementarity that made each work.
 
 That kills the tidy conclusion. There is no "use Model A early and the new model
 late" - the halves were fitted to each other, and a draft plan is one object.
+
+### Tight end slot, or another back/receiver? (2026-08-29)
+
+The question sounds like starter-versus-bench and is not. This league starts
+QB/RB2/WR3/TE/FLEX2/DEF, so with two flex slots a "backup" receiver walks into
+the lineup. Both candidates fill a STARTING slot; the only question is which
+slot is worth more, and that changes as the roster fills.
+
+    PICK   ROUND  ROSTER SO FAR      best TE   best RB   best WR   take TE?
+    7      1      1QB 1RB               33.3     114.3      94.1   no, by 81
+    18     2      1QB 2RB               33.3     118.1      82.1   no, by 85
+    31     3      1QB 3RB               32.9      54.5      93.7   no, by 61
+    42     4      1QB 3RB 1WR           32.9      49.5      53.7   no, by 21
+    55     5      1QB 3RB 2WR           33.8      52.9      45.9   no, by 19
+    66     6      1QB 4RB 2WR           36.0      35.0      42.3   no, by 6
+    79     7      1QB 4RB 3WR           33.4      35.2      28.9   no, by 2
+    90     8      1QB 5RB 3WR           29.4      25.0      23.7   YES, by 4
+
+**The tight end is worth a flat ~33 points at every pick, and depth decays past
+it.** That is the whole shape. A tight end is not getting better as the draft
+goes on - the plateau means the tight end at pick 90 is about as good as the one
+at pick 7 - while the back or receiver you could take instead falls from 114 to
+25. The crossover is where decay meets the flat line, and it lands at **round 8**.
+
+So: no, do not take a starting tight end before adding depth. Not in round 6
+(depth wins by 6), and not in round 7 (by 2, effectively a tie). From round 8
+the empty slot is the most valuable thing left to fill.
+
+**This is the third independent route to the same answer.** `TightEndTiming`'s
+swap said waiting to 90 beat taking one at 79. The RUNBOOK already places the
+tight end at round 8. And this marginal analysis, built on completely different
+machinery, puts the crossover in the same place.
+
+**Do not read the rows past round 8.** They run 8.8, then 35.6, then 12.2, which
+the board cannot produce honestly - it only loses players, so the best available
+tight end cannot improve. That is sampling noise and which specific tight end
+happens to be on the board, not signal. The trustworthy part is rounds 1 through
+8, where the trend is monotone and large.
