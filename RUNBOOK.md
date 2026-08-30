@@ -35,7 +35,7 @@ Then press **enter** at each of your picks. It re-reads the live board
 (uncached) and prints the committee vote plus the wait-or-take table from the
 current state.
 
-Warm-up is **~55s and is paid once**; each pick after that costs **4-7s**,
+Warm-up is **~18s and is paid once**; each pick after that costs **4-11s**,
 measured against the paused mock on 2026-08-29. Running the tools separately
 costs 25-45s per pick, because each one pays the warm-up again — that was the
 single biggest draft-night risk before this existed.
@@ -154,22 +154,26 @@ he survives to your next pick. One number for the tight end, the backup
 quarterback and the defence, so they compare directly:
 
 ```
-POS  BEST AVAILABLE           ADDS   SURVIVES  LOSS IF WAIT   verdict
-RB   Kenny Gainwell           38.9        89%           2.6   wait - he keeps
-QB   Bo Nix                   34.3       100%           0.0   wait - he keeps
-TE   Travis Kelce             30.0        99%           0.0   wait - he keeps
-WR   Jordan Addison           23.3        60%           0.0   wait - he keeps
-DEF  Houston Texans            8.8          -             -   not simulated
+POS  BEST AVAILABLE                  ADDS   SURVIVES  LOSS IF WAIT   verdict
+TE   Travis Kelce                    61.2       48%           7.9   lean take (8)
+RB   Kenny Gainwell                  60.0       16%           3.8   lean take (4)
+WR   Jordan Addison                  58.4        0%           0.0   wait - he keeps
+DEF  Houston Texans                  27.3        3%           4.2   lean take (4)
+QB   Bo Nix                          13.1       96%           0.0   wait - he keeps
 ```
 
 Take the top row unless LOSS IF WAIT is near zero for everything, in which case
 take the highest ADDS. It says whose pick it is — if it reads "someone else",
-you are looking at a preview, not your decision.
+you are looking at a preview, not your decision. Defence survival IS simulated
+now (defences joined the board 2026-08-29).
 
-**Read it as a prompt, not an oracle.** Every model built on this objective lost
-a five-season backtest to the committed plan below — the best configuration
-reached 1921 against 1998, and the free-choice policy 1859. It has never beaten
-the rules. What it does well is price a SPECIFIC board state you are actually
+**Read it as a prompt, not an oracle.** Every model built on this objective has
+lost a five-season backtest to the committed plan below — best configuration
+1921 against 1998. Its objective was corrected late on 2026-08-29 to centre on
+each player's own projection rather than his tier's average, after which it
+independently reproduced this plan's RB RB RB WR WR WR opening; but that fix
+cannot be scored on history, because per-player projections do not survive at
+the right vintage. So it has still never been SHOWN to beat the rules. What it does well is price a SPECIFIC board state you are actually
 looking at, which a written plan cannot. Where it disagrees with the plan,
 prefer the plan unless it shows a large LOSS IF WAIT.
 
