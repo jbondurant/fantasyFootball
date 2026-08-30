@@ -120,7 +120,7 @@ public class PolicyBacktest {
     }
 
     /** Every season's outcomes except the one being judged. */
-    static Map<String, List<OutcomeDistributions.Season>> poolWithout(
+    public static Map<String, List<OutcomeDistributions.Season>> poolWithout(
             Map<String, List<OutcomeDistributions.Season>> bySeason, String excluded){
         Map<String, List<OutcomeDistributions.Season>> pool = new HashMap<>();
         for(Map.Entry<String, List<OutcomeDistributions.Season>> entry
@@ -295,7 +295,7 @@ public class PolicyBacktest {
     /** Reserve the last pick for the defence that must be fielded (-PdefLast). */
     static final boolean DEF_LAST = Boolean.getBoolean("defLast");
 
-    static boolean worthTaking(Position candidate, List<Position> chosen){
+    public static boolean worthTaking(Position candidate, List<Position> chosen){
         int at = chosen.size();
         if(!FRONT_SHAPE.isBlank()){
             String[] pinned = FRONT_SHAPE.trim().split("\\s+");
@@ -326,7 +326,7 @@ public class PolicyBacktest {
         return candidate == Position.DEF ? held < 1 : held < 2;
     }
 
-    static Map<Position, Double> wireFrom(
+    public static Map<Position, Double> wireFrom(
             Map<String, List<OutcomeDistributions.Season>> pool){
         Map<Position, Integer> replacement =
                 InsuranceTest.replacementRanks(AAAConfiguration.getInstance());

@@ -3625,3 +3625,54 @@ half-PPR ADP only starts in 2018. Eight clean seasons, up to seventeen with a
 measured format proxy. Everything tried today failed because fourteen positions
 cannot be fitted on five seasons, and that is the only fix that changes the
 arithmetic.
+
+## Converging on the prior from outcomes alone (2026-08-29)
+
+Justin's objection to the shrinkage experiment was right: starting a model FROM
+the committed plan is not convergence, it is a prior with a model attached. So
+this one is never shown the plan. It learns a small correction to the objective
+from outcomes only, and we see where it lands.
+
+The parameter count is the design. Fourteen free positions on three seasons
+memorised them - the sequence search opened with a tight end at pick 7 and lost
+191 out of sample. So four numbers instead: one multiplier per position on the
+model's marginal, receivers pinned at 1.0. Coordinate ascent on 2021-2023,
+judged once on 2024-2025.
+
+    start   RB 1.00  TE 1.00  QB 1.00  DEF 1.00   train 1893
+    pass 1  RB 1.30  TE 1.00  QB 1.00  DEF 0.60   train 2009
+
+                                           TEST
+    unweighted model                       1813
+    fitted weights                         1730
+    RUNBOOK committed (the prior)          2054
+
+**It converged on the prior's DIRECTION.** Told nothing about the committed
+plan, the fit moved to RB x1.30 and DEF x0.60 - upweight running backs,
+downweight defences. That is the folk rule, rediscovered from outcomes by a
+model that had never seen it. It is the strongest evidence produced today that
+the rule encodes something real rather than habit.
+
+**And the magnitudes still overfit.** +116 on training, -83 on test. Even four
+parameters on three seasons is too many, which is the same wall everything else
+hit.
+
+### What this settles
+
+The prior is not beating the model because the model is badly built. It is
+beating it because five seasons cannot re-derive, to useful precision, what
+decades of collective play already encoded. The direction is recoverable from
+five seasons; the magnitudes are not.
+
+That makes the data harvest the only route left worth taking, and it is now
+well-specified: Sleeper season actuals to 2009, weekly actuals to 2015, FFC
+standard ADP to 2009 with half-PPR from 2018. Eight clean seasons, seventeen
+with a format proxy that must itself be measured rather than assumed.
+
+At eight to seventeen seasons, four parameters becomes a comfortable fit and
+fourteen becomes arguable. Until then, the honest ranking is unchanged:
+
+    RUNBOOK committed        1998        <- use this
+    starter-sum, best config 1921
+    free-choice policy       1859
+    best available by ADP    1442
