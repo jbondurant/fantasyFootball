@@ -2266,11 +2266,27 @@ has to earn its place out of sample, but it is the right shape.
 
 ### Phases
 
-**0 - data foundation (75 min).** Harvest weekly actuals (5 x 18, cached
-forever) and defence actuals/ADP. Build a vintage audit table: every historical
-input, its capture date, that season's start date, the gap in days, and a
-usable/not verdict - `AdrProvenance` for projections. *Gate:* weekly sums must
-reconcile against `HistoricalActuals` season totals.
+**0 - data foundation (75 min). DONE 2026-08-29.** `WeeklyActuals` pulls all
+five seasons x eighteen weeks, cached forever, and keeps scoring separate from
+availability - a man who played and scored two is available-and-bad and can be
+benched, a man who did not play cannot be started at all, and collapsing them
+would lose the distinction the objective turns on.
+
+The gate passed cleanly:
+
+    SEASON     matched  mean |diff|   worst diff    over 1 pt   verdict
+    2021           603        0.000          0.0            0   RECONCILES
+    2022           578        0.001          0.3            0   RECONCILES
+    2023           544        0.000          0.0            0   RECONCILES
+    2024           555        0.000          0.0            0   RECONCILES
+    2025           574        0.000          0.0            0   RECONCILES
+
+Not one player in five seasons differs by more than a third of a point between
+the weekly sum and the season total. The two feeds are the same data at two
+resolutions, so the weekly one can carry the starter-sum objective.
+
+Still outstanding in this phase: defence actuals and ADP, and the vintage audit
+table - though the provenance fix below did most of the latter.
 
 **1 - per-player draft-time distribution (60 min).** Mean from the rank-to-
 points curve; spread calibrated from `rank_std`; availability from the

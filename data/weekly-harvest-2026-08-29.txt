@@ -1,0 +1,22 @@
+
+HARVEST: 5 seasons x 18 weeks
+
+SEASON      weeks    scorers     played  empty weeks
+2021           18       8705      26484            0
+2022           18       8668      26370            0
+2023           18       8764      26422            0
+2024           18       8613      26488            0
+2025           18       6903      26490            0
+
+
+THE GATE: do the weeks sum to the season?
+
+SEASON     matched  mean |diff|   worst diff    over 1 pt   verdict
+2021           603        0.000          0.0            0   RECONCILES
+2022           578        0.001          0.3            0   RECONCILES
+2023           544        0.000          0.0            0   RECONCILES
+2024           555        0.000          0.0            0   RECONCILES
+2025           574        0.000          0.0            0   RECONCILES
+
+GATE PASSED. The weekly feed and the season feed agree, so the weekly
+data can be trusted as the basis for the starter-sum objective.
