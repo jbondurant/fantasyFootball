@@ -3523,3 +3523,57 @@ today that IS trustworthy is measurement, not optimisation: the weekly actuals,
 the outcome distributions, the availability-scoring correlation, defence
 predictability, the placement sweep, and this backtest - which is the thing that
 kept saying no.
+
+## Trying to beat the rules: the obstacle is n=5, and it is fixable
+
+Three attempts, all failed, and the third explains the other two.
+
+**Scarcity lookahead made it worse.** Greedy ignores that backs deplete faster
+than receivers, which is exactly the edge the committed plan's RB-heavy opening
+exploits - so scoring positions by what they will have LOST by the next pick
+should have helped. Sweeping the weight:
+
+    scarcity   0      1      3      8     20
+    score   1859   1831   1803   1764   1772
+
+Monotonically worse. The objective already prices scarcity implicitly, through
+the roster the marginal is computed against, so an explicit term double-counts.
+
+**Sequence search overfits, spectacularly.** Hill-climbing whole plans, fitted
+on 2021-2023 and judged once on 2024-2025:
+
+                             train       TEST
+    RUNBOOK committed         1960       2054
+    hill-climbed sequence     2021       1863
+    difference                 +61       -191
+
+It gained 61 on training and lost 191 on test, and the plan it found opens with
+a TIGHT END at pick 7. That is what memorisation looks like.
+
+### That is the real obstacle, and it is not the model
+
+Fourteen positions fitted on three seasons has more free parameters than data.
+The committed plan wins because it encodes priors drawn from far more football
+than five seasons - and no amount of tuning on five seasons will beat priors
+built on decades.
+
+**So the path to beating the rules is data, not cleverness.** Checked:
+
+    Sleeper season actuals        back to 2009      17 seasons
+    Sleeper weekly actuals        back to 2015+     11 seasons
+    FFC half-PPR ADP              back to 2018       8 seasons
+    FFC standard ADP              back to 2009      17 seasons
+
+Half-PPR ADP starts in 2018, but STANDARD ADP goes back to 2009 with 145-202
+players a season. Draft order barely differs between formats above the flex -
+the repo already measured Sleeper defaults and Sleeper ADP as interchangeable
+proxies - so standard ADP is a usable stand-in for the early years, with the
+substitution measured rather than assumed.
+
+That is 8 clean seasons and up to 17 with a documented proxy, against the 5 in
+hand. Triple the data is the difference between fitting a sequence and
+memorising one.
+
+**The next session's first job is the harvest, not the model.** Everything tried
+today failed for the same reason, and more model work on five seasons will fail
+the same way.

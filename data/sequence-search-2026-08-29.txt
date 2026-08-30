@@ -1,0 +1,19 @@
+
+starting from the committed plan
+   RB RB RB WR WR WR WR TE WR QB TE QB RB DEF
+   train 1960, test 2054
+
+pass 1: train 1994   RB RB RB WR WR WR WR TE WR QB RB QB WR DEF
+pass 2: train 2021   TE RB RB WR WR WR WR TE WR QB RB QB WR DEF
+pass 3: train 2021   TE RB RB WR WR WR WR TE WR QB RB QB WR DEF
+
+                                  train       TEST
+RUNBOOK committed                  1960       2054
+hill-climbed sequence              2021       1863
+difference                          +61       -191
+
+fitted plan: TE RB RB WR WR WR WR TE WR QB RB QB WR DEF
+
+It gained on training and lost on test - that is overfitting, and the
+answer is still no. Fourteen positions fitted on three seasons was always
+going to memorise them.

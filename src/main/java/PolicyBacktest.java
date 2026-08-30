@@ -159,6 +159,9 @@ public class PolicyBacktest {
         }
         for(int pick = 1; pick <= 200 && mine.size() < MY_PICKS.length; pick++){
             if(myPicks.contains(pick)){
+                int taken = mine.size();
+                int nextGap = taken + 1 < MY_PICKS.length
+                        ? MY_PICKS[taken + 1] - MY_PICKS[taken] - 1 : 0;
                 String best = null;
                 Position bestPosition = null;
                 double bestValue = -Double.MAX_VALUE;
@@ -176,7 +179,28 @@ public class PolicyBacktest {
                     }
                     List<String> trial = new ArrayList<>(mine);
                     trial.add(candidate);
-                    double scored = value.of(trial);
+                    double now = value.of(trial);
+
+                    // SCARCITY. Greedy takes whatever is worth most right now,
+                    // which ignores that backs disappear faster than receivers -
+                    // and that is precisely the edge the committed plan's
+                    // RB-heavy opening exploits. What matters is not what a
+                    // position is worth, but what it will have LOST by my next
+                    // pick. Score each position by its decay: the best man there
+                    // now, against the best man there after the board has been
+                    // picked over until I choose again.
+                    // Pure decay scored 1777 against greedy's 1859: it ignores
+                    // the LEVEL, so a position that decays little but is worth
+                    // much never gets taken. Level plus scarcity, weighted.
+                    double scored = now;
+                    if(SCARCITY > 0 && nextGap > 0){
+                        String later = afterGap(board, gone, position, nextGap);
+                        if(later != null){
+                            List<String> deferred = new ArrayList<>(mine);
+                            deferred.add(later);
+                            scored = now + SCARCITY * (now - value.of(deferred));
+                        }
+                    }
                     if(scored > bestValue){
                         bestValue = scored;
                         best = candidate;
@@ -214,6 +238,30 @@ public class PolicyBacktest {
      * front and let it choose everything after.
      */
     static final String FRONT_SHAPE = System.getProperty("frontShape", "");
+
+    /**
+     * How heavily to weight scarcity - what a position will have LOST by my
+     * next pick - against its value now. 0 is pure greed, large is pure decay.
+     */
+    static final double SCARCITY =
+            Double.parseDouble(System.getProperty("scarcity", "0"));
+
+    /**
+     * The best man at this position once the board has been picked over for the
+     * gap between my picks - who I would be settling for if I wait.
+     */
+    static String afterGap(PlanBacktest.Board board, Set<String> gone, Position position,
+                           int gap){
+        Set<String> later = new HashSet<>(gone);
+        for(int i = 0; i < gap; i++){
+            String next = PlanBacktest.bestAvailableSkill(board, later);
+            if(next == null){
+                break;
+            }
+            later.add(next);
+        }
+        return PlanBacktest.bestAvailable(board, later, position);
+    }
 
     /** Earliest pick index at which a quarterback may be taken (-PqbFrom). */
     static final int QB_FROM = Integer.getInteger("qbFrom", 0);
