@@ -131,9 +131,35 @@ TE   10-12       11        15.8          1.4        17.2      9.7
 TE   13-16       21        13.3          1.9        15.2     11.9
 ```
 
-**At each pick from round 8 on, run the combiner:**
+**At each pick from round 8 on, run the live late-rounds tool:**
 
-    ./gradlew run -Pmain=LateWaitOrTake -PdraftId=<id>
+    ./gradlew run -Pmain=LiveLateRounds -PdraftId=<id>
+
+It reads the live board, takes the roster you ACTUALLY have, and prices the best
+available man at every position — including defence — by what he adds to the
+points your starters will score across the season, then multiplies by how often
+he survives to your next pick. One number for the tight end, the backup
+quarterback and the defence, so they compare directly:
+
+```
+POS  BEST AVAILABLE           ADDS   SURVIVES  LOSS IF WAIT   verdict
+RB   Kenny Gainwell           38.9        89%           2.6   wait - he keeps
+QB   Bo Nix                   34.3       100%           0.0   wait - he keeps
+TE   Travis Kelce             30.0        99%           0.0   wait - he keeps
+WR   Jordan Addison           23.3        60%           0.0   wait - he keeps
+DEF  Houston Texans            8.8          -             -   not simulated
+```
+
+Take the top row unless LOSS IF WAIT is near zero for everything, in which case
+take the highest ADDS. Defence survival is not simulated (the board is built
+from skill positions), but defences go in the last two rounds — take one there.
+
+**Scope:** rounds 8+ only. The same objective driving the WHOLE draft lost a
+five-season backtest to this committed plan by 98 points a season, and 91 of
+those 98 were in rounds 1–7. Its back half was within 7 points — noise. So
+`DraftNight` keeps rounds 1–7 and this takes the rounds where it is competitive.
+
+**Superseded:** `LateWaitOrTake` — same idea, weaker value model.
 
 It values every available player (per-player projection over the wire, plus a
 measured keeper base rate scaled by youth — young x1.44, veteran x0.61), runs
