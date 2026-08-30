@@ -144,7 +144,9 @@ public class OutcomeDistributions {
 
     /** ADP joined to the weekly series, by normalised name. */
     public static List<Season> load(File adpFile, String season) throws Exception {
-        Map<String, Double> totals = HistoricalActuals.pointsBySleeperID(season);
+        Map<String, Double> totals = new HashMap<>(
+                HistoricalActuals.pointsBySleeperID(season));
+        totals.putAll(HistoricalActuals.defencePointsBySleeperID(season));
         Map<String, String> idByName = new HashMap<>();
         for(String id : totals.keySet()){
             Player player = Player.getPlayerFromSIDV2(id);
@@ -188,12 +190,18 @@ public class OutcomeDistributions {
         Map<Position, Integer> nextRank = new EnumMap<>(Position.class);
         List<Season> out = new ArrayList<>();
         for(String[] cells : rows){
+            String label = cells[posCol].trim();
             Position position;
-            try {
-                position = Position.valueOf(cells[posCol].trim());
+            if(label.equals("DST") || label.equals("DEF")){
+                position = Position.DEF;   // FantasyPros says DST, Sleeper says DEF
             }
-            catch(IllegalArgumentException notSkill){
-                continue;
+            else {
+                try {
+                    position = Position.valueOf(label);
+                }
+                catch(IllegalArgumentException notPlayable){
+                    continue;              // kickers; this league starts none
+                }
             }
             String id = idByName.get(TightEndTiming.normalise(cells[nameCol]));
             if(id == null){

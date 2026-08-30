@@ -123,6 +123,14 @@ public class WeeklyStarterValue implements RosterValue {
         points += fill(available.get(Position.RB), 2, Position.RB, flexPool);
         points += fill(available.get(Position.WR), 3, Position.WR, flexPool);
         points += fill(available.get(Position.TE), 1, Position.TE, flexPool);
+        // The league starts a defence, so V(R) has to score one or every roster
+        // is short a slot. It is filled from the wire when the roster has none,
+        // which is nearly always the right answer: a preseason defence ranking
+        // correlates 0.277 with the season against 0.578 for the skill
+        // positions, and 0.047 in 2024. There is too little signal there for a
+        // pick to buy anything, so the objective should - and now does - decline
+        // to spend one early without being told to.
+        points += fill(available.get(Position.DEF), 1, Position.DEF, null);
         flexPool.sort(Comparator.reverseOrder());
         double flexWire = Math.max(wirePerWeek.getOrDefault(Position.RB, 0.0),
                 wirePerWeek.getOrDefault(Position.WR, 0.0));
@@ -176,7 +184,11 @@ public class WeeklyStarterValue implements RosterValue {
         Map<Position, List<String>> byPosition = new EnumMap<>(Position.class);
         for(String id : projections.keySet()){
             Player player = Player.getPlayerFromSIDV2(id);
-            if(player != null && StartingLineup.isSkillPosition(player.position)){
+            // DEF too: the league starts one, and gating this on
+            // isSkillPosition left rostered defences with no sampled outcomes
+            // at all, so they were silently treated as never available.
+            if(player != null && (StartingLineup.isSkillPosition(player.position)
+                    || player.position == Position.DEF)){
                 positionOf.put(id, player.position);
                 byPosition.computeIfAbsent(player.position, u -> new ArrayList<>()).add(id);
             }
@@ -214,8 +226,8 @@ public class WeeklyStarterValue implements RosterValue {
         Map<Position, Integer> replacement = InsuranceTest.replacementRanks(configuration);
         Map<Position, Double> wire = new EnumMap<>(Position.class);
         for(Position position : new Position[]{Position.QB, Position.RB, Position.WR,
-                Position.TE}){
-            int from = replacement.getOrDefault(position, 24);
+                Position.TE, Position.DEF}){
+            int from = replacement.getOrDefault(position, position == Position.DEF ? 13 : 24);
             // Selected by RANK, not by tier. Tiers are twelve wide, so QB21 -
             // the first quarterback this league leaves undrafted - falls in the
             // 13-24 band, and taking that band's best returned QB13-15 at 18.3

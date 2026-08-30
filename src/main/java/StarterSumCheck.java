@@ -31,7 +31,11 @@ public class StarterSumCheck {
         Map<Position, List<String>> byPosition = new EnumMap<>(Position.class);
         for(String id : projections.keySet()){
             Player player = Player.getPlayerFromSIDV2(id);
-            if(player != null && StartingLineup.isSkillPosition(player.position)){
+            // DEF too: the league starts one, and gating this on
+            // isSkillPosition left rostered defences with no sampled outcomes
+            // at all, so they were silently treated as never available.
+            if(player != null && (StartingLineup.isSkillPosition(player.position)
+                    || player.position == Position.DEF)){
                 positionOf.put(id, player.position);
                 byPosition.computeIfAbsent(player.position, u -> new ArrayList<>()).add(id);
             }
@@ -79,10 +83,10 @@ public class StarterSumCheck {
                 baseSeason, baseWeekly);
 
         for(Position position : new Position[]{Position.RB, Position.WR, Position.TE,
-                Position.QB}){
+                Position.QB, Position.DEF}){
             for(int depth : new int[]{6, 18, 30}){
                 List<String> ids = byPosition.get(position);
-                if(depth >= ids.size()){
+                if(ids == null || depth >= ids.size()){
                     continue;
                 }
                 String id = ids.get(depth);
@@ -99,6 +103,12 @@ public class StarterSumCheck {
             }
         }
 
+        System.out.println("\nThe DEF rows answer a different question from the rest."
+                + " The nine has no defence,\nso a drafted one FILLS AN EMPTY STARTING"
+                + " SLOT rather than sitting behind\nsomebody - and what it adds is"
+                + " only what it beats the wire defence by. If that\nis small, the"
+                + " search has no reason to ever spend a pick there, which is what\nthe"
+                + " 0.277 rank correlation would predict.");
         System.out.println("\nUnder season totals a tenth man is worth exactly nothing"
                 + " unless he outscores\na starter outright - that is the blindness that"
                 + " made LiveInsurance report\nSTARTS = 0% for everyone. Under the"

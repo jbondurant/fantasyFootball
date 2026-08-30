@@ -2863,3 +2863,64 @@ and this result stands until it is.
 handed one at its last pick because the league starts one and no model has an
 opinion. That the objective omits a starting slot entirely is a gap in the
 design, not in the backtest.
+
+## Defence: the folk claim is true, and now has a number (2026-08-29)
+
+Justin's challenge - defences are notoriously unpredictable, but nobody had
+calculated it. Measured the same way every feed in this repo is measured, the
+rank correlation between a preseason board and what actually happened:
+
+    SEASON         QB       RB       WR       TE      DEF
+    2021        0.773    0.728    0.701    0.610    0.527
+    2022        0.463    0.598    0.616    0.382    0.119
+    2023        0.378    0.533    0.664    0.468    0.461
+    2024        0.571    0.600    0.643    0.517    0.047
+    2025        0.466    0.701    0.573    0.568    0.232
+
+    mean        0.530    0.632    0.639    0.509    0.277
+
+**The claim holds.** A preseason defence ranking carries less than half the
+information of any skill position - 0.277 against 0.578 - and in two of five
+seasons it carried essentially none. The folk rule of taking a defence last is
+correct for a measurable reason, not out of habit.
+
+### The design gap, closed
+
+`V(R)` omitted the DEF slot entirely, which meant every roster was scored a
+starter short. The slot is now filled, from the wire when the roster has none.
+Two bugs surfaced doing it, both from gating the board on
+`StartingLineup.isSkillPosition`: rostered defences were given no sampled
+outcomes at all and were silently treated as never available, and the pool held
+no defence seasons. Both fixed; the pool grew from 1328 player-seasons to 1466.
+
+What a drafted defence is worth over the wire, which is the question that
+decides the timing:
+
+    Detroit Lions        DEF  tier 0   +32.5
+    San Francisco 49ers  DEF  tier 1   +26.9
+    New York Jets        DEF  tier 2   +16.2
+
+    for comparison       RB   tier 0  +124.8   tier 2  +51.2
+                         WR   tier 0   +95.6   tier 2  +55.1
+                         TE   tier 2   +15.3
+                         QB   tier 2   +15.7
+
+**The curve is flat, which is the 0.277 showing up as money.** The best defence
+on the board beats a wire defence by 32 points; the twenty-fifth beats it by
+16. You cannot tell them apart in advance, so the good one is not much better
+than the ordinary one. A defence is worth less than a tier-two back or receiver
+and more than a tier-two tight end or quarterback - which places it exactly
+where the RUNBOOK already puts it, at the end of the draft.
+
+### What is still open, and why it is not worth closing
+
+The SEARCH cannot pick a defence: `DraftPlanner`'s positions are QB/RB/WR/TE
+and its board is gated on skill positions. At the last pick or two a defence is
+genuinely the best available choice - +32.5 against +15.3 for a deep tight end
+- so the search would take one if it could, and it currently takes a low-value
+skill player instead.
+
+That is worth roughly thirty points a season, once, at the final pick. Opening
+the board to defences touches the construction Model A depends on, three days
+before a draft, to reproduce a rule the RUNBOOK already states. Not worth it.
+Recorded here so the next person knows it is a choice rather than an oversight.

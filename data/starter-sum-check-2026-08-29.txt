@@ -1,27 +1,37 @@
-outcome pool: 30 position-tier cells, 1328 player-seasons
+outcome pool: 33 position-tier cells, 1466 player-seasons
    wire QB  -> 15.8 pts/week (top quartile of the replacement tier)
    wire RB  -> 6.8 pts/week (top quartile of the replacement tier)
    wire WR  -> 7.5 pts/week (top quartile of the replacement tier)
    wire TE  -> 7.2 pts/week (top quartile of the replacement tier)
+   wire DEF -> 8.7 pts/week (top quartile of the replacement tier)
 
 
 THE TEST: what is a TENTH man worth on a full nine?
 (the nine is Gibbs, Nacua, Robinson, Chase, Smith-Njigba, St. Brown, Bowers, Allen, McCaffrey)
 
 TENTH MAN                  POS    tier    season totals      starter sum
-(nobody)                   -         -           2445.0           2162.8
-De'Von Achane              RB        0             +2.4           +119.1
-Jeremiyah Love             RB        1             +0.0            +63.8
-Jordan Mason               RB        2             +0.0            +51.0
-A.J. Brown                 WR        0             +0.0            +99.6
-Rashee Rice                WR        1             +0.0            +68.0
-Davante Adams              WR        2             +0.0            +55.8
-Tucker Kraft               TE        0             +0.0            +49.5
-Oronde Gadsden             TE        1             +0.0            +22.5
-Kenyon Sadiq               TE        2             +0.0            +14.9
-Trevor Lawrence            QB        0             +0.0            +51.7
-Baker Mayfield             QB        1             +0.0            +25.9
-Michael Penix              QB        2             +0.0            +15.0
+(nobody)                   -         -           2445.0           2324.0
+De'Von Achane              RB        0             +2.4           +124.8
+Jeremiyah Love             RB        1             +0.0            +64.9
+Jordan Mason               RB        2             +0.0            +51.2
+A.J. Brown                 WR        0             +0.0            +95.6
+Rashee Rice                WR        1             +0.0            +68.5
+Davante Adams              WR        2             +0.0            +55.1
+Tucker Kraft               TE        0             +0.0            +43.8
+Oronde Gadsden             TE        1             +0.0            +24.5
+Kenyon Sadiq               TE        2             +0.0            +15.3
+Trevor Lawrence            QB        0             +0.0            +51.1
+Baker Mayfield             QB        1             +0.0            +26.3
+Michael Penix              QB        2             +0.0            +15.7
+Detroit Lions              DEF       0             +0.0            +32.5
+San Francisco 49ers        DEF       1             +0.0            +26.9
+New York Jets              DEF       2             +0.0            +16.2
+
+The DEF rows answer a different question from the rest. The nine has no defence,
+so a drafted one FILLS AN EMPTY STARTING SLOT rather than sitting behind
+somebody - and what it adds is only what it beats the wire defence by. If that
+is small, the search has no reason to ever spend a pick there, which is what
+the 0.277 rank correlation would predict.
 
 Under season totals a tenth man is worth exactly nothing unless he outscores
 a starter outright - that is the blindness that made LiveInsurance report
