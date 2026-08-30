@@ -10,7 +10,7 @@ RUNBOOK committed            2035     1654     2191     1960     2148      1998 
 RB-heavy folk rule           1899     1734     2157     1764     1865      1884      +442     5/5
 RUNBOOK front + SS back      2102     1819     1956     1905     2104      1977      +536     5/5
 ModelA front + SS back       1773     1771     1890     1928     1946      1862      +420     5/5
-committed, DEF streamed      2047     1647     2206     2010     2147      2011      +569     5/5
+committed, DEF streamed      2046     1647     2195     2007     2141      2007      +565     5/5
 best available by ADP        1439     1381     1192     1485     1712      1442        +0     0/5
 
 Every strategy drafts from the same board at the same picks, so the only

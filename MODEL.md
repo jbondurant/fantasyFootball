@@ -3263,3 +3263,28 @@ The streamed rate is computed from `WeeklyStarterValue.wireRates`, not typed in.
 The first version hardcoded 8.7 read off another tool's output, which is the
 same prose-drift fault this repo spent the day fixing - the moment the wire
 calculation moves, a copied constant becomes a lie.
+
+### Correction: streaming costs a roster spot (2026-08-29)
+
+Justin's catch, and it was a real fault. The roster is sixteen - ten starters
+and six bench - and fourteen picks plus two keepers fills it exactly. So taking
+a defence off waivers means DROPPING somebody. The backtest was crediting a
+streamed defence on top of a full roster, handing that strategy a player nobody
+has.
+
+Fixed: a roster with no defence now loses its last drafted man before scoring,
+so both strategies field the same sixteen bodies.
+
+    RUNBOOK committed         1998   1998     (defence drafted at pick 14)
+    committed, DEF streamed   2011   2007     (before / after the roster cost)
+
+The correction takes 4 of streaming's 13 points. It is small because the man
+dropped is a round-16 pick worth almost nothing - which is itself the reason
+streaming survives at all: the roster spot it consumes is the cheapest one you
+own.
+
+Streaming still leads, +9 a season, ahead in 3 seasons of 5. That is inside the
+noise, so the conclusion is unchanged in substance and weaker in strength:
+streaming is AT LEAST AS GOOD as drafting a defence, and nothing supports
+spending a real pick on one. Take a defence last, or stream one and spend the
+pick elsewhere - the evidence does not separate them.

@@ -292,6 +292,19 @@ public class PlanBacktest {
      * and it never uses information from the future.
      */
     public static double seasonPoints(Board board, List<String> roster){
+        // A streamed defence OCCUPIES A ROSTER SPOT. The roster is sixteen -
+        // ten starters and six bench - and fourteen picks plus two keepers
+        // fills it, so taking a defence off waivers means dropping somebody.
+        // Crediting a streamed defence on top of a full roster handed that
+        // strategy a player nobody has, which is why streaming looked free.
+        // The man dropped is the last one drafted.
+        List<String> held = new ArrayList<>(roster);
+        boolean hasDefence = held.stream()
+                .anyMatch(id -> board.positionOf().get(id) == Position.DEF);
+        if(!hasDefence && !held.isEmpty()){
+            held.remove(held.size() - 1);
+        }
+        roster = held;
         Map<String, Integer> boardRank = new HashMap<>();
         for(int i = 0; i < board.ids().size(); i++){
             boardRank.put(board.ids().get(i), i);
