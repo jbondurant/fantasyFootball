@@ -2488,3 +2488,108 @@ manifest marks it UNKNOWN so the tool refuses it; and
 `sleeper-defaults-2026-20260827.csv` turned out to be correctly dated - the
 26 and 27 August workbooks are identical, so the first-match test that flagged
 it was wrong, not the file.
+
+## Design: the 1-16 model as Model A with a different objective (2026-08-29)
+
+Justin's specification: keep the rounds 1-7 model, add one that spans 1-16 with
+the keepers in their real spots, prices bust whether it comes from injury or
+from a healthy player underperforming, and maximises the points his STARTERS
+score over the season - counting the bench man who overtakes a starter, and
+checking whether a tight end is really better than the wire at a given round.
+
+The good news is that almost none of this is new machinery. It is the existing
+search with a different scoring function and a longer horizon.
+
+### The objective
+
+For a roster R, the thing being maximised is
+
+    V(R) = SUM over weeks of  bestNine(who is available that week, that week's points)
+
+Not a season total. A season total fixes who starts all year, which is exactly
+why it cannot see a bench player - and why LiveInsurance returned STARTS = 0%
+for every candidate. The weekly max is what makes a bench man worth anything:
+he scores only in the weeks he beats the people ahead of him, which is an
+option payoff, convex in dispersion. That is also why bust and injury belong in
+the same term. Both are ways a starter vacates a slot; one does it by being
+absent and the other by being present and bad.
+
+**Byes are out of scope by choice, and that buys a 17x saving.** With no byes
+the weeks are exchangeable, so
+
+    V(R) = 17 x E[ bestNine(available, weekly points) ]
+
+One week evaluated over sampled scenarios, multiplied by seventeen. This is
+exact for the EXPECTATION - week-to-week injury correlation changes the
+variance of a season, not its mean - and it turns a 1700-call evaluation into a
+200-call one.
+
+### What gets reused
+
+`StartingLineup.bestNine(roster, points)` is already the single-week lineup
+optimiser; it has only ever been fed season totals. Feed it weekly points and
+an availability filter and it is the inner loop of the new objective, unchanged.
+
+The seam is one interface:
+
+    interface RosterValue { double of(Collection<String> roster); }
+
+with `SeasonTotalValue` wrapping today's `bestNine` and `WeeklyStarterValue`
+implementing the above. `DraftPlanner` takes a `RosterValue`. Model A keeps the
+old one and is untouched - Justin's requirement - and the new model passes the
+new one. The fourteen existing call sites move behind the interface in one
+mechanical change.
+
+`DraftPlanner.scheduleRounds()` already extends the board to sixteen rounds
+with keepers occupying r12 and r13 (added 2026-08-29), so the horizon is done.
+
+### What is new
+
+**Player outcome samples.** Each player needs a joint draw of availability and
+scoring, per scenario. From the vintage work:
+
+- cross-position mean: the week-1 projection, which beat market rank by +0.120
+  spearman across five seasons
+- within-position ordering: market rank, which beat the projection at every
+  position and by 0.210 at tight end - so tight ends are never ranked by
+  projection
+- dispersion: the per-tier empirical distribution of outcome-over-expectation,
+  with `rank_std` (expert disagreement, available at draft time) tested as a
+  per-player modifier and dropped if it does not earn its place out of sample
+- availability: games played by position and tier, with its correlation to
+  scoring measured rather than assumed away
+
+**Sample Average Approximation.** Draw the scenario set ONCE, hold it fixed,
+and evaluate every candidate roster against the same draws. The search then
+optimises a deterministic function, comparisons are paired by construction, and
+the noise that wrecked several of today's readings cannot reappear between two
+options. The repo already ran `saa-replan` in the rounds 1-7 committee, so the
+pattern is familiar here.
+
+### The tight end question answers itself
+
+No rule is needed, and none should be written. `bestNine` fills any slot it
+cannot fill from the roster with the waiver wire, so a tight end who beats the
+wire by little adds little to V(R), and the search declines him without being
+told to. Same for a defence. The 2026-08-29 finding that drafting a TE10 beats
+streaming by +53.2 +/- 30.6 points becomes a prediction this model should
+reproduce, not a constant to hard-code - and if it does not reproduce it, one
+of the two is wrong and that is worth knowing.
+
+### Cost
+
+Per roster evaluation: S scenarios x one `bestNine`. At S=200 that is the same
+order as a single rollout today. The search multiplies it by the rollout count,
+so expect the 1-16 model to cost roughly what Model A costs times S/17. Offline
+training and validation can afford that; draft-night use will want a smaller S
+with the scenario set cached, and `DraftNight` already holds a warm engine to
+hang it on.
+
+### Order of work
+
+Phases 0, 1 and 4 of the plan above stand: weekly actuals, the per-player
+distribution with its gates, and an out-of-sample test against Model A's plan,
+best-available-ADP and the committed plan. This design replaces phase 3. Phase
+2 folds in - peaks, valleys and scarcity stop being a separate layer, because a
+curve's shape is already inside V(R) through what the wire offers at each
+position.
