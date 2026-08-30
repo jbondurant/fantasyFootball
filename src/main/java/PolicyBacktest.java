@@ -206,7 +206,40 @@ public class PolicyBacktest {
     // backs and scored 1055, below drafting at random. The greedy evaluation
     // needs real lookahead, not a stand-in.
 
+    /**
+     * Pin the opening picks to a fixed shape (-PfrontShape="RB RB RB WR ...").
+     *
+     * The back-half decomposition put 91 of the model's 98-point deficit in
+     * rounds 1-7, so this tests that directly: give it the committed plan's
+     * front and let it choose everything after.
+     */
+    static final String FRONT_SHAPE = System.getProperty("frontShape", "");
+
+    /** Earliest pick index at which a quarterback may be taken (-PqbFrom). */
+    static final int QB_FROM = Integer.getInteger("qbFrom", 0);
+
+    /** Reserve the last pick for the defence that must be fielded (-PdefLast). */
+    static final boolean DEF_LAST = Boolean.getBoolean("defLast");
+
     static boolean worthTaking(Position candidate, List<Position> chosen){
+        int at = chosen.size();
+        if(!FRONT_SHAPE.isBlank()){
+            String[] pinned = FRONT_SHAPE.trim().split("\\s+");
+            if(at < pinned.length){
+                return candidate == Position.valueOf(pinned[at]);
+            }
+        }
+        if(DEF_LAST){
+            if(at == MY_PICKS.length - 1){
+                return candidate == Position.DEF;
+            }
+            if(candidate == Position.DEF){
+                return false;
+            }
+        }
+        if(candidate == Position.QB && at < QB_FROM){
+            return false;
+        }
         if(candidate != Position.DEF && candidate != Position.QB){
             return true;
         }

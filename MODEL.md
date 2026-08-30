@@ -3478,3 +3478,48 @@ a LEGAL ROSTER is: how many spots, which slots must be filled, and what it costs
 to reach the wire. The objective prices points well and always priced
 constraints badly, and the constraints turn out to be where the model's deficit
 lived.
+
+## Trying to make it draft-ready: how far it got, and where it stopped
+
+Two hypotheses tested and one confirmed.
+
+**Quarterback timing was NOT the error.** The policy takes a quarterback in
+rounds 3-6 while the committed plan waits until 10, which looked like an obvious
+fault. Forcing it later makes things worse:
+
+    qbFrom=0   1848      qbFrom=7   1758
+    qbFrom=4   1850      qbFrom=9   1673
+
+**Forcing a defence at the last pick costs 11 points** (1859 -> 1848),
+consistent with everything else measured today: drafting one and streaming one
+are within noise of each other.
+
+**The front half was the error, and pinning it helps:**
+
+    free choice throughout          1859
+    committed front, model back     1921
+    committed front + DEF last      1912
+    RUNBOOK committed               1998
+
+Giving the model the committed plan's opening seven picks is worth **+62**, the
+largest single improvement of the day. It is the best the model has scored.
+
+### But it is still 77 behind, and the gap moved
+
+Committed front plus model back scores 1921 against the committed plan's 1998,
+so with the corrected objective the model's BACK half is now 77 points worse
+too. It is behind in both halves - front by 62, back by 77. An earlier
+decomposition had the back half within 7 points; that was measured under the
+scoring that has since been corrected four times, and it does not survive.
+
+**So: not draft-ready, and not by Tuesday.** The day moved it from 1731 at its
+worst to 1921 at its best - real progress, all of it from constraints rather
+than from the search or the distributions - and it is still comfortably behind a
+plan Justin already has written down.
+
+**Use the RUNBOOK.** `DraftNight` for rounds 1-7, the measured rules for 8-16,
+`LiveLateRounds` as the adaptive read where it is competitive. Everything built
+today that IS trustworthy is measurement, not optimisation: the weekly actuals,
+the outcome distributions, the availability-scoring correlation, defence
+predictability, the placement sweep, and this backtest - which is the thing that
+kept saying no.
