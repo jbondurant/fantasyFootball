@@ -2696,3 +2696,45 @@ simpler than it started:**
 Nothing estimated, nothing fitted, and the availability-scoring correlation
 (RB 0.347, WR 0.210, TE 0.102, QB 0.669) is preserved by construction rather
 than modelled. That is the whole of the layer the 1-16 design calls for.
+
+### The objective is built, and it sees what the old one could not (2026-08-29)
+
+`RosterValue` is the seam: `SeasonTotalValue` wraps Model A's rule untouched,
+`WeeklyStarterValue` implements V(R) = 17 x E[best legal lineup in one week].
+The decisive test is what a TENTH man is worth on a full nine:
+
+    TENTH MAN                  POS    tier    season totals      starter sum
+    De'Von Achane              RB        0             +2.4           +155.8
+    Jeremiyah Love             RB        1             +0.0            +92.3
+    A.J. Brown                 WR        0             +0.0           +134.2
+    Rashee Rice                WR        1             +0.0            +98.9
+    Tucker Kraft               TE        0             +0.0            +74.0
+    Oronde Gadsden             TE        1             +0.0            +40.1
+    Trevor Lawrence            QB        0             +0.0            +66.2
+    Michael Penix              QB        2             +0.0            +22.5
+
+Eleven of twelve bench candidates are worth exactly nothing under season
+totals - only Achane registers, and only because he outscores a starter
+outright. That is the blindness that produced STARTS = 0%. Under the starter
+sum every one is worth something, graded by tier and by position, and the
+ordering at the top tier is RB 155.8 > WR 134.2 > TE 74.0 > QB 66.2, which is
+the flex advantage arriving from a third independent direction.
+
+**A wire bug caught in the same run.** The first version took the deepest tier
+the pool happened to hold as the waiver wire, which put the WR wire at rank
+~133 and 0.4 points a week - a man who barely plays, not a wire. Every marginal
+was inflated by it. The wire is now the replacement level `InsuranceTest`
+measures from full sixteen-round histories - QB21, RB61, WR81, TE19, worth
+12.2, 3.4, 4.2 and 5.0 points a week - and the marginals fell by 10-20%. A
+sanity check: Achane's +155.8 is 9.2 points a week over the wire, against a
+tier-zero back averaging 15.0 a game at 82% availability, which is 8.9. The
+objective is arithmetically consistent with its own inputs.
+
+### What remains
+
+The objective exists; the SEARCH does not yet use it. Next is passing a
+`RosterValue` into `DraftPlanner` so the sixteen-round board is optimised
+against the starter sum rather than best-nine, at which point the tight end and
+defence timing questions are answered by the objective instead of by rules.
+Then Phase 4, which is not optional: fit on early seasons, judge once on held
+out ones, against Model A's plan, best-available-ADP and the committed plan.

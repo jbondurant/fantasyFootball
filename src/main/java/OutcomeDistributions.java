@@ -29,10 +29,26 @@ import java.util.Set;
 public class OutcomeDistributions {
 
     /** One player's season, split into the two halves the objective needs. */
-    record Season(String name, Position position, int rank, int games,
+    public record Season(String name, Position position, int rank, int games,
                   double meanWhenPlaying, double sdWhenPlaying, double total){}
 
     static final int TIER = 12;
+
+    /** Every joined season, for anything that needs the outcome pool. */
+    public static Map<String, List<Season>> all() throws Exception {
+        Map<String, List<Season>> bySeason = new java.util.LinkedHashMap<>();
+        for(File file : new File("data").listFiles()){
+            String name = file.getName();
+            if(!name.matches("fp-adp-halfppr-\\d{4}-\\d{8}\\.csv")){
+                continue;
+            }
+            List<Season> seasons = load(file, name.split("-")[3]);
+            if(seasons.size() > 80){
+                bySeason.put(name.split("-")[3], seasons);
+            }
+        }
+        return bySeason;
+    }
 
     public static void main(String[] args) throws Exception {
         Map<String, List<Season>> bySeason = new java.util.LinkedHashMap<>();
@@ -127,7 +143,7 @@ public class OutcomeDistributions {
     }
 
     /** ADP joined to the weekly series, by normalised name. */
-    static List<Season> load(File adpFile, String season) throws Exception {
+    public static List<Season> load(File adpFile, String season) throws Exception {
         Map<String, Double> totals = HistoricalActuals.pointsBySleeperID(season);
         Map<String, String> idByName = new HashMap<>();
         for(String id : totals.keySet()){
