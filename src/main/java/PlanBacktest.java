@@ -334,15 +334,13 @@ public class PlanBacktest {
             total += fill(up.get(Position.RB), 2, flex, points);
             total += fill(up.get(Position.WR), 3, flex, points);
             total += fill(up.get(Position.TE), 1, flex, points);
-            // A defence slot the roster cannot fill is STREAMED, not left empty.
-            // Scoring it zero was quietly assuming you cannot pick a defence off
-            // waivers, which is false and which made "never draft one" look
-            // catastrophic when every model that can choose freely does exactly
-            // that. The rate is the wire level measured from history.
-            List<String> defence = up.get(Position.DEF);
-            total += defence == null || defence.isEmpty()
-                    ? streamedDefencePerWeek()
-                    : fill(defence, 1, null, points);
+            // No free wire, here or in the objective. Every player who fills a
+            // slot occupies one of sixteen roster spots, so a slot you rostered
+            // nobody for scores nothing. The earlier version credited a streamed
+            // defence for free, which is the same fault the objective had - and
+            // having it in one and not the other meant the model was optimising
+            // for a world it was never scored in.
+            total += fill(up.get(Position.DEF), 1, null, points);
             flex.sort(Comparator.comparingInt(
                     id -> boardRank.getOrDefault(id, Integer.MAX_VALUE)));
             for(int slot = 0; slot < 2 && slot < flex.size(); slot++){

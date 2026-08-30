@@ -3327,3 +3327,54 @@ the league.
 That is the same class of fault as the roster-spot omission: the objective
 models points well and constraints badly. Any future work on it should start
 there.
+
+## There is no free wire (2026-08-29)
+
+Justin's correction, and it is the deepest of the day. It is not about defences.
+
+`fill()` credited every unfilled slot with wire points, at no cost, every week.
+That is an unlimited supply of players nobody has. **Any player who fills a
+lineup slot occupies one of sixteen roster spots** - the wire lets you UPGRADE a
+spot, never ADD one. There is no stream that does not take up space.
+
+The consequences ran through everything:
+
+**It is why no model would draft a defence.** With the free wire removed, every
+starter-sum variant drafts one:
+
+    MODEL                          with free wire        without
+    starter sum, 100 scen          NEVER                 pick 10 (round 10)
+    starter sum, 400 scen          NEVER                 pick 11 (round 11)
+    starter sum, 1200 scen         NEVER                 pick 9  (round 9)
+    starter sum, 400 (other seed)  NEVER                 pick 13 (round 15)
+
+**It is why "never draft a defence" scored so well.** That row falls from 2007
+to 1850 once its free defence is taken away - 157 points, all of it phantom.
+
+**And the model and the evaluator disagreed about it.** `PlanBacktest` scored an
+unfilled slot as zero all along; the objective credited it to the wire. The
+model was optimising for a world it was never scored in, which is a fault
+serious enough to have invalidated every comparison between them.
+
+Both now agree: no free wire anywhere.
+
+### It did not rescue the model
+
+    starter-sum POLICY    1731   (was 1751 with the free wire)
+    RUNBOOK committed     1984
+
+Aligning them made the policy slightly WORSE, and it remains 253 points a season
+behind the committed plan. The correction was necessary and it was not the
+missing piece.
+
+There is a visible over-correction: three of four variants now take a defence in
+rounds 9 to 11, which the placement sweep prices at about 40 points worse than
+rounds 14-16. Zero for an unfilled slot is too harsh in the other direction - a
+manager really can add a body off waivers, he just has to drop one to do it. The
+truthful model is a swap, not a free add and not an impossibility, and neither
+extreme is right.
+
+That is the next thing to build, and it is the same lesson as the roster-spot
+and must-draft corrections: **this objective models points well and constraints
+badly.** Three faults in a row, all of them constraints, all of them found by
+Justin rather than by the tests.

@@ -58,6 +58,22 @@ public class WeeklyStarterValue implements RosterValue {
      */
     record Draw(boolean up, double expected, double points){}
 
+    /**
+     * Whether an unfilled slot may be credited to the waiver wire for free.
+     *
+     * It may not, and this flag exists only so the old behaviour can be
+     * measured against the new. Every player who fills a lineup slot occupies
+     * one of sixteen roster spots - there is no stream that does not take up
+     * space. Crediting a free wire man for every unfilled slot, every week,
+     * handed the model an unlimited supply of players nobody has, and it
+     * undervalued depth accordingly: why draft a fourth receiver when an
+     * imaginary free one covers the flex?
+     *
+     * With it off, an unfilled slot scores zero - which is what happens to a
+     * manager who rostered nobody able to play there.
+     */
+    static final boolean FREE_WIRE = Boolean.getBoolean("freeWire");
+
     private final int scenarios;
     private final Map<String, Draw[]> byPlayer = new HashMap<>();
     private final Map<Position, Double> wirePerWeek;
@@ -143,8 +159,10 @@ public class WeeklyStarterValue implements RosterValue {
         // to spend one early without being told to.
         points += fill(available.get(Position.DEF), 1, Position.DEF, null);
         flexPool.sort(Comparator.comparingDouble(Draw::expected).reversed());
-        double flexWire = Math.max(wirePerWeek.getOrDefault(Position.RB, 0.0),
-                wirePerWeek.getOrDefault(Position.WR, 0.0));
+        double flexWire = FREE_WIRE
+                ? Math.max(wirePerWeek.getOrDefault(Position.RB, 0.0),
+                           wirePerWeek.getOrDefault(Position.WR, 0.0))
+                : 0.0;
         for(int slot = 0; slot < 2; slot++){
             points += slot < flexPool.size() && flexPool.get(slot).expected() >= flexWire
                     ? flexPool.get(slot).points() : flexWire;
@@ -154,7 +172,7 @@ public class WeeklyStarterValue implements RosterValue {
 
     private double fill(List<Draw> available, int slots, Position position,
                         List<Draw> flexPool){
-        double wire = wirePerWeek.getOrDefault(position, 0.0);
+        double wire = FREE_WIRE ? wirePerWeek.getOrDefault(position, 0.0) : 0.0;
         int size = available == null ? 0 : available.size();
         double points = 0;
         int used = 0;
