@@ -3192,3 +3192,35 @@ Which is a stronger version of the RUNBOOK's rule. The RUNBOOK says take one
 last; the model says the pick is barely worth spending at all. Both agree it is
 never worth spending early, which is the only part that has been tested against
 outcomes.
+
+### Where the defence pick actually belongs (2026-08-29)
+
+Every model gave an opinion; none had been tested. So force it: one plan,
+thirteen picks held fixed, the defence slid through all fourteen slots, each
+variant scored on real outcomes across five seasons. Only one pick's position
+differs between rows, so the difference between them IS the cost of taking a
+defence that early.
+
+    AT   ROUND    mean          AT   ROUND    mean
+    1    1        1769          8    8        1892
+    2    2        1802          9    9        1911
+    3    3        1842          10   10       1942
+    4    4        1866          11   11       1961
+    5    5        1844          12   14       1981
+    6    6        1871          13   15       1984
+    7    7        1831          14   16       1984
+
+**Monotone, and it flattens at the end.** Later is better at essentially every
+step, and rounds 14, 15 and 16 are indistinguishable at 1981/1984/1984. The
+spread from first pick to last is 215 points a season, so this is not a free
+choice - but among sensible placements, round 11 onward, it is worth 23 points.
+Take it in the last two rounds and stop thinking about it.
+
+**It converges with the top-four finding by a different route.** `DefenceTiming`
+priced chasing a top-four defence - whose ADP puts it in rounds 9 to 12 - at
+-52.7 points a season against the skill player passed over. This curve says
+taking the defence at round 10 instead of round 16 costs 42. Two independent
+methods, same order of magnitude, same direction.
+
+The dips at rounds 5 and 7 (1844, 1831) are which specific players the plan
+ends up with in those variants, not structure. The trend is what to read.

@@ -242,7 +242,20 @@ rounds 8-9 pick averages.
 - **The QB shelf.** Prescott (366 proj), Lawrence (355), Herbert (347) and
   Mahomes (345) essentially never go inside nine rounds. There is no urgency
   at quarterback beyond the round-8 insurance pick.
-- **Defense: last round, and do not reach.** Measured 2026-08-29 over five
+- **Defense: last two rounds.** Measured directly — one plan, thirteen picks
+  held fixed, the defense slid through every slot and scored on real outcomes:
+
+  ```
+  round    1     3     6     8    10    11    14    15    16
+  mean  1769  1842  1871  1892  1942  1961  1981  1984  1984
+  ```
+
+  Monotone: later is better, and it flattens after round 14 — rounds 14, 15 and
+  16 are worth the same, so take it whenever it is convenient in there. The
+  spread from round 1 to round 16 is **215 points a season**, so this is not a
+  free choice; but among sensible placements (round 11 onward) it is worth only
+  23 points, so do not agonise.
+- **And do not reach.** Measured 2026-08-29 over five
   seasons. Preseason top-four defenses finished top four **3 times in 20 (15%)**
   — chance alone gives 13%, so a preseason defense ranking is close to
   uninformative about which ones will be good. They beat a free defense by only
