@@ -3924,3 +3924,41 @@ bucketed 1859, no better. The bucketing was not the deficit.
 ordering is noise; keep tier-level differences, since those are real; and
 handle skew separately from spread, because averaging a 12%-boom tight end and a
 0%-boom quarterback the same way destroys the only reason to take the first.
+
+## The round-4 bust against the round-10 boom, measured (2026-08-29)
+
+Justin: how can those two be modelled together, when whether the round-10 back
+ever STARTS depends on what the round-4 back did?
+
+They need no model. It is a joint question - both outcomes must be realised in
+the same season for the comparison to mean anything - and five seasons of real
+outcomes contain both. Every early-tier player against every late-tier player at
+the same position, within a season:
+
+    POS  EARLY     LATE      pairs  late wins  avg margin   value
+    RB   1-12      13-24       720        20%          76    15.6
+    RB   1-12      37-48       720        10%          63     6.1
+    RB   13-24     25-36       720        42%          74    31.3
+    WR   1-12      13-24       720        32%          61    19.2
+    WR   13-24     25-36       720        40%          58    23.4
+    TE   13-24     25-36       660        37%          44    16.2
+
+**The literal answer:** a round-10 back (tier 37-48) outscores a top-twelve back
+10% of the time, by 63 points when he does - worth 6.1 points. Small, real, and
+measured rather than assumed.
+
+**The finding that matters more:** RB 13-24 against RB 25-36 is **42%** - nearly
+a coin flip. Your second back and a round-six back are almost interchangeable.
+Receivers are the same, 40%. But tier ONE is genuinely different: only 20% of
+tier-two backs beat a tier-one back.
+
+So the shape of the position curve is a cliff and then a plateau, not a slope.
+One elite back or receiver is worth reaching for; after that the tier-two
+versus tier-three distinction is close to a coin toss and should not drive a
+pick. That is the measured version of why RB-heavy openings work and why the
+middle rounds feel interchangeable - they nearly are.
+
+It also explains the within-tier blindness from the profile above, arriving from
+the other direction: if a tier-two back beats a tier-three back only 58% of the
+time, then no board could reliably tell them apart, because they are not
+reliably different.

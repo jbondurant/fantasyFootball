@@ -1,0 +1,36 @@
+
+HOW OFTEN DOES THE LATER MAN BEAT THE EARLIER ONE?
+(every pair at the same position, within a season, 5 seasons)
+
+POS  EARLY     LATE        pairs late wins  avg margin       value   
+RB   1-12      13-24         720       20%          76        15.6   occasional
+RB   1-12      25-36         720       19%          51         9.8   occasional
+RB   1-12      37-48         720       10%          63         6.1   rare
+RB   1-12      49-60         720        8%          46         3.6   rare
+RB   1-12      61-72         684        7%          53         3.7   rare
+RB   13-24     25-36         720       42%          74        31.3   the gap is nearly a coin flip
+RB   13-24     37-48         720       26%          59        15.3   occasional
+RB   13-24     49-60         720       24%          53        12.6   occasional
+RB   13-24     61-72         684       16%          59         9.4   rare
+WR   1-12      13-24         720       32%          61        19.2   happens often enough to matter
+WR   1-12      25-36         720       26%          57        14.8   occasional
+WR   1-12      37-48         720       22%          47        10.4   occasional
+WR   1-12      49-60         720       12%          41         4.8   rare
+WR   1-12      61-72         720        9%          36         3.3   rare
+WR   13-24     25-36         720       40%          58        23.4   the gap is nearly a coin flip
+WR   13-24     37-48         720       36%          50        18.0   happens often enough to matter
+WR   13-24     49-60         720       18%          37         6.7   occasional
+WR   13-24     61-72         720       13%          35         4.4   rare
+TE   1-12      13-24         720       29%          35        10.2   happens often enough to matter
+TE   1-12      25-36         660       18%          33         5.8   rare
+TE   1-12      37-48         228       14%          38         5.4   rare
+TE   13-24     25-36         660       37%          44        16.2   happens often enough to matter
+TE   13-24     37-48         228       30%          38        11.4   happens often enough to matter
+
+late wins = share of pairs where the later man outscored the earlier one that
+season. avg margin = by how much, in the seasons he did. value = the two
+multiplied, which is what a bench pick is worth over the man ahead of him.
+
+This needs no model. Both outcomes are in the same season, so the comparison
+is direct - which is the answer to how a round-4 bust and a round-10 boom can
+be priced together: they already happened together, five times over.

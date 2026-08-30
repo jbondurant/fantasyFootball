@@ -148,10 +148,16 @@ public class PolicyBacktest {
             tierOf.put(id, (next.merge(positionOf.get(id), 1, Integer::sum) - 1)
                     / WeeklyStarterValue.TIER);
         }
-        WeeklyStarterValue value = new WeeklyStarterValue(positionOf, tierOf, pool,
-                wireFrom(pool),
-                WeeklyStarterValue.expectedFromRank(board.ids(), positionOf, pool),
-                scenarios, 424_242L);
+        Map<String, Double> expected =
+                WeeklyStarterValue.expectedFromRank(board.ids(), positionOf, pool);
+        // -PriskObjective swaps in the Model-A-shaped rule: the best legal ten
+        // out of risk-discounted projections, a definition with three measured
+        // numbers rather than a simulation with ten judgement calls. It had
+        // never been backtested; this is that run.
+        RosterValue value = Boolean.getBoolean("riskObjective")
+                ? riskValue(expected)
+                : new WeeklyStarterValue(positionOf, tierOf, pool, wireFrom(pool),
+                        expected, scenarios, 424_242L);
 
         Set<String> gone = new HashSet<>();
         List<String> mine = new ArrayList<>();
@@ -296,6 +302,18 @@ public class PolicyBacktest {
 
     /** Reserve the last pick for the defence that must be fielded (-PdefLast). */
     static final boolean DEF_LAST = Boolean.getBoolean("defLast");
+
+    static RosterValue riskValue(Map<String, Double> expected){
+        try {
+            return new RiskDiscountedValue(expected,
+                    RiskDiscountedValue.positionGamesMissed(),
+                    InsuranceTest.replacementRanks(AAAConfiguration.getInstance()),
+                    PositionPredictability.reliability());
+        }
+        catch(Exception unavailable){
+            throw new RuntimeException("cannot build the risk objective", unavailable);
+        }
+    }
 
     public static boolean worthTaking(Position candidate, List<Position> chosen){
         int at = chosen.size();
