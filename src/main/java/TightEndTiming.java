@@ -687,7 +687,7 @@ public class TightEndTiming {
     }
 
     /** Sleeper and FantasyPros disagree about suffixes and punctuation. */
-    static String normalise(String name){
+    public static String normalise(String name){
         return name.toLowerCase()
                 .replaceAll("[.'`]", "")
                 .replaceAll("\\s+(jr|sr|ii|iii|iv|v)$", "")

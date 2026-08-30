@@ -2609,3 +2609,53 @@ best-available-ADP and the committed plan. This design replaces phase 3. Phase
 2 folds in - peaks, valleys and scarcity stop being a separate layer, because a
 curve's shape is already inside V(R) through what the wire offers at each
 position.
+
+### Phase 1, first result: availability and scoring are NOT independent (2026-08-29)
+
+    POS           n  correlation   verdict
+    RB          422        0.347   NOT INDEPENDENT
+    WR          519        0.210   NOT INDEPENDENT
+    TE          202        0.102   NOT INDEPENDENT
+    QB          185        0.669   NOT INDEPENDENT
+
+Every position positive, quarterback overwhelmingly so. `StarterContribution`
+draws games played and scoring independently; that is wrong, and wrong in the
+direction that matters. Independent draws understate how often a roster is
+short AND weak in the same week, which is exactly the week a bench man is worth
+something.
+
+**Why it is positive is the more useful finding.** This is not mostly injury.
+A player who loses his ROLE - benched quarterback, back who falls out of a
+committee - records both fewer games and fewer points in the games he does
+play. So availability-loss and bust are not two risks to be modelled
+separately. They are one event, job loss, observed through two measurements.
+QB at 0.669 is the clearest case, because a benched quarterback stops playing
+almost entirely.
+
+**The fix is simpler than modelling the correlation.** Bootstrap whole observed
+player-seasons - games, mean when playing, spread when playing - as a single
+unit from the position-and-tier pool, instead of drawing the parts separately.
+The correlation is then preserved by construction and nothing has to be
+estimated.
+
+Separately, the distributions themselves:
+
+    POS  TIER          n     games  sd games    pts/game sd pts/game
+    RB   1-12         60      14.8       3.4        15.0         7.8
+    RB   13-24        60      13.1       4.4        11.1         6.3
+    RB   25-36        60      13.9       3.0         9.2         5.9
+    TE   1-12         60      14.0       3.0         9.2         6.0
+    TE   13-24        60      14.3       3.4         6.0         4.8
+    TE   25-36        55      14.6       2.7         4.7         4.1
+    QB   1-12         60      14.3       3.7        19.0         7.6
+
+Two things stand out. Availability barely varies by draft rank - every tier
+plays 13 to 15 games - so what a high pick buys is scoring rate, not health.
+And week-to-week spread is enormous relative to the mean: a tier-one back
+averages 15.0 a game with a standard deviation of 7.8. That spread is the
+whole reason a bench player ever starts, and a model working in season totals
+cannot see any of it.
+
+The TE tiers are worth noting against the tight end work: TE1-12 average 9.2 a
+game against 6.0 for TE13-24, about 45 points across a season, which is the
+same order as the +53.2 +/- 30.6 streaming margin measured independently.
