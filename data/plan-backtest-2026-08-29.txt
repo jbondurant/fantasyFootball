@@ -3,11 +3,11 @@ PHASE 4: every strategy on every season's REAL outcomes
 lineup QB/RB2/WR3/TE/FLEX2/DEF, 18 weeks, best legal lineup each week
 
 STRATEGY                     2021     2022     2023     2024     2025      mean    vs ADP    wins
-starter-sum (1-16)           1849     1961     1804     2180     2148      1989      +374     5/5
-best-nine (Model A)          1506     1671     1976     1783     1701      1727      +113     3/5
-RUNBOOK committed            2082     1705     2342     2031     2241      2080      +466     5/5
-RB-heavy folk rule           1975     1789     2300     1908     1946      1983      +369     5/5
-best available by ADP        1672     1519     1388     1662     1831      1614        +0     0/5
+starter-sum (1-16)           1735     1923     1724     2038     2007      1886      +444     5/5
+best-nine (Model A)          1359     1534     1858     1715     1597      1613      +171     3/5
+RUNBOOK committed            2018     1645     2183     1943     2130      1984      +542     5/5
+RB-heavy folk rule           1882     1725     2148     1746     1848      1870      +428     5/5
+best available by ADP        1439     1381     1192     1485     1712      1442        +0     0/5
 
 Every strategy drafts from the same board at the same picks, so the only
 difference between two rows is the order of positions. 'best available by ADP'

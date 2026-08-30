@@ -238,48 +238,67 @@ public class PlanBacktest {
         return null;
     }
 
-    /** Eighteen weeks of the best lineup these players could actually field. */
+    /**
+     * Eighteen weeks of the best lineup these players could actually field.
+     *
+     * Starters are chosen by PRESEASON RANK, not by what they scored that week.
+     * The first version sorted on the week's realised points, which is perfect
+     * hindsight start/sit: it hands every manager a lineup nobody can set, and
+     * it rewards redundancy most at the positions with the widest weekly spread.
+     * That flattered any strategy that stacked a position, which is exactly what
+     * the policy under test was doing.
+     *
+     * Preseason rank understates a real manager, who learns during the season.
+     * It is applied identically to every strategy, so the comparison stays fair,
+     * and it never uses information from the future.
+     */
     public static double seasonPoints(Board board, List<String> roster){
+        Map<String, Integer> boardRank = new HashMap<>();
+        for(int i = 0; i < board.ids().size(); i++){
+            boardRank.put(board.ids().get(i), i);
+        }
         double total = 0;
         for(int week = 0; week < WeeklyActuals.WEEKS; week++){
             Map<String, Double> points = board.weekly().get(week);
-            Map<Position, List<Double>> up = new EnumMap<>(Position.class);
+            Map<Position, List<String>> up = new EnumMap<>(Position.class);
             for(String id : roster){
                 // no entry that week means he did not play, so he cannot start
-                Double scored = points.get(id);
-                if(scored != null){
+                if(points.get(id) != null){
                     up.computeIfAbsent(board.positionOf().get(id),
-                            u -> new ArrayList<>()).add(scored);
+                            u -> new ArrayList<>()).add(id);
                 }
             }
-            for(List<Double> values : up.values()){
-                values.sort(Comparator.reverseOrder());
+            for(List<String> ids : up.values()){
+                ids.sort(Comparator.comparingInt(
+                        id -> boardRank.getOrDefault(id, Integer.MAX_VALUE)));
             }
-            List<Double> flex = new ArrayList<>();
-            total += fill(up.get(Position.QB), 1, null);
-            total += fill(up.get(Position.RB), 2, flex);
-            total += fill(up.get(Position.WR), 3, flex);
-            total += fill(up.get(Position.TE), 1, flex);
-            total += fill(up.get(Position.DEF), 1, null);
-            flex.sort(Comparator.reverseOrder());
+            List<String> flex = new ArrayList<>();
+            total += fill(up.get(Position.QB), 1, null, points);
+            total += fill(up.get(Position.RB), 2, flex, points);
+            total += fill(up.get(Position.WR), 3, flex, points);
+            total += fill(up.get(Position.TE), 1, flex, points);
+            total += fill(up.get(Position.DEF), 1, null, points);
+            flex.sort(Comparator.comparingInt(
+                    id -> boardRank.getOrDefault(id, Integer.MAX_VALUE)));
             for(int slot = 0; slot < 2 && slot < flex.size(); slot++){
-                total += flex.get(slot);
+                total += points.getOrDefault(flex.get(slot), 0.0);
             }
         }
         return total;
     }
 
-    static double fill(List<Double> available, int slots, List<Double> flex){
+    static double fill(List<String> available, int slots, List<String> flex,
+                       Map<String, Double> points){
         int size = available == null ? 0 : available.size();
-        double points = 0;
+        double scored = 0;
         for(int slot = 0; slot < slots && slot < size; slot++){
-            points += available.get(slot);
+            scored += points.getOrDefault(available.get(slot), 0.0);
         }
         if(flex != null){
             for(int extra = slots; extra < size; extra++){
                 flex.add(available.get(extra));
             }
         }
-        return points;
+        return scored;
     }
 }

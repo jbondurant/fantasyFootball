@@ -46,8 +46,17 @@ public class WeeklyStarterValue implements RosterValue {
     static final int WEEKS = 17;
     static final int TIER = 12;
 
-    /** One drawn week for one player: was he up, and what did he score. */
-    record Draw(boolean up, double points){}
+    /**
+     * One drawn week: was he up, what you EXPECTED of him, and what he scored.
+     *
+     * Both numbers are needed because a lineup is set before the week. Sorting
+     * candidates by what they went on to score is perfect hindsight, and it made
+     * redundancy look far more valuable than it is - a second quarterback is
+     * only worth the max of two if you know in advance which will hit. That one
+     * mistake produced both of the policy's pathologies: a third-round
+     * quarterback and three defences.
+     */
+    record Draw(boolean up, double expected, double points){}
 
     private final int scenarios;
     private final Map<String, Draw[]> byPlayer = new HashMap<>();
@@ -78,7 +87,7 @@ public class WeeklyStarterValue implements RosterValue {
             Draw[] draws = new Draw[scenarios];
             for(int s = 0; s < scenarios; s++){
                 if(seasons == null || seasons.isEmpty()){
-                    draws[s] = new Draw(false, 0);
+                    draws[s] = new Draw(false, 0, 0);
                     continue;
                 }
                 // ONE observed season drawn whole - games and scoring together
@@ -87,7 +96,7 @@ public class WeeklyStarterValue implements RosterValue {
                 boolean up = random.nextDouble() < drawn.games() / 18.0;
                 double points = Math.max(0, drawn.meanWhenPlaying()
                         + random.nextGaussian() * drawn.sdWhenPlaying());
-                draws[s] = new Draw(up, up ? points : 0);
+                draws[s] = new Draw(up, drawn.meanWhenPlaying(), up ? points : 0);
             }
             byPlayer.put(id, draws);
         }
@@ -104,7 +113,7 @@ public class WeeklyStarterValue implements RosterValue {
 
     /** The greedy legal fill, with the wire competing for every slot. */
     double oneWeek(Collection<String> roster, int scenario){
-        Map<Position, List<Double>> available = new EnumMap<>(Position.class);
+        Map<Position, List<Draw>> available = new EnumMap<>(Position.class);
         for(String id : roster){
             Position position = positionOf.get(id);
             Draw[] draws = byPlayer.get(id);
@@ -112,12 +121,14 @@ public class WeeklyStarterValue implements RosterValue {
                 continue;
             }
             available.computeIfAbsent(position, u -> new ArrayList<>())
-                    .add(draws[scenario].points());
+                    .add(draws[scenario]);
         }
-        for(List<Double> values : available.values()){
-            values.sort(Comparator.reverseOrder());
+        // sorted by what you EXPECTED, because that is all a lineup can be set
+        // on; the points counted are what actually happened
+        for(List<Draw> values : available.values()){
+            values.sort(Comparator.comparingDouble(Draw::expected).reversed());
         }
-        List<Double> flexPool = new ArrayList<>();
+        List<Draw> flexPool = new ArrayList<>();
         double points = 0;
         points += fill(available.get(Position.QB), 1, Position.QB, null);
         points += fill(available.get(Position.RB), 2, Position.RB, flexPool);
@@ -131,25 +142,27 @@ public class WeeklyStarterValue implements RosterValue {
         // pick to buy anything, so the objective should - and now does - decline
         // to spend one early without being told to.
         points += fill(available.get(Position.DEF), 1, Position.DEF, null);
-        flexPool.sort(Comparator.reverseOrder());
+        flexPool.sort(Comparator.comparingDouble(Draw::expected).reversed());
         double flexWire = Math.max(wirePerWeek.getOrDefault(Position.RB, 0.0),
                 wirePerWeek.getOrDefault(Position.WR, 0.0));
         for(int slot = 0; slot < 2; slot++){
-            points += slot < flexPool.size()
-                    ? Math.max(flexPool.get(slot), flexWire) : flexWire;
+            points += slot < flexPool.size() && flexPool.get(slot).expected() >= flexWire
+                    ? flexPool.get(slot).points() : flexWire;
         }
         return points;
     }
 
-    private double fill(List<Double> available, int slots, Position position,
-                        List<Double> flexPool){
+    private double fill(List<Draw> available, int slots, Position position,
+                        List<Draw> flexPool){
         double wire = wirePerWeek.getOrDefault(position, 0.0);
         int size = available == null ? 0 : available.size();
         double points = 0;
         int used = 0;
         for(int slot = 0; slot < slots; slot++){
-            if(used < size && available.get(used) >= wire){
-                points += available.get(used);
+            // start him only if you EXPECTED him to beat the wire, then take
+            // whatever he actually did
+            if(used < size && available.get(used).expected() >= wire){
+                points += available.get(used).points();
                 used++;
             }
             else {

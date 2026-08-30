@@ -4,18 +4,18 @@ drafts on each season's own board using distributions from the OTHER four
 seasons, then is scored on what really happened
 
 STRATEGY                     2021     2022     2023     2024     2025      mean    vs ADP    wins
-starter-sum POLICY           1660     1838     1962     1886     1801      1829      +215     3/5
-starter-sum (1-16)           1849     1961     1804     2180     2148      1989      +374     5/5
-best-nine (Model A)          1506     1671     1976     1783     1701      1727      +113     3/5
-RUNBOOK committed            2082     1705     2342     2031     2241      2080      +466     5/5
-RB-heavy folk rule           1975     1789     2300     1908     1946      1983      +369     5/5
-best available by ADP        1672     1519     1388     1662     1831      1614        +0     0/5
+starter-sum POLICY           1607     1821     1763     1831     1733      1751      +309     5/5
+starter-sum (1-16)           1735     1923     1724     2038     2007      1886      +444     5/5
+best-nine (Model A)          1359     1534     1858     1715     1597      1613      +171     3/5
+RUNBOOK committed            2018     1645     2183     1943     2130      1984      +542     5/5
+RB-heavy folk rule           1882     1725     2148     1746     1848      1870      +428     5/5
+best available by ADP        1439     1381     1192     1485     1712      1442        +0     0/5
 
 what the policy chose, season by season:
-   2021: RB WR WR WR RB QB WR WR WR WR DEF RB TE RB
-   2022: RB RB WR WR QB WR RB WR TE RB RB DEF DEF DEF
-   2023: RB RB RB QB RB WR WR QB WR TE RB DEF WR TE
-   2024: RB RB QB WR QB RB RB RB RB WR DEF DEF TE DEF
-   2025: RB WR WR WR QB WR WR RB RB TE RB DEF DEF WR
+   2021: RB WR WR RB RB QB WR WR WR WR RB TE RB RB
+   2022: RB RB WR WR WR QB RB WR RB RB RB QB TE DEF
+   2023: RB RB RB QB RB WR WR TE WR TE RB WR WR TE
+   2024: RB RB QB WR RB RB WR RB TE WR RB RB WR TE
+   2025: RB WR WR RB RB QB WR RB RB TE WR WR WR RB
 
-against the committed plan: -251 points a season, policy ahead in 1 of 5.
+against the committed plan: -233 points a season, policy ahead in 1 of 5.

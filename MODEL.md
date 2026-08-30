@@ -3016,3 +3016,51 @@ not be used on Tuesday. What was worth building is the measurement apparatus
 around it: the weekly actuals, the outcome distributions, the availability-
 scoring correlation, the defence predictability numbers, and this backtest -
 all of which stand on their own and are what caught the model.
+
+## Both pathologies were one bug: hindsight start/sit (2026-08-29)
+
+The policy took a third-round quarterback and three defences. Those looked like
+two separate faults; they were one, and it was mine.
+
+**The lineup fill sorted candidates by the week's REALISED points.** That is
+perfect start/sit - it hands a manager a lineup nobody can set, because you
+choose before kickoff. And it rewards redundancy in proportion to weekly
+spread: two quarterbacks are worth the max of two draws only if you know in
+advance which will hit. Quarterback has the widest weekly spread of any
+position (sd 7.6 on a mean of 19.0), so stacking quarterbacks looked
+outstanding, and a second defence looked free money for the same reason.
+
+The bug was in BOTH the model and the evaluator, so the backtest was rewarding
+the very behaviour the model was inventing.
+
+Fixed on both sides. `WeeklyStarterValue` now carries the expected rate and the
+realised points separately: lineups are set on what you EXPECTED, and scored on
+what happened. `PlanBacktest` sets its lineups by PRESEASON RANK - which
+understates a real manager who learns during the season, but never uses
+information from the future and is applied identically to every strategy.
+
+The pathologies went with it:
+
+    before   2022: ... RB RB DEF DEF DEF      2024: RB RB QB WR QB ...
+    after    2022: ... RB RB QB TE DEF        2024: RB RB QB WR RB ...
+
+No defence stacking anywhere, and no season takes two quarterbacks.
+
+**The verdict does not move.**
+
+    STRATEGY                     mean  vs ADP  wins
+    RUNBOOK committed            1984    +542   5/5
+    starter-sum (fixed seq)      1886    +444   5/5
+    RB-heavy folk rule           1870    +428   5/5
+    starter-sum POLICY           1751    +309   5/5
+    best-nine (Model A)          1613    +171   3/5
+    best available by ADP        1442      +0   0/5
+
+Still -233 points a season against the committed plan, still ahead in 1 season
+of 5. Every score fell, because hindsight had been inflating all of them - the
+ADP baseline most of all, from 1614 to 1442, which is what you would expect
+since it stacks nothing.
+
+That the pathologies were not the reason it was losing is worth knowing. A
+better-behaved model that loses by the same margin is evidence the problem is
+the objective or its inputs, not the search.
