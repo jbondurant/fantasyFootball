@@ -3157,3 +3157,38 @@ the board cannot produce honestly - it only loses players, so the best available
 tight end cannot improve. That is sampling noise and which specific tight end
 happens to be on the board, not signal. The trustworthy part is rounds 1 through
 8, where the trend is monotone and large.
+
+## Defences in the simulation, without touching Model A (2026-08-29)
+
+Three gates, all on the same condition - `scheduleRounds() > GAME_ROUNDS` - so
+the nine-round game never sees a defence and the sixteen-round one always does:
+
+- the BOARD: defences are added to the draftable pool
+- the BALLOT: `positions()` returns five positions instead of four, so the
+  search can branch on one
+- `SelectionModel.features` gained a DEF starter slot, without which it threw
+  the moment a defence reached it
+
+**Model A is unchanged and no slower.** Plan `[RB, WR, RB, WR, WR, WR, TE, QB,
+QB]`, 1812.8, p10 1784.4, byte-identical with the change stashed and unstashed.
+43 seconds either way; the sixteen-round model costs 44. The branching factor
+Model A was tuned with is untouched because it never reaches the wider ballot.
+
+**A false alarm worth recording.** Model A read 1812.8 against the 1812.1
+verified earlier today, which looked like the change leaking. It was not - the
+same number appears with the change stashed. The projections themselves moved:
+the Boris Chen feed failed during the lockdown, fell back to a stale cache, and
+later succeeded and cached fresh. Worth knowing that the plan drifts slightly
+as feeds refresh; 0.7 points on 1812 is immaterial.
+
+**And the model still declines to draft one.** With defences on the board, on
+the ballot, and in the objective - 32 in the projections, 17 on the board after
+the ADP limit - the sixteen-round plan takes none. That is not a bug, it is the
+0.277 predictability arriving as a decision: a drafted defence is worth about 9
+points over a streamed one, so the model would rather have another skill player
+and take whatever the wire offers.
+
+Which is a stronger version of the RUNBOOK's rule. The RUNBOOK says take one
+last; the model says the pick is barely worth spending at all. Both agree it is
+never worth spending early, which is the only part that has been tested against
+outcomes.

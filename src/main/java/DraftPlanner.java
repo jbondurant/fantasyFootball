@@ -36,8 +36,27 @@ import java.util.Set;
  */
 public class DraftPlanner {
 
-    private static final Position[] POSITIONS =
+    private static final Position[] SKILL_POSITIONS =
             {Position.QB, Position.RB, Position.WR, Position.TE};
+
+    private static final Position[] WITH_DEFENCE =
+            {Position.QB, Position.RB, Position.WR, Position.TE, Position.DEF};
+
+    /**
+     * The positions the search will branch over.
+     *
+     * Four inside the nine-round game, because nobody drafts a defence there
+     * and Model A must keep the branching factor - and the running time - it
+     * was tuned with. Five once the schedule runs past round 9, where a defence
+     * is genuinely the best pick left at the end and the search could not
+     * previously even consider one: the sixteen-round plan took a third
+     * quarterback at pick 186 rather than the defence it should have had, not
+     * because it valued one higher but because DEF was never on the ballot.
+     */
+    private static Position[] positions(){
+        return scheduleRounds() > SelectionModel.GAME_ROUNDS
+                ? WITH_DEFENCE : SKILL_POSITIONS;
+    }
 
     /**
      * How many rounds of the real pick order to build a board for.
@@ -223,7 +242,7 @@ public class DraftPlanner {
             Position best = null;
             double bestScore = Double.NEGATIVE_INFINITY;
             double[] bestStats = null;
-            for(Position candidate : POSITIONS){
+            for(Position candidate : positions()){
                 List<Position> prefix = new ArrayList<>(chosenPositions);
                 prefix.add(candidate);
                 double[] outcomes = new double[rollouts];
@@ -267,11 +286,11 @@ public class DraftPlanner {
      */
     private List<SnipeRow> snipes(List<Position> plan, int rollouts, long seed){
         int picks = myPickNumbers.length;
-        double[][] count = new double[picks][POSITIONS.length];
-        double[][] gone = new double[picks][POSITIONS.length];
-        double[][] dropWhenGone = new double[picks][POSITIONS.length];
+        double[][] count = new double[picks][positions().length];
+        double[][] gone = new double[picks][positions().length];
+        double[][] dropWhenGone = new double[picks][positions().length];
         List<Map<String, Integer>> targetCounts = new ArrayList<>();
-        for(int i = 0; i < picks * POSITIONS.length; i++){
+        for(int i = 0; i < picks * positions().length; i++){
             targetCounts.add(new HashMap<>());
         }
         Object merge = new Object();
@@ -281,14 +300,14 @@ public class DraftPlanner {
                     new Random(seed + 7919L * r), me, policy);
             synchronized(merge){
             for(int i = 0; i + 1 < policy.bestSeen.size(); i++){
-                for(int p = 0; p < POSITIONS.length; p++){
-                    Position position = POSITIONS[p];
+                for(int p = 0; p < positions().length; p++){
+                    Position position = positions()[p];
                     String target = policy.bestSeen.get(i).get(position);
                     if(target == null || takenAt.getOrDefault(target, 0) == myPickNumbers[i]){
                         continue;   // nobody left there, or I took him myself
                     }
                     count[i][p]++;
-                    targetCounts.get(i * POSITIONS.length + p).merge(target, 1, Integer::sum);
+                    targetCounts.get(i * positions().length + p).merge(target, 1, Integer::sum);
                     int taken = takenAt.getOrDefault(target, Integer.MAX_VALUE);
                     if(taken < myPickNumbers[i + 1]){
                         gone[i][p]++;
@@ -302,13 +321,13 @@ public class DraftPlanner {
         });
         List<SnipeRow> rows = new ArrayList<>();
         for(int i = 0; i + 1 < picks; i++){
-            for(int p = 0; p < POSITIONS.length; p++){
+            for(int p = 0; p < positions().length; p++){
                 if(count[i][p] == 0){
                     continue;
                 }
-                String usualTarget = targetCounts.get(i * POSITIONS.length + p).entrySet().stream()
+                String usualTarget = targetCounts.get(i * positions().length + p).entrySet().stream()
                         .max(Map.Entry.comparingByValue()).map(Map.Entry::getKey).orElse("");
-                rows.add(new SnipeRow(myPickNumbers[i], POSITIONS[p], playerName(usualTarget),
+                rows.add(new SnipeRow(myPickNumbers[i], positions()[p], playerName(usualTarget),
                         gone[i][p] / count[i][p],
                         gone[i][p] == 0 ? 0 : dropWhenGone[i][p] / gone[i][p]));
             }
@@ -542,7 +561,15 @@ public class DraftPlanner {
         List<String> board = new ArrayList<>();
         for(Map.Entry<String, Double> entry : adp.entrySet()){
             Player player = Player.getPlayerFromSIDV2(entry.getKey());
-            if(player == null || !StartingLineup.isSkillPosition(player.position)){
+            // Defences join the board ONLY when the schedule runs past the
+            // nine-round game. Model A plays nine rounds, where nobody drafts a
+            // defence, so it never sees one: its board, its rollouts and its
+            // speed are untouched, and its plan stays byte-identical. The
+            // sixteen-round model does need them, because rounds 15 and 16 are
+            // where a defence is genuinely the best pick left.
+            boolean defencesOnBoard = scheduleRounds() > SelectionModel.GAME_ROUNDS;
+            if(player == null || !(StartingLineup.isSkillPosition(player.position)
+                    || (defencesOnBoard && player.position == Position.DEF))){
                 continue;
             }
             if(entry.getValue() > SelectionModel.ADP_LIMIT || keptIDs.contains(entry.getKey())){

@@ -633,6 +633,11 @@ public class SelectionModel implements ChoiceModel {
         starterSlots.put(Position.RB, 2);
         starterSlots.put(Position.WR, 3);
         starterSlots.put(Position.TE, 1);
+        // The league starts one defence. Without this entry the feature builder
+        // throws the moment a defence reaches it, which is what happened when
+        // the sixteen-round board first included them. Model A's board holds no
+        // defences, so this line is inert for it.
+        starterSlots.put(Position.DEF, 1);
 
         double[][] features = new double[n][FEATURES];
         for(int a = 0; a < n; a++){
