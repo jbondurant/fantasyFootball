@@ -91,6 +91,20 @@ public class SelectionModel implements ChoiceModel {
     public static final int TRAIN_ROUNDS = 13;
 
     /**
+     * Rounds of history the choice model learns from.
+     *
+     * Thirteen for the nine-round game, tuned and left alone. But this league
+     * drafts 41 of its 58 defences in rounds 14-16, so a model trained to round
+     * 13 sees only the seventeen EARLIEST defences ever taken - and concludes
+     * they go early, which is the opposite of the truth. When the schedule runs
+     * to sixteen the training window has to as well, or the model is taught a
+     * fact that is backwards.
+     */
+    public static int trainRounds(){
+        return DraftPlanner.scheduleRounds() > GAME_ROUNDS ? 16 : TRAIN_ROUNDS;
+    }
+
+    /**
      * Everything about the moment of a selection that the candidate-level
      * features need. Season-level maps (teamOf, rookies, adpSpreadCentered)
      * may be empty when a feature is inactive - its column just reads zero.
@@ -157,7 +171,7 @@ public class SelectionModel implements ChoiceModel {
     public static SelectionModel fitShipped(AAAConfiguration configuration, int lastSeason,
                                             Map<String, Double> qbEarliness){
         return fit(loadObservations(configuration, 2021, lastSeason, qbEarliness,
-                Map.of(), Map.of(), false, TRAIN_ROUNDS), shippedFeatures());
+                Map.of(), Map.of(), false, trainRounds()), shippedFeatures());
     }
 
     private final double[] beta;
@@ -491,10 +505,20 @@ public class SelectionModel implements ChoiceModel {
         }
         double teams = Math.max(allManagers.size(), 1);
 
+        // Defences join the TRAINING board only when the schedule runs past the
+        // nine-round game, so Model A's fit is untouched. Without them the
+        // choice model has never seen a defence picked and cannot know when
+        // they go - which is why the sixteen-round search believed one was
+        // about to be taken in round 7 and reached for it. This league's own
+        // history is unambiguous: across five drafts, zero defences before
+        // round 10 and only 16% before round 13, with the mass in 14-16. That
+        // is a fact the model should read off the drafts, not be told.
+        boolean withDefences = DraftPlanner.scheduleRounds() > GAME_ROUNDS;
         List<String> board = new ArrayList<>();
         for(Map.Entry<String, Double> entry : adp.entrySet()){
             Player player = Player.getPlayerFromSIDV2(entry.getKey());
-            if(player == null || !StartingLineup.isSkillPosition(player.position)){
+            if(player == null || !(StartingLineup.isSkillPosition(player.position)
+                    || (withDefences && player.position == Position.DEF))){
                 continue;
             }
             if(entry.getValue() > ADP_LIMIT || kept.contains(entry.getKey())){
@@ -514,7 +538,8 @@ public class SelectionModel implements ChoiceModel {
             JsonElement pickedBy = pick.get("picked_by");
             if(pickedBy == null || pickedBy.isJsonNull()){
                 board.remove(chosenID);
-                if(player != null && StartingLineup.isSkillPosition(player.position)){
+                if(player != null && (StartingLineup.isSkillPosition(player.position)
+                        || (withDefences && player.position == Position.DEF))){
                     recentPicks.add(player.position);
                 }
                 continue;
@@ -557,7 +582,8 @@ public class SelectionModel implements ChoiceModel {
             if(player != null){
                 rosters.computeIfAbsent(manager, u -> new EnumMap<>(Position.class))
                         .merge(player.position, 1, Integer::sum);
-                if(StartingLineup.isSkillPosition(player.position)){
+                if(StartingLineup.isSkillPosition(player.position)
+                        || (withDefences && player.position == Position.DEF)){
                     recentPicks.add(player.position);
                 }
                 if(player.position.equals(Position.QB) && teamOf.containsKey(chosenID)){

@@ -92,7 +92,7 @@ public class BoostedSelectionModel implements ChoiceModel {
                                 PlayerImportAndSetup.Position.TE),
                         SelectionModel.positionEarliness(configuration, lastSeason,
                                 PlayerImportAndSetup.Position.RB),
-                        false, SelectionModel.TRAIN_ROUNDS),
+                        false, SelectionModel.trainRounds()),
                 SHIPPED_TREES, SHIPPED_DEPTH, SHIPPED_LEARNING_RATE);
     }
 

@@ -3825,3 +3825,52 @@ open disagreement with a measurement I trust more than the model.** Not
 draft-ready, and the RUNBOOK is unchanged for Tuesday. The next step is to check
 whether the choice model's defence probabilities are sane, which is a contained
 question with a clear answer.
+
+## The model reads the league's defence habit off its own drafts (2026-08-29)
+
+Justin: "my league picks late for defenses, not something you should note, but
+something your models should pick up on." Exactly right, and it was the bug.
+
+`SelectionModel` filtered defences out of its training observations, so the
+choice model had never seen a single defence picked and could not know when they
+go. Measured from this league's five completed drafts:
+
+    round 10  #                 (1)
+    round 11  ####              (4)
+    round 12  ####              (4)
+    round 13  ########          (8)
+    round 14  ############     (12)
+    round 15  #############    (13)
+    round 16  ################ (16)
+
+    zero before round 10; 16% before round 13; the mass in 14-16
+
+Three blind spots, all now gated on `scheduleRounds() > 9` so Model A's fit is
+untouched:
+
+1. defences excluded from the training board
+2. defences excluded from the recent-picks feature, which is how the model sees
+   positional runs
+3. **`TRAIN_ROUNDS = 13`** - the subtle one. 41 of 58 defences go in rounds
+   14-16, so a model trained to round 13 saw only the seventeen EARLIEST
+   defences ever taken and concluded they go early, which is backwards. The
+   training window now runs to 16 when the schedule does.
+
+The third had to be applied to `BoostedSelectionModel`, not `SelectionModel` -
+the boosted fit is the one production uses, and patching the other did nothing.
+
+**The result:**
+
+    defence survival to my next pick   3%  ->  51%
+    LiveLateRounds verdict             lean take  ->  wait - he keeps
+    16-round opening                   RB WR RB WR WR WR  ->  RB RB RB WR WR WR
+
+The opening is now the committed plan's exactly, reached from projections, a
+risk discount, and the league's own draft history - with the plan never
+consulted. Model A byte-identical at 1812.8 / p10 1784.4. Suite green.
+
+**Still open:** the `Draft16` SEARCH continues to place a defence at pick 7 even
+though the live tool now says wait. Those are different code paths - the search
+scores a whole plan through rollouts, the live tool scores one pick - so the
+remaining fault is in the rollout tail policy rather than in the choice model or
+the objective. Contained, and next.
