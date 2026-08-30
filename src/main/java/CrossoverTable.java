@@ -28,6 +28,9 @@ public class CrossoverTable {
 
     static final int TIER = 12;
 
+    /** Half-width of the rank window pooled around each query. */
+    static final int WINDOW = 8;
+
     public static void main(String[] args) throws Exception {
         List<List<PositionPredictability.Seen>> seasons = new ArrayList<>();
         for(File file : new File("data").listFiles()){
@@ -45,52 +48,93 @@ public class CrossoverTable {
         }
 
         System.out.printf("%nHOW OFTEN DOES THE LATER MAN BEAT THE EARLIER ONE?%n");
-        System.out.printf("(every pair at the same position, within a season,"
-                + " %d seasons)%n%n", seasons.size());
-        System.out.printf("%-4s %-9s %-9s %7s %9s %11s %11s   %s%n", "POS", "EARLY",
-                "LATE", "pairs", "late wins", "avg margin", "value", "");
+        System.out.printf("smoothed: every query pools pairs within +/-%d ranks, so"
+                + " adjacent rows cannot%nleapfrog each other on five seasons of"
+                + " sampling noise. Twelve-wide buckets%ndid exactly that - a round-10"
+                + " back could read 10%% between a round-9 at 8%%%nand a round-11 at"
+                + " 13%%, which is chunking, not football.%n%n", WINDOW);
 
+        int[] earlyRanks = {5, 17};
+        int[] lateRanks = {23, 29, 35, 41, 47, 53, 59, 65, 71};
         for(Position position : new Position[]{Position.RB, Position.WR, Position.TE}){
-            for(int early = 0; early < 2; early++){
-                for(int late = early + 1; late < 6; late++){
-                    int pairs = 0;
-                    int wins = 0;
-                    double margin = 0;
-                    for(List<PositionPredictability.Seen> season : seasons){
-                        List<PositionPredictability.Seen> earlyMen = tier(season,
-                                position, early);
-                        List<PositionPredictability.Seen> lateMen = tier(season,
-                                position, late);
-                        for(PositionPredictability.Seen a : earlyMen){
-                            for(PositionPredictability.Seen b : lateMen){
-                                pairs++;
-                                if(b.actual() > a.actual()){
-                                    wins++;
-                                    margin += b.actual() - a.actual();
-                                }
-                            }
-                        }
-                    }
-                    if(pairs < 100){
+            System.out.printf("%n%-4s %-14s", position, "vs EARLY RANK");
+            for(int early : earlyRanks){
+                System.out.printf(" %22s", position.name() + (early + 1)
+                        + " (r" + round(early) + ")");
+            }
+            System.out.printf("%n%-4s %-14s", "", "later man");
+            for(int early : earlyRanks){
+                System.out.printf(" %9s %6s %5s", "wins", "margin", "value");
+            }
+            System.out.println();
+            for(int late : lateRanks){
+                if(late <= earlyRanks[earlyRanks.length - 1]){
+                    continue;
+                }
+                System.out.printf("%-4s %-14s", "", position.name() + (late + 1)
+                        + " (r" + round(late) + ")");
+                for(int early : earlyRanks){
+                    double[] result = crossover(seasons, position, early, late);
+                    if(result[2] < 60){
+                        System.out.printf(" %9s %6s %5s", "-", "-", "-");
                         continue;
                     }
-                    double rate = (double) wins / pairs;
-                    double when = wins == 0 ? 0 : margin / wins;
-                    System.out.printf("%-4s %-9s %-9s %7d %8.0f%% %11.0f %11.1f   %s%n",
-                            position, band(early), band(late), pairs, 100 * rate, when,
-                            rate * when, note(rate));
+                    System.out.printf(" %8.0f%% %6.0f %5.1f", 100 * result[0],
+                            result[1], result[0] * result[1]);
                 }
+                System.out.println();
             }
         }
 
-        System.out.println("\nlate wins = share of pairs where the later man outscored"
-                + " the earlier one that\nseason. avg margin = by how much, in the"
-                + " seasons he did. value = the two\nmultiplied, which is what a bench"
-                + " pick is worth over the man ahead of him.");
-        System.out.println("\nThis needs no model. Both outcomes are in the same season,"
-                + " so the comparison\nis direct - which is the answer to how a round-4"
-                + " bust and a round-10 boom can\nbe priced together: they already"
-                + " happened together, five times over.");
+        System.out.println("\nwins = share of pairs where the later man outscored the"
+                + " earlier one that\nseason; margin = by how much when he did; value ="
+                + " the two multiplied, which is\nwhat the later pick is worth over the"
+                + " man ahead of him.");
+        System.out.println("\nRead DOWN a column: it should fall smoothly, and now does."
+                + " Any row that\njumps against its neighbours is still noise, not a"
+                + " discovery.");
+    }
+
+    /** {win rate, mean margin when winning, pairs} pooling a window of ranks. */
+    static double[] crossover(List<List<PositionPredictability.Seen>> seasons,
+                              Position position, int early, int late){
+        int pairs = 0;
+        int wins = 0;
+        double margin = 0;
+        for(List<PositionPredictability.Seen> season : seasons){
+            List<PositionPredictability.Seen> earlyMen = window(season, position, early);
+            List<PositionPredictability.Seen> lateMen = window(season, position, late);
+            for(PositionPredictability.Seen a : earlyMen){
+                for(PositionPredictability.Seen b : lateMen){
+                    if(b.rank() <= a.rank()){
+                        continue;   // only ever ask about a genuinely later man
+                    }
+                    pairs++;
+                    if(b.actual() > a.actual()){
+                        wins++;
+                        margin += b.actual() - a.actual();
+                    }
+                }
+            }
+        }
+        return new double[]{pairs == 0 ? 0 : (double) wins / pairs,
+                wins == 0 ? 0 : margin / wins, pairs};
+    }
+
+    static List<PositionPredictability.Seen> window(List<PositionPredictability.Seen> season,
+                                                    Position position, int centre){
+        List<PositionPredictability.Seen> out = new ArrayList<>();
+        for(PositionPredictability.Seen s : season){
+            if(s.position() == position && Math.abs(s.rank() - centre) <= WINDOW){
+                out.add(s);
+            }
+        }
+        return out;
+    }
+
+    /** The round a player of this positional rank typically goes in, roughly. */
+    static int round(int rank){
+        return Math.max(1, (int) Math.round((rank + 1) / 2.4));
     }
 
     static String note(double rate){

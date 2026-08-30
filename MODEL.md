@@ -3943,9 +3943,9 @@ the same position, within a season:
     WR   13-24     25-36       720        40%          58    23.4
     TE   13-24     25-36       660        37%          44    16.2
 
-**The literal answer:** a round-10 back (tier 37-48) outscores a top-twelve back
-10% of the time, by 63 points when he does - worth 6.1 points. Small, real, and
-measured rather than assumed.
+**Superseded by the smoothed version below** - twelve-wide buckets produced
+exactly the jitter Justin predicted, where a round-10 back could read 10%
+between a round-9 at 8% and a round-11 at 13%. That is chunking, not football.
 
 **The finding that matters more:** RB 13-24 against RB 25-36 is **42%** - nearly
 a coin flip. Your second back and a round-six back are almost interchangeable.
@@ -3962,3 +3962,39 @@ It also explains the within-tier blindness from the profile above, arriving from
 the other direction: if a tier-two back beats a tier-three back only 58% of the
 time, then no board could reliably tell them apart, because they are not
 reliably different.
+
+### Smoothed: the crossover as a curve, not chunks (2026-08-29)
+
+Justin's objection to the bucketed table was right - twelve-wide disjoint bins
+over five seasons let adjacent depths leapfrog on sampling noise, and the bin
+edges are arbitrary. Every query now pools pairs within +/-8 ranks, so the
+curve has to fall smoothly or the wobble is real:
+
+    RB   later man    vs RB6 (your RB1)      vs RB18 (your RB2)
+                    wins margin value      wins margin value
+         RB24         20%     65  13.0       37%     74  27.1
+         RB30         19%     58  10.8       36%     71  25.5
+         RB36         16%     56   9.1       34%     67  22.6
+         RB42         13%     56   7.0       26%     64  16.6
+         RB48         11%     58   6.2       25%     59  14.4
+         RB54          8%     50   4.3       20%     54  11.0
+         RB66          6%     50   3.2       14%     54   7.6
+         RB72          4%     50   2.1       11%     44   5.0
+
+It falls monotonically now, and that is the point - a curve that has to be
+smooth cannot hide noise as structure.
+
+**What it says, read as a curve.** The margin barely moves with depth - a back
+who beats your RB1 does it by 50 to 65 points wherever he was drafted. What
+collapses is the PROBABILITY: 20% at RB24 down to 4% at RB72. So a late pick is
+not a smaller prize, it is the same prize at longer odds, which is the exact
+shape of a lottery ticket and the reason bench value is an option rather than an
+asset.
+
+**And your second starter is the one who gets replaced.** Every value against
+RB18 is roughly double the same row against RB6 - 27.1 against 13.0 at RB24.
+Bench picks do not threaten your best player, they threaten your second and
+third, which is where the flex actually turns over.
+
+The rank-to-round labels are approximate (rank / 2.4) and should not be read as
+exact; the ranks themselves are the measurement.
