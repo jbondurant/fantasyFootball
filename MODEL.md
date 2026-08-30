@@ -2775,3 +2775,44 @@ whatever position is cheapest. That is a modelling gap, not a discovery.
 baseline. Phase 4 is what decides whether any of it beats Model A's plan,
 best-available-ADP, or the committed plan, and until then the RUNBOOK should
 not move a single pick on the strength of it.
+
+### The bench-churn constraint was a mis-set wire (2026-08-29)
+
+The first 1-16 run took four tight ends, which nobody would hold past October,
+and the obvious diagnosis was a missing roster-churn term. It was not. Two
+things were already right and one number was wrong.
+
+**Churn was already modelled.** The weekly fill starts a rostered player only
+if he beats the wire, and otherwise takes the wire - which is exactly what
+dropping him and streaming achieves. A bench player who busts already
+contributes nothing beyond the wire; his downside was floored all along.
+
+**A roster cap would not have bound.** Fourteen picks into a sixteen-man roster
+leaves no slack, and the search already trades picks against each other.
+
+**The wire was too weak, and that made the floor too generous.** It averaged the
+whole replacement tier, which is what the wire offers a manager who never
+touches it. A manager who streams takes the BEST option available, so the wire
+is the top of that band, not its middle. Chosen on expected rate rather than on
+what the player went on to score - picking the best realised outcome is the
+hindsight that wrecked `wireLevel` in TightEndTiming, and this is deliberately
+the honest version.
+
+Selected by RANK rather than by tier, too: tiers are twelve wide, so QB21 fell
+in the 13-24 band and its best quarter came back as QB13-15 at 18.3 points a
+week - a startable quarterback somebody owns, not a wire option.
+
+    wire QB  15.8   RB 6.8   WR 7.5   TE 7.2   points per week
+
+The hoarding largely goes with it:
+
+    before   RB WR WR RB WR WR RB WR QB TE TE WR TE TE     (four tight ends)
+    after    RB WR WR WR WR WR RB WR QB TE TE WR RB TE     (three, the last at 186)
+
+Taking a first tight end at 114 with none on the roster is right, and a second
+as cover is defensible. The third, at the final pick of the draft, costs
+nothing and proves little. Seven receivers is the part still worth arguing
+with, though it is less obviously wrong - with three WR slots and two flexes,
+receivers are the most startable thing on the board.
+
+Still unvalidated. Phase 4 decides.

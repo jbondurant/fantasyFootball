@@ -48,29 +48,11 @@ public class StarterSumCheck {
         System.out.printf("outcome pool: %d position-tier cells, %d player-seasons%n",
                 pool.size(), pool.values().stream().mapToInt(List::size).sum());
 
-        // The wire is the best man this league leaves UNDRAFTED, which
-        // InsuranceTest measures from full sixteen-round histories: QB21, RB61,
-        // WR81, TE19. Taking the deepest tier the pool happens to hold instead
-        // put the WR wire at rank ~133 and 0.4 points a week, which is not a
-        // waiver wire but a man who barely plays - and it inflated every
-        // marginal below, because anyone at all beats nothing.
-        Map<Position, Integer> replacement =
-                InsuranceTest.replacementRanks(AAAConfiguration.getInstance());
-        Map<Position, Double> wire = new EnumMap<>(Position.class);
-        for(Position position : new Position[]{Position.QB, Position.RB, Position.WR,
-                Position.TE}){
-            int rank = replacement.getOrDefault(position, 24);
-            int tier = rank / WeeklyStarterValue.TIER;
-            List<OutcomeDistributions.Season> cell = pool.get(position + ":" + tier);
-            while(cell == null && tier > 0){
-                cell = pool.get(position + ":" + (--tier));
-            }
-            double rate = cell == null ? 0 : cell.stream()
-                    .mapToDouble(s -> s.meanWhenPlaying() * s.games() / 18.0)
-                    .average().orElse(0);
-            wire.put(position, rate);
-            System.out.printf("   wire %-3s = %s%d, tier %d -> %.1f pts/week%n", position,
-                    position, rank, tier, rate);
+        Map<Position, Double> wire = WeeklyStarterValue.wireRates(
+                AAAConfiguration.getInstance(), pool);
+        for(Map.Entry<Position, Double> entry : wire.entrySet()){
+            System.out.printf("   wire %-3s -> %.1f pts/week (top quartile of the"
+                    + " replacement tier)%n", entry.getKey(), entry.getValue());
         }
 
         // a plausible starting nine off the current board: Model A's shape

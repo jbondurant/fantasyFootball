@@ -188,20 +188,58 @@ public class WeeklyStarterValue implements RosterValue {
             }
         }
         Map<String, List<OutcomeDistributions.Season>> pool = pool();
+        Map<Position, Double> wire = wireRates(configuration, pool);
+        return new WeeklyStarterValue(positionOf, tierOf, pool, wire, scenarios, seed);
+    }
+
+    /**
+     * What the waiver wire supplies to a manager who actually works it.
+     *
+     * The first version averaged the whole replacement tier, which is what the
+     * wire offers a manager who never touches it. Nobody drafts that way, and
+     * it made the wire too weak: a fourth tight end scoring a shade over a
+     * random deep player looked like a gain, so the search hoarded cheap
+     * redundancy - it took four tight ends in the first 1-16 run, which no one
+     * would hold past October.
+     *
+     * A manager streaming picks the BEST option available, so the wire is the
+     * top of that tier rather than its middle. Chosen on expected rate, not on
+     * what the player went on to score: picking the best realised outcome would
+     * be the same hindsight that wrecked wireLevel in TightEndTiming, and this
+     * is deliberately the honest version - you choose before the week, and then
+     * take what comes.
+     */
+    public static Map<Position, Double> wireRates(AAAConfiguration configuration,
+            Map<String, List<OutcomeDistributions.Season>> pool){
         Map<Position, Integer> replacement = InsuranceTest.replacementRanks(configuration);
         Map<Position, Double> wire = new EnumMap<>(Position.class);
         for(Position position : new Position[]{Position.QB, Position.RB, Position.WR,
                 Position.TE}){
-            int tier = replacement.getOrDefault(position, 24) / TIER;
-            List<OutcomeDistributions.Season> cell = pool.get(position + ":" + tier);
-            while(cell == null && tier > 0){
-                cell = pool.get(position + ":" + (--tier));
+            int from = replacement.getOrDefault(position, 24);
+            // Selected by RANK, not by tier. Tiers are twelve wide, so QB21 -
+            // the first quarterback this league leaves undrafted - falls in the
+            // 13-24 band, and taking that band's best returned QB13-15 at 18.3
+            // points a week. That is a startable quarterback somebody owns, not
+            // a wire option.
+            List<Double> rates = new ArrayList<>();
+            for(List<OutcomeDistributions.Season> cell : pool.values()){
+                for(OutcomeDistributions.Season season : cell){
+                    if(season.position() == position && season.rank() >= from - 1
+                            && season.rank() < from - 1 + 24){
+                        rates.add(season.meanWhenPlaying() * season.games() / 18.0);
+                    }
+                }
             }
-            wire.put(position, cell == null ? 0 : cell.stream()
-                    .mapToDouble(s -> s.meanWhenPlaying() * s.games() / 18.0)
-                    .average().orElse(0));
+            if(rates.isEmpty()){
+                wire.put(position, 0.0);
+                continue;
+            }
+            rates.sort(Comparator.reverseOrder());
+            int best = Math.max(1, rates.size() / 4);
+            wire.put(position, rates.subList(0, best).stream()
+                    .mapToDouble(Double::doubleValue).average().orElse(0));
         }
-        return new WeeklyStarterValue(positionOf, tierOf, pool, wire, scenarios, seed);
+        return wire;
     }
 
     /** Historical player-seasons keyed POSITION:tier, ready to draw from. */

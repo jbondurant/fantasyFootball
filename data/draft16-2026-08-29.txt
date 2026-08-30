@@ -7,8 +7,8 @@ objective: best-nine season totals
    value 1819.0
 
 objective: weekly starter sum (100 scenarios) 
-   plan RB WR WR RB WR WR RB WR QB TE TE WR TE TE
-   value 2115.6
+   plan RB WR WR WR WR WR RB WR QB TE TE WR RB TE
+   value 2176.4
 
 The two are not comparable by VALUE - they are different units, best-nine
 season totals against a season of weekly starter points. What is comparable
