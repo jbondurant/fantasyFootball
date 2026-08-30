@@ -334,13 +334,14 @@ public class PlanBacktest {
             total += fill(up.get(Position.RB), 2, flex, points);
             total += fill(up.get(Position.WR), 3, flex, points);
             total += fill(up.get(Position.TE), 1, flex, points);
-            // No free wire, here or in the objective. Every player who fills a
-            // slot occupies one of sixteen roster spots, so a slot you rostered
-            // nobody for scores nothing. The earlier version credited a streamed
-            // defence for free, which is the same fault the objective had - and
-            // having it in one and not the other meant the model was optimising
-            // for a world it was never scored in.
-            total += fill(up.get(Position.DEF), 1, null, points);
+            // A defence can be streamed like anything else - but it costs a
+            // roster spot, charged once above by dropping the last drafted man,
+            // not free every week. Both halves of Justin's point: the wire is
+            // reachable, and reaching it takes up space.
+            List<String> defence = up.get(Position.DEF);
+            total += defence == null || defence.isEmpty()
+                    ? streamedDefencePerWeek()
+                    : fill(defence, 1, null, points);
             flex.sort(Comparator.comparingInt(
                     id -> boardRank.getOrDefault(id, Integer.MAX_VALUE)));
             for(int slot = 0; slot < 2 && slot < flex.size(); slot++){

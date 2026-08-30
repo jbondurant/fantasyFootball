@@ -4,13 +4,13 @@ lineup QB/RB2/WR3/TE/FLEX2/DEF, 18 weeks, best legal lineup each week
 a defence slot the roster cannot fill is STREAMED at 8.7 points a week
 
 STRATEGY                     2021     2022     2023     2024     2025      mean    vs ADP    wins
-starter-sum (1-16)           1735     1923     1724     2038     2007      1886      +444     5/5
-best-nine (Model A)          1359     1534     1858     1715     1597      1613      +171     3/5
-RUNBOOK committed            2018     1645     2183     1943     2130      1984      +542     5/5
-RB-heavy folk rule           1882     1725     2148     1746     1848      1870      +428     5/5
-RUNBOOK front + SS back      2085     1810     1947     1888     2087      1963      +522     5/5
-ModelA front + SS back       1756     1763     1881     1910     1929      1848      +406     5/5
-[not legal] no DEF drafted     1889     1489     2038     1850     1983      1850      +408     5/5
+starter-sum (1-16)           1753     1932     1733     2056     2025      1900      +458     5/5
+best-nine (Model A)          1376     1542     1867     1733     1615      1627      +185     3/5
+RUNBOOK committed            2035     1654     2191     1960     2148      1998      +556     5/5
+RB-heavy folk rule           1899     1734     2157     1764     1865      1884      +442     5/5
+RUNBOOK front + SS back      2102     1819     1956     1905     2104      1977      +536     5/5
+ModelA front + SS back       1773     1771     1890     1928     1946      1862      +420     5/5
+[not legal] no DEF drafted     2046     1647     2195     2007     2141      2007      +565     5/5
 best available by ADP        1439     1381     1192     1485     1712      1442        +0     0/5
 
 Every strategy drafts from the same board at the same picks, so the only

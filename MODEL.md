@@ -3427,3 +3427,54 @@ at all without lookahead.
 That is the honest state: the constraint layer is right and worth keeping, the
 free-wire removal is right in principle and mis-serves a greedy policy, and the
 model remains well behind the folk rules. **Nothing here changes the RUNBOOK.**
+
+## The wire is a SWAP, and the bench is fungible (2026-08-29)
+
+Justin's formulation, and it is the right one. It reconciles everything and my
+removal of the free wire was an over-correction.
+
+**The bench is fungible.** If a tight end goes down and no tight end is
+rostered, you drop your least useful backup and add one off waivers the same
+day. You never need positional COVER - you need spots you can convert. So a
+rostered man is worth exactly what he EXCEEDS the wire by, which is what
+`max(player, wire)` computes, and which is the whole value of a bench pick:
+
+    bench value = P(he beats the wire) x the margin when he does
+
+That is the formula, and the free-wire fill already implemented it. Turning it
+off made an unfilled slot a permanent zero, which a greedy policy read as
+catastrophe and answered by opening every season with a quarterback at pick 7.
+
+**The real constraint is the BUDGET, not the week.** Sixteen spots, eight of
+which must cover the starting positions, leaving eight for upside. Streaming a
+position consumes one of those spots - which is why fielding a defence costs a
+spot whether you draft it or swap for it. That is charged in the roster
+accounting, where it belongs, rather than by pretending the wire does not exist.
+
+Both halves of the point are now modelled: **the wire is reachable, and reaching
+it takes up space.**
+
+### It is the best the policy has ever scored
+
+    starter-sum POLICY, no free wire (my over-correction)     1731
+    starter-sum POLICY, original                              1751
+    starter-sum POLICY, wire as swap + roster constraints     1859
+    RUNBOOK committed                                         1998
+
++128 over the over-correction and +108 over anything before it, and the plans
+read like plans again - no quarterback at pick 7, no stacking, a tight end in
+the right region. Model A is byte-identical throughout at 1812.8 / p10 1784.4,
+and the suite is green.
+
+**Still 139 behind the committed plan**, and that gap is what remains. But the
+direction of travel finally reversed: every previous change made the model worse
+or left it flat.
+
+### What the day's corrections were really about
+
+Four of them - roster spot, must-draft-a-defence, no free wire, and now this -
+and none was a bug in the search or the distributions. Every one was about what
+a LEGAL ROSTER is: how many spots, which slots must be filled, and what it costs
+to reach the wire. The objective prices points well and always priced
+constraints badly, and the constraints turn out to be where the model's deficit
+lived.

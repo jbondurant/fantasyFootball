@@ -59,20 +59,27 @@ public class WeeklyStarterValue implements RosterValue {
     record Draw(boolean up, double expected, double points){}
 
     /**
-     * Whether an unfilled slot may be credited to the waiver wire for free.
+     * Whether an unfilled slot may be filled from the waiver wire.
      *
-     * It may not, and this flag exists only so the old behaviour can be
-     * measured against the new. Every player who fills a lineup slot occupies
-     * one of sixteen roster spots - there is no stream that does not take up
-     * space. Crediting a free wire man for every unfilled slot, every week,
-     * handed the model an unlimited supply of players nobody has, and it
-     * undervalued depth accordingly: why draft a fourth receiver when an
-     * imaginary free one covers the flex?
+     * It may, and the reason is Justin's: the bench is FUNGIBLE. If a tight end
+     * goes down and no tight end is rostered, you drop your least useful backup
+     * and add one off waivers the same day. You never need positional cover, so
+     * a rostered man is worth exactly what he EXCEEDS the wire by - which is
+     * what max(player, wire) computes, and which is the whole value of a bench
+     * pick: the odds he beats the wire, times the margin when he does.
      *
-     * With it off, an unfilled slot scores zero - which is what happens to a
-     * manager who rostered nobody able to play there.
+     * Turning this off on 2026-08-29 was an over-correction. It made an
+     * unfilled slot a permanent zero, which a greedy policy read as catastrophe
+     * and answered by opening every season with a quarterback at pick 7.
+     *
+     * The real constraint is not per-week, it is the BUDGET: sixteen spots, of
+     * which eight must cover the starting positions, leaving eight for upside.
+     * Streaming a position consumes one of those spots - which is why fielding
+     * a defence costs a spot whether you draft it or swap for it, and that is
+     * charged where it belongs, in the roster accounting, not by pretending the
+     * wire does not exist.
      */
-    static final boolean FREE_WIRE = Boolean.getBoolean("freeWire");
+    static final boolean FREE_WIRE = !Boolean.getBoolean("noFreeWire");
 
     private final int scenarios;
     private final Map<String, Draw[]> byPlayer = new HashMap<>();
