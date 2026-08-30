@@ -4037,3 +4037,38 @@ model built - a definition plus three measured numbers, 1885 - and it is still
 113 short of a plan written from folk knowledge. The remaining disagreement is
 concentrated in one place, defence timing, where the model says round 7-8 and
 five seasons of outcomes say round 14-16.
+
+## Defence at pick 7 is a modelling failure - one cause found, not the cause
+
+Justin is right that this is a bug rather than a disagreement, and it should be
+treated as one. Two candidate causes checked so far.
+
+**Ruled out: the rollout tail policy.** `bestByPosition` does not filter, so the
+greedy tail can and does take a defence. Rollouts are not leaving the slot empty.
+
+**Found and fixed, but not the culprit: false scarcity.** `ADP_LIMIT = 250` cut
+the draftable board to **17 defences of 32**. Twelve teams chasing seventeen
+defences is a shortage that does not exist, and reaching for one early is
+rational under it. Defences are now exempt from the limit and the board carries
+all 32.
+
+That was a real bug and worth fixing. It did not move the pick: the plan is
+still `RB RB RB WR WR WR DEF ...`, so scarcity was not what was driving it.
+
+**What is left to check, in order:**
+
+1. Print the actual marginals at that decision - what the objective says a
+   defence, a tight end and a receiver each add at pick 79 with that roster.
+   Everything so far has been inference about those numbers; nobody has looked
+   at them.
+2. The `unfilled` replacement values. DEF reads 84.8 and TE 54.4, and if the TE
+   figure is too HIGH then filling the tight end slot looks cheap and the
+   defence wins by default. Both come from the replacement-rank player's
+   discounted projection and neither has been sanity-checked against what a
+   round-16 defence or a round-8 tight end actually returns.
+3. Whether the shrinkage interacts badly: defences shrink toward a mean that is
+   itself computed over only 32 players, while receivers shrink toward a mean
+   over 200.
+
+Model A remains byte-identical at 1812.8 / p10 1784.4 and the suite is green
+throughout. **Nothing here reaches Tuesday's tooling.**

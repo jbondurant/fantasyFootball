@@ -602,7 +602,16 @@ public class DraftPlanner {
                     || (defencesOnBoard && player.position == Position.DEF))){
                 continue;
             }
-            if(entry.getValue() > SelectionModel.ADP_LIMIT || keptIDs.contains(entry.getKey())){
+            // Defences are exempt from the ADP limit. It cut them to 17 of 32,
+            // and twelve teams chasing seventeen defences is a scarcity that
+            // does not exist - which made reaching for one in round 7 perfectly
+            // rational INSIDE the model. All 32 are draftable in reality and
+            // nobody has ever run out.
+            if(player.position != Position.DEF
+                    && entry.getValue() > SelectionModel.ADP_LIMIT){
+                continue;
+            }
+            if(keptIDs.contains(entry.getKey())){
                 continue;
             }
             board.add(entry.getKey());
