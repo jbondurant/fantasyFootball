@@ -3998,3 +3998,42 @@ third, which is where the flex actually turns over.
 
 The rank-to-round labels are approximate (rank / 2.4) and should not be read as
 exact; the ranks themselves are the measurement.
+
+## Nightly runs, and a footgun caught (2026-08-30)
+
+**The trap first.** The risk objective's first backtest came back scoring the
+committed plan EXACTLY in all five seasons - 2035, 1654, 2191, 1960, 2148 - and
+choosing its precise sequence five times running. That was not the objective
+agreeing with the plan. `DEVIATE` defaulted to 1e9, meaning "never leave the
+committed plan", so the run replayed the prior back at itself. Any experiment
+that forgot the flag would silently measure the prior and look like a triumph.
+
+The default is now 0 - prior never consulted - and opting INTO it is the
+deliberate act. It was caught only because the result was too perfect, which is
+not a reliable detector.
+
+**The risk objective, actually measured:**
+
+    starter-sum POLICY (risk objective)   1885   +443 vs ADP   5/5
+    RUNBOOK committed                     1998   +556          5/5
+
+1885 is the best any model has scored - ahead of the starter sum's 1859 and the
+weighted variants - and still 113 behind the plan. Its plans now vary by season
+rather than repeating, which is what an adaptive policy should do.
+
+**The rest of the nightly:**
+
+- **DEF-at-7 survives 300 trials** in `Draft16`, so it is not sampling noise.
+  But the defence SURVEY at 200 trials puts it at pick 8 in three of four
+  variants and pick 11 in the fourth - later than before the choice model
+  learned about defences, and moving the right way.
+- **The placement sweep is unchanged**: best at pick 13 of 14, worst at pick 1,
+  spread 215 points. The measurement the model still disagrees with.
+- **Lockdown green**: 53 smoke checks passed, 0 failed; KeeperAudit 24/24; Model
+  A byte-identical at 1812.8 / p10 1784.4.
+
+**Where that leaves the whole effort.** The Model-A-shaped objective is the best
+model built - a definition plus three measured numbers, 1885 - and it is still
+113 short of a plan written from folk knowledge. The remaining disagreement is
+concentrated in one place, defence timing, where the model says round 7-8 and
+five seasons of outcomes say round 14-16.

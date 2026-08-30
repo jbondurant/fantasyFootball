@@ -1,0 +1,23 @@
+
+rounds 1-16, keepers [Tuten r12, Purdy r13]
+my picks: [7, 18, 31, 42, 55, 66, 79, 90, 103, 114, 127, 162, 175, 186]
+
+objective: best-nine season totals 
+   plan RB WR RB WR WR WR TE QB RB QB RB RB RB RB
+   value 1820.9
+
+   an unfilled slot is worth: {QB=160.45082296980823, RB=34.747385563869884, WR=45.51007567108587, TE=54.37355867098034, DEF=84.80266325062912}
+
+objective: best legal ten, risk-discounted projections 
+   plan RB WR RB WR WR WR DEF TE TE QB QB WR TE RB
+   value 1120.5
+
+objective: weekly starter sum (600 scenarios) 
+   plan RB RB RB WR WR WR WR TE DEF WR QB TE WR TE
+   value 2228.0
+
+The two are not comparable by VALUE - they are different units, best-nine
+season totals against a season of weekly starter points. What is comparable
+is the PLAN: where the two rules want different positions, the starter sum is
+seeing something season totals cannot, and the round it first diverges is
+the round bench value starts to matter.

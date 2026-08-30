@@ -253,8 +253,18 @@ public class PolicyBacktest {
      * Zero means ignore the plan, which is the free-choice policy. The question
      * is whether anything in between beats both.
      */
+    /**
+     * Defaults to 0 - pure model, prior never consulted.
+     *
+     * It defaulted to 1e9, meaning "never leave the committed plan", which is a
+     * footgun: the nightly run of the risk objective came back scoring exactly
+     * the committed plan in all five seasons and choosing its exact sequence,
+     * and that was not the objective agreeing with the plan, it was the plan
+     * replaying itself. Any experiment that forgets the flag silently measures
+     * the prior. Opting INTO the prior should be the deliberate act.
+     */
     static final double DEVIATE =
-            Double.parseDouble(System.getProperty("deviate", "1e9"));
+            Double.parseDouble(System.getProperty("deviate", "0"));
 
     static final List<Position> PRIOR = new ArrayList<>();
     static {
