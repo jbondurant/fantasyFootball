@@ -2816,3 +2816,50 @@ with, though it is less obviously wrong - with three WR slots and two flexes,
 receivers are the most startable thing on the board.
 
 Still unvalidated. Phase 4 decides.
+
+## Phase 4: the new model does NOT beat the folk rules (2026-08-29)
+
+Every strategy drafted from each season's real ADP board and was scored on what
+those players actually did, week by week, in the league's real lineup - QB,
+RB2, WR3, TE, FLEX2, DEF. No distributions, no scenario draws, nothing marking
+its own homework.
+
+    STRATEGY                     2021   2022   2023   2024   2025    mean  vs ADP  wins
+    RUNBOOK committed            2082   1705   2342   2031   2241    2080    +466   5/5
+    RB-heavy folk rule           1975   1789   2300   1908   1946    1983    +369   5/5
+    starter-sum (1-16)           1849   1961   1804   2180   2148    1989    +374   5/5
+    best-nine (Model A)          1506   1671   1976   1783   1701    1727    +113   3/5
+    best available by ADP        1672   1519   1388   1662   1831    1614      +0   0/5
+
+**The committed plan already in the RUNBOOK wins.** It beats the starter-sum
+sequence by 91 points a season on the mean and 3 seasons to 2 head to head. The
+starter-sum row is also FLATTERED - the model that produced it drew its
+distributions from these very seasons - so the true gap is wider than 91.
+
+The plan said: if it does not beat the baselines, keep the simpler rule and
+write down that it lost. It lost. **The RUNBOOK does not change.**
+
+Three things worth keeping from the run:
+
+**Position thinking is worth a lot.** Every deliberate strategy beat
+best-available-by-ADP, by 113 to 466 points a season, 5 of 5 seasons for the
+top three. The null hypothesis loses badly, which is a real result even though
+it flatters nobody in particular.
+
+**Model A must never be extended past round 9.** Its sixteen-round plan is the
+worst of the thinking strategies at 1727, barely clear of drafting blind,
+because it degenerates into six consecutive quarterbacks once the starting nine
+is full. It is excellent inside the game it was built for and useless outside
+it, which is exactly why it was left untouched.
+
+**What was tested is a fixed sequence, not the model.** The starter-sum row is
+one position order derived from the 2026 board and replayed on five other
+seasons. A per-season policy - rerunning the search against each season's own
+board - would likely do better, and that is the honest next experiment rather
+than a defence of this result. But it has to be run before anything is claimed,
+and this result stands until it is.
+
+**And none of these models reasons about defence at all.** Every strategy was
+handed one at its last pick because the league starts one and no model has an
+opinion. That the objective omits a starting slot entirely is a gap in the
+design, not in the backtest.
