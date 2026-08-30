@@ -34,6 +34,9 @@ public class AccuracyShootout {
         Map<String, double[]> weekOneBySeason = new LinkedHashMap<>();
         Map<String, double[]> bestAdpBySeason = new LinkedHashMap<>();
         Map<String, String> bestAdpName = new LinkedHashMap<>();
+        // experiment 2: season -> family -> capture date -> spearman
+        Map<String, Map<String, java.util.TreeMap<String, Double>>> vintages =
+                new LinkedHashMap<>();
         for(String season : new String[]{"2021", "2022", "2023", "2024", "2025"}){
             Map<String, Double> actual = HistoricalActuals.pointsBySleeperID(season);
             List<Source> sources = new ArrayList<>();
@@ -69,7 +72,10 @@ public class AccuracyShootout {
                             csvValues(file, "sleeper_adp"), true));
                 }
                 else if(name.matches("sleeper-defaults-" + season + "-\\d{8}\\.csv")){
-                    sources.add(new Source("sleeper-DEFAULTS",
+                    // dated in the label: experiment 2 compares vintages of the
+                    // SAME source, so they cannot all be called the same thing
+                    sources.add(new Source("sleeper-defaults-" + name.substring(
+                            name.length() - 12, name.length() - 4),
                             csvValues(file, "sleeper_rank"), true));
                 }
                 else if(name.matches("fp-adp-halfppr-" + season + "-\\d{8}\\.csv")){
@@ -93,7 +99,16 @@ public class AccuracyShootout {
                 if(source.label().equals("sleeper-week1-proj")){
                     weekOneBySeason.put(season, score);
                 }
-                else if(!source.label().contains("LEAKED")){
+                // experiment 2 collects any source whose label carries a date,
+                // so the SAME feed can be compared against itself at two ages
+                java.util.regex.Matcher dated = java.util.regex.Pattern
+                        .compile("^(.*)-(\\d{8})$").matcher(source.label());
+                if(dated.matches()){
+                    vintages.computeIfAbsent(season, u -> new LinkedHashMap<>())
+                            .computeIfAbsent(dated.group(1), u -> new java.util.TreeMap<>())
+                            .put(dated.group(2), score[1]);
+                }
+                if(!source.label().contains("LEAKED")){
                     double[] best = bestAdpBySeason.get(season);
                     if(best == null || score[1] > best[1]){
                         bestAdpBySeason.put(season, score);
@@ -145,6 +160,63 @@ public class AccuracyShootout {
                     delta > 0.05 ? "week-1 projection is better"
                             : delta < -0.05 ? "MARKET RANK IS BETTER" : "no difference");
         }
+        System.out.printf("%n%nEXPERIMENT 2: does a later capture predict better?%n"
+                + "(the same feed compared against itself at two ages - the only"
+                + " comparison%nthat isolates vintage from the source's own"
+                + " quality)%n%n");
+        System.out.printf("%-7s %-18s %11s %9s %11s %9s %9s %7s%n", "SEASON", "FEED",
+                "early", "spearman", "late", "spearman", "delta", "days");
+        double vintageDelta = 0;
+        int pairs = 0;
+        int laterWins = 0;
+        for(Map.Entry<String, Map<String, java.util.TreeMap<String, Double>>> season
+                : vintages.entrySet()){
+            for(Map.Entry<String, java.util.TreeMap<String, Double>> family
+                    : season.getValue().entrySet()){
+                java.util.TreeMap<String, Double> byDate = family.getValue();
+                if(byDate.size() < 2){
+                    continue;
+                }
+                String early = byDate.firstKey();
+                String late = byDate.lastKey();
+                double delta = byDate.get(late) - byDate.get(early);
+                // Two captures scoring identically to six decimals are not two
+                // captures. The sleeper-defaults files carry FABRICATED dates -
+                // commit 2bd97be extracted them all from the same mid-July ADR
+                // workbooks and named them after draft dates - so a "September"
+                // file is July content wearing a September name. Excluded here
+                // and reported, rather than averaged into an answer.
+                if(Math.abs(delta) < 1e-6){
+                    System.out.printf("%-7s %-18s %11s %9.3f %11s %9.3f   SAME DATA -"
+                            + " not two captures%n", season.getKey(), family.getKey(),
+                            early, byDate.get(early), late, byDate.get(late));
+                    continue;
+                }
+                long days = java.time.temporal.ChronoUnit.DAYS.between(
+                        java.time.LocalDate.parse(early,
+                                java.time.format.DateTimeFormatter.BASIC_ISO_DATE),
+                        java.time.LocalDate.parse(late,
+                                java.time.format.DateTimeFormatter.BASIC_ISO_DATE));
+                System.out.printf("%-7s %-18s %11s %9.3f %11s %9.3f %+9.3f %7d%n",
+                        season.getKey(), family.getKey(), early, byDate.get(early),
+                        late, byDate.get(late), delta, days);
+                vintageDelta += delta;
+                pairs++;
+                if(delta > 0){
+                    laterWins++;
+                }
+            }
+        }
+        if(pairs > 0){
+            System.out.printf("%nmean delta %+.3f over %d paired vintages;"
+                    + " the later capture won %d of them.%n",
+                    vintageDelta / pairs, pairs, laterWins);
+            System.out.println("A month of preseason news is worth roughly this much"
+                    + " rank-correlation.\nIf it is near zero, the vintage discipline"
+                    + " costs more than it buys and the\n2024 ADP hole stops"
+                    + " mattering.");
+        }
+
         System.out.println("\nspearman = rank correlation of the source's top-150 with what"
                 + "\nactually happened. The fog, measured.");
     }

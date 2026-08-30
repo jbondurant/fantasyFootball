@@ -2417,3 +2417,52 @@ deleted, so the leak stays visible.
 Anything previously concluded from "Sleeper's projections beat ADP by a mile"
 rested on that source and should be re-derived. The honest version of that
 claim is the +0.120 above - real, consistent, and a third the size.
+
+### Experiment 2 result: vintage barely matters (2026-08-29)
+
+Same feed against itself at two ages - the only comparison that isolates
+vintage from a source's own quality:
+
+    SEASON  FEED                early  spearman     late  spearman   delta  days
+    2022    sleeper-dated    20220806     0.491 20220913     0.489  -0.003    38
+    2023    sleeper-dated    20230830     0.436 20230901     0.430  -0.006     2
+    2024    sleeper-dated    20240803     0.398 20240829     0.405  +0.007    26
+    2025    sleeper-dated    20250801     0.388 20250903     0.450  +0.062    33
+
+    mean delta +0.015 over 4 pairs; the later capture won 2 of them.
+
+**A month of preseason news is worth about +0.015 rank-correlation, and it is
+not consistent** - two of four pairs got WORSE with age. The single real
+movement is 2025, +0.062 across 33 days, one season out of four.
+
+So Justin's premise - that a month-out projection carries more preseason-injury
+risk - is not supported at this sample size. The practical consequences are
+good news for the 1-16 model:
+
+- the 2024 ADP hole (dated 3 August rather than September) stops mattering
+- ADR's July captures are usable as rank inputs, not just as bye-week sources
+- vintage discipline is still right for AVOIDING LEAKS, which is a different
+  thing entirely and is where it earned its keep today
+
+Four pairs is thin, and 2025 shows the effect can be real in a given year.
+This says the average cost is small, not that vintage never matters.
+
+### The provenance bug this exposed
+
+The `sleeper-defaults-<season>-<date>.csv` files carry **fabricated dates**.
+Commit 2bd97be extracted them all from the same mid-July ADR workbooks and
+named them after each season's draft, so `sleeper-defaults-2022-20220901.csv`
+is July content wearing a September name. Re-extracting the 2022 workbook at
+its true manifest date produced a file identical in all 208 ranks.
+
+Consequences:
+
+- `AdrProvenance` reports those dates as capture dates and passes them as
+  admissible. Its 2021-2024 rows are wrong: it is reading filenames, not
+  provenance. The 2026 rows, harvested live this month, are fine.
+- Experiment 2 now detects two "captures" that score identically to six
+  decimals and prints SAME DATA rather than averaging them into an answer.
+
+Not renamed or deleted here - several tools glob those filenames, and the fix
+should be one change that moves the dates and the readers together, proposed
+before it is made.

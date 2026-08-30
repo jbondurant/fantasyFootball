@@ -12,7 +12,7 @@
    sleeper-stored-adp          150    0.480       12/24    0.40   0.52   0.61   0.43
    sleeper-week1-proj          150    0.570       11/24    0.43   0.54   0.51   0.23
    ffc-adp                     115    0.344       11/24    0.29   0.42   0.50   0.25
-   sleeper-DEFAULTS            150    0.484       12/24    0.30   0.57   0.62   0.44
+   sleeper-defaults-20220901   150    0.484       12/24    0.30   0.57   0.62   0.44
    sleeper-dated-20220806      150    0.491       12/24    0.54   0.61   0.60   0.46
    fp-consensus-adp            150    0.504       12/24    0.39   0.61   0.60   0.43
    sleeper-dated-20220913      150    0.489       12/24    0.30   0.57   0.63   0.46
@@ -22,7 +22,7 @@
    sleeper-stored-adp          150    0.435        8/24    0.34   0.45   0.59   0.16
    sleeper-week1-proj          150    0.579       15/24    0.39   0.47   0.63   0.22
    ffc-adp                     150    0.479        7/24    0.49   0.43   0.63   0.46
-   sleeper-DEFAULTS            150    0.431        8/24    0.37   0.43   0.60   0.23
+   sleeper-defaults-20230901   150    0.431        8/24    0.37   0.43   0.60   0.23
    sleeper-dated-20230901      150    0.430        8/24    0.37   0.44   0.60   0.23
    fp-consensus-adp            150    0.416        8/24    0.41   0.41   0.59   0.18
    sleeper-dated-20230830      150    0.436        8/24    0.37   0.44   0.61   0.23
@@ -33,7 +33,7 @@
    sleeper-week1-proj          150    0.558       14/24    0.47   0.58   0.43   0.19
    ffc-adp                     150    0.356       10/24    0.40   0.51   0.42   0.51
    sleeper-dated-20240803      150    0.398        9/24    0.40   0.57   0.49   0.53
-   sleeper-DEFAULTS            150    0.405       11/24    0.42   0.53   0.51   0.53
+   sleeper-defaults-20240902   150    0.405       11/24    0.42   0.53   0.51   0.53
    sleeper-dated-20240829      150    0.405       11/24    0.42   0.53   0.51   0.53
    fp-consensus-adp            150    0.369       11/24    0.28   0.55   0.46   0.38
 
@@ -52,19 +52,35 @@ EXPERIMENT 1: does a week-1 projection beat the market rank?
 (the leaked season feed is excluded - it is not a forecast)
 
 SEASON      week-1 proj  best ADP rank      delta   which ADP             
-2021              0.588          0.415     +0.173   sleeper-dated-20210907
-2022              0.570          0.504     +0.066   fp-consensus-adp      
-2023              0.579          0.479     +0.100   ffc-adp               
-2024              0.558          0.405     +0.153   sleeper-DEFAULTS      
-2025              0.559          0.452     +0.107   sleeper-stored-adp    
+2021              0.588          0.588     +0.000   sleeper-week1-proj    
+2022              0.570          0.570     +0.000   sleeper-week1-proj    
+2023              0.579          0.579     +0.000   sleeper-week1-proj    
+2024              0.558          0.558     +0.000   sleeper-week1-proj    
+2025              0.559          0.559     +0.000   sleeper-week1-proj    
 
-mean delta +0.120 over 5 seasons - week-1 projection WINS
+mean delta +0.000 over 5 seasons - week-1 projection loses
 
 by position (week-1 minus best ADP):
-   QB    -0.000   no difference
-   RB    -0.036   no difference
-   WR    -0.027   no difference
-   TE    -0.210   MARKET RANK IS BETTER
+   QB    +0.000   no difference
+   RB    +0.000   no difference
+   WR    +0.000   no difference
+   TE    +0.000   no difference
+
+
+EXPERIMENT 2: does a later capture predict better?
+(the same feed compared against itself at two ages - the only comparison
+that isolates vintage from the source's own quality)
+
+SEASON  FEED                     early  spearman        late  spearman     delta    days
+2022    sleeper-dated         20220806     0.491    20220913     0.489    -0.003      38
+2023    sleeper-dated         20230830     0.436    20230901     0.430    -0.006       2
+2024    sleeper-dated         20240803     0.398    20240829     0.405    +0.007      26
+2025    sleeper-dated         20250801     0.388    20250903     0.450    +0.062      33
+
+mean delta +0.015 over 4 paired vintages; the later capture won 2 of them.
+A month of preseason news is worth roughly this much rank-correlation.
+If it is near zero, the vintage discipline costs more than it buys and the
+2024 ADP hole stops mattering.
 
 spearman = rank correlation of the source's top-150 with what
 actually happened. The fog, measured.
