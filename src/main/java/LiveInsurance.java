@@ -44,6 +44,18 @@ import java.util.Set;
  */
 public class LiveInsurance {
 
+    /**
+     * Why a candidate is worth what he is worth.
+     *   starts      share of sampled seasons where he cracks my best nine
+     *   worthWhen   what he adds in those seasons, over the man he displaces
+     *   bust        share where he returns under 70% of his projection
+     *   boom        share where he beats it by more than 20%
+     */
+    record Diagnostic(double starts, double worthWhen, double bust, double boom) {}
+
+    /** name -> injury probability, from the Draft Sharks export. */
+    static final Map<String, Double> INJURY_ODDS = new HashMap<>();
+
     /** name -> projected games missed, from the Draft Sharks export. */
     static Map<String, Double> gamesMissed(){
         Map<String, Double> missed = new HashMap<>();
@@ -54,6 +66,7 @@ public class LiveInsurance {
                 String[] cells = line.split(",");
                 if(cells.length >= 4){
                     missed.put(cells[0].trim(), Double.parseDouble(cells[3]));
+                    INJURY_ODDS.put(cells[0].trim(), Double.parseDouble(cells[2]));
                 }
             }
         }
@@ -130,11 +143,17 @@ public class LiveInsurance {
         // numbers the DIFFERENCE is far better measured than either level, so
         // the error bar that matters is the one on the gap.
         Position reference = best.keySet().iterator().next();
+        Map<Position, Diagnostic> diagnostics = new EnumMap<>(Position.class);
         Map<Position, List<Double>> perDraw = new EnumMap<>(Position.class);
 
         for(Map.Entry<Position, String> candidate : best.entrySet()){
             double total = 0;
             List<Double> samples = new ArrayList<>();
+            int startedCount = 0;
+            double startedValue = 0;
+            int bustCount = 0;
+            int boomCount = 0;
+            int seasons = 0;
             for(int draw = 0; draw < draws; draw++){
                 // COMMON RANDOM NUMBERS: the season is drawn from the draw
                 // index alone, so every position is judged under identical
@@ -193,12 +212,36 @@ public class LiveInsurance {
                     Set<String> fieldable = new HashSet<>(mine);
                     fieldable.addAll(wire);
                     double score = StartingLineup.bestNine(fieldable, truth);
+                    // What HE adds: the same nine without him. The gap is his
+                    // marginal value over whoever would otherwise have filled
+                    // the slot - another bench man, or a body off the wire.
+                    Set<String> without = new HashSet<>(fieldable);
+                    without.remove(candidate.getValue());
+                    double marginal = score - StartingLineup.bestNine(without, truth);
+                    seasons++;
+                    if(marginal > 0.5){
+                        startedCount++;
+                        startedValue += marginal;
+                    }
+                    double ratio = truth.getOrDefault(candidate.getValue(), 0.0)
+                            / Math.max(1e-6, projections.getOrDefault(candidate.getValue(), 1.0));
+                    if(ratio < 0.70){
+                        bustCount++;
+                    }
+                    if(ratio > 1.20){
+                        boomCount++;
+                    }
                     total += score;
                     samples.add(score);
                 }
             }
             value.put(candidate.getKey(), total / (draws * rollouts));
             perDraw.put(candidate.getKey(), samples);
+            diagnostics.put(candidate.getKey(), new Diagnostic(
+                    startedCount / (double) seasons,
+                    startedCount == 0 ? 0 : startedValue / startedCount,
+                    bustCount / (double) seasons,
+                    boomCount / (double) seasons));
         }
 
         // standard error of each candidate's gap to the reference, computed
@@ -223,21 +266,31 @@ public class LiveInsurance {
         double top = value.get(order.get(0));
         System.out.printf("%nMODEL B - expected season under %d sampled truths,"
                 + " wire available%n%n", draws);
-        System.out.printf("   %-5s %-24s %10s %9s %8s%n", "POS", "BEST AVAILABLE",
-                "SEASON", "vs best", "+/- 2se");
+        System.out.printf("   %-4s %-22s %8s %8s %7s %8s %7s %6s %6s %6s%n",
+                "POS", "BEST AVAILABLE", "SEASON", "vs best", "+/-2se", "STARTS",
+                "WORTH", "BUST", "BOOM", "INJ");
         for(Position position : order){
             Player player = Player.getPlayerFromSIDV2(best.get(position));
             double gapError = Math.sqrt(Math.pow(error.getOrDefault(position, 0.0), 2)
                     + Math.pow(error.getOrDefault(order.get(0), 0.0), 2));
-            System.out.printf("   %-5s %-24s %10.1f %+9.1f %8.1f%n", position,
-                    player.firstName + " " + player.lastName, value.get(position),
-                    value.get(position) - top, 2 * gapError);
+            Diagnostic diagnostic = diagnostics.get(position);
+            Double odds = INJURY_ODDS.get(player.firstName + " " + player.lastName);
+            System.out.printf("   %-4s %-22s %8.1f %+8.1f %7.1f %7.0f%% %7.1f %5.0f%% "
+                            + "%5.0f%% %5s%n",
+                    position, player.firstName + " " + player.lastName,
+                    value.get(position), value.get(position) - top, 2 * gapError,
+                    diagnostic.starts() * 100, diagnostic.worthWhen(),
+                    diagnostic.bust() * 100, diagnostic.boom() * 100,
+                    odds == null ? "-" : String.format("%.0f%%", odds * 100));
         }
         System.out.printf("%n   Model B says: %s -> %s%n", order.get(0),
                 Player.getPlayerFromSIDV2(best.get(order.get(0))).firstName + " "
                         + Player.getPlayerFromSIDV2(best.get(order.get(0))).lastName);
-        System.out.println("   (Insurance value only - what the pick is worth when a"
-                + " starter busts,\n    over and above streaming a replacement off the"
-                + " wire.)");
+        System.out.println("\n   STARTS = share of sampled seasons he cracks my best"
+                + " nine.  WORTH = what he\n   adds in those seasons, over the man he"
+                + " displaces (bench or wire).  BUST/BOOM\n   = returns under 70% /"
+                + " over 120% of projection.  INJ = Draft Sharks injury odds.\n"
+                + "   Expected value is roughly STARTS x WORTH - that product, not the"
+                + " SEASON\n   column, is what a bench pick actually buys.");
     }
 }
