@@ -3378,3 +3378,52 @@ That is the next thing to build, and it is the same lesson as the roster-spot
 and must-draft corrections: **this objective models points well and constraints
 badly.** Three faults in a row, all of them constraints, all of them found by
 Justin rather than by the tests.
+
+## The constraint layer, and one fix that failed (2026-08-29)
+
+Three corrections in a row said the same thing - the objective prices points
+well and constraints badly - so the floor under all of them is now in the
+search: **you start one defence and one quarterback, so a second defence can
+never play and a third quarterback is a wasted spot on a sixteen-man roster.**
+Skill positions stay uncapped, because the flexes make a fourth receiver
+genuinely startable.
+
+Model A is untouched, byte-identical at 1812.8 / p10 1784.4 - its ballot has no
+defence and nine rounds never reach three quarterbacks.
+
+**It fixed something bigger than defences.** Model A extended to sixteen rounds
+used to degenerate into six consecutive quarterbacks. It now reads
+
+    RB WR RB WR WR WR TE QB QB RB RB RB RB RB
+
+which is a plan rather than an artifact. The double-defence and double-
+quarterback pathologies are gone from every variant.
+
+### But removing the free wire over-corrects a GREEDY policy
+
+With no free wire an unfilled quarterback slot looks like losing 320 points for
+the season, so the greedy policy rushed to fill slots and opened every single
+season with a quarterback at pick 7. That is not a constraint problem; it is a
+lookahead problem. Greedy values the roster AS IT IS, and a half-built roster
+with no free wire looks catastrophic rather than unfinished.
+
+**A completion heuristic was tried and failed, badly.** Filling each trial
+roster's empty mandatory slots with the best men still on the board was meant to
+remove the panic. It made every candidate's roster nearly identical, masking the
+marginal it was supposed to measure: the policy collapsed to two quarterbacks
+then twelve running backs and scored **1055**, below drafting at random. Removed,
+with the reason recorded in the file so nobody tries it again.
+
+The policy stands at 1731 against the committed plan's 1984.
+
+### Where this actually leaves the objective
+
+The truth about the wire is a SWAP - not a free add, not an impossibility. A
+manager can put any player in an empty slot, but only by dropping someone, so
+each roster spot is worth at least wire level and there are exactly sixteen of
+them. Neither extreme models that, and the greedy evaluator cannot represent it
+at all without lookahead.
+
+That is the honest state: the constraint layer is right and worth keeping, the
+free-wire removal is right in principle and mis-serves a greedy policy, and the
+model remains well behind the folk rules. **Nothing here changes the RUNBOOK.**

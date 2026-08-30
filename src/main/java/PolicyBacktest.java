@@ -164,6 +164,12 @@ public class PolicyBacktest {
                 double bestValue = -Double.MAX_VALUE;
                 for(Position position : new Position[]{Position.QB, Position.RB,
                         Position.WR, Position.TE, Position.DEF}){
+                    // same roster-legality floor the search uses: you start one
+                    // defence and one quarterback, so a second defence can never
+                    // play and a third quarterback is a wasted spot
+                    if(!worthTaking(position, plan)){
+                        continue;
+                    }
                     String candidate = PlanBacktest.bestAvailable(board, gone, position);
                     if(candidate == null){
                         continue;
@@ -191,6 +197,26 @@ public class PolicyBacktest {
             }
         }
         return PlanBacktest.seasonPoints(board, mine);
+    }
+
+    // A completion heuristic was tried here on 2026-08-29 and removed: filling
+    // each trial roster's empty mandatory slots with the best men left made
+    // every candidate's roster nearly identical, which masked the marginal it
+    // was meant to measure. The policy collapsed to QB QB then twelve running
+    // backs and scored 1055, below drafting at random. The greedy evaluation
+    // needs real lookahead, not a stand-in.
+
+    static boolean worthTaking(Position candidate, List<Position> chosen){
+        if(candidate != Position.DEF && candidate != Position.QB){
+            return true;
+        }
+        int held = 0;
+        for(Position position : chosen){
+            if(position == candidate){
+                held++;
+            }
+        }
+        return candidate == Position.DEF ? held < 1 : held < 2;
     }
 
     static Map<Position, Double> wireFrom(

@@ -53,6 +53,33 @@ public class DraftPlanner {
      * quarterback at pick 186 rather than the defence it should have had, not
      * because it valued one higher but because DEF was never on the ballot.
      */
+    /**
+     * Whether another man at this position could ever reach the lineup.
+     *
+     * The objective prices points well and constraints badly - it has now been
+     * caught three times assuming a roster spot was free, that a slot could be
+     * left unfilled, or that a wire man arrives from nowhere. This is the floor
+     * under all of that: you start ONE defence and ONE quarterback, so a second
+     * defence can never play and a third quarterback is a wasted spot on a
+     * sixteen-man roster. Skill positions are uncapped because the flexes make
+     * a fourth receiver or fourth back genuinely startable.
+     *
+     * Inert for Model A, whose ballot holds no defence and which has never had
+     * enough picks to reach three quarterbacks inside nine rounds.
+     */
+    private static boolean worthTaking(Position candidate, List<Position> prefix){
+        if(candidate != Position.DEF && candidate != Position.QB){
+            return true;
+        }
+        int held = 0;
+        for(Position position : prefix){
+            if(position == candidate){
+                held++;
+            }
+        }
+        return candidate == Position.DEF ? held < 1 : held < 2;
+    }
+
     private static Position[] positions(){
         return scheduleRounds() > SelectionModel.GAME_ROUNDS
                 ? WITH_DEFENCE : SKILL_POSITIONS;
@@ -243,6 +270,9 @@ public class DraftPlanner {
             double bestScore = Double.NEGATIVE_INFINITY;
             double[] bestStats = null;
             for(Position candidate : positions()){
+                if(!worthTaking(candidate, chosenPositions)){
+                    continue;
+                }
                 List<Position> prefix = new ArrayList<>(chosenPositions);
                 prefix.add(candidate);
                 double[] outcomes = new double[rollouts];
