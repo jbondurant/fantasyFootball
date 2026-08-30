@@ -3874,3 +3874,53 @@ though the live tool now says wait. Those are different code paths - the search
 scores a whole plan through rollouts, the live tool scores one pick - so the
 remaining fault is in the rollout tail policy rather than in the choice model or
 the objective. Contained, and next.
+
+## What predicts, what does not, and what to do about each (2026-08-29)
+
+One reliability number per position was too coarse. Measured by position AND
+tier, with the shape of the error alongside:
+
+    POS  TIER         n  predicts     bias   spread     bust     boom
+    RB   1-12        60     0.037     0.99     0.35       8%       7%
+    RB   13-24       60     0.335     1.00     0.46      17%       7%
+    RB   25-36       60    -0.020     1.02     0.49      15%      18%
+    RB   61-72       57     0.200     1.01     0.94      37%      28%
+    WR   1-12        60     0.357     0.99     0.33       8%       7%
+    WR   61-72       60    -0.090     1.03     0.59      17%      23%
+    TE   1-12        60     0.319     1.01     0.35       5%      12%
+    QB   1-12        60     0.394     0.99     0.32      10%       0%
+    DEF  1-12        60     0.126     1.00     0.23       0%       0%
+    DEF  13-24       59     0.127     1.01     0.25       2%       3%
+
+**Within a tier, the board is nearly blind everywhere.** 0.04 to 0.39, and
+RB1-12 is 0.037 - at pick 7 the board cannot tell the top twelve backs apart at
+all. Yet position-level predictability is 0.63, which means the TIERS are
+ordered correctly and the ordering INSIDE them is mostly noise. **The tier is
+the unit of decision; the player within it is nearly a coin flip.**
+
+**That corrects an earlier diagnosis of mine.** I told Justin the tier bucketing
+was throwing away the projections and making the model less informed than Model
+A. The principle was right, but the measurement says the discarded information
+was largely noise - which is why the per-rank version scored 1818 against the
+bucketed 1859, no better. The bucketing was not the deficit.
+
+**Failure looks different at each position, and shrinkage only fits one case:**
+
+- **DEF: spread 0.23-0.25, bust 0-2%, boom 0-3%.** Not merely unpredictable -
+  nearly IDENTICAL. Every defence returns close to its billing and its billing
+  is close to every other's. That is the real argument for taking one last: not
+  that you cannot pick the good one, but that there is barely a good one to
+  pick.
+- **QB 1-12: 10% bust, 0% boom.** No upside whatever, only downside. An elite
+  quarterback cannot pay off, he can only fail to. Never reach.
+- **TE 1-12: 5% bust, 12% boom.** The only tier in the table where upside beats
+  downside more than two to one. If any early reach is defensible it is this
+  one - which sits oddly beside the finding that TE should wait until round 8,
+  and is worth resolving rather than papering over.
+- **Spread grows sharply with depth** - RB 0.35 at tier 1 against 0.94 at tier
+  6. Late picks are lottery tickets by measurement, not by folklore.
+
+**How to account for each, then:** shrink hard WITHIN a tier, since that
+ordering is noise; keep tier-level differences, since those are real; and
+handle skew separately from spread, because averaging a 12%-boom tight end and a
+0%-boom quarterback the same way destroys the only reason to take the first.

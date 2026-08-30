@@ -26,7 +26,7 @@ import java.util.Map;
  */
 public class PositionPredictability {
 
-    record Seen(Position position, int rank, double actual){}
+    public record Seen(Position position, int rank, double actual){}
 
     /**
      * How much a preseason ranking at each position is worth believing, as the
@@ -173,7 +173,7 @@ public class PositionPredictability {
         return 1 - 6 * sum / ((double) n * (n * n - 1));
     }
 
-    static List<Seen> load(File adpFile, String season) throws Exception {
+    public static List<Seen> load(File adpFile, String season) throws Exception {
         Map<String, Double> actual = new HashMap<>(
                 HistoricalActuals.pointsBySleeperID(season));
         actual.putAll(HistoricalActuals.defencePointsBySleeperID(season));
