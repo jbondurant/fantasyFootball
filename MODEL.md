@@ -3224,3 +3224,42 @@ methods, same order of magnitude, same direction.
 
 The dips at rounds 5 and 7 (1844, 1831) are which specific players the plan
 ends up with in those variants, not structure. The trend is what to read.
+
+### Every model streams the defence - and it turns out they are right (2026-08-29)
+
+With defences on the board, on the ballot and in the objective, five variants
+drafted all sixteen rounds:
+
+    MODEL                            defence at
+    best-nine season totals          NEVER - streams one
+    starter sum, 100 scenarios       NEVER - streams one
+    starter sum, 400 scenarios       NEVER - streams one
+    starter sum, 1200 scenarios      NEVER - streams one
+    starter sum, 400 (other seed)    NEVER - streams one
+
+Unanimous across objectives, scenario counts and seeds. None takes one early,
+which is what would have been alarming; none takes one at all.
+
+**That claim was untestable until now, and the reason is a fault in the
+backtest.** `seasonPoints` scored an unfilled defence slot as ZERO, which
+quietly assumed you cannot pick a defence off waivers. That is false - defences
+are always available - and it made "never draft one" look catastrophic while
+every model that could choose freely was doing exactly that.
+
+Fixed: an unfillable defence slot is now STREAMED, at the wire rate
+`WeeklyStarterValue` measures. And the models win:
+
+    RUNBOOK committed         1998   (defence drafted at pick 14)
+    committed, DEF streamed   2011   (that pick spent on a back instead)
+
+**+13 points a season, and it is now the best strategy on the board.** But 13
+points on two thousand is 0.6%, and streaming wins 3 seasons of 5, so the
+honest reading is that streaming is AT LEAST AS GOOD as drafting one - not that
+it is meaningfully better. What it does kill is any argument for spending a
+pick on a defence, which now has no support from any direction: not the 0.277
+predictability, not the placement curve, not the top-four test, and not this.
+
+The streamed rate is computed from `WeeklyStarterValue.wireRates`, not typed in.
+The first version hardcoded 8.7 read off another tool's output, which is the
+same prose-drift fault this repo spent the day fixing - the moment the wire
+calculation moves, a copied constant becomes a lie.

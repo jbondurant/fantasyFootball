@@ -35,6 +35,31 @@ import java.util.Set;
  */
 public class PlanBacktest {
 
+    /**
+     * What streaming a defence off waivers is worth per week.
+     *
+     * Computed, not typed. An earlier version hardcoded 8.7 read off another
+     * tool's output, which is the same prose-drift fault this repo has been
+     * fixing all day: the moment the wire calculation changes, a constant
+     * copied out of it becomes a lie. This asks WeeklyStarterValue for the
+     * number, so the two can never disagree.
+     */
+    private static Double streamedDefence;
+
+    static synchronized double streamedDefencePerWeek(){
+        if(streamedDefence == null){
+            try {
+                streamedDefence = WeeklyStarterValue.wireRates(
+                        AAAConfiguration.getInstance(),
+                        WeeklyStarterValue.pool()).getOrDefault(Position.DEF, 0.0);
+            }
+            catch(Exception unavailable){
+                throw new RuntimeException("cannot price a streamed defence", unavailable);
+            }
+        }
+        return streamedDefence;
+    }
+
     /** Slot 7, keepers at r12 and r13. */
     static final int[] MY_PICKS = {7, 18, 31, 42, 55, 66, 79, 90, 103, 114, 127,
             162, 175, 186};
@@ -58,6 +83,9 @@ public class PlanBacktest {
                 "RB RB RB WR WR WR WR   WR QB TE TE WR RB DEF");
         STRATEGIES.put("ModelA front + SS back",
                 "RB WR RB WR WR WR TE   WR QB TE TE WR RB DEF");
+        // the models' unanimous choice: never draft one, stream instead
+        STRATEGIES.put("committed, DEF streamed",
+                "RB RB RB WR WR WR WR TE WR QB TE QB RB RB");
         STRATEGIES.put("best available by ADP", null);
     }
 
@@ -82,7 +110,9 @@ public class PlanBacktest {
 
         System.out.printf("%nPHASE 4: every strategy on every season's REAL outcomes%n");
         System.out.printf("lineup QB/RB2/WR3/TE/FLEX2/DEF, 18 weeks, best legal"
-                + " lineup each week%n%n");
+                + " lineup each week%n");
+        System.out.printf("a defence slot the roster cannot fill is STREAMED at %.1f"
+                + " points a week%n%n", streamedDefencePerWeek());
         System.out.printf("%-24s", "STRATEGY");
         for(Board board : boards){
             System.out.printf(" %8s", board.season());
@@ -286,7 +316,15 @@ public class PlanBacktest {
             total += fill(up.get(Position.RB), 2, flex, points);
             total += fill(up.get(Position.WR), 3, flex, points);
             total += fill(up.get(Position.TE), 1, flex, points);
-            total += fill(up.get(Position.DEF), 1, null, points);
+            // A defence slot the roster cannot fill is STREAMED, not left empty.
+            // Scoring it zero was quietly assuming you cannot pick a defence off
+            // waivers, which is false and which made "never draft one" look
+            // catastrophic when every model that can choose freely does exactly
+            // that. The rate is the wire level measured from history.
+            List<String> defence = up.get(Position.DEF);
+            total += defence == null || defence.isEmpty()
+                    ? streamedDefencePerWeek()
+                    : fill(defence, 1, null, points);
             flex.sort(Comparator.comparingInt(
                     id -> boardRank.getOrDefault(id, Integer.MAX_VALUE)));
             for(int slot = 0; slot < 2 && slot < flex.size(); slot++){
