@@ -99,6 +99,67 @@ public class PowerBacktest {
     /** -PnoPolicy skips the adaptive starter-sum policy, which dominates runtime. */
     static final boolean NO_POLICY = Boolean.getBoolean("noPolicy");
 
+    /**
+     * Rows that are not fair entrants and must not anchor a conclusion.
+     *
+     * best-nine (Model A) is Model A run past round 7, which is outside its
+     * domain. Its objective is the best legal NINE - the nine non-defence
+     * starting slots - and Justin holds two keepers, so two keepers plus seven
+     * picks fill those slots exactly. From round 8 the objective is indifferent
+     * and everything it emits is an artifact; DraftNight prints "THE STARTING
+     * NINE IS FULL" at precisely that point, and a DraftPlanner run shows the
+     * value pinned at 1812.8 for every pick from the sixth onward. The
+     * legitimate mixed row is ModelA front + SS back, which uses Model A for
+     * the front seven only.
+     *
+     * The row is still scored, because its standard error is a real measurement
+     * of this instrument, but it is marked everywhere it appears.
+     */
+    static final Set<String> OUT_OF_DOMAIN = Set.of("best-nine (Model A)");
+
+    /**
+     * How a season's realised football is turned into weekly points - THE SEAM
+     * FOR SWAPPING THE OUTCOME MEASURE, which is one line below.
+     *
+     * Sleeper's pts_half_ppr pays FOUR points for a passing touchdown and this
+     * league pays six, so grading outcomes off the raw feed understates every
+     * starting quarterback by roughly 55-66 points a season. That is a
+     * SYSTEMATIC error, not a random one, and no amount of sample size fixes
+     * it: this instrument measures how big a gap has to be to beat noise, and
+     * is blind by construction to a bias that moves every row the same way.
+     *
+     * The live switch is LeagueActuals, which PlanBacktest.board already grades
+     * through - so this tool follows it automatically and GRADER stays NULL.
+     * A non-null grader here would silently overrule that toggle and re-impose
+     * whatever it names, which is precisely the -Pdeviate fault in a new hat:
+     * a default that quietly decides the thing under test. The seam exists for
+     * an explicit, deliberate override and for nothing else.
+     */
+    public interface Grader {
+        Map<String, Double> pointsBySleeperID(String season, int week);
+    }
+
+    static final Grader GRADER = null;
+
+    /**
+     * The same board, regraded. A Board carries its weekly outcomes, and both
+     * PlanBacktest.score and PlanBacktest.seasonPoints read them off the board
+     * they are handed, so replacing them here replaces the outcome measure for
+     * everything this tool runs - including the reproduction check, which then
+     * checks the harness against PlanBacktest under the new grader too.
+     */
+    static PlanBacktest.Board regraded(PlanBacktest.Board board, Grader grader){
+        if(grader == null){
+            return board;
+        }
+        List<Map<String, Double>> weekly = new ArrayList<>();
+        for(int week = 1; week <= WeeklyActuals.WEEKS; week++){
+            weekly.add(grader.pointsBySleeperID(board.season(), week));
+        }
+        return new PlanBacktest.Board(board.season(), board.ids(), board.positionOf(),
+                weekly);
+    }
+
     /** One evaluation: a season, a seat, and an opponent world. */
     public record Draw(String season, int slot, int world){}
 
@@ -448,7 +509,8 @@ public class PowerBacktest {
         while(tCdf(high, df) < p && high < 1e9){
             high *= 2;
         }
-        for(int step = 0; step < 200; step++){
+        // 80 halvings takes an interval of order 100 below 1e-22; more is waste
+        for(int step = 0; step < 80; step++){
             double middle = (low + high) / 2;
             if(tCdf(middle, df) < p){
                 low = middle;
@@ -464,12 +526,23 @@ public class PowerBacktest {
 
     /** P(T <= t) for t >= 0, by Simpson's rule under the tangent substitution. */
     static double tCdf(double t, int df){
-        return 0.5 + halfMass(Math.atan(t), df) / (2 * halfMass(Math.PI / 2, df));
+        return 0.5 + halfMass(Math.atan(t), df) / (2 * total(df));
+    }
+
+    /**
+     * The whole right half's mass, which normalises every CDF call at this df -
+     * memoised because the bisection asks for it thousands of times and it is
+     * the same integral every time.
+     */
+    private static final Map<Integer, Double> TOTAL = new HashMap<>();
+
+    private static synchronized double total(int df){
+        return TOTAL.computeIfAbsent(df, d -> halfMass(Math.PI / 2, d));
     }
 
     /** The unnormalised density integrated from 0 to tan(upper). */
     private static double halfMass(double upper, int df){
-        int steps = 20_000;
+        int steps = 4_000;
         double width = upper / steps;
         double total = 0;
         for(int i = 0; i <= steps; i++){
@@ -516,7 +589,10 @@ public class PowerBacktest {
                 String season = file.getName().split("-")[3];
                 PlanBacktest.Board board = PlanBacktest.board(file, season);
                 if(board != null && board.ids().size() > 150){
-                    boards.put(season, board);
+                    // seasons are DISCOVERED, never listed: a harvest that adds
+                    // 2018-2020 or reaches back to 2009 widens this loop and
+                    // every degree of freedom below follows it
+                    boards.put(season, regraded(board, GRADER));
                 }
             }
         }
@@ -744,8 +820,8 @@ public class PowerBacktest {
         }
         List<Double> bars = new ArrayList<>();
         for(int g = 0; g < names.size(); g++){
-            if(g == baseline){
-                continue;
+            if(g == baseline || OUT_OF_DOMAIN.contains(names.get(g))){
+                continue;                        // like for like with the new bar
             }
             double[] diff = new double[seasons.size()];
             for(int s = 0; s < seasons.size(); s++){
@@ -787,8 +863,10 @@ public class PowerBacktest {
         }
         System.out.println();
         for(int r = 0; r < rows; r++){
+            String label = (OUT_OF_DOMAIN.contains(names.get(r)) ? "! " : "")
+                    + names.get(r);
             System.out.printf("%2d %-21s", r + 1,
-                    names.get(r).length() > 21 ? names.get(r).substring(0, 21) : names.get(r));
+                    label.length() > 21 ? label.substring(0, 21) : label);
             for(int c = 0; c < rows; c++){
                 if(r == c){
                     System.out.printf(" %5s", ".");
@@ -814,7 +892,13 @@ public class PowerBacktest {
         System.out.printf("%n   + / -  past this pair's 95%% bar AND past the"
                 + " all-pairs bar%n   * / ~  past its own 95%% bar only - one of"
                 + " these is expected by chance%n   blank  indistinguishable at this"
-                + " sample size%n");
+                + " sample size%n   !      out of domain: not a fair entrant, read"
+                + " neither its row nor its column%n");
+    }
+
+    /** Neither the baseline itself nor a row that is outside its own domain. */
+    static boolean fairEntrant(Paired row){
+        return !row.name().equals(BASELINE) && !OUT_OF_DOMAIN.contains(row.name());
     }
 
     static void report(List<String> names, double[][] scores, List<Draw> draws,
@@ -841,11 +925,19 @@ public class PowerBacktest {
             }
             Paired row = paired(names.get(s), scores[s], diff, clusterOf, seasons.size());
             rows.add(row);
-            System.out.printf("%-24s %7.0f %+8.0f %8.1f %8.1f %9.0f %7.0f%%%s%n",
+            System.out.printf("%-24s %7.0f %+8.0f %8.1f %8.1f %9.0f %7.0f%%%s%s%n",
                     row.name(), row.mean(), row.diff(), row.seNaive(), row.seSeason(),
                     row.bar(), 100.0 * row.wins() / row.draws(),
-                    s == baseline ? "   <- baseline" : (row.real() ? "   REAL" : ""));
+                    s == baseline ? "   <- baseline" : (row.real() ? "   REAL" : ""),
+                    OUT_OF_DOMAIN.contains(row.name()) ? "   [out of domain]" : "");
         }
+        System.out.printf("%n[out of domain] Model A's objective is the best legal NINE,"
+                + " and two keepers plus%nseven picks fill those slots exactly - from"
+                + " round 8 it is indifferent and its%noutput is an artifact. The row is"
+                + " scored because its error bar is a real reading%non this instrument,"
+                + " but it is not a fair entrant and must not anchor anything.%nThe"
+                + " legitimate mixed row is 'ModelA front + SS back', Model A for the"
+                + " front seven.%n");
 
         // Justin's own seat, on its own, because that is the draft he sits in
         System.out.printf("%nSLOT %d ONLY (Justin's seat), %d draws:%n", MY_SLOT,
@@ -868,15 +960,16 @@ public class PowerBacktest {
                 cluster[i] = clusterOf[mine.get(i)];
             }
             Paired row = paired(names.get(s), score, diff, cluster, seasons.size());
-            System.out.printf("%-24s %7.0f %+8.0f %8.1f %9.0f%s%n", row.name(),
+            System.out.printf("%-24s %7.0f %+8.0f %8.1f %9.0f%s%s%n", row.name(),
                     row.mean(), row.diff(), row.seSeason(), row.bar(),
-                    s == baseline ? "   <- baseline" : (row.real() ? "   REAL" : ""));
+                    s == baseline ? "   <- baseline" : (row.real() ? "   REAL" : ""),
+                    OUT_OF_DOMAIN.contains(row.name()) ? "   [out of domain]" : "");
         }
 
-        // the headline: the typical bar across the challengers
-        double[] bars = rows.stream().filter(r -> !r.name().equals(BASELINE))
+        // the headline: the typical bar across the FAIR challengers
+        double[] bars = rows.stream().filter(PowerBacktest::fairEntrant)
                 .mapToDouble(Paired::bar).sorted().toArray();
-        double[] mde = rows.stream().filter(r -> !r.name().equals(BASELINE))
+        double[] mde = rows.stream().filter(PowerBacktest::fairEntrant)
                 .mapToDouble(r -> minimumDetectable(r.seSeason(), r.clusters()))
                 .sorted().toArray();
         double medianBar = bars[bars.length / 2];
@@ -918,8 +1011,12 @@ public class PowerBacktest {
         System.out.printf("%nHOW MANY SEASONS WOULD IT TAKE?%n");
         System.out.printf("bar to call a gap real, at %d slots x %d worlds a season:%n",
                 TEAMS, SEEDS);
+        // anchored on what is actually loaded, not on a typed list, so a
+        // harvest that widens the data widens this row with it
+        int have = seasons.size();
+        int[] counts = {have, have + 3, 2 * have, 2 * have + 4, 3 * have + 2};
+        long fair = rows.stream().filter(PowerBacktest::fairEntrant).count();
         System.out.printf("   %-10s", "seasons");
-        int[] counts = {5, 8, 10, 12, 17};
         for(int seasonCount : counts){
             System.out.printf(" %8d", seasonCount);
         }
@@ -928,8 +1025,8 @@ public class PowerBacktest {
         for(int seasonCount : counts){
             double se = 0;
             for(Paired row : rows){
-                if(!row.name().equals(BASELINE)){
-                    se += row.seAt(seasonCount, (int) row.perCluster()) / (rows.size() - 1);
+                if(fairEntrant(row)){
+                    se += row.seAt(seasonCount, (int) row.perCluster()) / fair;
                 }
             }
             System.out.printf(" %8.0f", t975(seasonCount - 1) * se);

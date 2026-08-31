@@ -4072,3 +4072,146 @@ still `RB RB RB WR WR WR DEF ...`, so scarcity was not what was driving it.
 
 Model A remains byte-identical at 1812.8 / p10 1784.4 and the suite is green
 throughout. **Nothing here reaches Tuesday's tooling.**
+
+## The instrument, not the model: what a gap has to be worth (2026-08-30)
+
+Every ranking in this document above rests on five numbers per strategy - five
+seasons, drafted from seat 7, against one fixed sequence of opponent picks. The
+per-season spread is around 200 points. Nobody had ever asked what that makes
+the error bar, and the answer is that most of the day's findings were inside it.
+
+`PowerBacktest` is the answer. It is a measuring instrument and proposes no
+strategy at all.
+
+### What it changes
+
+**Twelve seats, not one.** The same season drafted from twelve slots is twelve
+largely-distinct rosters. Slot 7 stays reportable on its own because it is
+Justin's seat.
+
+**Opponents that vary.** The other eleven no longer take strictly the best
+available by ADP forever. They draft from a board perturbed by `PickDisplacement`
+- this league's own residuals, fitted on 814 real picks - so a strategy meets
+many rooms instead of one. The perturbation reproduces the league's known
+habits without being told them: a top-100 player moves 13.4 selections on
+average, and the first quarterback goes at 33 against 19 on the flat board, a
+14-pick delay against the +16.4 offset the model was fitted with.
+
+**Common random numbers.** The opponent board for a world is drawn ONCE and
+handed to every strategy, so all comparisons are paired.
+
+**Errors clustered on season.** This is the part that cuts against the tool's
+own headline. Twelve slots times eight worlds is 480 draws but NOT 480
+independent observations: every draw inside a season is scored on the same
+realised football. The season is the unit of independent randomness and there
+are still five. The naive independent-draws error is 4 to 8 points; the honest
+clustered one is 10 to 73. Reporting the first would have been a worse lie than
+the one being fixed.
+
+### The number
+
+    significance bar (95%, two-sided)     94 points   [range 28 - 204]
+    detectable at 80% power              125 points   [range 37 - 273]
+    the old instrument's bar             217 points
+
+**A challenger must beat the RUNBOOK by about 125 points before we are entitled
+to believe it.** The old design could not see anything under 217. Every gap this
+repo has ranked strategies on - 30 to 150 points - sat inside the old bar, and
+most sit inside the new one.
+
+### The re-ranking
+
+    STRATEGY                    mean   vs RUN  SE(seas)   95% bar     wins
+    starter-sum (1-16)          1914      -93      44.0       122      30%
+    RUNBOOK committed           2007       +0       0.0         0        -
+    RB-heavy folk rule          2046      +39      26.5        74      60%
+    RUNBOOK front + SS back     2008       +1      10.2        28      51%
+    ModelA front + SS back      1974      -33      33.7        94      41%
+    [not legal] no DEF drafted  2017       +9      10.0        28      60%
+    best available by ADP       1426     -581      63.3       176       0%   REAL
+    starter-sum POLICY          1910      -97      73.3       204      37%
+    best-nine (Model A)         1714     -293      39.4       109       4%   REAL
+                                                            [out of domain]
+
+`best-nine (Model A)` is Model A run past round 7, outside its domain: its
+objective is the best legal nine, two keepers plus seven picks fill those slots
+exactly, and from round 8 it is indifferent - a `DraftPlanner` run shows the
+value pinned at 1812.8 for every pick from the sixth onward. It is scored
+because its error bar is a real reading on the instrument, not because it is a
+fair entrant.
+
+**What survives.** Exactly one ordering among the plausible strategies: they all
+beat drafting best-available-by-ADP, by 500-600 points, overwhelmingly. Nothing
+else clears its bar. The RUNBOOK, the RB-heavy folk rule, the two spliced plans,
+and the starter-sum policy are one statistically indistinguishable tier.
+
+**What was noise.** The starter-sum sequence's 98-point deficit is -93 +/- 44,
+inside the bar. The policy's "-179 points a season, ahead in 1 of 5" becomes
+-97 +/- 73 across 480 draws - not significant, and its five-season win count was
+five coin flips. The 62-point gain from giving the model the committed front,
+"the largest single improvement of the day", is smaller than the error on either
+row. The RB-heavy folk rule, reported 114 points BEHIND the RUNBOOK, comes out
+39 ahead - a 153-point swing from changing nothing but the seat and the
+opponents, which is the cleanest demonstration available that the old design was
+measuring luck.
+
+### Why more slots will not save us
+
+    STRATEGY                 sd(season)   sd(draw)     SE now   SE floor
+    starter-sum (1-16)               97        163       44.0       43.4
+    RB-heavy folk rule               58        115       26.5       26.0
+    starter-sum POLICY              163        164       73.3       72.9
+
+`SE floor` is what the error would be with infinitely many slots and opponent
+worlds on these same five seasons. It is already within a point of `SE now`.
+Raising the worlds from 8 to 32 moves the starter-sum error from 44.0 to 43.8.
+**The slot and opponent axes are exhausted.** What is left is seasonal, and only
+seasons fix it:
+
+    seasons        5      8     10     14     17
+    95% bar      104     70     60     48     43
+
+This is the same conclusion the n=5 section reached from the other direction,
+now with a price on it: the harvest from five seasons to fourteen roughly halves
+the bar. It does not get below ~45 points, so a plan that is 30 points better
+than the RUNBOOK is not provable with any amount of football that exists.
+
+### Two things the instrument cannot see
+
+**A bias, by construction.** It measures how big a gap must be to beat noise. A
+systematic error moves every row together and is invisible to it. One is
+confirmed and live: Sleeper's `pts_half_ppr` pays four points per passing
+touchdown while this league pays six, understating every starting quarterback by
+55-66 points a season. `LeagueActuals` is the switch and `PlanBacktest.board`
+grades through it, so this tool follows it automatically - `PowerBacktest.GRADER`
+is deliberately NULL, because a non-null default here would silently overrule
+that toggle and re-impose its own scoring, which is the `-Pdeviate` fault in a
+new hat. Every number in this section was measured with the switch OFF, and the
+whole table has to be rerun when it flips.
+
+**Its own opponent model.** The absolute level moves a lot with `-Pjitter`
+(RUNBOOK scores 1934 at 0.5, 2007 at 1.0, 2136 at 2.0) because sloppier rooms
+leave better players on the board. The ORDERING is stable across that sweep,
+with one exception: at jitter 2 the starter-sum sequence's deficit becomes
+significant. Read the level as an artifact and the ordering as the finding.
+
+### Guards
+
+The tool checks itself on every run: at jitter 0 and seat 7 it IS the old
+harness, so all nine strategies and the adaptive policy must reproduce their old
+single-slot scores exactly, and it throws if they do not. That is deliberate
+protection against the `-Pdeviate` class of fault, where a default quietly turned
+a backtest into a replay of the thing it was testing. There is no `-Pdeviate`
+here and nothing this tool runs is ever shown the committed plan.
+
+Seasons are discovered by globbing the ADP files, never listed, so the harvest
+widens every degree of freedom without a code change.
+
+    ./gradlew run -Pmain=PowerBacktest -Pkeepers=Tuten,Purdy -q
+
+Around 8 seconds on 8 idle cores; it was measured at 23-39 s while several other
+agents were building concurrently. `-Pseeds` sets the worlds, `-Pjitter` the
+opponent chaos, `-PnoPolicy=true` drops the only expensive strategy.
+
+Model A remains byte-identical at 1812.8 / p10 1784.4, plan
+[RB, WR, RB, WR, WR, WR, TE, QB, QB]. Nothing here reaches Tuesday's tooling.
