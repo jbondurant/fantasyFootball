@@ -226,6 +226,19 @@ public class PlanBacktest {
     }
 
     public static double score(Board board, String sequence){
+        return seasonPoints(board, draft(board, sequence));
+    }
+
+    /**
+     * The fourteen men this sequence actually ends up with.
+     *
+     * Split out of score() so a caller can ask WHO a shape drafted, not only
+     * what it scored. ShapeSensitivity needs this: two sequences that differ on
+     * paper can draft the identical roster - the position fallback below fires
+     * when a position is exhausted - and a "perturbation" that changes nobody is
+     * not evidence of a plateau, it is a no-op wearing a plateau's clothes.
+     */
+    public static List<String> draft(Board board, String sequence){
         List<Position> wanted = new ArrayList<>();
         if(sequence != null){
             for(String token : sequence.split("\\s+")){
@@ -260,7 +273,7 @@ public class PlanBacktest {
                 }
             }
         }
-        return seasonPoints(board, mine);
+        return mine;
     }
 
     public static String bestAvailable(Board board, Set<String> gone, Position position){
