@@ -51,6 +51,7 @@ public class RiskDiscountedValue implements RosterValue {
     static final int FLEX = 2;
 
     private final Map<String, Double> discounted = new HashMap<>();
+    private final Map<String, Double> believed = new HashMap<>();
 
     /**
      * What an unfilled slot is worth - the replacement-rank player's own
@@ -79,15 +80,44 @@ public class RiskDiscountedValue implements RosterValue {
         // took a defence in round 7: the best defence PROJECTED 64 points above
         // replacement, and it believed all of it, when the 0.277 says almost
         // none of that gap is real.
-        Map<Position, double[]> means = new EnumMap<>(Position.class);
+        // Shrink toward the mean of COMPARABLE men, not of the whole position.
+        // Shrinking toward the position mean crushed skill players and left
+        // defences almost untouched: tight ends have hundreds of waiver-level
+        // players dragging their mean down, so Kelce lost 53% of his
+        // projection, while only 32 defences exist so their mean sits near
+        // their top and the Rams lost 15%. That inflated every defence against
+        // every skill position - which is the defence bias, and it was
+        // invisible until the marginals were printed.
+        //
+        // The comparison set is the men drafted around him: his own rank
+        // neighbourhood, which is what "he might have been picked instead"
+        // actually means.
+        Map<Position, List<Double>> ranked = new EnumMap<>(Position.class);
         for(Map.Entry<String, Double> entry : projections.entrySet()){
             Player player = Player.getPlayerFromSIDV2(entry.getKey());
             if(player != null){
-                double[] cell = means.computeIfAbsent(player.position,
-                        u -> new double[2]);
-                cell[0] += entry.getValue();
-                cell[1]++;
+                ranked.computeIfAbsent(player.position, u -> new ArrayList<>())
+                        .add(entry.getValue());
             }
+        }
+        for(List<Double> values : ranked.values()){
+            values.sort(Comparator.reverseOrder());
+        }
+        Map<String, Double> neighbourhood = new HashMap<>();
+        for(Map.Entry<String, Double> entry : projections.entrySet()){
+            Player player = Player.getPlayerFromSIDV2(entry.getKey());
+            if(player == null){
+                continue;
+            }
+            List<Double> values = ranked.get(player.position);
+            int rank = values.indexOf(entry.getValue());
+            int from = Math.max(0, rank - 6);
+            int to = Math.min(values.size(), rank + 7);
+            double sum = 0;
+            for(int i = from; i < to; i++){
+                sum += values.get(i);
+            }
+            neighbourhood.put(entry.getKey(), sum / (to - from));
         }
         for(Map.Entry<String, Double> entry : projections.entrySet()){
             Player player = Player.getPlayerFromSIDV2(entry.getKey());
@@ -98,12 +128,11 @@ public class RiskDiscountedValue implements RosterValue {
             double out = missed.containsKey(name) ? missed.get(name)
                     : positionGamesMissed.getOrDefault(player.position, 0.0);
             double available = Math.max(0.0, Math.min(1.0, (17.0 - out) / 17.0));
-            double[] cell = means.get(player.position);
-            double mean = cell == null || cell[1] == 0 ? entry.getValue()
-                    : cell[0] / cell[1];
+            double mean = neighbourhood.getOrDefault(entry.getKey(), entry.getValue());
             double trust = reliability.getOrDefault(player.position, 1.0);
-            double believed = mean + trust * (entry.getValue() - mean);
-            discounted.put(entry.getKey(), Math.max(0, believed) * available);
+            double believed = Math.max(0, mean + trust * (entry.getValue() - mean));
+            this.believed.put(entry.getKey(), believed);
+            discounted.put(entry.getKey(), believed * available);
         }
         Map<Position, List<Double>> byPosition = new EnumMap<>(Position.class);
         for(Map.Entry<String, Double> entry : discounted.entrySet()){
@@ -120,6 +149,68 @@ public class RiskDiscountedValue implements RosterValue {
                     entry.getKey() == Position.DEF ? 13 : 24);
             unfilled.put(entry.getKey(),
                     values.get(Math.min(Math.max(0, rank - 1), values.size() - 1)));
+        }
+    }
+
+    /** One player's fully discounted value, for tracing a decision. */
+    public double valueOf(String id){
+        return discounted.getOrDefault(id, 0.0);
+    }
+
+    /** His value after the trust shrinkage but before the injury discount. */
+    public double believedOf(String id){
+        return believed.getOrDefault(id, 0.0);
+    }
+
+    /** Print which slot each man fills and what the empty ones contribute. */
+    public void explain(java.util.Collection<String> roster){
+        Map<Position, List<String>> byPosition = new EnumMap<>(Position.class);
+        for(String id : roster){
+            Player player = Player.getPlayerFromSIDV2(id);
+            if(player != null && discounted.containsKey(id)){
+                byPosition.computeIfAbsent(player.position, u -> new ArrayList<>())
+                        .add(id);
+            }
+        }
+        for(List<String> ids : byPosition.values()){
+            ids.sort(Comparator.comparingDouble((String id) -> -discounted.get(id)));
+        }
+        List<String> flexPool = new ArrayList<>();
+        for(Map.Entry<Position, Integer> slot : SLOTS.entrySet()){
+            List<String> have = byPosition.getOrDefault(slot.getKey(), List.of());
+            double replacement = unfilled.getOrDefault(slot.getKey(), 0.0);
+            for(int i = 0; i < slot.getValue(); i++){
+                if(i < have.size() && discounted.get(have.get(i)) >= replacement){
+                    Player player = Player.getPlayerFromSIDV2(have.get(i));
+                    System.out.printf("   %-8s %-26s %10.1f%n", slot.getKey(),
+                            player.firstName + " " + player.lastName,
+                            discounted.get(have.get(i)));
+                }
+                else {
+                    System.out.printf("   %-8s %-26s %10.1f%n", slot.getKey(),
+                            "(empty - replacement)", replacement);
+                }
+            }
+            if(slot.getKey() != Position.QB && slot.getKey() != Position.DEF){
+                for(int extra = slot.getValue(); extra < have.size(); extra++){
+                    flexPool.add(have.get(extra));
+                }
+            }
+        }
+        flexPool.sort(Comparator.comparingDouble((String id) -> -discounted.get(id)));
+        double flexReplacement = Math.max(unfilled.getOrDefault(Position.RB, 0.0),
+                unfilled.getOrDefault(Position.WR, 0.0));
+        for(int i = 0; i < FLEX; i++){
+            if(i < flexPool.size() && discounted.get(flexPool.get(i)) >= flexReplacement){
+                Player player = Player.getPlayerFromSIDV2(flexPool.get(i));
+                System.out.printf("   %-8s %-26s %10.1f%n", "FLEX",
+                        player.firstName + " " + player.lastName,
+                        discounted.get(flexPool.get(i)));
+            }
+            else {
+                System.out.printf("   %-8s %-26s %10.1f%n", "FLEX",
+                        "(empty - replacement)", flexReplacement);
+            }
         }
     }
 
