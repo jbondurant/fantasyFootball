@@ -435,31 +435,58 @@ public class PairwiseOdds {
             Collections.sort(values);
         }
 
-        System.out.printf("%n%s%nAT YOUR PICKS%n%s%n", "=".repeat(72), "=".repeat(72));
-        System.out.printf("%nP(the man at your NEXT pick outscores the man on the board NOW)%n");
-        System.out.printf("ranks read off today's ADP. below 50%% means waiting costs you.%n%n");
-        System.out.printf("%-15s", "TAKE NOW ->");
+        System.out.printf("%n%s%nANY TWO PICKS, NOT JUST CONSECUTIVE ONES%n%s%n",
+                "=".repeat(72), "=".repeat(72));
+        System.out.printf("%nP(the man still there at the COLUMN pick outscores the man on the%n"
+                + "board at the ROW pick). Below 50%% means taking him at the row pick is%n"
+                + "the better side of the bet. Ranks read off today's ADP.%n");
+
+        Integer from = Integer.getInteger("from");
+        Integer to = Integer.getInteger("to");
         for(Position position : shown){
-            System.out.printf(" %10s", position);
-        }
-        System.out.println();
-        for(int i = 0; i + 1 < picks.length; i++){
-            System.out.printf("%4d -> %-8d", picks[i], picks[i + 1]);
-            for(Position position : shown){
-                int early = depth(adp.get(position), picks[i]);
-                int late = depth(adp.get(position), picks[i + 1]);
-                int limit = cap.get(position);
-                if(early < 1 || late > limit || early >= late){
-                    System.out.printf(" %10s", "-");
-                    continue;
-                }
-                System.out.printf(" %9.0f%%", 100 * model.probability(position, early, late));
+            List<Double> board = adp.get(position);
+            int limit = cap.get(position);
+            System.out.printf("%n%s  -  best %s left at the row pick, against the best"
+                    + " %s left at the column pick%n%n", position, position, position);
+            System.out.printf("%-8s", "TAKE AT");
+            for(int pick : picks){
+                System.out.printf(" %5d", pick);
             }
             System.out.println();
+            for(int i = 0; i < picks.length; i++){
+                System.out.printf("%-8d", picks[i]);
+                for(int j = 0; j < picks.length; j++){
+                    int early = depth(board, picks[i]);
+                    int late = depth(board, picks[j]);
+                    if(j <= i || early < 1 || late > limit || early >= late){
+                        System.out.printf(" %5s", j == i ? "--" : "");
+                        continue;
+                    }
+                    System.out.printf(" %4.0f%%", 100 * model.probability(position, early, late));
+                }
+                System.out.println();
+            }
         }
-        System.out.printf("%nEach cell is that position's own rank at those two picks, so"
-                + " 'RB' at%n7 -> 18 is the best back left at 7 against the best back left"
-                + " at 18.%n");
+
+        System.out.printf("%nA blank means the board is not deep enough at that position for%n"
+                + "those two picks to be different men, or the later rank runs past what%n"
+                + "thirteen seasons can speak to.%n");
+
+        if(from != null && to != null){
+            System.out.printf("%n%s%nONE QUERY: the man at pick %d against the man at pick %d%n%s%n",
+                    "-".repeat(72), to, from, "-".repeat(72));
+            for(Position position : shown){
+                int early = depth(adp.get(position), from);
+                int late = depth(adp.get(position), to);
+                if(early >= late || late > cap.get(position)){
+                    System.out.printf("   %-4s -%n", position);
+                    continue;
+                }
+                System.out.printf("   %-4s %s%d against %s%d: the later man wins %4.0f%%"
+                        + " of the time%n", position, position, late, position, early,
+                        100 * model.probability(position, early, late));
+            }
+        }
     }
 
     /** How many of a position are gone by an overall pick, from today's board. */
