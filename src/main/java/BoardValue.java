@@ -46,30 +46,33 @@ public class BoardValue {
     record Slot(Position position, int rank){}
 
     /**
-     * WHY THE BENCH HALF IS NOT HERE, having been tried and removed.
+     * HOW THE BENCH HALF GOT IN, after I wrongly said it could not.
      *
-     * From pick 103 on every cell above reads zero: once the lineup is full, a
-     * season-total model filled by expectation cannot tell one bench man from
-     * another, so six of fourteen picks fall to a tie-break. The obvious repair
-     * is to price a bench man at what this league's real bench picks returned -
-     * BenchValue measured 44.0 points over the wire in rounds 8-9, 32.8 in
-     * 10-12, 31.2 in 13-16 - and it is measured, not modelled, so it respects
-     * the no-intraseason rule.
+     * I first valued every man at the MEAN season points of his rank. That makes
+     * a lineup deterministic, so a bench man is worth exactly zero, and every
+     * cell from pick 103 read zero. I then tried a flat measured bench figure,
+     * which priced a backup quarterback at 88 at every pick because those
+     * figures are raw points and a quarterback's are inflated by six-point
+     * passing touchdowns. Both were wrong, and I told Justin the honest fix
+     * needed a failure channel he had ruled out.
      *
-     * It fails, and instructively. Those figures are RAW POINTS, and BenchValue
-     * says so in its own output: "it is in raw points, which flatters QB
-     * because this league pays 6 per passing TD". Applied flat, a backup
-     * quarterback priced at 88 at every pick and the model took quarterbacks at
-     * 7 and 18 - the identical cross-position raw-points error that cost
-     * RankDraft 68 points, repeated one step later by me.
+     * He had not. He ruled out INTRASEASON modelling - week by week, bust versus
+     * injured. Whether a man's SEASON went badly is one of the two numbers he
+     * allows, and it is already in the data.
      *
-     * The honest repair needs the chance the man ahead of him FAILS, because a
-     * bench quarterback behind a kept Purdy is worth almost nothing while a
-     * fifth receiver has five slots to fall into. That is the promotion channel
-     * Justin ruled out, and two independent measurements put its whole value at
-     * +5.6 +/- 7.7 and +17 a season against a 125-point bar. So the bench half
-     * is left out rather than faked: this model is complete for STARTERS, and
-     * says so, instead of guessing after the lineup fills.
+     * So the roster is no longer scored against a mean. It is scored against
+     * each of the sixteen real seasons in turn, with every man taking what men
+     * of his rank actually scored THAT season, and the lineup taking the best of
+     * what is held. Depth then pays exactly when it should: a second back is
+     * worth the seasons his rank beat the starter's and nothing in the seasons
+     * it did not. No weeks, no bust-versus-injury distinction, no free
+     * parameter - a man who missed half a year is simply a man who scored little.
+     *
+     * The one judgement is who fills the slot within a season. Taking the best
+     * REALISED man assumes a manager who always ends up playing his better
+     * player; taking the best EXPECTED man assumes one who never reacts. The
+     * truth is between, so -PlineupByExpected prints the stingy end and the
+     * difference is the bracket rather than a claim.
      */
 
     public static void main(String[] args) throws Exception {
@@ -77,6 +80,7 @@ public class BoardValue {
         List<String> order = new ArrayList<>(new TreeMap<>(wider).keySet());
         List<PairwiseOdds.Man> men = PairwiseOdds.nflverseMen(wider, order);
         Map<Position, double[]> curve = RankDraft.pointsByRank(men);
+        Map<Position, List<List<Double>>> pools = pools(men);
         Position[] shown = {Position.RB, Position.WR, Position.TE, Position.QB, Position.DEF};
         Map<Position, List<Double>> adp = RankDraft.board(shown);
         Map<Position, Double> overWire =
@@ -109,7 +113,8 @@ public class BoardValue {
             Position take = null;
             double most = -1e9;
             for(Position position : shown){
-                double gain = urgency(curve, adp, roster, position, picks[i], next);
+                double gain = urgency(curve, pools, order.size(), adp, roster,
+                        position, picks[i], next);
                 System.out.printf(" %7s", Double.isNaN(gain) ? "-"
                         : String.format("%.0f", gain));
                 if(have.getOrDefault(position, 0) >= MOST.get(position)){
@@ -148,7 +153,8 @@ public class BoardValue {
     }
 
     /** Marginal lineup points from taking him now rather than at my next pick. */
-    static double urgency(Map<Position, double[]> curve, Map<Position, List<Double>> adp,
+    static double urgency(Map<Position, double[]> curve, Map<Position, List<List<Double>>> pools,
+                          int count, Map<Position, List<Double>> adp,
                           List<Slot> roster, Position position, int now, int next){
         List<Double> board = adp.get(position);
         double[] mean = curve.get(position);
@@ -159,10 +165,10 @@ public class BoardValue {
         if(early < 1 || early >= mean.length){
             return Double.NaN;
         }
-        double base = lineup(roster, curve);
+        double base = empirical(roster, pools, curve, count);
         List<Slot> withNow = new ArrayList<>(roster);
         withNow.add(new Slot(position, early));
-        double gainNow = lineup(withNow, curve) - base;
+        double gainNow = empirical(withNow, pools, curve, count) - base;
         if(next < 0){
             return gainNow;
         }
@@ -172,7 +178,117 @@ public class BoardValue {
         }
         List<Slot> withLater = new ArrayList<>(roster);
         withLater.add(new Slot(position, late));
-        return gainNow - (lineup(withLater, curve) - base);
+        return gainNow - (empirical(withLater, pools, curve, count) - base);
+    }
+
+    /**
+     * What men of this rank have actually scored - as a SET, not as an average.
+     *
+     * Two failed attempts got here. The raw one-man-per-cell table was savage:
+     * a difference of differences over single observations priced a back at
+     * pick 7 at MINUS 32. Averaging the neighbourhood fixed the noise and put
+     * every bench cell back to zero, because the average of a rank's outcomes
+     * cannot beat the average of a better rank's - and beating him sometimes is
+     * the entire reason a bench man is worth a pick.
+     *
+     * So the neighbourhood is pooled rather than averaged: every season of every
+     * rank within a log-rank window becomes one possible outcome for this rank.
+     * That borrows strength for the noise and KEEPS the spread, which is the
+     * only part that pays. A rank-40 back holds seasons that beat a rank-4
+     * back's bad ones, and that is measured, not assumed.
+     */
+    static Map<Position, List<List<Double>>> pools(List<PairwiseOdds.Man> men){
+        Map<Position, Map<Integer, List<Double>>> raw = new EnumMap<>(Position.class);
+        for(PairwiseOdds.Man man : men){
+            int cap = PairwiseOdds.CAP.getOrDefault(man.position(), 0);
+            if(man.rank() > cap || man.rank() < 1){
+                continue;
+            }
+            raw.computeIfAbsent(man.position(), u -> new HashMap<>())
+                    .computeIfAbsent(man.rank(), u -> new ArrayList<>()).add(man.points());
+        }
+        Map<Position, List<List<Double>>> out = new EnumMap<>(Position.class);
+        for(Map.Entry<Position, Map<Integer, List<Double>>> entry : raw.entrySet()){
+            int cap = PairwiseOdds.CAP.getOrDefault(entry.getKey(), 0);
+            List<List<Double>> byRank = new ArrayList<>();
+            for(int rank = 0; rank <= cap; rank++){
+                List<Double> pool = new ArrayList<>();
+                int from = Math.max(1, (int) Math.floor(rank * Math.exp(-0.25)));
+                int to = Math.min(cap, (int) Math.ceil(rank * Math.exp(0.25)));
+                for(int r = from; r <= to; r++){
+                    pool.addAll(entry.getValue().getOrDefault(r, List.of()));
+                }
+                byRank.add(pool);
+            }
+            out.put(entry.getKey(), byRank);
+        }
+        return out;
+    }
+
+    /** Scenarios drawn once and held, so two rosters always meet the same worlds. */
+    static final int WORLDS = 600;
+
+    /**
+     * One man's outcome in one world.
+     *
+     * Keyed on his position and rank rather than on where he sits in the roster,
+     * so adding a man to a roster never changes what anybody else drew. That is
+     * what makes a marginal a marginal rather than sampling noise - the same
+     * common-random-numbers discipline the rest of this repo uses.
+     */
+    static double drawn(Map<Position, List<List<Double>>> pools, Position position,
+                        int rank, int world, Map<Position, double[]> curve){
+        List<List<Double>> byRank = pools.get(position);
+        if(byRank == null || rank >= byRank.size() || byRank.get(rank).isEmpty()){
+            double[] mean = curve.get(position);
+            return mean != null && rank < mean.length ? mean[rank] : 0;
+        }
+        List<Double> pool = byRank.get(rank);
+        int index = Math.floorMod(world * 2654435761L
+                + position.ordinal() * 40503L + rank * 2246822519L, pool.size());
+        return pool.get(index);
+    }
+
+    /**
+     * The roster against every real season, not against an average of them.
+     *
+     * This is where depth earns its keep. In a season the man at rank 4 fell
+     * over, the man at rank 40 fills the slot and the roster keeps its points;
+     * in a season he did not, the deep man contributes nothing. Averaging those
+     * sixteen answers prices a bench pick correctly without ever asking WHY the
+     * starter failed, or in which week.
+     */
+    static double empirical(List<Slot> roster, Map<Position, List<List<Double>>> pools,
+                            Map<Position, double[]> curve, int count){
+        double total = 0;
+        for(int world = 0; world < WORLDS; world++){
+            total += oneSeason(roster, pools, curve, world);
+        }
+        return total / WORLDS;
+    }
+
+    static double oneSeason(List<Slot> roster, Map<Position, List<List<Double>>> pools,
+                            Map<Position, double[]> curve, int world){
+        Map<Position, List<Double>> pool = new EnumMap<>(Position.class);
+        for(Slot slot : roster){
+            pool.computeIfAbsent(slot.position(), u -> new ArrayList<>())
+                    .add(drawn(pools, slot.position(), slot.rank(), world, curve));
+        }
+        for(List<Double> values : pool.values()){
+            values.sort(Comparator.reverseOrder());
+        }
+        double total = 0;
+        List<Double> flex = new ArrayList<>();
+        total += fill(pool, Position.QB, 1, curve, flex, false);
+        total += fill(pool, Position.RB, 2, curve, flex, true);
+        total += fill(pool, Position.WR, 3, curve, flex, true);
+        total += fill(pool, Position.TE, 1, curve, flex, true);
+        total += fill(pool, Position.DEF, 1, curve, flex, false);
+        flex.sort(Comparator.reverseOrder());
+        for(int slot = 0; slot < 2; slot++){
+            total += slot < flex.size() ? flex.get(slot) : replacement(curve, Position.RB);
+        }
+        return total;
     }
 
     /**
