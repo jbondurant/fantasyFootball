@@ -1011,7 +1011,26 @@ public class ShapeSensitivity {
      * submit, whatever it scores.
      */
     public static boolean legal(List<Position> shape){
-        return shape.contains(Position.DEF);
+        // Every starting slot this league fields, not just the defence.
+        // This used to read `shape.contains(Position.DEF)`, which waved through
+        // a roster with no tight end - or no quarterback - and then scored the
+        // empty slot at zero. Justin caught it on the summary line "dropping
+        // the starting TE entirely scores +11": a tight end is a required slot
+        // here, so that sentence could not be true. It turned out the +11 shape
+        // did keep a tight end, at round 11, so the number was not the bug -
+        // but the predicate was, and it was counting rosters nobody could field.
+        // Requirements come from LeagueRules: QB 1, RB 2, WR 3, TE 1, FLEX 2,
+        // DEF 1. The two flexes are any of RB/WR/TE, so they need no minimum
+        // of their own beyond the fixed slots above.
+        Map<Position, Integer> have = new EnumMap<>(Position.class);
+        for(Position position : shape){
+            have.merge(position, 1, Integer::sum);
+        }
+        return have.getOrDefault(Position.QB, 0) >= 1
+                && have.getOrDefault(Position.RB, 0) >= 2
+                && have.getOrDefault(Position.WR, 0) >= 3
+                && have.getOrDefault(Position.TE, 0) >= 1
+                && have.getOrDefault(Position.DEF, 0) >= 1;
     }
 
     public static double mean(double[] values){
