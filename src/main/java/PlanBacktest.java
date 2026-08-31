@@ -313,18 +313,18 @@ public class PlanBacktest {
      * quarterback and one back are already covered, so a nought-quarterback
      * plan becomes legal - which is the whole point of holding them.
      */
+    /*
+     * Superseded by RosterRules, which is now the single authority on what a
+     * legal roster is and what a pick costs. The map used to be typed here -
+     * QB 1, RB 2, WR 3, TE 1, DEF 1, minus one QB and one RB when the keepers
+     * are held - and typing it in a second place is how the arithmetic drifts.
+     * RosterRules subtracts the same thing from the league's own roster_positions
+     * array, so the numbers are identical (RosterRulesTest pins both settings of
+     * -PholdKeepers) and there is only one of them.
+     */
     public static Map<Position, Integer> requiredPicks(){
-        Map<Position, Integer> need = new EnumMap<>(Position.class);
-        need.put(Position.QB, 1);
-        need.put(Position.RB, 2);
-        need.put(Position.WR, 3);
-        need.put(Position.TE, 1);
-        need.put(Position.DEF, 1);
-        if(holdKeepers()){
-            need.merge(Position.QB, -1, Integer::sum);
-            need.merge(Position.RB, -1, Integer::sum);
-        }
-        return need;
+        RosterRules rules = RosterRules.live();
+        return holdKeepers() ? rules.justins().stillNeeds() : rules.empty().stillNeeds();
     }
 
     public static List<String> draft(Board board, String sequence){
