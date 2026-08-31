@@ -1,0 +1,29 @@
+
+WHAT AN EARLIER DEFENCE ACTUALLY BUYS
+
+SEASON      DEF1-3    DEF4-6    DEF7-9  DEF10-12     SPREAD
+2021         134.7     126.0     126.0     147.3       21.3
+2022         144.7     113.3     108.0     121.0       36.7
+2023         147.3     150.7     150.7     133.7       17.0
+2024         108.7     107.3     130.0     143.3       36.0
+2025         143.7     140.3      96.7     102.0       47.0
+mean         135.8     127.5     122.3     129.5
+
+ranked by PRESEASON adp. if taking a defence early bought a better one,
+DEF1-3 would beat DEF10-12 consistently.
+DEF1-3 beat DEF10-12 in 3 of 5 seasons (coin flip would give 2.5).
+
+the gradient is +6.3 points a season, top band to bottom.
+
+================================================================
+THE TRADE, BOTH HALVES ON ONE SCALE
+================================================================
+   spend round 8 on a skill man instead of round 13-16:  +12.8
+   spend round 8 on a defence instead of round 13-16:    +6.3
+
+   depth wins by 6.5 points a season.
+
+   and that understates it: the defence figure above is the gap
+   between the BEST and WORST preseason bands, which you only collect
+   if preseason ranking picks the right defence. the season-by-season
+   count above says whether it does.
