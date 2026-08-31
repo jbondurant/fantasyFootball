@@ -1,9 +1,18 @@
 # What we would need to know to build the missing model
 
-Written 2026-08-31, the night before the draft. Nothing here is on the draft's
-critical path; the RUNBOOK is settled and every finding below is post-season
-work. Written down because the alternative is that it lives in one session's
-scrollback and gets re-derived from nothing next August.
+Written 2026-08-31, the night before the draft. **This is pre-draft work** -
+Justin's call, and he is right that I made it for him. The whole value of the
+missing channel is that it might change a pick tomorrow; deferring it to the
+post-season is deferring the only version of the question that pays.
+
+That reorders everything below. Question 4 - would any of this change a pick -
+stops being the last question and becomes the ONLY deliverable. The other four
+are worth answering exactly as far as they move it.
+
+Deadline is hard: the draft is 2026-09-01 20:45, so anything that has not landed
+and been verified by that afternoon does not exist. RUNBOOK.md, DraftNight.java
+and LiveLateRounds.java stay frozen unless a result clears the measured 125-point
+bar, and a late unverified swap is the one genuinely reckless move available.
 
 ## The model that is missing
 
@@ -26,6 +35,12 @@ and that is a bad place to leave a model you intend to keep using.
 
 Ordered by how much they would change the model, not by how interesting.
 
+0. **Would a three-channel model reorder any of Justin's actual picks?** Bound
+   this FIRST and without waiting for the rates: sweep bust rate and detection
+   lag across every plausible value and ask whether the ordering at picks 79,
+   90, 103, 114 and 127 ever changes. If no plausible parameter flips a pick,
+   the rest is post-season curiosity and Justin drafts as planned. If some do,
+   we know precisely which number has to be right.
 1. **How fast is a bust detectable?** A promotion rule can only use what a
    manager knew that week. If four weeks of evidence separates a bust from a
    slow start, the channel is worth much less than if two do. This is the
