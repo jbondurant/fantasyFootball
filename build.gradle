@@ -78,7 +78,7 @@ tasks.register('run', JavaExec) {
      // off the board. The pick schedule always gave up rounds 12 and 13 for
      // them; without this the roster never received them, so a plan drafting
      // no quarterback looked illegal when for him it is not. Off by default.
-     'holdKeepers', 'planSample', 'format', 'noKeepers',
+     'holdKeepers', 'planSample', 'format', 'noKeepers', 'honestWire', 'from', 'to',
      // LeagueActuals.FLAG - grade outcomes under the league's own scoring
      // instead of Sleeper's pts_half_ppr. Off by default on purpose.
      'leagueScoredActuals',
@@ -96,7 +96,13 @@ tasks.register('run', JavaExec) {
      // two-keeper structure, 'feedScored' grades with Sleeper's own number as
      // the control.
      'rounds', 'format', 'planSample', 'cutoff', 'targetFrom', 'noKeepers',
-     'feedScored'].each { knob ->
+     'feedScored',
+     // The bust/boom study (DetectionLag / BustBoomRates / LineupPromotion).
+     // 'source=nflverse' swaps the outcome feed from Sleeper's thirteen usable
+     // seasons to the sixteen on disk under data/nflverse; 'perWeek' scores a
+     // missed week as a zero instead of dividing availability out; 'maxPick'
+     // moves the drafted-starter cutoff; 'blend' sets the form weight.
+     'source', 'perWeek', 'maxPick', 'blend'].each { knob ->
         if (project.hasProperty(knob)) {
             systemProperty knob, project.property(knob)
         }
