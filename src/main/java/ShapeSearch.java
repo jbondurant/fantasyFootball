@@ -338,6 +338,81 @@ public class ShapeSearch {
         return apart / 2;
     }
 
+    // ------------------------------------------------------ structural traits
+
+    /**
+     * A statement about a plan that is true or false of it, in draft language.
+     *
+     * The argmax of a fourteen-slot search is worthless at this sample size -
+     * PowerBacktest puts the bar for a real gap at 125 points, and the tie set
+     * runs to thousands of shapes. What survives is not WHICH shape but what the
+     * tied shapes have in COMMON, and that only becomes a usable answer if it is
+     * phrased as something Justin can act on with a pick clock running.
+     *
+     * Each trait is scored two ways: how often it holds among the tied plans, and
+     * how often it holds among shapes drawn at random. A trait that holds in
+     * nearly every tied plan and in half the random ones is a finding. One that
+     * holds equally in both is the search telling you it has no opinion.
+     */
+    public record Trait(String name, java.util.function.Predicate<List<Position>> holds){}
+
+    static boolean firstIsBy(List<Position> shape, Position position, int round){
+        int at = shape.indexOf(position);
+        return at >= 0 && at < round;
+    }
+
+    static int held(List<Position> shape, Position position){
+        int count = 0;
+        for(Position slot : shape){
+            if(slot == position){
+                count++;
+            }
+        }
+        return count;
+    }
+
+    static int amongFirst(List<Position> shape, Position position, int rounds){
+        int count = 0;
+        for(int i = 0; i < Math.min(rounds, shape.size()); i++){
+            if(shape.get(i) == position){
+                count++;
+            }
+        }
+        return count;
+    }
+
+    public static final List<Trait> TRAITS = List.of(
+            new Trait("opens with a back", s -> s.get(0) == Position.RB),
+            new Trait("two backs in the first three", s -> amongFirst(s, Position.RB, 3) >= 2),
+            new Trait("three backs in the first five", s -> amongFirst(s, Position.RB, 5) >= 3),
+            new Trait("no receiver until round 3", s -> amongFirst(s, Position.WR, 2) == 0),
+            new Trait("first QB by round 3", s -> firstIsBy(s, Position.QB, 3)),
+            new Trait("first QB by round 5", s -> firstIsBy(s, Position.QB, 5)),
+            new Trait("first QB after round 8", s -> !firstIsBy(s, Position.QB, 8)),
+            new Trait("carries two QBs", s -> held(s, Position.QB) == 2),
+            new Trait("first TE by round 8", s -> firstIsBy(s, Position.TE, 8)),
+            new Trait("carries two TEs", s -> held(s, Position.TE) == 2),
+            new Trait("defence in the last three rounds",
+                    s -> s.indexOf(Position.DEF) >= s.size() - 3),
+            new Trait("defence in the first seven",
+                    s -> s.indexOf(Position.DEF) < 7),
+            new Trait("four or more backs", s -> held(s, Position.RB) >= 4),
+            new Trait("five or more receivers", s -> held(s, Position.WR) >= 5));
+
+    /** What share of a set of shapes the trait holds for. */
+    public static double shareHolding(java.util.Collection<String> shapes, Trait trait){
+        if(shapes.isEmpty()){
+            return Double.NaN;
+        }
+        int holds = 0;
+        for(String sequence : shapes){
+            if(trait.holds().test(parse(sequence))){
+                holds++;
+            }
+        }
+        return holds / (double) shapes.size();
+    }
+
     // --------------------------------------------------------------- climbing
 
     /**
@@ -566,7 +641,12 @@ public class ShapeSearch {
     public static void main(String[] args) throws Exception {
         int restarts = flag("restarts", 30);
         int randomShapes = flag("randomShapes", 20000);
-        double band = flag("tieBand", 90.0);
+        // 125 is measured, not guessed. PowerBacktest's clustered standard error
+        // puts bare significance at 94 points and 80% power at 125, so anything
+        // inside 125 of the leader has not been distinguished from it by this
+        // evidence. An earlier version of this tool used 90, which was a
+        // back-of-envelope figure and too tight.
+        double band = flag("tieBand", 125.0);
         long seed = (long) flag("seed", 20260830.0);
         int slateRows = flag("slateRows", 15);
 
@@ -606,6 +686,57 @@ public class ShapeSearch {
         System.out.printf("seeds    RANDOM LEGAL SHAPES ONLY. The committed shape is never a"
                 + " start,%n         never a hint, never in an objective. It is a scored"
                 + " entrant.%n");
+
+        // A census of what is actually ON each board, printed before any result.
+        // A slot can only draft a position the board carries; if it carries none,
+        // `bestAvailable` falls back to best-available-ANYWHERE and the slot
+        // silently becomes something else. Any conclusion about a position's
+        // timing is worthless without this line, and it costs nothing to print.
+        System.out.printf("%nBOARD CENSUS - what each season's board actually carries%n");
+        System.out.printf("  %-8s %7s", "SEASON", "players");
+        for(Position position : ALPHABET){
+            System.out.printf(" %6s", position.name());
+        }
+        System.out.printf("%n");
+        for(PlanBacktest.Board board : boards){
+            System.out.printf("  %-8s %7d", board.season(), board.ids().size());
+            for(Position position : ALPHABET){
+                long carried = board.ids().stream()
+                        .filter(id -> board.positionOf().get(id) == position).count();
+                System.out.printf(" %6d", carried);
+            }
+            System.out.printf("%n");
+        }
+        System.out.printf("  A zero in any column means that slot cannot draft what it says"
+                + " it drafts.%n");
+
+        // -Pshape="RB RB ..." prints WHO a shape drafts, beside its DEF-last twin,
+        // and stops. Reasoning about the defence slot from position labels alone
+        // produced a confident and wrong prediction; this exists so the next
+        // person looks at the fourteen men instead of arguing about the fourteen
+        // letters.
+        String inspect = System.getProperty("shape");
+        if(inspect != null && !inspect.isBlank()){
+            List<Position> asked = parse(inspect);
+            System.out.printf("%nROSTER INSPECTION%n  %s   legal=%s%n", render(asked),
+                    legal(asked));
+            for(PlanBacktest.Board season : boards){
+                for(List<Position> variant : List.of(asked, defenceLast(asked))){
+                    List<String> men = PlanBacktest.draft(season, render(variant));
+                    System.out.printf("%n  %s  %s%n    %8.0f  ", season.season(),
+                            render(variant), PlanBacktest.score(season, render(variant)));
+                    for(int i = 0; i < men.size(); i++){
+                        Player man = Player.getPlayerFromSIDV2(men.get(i));
+                        System.out.printf("%s%d:%s(%s) ", i > 0 ? "| " : "",
+                                PlanBacktest.MY_PICKS[i],
+                                man == null ? men.get(i) : man.lastName,
+                                season.positionOf().get(men.get(i)));
+                    }
+                    System.out.printf("%n");
+                }
+            }
+            return;
+        }
 
         // ------------------------------------------------- phase 1: uniform draw
         Random sampler = new Random(seed);
@@ -807,14 +938,30 @@ public class ShapeSearch {
                 + " these two are NOT%n  separated - and neither is any gap smaller than"
                 + " about %.0f.%n", mean(headline), standardError(headline),
                 2 * standardError(headline));
+        // The same discipline, applied to the floor. A worst-season figure is a
+        // MINIMUM over five draws, so it is one observation, not an average of
+        // five - it carries the spread of a single season, not that spread over
+        // root five. Claiming a plan is safer because its floor is higher needs a
+        // gap bigger than that, and this prints the comparison rather than
+        // asserting it.
         double[] worstGaps = differences(looWorst, runbookScores);
-        System.out.printf("  What IS separated is the floor: the honest picks never fall"
-                + " below %.0f,%n  the committed shape falls to %.0f. Worst-season gap"
-                + " %+.0f.%n", min(looWorst), min(runbookScores),
-                min(looWorst) - min(runbookScores));
-        if(Double.isNaN(mean(worstGaps))){
-            System.out.printf("  (worst-rule gaps unavailable)%n");
-        }
+        double floorGap = min(looMean) - min(runbookScores);
+        double floorNoise = stdev(headline);
+        System.out.printf("%n  The floor, held to the same standard: the honest picks never"
+                + " fall below %.0f,%n  the committed shape falls to %.0f - a gap of %+.0f."
+                + " But a worst season is a%n  MINIMUM over five draws, one observation"
+                + " rather than a mean, so its noise is the%n  full per-season spread of"
+                + " %.0f, not %.0f. %s%n", min(looMean), min(runbookScores), floorGap,
+                floorNoise, standardError(headline),
+                floorGap > 2 * floorNoise
+                        ? "That gap clears twice the spread."
+                        : String.format("At %.1f spreads, that gap is SUGGESTIVE, NOT"
+                                + " ESTABLISHED.", floorGap / floorNoise));
+        System.out.printf("  Seasons in which each rule's pick beat the committed shape:"
+                + " mean-rule %d of %d,%n  worst-rule %d of %d. A rule that wins three and"
+                + " loses two has shown nothing.%n",
+                (int) Arrays.stream(headline).filter(gap -> gap > 0).count(), seasons,
+                (int) Arrays.stream(worstGaps).filter(gap -> gap > 0).count(), seasons);
 
         // ------------------------------------------------------ shape stability
         System.out.printf("%n%nSTABILITY - do the folds agree on a shape?%n%n");
@@ -950,11 +1097,29 @@ public class ShapeSearch {
                 + " %d of %d, by %+.0f a season%n", preferredEarly, seasons,
                 trainGain / seasons);
         System.out.printf("  folds where that preference LOST points out of sample:"
-                + " %d of %d, by %+.0f a season%n", dominanceCostHeldOut, seasons,
+                + " %d of %d; mean held-out gain %+.0f%n", dominanceCostHeldOut, seasons,
                 heldOutGain / seasons);
-        System.out.printf("  A gain on training that evaporates or reverses out of sample,"
-                + " on the one slot%n  where the answer was known beforehand, is overfitting"
-                + " measured rather than argued.%n");
+        if(heldOutGain / seasons > 0){
+            System.out.printf("%n  THE PREDICTION FAILED, and the failure is the finding."
+                    + " The ADP argument said%n  DEF-last must win: no opponent here ever"
+                    + " drafts a defence, so the same defence%n  waits at pick 186 as at"
+                    + " pick 42, while every skill pick moves onto a less%n  picked-over"
+                    + " board. It lost anyway, out of sample as well as in.%n");
+            System.out.printf("  Run -Pshape=\"<sequence>\" to see why: rotating the defence"
+                + " does not merely move%n  WHEN you draft - the other eleven drain the"
+                + " board between your picks, so the two%n  rosters share almost no"
+                + " players at all. A shape is a lottery ticket over fourteen%n  board"
+                + " positions, and an ADP-dominant ticket is not a better-scoring one.%n");
+            System.out.printf("  DO NOT ACT ON THIS. PlanBacktest's defence market is"
+                + " fictional - eleven teams%n  that never draft one - so the defence slot"
+                + " is the single least trustworthy%n  parameter this instrument has, and"
+                + " it is the one it argues hardest about.%n");
+        }
+        else {
+            System.out.printf("%n  The training gain did not survive the held-out season,"
+                + " on the one slot where%n  the answer was arguable beforehand. That is"
+                + " overfitting measured rather than argued.%n");
+        }
 
         // ------------------------------- which of the fourteen slots are real
         // A whole fourteen-slot shape will never repeat across folds - the space
@@ -988,15 +1153,19 @@ public class ShapeSearch {
             double nullWidth = nullSpread[2] - nullSpread[0];
             int foldMin = Arrays.stream(foldMedians).min().orElse(0);
             int foldMax = Arrays.stream(foldMedians).max().orElse(0);
+            // Two signals, and the fold agreement is the one that matters. A
+            // position every fold puts in the same round is determined even if
+            // the tie set around it is wide; a position the folds cannot agree on
+            // is free however narrow the band looks.
             String verdict;
-            if(slateWidth <= 0.5 * nullWidth && foldMax - foldMin <= 1){
-                verdict = "PINNED - folds agree";
+            if(foldMax - foldMin >= 2){
+                verdict = "FREE - folds disagree, do not specify";
             }
-            else if(slateWidth <= 0.75 * nullWidth && foldMax - foldMin <= 3){
-                verdict = "leans, not pinned";
+            else if(slateWidth <= 0.5 * nullWidth){
+                verdict = "PINNED - folds agree, band narrow";
             }
             else {
-                verdict = "FREE - noise, do not specify";
+                verdict = "LEANS - folds agree, band as wide as chance";
             }
             System.out.printf("  %-4s %-18s %-18s %-24s %s%n", position.name(),
                     String.format("%.0f / %.0f / %.0f", slate[0] + 1, slate[1] + 1, slate[2] + 1),
@@ -1007,6 +1176,31 @@ public class ShapeSearch {
         System.out.printf("%n  rounds are 1-14 over picks 7, 18, 31, 42, 55, 66, 79, 90, 103,"
                 + " 114, 127, 162, 175, 186.%n  The RUNBOOK takes RB at 1, WR at 4, TE at 8,"
                 + " QB at 10, DEF at 14.%n");
+
+        // ------------------------------------- what the tied plans have in common
+        // The usable deliverable. A specific fourteen-slot sequence is not a
+        // finding at this sample size; a statement true of nearly every plan
+        // inside the noise band is.
+        System.out.printf("%n%nWHAT EVERY TIED PLAN HAS IN COMMON%nThe argmax is worthless"
+                + " here - thousands of shapes tie. These are the statements%nthat hold"
+                + " across the tie set, each against how often it holds by chance.%nLIFT is"
+                + " the ratio: 1.0 means the search has no opinion.%n%n");
+        System.out.printf("  %-34s %8s %8s %6s  %s%n", "TRAIT", "tied", "chance", "lift",
+                "RUNBOOK");
+        for(Trait trait : TRAITS){
+            double tied = shareHolding(consensus, trait);
+            double chance = shareHolding(uniformShapes, trait);
+            double lift = chance > 0 ? tied / chance : Double.NaN;
+            System.out.printf("  %-34s %7.0f%% %7.0f%% %6.2f  %-3s %s%n", trait.name(),
+                    100 * tied, 100 * chance, lift,
+                    trait.holds().test(runbook) ? "yes" : "no",
+                    tied >= 0.95 ? "<- holds in nearly every tied plan"
+                            : tied <= 0.05 ? "<- holds in almost none" : "");
+        }
+        System.out.printf("%n  A trait at 100%% with a lift near 1 is not a finding - it is"
+                + " true of everything.%n  The usable rows are high share AND high lift, and"
+                + " the rows where the committed%n  plan says 'no' to one of those are where"
+                + " it differs from the tied field.%n");
 
         // --------------------------------------------------- where 1998 sits
         double[] uniformMeans = new double[uniform.size()];

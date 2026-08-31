@@ -356,6 +356,53 @@ class ShapeSearchTest {
     }
 
     @Test
+    void traitsReadTheCommittedPlanCorrectly(){
+        // If a trait misreads the one shape everybody knows by heart, every share
+        // and every lift built on it is wrong. The committed plan is
+        // RB RB RB WR WR WR WR TE WR QB TE QB RB DEF.
+        Map<String, Boolean> expected = new HashMap<>();
+        expected.put("opens with a back", true);
+        expected.put("two backs in the first three", true);
+        expected.put("three backs in the first five", true);
+        expected.put("no receiver until round 3", true);
+        expected.put("first QB by round 3", false);
+        expected.put("first QB by round 5", false);
+        expected.put("first QB after round 8", true);
+        expected.put("carries two QBs", true);
+        expected.put("first TE by round 8", true);
+        expected.put("carries two TEs", true);
+        expected.put("defence in the last three rounds", true);
+        expected.put("defence in the first seven", false);
+        expected.put("four or more backs", true);
+        expected.put("five or more receivers", true);
+        for(ShapeSearch.Trait trait : ShapeSearch.TRAITS){
+            Assertions.assertTrue(expected.containsKey(trait.name()),
+                    "untested trait: " + trait.name());
+            Assertions.assertEquals(expected.get(trait.name()), trait.holds().test(RUNBOOK),
+                    "trait misreads the committed plan: " + trait.name());
+        }
+        Assertions.assertEquals(expected.size(), ShapeSearch.TRAITS.size());
+    }
+
+    @Test
+    void traitSharesAreProportionsOfTheSetGiven(){
+        List<String> shapes = List.of(
+                "RB RB RB WR WR WR WR TE WR QB TE QB RB DEF",
+                "QB RB RB WR WR WR WR TE WR RB TE WR RB DEF",
+                "WR WR RB WR WR RB RB TE WR QB TE QB RB DEF",
+                "WR WR RB WR WR RB RB TE WR QB TE QB RB DEF");
+        ShapeSearch.Trait opensRb = ShapeSearch.TRAITS.stream()
+                .filter(t -> t.name().equals("opens with a back")).findFirst().orElseThrow();
+        Assertions.assertEquals(0.25, ShapeSearch.shareHolding(shapes, opensRb), 1e-9);
+        ShapeSearch.Trait defLate = ShapeSearch.TRAITS.stream()
+                .filter(t -> t.name().equals("defence in the last three rounds"))
+                .findFirst().orElseThrow();
+        Assertions.assertEquals(1.0, ShapeSearch.shareHolding(shapes, defLate), 1e-9);
+        Assertions.assertTrue(Double.isNaN(ShapeSearch.shareHolding(List.of(), opensRb)),
+                "an empty set has no share, and must not report zero");
+    }
+
+    @Test
     void movingTheDefenceLastKeepsTheRosterAndOnlyChangesWhen(){
         List<Position> moved = ShapeSearch.defenceLast(RUNBOOK);
         Assertions.assertEquals(ShapeSearch.RUNBOOK, ShapeSearch.render(moved),

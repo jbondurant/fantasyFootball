@@ -80,7 +80,15 @@ tasks.register('run', JavaExec) {
      // ObjectiveAudit - 'plans=false' skips the sixteen-round searches and
      // leaves only the backtest columns, which is the fast way to inspect one
      // constant. 'window' overrides the shrinkage neighbourhood.
-     'plans', 'window'].each { knob ->
+     'plans', 'window',
+     // The season harvest (EraIngest / EraSample / RegimeShift / FormatProxyAudit).
+     // 'rounds' how many rounds the replayed draft runs, 'format' which FFC
+     // board, 'planSample' scores a seeded subset instead of all 415,650 plans,
+     // 'cutoff' and 'targetFrom' set the era split, 'noKeepers' drops the
+     // two-keeper structure, 'feedScored' grades with Sleeper's own number as
+     // the control.
+     'rounds', 'format', 'planSample', 'cutoff', 'targetFrom', 'noKeepers',
+     'feedScored'].each { knob ->
         if (project.hasProperty(knob)) {
             systemProperty knob, project.property(knob)
         }

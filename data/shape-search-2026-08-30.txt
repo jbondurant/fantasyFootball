@@ -5,13 +5,228 @@ space    54,678,624 ordered legal shapes over 24 compositions
 legal    QB 1-2, TE 1-2, DEF exactly 1, RB >= 2, WR >= 3
 scoring  PlanBacktest.score, unchanged - real ADP boards, real weekly outcomes,
          lineups set by PRESEASON rank and scored on REALISED points
-search   30 random restarts per fold per rule, steepest-ascent hill climb,
+search   10 random restarts per fold per rule, steepest-ascent hill climb,
          neighbourhood = one substitution or one swap (90 moves from a given shape)
 seeds    RANDOM LEGAL SHAPES ONLY. The committed shape is never a start,
          never a hint, never in an objective. It is a scored entrant.
+
+BOARD CENSUS - what each season's board actually carries
+  SEASON   players     QB     RB     WR     TE    DEF
+  2021         373     48    105    134     56     30
+  2022         237     28     69     85     32     23
+  2023         269     34     81     93     35     26
+  2024         288     36     82    104     37     29
+  2025         299     39     85    103     42     30
+  A zero in any column means that slot cannot draft what it says it drafts.
 
 RUNBOOK committed                    2035   1654   2191   1960   2148  mean   1998  worst   1654
 best available by ADP (the null)     1439   1381   1192   1485   1712  mean   1442  worst   1192
 
 That 1998 is the number under investigation, and it is IN-SAMPLE: the shape's
 slots were argued from these same five seasons.
+
+
+PER-FOLD - trained on four seasons, scored on the fifth
+
+HOLD OUT 2021
+  rule / shape chosen from the other four         train HELD-OUT
+  RB RB QB WR WR DEF RB TE WR QB RB WR TE WR       2141     2117
+  RB WR RB WR WR WR RB DEF WR QB TE WR TE QB       2126     1886   max worst-season
+  RB WR RB WR WR DEF RB TE WR QB TE WR WR QB       2130     1911   minimax regret
+  RB RB RB WR WR WR WR TE WR QB TE QB RB DEF       1988     2035   RUNBOOK: rank 25,066 of 111,720 on train, 37,213 of 111,720 held out
+  slate within 125 of the leader: 14,045 of 111,720 shapes evaluated (12.6%),
+  their held-out mean 2016, range 1424 to 2400.  RUNBOOK is NOT in the slate.
+
+HOLD OUT 2022
+  rule / shape chosen from the other four         train HELD-OUT
+  RB RB QB WR WR WR WR TE DEF QB RB WR RB WR       2153     1906
+  RB RB QB WR WR WR RB TE DEF QB RB WR WR WR       2132     2102   max worst-season
+  RB RB RB WR WR QB WR TE TE WR WR RB DEF WR       2125     1779   minimax regret
+  RB RB RB WR WR WR WR TE WR QB TE QB RB DEF       2084     1654   RUNBOOK: rank 2,870 of 111,720 on train, 103,812 of 111,720 held out
+  slate within 125 of the leader: 17,825 of 111,720 shapes evaluated (16.0%),
+  their held-out mean 1951, range 1526 to 2284.  RUNBOOK IS IN THE SLATE.
+
+HOLD OUT 2023
+  rule / shape chosen from the other four         train HELD-OUT
+  RB RB QB DEF WR WR RB TE WR QB RB WR WR TE       2175     2101
+  RB RB QB RB WR WR RB TE TE DEF WR WR WR WR       2163     1893   max worst-season
+  RB RB QB RB WR QB RB TE WR DEF WR WR WR TE       2141     1881   minimax regret
+  RB RB RB WR WR WR WR TE WR QB TE QB RB DEF       1949     2191   RUNBOOK: rank 48,558 of 111,720 on train, 1,025 of 111,720 held out
+  slate within 125 of the leader: 10,822 of 111,720 shapes evaluated (9.7%),
+  their held-out mean 1911, range 1485 to 2257.  RUNBOOK is NOT in the slate.
+
+HOLD OUT 2024
+  rule / shape chosen from the other four         train HELD-OUT
+  RB RB QB DEF WR WR RB TE WR QB RB WR WR TE       2178     2087
+  RB RB DEF QB WR WR RB TE WR QB RB WR TE WR       2132     1970   max worst-season
+  RB RB QB WR WR DEF WR TE WR QB RB WR RB TE       2131     2086   minimax regret
+  RB RB RB WR WR WR WR TE WR QB TE QB RB DEF       2007     1960   RUNBOOK: rank 20,068 of 111,720 on train, 54,099 of 111,720 held out
+  slate within 125 of the leader: 7,264 of 111,720 shapes evaluated (6.5%),
+  their held-out mean 1973, range 1594 to 2237.  RUNBOOK is NOT in the slate.
+
+HOLD OUT 2025
+  rule / shape chosen from the other four         train HELD-OUT
+  RB RB QB DEF WR WR WR TE WR QB RB WR WR TE       2187     1992
+  RB WR QB DEF WR WR RB TE WR QB RB WR WR RB       2149     1899   max worst-season
+  RB QB RB DEF WR WR RB TE WR QB RB WR WR TE       2178     1821   minimax regret
+  RB RB RB WR WR WR WR TE WR QB TE QB RB DEF       1960     2148   RUNBOOK: rank 41,934 of 111,720 on train, 5,883 of 111,720 held out
+  slate within 125 of the leader: 5,096 of 111,720 shapes evaluated (4.6%),
+  their held-out mean 1923, range 1308 to 2263.  RUNBOOK is NOT in the slate.
+
+THE HEADLINE
+  RUNBOOK committed, five seasons (IN-SAMPLE)        1998
+  LOO pick by train MEAN (out-of-sample)             2041   fold sd   90
+  LOO pick by train WORST SEASON                     1950   fold sd   91
+  LOO pick by train MINIMAX REGRET                   1895   fold sd  118
+  LOO whole-slate average                            1955
+  best available by ADP (the null)                   1442
+  worst season of the LOO-by-mean picks              1906
+  worst season of the LOO-by-worst picks             1886
+  worst season of the RUNBOOK                        1654
+
+  selection optimism, train leader minus its held-out score: +126
+  a fourteen-slot shape fitted this hard on four seasons loses that much
+  when it meets a fifth. 1998 discounted by it: 1872.
+  standard error of the LOO mean over five folds: 40. Per-season spread is
+  about 213, which is the resolution this whole experiment has.
+
+
+IS THE DIFFERENCE REAL? - paired, season by season
+Both strategies draft the same five boards, so the seasons pair up and the
+shared variance cancels. This is the sharper test; the five-season means above
+are the blunt one.
+
+  SEASON                            2021    2022    2023    2024    2025  mean gap       SE
+  LOO by train mean - RUNBOOK        +81    +252     -91    +127    -156       +43       74
+  LOO by worst season - RUNBOOK     -149    +448    -298      +9    -249       -48      135
+  LOO by minimax regret - RUNBOOK    -125    +125    -310    +126    -327      -102       99
+
+  The honest picker beats the committed shape by +43 a season, give or take
+  74. That interval straddles zero, so on five seasons these two are NOT
+  separated - and neither is any gap smaller than about 148.
+
+  The floor, held to the same standard: the honest picks never fall below 1906,
+  the committed shape falls to 1654 - a gap of +252. But a worst season is a
+  MINIMUM over five draws, one observation rather than a mean, so its noise is the
+  full per-season spread of 166, not 74. At 1.5 spreads, that gap is SUGGESTIVE, NOT ESTABLISHED.
+  Seasons in which each rule's pick beat the committed shape: mean-rule 3 of 5,
+  worst-rule 2 of 5. A rule that wins three and loses two has shown nothing.
+
+
+STABILITY - do the folds agree on a shape?
+
+  HELD   SHAPE PICKED BY TRAIN MEAN                    hamm  comp
+  2021   RB RB QB WR WR DEF RB TE WR QB RB WR TE WR       7     0
+  2022   RB RB QB WR WR WR WR TE DEF QB RB WR RB WR       5     1
+  2023   RB RB QB DEF WR WR RB TE WR QB RB WR WR TE       7     0
+  2024   RB RB QB DEF WR WR RB TE WR QB RB WR WR TE       7     0
+  2025   RB RB QB DEF WR WR WR TE WR QB RB WR WR TE       6     1
+
+  hamm = slots differing from the RUNBOOK shape in ORDER, comp = in ROSTER
+  folds picking EXACTLY the RUNBOOK shape: 0 of 5
+  mean pairwise Hamming between the five fold winners: 3.3 of 14 slots (1 identical pairs of 10)
+  folds whose SLATE contains the RUNBOOK shape: 1 of 5
+
+
+THE CONSENSUS SLATE - in every fold's slate, so no single season carries it
+1,565 shapes of the 111,720 evaluated qualify. Ranked by WORST SEASON, which is what
+a manager who plays one season feels; the mean is shown beside it, not above it.
+
+  SHAPE                                         worst   mean    sd  wADP  wRUN  hamm
+  RB RB QB WR WR DEF RB TE WR QB RB WR TE WR     2112   2136    31    5/5    3/5     7
+  RB RB QB WR WR WR RB TE DEF QB RB WR WR WR     2102   2126    22    5/5    4/5     7
+  RB RB QB WR WR DEF RB TE WR QB RB WR WR TE     2096   2148    65    5/5    3/5     7
+  RB RB QB WR WR WR RB TE DEF QB RB WR WR TE     2095   2133    23    5/5    3/5     7
+  RB RB QB WR WR DEF RB TE WR QB RB WR WR WR     2085   2137    46    5/5    3/5     7
+  RB RB QB WR WR WR RB TE DEF QB RB WR WR RB     2083   2107    24    5/5    3/5     7
+  RB RB QB DEF WR WR RB TE WR QB RB WR TE WR     2080   2152    56    5/5    3/5     7
+  RB RB QB WR WR DEF RB TE WR QB RB WR RB WR     2078   2126    37    5/5    4/5     6
+  RB RB QB WR WR DEF WR TE WR QB RB WR TE WR     2078   2129    54    5/5    3/5     6
+  RB RB QB WR WR WR DEF TE WR QB RB WR WR TE     2076   2115    34    5/5    3/5     6
+  RB RB QB WR WR WR RB TE DEF QB RB WR TE WR     2072   2117    33    5/5    4/5     7
+  WR RB RB WR WR WR RB TE DEF QB RB WR TE QB     2071   2096    26    5/5    3/5     7
+  RB RB QB WR WR DEF WR TE WR QB RB WR RB TE     2070   2122    71    5/5    3/5     5
+  RB RB QB WR WR DEF WR TE WR QB RB WR WR WR     2069   2129    85    5/5    3/5     6
+  RB RB QB DEF WR WR RB TE WR QB RB WR WR WR     2068   2150   100    5/5    3/5     7
+
+  the RUNBOOK is NOT in the consensus slate.
+
+
+DEF-LAST DOMINANCE TEST - the one perturbation whose sign is known in advance
+Moving the defence to pick 186 shifts every skill pick earlier onto a fuller board,
+so the DEF-last roster is ADP-dominant. Preferring the defence earlier can only be
+justified by what five particular seasons happened to do.
+
+  HELD   DEF at      train HELD-OUT   train-DL  HELD-DL
+  2021   6            2141     2117       1909     1788
+  2022   9            2153     1906       2117     1780
+  2023   4            2175     2101       1859     1905
+  2024   4            2178     2087       1884     1806
+  2025   4            2187     1992       1892     2104
+
+  folds whose winner beats its own DEF-last twin ON TRAINING: 5 of 5, by +235 a season
+  folds where that preference LOST points out of sample: 1 of 5; mean held-out gain +164
+
+  THE PREDICTION FAILED, and the failure is the finding. The ADP argument said
+  DEF-last must win: no opponent here ever drafts a defence, so the same defence
+  waits at pick 186 as at pick 42, while every skill pick moves onto a less
+  picked-over board. It lost anyway, out of sample as well as in.
+  Run -Pshape="<sequence>" to see why: rotating the defence does not merely move
+  WHEN you draft - the other eleven drain the board between your picks, so the two
+  rosters share almost no players at all. A shape is a lottery ticket over fourteen
+  board positions, and an ADP-dominant ticket is not a better-scoring one.
+  DO NOT ACT ON THIS. PlanBacktest's defence market is fictional - eleven teams
+  that never draft one - so the defence slot is the single least trustworthy
+  parameter this instrument has, and it is the one it argues hardest about.
+
+
+WHICH OF THE FOURTEEN SLOTS THE FIVE SEASONS ACTUALLY DETERMINE
+first round each position is taken, as p10 / median / p90. The null column is
+the same statistic over shapes drawn at random - what NO information looks like.
+
+  POS  consensus slate    random null        median per fold (2021-2025) verdict
+  QB   3 / 3 / 6          1 / 5 / 11         3   3   3   3   3        PINNED - folds agree, band narrow
+  RB   1 / 1 / 2          1 / 2 / 6          1   1   1   1   1        PINNED - folds agree, band narrow
+  WR   1 / 4 / 5          1 / 2 / 5          4   4   4   4   4        LEANS - folds agree, band as wide as chance
+  TE   6 / 8 / 8          1 / 5 / 11         8   8   8   8   8        PINNED - folds agree, band narrow
+  DEF  4 / 6 / 11         2 / 8 / 13         9   10  8   6   8        FREE - folds disagree, do not specify
+
+  rounds are 1-14 over picks 7, 18, 31, 42, 55, 66, 79, 90, 103, 114, 127, 162, 175, 186.
+  The RUNBOOK takes RB at 1, WR at 4, TE at 8, QB at 10, DEF at 14.
+
+
+WHAT EVERY TIED PLAN HAS IN COMMON
+The argmax is worthless here - thousands of shapes tie. These are the statements
+that hold across the tie set, each against how often it holds by chance.
+LIFT is the ratio: 1.0 means the search has no opinion.
+
+  TRAIT                                  tied   chance   lift  RUNBOOK
+  opens with a back                       87%      33%   2.65  yes 
+  two backs in the first three            85%      25%   3.48  yes 
+  three backs in the first five           27%      19%   1.44  yes 
+  no receiver until round 3               80%      41%   1.92  yes 
+  first QB by round 3                     73%      35%   2.11  no  
+  first QB by round 5                     79%      54%   1.46  no  
+  first QB after round 8                   6%      24%   0.24  yes 
+  carries two QBs                         83%      71%   1.17  yes 
+  first TE by round 8                     90%      76%   1.18  yes 
+  carries two TEs                         79%      71%   1.11  yes 
+  defence in the last three rounds         7%      22%   0.32  yes 
+  defence in the first seven              55%      49%   1.11  no  
+  four or more backs                      65%      79%   0.83  yes 
+  five or more receivers                  95%      60%   1.56  yes 
+
+  A trait at 100% with a lift near 1 is not a finding - it is true of everything.
+  The usable rows are high share AND high lift, and the rows where the committed
+  plan says 'no' to one of those are where it differs from the tied field.
+
+
+WHERE 1998 SITS IN THE FAMILY - 20,000 shapes drawn UNIFORMLY from the legal space
+  mean   1794   median   1795   5th   1652   95th   1932   best sampled   2070
+  the RUNBOOK's 1998 beats 99.46% of legal shapes on these five seasons by mean,
+  and its worst season beats 60.46% of them.
+
+
+pool 111,720 distinct shapes, 558,610 season-scores, 675s. That is 0.20432% of the
+legal space, so every slate count above is a FLOOR on how many shapes tie,
+never a ceiling.

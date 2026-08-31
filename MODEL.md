@@ -4635,15 +4635,29 @@ Two tests, both in `RegimeShift`, both on held-out seasons:
   WITHIN an era too. The across-era number sits between the two within-era
   numbers, which is as clean a null as this can produce.
 
+  DRIFT (agreement regressed on the GAP between two seasons - the recency
+  question in its strongest form, since it does not need a cutoff to exist):
+  **-0.0109 +/- 0.0056 per year**, 78 pairs. Marginal, and that interval is a
+  FLOOR: 78 pairs come from 13 seasons, so they are not independent and ordinary
+  least squares does not know it. Read as "not significant, pointing gently
+  toward mild drift".
+
   TRANSFER (fit on one era, score on 2021-2025, top 1% of plans rather than one
   noisy winner): fitting on recent seasons instead of old ones is worth
-  **+29.7 +/- 31.1 points a season**. Inside the noise.
+  **+29.7 +/- 31.1 points a season**. Inside the noise, same gentle direction.
 
-**Recommendation: pool all 13 seasons, flat. No cutoff.** Down-weighting costs
-real resolution (13.0 effective seasons -> 11.8 at a half-life of 8) to buy
-insurance against a bias that cannot be measured. The half-life grid's apparent
-winner is grid search: its held-out curve reverses direction repeatedly, which a
-real recency effect would not.
+**Recommendation: pool all 13 seasons. No cutoff.** Nothing reaches
+significance, and down-weighting costs real resolution (13.0 effective seasons
+-> 11.8 at a half-life of 8) to insure against a bias that cannot be measured.
+The half-life grid's apparent winner is grid search: its held-out curve reverses
+direction repeatedly, which a real recency effect would not.
+
+The one defensible hedge: both marginal estimates lean the same way, so a LONG
+half-life - 8 seasons or more - costs about 1.2 effective seasons (95% bar 101 ->
+106) and is cheap insurance. A cutoff year is not the same thing and is not
+recommended: it is a half-life of zero, it throws away seasons that the drift
+test says are still evidence, and there is no year in the data where anything
+changes.
 
 **But the answer is structural, not universal.** Run `-PnoKeepers` and the same
 test finds a REAL effect: +89.5 +/- 31.7 at a 2019 cutoff, +51.1 and +41.5 at
@@ -4670,3 +4684,160 @@ not winners.
 Model A remains byte-identical: [RB, WR, RB, WR, WR, WR, TE, QB, QB], 1812.8,
 p10 1784.4. Every file here is new; the only shared edit is additive knobs in
 build.gradle.
+
+## The committed plan's 1998 is a training score, and so is everything near it
+
+`ShapeSearch` was built to answer one question: is the RUNBOOK's 1998 an honest
+out-of-sample number, or is it inflated because we chose those fourteen slots by
+looking at the same five seasons it is scored on? Fourteen parameters fitted on
+five observations and then graded on those five, while every model it beats is
+graded leave-one-out.
+
+The honest version:
+
+    for each held-out season S in 2021..2025:
+        search shapes using ONLY the other four
+        score the winner on S, which it never saw
+    report the mean of the five held-out scores
+
+**Seeded from random legal shapes and nothing else.** The committed shape is
+never a start, never a hint, never in an objective - it enters as a scored
+entrant so its rank sits beside everybody else's. That is deliberate protection
+against the `-Pdeviate` class of fault, where a default quietly handed a search
+the answer it was meant to rediscover.
+
+    ./gradlew run -Pmain=ShapeSearch -q
+    ./gradlew run -Pmain=ShapeSearch -Pshape="RB RB QB DEF WR ..."   # who a shape drafts
+
+### The answer, and it is not the one the question expected
+
+    RUNBOOK committed, five seasons (IN-SAMPLE)        1998
+    LOO pick by train MEAN (out-of-sample)             2041   fold sd 90
+    LOO pick by train WORST SEASON                     1950
+    LOO pick by train MINIMAX REGRET                   1895
+    LOO whole-slate average                            1955
+    best available by ADP (the null)                   1442
+
+An honest picker that never sees the season it is graded on scores **2041**,
+slightly ABOVE the committed plan's in-sample 1998. So the fixed-shape family is
+genuinely worth about two thousand points out of sample, the models at 1885 were
+not chasing a mirage, and 1998 is not fraudulent.
+
+**But 1998 is still a training score, and the selection tax is measured: +126.**
+That is what a shape fitted this hard on four seasons loses when it meets a
+fifth. It is the honest discount on any number chosen by looking at these five.
+
+**And the two are not separated.** Paired season by season, which is the sharp
+test because both shapes draft the same five boards:
+
+    LOO by train mean - RUNBOOK   +81  +252   -91  +127  -156   mean +43, SE 74
+
+Plus or minus 74 straddles zero. Nothing smaller than about 148 points is
+distinguishable here, which agrees with `PowerBacktest`'s clustered 125.
+
+### The RUNBOOK is an ordinary member of a family it does not lead
+
+Its rank on the four training seasons swings from 2,870th to 48,558th of 111,720
+shapes depending on which season is dropped; held out, from 1,025th to 103,812nd.
+Four of the five folds' tie sets do not contain it. It is not in the consensus
+slate - the 1,565 shapes inside the band no matter which season you drop.
+
+Where it does stand out is the wrong direction. Against 20,000 shapes drawn
+uniformly from the legal space, **1998 beats 99.46% of them by mean - and its
+worst season beats only 60.46%.** Excellent on average, close to a coin flip on
+the floor, which for a man who plays one season is the statistic that matters.
+Its 1654 in 2022 is 252 below the worst any honest pick ever posted. At 1.5
+per-season spreads that is suggestive, not established.
+
+### The argmax is worthless; the tie set is the finding
+
+At the measured 125-point band, **5,096 to 17,825 shapes tie with the leader in
+each fold** - up to 16% of everything evaluated. Naming one fourteen-slot
+sequence as best is meaningless. What the tied plans agree on is not:
+
+    TRAIT                              tied  chance  lift   RUNBOOK
+    two backs in the first three        85%     25%  3.48   yes
+    opens with a back                   87%     33%  2.65   yes
+    first QB by round 3                 73%     35%  2.11   NO
+    no receiver until round 3           80%     41%  1.92   yes
+    five or more receivers              95%     60%  1.56   yes
+    first QB after round 8               6%     24%  0.24   yes
+
+And per parameter, with the folds' medians beside the random null:
+
+    POS  tie set    null       per fold          verdict
+    QB   3 / 3 / 6  1 / 5 / 11  3  3  3  3  3    PINNED
+    RB   1 / 1 / 2  1 / 2 / 6   1  1  1  1  1    PINNED
+    TE   6 / 8 / 8  1 / 5 / 11  8  8  8  8  8    PINNED
+    WR   1 / 4 / 5  1 / 2 / 5   4  4  4  4  4    LEANS (band as wide as chance)
+    DEF  4 / 6 / 11 2 / 8 / 13  9 10  8  6  8    FREE (folds disagree)
+
+The committed plan matches the pinned structure exactly on backs and tight end.
+**The one place it disagrees with the tied field is the quarterback**: every
+fold puts the first QB in round 3, the committed plan waits until round 10, and
+only 6% of tied plans wait past round 8.
+
+### Do not act on the quarterback finding yet
+
+It is the conclusion most exposed to the two known faults in this instrument,
+and they push opposite ways:
+
+- **Outcomes are graded at 4 points a passing touchdown; the league pays 6.**
+  Every starting quarterback is scored 55-66 points a season light, so QB-early
+  wins here DESPITE a handicap. Correcting it should strengthen the finding.
+- **The eleven opponents take strictly best-available-by-ADP.** The real league
+  lets quarterbacks fall about 16 selections. So this backtest makes QBs scarcer
+  than they are and rewards reaching, which weakens the finding.
+
+Until `ShapeSearch` is rerun on the corrected grader and against `PowerBacktest`'s
+displaced opponents, round 3 is a hypothesis, not a plan.
+
+### A prediction that failed, and why the failure matters
+
+The defence slot looked like a free overfitting detector. No opponent in
+`PlanBacktest` ever drafts a defence, so the same defence waits at pick 186 as at
+pick 42, while moving it late shifts every skill pick onto a less picked-over
+board. The DEF-last rotation is therefore ADP-dominant, and the search preferring
+the defence EARLY had to be fitting noise.
+
+It is not. DEF-early beat its own DEF-last twin by **+235 a season on training
+and +164 out of sample, in four folds of five.**
+
+`-Pshape=` prints why, and the answer is worth carrying to every other shape
+conclusion in this repo: rotating one slot does not merely change WHEN you draft.
+The other eleven drain the board between your picks, so the two rosters share
+almost no players at all - in 2021, DEF-last got Cooper, Aiyuk, Chark and
+Beasley where DEF-early got Higgins, Waddle and Fournette. **A shape is a lottery
+ticket over fourteen board positions, and an ADP-dominant ticket is not a
+better-scoring one.**
+
+That said, the defence market here is fictional - eleven teams that never draft
+one - so the defence slot is the least trustworthy parameter this instrument has
+and the one it argues hardest about. The folds cannot agree on it either. Take
+the defence last, as the committed plan does.
+
+### What this is worth, honestly
+
+The fixed-shape family survives leave-one-out at about 2000, and every plausible
+member of it beats best-available-by-ADP by 500-600. Below that, at five seasons,
+the shape family **cannot be resolved**: thousands of plans tie, the honest
+picker and the committed plan differ by less than their own error bar, and the
+committed plan's higher-variance floor is suggestive rather than proven. Seasons
+are the only axis that would sharpen this; more restarts do not (fold winners are
+identical at 3, 10 and 30 restarts) and neither do draft slots or opponent worlds
+(`PowerBacktest`: SE 44.0 to 43.4 with infinitely many).
+
+The search space was 54,678,624 ordered legal shapes (QB 1-2, TE 1-2, DEF exactly
+1, RB >= 2, WR >= 3); the pool evaluated was 111,720 of them, 0.2%, so every tie
+count above is a FLOOR on how many shapes tie, never a ceiling.
+
+Full output: `data/shape-search-2026-08-30.txt`. Model A remains byte-identical
+at 1812.8 / p10 1784.4, plan [RB, WR, RB, WR, WR, WR, TE, QB, QB]. Nothing here
+reaches Tuesday's tooling.
+
+**One correction to an earlier table.** The `best-nine (Model A)` row in
+`PlanBacktest.STRATEGIES` (1627) is Model A run past round 7, outside its domain
+- two keepers plus seven picks fill its nine starting slots exactly, so its
+trailing picks are artifacts. It is not a fair entrant and must not be read as
+the floor of the model field. The legitimate mixed entrant is `ModelA front + SS
+back` at 1862.
