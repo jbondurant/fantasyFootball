@@ -4646,11 +4646,19 @@ Two tests, both in `RegimeShift`, both on held-out seasons:
   noisy winner): fitting on recent seasons instead of old ones is worth
   **+29.7 +/- 31.1 points a season**. Inside the noise, same gentle direction.
 
-**Recommendation: pool all 13 seasons. No cutoff.** Nothing reaches
-significance, and down-weighting costs real resolution (13.0 effective seasons
--> 11.8 at a half-life of 8) to insure against a bias that cannot be measured.
-The half-life grid's apparent winner is grid search: its held-out curve reverses
-direction repeatedly, which a real recency effect would not.
+**Recommendation, as the tool prints it: BORDERLINE - pool all 13 seasons, or
+hedge gently. Do NOT cut.** The strongest era signal is 2.01 standard errors on
+an interval that is itself optimistic, and down-weighting costs real resolution
+(13.0 effective seasons -> 11.8 at a half-life of 8) to insure against a bias
+that cannot be measured. The half-life grid's apparent winner is grid search:
+its held-out curve reverses direction twice, which a real recency effect would
+not.
+
+The verdict is computed in `RegimeShift.verdict` with a three-way rule, because
+the drift estimate read 1.95 sigma on a 20,000-plan subsample and 2.00 sigma on
+all 415,650 - a two-sided threshold flipped the RECOMMENDATION between those two
+runs. Anything between 2 and 3 sigma now prints BORDERLINE rather than picking a
+side.
 
 The one defensible hedge: both marginal estimates lean the same way, so a LONG
 half-life - 8 seasons or more - costs about 1.2 effective seasons (95% bar 101 ->
@@ -4659,13 +4667,14 @@ recommended: it is a half-life of zero, it throws away seasons that the drift
 test says are still evidence, and there is no year in the data where anything
 changes.
 
-**But the answer is structural, not universal.** Run `-PnoKeepers` and the same
-test finds a REAL effect: +89.5 +/- 31.7 at a 2019 cutoff, +51.1 and +41.5 at
-2021 and 2017, and there the across-era agreement (0.157-0.161) does fall below
-both within-era numbers. The keeper structure removes the quarterback-timing
-decision, and quarterback timing is where the eras differ most. Anyone using
-this harvest for a keeperless question should weight by recency; Justin's own
-game does not need to.
+**But the answer is structural, not universal.** Run `-PnoKeepers` and all three
+tests fire (`data/regime-shift-nokeepers-2026-08-30.txt`): across-era agreement
+0.159 against within-era 0.210 and 0.213, drift -0.0143 +/- 0.0051 (2.80 sigma),
+transfer +89.5 +/- 31.7 (2.82 sigma) - and +51.1 and +41.5 at 2021 and 2017
+cutoffs, so it is not an artifact of where the split falls. The keeper structure
+removes the quarterback-timing decision, and quarterback timing is where the
+eras differ most. Anyone using this harvest for a keeperless question should
+weight by recency; Justin's own game does not need to.
 
 ### What the harvest is worth
 

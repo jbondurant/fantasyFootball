@@ -1,0 +1,94 @@
+
+SEASONS AVAILABLE, AND HOW WELL THEY JOIN
+board: fantasyfootballcalculator 12-team ADP from real drafts
+outcomes: sleeper weekly stats, scored under THIS league's settings (6-point passing TDs)
+gates: match rate >= 90%, top-100 match >= 95%, board depth >= 144 for a 11-round draft
+
+SEASON FORMAT     DRAFTS  BOARD JOINED    RATE  TOP-100  SKILL   DEF LOOSE WEEKS  VERDICT
+2010   ppr           898    204    130   63.7%    67.6%    113    17     7    17  REJECT match rate
+2011   ppr           600    179    129   72.1%    82.2%    115    14     3    17  REJECT match rate
+2012   ppr           303     93     88   94.6%    96.0%     87     1     0    17  REJECT too shallow
+2013   ppr           764    177    168   94.9%    96.0%    153    15     1    17  USE
+2014   ppr           635    179    178   99.4%    99.0%    164    14     3    17  USE
+2015   ppr           844    187    187  100.0%   100.0%    172    15     3    17  USE
+2016   ppr           956    177    177  100.0%   100.0%    163    14     3    17  USE
+2017   ppr           685    176    176  100.0%   100.0%    163    13     1    17  USE
+2018   ppr          2494    183    183  100.0%   100.0%    168    15     2    17  USE
+2019   ppr          2167    186    185   99.5%   100.0%    169    16     2    17  USE
+2020   ppr          2403    189    188   99.5%   100.0%    173    15     3    17  USE
+2021   ppr          1709    196    195   99.5%   100.0%    182    13     2    18  USE
+2022   ppr          1633    152    151   99.3%    99.0%    145     6     1    18  USE
+2023   ppr          3146    189    189  100.0%   100.0%    177    12     1    18  USE
+2024   ppr          1371    190    190  100.0%   100.0%    178    12     1    18  USE
+2025   ppr          8470    229    228   99.6%   100.0%    205    23     0    18  USE
+
+13 of 16 seasons usable.
+
+WHO THE JOIN MISSED, EARLIEST ADP FIRST
+(an unmatched man is deleted from the board, so these are the players
+the replayed draft could never take - the list is the honest cost of the join)
+   2010  72 missed, 41 inside pick 120:  8 Randy Moss WR | 9 Michael Turner RB | 19 Rashard Mendenhall RB | 33 Cedric Benson RB | 36 Jahvid Best RB | 39 Dallas Clark TE
+   2011  48 missed, 29 inside pick 120:  12 Rashard Mendenhall RB | 22 Michael Turner RB | 28 Felix Jones RB | 34 Jahvid Best RB | 43 Jermichael Finley TE | 54 Dallas Clark TE
+   2012  5 missed, 5 inside pick 120:  66 Kevin Smith RB | 80 Michael Bush RB | 88 Tony Gonzalez TE | 101 Rashard Mendenhall RB | 119 Jonathan Dwyer RB
+   2013  9 missed, 6 inside pick 120:  25 David Wilson RB | 56 Tony Gonzalez TE | 65 Rashard Mendenhall RB | 78 Jermichael Finley TE | 114 Mikel Leshoure RB | 117 Michael Bush RB
+   2014  1 missed, 1 inside pick 120:  53 Ray Rice RB
+   2015  0 missed, 0 inside pick 120
+   2016  0 missed, 0 inside pick 120
+   2017  0 missed, 0 inside pick 120
+   2018  0 missed, 0 inside pick 120
+   2019  1 missed, 0 inside pick 120
+   2020  1 missed, 0 inside pick 120
+   2021  1 missed, 0 inside pick 120
+   2022  1 missed, 1 inside pick 120:  94 Nyheim Hines RB
+   2023  0 missed, 0 inside pick 120
+   2024  0 missed, 0 inside pick 120
+   2025  1 missed, 0 inside pick 120
+
+SCORING AUDIT: TOP-12 QUARTERBACK, BOTH WAYS
+SEASON TOP QB                     league       feed       gap   mean gap, top 12
+2013   Peyton Manning              520.0      410.0    +110.0   +61.0
+2014   Andrew Luck                 434.7      354.7     +80.0   +63.7
+2015   Cam Newton                  464.1      394.1     +70.0   +62.3
+2016   Aaron Rodgers               459.0      379.0     +80.0   +59.8
+2017   Russell Wilson              412.9      345.9     +67.0   +53.7
+2018   Patrick Mahomes             520.1      420.1    +100.0   +66.5
+2019   Lamar Jackson               484.7      412.7     +72.0   +54.2
+2020   Aaron Rodgers               479.8      383.8     +96.0   +67.7
+2021   Josh Allen                  481.6      409.6     +72.0   +66.2
+2022   Patrick Mahomes             505.9      427.9     +78.0   +48.3
+2023   Josh Allen                  461.6      410.6     +51.0   +47.7
+2024   Lamar Jackson               506.4      434.4     +72.0   +53.1
+2025   Matthew Stafford            443.4      358.4     +85.0   +51.0
+
+SCORING AUDIT: TOP-6 DEFENCES, BOTH WAYS
+SEASON     league       feed       gap
+2013        187.5      184.0      +3.5
+2014        165.0      159.8      +5.2
+2015        188.5      184.5      +4.0
+2016        172.0      167.3      +4.7
+2017        166.0      162.0      +4.0
+2018        163.0      159.0      +4.0
+2019        185.2      182.0      +3.2
+2020        146.5      142.8      +3.7
+2021        159.3      156.0      +3.3
+2022        134.7      128.8      +5.8
+2023        174.7      169.7      +5.0
+2024        141.0      136.0      +5.0
+2025        159.8      154.7      +5.2
+
+A startable defence is graded 5.8 points a season away from the feed's number.
+
+DEPTH CHECK: a 11-round draft removes 132 players.
+   2013  153 skill + 15 defences on the board, 132 needed
+   2014  164 skill + 14 defences on the board, 132 needed
+   2015  172 skill + 15 defences on the board, 132 needed
+   2016  163 skill + 14 defences on the board, 132 needed
+   2017  163 skill + 13 defences on the board, 132 needed
+   2018  168 skill + 15 defences on the board, 132 needed
+   2019  169 skill + 16 defences on the board, 132 needed
+   2020  173 skill + 15 defences on the board, 132 needed
+   2021  182 skill + 13 defences on the board, 132 needed
+   2022  145 skill + 6 defences on the board, 132 needed
+   2023  177 skill + 12 defences on the board, 132 needed
+   2024  178 skill + 12 defences on the board, 132 needed
+   2025  205 skill + 23 defences on the board, 132 needed

@@ -1,0 +1,50 @@
+
+SAMPLE SIZE AFTER THE HARVEST
+
+SEASON   FORMAT     MATCH  TOP-100   DEPTH
+2013        ppr     94.9%    96.0%     153
+2014        ppr     99.4%    99.0%     164
+2015        ppr    100.0%   100.0%     172
+2016        ppr    100.0%   100.0%     163
+2017        ppr    100.0%   100.0%     163
+2018        ppr    100.0%   100.0%     168
+2019        ppr     99.5%   100.0%     169
+2020        ppr     99.5%   100.0%     173
+2021        ppr     99.5%   100.0%     182
+2022        ppr     99.3%    99.0%     145
+2023        ppr    100.0%   100.0%     177
+2024        ppr    100.0%   100.0%     178
+2025        ppr     99.6%   100.0%     205
+
+usable seasons   13 (was 5)
+gates            match >= 90%, top-100 >= 95%, depth >= 144
+plans scored     20000, 11 rounds, keeper structure: QB9 and RB23 held from the start (Tuten + Purdy on the 2026 board), eleven live picks
+
+NOISE, MEASURED
+   any two legal plans differ by +/- 203 points from season to season
+   two plans from the top 1% differ by +/- 186 - the comparison a fit really makes
+   (median across-season standard deviation over 4000 random pairs)
+
+SEASONS       std error        95% bar detectable at 80%
+5                  83.3          163.2            233.2
+8                  65.8          129.0            184.3
+10                 58.9          115.4            164.9
+13                 51.6          101.2            144.6   <- where the harvest lands
+17                 45.2           88.5            126.5
+25                 37.2           73.0            104.3
+
+95% bar is how far apart two plans must score before the difference is
+not chance. The last column is the difference a fair test would find eight
+times in ten - the honest planning number, and always the bigger one.
+
+EFFECTIVE SAMPLE SIZE UNDER RECENCY WEIGHTING
+WEIGHTING             n_eff        95% bar
+flat (pool all)        13.0          101.2
+half-life 8            11.8          106.3
+half-life 5            10.4          113.4
+half-life 3             7.9          130.1
+half-life 2             5.7          152.9
+
+Down-weighting the old seasons costs resolution - that is what n_eff is
+saying. It is only worth paying if the old seasons are biased, which is
+RegimeShift's question, not this one's.

@@ -46,9 +46,27 @@ public class EraBoards {
 
     public static final int TEAMS = 12;
 
-    /** FFC publishes half-PPR boards from 2018; before that PPR is the closest. */
+    /**
+     * PPR boards, for every season, including the ones where half-PPR exists.
+     *
+     * This league is half-PPR and FFC publishes half-PPR from 2018, so the
+     * obvious choice is half-PPR where available and PPR before. It is the
+     * wrong one. That policy puts a FORMAT CHANGE at 2018, in the middle of the
+     * sample, exactly where the old-versus-recent question is being asked - and
+     * any difference found between the eras would then be inseparable from the
+     * boards having changed scoring. PPR runs the whole way, so it is the
+     * format that lets the regime test mean something.
+     *
+     * It costs accuracy on the board: PPR lifts receivers and pass-catching
+     * backs relative to half-PPR. That cost is measured rather than argued
+     * about - -Pformat=half-ppr reruns everything from 2018 on the league's own
+     * format, and RegimeShift reports whether the verdict moves.
+     *
+     * PPR is also the deeper feed. The 2022 half-PPR board has 122 players and
+     * cannot supply an eleven-round draft; its PPR board has 152.
+     */
     public static String defaultFormat(String season){
-        return Integer.parseInt(season) >= 2018 ? "half-ppr" : "ppr";
+        return "ppr";
     }
 
     public record Row(String id, String name, Position position, double adp){}
@@ -57,7 +75,7 @@ public class EraBoards {
     public record Match(String season, String format, int boardRows, int matched,
                         int ambiguous, int topHundred, int topHundredMatched,
                         int skill, int defences, List<String> missedByAdp, int weeks,
-                        int drafts){
+                        int drafts, int exact, int loosened){
         public double rate(){
             return boardRows == 0 ? 0 : (double) matched / boardRows;
         }
@@ -106,8 +124,12 @@ public class EraBoards {
     public static Board build(String season, String format){
         int weeks = EraActuals.weeks(season);
 
-        // name+position -> the men who wore it, from every row in the season
+        // Four indexes over the same men, tried in order of how much they
+        // assume. See match() for why each one exists.
+        Map<String, List<JsonObject>> byNamePosition = new LinkedHashMap<>();
         Map<String, List<JsonObject>> byName = new LinkedHashMap<>();
+        Map<String, List<JsonObject>> byLastPositionTeam = new LinkedHashMap<>();
+        Map<String, List<JsonObject>> byLastTeam = new LinkedHashMap<>();
         for(JsonElement element : EraActuals.skillRows(season)){
             JsonObject row = element.getAsJsonObject();
             JsonObject player = row.getAsJsonObject("player");
@@ -118,9 +140,16 @@ public class EraBoards {
             if(!Position.isStandardPosition(position) || position.equals("DEF")){
                 continue;
             }
-            String name = (text(player, "first_name") + " " + text(player, "last_name"));
-            byName.computeIfAbsent(key(name, Position.valueOf(position)),
+            String name = normalise(text(player, "first_name") + " "
+                    + text(player, "last_name"));
+            String last = normalise(text(player, "last_name"));
+            String team = text(row, "team");
+            byNamePosition.computeIfAbsent(name + "|" + position, k -> new ArrayList<>())
+                    .add(row);
+            byName.computeIfAbsent(name, k -> new ArrayList<>()).add(row);
+            byLastPositionTeam.computeIfAbsent(last + "|" + position + "|" + team,
                     k -> new ArrayList<>()).add(row);
+            byLastTeam.computeIfAbsent(last + "|" + team, k -> new ArrayList<>()).add(row);
         }
 
         Set<String> defenceIDs = EraActuals.defenceIDs(season);
@@ -131,6 +160,8 @@ public class EraBoards {
         int ambiguous = 0;
         int topHundred = 0;
         int topHundredMatched = 0;
+        int exact = 0;
+        int loosenedCount = 0;
         JsonObject json = JsonParser.parseString(adpJson(season, format)).getAsJsonObject();
         int drafts = json.getAsJsonObject("meta").get("total_drafts").getAsInt();
         for(JsonElement element : json.getAsJsonArray("players")){
@@ -153,9 +184,20 @@ public class EraBoards {
                 id = defenceID(team, defenceIDs);
             }
             else {
-                id = skillID(byName.get(key(name, position)), team);
-                if(id == null && byName.containsKey(key(name, position))){
-                    ambiguous++;
+                String exactKey = normalise(name) + "|" + position;
+                id = skillID(byNamePosition.get(exactKey), team);
+                if(id != null){
+                    exact++;
+                }
+                else {
+                    id = loosened(normalise(name), position, team, byName,
+                            byLastPositionTeam, byLastTeam);
+                    if(id != null){
+                        loosenedCount++;
+                    }
+                    else if(byNamePosition.containsKey(exactKey)){
+                        ambiguous++;
+                    }
                 }
             }
             if(id == null){
@@ -190,18 +232,30 @@ public class EraBoards {
         }
         Match match = new Match(season, format, boardRows, ids.size(), ambiguous,
                 topHundred, topHundredMatched, ids.size() - defences, defences,
-                missed, weeks, drafts);
+                missed, weeks, drafts, exact, loosenedCount);
         return new Board(season, format, ids, positionOf, adp, weekly, weeks, match);
     }
 
     /**
      * One man, or nobody.
      *
-     * Two men have shared a name, a position and a season - Steve Smith and
-     * Steve Smith were both starting receivers from 2007 to 2014 - so the team
-     * breaks the tie when it is decisive. When it is not, this returns null and
-     * the player is counted as unmatched. A coin flip here would be a silent
-     * lie, and silent lies are the whole thing this join is guarding against.
+     * Two kinds of collision, and they need different answers.
+     *
+     * The first is two real players: Steve Smith and Steve Smith were both
+     * starting receivers from 2007 to 2014. The team breaks that tie when it is
+     * decisive, and when it is not this returns null and the player counts as
+     * unmatched. A coin flip here would be a silent lie.
+     *
+     * The second is a real player against a MODERN STUB. Sleeper answers a 2010
+     * season request with a row for every player in its present-day directory,
+     * so Frank Gore Jr., who was born into the league in 2024, appears in 2010
+     * beside Frank Gore with six placeholder stat keys and no games. That took
+     * Frank Gore - a top-20 pick in four straight drafts - off four boards.
+     * The discriminator is participation: exactly one of them played. That is
+     * an IDENTITY question ("which of these rows is the man the board means"),
+     * not a performance one, so it does not bias the outcomes - and a man who
+     * genuinely played nothing stays matched unless he also collides, in which
+     * case he is reported rather than guessed at.
      */
     static String skillID(List<JsonObject> candidates, String team){
         if(candidates == null || candidates.isEmpty()){
@@ -210,16 +264,77 @@ public class EraBoards {
         if(candidates.size() == 1){
             return candidates.get(0).get("player_id").getAsString();
         }
+        String byTeam = unique(candidates, candidate -> team.equals(text(candidate, "team")));
+        if(byTeam != null){
+            return byTeam;
+        }
+        return unique(candidates, EraBoards::played);
+    }
+
+    /**
+     * The three ways the two feeds disagree about a man who is plainly the
+     * same man, tried hardest-evidence first, each requiring a UNIQUE answer.
+     *
+     * Every one of these was found by reading the unmatched list rather than
+     * guessed at in advance:
+     *
+     *   POSITION. Sleeper lists Devin Funchess and Jordan Matthews as tight
+     *   ends; FFC's board sells them as receivers. Keying on name plus position
+     *   dropped both from four boards between them. The board's label is the
+     *   one kept, because the board is what the draft is being replayed
+     *   against - a 2016 manager drafting Funchess was drafting a receiver.
+     *
+     *   FIRST NAME. Sleeper says William Fuller and Marquise Brown; FFC says
+     *   Will Fuller and Hollywood Brown. Last name plus position plus club
+     *   settles those without inviting a nickname table nobody will maintain.
+     *
+     *   BOTH AT ONCE. Last name plus club, the loosest rung, and the one most
+     *   likely to be wrong - so it still refuses to answer unless exactly one
+     *   man fits, which two receivers named Brown on one roster would not.
+     */
+    static String loosened(String name, Position position, String team,
+                           Map<String, List<JsonObject>> byName,
+                           Map<String, List<JsonObject>> byLastPositionTeam,
+                           Map<String, List<JsonObject>> byLastTeam){
+        List<JsonObject> sameName = byName.get(name);
+        if(sameName != null && sameName.size() == 1){
+            return sameName.get(0).get("player_id").getAsString();
+        }
+        String last = name.contains(" ") ? name.substring(name.lastIndexOf(' ') + 1) : name;
+        List<JsonObject> sameClub = byLastPositionTeam.get(last + "|" + position + "|" + team);
+        if(sameClub != null && sameClub.size() == 1){
+            return sameClub.get(0).get("player_id").getAsString();
+        }
+        sameClub = byLastTeam.get(last + "|" + team);
+        if(sameClub != null && sameClub.size() == 1){
+            return sameClub.get(0).get("player_id").getAsString();
+        }
+        return null;
+    }
+
+    /** The one candidate the test picks out, or null if it picks none or several. */
+    static String unique(List<JsonObject> candidates,
+                         java.util.function.Predicate<JsonObject> test){
         String found = null;
         for(JsonObject candidate : candidates){
-            if(team.equals(text(candidate, "team"))){
+            if(test.test(candidate)){
                 if(found != null){
-                    return null;                // two of them on the same club
+                    return null;
                 }
                 found = candidate.get("player_id").getAsString();
             }
         }
         return found;
+    }
+
+    /** Did this row's man take the field that season at all? */
+    static boolean played(JsonObject row){
+        JsonObject stats = row.getAsJsonObject("stats");
+        if(stats == null){
+            return false;
+        }
+        JsonElement games = stats.get("gp");
+        return games != null && !games.isJsonNull() && games.getAsDouble() > 0;
     }
 
     /** A defence's id in this season's weekly files, relocations undone. */

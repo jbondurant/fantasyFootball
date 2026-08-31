@@ -25,7 +25,7 @@ import java.util.Map;
  * pays 6.
  *
  *   ./gradlew run -Pmain=EraIngest
- *   ./gradlew run -Pmain=EraIngest -Pformat=ppr    (the board-format control)
+ *   ./gradlew run -Pmain=EraIngest -Pformat=half-ppr   (2018+ only; the control)
  *
  * The first run fetches roughly three hundred documents and takes a few
  * minutes. Everything is cached forever afterwards - a finished season does
@@ -78,25 +78,26 @@ public class EraIngest {
                 + " board depth >= %d for a %d-round draft%n%n",
                 MIN_RATE * 100, MIN_TOP_RATE * 100, minDepth(), rounds);
 
-        System.out.printf("%-6s %-9s %7s %6s %6s %7s %8s %6s %5s %5s  %s%n",
+        System.out.printf("%-6s %-9s %7s %6s %6s %7s %8s %6s %5s %5s %5s  %s%n",
                 "SEASON", "FORMAT", "DRAFTS", "BOARD", "JOINED", "RATE", "TOP-100",
-                "SKILL", "DEF", "WEEKS", "VERDICT");
+                "SKILL", "DEF", "LOOSE", "WEEKS", "VERDICT");
         List<EraBoards.Board> boards = new ArrayList<>();
         Map<String, List<String>> misses = new LinkedHashMap<>();
         for(String season : EraBoards.candidateSeasons()){
             EraBoards.Board board = EraBoards.tryBuild(season, format);
             if(board == null){
-                System.out.printf("%-6s %-9s %7s %6s %6s %7s %8s %6s %5s %5s  %s%n",
+                System.out.printf("%-6s %-9s %7s %6s %6s %7s %8s %6s %5s %5s %5s  %s%n",
                         season, format == null ? EraBoards.defaultFormat(season) : format,
-                        "-", "-", "-", "-", "-", "-", "-", "-", "NO DATA");
+                        "-", "-", "-", "-", "-", "-", "-", "-", "-", "NO DATA");
                 continue;
             }
             EraBoards.Match match = board.match();
             String verdict = verdict(match, rounds);
-            System.out.printf("%-6s %-9s %7d %6d %6d %6.1f%% %7.1f%% %6d %5d %5d  %s%n",
+            System.out.printf("%-6s %-9s %7d %6d %6d %6.1f%% %7.1f%% %6d %5d %5d %5d  %s%n",
                     season, match.format(), match.drafts(), match.boardRows(),
                     match.matched(), match.rate() * 100, match.topRate() * 100,
-                    match.skill(), match.defences(), match.weeks(), verdict);
+                    match.skill(), match.defences(), match.loosened(), match.weeks(),
+                    verdict);
             misses.put(season, match.missedByAdp());
             if(verdict.equals("USE")){
                 boards.add(board);

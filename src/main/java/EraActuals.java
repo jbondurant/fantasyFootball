@@ -101,6 +101,18 @@ public class EraActuals {
      * filler reads the difference, so the two paths must agree on it.
      */
     public static Map<String, Double> weeklyPoints(String season, int week){
+        // -PfeedScored: grade with Sleeper's own precomputed number instead.
+        // Not an option anybody should draft on - it is a 4-point passing
+        // touchdown in a 6-point league - but the harvest needs it as a
+        // CONTROL. The feed changed its own arithmetic mid-history (it charged
+        // -1 a fumble in 2021 and nothing from 2023), so a rule drift could
+        // masquerade as a regime shift. Running the regime test both ways shows
+        // whether it does. Every season moves together either way; a harvest
+        // that graded new seasons one way and old ones the other would BE the
+        // confound.
+        if(Boolean.getBoolean("feedScored")){
+            return weeklyFeedPoints(season, week);
+        }
         LeagueScoringSettings scoring = LeagueActuals.leagueScoring();
         Map<String, Double> points = new HashMap<>();
         for(Map.Entry<String, JsonElement> entry : week(season, week).entrySet()){

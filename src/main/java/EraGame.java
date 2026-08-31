@@ -39,6 +39,64 @@ public class EraGame {
     /** The starting lineup: QB, RB, RB, WR, WR, WR, TE, FLEX, FLEX, DEF. */
     public static final int STARTERS = 10;
 
+    /**
+     * THE KEEPER DECISION, made explicitly because making it by accident would
+     * answer the wrong question.
+     *
+     * Justin's 2026 draft is not a plain draft. He holds Purdy and Tuten before
+     * it starts, at a cost of rounds 12 and 13, so he begins with a quarterback
+     * and a running back in hand and eleven live picks in front of him. No
+     * historical season has that structure. Replaying those seasons as plain
+     * drafts would score plans against a DIFFERENT problem - one where a
+     * quarterback still has to be found - and the answer would not transfer.
+     *
+     * So the structure is reproduced: on every historical board I am handed a
+     * quarterback and a running back for free, and draft rounds 1-11.
+     *
+     * WHICH two? Matched on positional ADP rank, not on cost. A keeper's whole
+     * point is being worth more than his price, so "the quarterback available at
+     * pick 151" would be QB25 and nothing like Purdy. Purdy is the 9th
+     * quarterback on the 2026 board and Tuten the 23rd running back, so the
+     * historical keepers are that season's QB9 and RB23 - {@link EraKeepers}
+     * reads those ranks off the live board rather than hardcoding them.
+     *
+     * They cost nothing because rounds 12 and 13 are past the end of an
+     * eleven-round game, which is exactly their real cost to Justin's nine
+     * meaningful rounds. Every plan is handed the same two men, so the
+     * comparison between plans stays clean.
+     *
+     * The keeperless variant remains one flag away (-PnoKeepers), and
+     * RegimeShift reports whether the regime verdict depends on this choice.
+     */
+    public static List<String> keepers(EraBoards.Board board){
+        if(Boolean.getBoolean("noKeepers")){
+            return new ArrayList<>();
+        }
+        List<String> held = new ArrayList<>();
+        int[] ranks = EraKeepers.ranks();
+        String quarterback = atPositionalRank(board, Position.QB, ranks[0]);
+        String runningBack = atPositionalRank(board, Position.RB, ranks[1]);
+        if(quarterback != null){
+            held.add(quarterback);
+        }
+        if(runningBack != null){
+            held.add(runningBack);
+        }
+        return held;
+    }
+
+    /** The nth player at a position in ADP order, or null if the board is short. */
+    public static String atPositionalRank(EraBoards.Board board, Position position,
+                                          int rank){
+        int seen = 0;
+        for(String id : board.ids()){
+            if(board.positionOf().get(id) == position && ++seen == rank){
+                return id;
+            }
+        }
+        return null;
+    }
+
     /** Serpentine pick numbers for my slot. */
     public static int[] myPicks(int rounds){
         int[] picks = new int[rounds];
@@ -63,8 +121,13 @@ public class EraGame {
      * falls back to best available rather than passing.
      */
     public static List<String> draft(EraBoards.Board board, List<Position> plan){
-        Set<String> gone = new HashSet<>();
-        List<String> mine = new ArrayList<>();
+        return draft(board, plan, keepers(board));
+    }
+
+    public static List<String> draft(EraBoards.Board board, List<Position> plan,
+                                     List<String> keepers){
+        Set<String> gone = new HashSet<>(keepers);
+        List<String> mine = new ArrayList<>(keepers);
         Set<Integer> mySlots = new HashSet<>();
         for(int pick : myPicks(plan.size())){
             mySlots.add(pick);
@@ -73,9 +136,14 @@ public class EraGame {
         int last = myPicks(plan.size())[plan.size() - 1];
         for(int pick = 1; pick <= last; pick++){
             if(mySlots.contains(pick)){
-                String choice = bestAvailable(board, gone, plan.get(taken));
+                // A null in the plan means "best available", the positionless
+                // null hypothesis - and it means best available SKILL, so the
+                // baseline cannot stumble into a second defence.
+                Position wanted = plan.get(taken);
+                String choice = wanted == null ? bestAvailableSkill(board, gone)
+                        : bestAvailable(board, gone, wanted);
                 if(choice == null){
-                    choice = bestAvailable(board, gone, null);
+                    choice = bestAvailableSkill(board, gone);
                 }
                 if(choice != null){
                     mine.add(choice);
@@ -174,5 +242,26 @@ public class EraGame {
     /** Draft this plan on this board and score it. */
     public static double score(EraBoards.Board board, List<Position> plan){
         return seasonPoints(board, draft(board, plan));
+    }
+
+    public static double score(EraBoards.Board board, List<Position> plan,
+                               List<String> keepers){
+        return seasonPoints(board, draft(board, plan, keepers));
+    }
+
+    /**
+     * The null hypothesis: never think about position at all, just take the
+     * best man left. Every plan is reported as points above this, because raw
+     * season totals are not comparable across eras - the league scored far more
+     * in 2024 than in 2013 - and the difference from a fixed reference is.
+     */
+    public static double bestAvailableScore(EraBoards.Board board, int rounds,
+                                            List<String> keepers){
+        List<Position> plan = new ArrayList<>();
+        for(int round = 1; round < rounds; round++){
+            plan.add(null);
+        }
+        plan.add(Position.DEF);
+        return seasonPoints(board, draft(board, plan, keepers));
     }
 }

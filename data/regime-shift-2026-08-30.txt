@@ -1,0 +1,148 @@
+
+REGIME SHIFT: ARE THE OLD SEASONS THE SAME GAME?
+
+seasons        13 usable, 2013 to 2025
+board          fantasyfootballcalculator ppr, 12 teams
+outcomes       league-scored from component stats, 6-point passing TDs, EVERY season alike
+game           11 rounds at slot 7, keeper structure: QB9 and RB23 held from the start (Tuten + Purdy on the 2026 board), eleven live picks
+value          points above that season's take-the-best-man-left baseline
+plans          415650 legal position sequences, scored on all 13 seasons (235.9s)
+
+EACH SEASON'S OWN BEST PLAN
+SEASON BEST PLAN       vs ADP  baseline   worst legal plan
+2013   TWWTWWRWQRD       +553      1820   -664 (QQWWQTQWRQD)
+2014   WWRWQTRQWWD       +244      2044   -1022 (RQQQTWWWQQD)
+2015   TWRTRWWRQTD       +828      1253   -269 (WTQRQQQWWQD)
+2016   RWTRRQWWRWD       +415      1917   -962 (TQRQQWQQWWD)
+2017   WRTWRWTQRWD       +472      1467   -520 (QQWTQRWQWQD)
+2018   RWTWTWRRWWD       +460      1963   -1063 (QRQQWQWWQTD)
+2019   WWWRRTWTWRD       +466      1866   -838 (QQQQWWTRQWD)
+2020   RTRWTWWWTWD       +205      2311   -1072 (QQQWQQTRWWD)
+2021   TRRWRTRWWWD       +769      1813   -741 (QWQQWRWQQTD)
+2022   TRWWQWRWTTD       +449      2026   -826 (QQTRWQQQWWD)
+2023   RRWTWRQWTWD       +572      1771   -626 (WQQQWWQTRQD)
+2024   WWRQRTWWTWD       +555      1853   -810 (TWQQWWQQRQD)
+2025   RRRQWWWWTRD       +998      1415   -564 (WQQWQQRQWTD)
+
+The spread between the best and worst legal plan is what any of this can be
+worth in a season. A plan chosen for one season is fitted to that season's
+injuries and breakouts, which is why no row above is evidence about 2026.
+
+AGREEMENT BETWEEN SEASONS (rank correlation over all 415650 plans)
+          13    14    15    16    17    18    19    20    21    22    23    24    25
+2013    1.00  0.24  0.24  0.32  0.40  0.30  0.40  0.37  0.27  0.39  0.14  0.22  0.08
+2014    0.24  1.00  0.15  0.10  0.27  0.33  0.44  0.29  0.24  0.24  0.15  0.28 -0.03
+2015    0.24  0.15  1.00  0.15  0.11 -0.03  0.12  0.21  0.03  0.36  0.15 -0.11  0.27
+2016    0.32  0.10  0.15  1.00  0.41  0.56  0.53  0.48  0.28  0.29  0.33  0.49  0.47
+2017    0.40  0.27  0.11  0.41  1.00  0.40  0.52  0.38  0.47  0.03  0.08  0.31  0.43
+2018    0.30  0.33 -0.03  0.56  0.40  1.00  0.42  0.49  0.26  0.14  0.30  0.34  0.24
+2019    0.40  0.44  0.12  0.53  0.52  0.42  1.00  0.45  0.35  0.28  0.24  0.49  0.14
+2020    0.37  0.29  0.21  0.48  0.38  0.49  0.45  1.00  0.46  0.50  0.21  0.48  0.35
+2021    0.27  0.24  0.03  0.28  0.47  0.26  0.35  0.46  1.00  0.30  0.33  0.28  0.13
+2022    0.39  0.24  0.36  0.29  0.03  0.14  0.28  0.50  0.30  1.00  0.19  0.22  0.05
+2023    0.14  0.15  0.15  0.33  0.08  0.30  0.24  0.21  0.33  0.19  1.00  0.23  0.13
+2024    0.22  0.28 -0.11  0.49  0.31  0.34  0.49  0.48  0.28  0.22  0.23  1.00  0.32
+2025    0.08 -0.03  0.27  0.47  0.43  0.24  0.14  0.35  0.13  0.05  0.13  0.32  1.00
+
+mean agreement   within pre-2019: +0.264 (15 pairs)   within 2019+: +0.293 (21 pairs)   across the split: +0.280 (42 pairs)
+If the across number sits inside the within numbers, the eras are ranking
+plans the same way and the old seasons are evidence about the new ones.
+
+agreement against the GAP between two seasons: -0.0112 +/- 0.0056 per year
+(78 pairs, gaps of 1 to 12 years). Agreement DOES decay with distance - gradual drift.
+
+That interval is OPTIMISTIC and should be read as a floor on the uncertainty:
+78 pairs come from only 13 seasons, so they are not independent observations,
+and ordinary least squares does not know that. A slope that is marginal here is
+weaker than marginal in truth.
+
+TRANSFER: A PLAN FITTED ON ONE ERA, SCORED ON ANOTHER
+held-out seasons are 2021+; every fit excludes the season it is scored on
+
+SEASON   fit pre-2019      fit 2019+        fit ALL
+2021             +307           +247           +293
+2022              +30            -61            -38
+2023              -74           +205             +6
+2024              -15            +91            +95
+2025             +275            +13            +83
+mean           +104.4          +98.9          +87.6
+
+   2021  old-fit WWTWRWRQTTD | recent-fit RRWQWTWWTWD | all-fit RWRWRQWWTTD
+   2022  old-fit WWTWRWRQTTD | recent-fit RRRWRQWWTWD | all-fit RWRWRQWWTWD
+   2023  old-fit WWTWRWRQTTD | recent-fit RRWWRTWWTWD | all-fit RWRWRWWWTTD
+   2024  old-fit WWTWRWRQTTD | recent-fit RRWWTQWWTWD | all-fit RWWWRQRWTTD
+   2025  old-fit WWTWRWRQTTD | recent-fit WQWWRTRWTWD | all-fit WWWWRQRWTTD
+
+PAIRED DIFFERENCES on the same 5 held-out seasons
+   recent-fit minus old-fit        -5.5  +/- 92.1  (5 seasons)
+   all-fit    minus old-fit       -16.8  +/- 54.2  (5 seasons)
+   all-fit    minus recent-fit    -11.3  +/- 48.3  (5 seasons)
+
+THE SAME TEST ON THE TOP 1% OF PLANS, NOT ONE WINNER
+   2021   old   +216.7   recent   +323.6
+   2022   old    -24.8   recent    -15.7
+   2023   old    +34.0   recent   +123.2
+   2024   old    +48.4   recent    +56.9
+   2025   old   +347.3   recent   +282.3
+   mean   old   +124.3   recent   +154.0
+   recent-top minus old-top       +29.7  +/- 31.1  (5 seasons)
+   a positive, significant number here is the regime effect. Anything
+   inside the interval says the eras teach the same lesson.
+
+HOW MUCH OF A FIT IS FLATTERY
+   best plan chosen ON the held-out seasons scores +402.2; honest fits score
+   +98.9 (recent) and +104.4 (old). The gap is what searching 415650 plans on a handful
+   of seasons buys itself.
+
+RECENCY WEIGHTING, JUDGED ON HELD-OUT SEASONS
+WEIGHTING             n_eff  held-out mean   plan it picks most
+half-life 1             3.0         +143.9   RRRQWTWWTWD (3 different)
+half-life 2             5.7         +119.8   RRRQWTWWTWD (3 different)
+half-life 3             7.9          +85.2   RRRQWTWWTWD (4 different)
+half-life 5            10.4         +109.8   RRRQWTWWTWD (5 different)
+half-life 8            11.8         +148.3   RWRWRQWWTWD (5 different)
+half-life 13           12.5         +117.6   RWRWRQWWTWD (5 different)
+half-life 21           12.8          +97.2   RWRWRQWWTTD (5 different)
+flat (pool all)        13.0          +87.6   RWRWRQWWTTD (5 different)
+
+best weighting on held-out seasons: half-life 8 (+148.3)
+   best weighting minus flat      +60.7  +/- 33.8  (5 seasons)
+
+A weighting only earns its complexity if it beats flat by more than the
+standard error above. Read the sign AND the interval, not the sign alone.
+the curve reverses direction 2 times across 7 half-lives; a real recency
+effect would fall monotonically as more of the past is let in.
+
+
+VERDICT
+
+1. AGREEMENT. Seasons agree with each other at 0.264 within the old era and
+   0.293 within the recent one; across the split they agree at 0.280.
+   The across number is not below both - no era structure in how plans rank.
+   Agreement against the gap between seasons: -0.0112 +/- 0.0056 a year (2.01 sigma).
+   It decays with distance - the past MAY be less relevant.
+
+2. TRANSFER. Fitting on the recent seasons instead of the old ones is worth
+   +29.7 +/- 31.1 points a season on held-out seasons.
+   That is inside the noise: no measurable penalty for learning from the old seasons.
+
+3. COST OF HEDGING. Flat weighting is worth 13.0 effective seasons; the best
+   half-life on held-out seasons (8) is worth 11.8, and beats flat by +60.7 +/- 33.8.
+   That winner reverses the curve 2 times out of 6, so it is the best of seven noisy draws, not a recency effect.
+
+RECOMMENDATION: BORDERLINE. Pool all 13 seasons, or hedge gently. Do NOT cut.
+The strongest era signal is 2.01 standard errors, which is exactly the region
+where a rule should not pretend to decide. Both estimates lean the same way -
+the past is slightly less relevant - and neither survives a hard look: the
+drift interval is optimistic (its pairs are not independent), and the weighting
+grid's winner reverses the curve 2 times.
+
+The cheap hedge is the LONGEST half-life, 21 seasons: it costs 0.2 effective
+seasons out of 13.0. A cutoff year is NOT the same thing and is not supported -
+there is no year in this data where anything changes.
+
+What this does NOT say: that the game has not changed. It says a plan fitted on
+2013-2018 does not measurably lose on 2021-2025 IN THIS GAME - eleven rounds with
+a quarterback and a back already in hand. Run -PnoKeepers and the answer changes,
+which is the point: the keeper structure removes the quarterback timing decision,
+and that decision is where the eras differ most.
