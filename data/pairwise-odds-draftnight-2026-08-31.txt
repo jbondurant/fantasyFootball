@@ -1,0 +1,118 @@
+
+WHICH SMOOTHER FOR THE PAIRWISE ODDS SURFACE?
+
+P(the man at positional rank P outscores the man at rank Q), Q < P, same
+position, same season. Preseason ADP in, end-of-season points out, nothing
+from the weeks between.
+
+seasons 13 (2013-2025)   drafted men 2181   pairs 55840   exact ties dropped 4
+caps: QB 32 RB 60 WR 72 TE 32
+
+
+1. LEAVE-ONE-SEASON-OUT BAKE-OFF
+
+Fitted on twelve seasons, scored on the thirteenth, thirteen times. Held-out
+unit is the SEASON, because every pair inside one is scored on the same realised
+football - holding out PAIRS would shrink the error bar by roughly sqrt(4295) and
+report a certainty that is not there.
+
+SMOOTHER                      log loss  vs LOG-LIN   SE(seas)   95% bar     acc  beats
+BUCKET 12 (the old way)        0.60712    -0.00183    0.00421   0.00918   67.2%     9/13   tie
+LOG-LINEAR in log rank         0.60895    +0.00000    0.00000   0.00000   67.6%     0/13   
+ISOTONIC, no smoothing         0.60589    -0.00306    0.00325   0.00708   67.6%     8/13   tie
+ISO + SMOOTH w=1               0.60501    -0.00394    0.00342   0.00744   67.6%     8/13   tie
+ISO + SMOOTH w=2               0.60417    -0.00478    0.00346   0.00754   67.6%     8/13   tie
+ISO + SMOOTH w=3               0.60347    -0.00548    0.00344   0.00749   67.6%     9/13   tie
+ISO + SMOOTH w=5               0.60248    -0.00647    0.00353   0.00768   67.6%     9/13   tie
+ISO + SMOOTH w=8               0.60202    -0.00693    0.00372   0.00811   67.6%     9/13   tie
+ISO + SMOOTH w=12              0.60233    -0.00662    0.00395   0.00861   67.6%     9/13   tie
+ISO + SMOOTH w=20              0.60299    -0.00596    0.00462   0.01006   67.6%     9/13   tie
+ISO + LOG-SMOOTH h=0.15        0.60418    -0.00478    0.00364   0.00793   67.6%     9/13   tie
+ISO + LOG-SMOOTH h=0.25        0.60298    -0.00597    0.00372   0.00811   67.6%    10/13   tie
+ISO + LOG-SMOOTH h=0.40        0.60295    -0.00600    0.00361   0.00787   67.6%    10/13   tie
+ISO + LOG-SMOOTH h=0.60        0.60527    -0.00368    0.00269   0.00586   67.6%     9/13   tie
+ISO + LOG-SMOOTH h=0.90        0.60948    +0.00053    0.00225   0.00490   67.6%     6/13   tie
+
+Lower log loss is better; it is a proper score, so a model cannot buy it by
+being confidently wrong. Bars are 95%, clustered on season, from the same
+PowerBacktest.paired that prices the 125-point draft bar.
+
+BEST: ISO + SMOOTH w=8
+
+
+2. DOES THE SMOOTHER HIDE THE CLIFF?
+
+The existing measurement says only ~20% of tier-two backs beat a tier-one back
+while tier-two against tier-three is ~42% - a cliff, then a plateau. A fit that
+cannot jitter must still be able to show that. Fitted on all 13 seasons:
+
+RB          vs6 ISO   vs6 LOG.25   vs6 FIXED8     vs6 LINE       vs18 ISO  vs18 LOG.25  vs18 FIXED8    vs18 LINE
+RB12            47%          44%          42%          38%              -            -            -            -
+RB18            32%          28%          33%          31%              -            -            -            -
+RB24            25%          23%          25%          27%            42%          44%          40%          45%
+RB30            21%          21%          22%          23%            37%          40%          36%          41%
+RB36            19%          19%          20%          21%            33%          37%          33%          38%
+RB42            17%          15%          17%          19%            30%          32%          29%          35%
+RB48            13%          13%          14%          18%            24%          28%          24%          33%
+RB54            11%          12%          12%          17%            21%          26%          21%          31%
+RB60            11%          11%          11%          16%            21%          24%          20%          29%
+
+ISO is the unsmoothed isotonic fit - the data's own shape. LINE is the
+one-parameter power law. FIXED8 smooths eight ranks either side everywhere;
+LOG.25 smooths a constant width in LOG rank, so it is narrow at the top of the
+board and wide in the tail. Read the top row: that is the cliff.
+
+
+3. IS ONE CURVE ENOUGH? (held-out calibration by region)
+
+The latent form says the whole surface is a function of ONE difference. If that
+is false the residuals will not be scattered - they will have a sign that depends
+on where you are on the board. Held-out pairs only, pooled over the 13 folds.
+
+RB, observed minus predicted, percentage points - FIXED SMOOTH w=8
+
+EARLY \ LATE     RB1-12    RB13-24    RB25-36    RB37-48    RB49-60
+RB1-12            +3.8%      -5.0%      -0.6%      +0.1%      +0.7%
+RB13-24               -      -0.2%      +0.5%      +0.6%      -1.3%
+RB25-36               -          -      +2.4%      +0.8%      +0.6%
+RB37-48               -          -          -      -0.1%      +0.3%
+RB49-60               -          -          -          -      +5.5%
+
+RB, observed minus predicted, percentage points - LOG-SMOOTH h=0.25
+
+EARLY \ LATE     RB1-12    RB13-24    RB25-36    RB37-48    RB49-60
+RB1-12            +2.5%      -2.3%      +0.9%      +1.6%      +0.6%
+RB13-24               -      +0.7%      -0.5%      +0.0%      -3.9%
+RB25-36               -          -      +2.2%      +1.2%      -1.5%
+RB37-48               -          -          -      -0.4%      -2.5%
+RB49-60               -          -          -          -      +5.0%
+
+Small mixed signs mean one curve carries the whole surface. A block of one
+sign is the model missing something real. The EARLY RB1-12 row is the one to
+read: it is the cliff, and it is where Justin's first pick lives.
+
+
+========================================================================
+AT YOUR PICKS
+========================================================================
+
+P(the man at your NEXT pick outscores the man on the board NOW)
+ranks read off today's ADP. below 50% means waiting costs you.
+
+TAKE NOW ->             RB         WR         TE         QB
+   7 -> 18              44%        48%          -          -
+  18 -> 31              39%        41%        31%        50%
+  31 -> 42              43%        44%          -        39%
+  42 -> 55              44%        45%        32%        48%
+  55 -> 66              49%        43%        46%        48%
+  66 -> 79              48%        46%        48%        44%
+  79 -> 90              47%        48%        50%        48%
+  90 -> 103             46%        47%        49%        50%
+ 103 -> 114             49%        47%        49%        48%
+ 114 -> 127             48%        46%        46%        45%
+ 127 -> 162             44%        43%        47%        44%
+ 162 -> 175             48%        50%        47%        48%
+ 175 -> 186             49%        48%        40%        49%
+
+Each cell is that position's own rank at those two picks, so 'RB' at
+7 -> 18 is the best back left at 7 against the best back left at 18.

@@ -1,6 +1,8 @@
 import PlayerImportAndSetup.Position;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -398,6 +400,79 @@ public class PairwiseOdds {
         return held.isEmpty() ? 0 : total / held.size();
     }
 
+    /**
+     * The table Justin reads at the table: for each of his picks, the odds the
+     * man he would get at his NEXT pick beats the man on the board now.
+     *
+     * Ranks, not pick numbers. An earlier version of this fitted pick numbers
+     * directly and that was wrong - the best back at pick 7 is RB3 in one
+     * season and RB6 in another, so a pick number means a different player
+     * every year while a positional rank does not. His live pick numbers are
+     * converted here off the board in front of him.
+     */
+    static void draftNight(Model model, Map<String, EraBoards.Board> boards){
+        int[] picks = {7, 18, 31, 42, 55, 66, 79, 90, 103, 114, 127, 162, 175, 186};
+        Position[] shown = {Position.RB, Position.WR, Position.TE, Position.QB};
+        Map<Position, Integer> cap = Map.of(Position.QB, 32, Position.RB, 60,
+                Position.WR, 72, Position.TE, 32);
+
+        // How deep into a position the board is by a given overall pick, taken
+        // from the live ADP rather than assumed.
+        Map<Position, List<Double>> adp = new EnumMap<>(Position.class);
+        for(Position position : shown){
+            adp.put(position, new ArrayList<>());
+        }
+        for(String id : ProjectionSources.resolve(
+                System.getProperty("projections", "sleeper")).keySet()){
+            Player player = Player.getPlayerFromSIDV2(id);
+            double value = SleeperProjections.adpOf(id);
+            if(player != null && adp.containsKey(player.position)
+                    && value < Double.MAX_VALUE){
+                adp.get(player.position).add(value);
+            }
+        }
+        for(List<Double> values : adp.values()){
+            Collections.sort(values);
+        }
+
+        System.out.printf("%n%s%nAT YOUR PICKS%n%s%n", "=".repeat(72), "=".repeat(72));
+        System.out.printf("%nP(the man at your NEXT pick outscores the man on the board NOW)%n");
+        System.out.printf("ranks read off today's ADP. below 50%% means waiting costs you.%n%n");
+        System.out.printf("%-15s", "TAKE NOW ->");
+        for(Position position : shown){
+            System.out.printf(" %10s", position);
+        }
+        System.out.println();
+        for(int i = 0; i + 1 < picks.length; i++){
+            System.out.printf("%4d -> %-8d", picks[i], picks[i + 1]);
+            for(Position position : shown){
+                int early = depth(adp.get(position), picks[i]);
+                int late = depth(adp.get(position), picks[i + 1]);
+                int limit = cap.get(position);
+                if(early < 1 || late > limit || early >= late){
+                    System.out.printf(" %10s", "-");
+                    continue;
+                }
+                System.out.printf(" %9.0f%%", 100 * model.probability(position, early, late));
+            }
+            System.out.println();
+        }
+        System.out.printf("%nEach cell is that position's own rank at those two picks, so"
+                + " 'RB' at%n7 -> 18 is the best back left at 7 against the best back left"
+                + " at 18.%n");
+    }
+
+    /** How many of a position are gone by an overall pick, from today's board. */
+    static int depth(List<Double> sorted, int pick){
+        int gone = 0;
+        for(double value : sorted){
+            if(value < pick){
+                gone++;
+            }
+        }
+        return gone + 1;
+    }
+
     public static void main(String[] args){
         String format = System.getProperty("format");
         Map<String, EraBoards.Board> boards = EraBoards.usable(
@@ -595,6 +670,14 @@ public class PairwiseOdds {
                 + " A block of one%nsign is the model missing something real. The"
                 + " EARLY RB1-12 row is the one to%nread: it is the cliff, and it is"
                 + " where Justin's first pick lives.%n%n");
+
+        // The recommended row, not the argmax row. The bake-off's minimum sits
+        // in a broad flat basin (w=5-12, h=0.25-0.40) and NOT ONE row clears its
+        // own 95% bar, so picking the lowest number would be the same
+        // argmax-of-a-noisy-field mistake this repo has made before. h=0.25 is
+        // chosen from the middle of the basin, and it is the variant that keeps
+        // the cliff: it halves the fixed window's -5.0% miss at the RB1-12 row.
+        draftNight(latent(everything, 0, 0.25), boards);
     }
 
     static double mean(double[] x){
