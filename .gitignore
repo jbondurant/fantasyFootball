@@ -17,3 +17,8 @@
 
 # Subscriber projection exports are personal-use data - never committed.
 data/external-projections/*.csv
+
+# nflverse weekly player stats 1999-2025, ~130MB for the 16 seasons we use.
+# Fetched, not authored - re-downloadable from the nflverse-data releases, so
+# it is ignored like the other heavy archives rather than committed.
+data/nflverse/
