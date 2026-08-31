@@ -151,15 +151,19 @@ public class ReplacementRanks {
      */
     static Map<Position, Integer> countedBefore(AAAConfiguration configuration, int cutoff,
                                                 double fraction){
-        List<List<Taken>> drafts = previousDrafts(configuration);
+        return ranksFrom(previousDrafts(configuration),
+                cutoff == Integer.MAX_VALUE ? 1.0 : fraction);
+    }
+
+    /** The arithmetic on its own, so it can be tested without a league. */
+    static Map<Position, Integer> ranksFrom(List<List<Taken>> drafts, double fraction){
         Map<Position, Integer> ranks = new EnumMap<>(Position.class);
         if(drafts.isEmpty()){
             return ranks;
         }
         Map<Position, Integer> totals = new EnumMap<>(Position.class);
         for(List<Taken> draft : drafts){
-            int limit = cutoff == Integer.MAX_VALUE ? Integer.MAX_VALUE
-                    : (int) Math.round(fraction * draft.size());
+            int limit = (int) Math.round(fraction * draft.size());
             for(Taken taken : draft){
                 if(taken.pickNumber() <= limit){
                     totals.merge(taken.position(), 1, Integer::sum);

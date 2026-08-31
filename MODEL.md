@@ -4464,3 +4464,209 @@ Model A remains byte-identical at 1812.8 / p10 1784.4 with plan
 [RB, WR, RB, WR, WR, WR, TE, QB, QB]. `PlanBacktest` was refactored (its drafting
 loop split into `draft()` so a caller can ask WHO a shape drafted) and prints
 byte-identical numbers. **Nothing here reaches Tuesday's tooling.**
+
+## Auditing the three measured constants (2026-08-30)
+
+`RiskDiscountedValue` is a definition, and a definition cannot be wrong. But it
+takes three inputs that are not definitions - a trust coefficient, a
+games-missed model, and a replacement rank per position - and each had been
+carried on the strength of the sentence that introduced it. `ObjectiveAudit`
+runs the model against defensible alternatives to each and reports the two
+things that matter: does the sixteen-round plan change, and does the backtest
+move.
+
+    ./gradlew run -Pmain=ObjectiveAudit -Pkeepers=Tuten,Purdy -q
+    ./gradlew run -Pmain=ObjectiveAudit -Pplans=false -q   # backtest only, ~5 min
+
+The `vs base` column is now printed with a PAIRED standard error - the error of
+the season-by-season difference from baseline, not of the variant's own mean.
+Every variant drafts the same five seasons off the same five boards, so most of
+the enormous season-to-season spread (1666 to 2055 in the baseline row alone)
+is common to both sides and cancels. **Nothing in the table clears two of its
+own standard errors.** No variant has been shown to be better. What survives is
+which constants move the PLAN.
+
+### Ranked by how much they move the answer
+
+**1. The trust coefficient and its window - the only constant that moves the
+plan.** Six of six window variants changed the sixteen-round plan; the biggest
+backtest move was +60 +- 59. Three separate faults:
+
+*It is the wrong statistic.* `PositionPredictability.reliability()` returns a
+SPEARMAN RANK CORRELATION, and the formula needs a regression slope in points.
+A rank correlation is scale-free - it says whether the ordering survives, not
+how far a points gap shrinks - and is not an estimate of that quantity at any
+sample size. `TrustCoefficient` estimates the thing itself: the origin-through
+slope of realised gap on projected gap, measured in the same window the
+objective shrinks toward.
+
+*It is not measurable at the shipped window.* The raw slopes at w=6 are QB
+1.26+-0.72, RB 1.07+-0.49, WR 0.71+-0.47, TE 1.03+-0.28, DEF -0.00+-1.58. Every
+skill error bar covers both the shipped value and 1.0 - "shrink by forty
+percent" and "do not shrink at all" are indistinguishable on five seasons. The
+point estimates sit at or above 1.0, so if anything the projections are too
+TIMID inside a neighbourhood and 0.578 shrinks the wrong way.
+
+*It cannot do the job it was added for.* Setting the defence trust to zero
+changes nothing - same plan, +3 +- 3. Once the shrinkage target is a LOCAL
+neighbourhood, trust=0 no longer means "this ordering is worthless", it only
+means "smooth the curve locally", and DEF1's neighbourhood still sits well above
+DEF13's. Neither target can express what the defence measurement actually says:
+shrinking to the position mean inflates defences (their mean sits near their
+top), shrinking to a local mean leaves the local slope intact whatever the
+coefficient. The trust term is worth -4 to -5.5 points on the top six men at
+each position and +-1 everywhere else. That is its entire effect.
+
+The window is the live tension: it controls defence timing and elite-skill
+valuation with the SAME knob, in opposite directions. Only a window wide enough
+to re-create the position-mean shrinkage that crushed Kelce pushes the defence
+later. There is no setting that fixes both.
+
+**2. The replacement ranks - correct as shipped, and insensitive.** Derived
+three ways in `ReplacementRanks`. The shipped ranks answer "who is the best man
+nobody rosters"; the defensible question is "who is left at MY last pick", since
+that is when an empty slot actually gets filled. Measured over five 192-pick
+drafts, that shifts QB 21->20, RB 61->60, WR 81->80, TE 19->18, DEF 13->11.
+The all-drafted counts sum to 189 against 192 roster spots, which reconciles -
+the count is measuring what it claims. **The correction changes nothing**: same
+plan, 1856 -> 1856. The DEF-only 13->11 change is +3 +- 3 with the same plan.
+The ranks only matter if you get them grossly wrong - textbook starters-only
+VORP (QB12 RB24 WR36 TE12 DEF12) costs -85 +- 65 and does change the plan.
+This constant is right and can be left alone.
+
+**3. Availability - the smallest, and it should stay linear.** Deleting the term
+entirely is +26 +- 33 and changes only the dead rounds 9-14. Two real defects,
+neither worth fixing:
+
+*A seam.* A player in the 329-row DraftSharks export keeps ~92% of his
+projection; a player outside it takes the 2021-2025 positional average and keeps
+~82%. Those are different scales - a 2026 forecast against five years of
+realised absence - so CSV membership is worth 7-16% of a man's value. It runs
+one way: the drafted man is in the file and the replacement man is not, so every
+skill marginal is inflated against its own replacement.
+
+*Defences keep 100%*, being in neither table. That is literally true - a defence
+does not tear an achilles - and is the largest single cross-position asymmetry
+in the objective. Correcting it changes nothing: same plan, +3 +- 3.
+
+On the functional form: games played and points per game correlate +0.35 at
+running back and +0.67 at quarterback, so a man who misses games also scores
+less in the ones he plays and a linear (17-g)/17 understates him. That is NOT a
+licence to bend the curve. The correlation is measured on REALISED seasons,
+where playing badly causes the benching that cuts games played - the arrow runs
+backwards from what a projected absence would need. Leave it linear.
+
+### The defence chase was the wrong chase
+
+Three commits have gone after the early defence. Measured directly on outcomes -
+the model's own sixteen-round shape, then the same shape with the defence moved
+to the last pick:
+
+    the model's plan (DEF r8)        1904
+    ...DEF moved to the last pick    1891      -14 +- 53
+    RUNBOOK committed (DEF last)     1998      +94 +- 78
+
+**The round-8 defence costs 14 points, which is nothing.** The model's ~94-point
+deficit to the committed plan survives moving the defence to where the plan puts
+it, so the deficit is in the skill-position ordering and always was. This agrees
+with `PolicyBacktest`'s existing `[not legal] no DEF drafted` row, which put a
+drafted defence at about nine points a season over a wire one.
+
+### A units fix, additive only
+
+`HistoricalActuals.leaguePointsBySleeperID` scores actuals under the league's
+own settings, because joining a six-point-TD projection to a four-point-TD
+outcome puts a false slope on every quarterback. It is a NEW method;
+`pointsBySleeperID` is untouched, so nothing moves under the agents running
+against the current grader.
+
+Model A remains byte-identical at 1812.8 / p10 1784.4, plan
+[RB, WR, RB, WR, WR, WR, TE, QB, QB]. **Nothing here reaches Tuesday's tooling.**
+
+## Thirteen seasons, and whether the old ones count (2026-08-30)
+
+The backtest ran on five seasons because five FantasyPros CSVs happened to be
+on disk. Five seasons cannot separate a good draft plan from a lucky one -
+`PowerBacktest` prices the 95% bar at ~104 points there - and no amount of slot
+or opponent variation helps, because every draw inside a season is scored on the
+same realised football. The SEASON is the unit of independent randomness.
+
+**The harvest: 13 usable seasons, 2013-2025.** Fantasy Football Calculator
+serves 12-team ADP from real drafts back to 2010; Sleeper serves scored seasons
+over the same range. `EraIngest` fetches, caches and joins them, and leads its
+report with the match rate because that is where this fails quietly.
+
+  - Join: 94.9% (2013), 99.3-100% every season after. `EraBoards` reports it per
+    season with the unmatched names, and refuses a season below 90% overall or
+    95% inside the top 100 by ADP.
+  - 2010 (63.7%) and 2011 (72.1%) are REJECTED and not recoverable: Sleeper has
+    no stat rows at all for men who left the league before it existed - Randy
+    Moss, Michael Turner, Rashard Mendenhall. 2012's FFC board is 93 players
+    deep, too shallow to draft from.
+  - Boards are PPR for every season, deliberately. Half-PPR exists only from
+    2018, and using it would put a format change at 2018 - exactly where the
+    old-versus-recent question is asked. `FormatProxyAudit` measures the
+    substitution on the seven seasons carrying both: plan-value agreement 0.837
+    pooled, against 0.28 between two seasons of the same format. The format
+    matters far less than the season does.
+  - Depth caps the game at ELEVEN rounds (FFC boards join at 145-205 players; a
+    16-round replay drafts to pick 186 and runs off the end of them).
+
+**The keeper structure is reproduced, not ignored.** Justin holds Purdy and
+Tuten before the draft, so he starts with a quarterback and a back in hand.
+Replaying history as a plain draft would score plans against a different
+problem. `EraKeepers` matches on positional ADP RANK, not on keeper cost -
+Purdy is QB9 and Tuten RB23 on the 2026 board, so each historical season hands
+me its QB9 and RB23 free, and rounds 12-13 cost nothing in an eleven-round game.
+
+**Every season is graded the same way**: rebuilt from raw component stats under
+the league's settings via `LeagueActuals`, always, never Sleeper's
+`pts_half_ppr`. This matters more than it sounds. The feed changed its own
+arithmetic mid-history, so a harvest that graded new seasons one way and old
+ones the other would manufacture a regime shift out of bookkeeping.
+
+### The regime test: the old seasons ARE the same game - in THIS game
+
+Two tests, both in `RegimeShift`, both on held-out seasons:
+
+  AGREEMENT (rank correlation over all 415,650 legal plans, 78 season pairs):
+    within 2013-2018  0.264      within 2019-2025  0.293      across  0.280
+  Seasons agree with each other only weakly - 0.28 - but they agree that weakly
+  WITHIN an era too. The across-era number sits between the two within-era
+  numbers, which is as clean a null as this can produce.
+
+  TRANSFER (fit on one era, score on 2021-2025, top 1% of plans rather than one
+  noisy winner): fitting on recent seasons instead of old ones is worth
+  **+29.7 +/- 31.1 points a season**. Inside the noise.
+
+**Recommendation: pool all 13 seasons, flat. No cutoff.** Down-weighting costs
+real resolution (13.0 effective seasons -> 11.8 at a half-life of 8) to buy
+insurance against a bias that cannot be measured. The half-life grid's apparent
+winner is grid search: its held-out curve reverses direction repeatedly, which a
+real recency effect would not.
+
+**But the answer is structural, not universal.** Run `-PnoKeepers` and the same
+test finds a REAL effect: +89.5 +/- 31.7 at a 2019 cutoff, +51.1 and +41.5 at
+2021 and 2017, and there the across-era agreement (0.157-0.161) does fall below
+both within-era numbers. The keeper structure removes the quarterback-timing
+decision, and quarterback timing is where the eras differ most. Anyone using
+this harvest for a keeperless question should weight by recency; Justin's own
+game does not need to.
+
+### What the harvest is worth
+
+`EraSample`: two plans from the top 1% differ by +/-186 points season to season,
+so the 95% bar falls from 163 points at five seasons to 101 at thirteen. The
+honest planning number - the difference a fair test finds eight times in ten -
+is 145 points. Thirteen seasons make the bar crossable; they do not make small
+differences real.
+
+`RegimeShift` also prices the overfitting directly: the best plan chosen ON the
+held-out seasons scores +402, honest fits score +99 to +104. Searching 415,650
+plans on a handful of seasons buys ~300 points of pure flattery, and the
+single-winner comparison flips sign between plan subsamples. Judge plan families,
+not winners.
+
+Model A remains byte-identical: [RB, WR, RB, WR, WR, WR, TE, QB, QB], 1812.8,
+p10 1784.4. Every file here is new; the only shared edit is additive knobs in
+build.gradle.

@@ -64,6 +64,14 @@ public class RiskDiscountedValue implements RosterValue {
      * number per position, read off the same projections as everything else -
      * QB21, RB61, WR81, TE19, DEF13, the ranks this league actually leaves
      * undrafted.
+     *
+     * AUDITED 2026-08-30 (ObjectiveAudit, ReplacementRanks) and left alone.
+     * The stricter question - not "who does nobody roster" but "who is left at
+     * MY last pick", which is when an empty slot really gets filled - moves
+     * these by one rank each and DEF by two, and changes nothing: same plan,
+     * same 1856. The counts also reconcile, summing to 189 against 192 roster
+     * spots. The ranks only matter if they are grossly wrong; textbook
+     * starters-only VORP costs 85 points and does change the plan.
      */
     private final Map<Position, Double> unfilled = new EnumMap<>(Position.class);
 
@@ -121,6 +129,18 @@ public class RiskDiscountedValue implements RosterValue {
         // The comparison set is the men drafted around him: his own rank
         // neighbourhood, which is what "he might have been picked instead"
         // actually means.
+        //
+        // AUDITED 2026-08-30 (ObjectiveAudit, TrustCoefficient). Three things
+        // are known now that were not when this was written. The coefficient is
+        // a Spearman rank correlation standing in for a regression slope, which
+        // is the wrong statistic. At this window it is not measurable: the
+        // slopes are QB 1.26+-0.72, RB 1.07+-0.49, WR 0.71+-0.47, TE 1.03+-0.28,
+        // DEF -0.00+-1.58, and every skill bar covers both the shipped value
+        // and 1.0. And it does not do the job it was added for - setting the
+        // DEF trust to zero leaves the plan untouched, because with a LOCAL
+        // target trust=0 means "smooth locally", not "this ordering is
+        // worthless". The window is the real knob, and it trades defence timing
+        // against elite-skill valuation with no setting that fixes both.
         Map<Position, List<Double>> ranked = new EnumMap<>(Position.class);
         for(Map.Entry<String, Double> entry : projections.entrySet()){
             Player player = Player.getPlayerFromSIDV2(entry.getKey());
