@@ -1,168 +1,107 @@
 import PlayerImportAndSetup.Position;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
- * Rounds 10-16: the seven picks the nine-round objective is silent about,
- * and the least-analysed part of the whole draft despite the fact that TUTEN
- * CAME FROM ROUND 12 and became the most valuable keeper in the league.
+ * An outcome-measured check on what the late-round pricer says.
  *
- * Under Model A a late pick is worth ~0 this season - it cannot crack the
- * starting nine. Its value is an OPTION on next year: a player taken in
- * round R is keepable in 2027 at round R, so a round-13 stash who breaks out
- * is a round-13 price on a first-round asset. That is exactly the Tuten
- * trade, and it is worth measuring rather than guessing.
+ * This began as a claimed fix and turned into a cross-check, because the claim
+ * was wrong. I asserted that LiveLateRounds prices depth at zero, quoting
+ * BenchValue's remark that "every position reads the same, because nothing a
+ * bench man does changes the starting-nine projection". That remark is about
+ * MODEL A and season totals. LiveLateRounds runs on WeeklyStarterValue, whose
+ * own header answers the point directly: "a bench player scores in the weeks he
+ * beats the men ahead of him, so his value is an option payoff". It sees depth.
+ * The blind spot was mine.
  *
- * Measured from five seasons of the league's own drafts joined to actual
- * outcomes: for every historical pick in rounds 10-16, what did he score the
- * FOLLOWING season, and would keeping him at his draft round have been
- * profitable? The hit rate, by position and by attribute, is the base rate
- * this year's late picks should be ranked against.
+ * So this does not add a term. It prices the same three choices from REALISED
+ * outcomes rather than from projections, so the live tool can be checked
+ * against something it does not itself compute:
+ *
+ *   backup skill   BenchValue, 434 real rounds 8-16 picks, points over the wire
+ *   drafted defence DefenceVersusDepth, realised points against the streaming rate
+ *
+ * The scale is points above what the ROSTER SPOT yields for free, which is the
+ * right denominator because the spot is the scarce thing - Justin's own
+ * correction, that a streamed defence still occupies one of the sixteen.
+ *
+ * A starting tight end is deliberately absent. He fills an empty slot, so his
+ * worth depends on WHO is there and on the tight end you would get at your last
+ * pick; that is a live number, and LiveLateRounds already computes it. Only the
+ * two constants below can be settled in advance.
  *
  *   ./gradlew run -Pmain=LateRoundValue
  */
 public class LateRoundValue {
 
-    /** A late pick and what became of him. */
-    record Stash(String name, Position position, int round, String season,
-                 double nextSeasonPoints, boolean rookie, boolean young){}
+    /** BenchValue, measured on 434 real picks by this league across 2021-25. */
+    record Band(String label, int from, int to, double overWire, double hitRate){}
 
-    public static void main(String[] args){
-        AAAConfiguration configuration = AAAConfiguration.getInstance();
-        List<JsonArray> drafts = configuration.getPreviousDraftPicks();
-        List<String> seasons = configuration.getPreviousSeasons();
+    static final Band[] BANDS = {
+            new Band("8-9",   8,  9, 44.0, 0.29),
+            new Band("10-12", 10, 12, 32.8, 0.19),
+            new Band("13-16", 13, 16, 31.2, 0.18),
+    };
 
-        List<Stash> stashes = new ArrayList<>();
-        Map<String, Map<Position, Double>> starterBar = new HashMap<>();
-        for(int i = 0; i < drafts.size() && i < seasons.size(); i++){
-            String season = seasons.get(i);
-            if(season == null){
-                continue;
-            }
-            String nextSeason = String.valueOf(Integer.parseInt(season) + 1);
-            Map<String, Double> nextActuals;
-            try {
-                nextActuals = HistoricalActuals.pointsBySleeperID(nextSeason);
-            }
-            catch(Exception missing){
-                continue;
-            }
-            if(nextActuals.isEmpty()){
-                continue;
-            }
-            // the bar a keeper must clear: what a starter at that position
-            // actually scored the following year (12-team, so QB12/RB24/WR36/TE12)
-            Map<Position, Double> bar = new EnumMap<>(Position.class);
-            Map<Position, List<Double>> byPosition = new EnumMap<>(Position.class);
-            for(Map.Entry<String, Double> entry : nextActuals.entrySet()){
-                Player player = Player.getPlayerFromSIDV2(entry.getKey());
-                if(player != null && StartingLineup.isSkillPosition(player.position)){
-                    byPosition.computeIfAbsent(player.position, u -> new ArrayList<>())
-                            .add(entry.getValue());
-                }
-            }
-            int[] ranks = {12, 24, 36, 12};
-            Position[] positions = {Position.QB, Position.RB, Position.WR, Position.TE};
-            for(int p = 0; p < positions.length; p++){
-                List<Double> values = byPosition.getOrDefault(positions[p],
-                        new ArrayList<>());
-                values.sort(Comparator.reverseOrder());
-                bar.put(positions[p], values.size() > ranks[p]
-                        ? values.get(ranks[p] - 1) : 0.0);
-            }
-            starterBar.put(season, bar);
+    /** DefenceVersusDepth: realised season points by PRESEASON defence band. */
+    static final double DEF_BEST_BAND = 135.8;
+    static final double DEF_WORST_BAND = 129.5;
+    static final int DEF_BAND_WINS = 3;         // of five seasons
+    static final int WEEKS = 17;
 
-            java.util.Set<String> rookies = HistoricalProjections.rookiesForSeason(
-                    configuration, season);
-            java.util.Set<String> young = HistoricalProjections.youngForSeason(
-                    configuration, season, 2);
-            for(JsonElement element : drafts.get(i)){
-                JsonObject pick = element.getAsJsonObject();
-                int round = pick.get("round").getAsInt();
-                JsonElement keeper = pick.get("is_keeper");
-                if(round < 10 || round > 16
-                        || (keeper != null && !keeper.isJsonNull()
-                            && keeper.getAsBoolean())){
-                    continue;
-                }
-                String id = pick.get("player_id").getAsString();
-                Player player = Player.getPlayerFromSIDV2(id);
-                if(player == null || !StartingLineup.isSkillPosition(player.position)){
-                    continue;
-                }
-                stashes.add(new Stash(player.firstName + " " + player.lastName,
-                        player.position, round, season,
-                        nextActuals.getOrDefault(id, 0.0), rookies.contains(id),
-                        young.contains(id)));
-            }
+    public static void main(String[] args) throws Exception {
+        double defenceWire = PlanBacktest.streamedDefencePerWeek();
+        double streamed = defenceWire * WEEKS;
+
+        System.out.printf("%nWHAT EACH KIND OF PICK IS WORTH, ROUNDS 8-16%n");
+        System.out.printf("scale: points above what that ROSTER SPOT yields for free.%n"
+                + "a defence is measured against STREAMING one, a bench man against%n"
+                + "the WAIVER WIRE. the spot is the scarce thing, so the spot is the%n"
+                + "denominator.%n%n");
+
+        System.out.printf("   streaming a defence pays %.1f a week, %.0f a season.%n",
+                defenceWire, streamed);
+        System.out.printf("   the best preseason defences returned %.1f a season.%n",
+                DEF_BEST_BAND);
+        System.out.printf("   so drafting the best defence beats streaming by %+.0f.%n%n",
+                DEF_BEST_BAND - streamed);
+
+        System.out.printf("%-8s %14s %14s %14s%n",
+                "ROUND", "BACKUP SKILL", "STARTING DEF", "VERDICT");
+        for(Band band : BANDS){
+            double defence = DEF_BEST_BAND - streamed;
+            String verdict = band.overWire() > defence + 5 ? "take the skill man"
+                    : Math.abs(band.overWire() - defence) <= 5 ? "either"
+                    : "take the defence";
+            System.out.printf("%-8s %+14.1f %+14.1f   %s%n",
+                    band.label(), band.overWire(), defence, verdict);
         }
 
-        System.out.printf("%d late picks (rounds 10-16) across %d seasons, joined to "
-                + "the FOLLOWING season's actual points.%n%n", stashes.size(),
-                starterBar.size());
+        System.out.printf("%n   and the defence column is generous twice over.%n");
+        System.out.printf("   it credits you the BEST preseason band, but preseason%n");
+        System.out.printf("   ordering picked the better half in only %d seasons of 5,%n",
+                DEF_BAND_WINS);
+        System.out.printf("   and the bands run %.1f / %.1f - not even monotonic. the%n",
+                DEF_BEST_BAND, DEF_WORST_BAND);
+        System.out.printf("   honest expectation is the pooled mean, %+.0f.%n",
+                (DEF_BEST_BAND + DEF_WORST_BAND) / 2 - streamed);
 
-        // hit rate by position
-        System.out.printf("%-6s %6s %10s %10s %10s%n", "POS", "n", "hit rate",
-                "mean next", "best next");
-        for(Position position : new Position[]{Position.QB, Position.RB, Position.WR,
-                Position.TE}){
-            List<Stash> group = stashes.stream()
-                    .filter(s -> s.position() == position).toList();
-            if(group.isEmpty()){
-                continue;
-            }
-            long hits = group.stream().filter(s ->
-                    s.nextSeasonPoints() >= starterBar.get(s.season())
-                            .getOrDefault(position, 0.0)).count();
-            double mean = group.stream().mapToDouble(Stash::nextSeasonPoints)
-                    .average().orElse(0);
-            double best = group.stream().mapToDouble(Stash::nextSeasonPoints)
-                    .max().orElse(0);
-            System.out.printf("%-6s %6d %9.0f%% %10.1f %10.1f%n", position, group.size(),
-                    100.0 * hits / group.size(), mean, best);
-        }
-
-        // hit rate by attribute
-        System.out.printf("%n%-18s %6s %10s %10s%n", "GROUP", "n", "hit rate", "mean next");
-        attribute("rookies", stashes.stream().filter(Stash::rookie).toList(), starterBar);
-        attribute("young (<=2yr)", stashes.stream().filter(Stash::young).toList(),
-                starterBar);
-        attribute("veterans", stashes.stream().filter(s -> !s.young()).toList(),
-                starterBar);
-        attribute("rounds 10-12", stashes.stream().filter(s -> s.round() <= 12).toList(),
-                starterBar);
-        attribute("rounds 13-16", stashes.stream().filter(s -> s.round() >= 13).toList(),
-                starterBar);
-
-        System.out.printf("%nthe ten best late stashes this league ever made:%n");
-        stashes.stream()
-                .sorted(Comparator.comparingDouble(Stash::nextSeasonPoints).reversed())
-                .limit(10)
-                .forEach(s -> System.out.printf("   %-24s %-4s r%-3d %s -> %.1f pts in %d%n",
-                        s.name(), s.position(), s.round(), s.season(),
-                        s.nextSeasonPoints(), Integer.parseInt(s.season()) + 1));
-        System.out.println("\n'hit' = scored at or above a starter's line the FOLLOWING"
-                + "\nseason (QB12/RB24/WR36/TE12), i.e. would have been worth keeping.");
-    }
-
-    static void attribute(String label, List<Stash> group,
-                          Map<String, Map<Position, Double>> bar){
-        if(group.size() < 5){
-            System.out.printf("%-18s %6d   (too few)%n", label, group.size());
-            return;
-        }
-        long hits = group.stream().filter(s -> s.nextSeasonPoints()
-                >= bar.get(s.season()).getOrDefault(s.position(), 0.0)).count();
-        System.out.printf("%-18s %6d %9.0f%% %10.1f%n", label, group.size(),
-                100.0 * hits / group.size(),
-                group.stream().mapToDouble(Stash::nextSeasonPoints).average().orElse(0));
+        System.out.printf("%n%s%n   THE RULE THIS PRODUCES%n%s%n",
+                "=".repeat(60), "=".repeat(60));
+        System.out.printf("   a starting DEFENCE is worth roughly %+.0f whenever you take%n"
+                + "   him, so he is a LAST-ROUND pick - not because he is cheap late,%n"
+                + "   but because he is no better early.%n",
+                DEF_BEST_BAND - streamed);
+        System.out.printf("%n   a BACKUP skill man is worth %+.1f in rounds 8-9 and %+.1f%n"
+                + "   in 13-16, so the early bench picks are the ones that pay.%n",
+                BANDS[0].overWire(), BANDS[2].overWire());
+        System.out.printf("%n   a starting TIGHT END cannot be settled here. he fills an empty%n"
+                + "   slot, so he is worth his projection over the tight end you would%n"
+                + "   get at your last pick - a live number, which LiveLateRounds already%n"
+                + "   computes on the real board.%n");
+        System.out.printf("%n   USE THIS TO CHECK THAT TOOL, not to replace it. on draft night%n"
+                + "   its ADDS column should put the best defence near or below zero and%n"
+                + "   a rounds 8-9 backup well above it. if it prices a defence ahead of%n"
+                + "   depth in round 8, it disagrees with five seasons of outcomes and%n"
+                + "   the outcomes should win.%n");
     }
 }
