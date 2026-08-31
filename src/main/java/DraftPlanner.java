@@ -80,8 +80,15 @@ public class DraftPlanner {
      * sixteen-man roster. Skill positions are uncapped because the flexes make
      * a fourth receiver or fourth back genuinely startable.
      *
-     * Inert for Model A, whose ballot holds no defence and which has never had
-     * enough picks to reach three quarterbacks inside nine rounds.
+     * NOT inert, and the sentence that used to sit here said it was: "which has
+     * never had enough picks to reach three quarterbacks inside nine rounds".
+     * It counts the drafted PREFIX only and cannot see a kept quarterback, so
+     * with Purdy held two drafted men make three - and Model A's own plan ends
+     * QB QB. It is harmless in practice because Model A is a rounds 1-7 model
+     * and rounds 8-9 are the region where its objective is already indifferent,
+     * but the cap does not do what its comment claimed. Fixing it means passing
+     * the keepers in, which changes a frozen tool the night before a draft, so
+     * it is recorded rather than done.
      */
     private static boolean worthTaking(Position candidate, List<Position> prefix){
         if(candidate != Position.DEF && candidate != Position.QB){

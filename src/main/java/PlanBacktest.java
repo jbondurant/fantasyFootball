@@ -91,8 +91,26 @@ public class PlanBacktest {
                 "RB WR WR WR WR WR RB WR QB TE TE WR RB DEF");
         STRATEGIES.put("best-nine (Model A)",
                 "RB WR RB WR WR WR TE QB QB QB QB QB QB DEF");
+        // A STRAWMAN, kept only because every number on record was measured
+        // against it. RUNBOOK.md:77 makes the round-10 quarterback conditional
+        // ("if there - else RB/WR"), :78 says round 11 is "anything you want",
+        // and :79 offers round 14 as the ALTERNATIVE to that stash, not an
+        // addition. This string takes both conditionals as certain and adds a
+        // tight end at 11, so it drafts two quarterbacks - three with Purdy
+        // kept, on a one-quarterback lineup - and a second tight end.
+        //
+        // Correcting it is worth -17 points, which is nothing against a
+        // 125-point bar, and THAT is the finding: seasonPoints scores the best
+        // legal lineup and never charges a roster for the picks it wasted. Two
+        // unusable quarterbacks cost nothing here. So a model that avoids the
+        // traps will not score better for avoiding them - it will be sound, not
+        // stronger, and those are different goals.
         STRATEGIES.put("RUNBOOK committed",
                 "RB RB RB WR WR WR WR TE WR QB TE QB RB DEF");
+        // What the document actually prescribes, with its conditionals resolved
+        // the way it resolves them: one stash, round 11 free, round 14 skill.
+        STRATEGIES.put("RUNBOOK as written",
+                "RB RB RB WR WR WR WR TE WR QB WR RB RB DEF");
         // What BoardValue drafts when the board falls at ADP. Kept here so the
         // higher-resolution harness can score it beside everything else.
         STRATEGIES.put("board value",
