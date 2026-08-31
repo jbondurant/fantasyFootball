@@ -373,33 +373,24 @@ public class PolicyBacktest {
         return candidate == Position.DEF ? held < 1 : held < 2;
     }
 
+    /**
+     * The wire, from the one place that computes it.
+     *
+     * This used to be a verbatim second copy of WeeklyStarterValue.wireRates -
+     * same band, same top quartile, same denominator - written out again here.
+     * A measured constant with two homes is the drift this repo keeps
+     * rediscovering: the -PhonestWire override was added beside the original and
+     * this copy would not have seen it, so flipping the switch would have moved
+     * half the repo onto the honest rate and quietly left the rest on the
+     * hindsight one, with nothing in either table to say which was which.
+     *
+     * Delegating changes no number: with the flag off, wireRates returns exactly
+     * what this used to compute. ProseDriftTest asserts the estimator has one
+     * home so a third copy cannot appear.
+     */
     public static Map<Position, Double> wireFrom(
             Map<String, List<OutcomeDistributions.Season>> pool){
-        Map<Position, Integer> replacement =
-                InsuranceTest.replacementRanks(AAAConfiguration.getInstance());
-        Map<Position, Double> wire = new EnumMap<>(Position.class);
-        for(Position position : new Position[]{Position.QB, Position.RB, Position.WR,
-                Position.TE, Position.DEF}){
-            int from = replacement.getOrDefault(position,
-                    position == Position.DEF ? 13 : 24);
-            List<Double> rates = new ArrayList<>();
-            for(List<OutcomeDistributions.Season> cell : pool.values()){
-                for(OutcomeDistributions.Season s : cell){
-                    if(s.position() == position && s.rank() >= from - 1
-                            && s.rank() < from - 1 + 24){
-                        rates.add(s.meanWhenPlaying() * s.games() / 18.0);
-                    }
-                }
-            }
-            if(rates.isEmpty()){
-                wire.put(position, 0.0);
-                continue;
-            }
-            rates.sort(Comparator.reverseOrder());
-            wire.put(position, rates.subList(0, Math.max(1, rates.size() / 4)).stream()
-                    .mapToDouble(Double::doubleValue).average().orElse(0));
-        }
-        return wire;
+        return WeeklyStarterValue.wireRates(AAAConfiguration.getInstance(), pool);
     }
 
     static String shape(List<Position> plan){

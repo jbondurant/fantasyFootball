@@ -73,6 +73,13 @@ public class BoardValue {
      * player; taking the best EXPECTED man assumes one who never reacts. The
      * truth is between, so -PlineupByExpected prints the stingy end and the
      * difference is the bracket rather than a claim.
+     *
+     * DEFAULT IS THE GENEROUS END, and it is hindsight. With the flag off the
+     * fill sorts on what each man DREW, so every number this file has ever
+     * printed assumes a manager who always ended up starting the right one. That
+     * is not a small assumption and it is the direction that flatters depth. The
+     * flag is implemented in oneSeason below; between 2026-08-30 and 2026-08-31
+     * this paragraph described it and nothing read it.
      */
 
     public static void main(String[] args) throws Exception {
@@ -430,26 +437,71 @@ public class BoardValue {
         return total / WORLDS;
     }
 
+    /**
+     * -PlineupByExpected: fill the slots by EXPECTATION, score them on the DRAW.
+     *
+     * The comment at the head of this file has promised this flag since the
+     * bench half went in - "the truth is between, so -PlineupByExpected prints
+     * the stingy end and the difference is the bracket rather than a claim" -
+     * and until 2026-08-31 nothing read it. build.gradle forwarded the name, so
+     * -PlineupByExpected=true was accepted, forwarded and ignored, and the
+     * bracket the comment describes had never been printed. That is TRAPS.md F27
+     * exactly: prose describing a mechanism the code does not implement.
+     *
+     * Off by default, so every number computed so far is unchanged: with the
+     * flag absent the fill sorts on the drawn points, which is what it has
+     * always done. On, it sorts on the mean of the man's rank - what you knew
+     * before the season - and still counts what he drew, which is the stingy end
+     * of the bracket and the hindsight-free one.
+     */
+    static final boolean BY_EXPECTED = Boolean.getBoolean("lineupByExpected");
+
     static double oneSeason(List<Slot> roster, Map<Position, List<List<Double>>> pools,
                             Map<Position, double[]> curve, int world){
-        Map<Position, List<Double>> pool = new EnumMap<>(Position.class);
+        // {what his rank promised, what he drew}. Both are needed the moment the
+        // lineup may be set on one and scored on the other.
+        Map<Position, List<double[]>> pool = new EnumMap<>(Position.class);
         for(Slot slot : roster){
+            double[] mean = curve.get(slot.position());
+            double expected = mean != null && slot.rank() >= 0 && slot.rank() < mean.length
+                    ? mean[slot.rank()] : 0;
             pool.computeIfAbsent(slot.position(), u -> new ArrayList<>())
-                    .add(drawn(pools, slot.position(), slot.rank(), world, curve));
+                    .add(new double[]{expected,
+                            drawn(pools, slot.position(), slot.rank(), world, curve)});
         }
-        for(List<Double> values : pool.values()){
-            values.sort(Comparator.reverseOrder());
+        Comparator<double[]> best = BY_EXPECTED
+                ? Comparator.comparingDouble((double[] man) -> man[0]).reversed()
+                : Comparator.comparingDouble((double[] man) -> man[1]).reversed();
+        for(List<double[]> values : pool.values()){
+            values.sort(best);
         }
         double total = 0;
-        List<Double> flex = new ArrayList<>();
-        total += fill(pool, Position.QB, 1, curve, flex, false);
-        total += fill(pool, Position.RB, 2, curve, flex, true);
-        total += fill(pool, Position.WR, 3, curve, flex, true);
-        total += fill(pool, Position.TE, 1, curve, flex, true);
-        total += fill(pool, Position.DEF, 1, curve, flex, false);
-        flex.sort(Comparator.reverseOrder());
+        List<double[]> flex = new ArrayList<>();
+        total += fillDrawn(pool, Position.QB, 1, curve, flex, false);
+        total += fillDrawn(pool, Position.RB, 2, curve, flex, true);
+        total += fillDrawn(pool, Position.WR, 3, curve, flex, true);
+        total += fillDrawn(pool, Position.TE, 1, curve, flex, true);
+        total += fillDrawn(pool, Position.DEF, 1, curve, flex, false);
+        flex.sort(best);
         for(int slot = 0; slot < 2; slot++){
-            total += slot < flex.size() ? flex.get(slot) : replacement(curve, Position.RB);
+            total += slot < flex.size() ? flex.get(slot)[1] : replacement(curve, Position.RB);
+        }
+        return total;
+    }
+
+    /** The greedy fill over {expected, drawn} pairs; the points counted are the draw. */
+    static double fillDrawn(Map<Position, List<double[]>> pool, Position position, int slots,
+                            Map<Position, double[]> curve, List<double[]> flex,
+                            boolean flexes){
+        List<double[]> have = pool.getOrDefault(position, List.of());
+        double total = 0;
+        for(int slot = 0; slot < slots; slot++){
+            total += slot < have.size() ? have.get(slot)[1] : replacement(curve, position);
+        }
+        if(flexes){
+            for(int extra = slots; extra < have.size(); extra++){
+                flex.add(have.get(extra));
+            }
         }
         return total;
     }

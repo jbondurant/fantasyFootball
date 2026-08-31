@@ -98,6 +98,26 @@ public class WeeklyStarterValue implements RosterValue {
      */
     static final boolean FREE_WIRE = !Boolean.getBoolean("noFreeWire");
 
+    /**
+     * Hindsight-free wire rates, from WireRateStress: stream on form and react
+     * after two weeks, which is the most generous policy a manager can actually
+     * execute. Only the defence has been measured this way so far; the others
+     * keep the shipped figure until someone measures them the same way.
+     *
+     * THE DENOMINATOR IS 18, and it has to match the one the shipped rate uses
+     * a dozen lines down - `meanWhenPlaying x games / 18.0`. This constant was
+     * first written 130.7 / 18.0, which is 7.26 and is wrong: 130.7 is the
+     * SEVENTEEN-week figure WireRateStress prints in its "season" column
+     * (rate x 17), so dividing it by 18 applies the conversion twice. The
+     * measured rate is 7.69 a week - 138.4 over the eighteen real weeks of the
+     * tool's own one-denominator table - and the 0.43 in between is about eight
+     * points a season in the number that decides whether a drafted defence beats
+     * a streamed one. HindsightRegressionTest reads 7.69 back out of
+     * data/wire-rate-stress-2026-08-31.txt rather than trusting this line.
+     */
+    static final Map<Position, Double> HONEST_WIRE =
+            Map.of(Position.DEF, 138.4 / 18.0);
+
     private final int scenarios;
     private final Map<String, Draw[]> byPlayer = new HashMap<>();
     private final Map<Position, Double> wirePerWeek;
@@ -345,10 +365,26 @@ public class WeeklyStarterValue implements RosterValue {
                 wire.put(position, 0.0);
                 continue;
             }
+            // HINDSIGHT, and the comment above denies it. The pool is chosen
+            // by preseason rank, which is clean and is what that comment
+            // defends. But these rates are REALISED - meanWhenPlaying x games
+            // - and sorting them and keeping the best quarter picks the men who
+            // turned out well. Nobody can do that before the week. Measured by
+            // WireRateStress: 8.75 a week here against 7.69 for a policy that
+            // streams on form and reacts after two weeks, and the difference
+            // reverses the defence conclusion.
+            //
+            // Left in place, because LiveLateRounds is frozen for tomorrow's
+            // draft and every number on record was computed with it. -PhonestWire
+            // supplies the measured hindsight-free rate instead, so the two can
+            // be compared before anything is switched.
             rates.sort(Comparator.reverseOrder());
             int best = Math.max(1, rates.size() / 4);
-            wire.put(position, rates.subList(0, best).stream()
-                    .mapToDouble(Double::doubleValue).average().orElse(0));
+            double shipped = rates.subList(0, best).stream()
+                    .mapToDouble(Double::doubleValue).average().orElse(0);
+            Double honest = HONEST_WIRE.get(position);
+            wire.put(position, honest != null && Boolean.getBoolean("honestWire")
+                    ? honest : shipped);
         }
         return wire;
     }

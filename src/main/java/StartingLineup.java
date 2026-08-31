@@ -73,6 +73,30 @@ public class StartingLineup {
         return bestNineBreakdown(sleeperIDs, points).total();
     }
 
+    /**
+     * How an id is turned into a position.
+     *
+     * The lookup used to be wired straight to Player.getPlayerFromSIDV2, which
+     * loads Sleeper's 14MB dump. That left the nine-round game's SCORING RULE -
+     * Model A's whole objective - with no offline test, so every property of it
+     * lived in a comment. Passing the lookup in changes nothing for the callers
+     * below; it only makes the rule reachable from a fixture.
+     */
+    public interface PositionLookup {
+        Position positionOf(String sleeperID);
+    }
+
+    static final PositionLookup SLEEPER = sleeperID -> {
+        Player player = Player.getPlayerFromSIDV2(sleeperID);
+        return player == null ? null : player.position;
+    };
+
+    /** The same optimum against a supplied position lookup. */
+    public static double bestNine(java.util.Collection<String> sleeperIDs,
+                                  Map<String, Double> points, PositionLookup lookup){
+        return bestNineBreakdown(sleeperIDs, points, lookup).total();
+    }
+
     /** The same optimum, split by slot group - for explaining a decision. */
     public record NineBreakdown(double qb, double rb, double wr, double te, double flex){
         public double total(){
@@ -82,16 +106,22 @@ public class StartingLineup {
 
     public static NineBreakdown bestNineBreakdown(java.util.Collection<String> sleeperIDs,
                                                   Map<String, Double> points){
+        return bestNineBreakdown(sleeperIDs, points, SLEEPER);
+    }
+
+    public static NineBreakdown bestNineBreakdown(java.util.Collection<String> sleeperIDs,
+                                                  Map<String, Double> points,
+                                                  PositionLookup lookup){
         Map<Position, java.util.List<Double>> byPosition = new EnumMap<>(Position.class);
         for(Position position : FIXED.keySet()){
             byPosition.put(position, new java.util.ArrayList<>());
         }
         for(String sleeperID : sleeperIDs){
-            Player player = Player.getPlayerFromSIDV2(sleeperID);
-            if(player == null || !isSkillPosition(player.position)){
+            Position position = lookup.positionOf(sleeperID);
+            if(position == null || !isSkillPosition(position)){
                 continue;
             }
-            byPosition.get(player.position).add(points.getOrDefault(sleeperID, 0.0));
+            byPosition.get(position).add(points.getOrDefault(sleeperID, 0.0));
         }
         Map<Position, Double> fixedPoints = new EnumMap<>(Position.class);
         java.util.List<Double> flexPool = new java.util.ArrayList<>();

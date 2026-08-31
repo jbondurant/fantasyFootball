@@ -44,7 +44,17 @@ import java.util.Map;
  * six-point projection to a four-point outcome puts a false slope on every
  * quarterback.
  *
- *   ./gradlew run -Pmain=TrustCoefficient [-Pwindow=6]
+ *   ./gradlew run -Pmain=TrustCoefficient
+ *
+ * This line used to offer an optional "window" property. There was never any
+ * such flag: main() sweeps a fixed {2, 4, 6, 9, 12, 18, 30} and reads no
+ * property at all, so anyone passing it got the sweep and believed they had
+ * pinned a width. Callers who want one window call
+ * measured(configuration, window, excluded) directly.
+ *
+ * (The dead name is deliberately not written here with its -P prefix.
+ * ProseDriftTest treats every -P<name> in the repo as a promise that the knob
+ * exists, so a retraction that spells one out would re-make the promise.)
  */
 public class TrustCoefficient {
 

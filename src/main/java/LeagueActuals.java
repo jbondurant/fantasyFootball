@@ -217,8 +217,15 @@ public class LeagueActuals {
         });
     }
 
-    private static Map<String, Double> seasonScored(String data, boolean defence,
-                                                    LeagueScoringSettings scoring){
+    /**
+     * Package-visible so ScoringFidelityTest can grade a synthetic season with
+     * a deliberately wrong pts_half_ppr on every row. That is the only way to
+     * prove from a test that this path rebuilds a total from components rather
+     * than reading the feed's own number - the public dispatchers all need a
+     * live season behind them.
+     */
+    static Map<String, Double> seasonScored(String data, boolean defence,
+                                            LeagueScoringSettings scoring){
         Map<String, Double> points = new HashMap<>();
         for(JsonElement element : JsonParser.parseString(data).getAsJsonArray()){
             JsonObject row = element.getAsJsonObject();
