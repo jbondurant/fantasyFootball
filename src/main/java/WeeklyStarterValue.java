@@ -21,8 +21,25 @@ import java.util.Random;
  *
  * Three things it does that a season-total rule cannot:
  *
- *   a bench player scores in the weeks he beats the men ahead of him, so his
- *   value is an option payoff and rises with spread rather than washing out;
+ *   a bench player is worth what INSURANCE is worth, which is three things
+ *   multiplied: the chance the man ahead of him is lost, the chance he is the
+ *   one promoted, and how far he beats the waiver wire when he is. All three
+ *   are in oneWeek(): a draw that is not up() is dropped from the pool, the
+ *   survivors are sorted by EXPECTED because that is all a lineup can be set
+ *   on, and fill() floors every slot at the wire.
+ *
+ *   This sentence used to read "a bench player scores in the weeks he beats
+ *   the men ahead of him, so his value is an option payoff and rises with
+ *   spread". That described a model this code does not implement, and it is
+ *   wrong twice. The fill sorts by expected, so no one is promoted merely for
+ *   outscoring a starter - you cannot know which week is his. And weeks are
+ *   exchangeable, so week-to-week spread cannot be a source of value at all.
+ *   Justin caught it from the sentence alone: "a bench player's value is the
+ *   odds of the starter being injured/a bust, the odds of it being the best
+ *   bench player to replace that starter, the score above a waiver wire
+ *   player." That is what the code does; the comment had drifted off it, and a
+ *   drifted comment on the objective is worse than none, because it is what
+ *   gets quoted when someone asks what the model believes;
  *
  *   availability and scoring are drawn TOGETHER, as one observed player-season
  *   from the pool for that position and tier. Measured 2026-08-29, they
