@@ -1,0 +1,22 @@
+
+(the draft is on pick 1, which is not mine - pricing my next, pick 7)
+
+THE BOARD AS IT IS
+
+pick 7, round 1, 0 men gone. my roster (2): RB QB
+the rules allow here: [RB, WR, TE, DEF]
+still needed for a legal lineup: {QB=0, RB=1, WR=3, TE=1, DEF=1}
+
+POS   BEST AVAILABLE               RANK   ADDS NOW    VS WAIT   verdict
+RB    Jahmyr Gibbs                    1      130.7       16.7   TAKE NOW
+WR    Puka Nacua                      1      132.1       16.5   TAKE NOW
+TE    Brock Bowers                    1       69.2        0.0   he keeps
+QB    Josh Allen                      -          -          -   REFUSED: a second QB is only ever a next-year keeper stash (RUNBOOK.md:191), and round 1 is before round 10
+DEF   Los Angeles Rams                1        0.0        0.0   he keeps
+
+   the model takes: RB
+
+ADDS NOW is what he adds to the season your STARTERS score, over the
+man the wire would give you. VS WAIT is that minus what the best of his
+position would add at pick 18 - so it is the cost of waiting, and it is
+what to rank on. A position the rules refuse is never priced at all.
