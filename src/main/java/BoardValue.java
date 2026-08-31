@@ -147,9 +147,172 @@ public class BoardValue {
                 + "at my next pick, in lineup points, given the men I already hold. A%n"
                 + "second quarterback prices near zero on his own, without being told to.%n");
 
+        System.out.printf("%n%s%nFIXED SHAPE AGAINST ADAPTIVE%n%s%n",
+                "=".repeat(64), "=".repeat(64));
+        System.out.printf("%nThe shape above is what this model does if the board falls exactly%n"
+                + "at ADP. It never does. The model itself is a function of the roster and%n"
+                + "of who is actually left, so it can be asked again at every pick - which%n"
+                + "is the thing a fixed shape, the committed plan included, cannot do.%n%n");
+        adaptive(curve, pools, order.size());
+
         System.out.printf("%n%s%nIS IT ANY GOOD?%n%s%n", "=".repeat(64), "=".repeat(64));
         PlanBacktest.STRATEGIES.put("board value", rendered.toString());
         PlanBacktest.main(new String[0]);
+    }
+
+    /**
+     * The same model, asked again at every pick against the board as it really
+     * fell.
+     *
+     * Positional depth comes from who has actually gone rather than from ADP, so
+     * a run on receivers pushes the model onto backs by itself. Nothing here is
+     * new - it is urgency() called with a live count instead of an assumed one.
+     */
+    static void adaptive(Map<Position, double[]> curve,
+                         Map<Position, List<List<Double>>> pools, int count) throws Exception {
+        List<PlanBacktest.Board> boards = new ArrayList<>();
+        for(java.io.File file : new java.io.File("data").listFiles()){
+            if(file.getName().matches("fp-adp-halfppr-\\d{4}-\\d{8}\\.csv")){
+                boards.add(PlanBacktest.board(file, file.getName().split("-")[3]));
+            }
+        }
+        boards.sort(Comparator.comparing(PlanBacktest.Board::season));
+        System.out.printf("%-8s %9s   %s%n", "SEASON", "POINTS", "WHAT IT TOOK");
+        double total = 0;
+        for(PlanBacktest.Board board : boards){
+            List<String> roster = adaptiveDraft(board, curve, pools, count);
+            double points = PlanBacktest.seasonPoints(board, roster);
+            total += points;
+            StringBuilder shape = new StringBuilder();
+            for(String id : roster){
+                Position position = board.positionOf().get(id);
+                shape.append(shape.isEmpty() ? "" : " ").append(position);
+            }
+            System.out.printf("%-8s %9.0f   %s%n", board.season(), points, shape);
+        }
+        System.out.printf("%-8s %9.0f%n", "mean", boards.isEmpty() ? 0 : total / boards.size());
+    }
+
+    /** One adaptive draft on one real board. */
+    static List<String> adaptiveDraft(PlanBacktest.Board board, Map<Position, double[]> curve,
+                                      Map<Position, List<List<Double>>> pools, int count){
+        Set<String> gone = new HashSet<>();
+        List<String> mine = new ArrayList<>();
+        List<Slot> held = new ArrayList<>();
+        if(PlanBacktest.holdKeepers()){
+            for(String id : PlanBacktest.keeperIDs(board)){
+                gone.add(id);
+                mine.add(id);
+                Position position = board.positionOf().get(id);
+                held.add(new Slot(position, taken(board, gone, position)));
+            }
+        }
+        Map<Position, Integer> have = new EnumMap<>(Position.class);
+        Set<Integer> myPicks = new HashSet<>();
+        for(int pick : PlanBacktest.MY_PICKS){
+            myPicks.add(pick);
+        }
+        int made = 0;
+        for(int pick = 1; pick <= 200 && made < PlanBacktest.MY_PICKS.length; pick++){
+            if(!myPicks.contains(pick)){
+                String other = PlanBacktest.bestAvailableSkill(board, gone);
+                if(other != null){
+                    gone.add(other);
+                }
+                continue;
+            }
+            int next = made + 1 < PlanBacktest.MY_PICKS.length
+                    ? PlanBacktest.MY_PICKS[made + 1] : -1;
+            Position take = null;
+            double most = -1e9;
+            for(Position position : new Position[]{Position.RB, Position.WR,
+                    Position.TE, Position.QB, Position.DEF}){
+                if(have.getOrDefault(position, 0) >= MOST.get(position)
+                        || PlanBacktest.bestAvailable(board, gone, position) == null){
+                    continue;
+                }
+                int early = taken(board, gone, position);
+                // How deep the position will be by my next pick.
+                //
+                // The first version guessed (next - pick) / 5, the same decay
+                // for every position, and that threw away the only signal this
+                // model has: positions do NOT fall away at the same rate, and
+                // the difference between them is the whole decision. It drafted
+                // TE TE QB QB with its first four picks and scored 1860.
+                //
+                // The rate comes from the board's own ADP order - how many of
+                // THIS position sit between the two picks - anchored on where
+                // the real draft has actually got to.
+                int later = next < 0 ? early
+                        : early + Math.max(0, adpDepth(board, position, next)
+                                - adpDepth(board, position, pick));
+                double gain = marginal(curve, pools, count, held, position, early, later);
+                if(RankDraft.mustTake(have, made, PlanBacktest.MY_PICKS.length, position)){
+                    gain = 1e9;
+                }
+                if(gain > most){
+                    most = gain;
+                    take = position;
+                }
+            }
+            if(take == null){
+                take = Position.WR;
+            }
+            String choice = PlanBacktest.bestAvailable(board, gone, take);
+            if(choice == null){
+                choice = PlanBacktest.bestAvailable(board, gone, null);
+            }
+            if(choice != null){
+                held.add(new Slot(take, taken(board, gone, take)));
+                mine.add(choice);
+                gone.add(choice);
+                have.merge(take, 1, Integer::sum);
+            }
+            made++;
+        }
+        return mine;
+    }
+
+    /** How many of a position ADP expects gone by a pick, from the board's own order. */
+    static int adpDepth(PlanBacktest.Board board, Position position, int pick){
+        int count = 0;
+        List<String> ids = board.ids();
+        for(int i = 0; i < Math.min(pick, ids.size()); i++){
+            if(board.positionOf().get(ids.get(i)) == position){
+                count++;
+            }
+        }
+        return count;
+    }
+
+    /** How many of a position have already left this board, plus one. */
+    static int taken(PlanBacktest.Board board, Set<String> gone, Position position){
+        int count = 0;
+        for(String id : gone){
+            if(board.positionOf().get(id) == position){
+                count++;
+            }
+        }
+        return count + 1;
+    }
+
+    static double marginal(Map<Position, double[]> curve,
+                           Map<Position, List<List<Double>>> pools, int count,
+                           List<Slot> roster, Position position, int early, int later){
+        double[] mean = curve.get(position);
+        if(mean == null || early >= mean.length){
+            return -1e8;
+        }
+        double base = empirical(roster, pools, curve, count);
+        List<Slot> now = new ArrayList<>(roster);
+        now.add(new Slot(position, early));
+        double gainNow = empirical(now, pools, curve, count) - base;
+        if(later >= mean.length || later <= early){
+            return gainNow;
+        }
+        List<Slot> then = new ArrayList<>(roster);
+        then.add(new Slot(position, later));
+        return gainNow - (empirical(then, pools, curve, count) - base);
     }
 
     /** Marginal lineup points from taking him now rather than at my next pick. */

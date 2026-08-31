@@ -29,6 +29,23 @@ at my next pick, in lineup points, given the men I already hold. A
 second quarterback prices near zero on his own, without being told to.
 
 ================================================================
+FIXED SHAPE AGAINST ADAPTIVE
+================================================================
+
+The shape above is what this model does if the board falls exactly
+at ADP. It never does. The model itself is a function of the roster and
+of who is actually left, so it can be asked again at every pick - which
+is the thing a fixed shape, the committed plan included, cannot do.
+
+SEASON      POINTS   WHAT IT TOOK
+2021          2006   RB QB RB WR TE WR WR WR RB WR WR TE RB WR RB DEF
+2022          1855   RB QB RB RB TE RB WR WR TE WR WR RB WR WR WR DEF
+2023          1987   RB QB TE RB TE RB QB QB WR RB WR RB WR RB WR DEF
+2024          1929   RB QB TE TE QB RB RB WR RB WR WR RB WR WR WR DEF
+2025          1844   RB QB TE TE RB RB QB WR WR RB RB WR RB WR WR DEF
+mean          1924
+
+================================================================
 IS IT ANY GOOD?
 ================================================================
 
@@ -40,12 +57,12 @@ STRATEGY                     2021     2022     2023     2024     2025      mean 
 starter-sum (1-16)           1870     1947     2010     1985     2133      1989      +305     5/5
 best-nine (Model A)          1553     1731     2060     1749     1802      1779       +95     3/5
 RUNBOOK committed            2121     1861     2188     1907     2173      2050      +366     5/5
+board value                  2105     1853     2032     1823     2058      1974      +290     3/5
 RB-heavy folk rule           2014     1897     2185     1844     2091      2006      +322     5/5
 RUNBOOK front + SS back      2069     1850     2160     1895     2204      2036      +352     5/5
 ModelA front + SS back       1896     1943     2179     1989     1979      1997      +314     4/5
 [not legal] no DEF drafted     2132     1853     2191     1954     2166      2059      +376     5/5
 best available by ADP        1276     1689     1550     1839     2065      1684        +0     0/5
-board value                  2105     1853     2032     1823     2058      1974      +290     3/5
 
 Every strategy drafts from the same board at the same picks, so the only
 difference between two rows is the order of positions. 'best available by ADP'

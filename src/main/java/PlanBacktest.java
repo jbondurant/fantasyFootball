@@ -93,6 +93,10 @@ public class PlanBacktest {
                 "RB WR RB WR WR WR TE QB QB QB QB QB QB DEF");
         STRATEGIES.put("RUNBOOK committed",
                 "RB RB RB WR WR WR WR TE WR QB TE QB RB DEF");
+        // What BoardValue drafts when the board falls at ADP. Kept here so the
+        // higher-resolution harness can score it beside everything else.
+        STRATEGIES.put("board value",
+                "RB TE RB TE WR WR RB WR WR QB RB RB WR DEF");
         STRATEGIES.put("RB-heavy folk rule",
                 "RB RB RB WR WR WR TE QB WR RB WR TE QB DEF");
         // The back-half decomposition said the starter-sum model's deficit is
