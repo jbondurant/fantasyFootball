@@ -126,8 +126,8 @@ public class LiveBoard {
         }
 
         int next = nextPickAfter(simulator, state, planner, pick);
-        System.out.printf("%-5s %-24s %6s %9s %8s %18s   %s%n", "POS", "BEST AVAILABLE",
-                "RANK", "ADDS NOW", "VS WAIT", "NEXT CLIFF", "verdict");
+        System.out.printf("%-5s %-24s %6s %9s %8s %9s %16s%n", "POS", "BEST AVAILABLE",
+                "RANK", "ADDS NOW", "VS WAIT", "END TEAM", "NEXT CLIFF");
 
         Map<Position, Double> urgency = new EnumMap<>(Position.class);
         Map<Position, Double> adds = new EnumMap<>(Position.class);
@@ -157,6 +157,14 @@ public class LiveBoard {
             then.add(new BoardValue.Slot(position, later));
             double wait = addsNow
                     - (BoardValue.empirical(then, pools, curve, order.size()) - base);
+            // Rank on the ROSTER I END WITH, not on the drop I avoid. Ranking
+            // by the drop scored 1916 in backtest and bought tight ends in
+            // round 2; rolling the rest of the draft out and valuing the
+            // finished roster scored 2008, which ties the plan. The cliff still
+            // prints, because it is what makes the number legible, but it no
+            // longer decides on its own.
+            double finished = rollout(planner, taken, curve, pools, order.size(),
+                    held, position, rank, pick);
             Valley cliff = nextValley(valleys(men, position), rank);
             boolean crosses = cliff != null && later > cliff.afterRank();
             // The cliff, not the odds, is what decides this. Crossing one means
@@ -166,18 +174,16 @@ public class LiveBoard {
             if(crosses){
                 wait += cliff.drop() / 2;
             }
-            urgency.put(position, wait);
+            urgency.put(position, finished);
             adds.put(position, addsNow);
             best.put(position, candidate);
             Player player = Player.getPlayerFromSIDV2(candidate);
             String where = cliff == null ? "none ahead"
                     : String.format("after %s%d%s", position, cliff.afterRank(),
                             crosses ? " CROSSED" : "");
-            System.out.printf("%-5s %-24s %6d %9.1f %8.1f %18s   %s%n", position,
+            System.out.printf("%-5s %-24s %6d %9.1f %8.1f %9.0f %16s%n", position,
                     player == null ? candidate : player.firstName + " " + player.lastName,
-                    rank, addsNow, wait, where,
-                    crosses ? "TAKE NOW - cliff" : wait > 15 ? "TAKE NOW"
-                            : wait > 5 ? "lean take" : "he keeps");
+                    rank, addsNow, wait, finished, where);
         }
 
         // Rank on the cost of waiting, and break ties on raw value - otherwise
@@ -290,6 +296,76 @@ public class LiveBoard {
             }
         }
         return null;
+    }
+
+    /**
+     * Take him, fill the rest of the draft greedily by value, and score the team.
+     *
+     * This is the rule that scored 2008 against the plan's 2050 - a tie - where
+     * ranking by the drop scored 1916 and spent round 2 on a tight end. Board
+     * depth for future picks advances at each position's OWN ADP rate, never a
+     * shared one: assuming a shared rate is what once drafted TE TE QB QB.
+     */
+    static double rollout(DraftPlanner planner, List<String> taken,
+                          Map<Position, double[]> curve,
+                          Map<Position, List<List<Double>>> pools, int count,
+                          List<BoardValue.Slot> held, Position first, int firstRank,
+                          int fromPick){
+        List<BoardValue.Slot> roster = new ArrayList<>(held);
+        roster.add(new BoardValue.Slot(first, firstRank));
+        Map<Position, Integer> mine = new EnumMap<>(Position.class);
+        for(BoardValue.Slot slot : roster){
+            mine.merge(slot.position(), 1, Integer::sum);
+        }
+        int[] picks = {7, 18, 31, 42, 55, 66, 79, 90, 103, 114, 127, 162, 175, 186};
+        for(int pick : picks){
+            if(pick <= fromPick || roster.size() >= 16){
+                continue;
+            }
+            double base = BoardValue.empirical(roster, pools, curve, count);
+            Position best = null;
+            double most = -1e9;
+            int bestRank = 1;
+            for(Position position : new Position[]{Position.RB, Position.WR,
+                    Position.TE, Position.QB, Position.DEF}){
+                if(mine.getOrDefault(position, 0) >= BoardValue.MOST.get(position)){
+                    continue;
+                }
+                int rank = expectedRank(planner, taken, position, pick);
+                double[] mean = curve.get(position);
+                if(mean == null || rank >= mean.length){
+                    continue;
+                }
+                List<BoardValue.Slot> trial = new ArrayList<>(roster);
+                trial.add(new BoardValue.Slot(position, rank));
+                double adds = BoardValue.empirical(trial, pools, curve, count) - base;
+                if(adds > most){
+                    most = adds;
+                    best = position;
+                    bestRank = rank;
+                }
+            }
+            if(best == null){
+                break;
+            }
+            roster.add(new BoardValue.Slot(best, bestRank));
+            mine.merge(best, 1, Integer::sum);
+        }
+        return BoardValue.empirical(roster, pools, curve, count);
+    }
+
+    /** How deep a position will be at a later pick, at its own ADP rate. */
+    static int expectedRank(DraftPlanner planner, List<String> taken,
+                            Position position, int pick){
+        int gone = 0;
+        for(String id : planner.points().keySet()){
+            Player player = Player.getPlayerFromSIDV2(id);
+            double adp = SleeperProjections.adpOf(id);
+            if(player != null && player.position == position && adp < pick){
+                gone++;
+            }
+        }
+        return gone + 1;
     }
 
     /** How many of a position have gone, plus one - his rank on THIS board. */
