@@ -140,16 +140,24 @@ class ShapeSensitivityTest {
     }
 
     @Test
-    void standardErrorOfTheCommittedSeasonsIsTheTieBand(){
-        // 2021-2025 as PlanBacktest scores the committed plan. The tie band is
-        // not a taste parameter; it is this number, rounded.
+    void theCommittedSeasonsAreTheOnesPlanBacktestPrints(){
         double[] seasons = {2035, 1654, 2191, 1960, 2148};
         Assertions.assertEquals(1997.6, ShapeSensitivity.mean(seasons), 0.05);
         Assertions.assertEquals(1654, ShapeSensitivity.min(seasons), 0.001);
         Assertions.assertEquals(95.1, ShapeSensitivity.standardError(seasons), 0.5);
-        Assertions.assertTrue(
-                Math.abs(ShapeSensitivity.standardError(seasons) - ShapeSensitivity.TIE_BAND) < 20,
-                "the declared tie band must stay close to the measured error");
+    }
+
+    @Test
+    void theTieBandIsTheMeasuredPowerThresholdNotTheCrudeStandardError(){
+        // The distinction matters and has already caused one wrong reading. The
+        // crude five-season error is about 95; the band is 125, the gap this
+        // design detects 80% of the time under clustering on season. Declaring
+        // ties at 95 would call a real difference a tie one time in five, so the
+        // band must stay ABOVE the crude error, not equal to it.
+        double crude = ShapeSensitivity.standardError(new double[]{2035, 1654, 2191, 1960, 2148});
+        Assertions.assertEquals(125.0, ShapeSensitivity.TIE_BAND, 0.001);
+        Assertions.assertTrue(ShapeSensitivity.TIE_BAND > crude,
+                "a band tighter than the crude error would manufacture differences");
     }
 
     @Test

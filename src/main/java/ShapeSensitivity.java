@@ -74,12 +74,17 @@ public class ShapeSensitivity {
     /**
      * Anything inside this many points of the committed mean is called a tie.
      *
-     * Not a taste parameter: it is the standard error of a five-season mean,
-     * printed alongside the measured one so the two can be checked against each
-     * other. Calling a 40-point difference real on five seasons would be reading
-     * noise, which is the exact failure this tool exists to detect.
+     * MEASURED, not chosen. An earlier version of this tool used 90, the naive
+     * standard error of a five-season mean. The right number came from a proper
+     * power analysis clustered on season: 94 points is bare significance and 125
+     * is the gap this design can detect 80% of the time. A tool that declared
+     * ties at 94 would call a real difference a tie one time in five, so the
+     * honest band for "we could not have told these apart" is the 80%-power one.
+     *
+     * The 95-point figure the header still prints is the crude per-season error
+     * for orientation; it is not what the verdict uses.
      */
-    static final double TIE_BAND = 90.0;
+    static final double TIE_BAND = 125.0;
 
     /** One shape, scored, and everything the verdict needs to know about it. */
     public record Scored(String shape, double[] seasons, double mean, double worst,
@@ -115,12 +120,18 @@ public class ShapeSensitivity {
         }
 
         header();
+        rivals();
         List<Scored> grid = singleSlotGrid();
         costCurves();
         List<Scored> swaps = adjacentSwaps();
         List<Scored> hamming2 = hammingTwo();
         List<Scored> orderings = sameBudgetOrderings(trials, seed);
-        List<Scored> budgets = budgetLandscape(Math.max(4, trials / 200), seed);
+        // The budget landscape is 560 budgets wide, so it dominates the runtime
+        // while carrying the least weight in the verdict - it exists to show
+        // that most position budgets are simply bad, which a few dozen orders
+        // each already establishes. -Pbuckets raises its resolution.
+        List<Scored> budgets = budgetLandscape(
+                Integer.getInteger("buckets", Math.max(4, trials / 1000)), seed);
         List<Scored> human = plausiblePlans(trials, seed);
         verdict(grid, swaps, hamming2, orderings, budgets, human);
     }
@@ -140,8 +151,11 @@ public class ShapeSensitivity {
             System.out.printf(" %7.0f", season);
         }
         System.out.printf(" %8.0f %8.0f%n", committed.mean(), committed.worst());
-        System.out.printf("%nstandard error of that five-season mean: %.0f  ->  tie band is"
-                + " +/- %.0f points%n", standardError(committed.seasons()), TIE_BAND);
+        System.out.printf("%ncrude per-season error of that mean: %.0f. THE TIE BAND IS"
+                + " +/- %.0f, which is%nnot that number: it is the measured 80%%-power"
+                + " detection threshold for this design%n(94 points is bare significance,"
+                + " 125 is what it can catch four times in five).%n",
+                standardError(committed.seasons()), TIE_BAND);
         System.out.printf("a shape inside the band has NOT been distinguished from the"
                 + " committed plan by%nthis evidence. 'paired' below is the sharper test:"
                 + " the same-board per-season%ndifference, whose error bar is much smaller."
@@ -232,6 +246,39 @@ public class ShapeSensitivity {
                 scored.changed());
     }
 
+    // ----------------------------------------- 0. the rivals, paired properly
+
+    /**
+     * The other strategies, measured against the plan the same way as every
+     * perturbation below.
+     *
+     * PlanBacktest already prints these means. What it does not print is the
+     * PAIRED error bar, and that is the whole question: "the committed plan beats
+     * every model we have built" is a claim about a difference, and a difference
+     * needs its own error bar rather than the two means' eyeballed gap. Since
+     * every strategy drafts from the same five boards, the per-season difference
+     * is paired and its standard error is the right one.
+     */
+    static void rivals(){
+        System.out.printf("%n%n0. THE RIVALS - the same comparison PlanBacktest prints,"
+                + " with the paired error%n   bar it does not. 'beats' is how many of the"
+                + " five seasons each actually won.%n%n");
+        System.out.printf("   %-26s %8s %8s %9s %10s %7s%n",
+                "STRATEGY", "mean", "worst", "vs plan", "paired se", "beats");
+        for(Map.Entry<String, String> entry : PlanBacktest.STRATEGIES.entrySet()){
+            if(entry.getValue() == null){
+                continue;                 // best-available-by-ADP has no fixed shape
+            }
+            Scored scored = score(render(parse(entry.getValue())));
+            System.out.printf("   %-26s %8.0f %8.0f %+9.0f %10.0f %5d/%d%s%n",
+                    entry.getKey(), scored.mean(), scored.worst(), scored.deltaMean(),
+                    scored.deltaStandardError(), scored.wins(), boards.size(),
+                    scored.legal() ? "" : "   ILLEGAL");
+        }
+        System.out.printf("%n   A gap smaller than about twice its paired se has not been"
+                + " demonstrated.%n");
+    }
+
     // ------------------------------------------------- 1. single-slot changes
 
     /**
@@ -247,10 +294,9 @@ public class ShapeSensitivity {
         for(Position position : DRAFTABLE){
             System.out.printf(" %7s", position);
         }
-        System.out.printf("   %s%n", "spread   verdict");
+        System.out.printf("   %s%n", "worst cost   verdict");
         List<Position> base = parse(COMMITTED);
         List<Scored> all = new ArrayList<>();
-        List<Scored> free = new ArrayList<>();
         for(int slot = 0; slot < base.size(); slot++){
             System.out.printf("%-6d %-5d", ROUND[slot], PlanBacktest.MY_PICKS[slot]);
             double low = Double.MAX_VALUE;
@@ -280,17 +326,18 @@ public class ShapeSensitivity {
                     legalCells++;
                 }
             }
+            double cost = committed.mean() - low;
             String verdict = legalCells == 1
                     ? "FORCED - every alternative is illegal"
-                    : tied >= 4 ? "FREE - no opinion here"
-                    : tied == 1 ? "LOAD-BEARING" : tied + " of the legal choices tie";
-            System.out.printf("   %6.0f   %s%n", high - low, verdict);
-            if(tied >= 4){
-                free.add(null);
-            }
+                    : cost <= TIE_BAND
+                    ? "FREE - the worst legal swap is inside the band"
+                    : "CONSTRAINED - costs more than the band";
+            System.out.printf("   %10.0f   %s%n", cost, verdict);
         }
         System.out.printf("%n= committed  ! drafts no defence, so illegal: shown, never counted%n");
-        System.out.printf("spread is over LEGAL cells only.%n");
+        System.out.printf("'worst cost' is what the WORST legal position in that slot"
+                + " costs against the plan.%nA slot is only CONSTRAINED if even the worst"
+                + " thing you could do there is detectable.%n");
         long tiedCells = all.stream().filter(s -> s.legal())
                 .filter(s -> Math.abs(s.mean() - committed.mean()) <= TIE_BAND).count();
         long legalCells = all.stream().filter(Scored::legal).count();

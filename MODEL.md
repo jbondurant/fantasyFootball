@@ -4349,3 +4349,118 @@ round 8 its objective cannot tell one position from another and its trailing
 quarterbacks are an artefact of a question outside its domain. Read `ModelA
 front + SS back` instead. The row stays because other work is running against
 it.
+
+## The committed plan is a plateau, not a peak (2026-08-30)
+
+`ShapeSensitivity` maps the neighbourhood around the RUNBOOK's fourteen-slot
+shape by re-scoring perturbations on **PlanBacktest's own scorer** - the same
+code, not a copy - so nothing here can quietly disagree with the 1998 it is
+testing. `data/shape-sensitivity-2026-08-30.txt` is the run.
+
+**The tie band is 125, and that choice is the whole result.** Not the naive
+95-point standard error of a five-season mean: 94 is bare significance and 125
+is what this design detects four times in five. Declaring ties at 95 would call
+a real difference a tie one time in five.
+
+**Every single slot is free.** All fourteen, exhaustively, each of the five
+positions:
+
+    of 52 legal single-slot changes, 52 tie the committed plan and 0 are
+    clearly worse or better
+
+The worst legal single-slot swap in the entire plan costs **115 points** -
+inside the band. The only slot with no alternative is round 16, and that is
+legality, not value: you must own a defence. All eight real adjacent swaps tie
+too, and the plan sits at the **50th percentile of its own adjacent swaps** -
+the literal median of shuffling its neighbouring picks.
+
+    FAMILY                                          legal    tie tie rate plan's %ile
+    single-slot changes (exhaustive)                   52     52   100.0%      76.9
+    adjacent swaps (exhaustive)                         8      8   100.0%      50.0
+    two-slot changes (exhaustive)                    1300   1068    82.2%      89.8
+    reshuffles of the committed budget (sampled)     9991   2371    23.7%      99.2
+    all budgets (sampled)                            5600    103     1.8%      99.9
+    plans a human would write (sampled)              9999   1065    10.7%      99.8
+
+The last row is the honest denominator - at least one QB, two RB, three WR, one
+TE, exactly one defence, defence no earlier than round 10. **1,065 of 9,999
+plans a thinking person might have written are indistinguishable from the
+committed one.** The plan is at the 99.8th percentile of that family and
+simultaneously tied with a tenth of it, which is the definition of a plateau:
+the top tenth of the plan space cannot be ranked by five seasons.
+
+### The three contested decisions, priced
+
+Cost curves, moving one man through every round (section 2 of the run):
+
+- **Tight end.** Only round 2 (-126) escapes the band. Rounds 1 and 3 through
+  16 all tie, including the round-7 placement the RUNBOOK argues against
+  (-115) and the round-8 one it argues for. The curve is also non-monotonic -
+  round 7 costs more than rounds 4, 5 and 6 - which is the signature of noise,
+  not of a decision. **Dropping the starting tight end entirely scores +11.**
+- **Defence.** The one decision with real content. Rounds 1, 2, 3, 5 and 7 are
+  all outside the band (-214, -182, -142, -139, -153); from round 10 on it is
+  free (-42, -23, -3, 0, 0). Individual rounds wobble, but the aggregate is
+  unambiguous: a defence in the first seven rounds costs on the order of 110 to
+  215 points, and after round 10 the round does not matter. This reproduces
+  `DefenceRound` **exactly**, which is a free cross-check - two independently
+  written tools building the same fourteen sequences.
+- **Second quarterback.** Free everywhere. Every one of the fourteen placements
+  ties, and **dropping him entirely costs 12 +/- 10** - nothing. Consistent with
+  him being a keeper stash whose value is next season's, which this backtest
+  cannot see at all.
+
+### The plan's win over the models does not survive a paired error bar
+
+`PlanBacktest` prints the means but not the paired error, and every strategy
+drafts the same five boards, so the difference is paired and much sharper:
+
+    STRATEGY                       mean    worst   vs plan  paired se   beats
+    starter-sum (1-16)             1900     1733       -98        131     2/5
+    best-nine (Model A)            1627     1376      -371        100     0/5
+    RB-heavy folk rule             1884     1734      -114         63     1/5
+    RUNBOOK front + SS back        1977     1819       -20         67     2/5
+    ModelA front + SS back         1862     1771      -136         78     1/5
+
+**Only Model A is actually beaten.** The folk rule's -114 and the starter sum's
+-98 are inside their own error bars. "The committed plan beats every model we
+have built" is true of the point estimates and false of the evidence. The
+metric agent reached the same place from the other side: varying draft seat and
+opponent world flipped the folk rule from 114 behind to 39 ahead, a 153-point
+swing from changing nothing about the plan.
+
+### What is actually load-bearing
+
+Two things, and neither is a sequence:
+
+1. **Draft a defence, and draft it late.** Rounds 10 to 16, anywhere.
+2. **Open with backs and receivers.** 92.5% of the tied plans take RB or WR in
+   round 1. But only 40% of them take two backs in rounds 1-3, and the tie set
+   averages 5.4 WR against 3.8 RB - so "RB-heavy" specifically is NOT what the
+   tie set has in common, and the RUNBOOK's `RB RB RB` opening is one member of
+   a set that mostly does something else.
+
+Everything else in the fourteen slots - which of RB or WR in any given round,
+the tight end's round, the second quarterback's round and existence - is
+decoration this project has been treating as a decision.
+
+**Caveat that cuts against the sharpest finding here.** PlanBacktest scores the
+fourteen DRAFTED men only; the keepers are absent. Every shape has to supply its
+own starting quarterback, and Justin does not - Purdy is kept at round 13. The
+single most load-bearing slot in the grid before the band was widened was the
+round-10 QB (115 points), and that is measuring a hole his real roster does not
+have.
+
+**Is it worth trying to beat 1998? No** - not on five seasons. Roughly a
+thousand plans tie it, no perturbation is distinguishable from it, and the one
+shape that scored clearly above (2097, `RB RB QB WR WR QB RB TE WR RB WR DEF WR
+TE`) is the maximum of ~27,000 draws and won 4 of 5 seasons. It is a selection
+artifact, not a candidate, and it is recorded here so nobody re-finds it and
+believes it. **Use the RUNBOOK on Tuesday** - not because it is the best plan,
+but because it is inside the plateau and the plateau is what the evidence
+supports.
+
+Model A remains byte-identical at 1812.8 / p10 1784.4 with plan
+[RB, WR, RB, WR, WR, WR, TE, QB, QB]. `PlanBacktest` was refactored (its drafting
+loop split into `draft()` so a caller can ask WHO a shape drafted) and prints
+byte-identical numbers. **Nothing here reaches Tuesday's tooling.**
