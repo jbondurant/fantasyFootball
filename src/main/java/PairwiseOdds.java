@@ -73,6 +73,42 @@ public class PairwiseOdds {
 
     // ------------------------------------------------------------ the sample
 
+    /**
+     * The wider sample: sixteen seasons from nflverse rather than thirteen.
+     *
+     * Justin asked "this is over how many seasons?" and the answer was thirteen,
+     * which was a regression I had introduced without noticing. He approved
+     * downloading nflverse precisely to reach 2010 - Sleeper simply has no rows
+     * for men who left before it existed - and then I consolidated onto a tool
+     * whose loader read the older thirteen-season harvest, throwing the three
+     * extra seasons away. Same question, more of the evidence.
+     */
+    static List<Man> nflverseMen(Map<String, List<DetectionLag.Man>> seasons,
+                                 List<String> order){
+        List<Man> out = new ArrayList<>();
+        for(int s = 0; s < order.size(); s++){
+            for(DetectionLag.Man man : seasons.get(order.get(s))){
+                if(man.position() == Position.DEF
+                        || !CAP.containsKey(man.position())
+                        || man.positionRank() > CAP.get(man.position())){
+                    continue;
+                }
+                double total = 0;
+                boolean played = false;
+                for(double week : man.weekly()){
+                    if(!Double.isNaN(week)){
+                        total += week;
+                        played = true;
+                    }
+                }
+                if(played){
+                    out.add(new Man(s, man.position(), man.positionRank(), total));
+                }
+            }
+        }
+        return out;
+    }
+
     static List<Man> men(Map<String, EraBoards.Board> boards, List<String> seasons){
         List<Man> out = new ArrayList<>();
         for(int s = 0; s < seasons.size(); s++){
@@ -566,9 +602,16 @@ public class PairwiseOdds {
         String format = System.getProperty("format");
         Map<String, EraBoards.Board> boards = EraBoards.usable(
                 format == null ? "ppr" : format, EraIngest.MIN_RATE, EraIngest.minDepth());
-        List<String> seasons = new ArrayList<>(new TreeMap<>(boards).keySet());
+        // Sixteen seasons where they are joinable, thirteen where they are not.
+        // -PeraBoards falls back to the older harvest so the two can be compared.
+        Map<String, List<DetectionLag.Man>> wider =
+                Boolean.getBoolean("eraBoards") ? Map.of() : NflverseBoards.usable(format);
+        List<String> seasons = wider.isEmpty()
+                ? new ArrayList<>(new TreeMap<>(boards).keySet())
+                : new ArrayList<>(new TreeMap<>(wider).keySet());
         int clusters = seasons.size();
-        List<Man> men = men(boards, seasons);
+        List<Man> men = wider.isEmpty() ? men(boards, seasons)
+                : nflverseMen(wider, seasons);
         int[] ties = new int[1];
         List<Pair> everything = pairs(men, -1, false, ties);
 
