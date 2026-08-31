@@ -489,6 +489,65 @@ public class PairwiseOdds {
         }
     }
 
+    /**
+     * Does the curve hold up at the ENDS, where a smoother is most likely to lie?
+     *
+     * Justin, on being told a back taken at pick 7 beats a last-round back 88%
+     * of the time: "These odds seem low, are they smoothed out properly." The
+     * ends are exactly where a monotone smoother compresses - it has neighbours
+     * on one side only, so the fitted value gets pulled inward - and the fitted
+     * number alone cannot answer him. This prints the raw win rate over the real
+     * pairs in each corner beside the fitted one, with the count, so the two can
+     * disagree out loud.
+     */
+    static void extremes(Model model, List<Pair> everything){
+        int[][] windows = {{1, 4}, {1, 8}, {5, 12}, {13, 24}, {25, 36}};
+        int[][] against = {{49, 60}, {37, 48}, {25, 36}};
+        System.out.printf("%n%s%nDOES IT HOLD AT THE ENDS?%n%s%n",
+                "=".repeat(72), "=".repeat(72));
+        System.out.printf("%nRunning backs. RAW is every real pair in that corner across all%n"
+                + "seasons; FIT is the curve. Where they disagree, the raw one is the%n"
+                + "measurement and the curve is a summary of it.%n%n");
+        System.out.printf("%-14s %-12s %8s %8s %8s %8s%n",
+                "TAKE (rank)", "AGAINST", "RAW", "FIT", "PAIRS", "DIFF");
+        for(int[] early : windows){
+            for(int[] late : against){
+                if(late[0] <= early[1]){
+                    continue;
+                }
+                int won = 0;
+                int seen = 0;
+                double fitted = 0;
+                int fits = 0;
+                for(Pair pair : everything){
+                    if(pair.position() != Position.RB){
+                        continue;
+                    }
+                    if(pair.early() >= early[0] && pair.early() <= early[1]
+                            && pair.late() >= late[0] && pair.late() <= late[1]){
+                        seen++;
+                        if(pair.lateWon()){
+                            won++;
+                        }
+                        fitted += model.probability(Position.RB, pair.early(), pair.late());
+                        fits++;
+                    }
+                }
+                if(seen < 30){
+                    continue;
+                }
+                double raw = (double) won / seen;
+                double fit = fitted / fits;
+                System.out.printf("RB%-2d-%-9d RB%-2d-%-7d %7.0f%% %7.0f%% %8d %+7.1f%%%n",
+                        early[0], early[1], late[0], late[1], 100 * raw, 100 * fit, seen,
+                        100 * (raw - fit));
+            }
+        }
+        System.out.printf("%nRAW is what happened; a positive DIFF means the late man really%n"
+                + "wins MORE often than the curve says, so the early pick is worth LESS%n"
+                + "than the matrix claims - and a negative DIFF means the opposite.%n");
+    }
+
     /** How many of a position are gone by an overall pick, from today's board. */
     static int depth(List<Double> sorted, int pick){
         int gone = 0;
@@ -705,6 +764,7 @@ public class PairwiseOdds {
         // chosen from the middle of the basin, and it is the variant that keeps
         // the cliff: it halves the fixed window's -5.0% miss at the RB1-12 row.
         draftNight(latent(everything, 0, 0.25), boards);
+        extremes(latent(everything, 0, 0.25), everything);
     }
 
     static double mean(double[] x){
