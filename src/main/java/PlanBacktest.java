@@ -246,6 +246,67 @@ public class PlanBacktest {
      * when a position is exhausted - and a "perturbation" that changes nobody is
      * not evidence of a plateau, it is a no-op wearing a plateau's clothes.
      */
+    /**
+     * What Justin already holds, reproduced on a historical board.
+     *
+     * The pick schedule above ALREADY gives up rounds 12 and 13 to keepers -
+     * that is the 35-pick gap - but the roster never received the two men those
+     * rounds bought. Every strategy paid the same price for nothing, so the
+     * comparisons stayed fair while the absolute scores ran low and, worse, the
+     * LEGALITY question came out wrong: a plan drafting no quarterback fields an
+     * empty QB slot here, though for a man keeping Purdy it is perfectly legal.
+     *
+     * The structure is copied by POSITIONAL ADP RANK, not by price, the way
+     * EraKeepers does it: Purdy is QB9 and Tuten RB23 on the 2026 board, so a
+     * historical season holds its own QB9 and RB23. Copying the round instead
+     * would hand an old season a replacement-level quarterback and call it a
+     * keeper.
+     */
+    public static List<String> keeperIDs(Board board){
+        int[] ranks = EraKeepers.ranks();
+        Map<Position, Integer> wantRank = new EnumMap<>(Position.class);
+        wantRank.put(Position.QB, ranks[0]);
+        wantRank.put(Position.RB, ranks[1]);
+        Map<Position, Integer> seen = new EnumMap<>(Position.class);
+        List<String> held = new ArrayList<>();
+        for(String id : board.ids()){
+            Position position = board.positionOf().get(id);
+            Integer want = wantRank.get(position);
+            if(want == null){
+                continue;
+            }
+            int rank = seen.merge(position, 1, Integer::sum);
+            if(rank == want){
+                held.add(id);
+            }
+        }
+        return held;
+    }
+
+    /** -PholdKeepers=true. Off leaves every existing number untouched. */
+    public static boolean holdKeepers(){
+        return Boolean.getBoolean("holdKeepers");
+    }
+
+    /**
+     * What a fourteen-pick plan must still supply. With the keepers held, the
+     * quarterback and one back are already covered, so a nought-quarterback
+     * plan becomes legal - which is the whole point of holding them.
+     */
+    public static Map<Position, Integer> requiredPicks(){
+        Map<Position, Integer> need = new EnumMap<>(Position.class);
+        need.put(Position.QB, 1);
+        need.put(Position.RB, 2);
+        need.put(Position.WR, 3);
+        need.put(Position.TE, 1);
+        need.put(Position.DEF, 1);
+        if(holdKeepers()){
+            need.merge(Position.QB, -1, Integer::sum);
+            need.merge(Position.RB, -1, Integer::sum);
+        }
+        return need;
+    }
+
     public static List<String> draft(Board board, String sequence){
         List<Position> wanted = new ArrayList<>();
         if(sequence != null){
@@ -255,6 +316,14 @@ public class PlanBacktest {
         }
         Set<String> gone = new HashSet<>();
         List<String> mine = new ArrayList<>();
+        if(holdKeepers()){
+            // Off the board - nobody drafts a man I already own - and onto the
+            // roster, so the empty slot he fills is actually filled.
+            for(String id : keeperIDs(board)){
+                gone.add(id);
+                mine.add(id);
+            }
+        }
         Set<Integer> myPicks = new HashSet<>();
         for(int pick : MY_PICKS){
             myPicks.add(pick);

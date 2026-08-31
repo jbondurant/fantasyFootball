@@ -74,6 +74,11 @@ tasks.register('run', JavaExec) {
     // tuning knobs have to be passed through explicitly as -P.
     ['sims', 'candidates', 'qbADPChange', 'draftId', 'trials', 'risk', 'quantile', 'why', 'projections', 'keepers', 'as', 'search', 'adaptiveTrials', 'inner', 'mlScale', 'inners', 'mcts', 'scenarios', 'buckets', 'draws', 'pos', 'seed', 'budget', 'deltas', 'roster', 'outlook', 'waitTrials', 'scheduleRounds', 'targets', 'pick', 'freeWire', 'noFreeWire', 'qbFrom', 'defLast', 'frontShape', 'noLookahead', 'scarcity', 'deviate', 'riskObjective', 'shape', 'seeds', 'jitter',
      'noPolicy', 'restarts', 'randomShapes', 'tieBand', 'slateRows',
+     // PlanBacktest.holdKeepers - put Justin's two keepers ON the roster and
+     // off the board. The pick schedule always gave up rounds 12 and 13 for
+     // them; without this the roster never received them, so a plan drafting
+     // no quarterback looked illegal when for him it is not. Off by default.
+     'holdKeepers', 'planSample', 'format', 'noKeepers',
      // LeagueActuals.FLAG - grade outcomes under the league's own scoring
      // instead of Sleeper's pts_half_ppr. Off by default on purpose.
      'leagueScoredActuals',
