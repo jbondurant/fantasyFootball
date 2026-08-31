@@ -1,0 +1,25 @@
+
+========================================================
+  MY PICK 7, ROUND 1  (draft is on 1)
+========================================================
+
+  THE PLAN says: RB
+
+  WAITING until pick 18 costs you:
+     RB   the man at 18 beats the man at 7 only 41% of the time   <- expensive to wait
+     WR   the man at 18 beats the man at 7 only 45% of the time
+     TE   -
+     QB   -
+
+  THE MODEL (second opinion - not backtested):
+  run  ./gradlew run -Pmain=LiveBoard -Pkeepers=Tuten,Purdy -q
+  take its REFUSALS as binding and its rankings as advisory.
+
+  THE TWO RULES WITH EVIDENCE BEHIND THEM:
+     round 1 is RB or WR - 90% of every plan that ties the committed one
+     no defence before round 10 - and it is worth ~0 whenever you take it,
+     so take it last
+
+  AND THE ONE TO IGNORE: you keep Purdy. You do not need a
+  quarterback. LiveLateRounds has no cap and will price one anyway.
+
