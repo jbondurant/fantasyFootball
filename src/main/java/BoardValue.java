@@ -215,6 +215,13 @@ public class BoardValue {
             }
         }
         Map<Position, Integer> have = new EnumMap<>(Position.class);
+        // Every candidate goes through RosterRules before it is priced. The
+        // unconstrained version of this loop scored 1924 and drafted TE TE QB QB
+        // in two of five seasons; the question this answers is whether the
+        // nonsense was what cost it.
+        RosterRules rules = RosterRules.live();
+        RosterRules.Roster legal = PlanBacktest.holdKeepers()
+                ? rules.justins() : rules.empty();
         Set<Integer> myPicks = new HashSet<>();
         for(int pick : PlanBacktest.MY_PICKS){
             myPicks.add(pick);
@@ -235,7 +242,8 @@ public class BoardValue {
             for(Position position : new Position[]{Position.RB, Position.WR,
                     Position.TE, Position.QB, Position.DEF}){
                 if(have.getOrDefault(position, 0) >= MOST.get(position)
-                        || PlanBacktest.bestAvailable(board, gone, position) == null){
+                        || PlanBacktest.bestAvailable(board, gone, position) == null
+                        || !legal.canDraft(position, round(made))){
                     continue;
                 }
                 int early = taken(board, gone, position);
@@ -274,6 +282,9 @@ public class BoardValue {
                 mine.add(choice);
                 gone.add(choice);
                 have.merge(take, 1, Integer::sum);
+                if(legal.canDraft(take, round(made))){
+                    legal = legal.draft(choice, take, round(made));
+                }
             }
             made++;
         }
@@ -290,6 +301,11 @@ public class BoardValue {
             }
         }
         return count;
+    }
+
+    /** Which ROUND my nth pick is - 1-11 then 14-16, because 12 and 13 are keepers. */
+    static int round(int made){
+        return made < 11 ? made + 1 : made + 3;
     }
 
     /** How many of a position have already left this board, plus one. */
