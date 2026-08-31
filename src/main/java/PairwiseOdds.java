@@ -508,8 +508,8 @@ public class PairwiseOdds {
         System.out.printf("%nRunning backs. RAW is every real pair in that corner across all%n"
                 + "seasons; FIT is the curve. Where they disagree, the raw one is the%n"
                 + "measurement and the curve is a summary of it.%n%n");
-        System.out.printf("%-14s %-12s %8s %8s %8s %8s%n",
-                "TAKE (rank)", "AGAINST", "RAW", "FIT", "PAIRS", "DIFF");
+        System.out.printf("%-14s %-12s %10s %8s %8s %8s %8s%n",
+                "TAKE (rank)", "AGAINST", "LATE WON", "RAW", "FIT", "EARLY", "DIFF");
         for(int[] early : windows){
             for(int[] late : against){
                 if(late[0] <= early[1]){
@@ -538,14 +538,17 @@ public class PairwiseOdds {
                 }
                 double raw = (double) won / seen;
                 double fit = fitted / fits;
-                System.out.printf("RB%-2d-%-9d RB%-2d-%-7d %7.0f%% %7.0f%% %8d %+7.1f%%%n",
-                        early[0], early[1], late[0], late[1], 100 * raw, 100 * fit, seen,
-                        100 * (raw - fit));
+                System.out.printf("RB%-2d-%-9d RB%-2d-%-7d %5d/%-4d %7.1f%% %7.1f%% %7.1f%%"
+                        + " %+7.1f%%%n",
+                        early[0], early[1], late[0], late[1], won, seen,
+                        100 * raw, 100 * fit, 100 * (1 - raw), 100 * (raw - fit));
             }
         }
-        System.out.printf("%nRAW is what happened; a positive DIFF means the late man really%n"
-                + "wins MORE often than the curve says, so the early pick is worth LESS%n"
-                + "than the matrix claims - and a negative DIFF means the opposite.%n");
+        System.out.printf("%nLATE WON is the count: how many of those real pairs the DEEPER man%n"
+                + "won outright. RAW is that as a rate, EARLY is its complement - what the%n"
+                + "better-ranked man actually won. A positive DIFF means the deep man wins%n"
+                + "MORE often than the curve says, so the early pick is worth LESS than the%n"
+                + "matrix claims.%n");
     }
 
     /** How many of a position are gone by an overall pick, from today's board. */
