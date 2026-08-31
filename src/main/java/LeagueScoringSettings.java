@@ -211,8 +211,17 @@ public class LeagueScoringSettings {
         return element.getAsDouble();
     }
 
+    /**
+     * A passing touchdown was 0.4 here - a tenth of its value - while every
+     * other entry was a correct standard figure, so it was a slipped decimal
+     * rather than a choice. Nothing calls this today, which is what made it
+     * worth fixing: dead code is read as a reference for what the defaults
+     * ARE, and the next caller would have inherited quarterbacks worth a tenth
+     * of themselves with nothing to make the error visible. This league pays 6,
+     * but this is the generic fallback, so it carries the standard 4.
+     */
     public static LeagueScoringSettings defaultScoringSettings(){
-        double[] values = {0.04, 0.4, -1.0, 0.1, 6.0, 0.5, 0.1, 6.0, -2.0};
+        double[] values = {0.04, 4.0, -1.0, 0.1, 6.0, 0.5, 0.1, 6.0, -2.0};
         LeagueScoringSettings defaultScoring = new LeagueScoringSettings(values);
         return defaultScoring;
     }
