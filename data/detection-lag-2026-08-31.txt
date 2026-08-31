@@ -1,0 +1,56 @@
+
+DETECTION LAG
+
+seasons          13 (2013 2014 2015 2016 2017 2018 2019 2020 2021 2022 2023 2024 2025)
+population       drafted starters, ADP <= 108 (rounds 1-9 of 12)
+rate             points per GAME PLAYED (availability divided out)
+target           rest-of-season rate, weeks k+1..W, needs 3+ games
+
+WEEK k      n   RMSE pre   RMSE std     edge   w* std  RMSE mix
+1        1290       3.33       7.51    -4.18     0.08      3.28
+2        1316       3.43       5.66    -2.23     0.15      3.32
+3        1318       3.50       5.00    -1.50     0.22      3.33
+4        1317       3.57       4.67    -1.09     0.27      3.37
+5        1310       3.60       4.42    -0.82     0.32      3.35
+6        1292       3.72       4.26    -0.54     0.37      3.43
+7        1271       3.79       4.17    -0.38     0.40      3.45
+8        1254       3.89       4.17    -0.27     0.42      3.54
+9        1238       3.99       4.21    -0.22     0.43      3.65
+10       1227       4.16       4.33    -0.17     0.45      3.83
+11       1198       4.31       4.33    -0.02     0.49      3.94
+12       1148       4.47       4.37    +0.10     0.54      4.07
+13       1070       4.76       4.59    +0.17     0.57      4.36
+14        931       4.87       4.81    +0.05     0.52      4.56
+
+CROSSOVER
+   season-to-date first beats preseason at week 12
+   the blend first leans more than half on the season at week 12
+   bootstrap over seasons: median 12, 95% interval [10, 15]
+   (2000 resamples of the 13 seasons; a draw that never crossed is recorded as 15)
+
+BY POSITION (crossover week, own bootstrap)
+POS      cross    95% low   95% high
+QB         >14         12         15
+RB           7          6         13
+WR          12          9         15
+TE          11          8         15
+
+WHAT THE LAG IS WORTH
+WEEK k     weeks left mix beats pre by per season
+1                  17           0.05           
+2                  16           0.10           
+3                  15           0.17           
+4                  14           0.20           
+5                  13           0.26           
+6                  12           0.30           
+7                  11           0.33           
+8                  10           0.35           
+9                   9           0.34           
+10                  8           0.33           
+11                  7           0.36           
+12                  6           0.40           
+13                  5           0.40           
+14                  4           0.31           
+
+   RMSE is in points per game; 'weeks left' is how
+   many weeks a promotion made at k could still pay out.

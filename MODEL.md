@@ -4986,3 +4986,233 @@ changes.** What changes is that streaming is no longer free upside, and the
 
 Full output: `data/wire-rate-stress-2026-08-31.txt`,
 `data/bust-boom-sweep-2026-08-31.txt`.
+
+## The bust/boom channel, measured three ways (2026-08-31)
+
+**Superseded in one place by the nflverse rerun at the end of this section: the
+detection lag is week 11 on sixteen seasons, not week 12 on thirteen. Everything
+else below stands.**
+
+The night before the draft, `RESEARCH-PLAN.md` asked for three numbers that a
+bust-and-boom promotion channel would need. All three are now measured from data
+already on disk, by four new entry points, and the headline is that **the channel
+is real, positive, and roughly ten times too small to matter.**
+
+    ./gradlew run -Pmain=DetectionLag        the hinge: how fast is a bust visible
+    ./gradlew run -Pmain=BustBoomRates       rates by position and draft tier
+    ./gradlew run -Pmain=PromotionBehaviour  what the twelve humans really did
+    ./gradlew run -Pmain=LineupPromotion     what the channel is worth, in points
+
+Outputs saved to `data/detection-lag-2026-08-31.txt`,
+`data/bust-boom-rates-2026-08-31.txt`, `data/promotion-behaviour-2026-08-31.txt`
+and `data/lineup-promotion-2026-08-31.txt`.
+
+### 1. Detection lag: week 11-12, and that is the whole story
+
+For every drafted starter (ADP <= 108) at every cut week k, two predictors of
+his rest-of-season points per game compete: his August price, read off the ADP
+board through a per-position curve fitted LEAVE-ONE-SEASON-OUT, against his own
+points per game over weeks 1..k. Thirteen seasons, about 1,300 graded men a
+week. Nothing is dated later than it should be: the to-date rate reads weeks
+1..k, the target reads weeks k+1..W, and the two never share a week.
+
+    WEEK k      n   RMSE pre   RMSE std     edge   w* std
+    1        1290       3.33       7.51    -4.18     0.08
+    3        1318       3.50       5.00    -1.50     0.22
+    6        1292       3.72       4.26    -0.54     0.37
+    9        1238       3.99       4.21    -0.22     0.43
+    12       1148       4.47       4.37    +0.10     0.54
+    14        931       4.87       4.81    +0.05     0.52
+
+**The crossover is week 12, bootstrapped over seasons at 95% [10, 15].** The
+optimal blend weight on form crosses 0.5 in the same week. By position, and this
+is the one genuinely useful split: **RB 7 [6, 13]**, TE 11 [8, 15], WR 12
+[9, 15], QB never inside 14 [12, 15]. A back's form is worth reading by week
+seven; a quarterback's essentially never is, which is the opposite of how the
+league behaves.
+
+Two things this does NOT say. It does not say form is useless before week 12 -
+the blend beats the board from week one, and beats it by 0.2 to 0.4 points a
+game from week four on. And the leave-one-season-out curve borrows the SHAPE of
+the ADP-to-points relation from seasons after the one it grades, which a real
+August manager would not have. That help goes to the preseason side, so week 12
+is a conservative bound: the true crossover is at or before it.
+
+### 2. Bust and boom rates, thirteen seasons
+
+`FogFit` had this on five seasons against a projection feed. `BustBoomRates`
+widens it to thirteen against the ADP board itself - the price twelve managers
+actually paid - and divides availability out, because the injury channel is
+already in the model and folding it in double-counts it.
+
+    POS  TIER               n    mean     sd    bust    boom startable
+    RB   rounds 1-2       162    1.00   0.32      5%     19%      88%
+    RB   rounds 7-9       161    0.98   0.40     12%     21%      39%
+    RB   rounds 10-13     193    0.87   0.46     21%     16%      18%
+    WR   rounds 1-2       127    0.98   0.21      1%      7%      94%
+    WR   rounds 7-9       176    0.99   0.33      7%     19%      56%
+    WR   rounds 10-13     223    0.95   0.38     11%     20%      39%
+
+The two numbers a promotion rule actually needs, as "did he finish inside the
+league's own starting depth", with 95% intervals over seasons:
+
+    POS   BUST: a rounds 1-9 pick   BOOM: a rounds 10-16 pick
+          not startable              startable
+    QB    36% [30%, 41%]             33% [26%, 40%]
+    RB    27% [25%, 30%]             32% [27%, 38%]
+    WR    16% [13%, 19%]             47% [39%, 55%]
+    TE    31% [24%, 38%]             55% [48%, 63%]
+
+Note the asymmetry the sweep should carry: **a receiver taken in rounds 1-9
+fails to be startable only 16% of the time, a back 27%.** That is the same cliff
+`1ca1d9f` found from the other direction.
+
+### 3. What a real manager did - and it is reachable
+
+The transaction log IS reachable, one request per league per week, for all five
+completed seasons: `/v1/league/{id}/transactions/{week}`. So are the weekly
+lineups: `/v1/league/{id}/matchups/{week}` returns, for every roster in every
+week, both the men on it and the ten actually started. Nobody had looked at
+either. `LeagueTransactions` harvests both, cached forever.
+
+What the log says. About 28 completed adds a team a season, near two a week,
+flat from week 1 to week 14. **Of players drafted in rounds 1-4, only 21% are
+ever cut by the man who drafted them; rounds 5-9, 40%; rounds 10+, 65% - and 14%
+of those late picks are gone before week 2 is over.** For rounds 1-9 the median
+cut comes in **week 7**, quartiles 4 and 10 - close to, and slightly ahead of,
+the week-12 statistical crossover, which says this league's managers act on
+about the evidence the numbers justify, marginally early. Between 60% and 71% of
+all adds are men nobody drafted.
+
+A one-for-one swap gains the ROSTER **+7.0 rest-of-season points, 95%
+[+4.2, +9.9]**. That is not a lineup gain, and the distinction is the finding.
+
+### 4. What it is worth: +8.5 points against a 125-point bar
+
+`LineupPromotion` replays five seasons of real rosters under four lineup rules,
+same roster each week, slots enforced, league-scored:
+
+    PRESEASON   fill the nine by August and never update  <- this IS the model
+    FORM        blend August with points per game to date <- the missing channel
+    ACTUAL      what the human really started
+    PERFECT     best nine by realised points              <- the ceiling
+
+Both rules are granted the availability knowledge `WeeklyStarterValue` already
+has through its `!up()` draw, because otherwise "form" gets credit for detecting
+injuries the model can already see. Points per team per season, weeks 1-14:
+
+    form over preseason, injury channel ON     +8.5  95% [+0.8, +16.3]  <- the prize
+    the injury channel by itself             +208.1
+    a real human over preseason+up            +17.0  95% [+9.9, +25.0]
+    hindsight over a real human              +177.0  95% [+168.6, +185.2]
+
+Sweeping the blend weight, the best mechanical rule sits near 0.15-0.30 and is
+worth **+12.7 to +14.3**; weight 1.0 is worth -7.3, so a rule that forgets the
+board is worse than one that ignores form. Weight 0.00 reproduces preseason to
+the point, which is the control proving the sweep measures the blend.
+
+**Read the four rows together.** The injury channel the model already has is
+worth 208 points. Everything the missing bust/boom channel could add is worth
+9-14. And the hard ceiling on ANY promotion rule - matching a real, engaged
+human with a waiver wire, beat reports and a Sunday morning - is +17. The
+95% bar for a plan-level claim is 125. **The channel cannot change a pick, and
+this is now measured rather than argued.** `StarterContribution` reached the
+same corner from the other side on 2026-08-29: strip out failure and a bench
+player contributes nothing, and it never gets better than a tie.
+
+One constraint from the archive that makes this a behavioural quantity rather
+than a modelling convenience: Sleeper cannot chain auto-subs. A sub ties to one
+starter and both games must not have begun, so promotion is an active weekly
+decision. Any rule assuming the roster self-heals is modelling a platform that
+does not exist.
+
+### What is still guesswork, plainly
+
+The lineup numbers rest on FIVE seasons, not thirteen - the league's own
+transaction and matchup history starts in 2021 - so `[+0.8, +16.3]` is as tight
+as this sample gets. The detection lag has thirteen. The `nflverse` weekly feed
+would take the paired ADP-plus-outcome sample to sixteen seasons and remove
+Sleeper's coverage holes for men who retired early; it was not downloaded here
+because it needs Justin's approval first.
+
+### 5. The same question on sixteen seasons (nflverse), 2026-08-31
+
+Justin approved the nflverse download the same night, so the whole study was
+rerun on it. `NflverseWeekly` reads `data/nflverse/stats_player_week_YYYY.csv`
+and scores from RAW COMPONENTS under this league's own settings - the files'
+`fantasy_points` columns are never read, because they are a 4-point passing
+touchdown and this repo has already been burned once by choosing on 6 and
+grading on 4. `NflverseBoards` joins them to the same FFC boards.
+
+    ./gradlew run -Pmain=NflverseBoards                     the join, and its match rate
+    ./gradlew run -Pmain=DetectionLag  -Psource=nflverse
+    ./gradlew run -Pmain=BustBoomRates -Psource=nflverse
+
+**Why it is a better sample, not just a bigger one.** Sleeper has no stat rows
+at all for men who left before it existed, and the men who vanish are
+disproportionately the ones who BUSTED - so the thirteen-season Sleeper sample
+was biased in exactly the direction this study cares about. Randy Moss, Michael
+Turner and Rashard Mendenhall are all missing from Sleeper's 2013 and all
+present here.
+
+The join holds up, and the match rate is a first-class output rather than a log
+line, with a season below the gate refused outright:
+
+    16 of 16 seasons usable, 2010-2025. Match 97.6% to 100.0%, top-100 98.0% to
+    100.0%, at most 4 names loosened in any season.
+
+The names that got away are almost all men who played no regular-season game at
+all - Michael Thomas 2021, Joe Mixon 2025, Brandon Aiyuk 2025 - who therefore
+have no rows to join to. That is a real limitation and it cuts one way: **the
+total-loss season is absent from this sample**, so the bust rates below are
+bust-given-he-played and understate the manager's true exposure. The injury
+channel, which is where those men belong, is measured separately and is worth
+208 points.
+
+**The detection lag, sixteen seasons, n ~ 1,500 a week:**
+
+    WEEK k      n   RMSE pre   RMSE std     edge   w* std
+    3        1605       3.56       5.07    -1.51     0.23
+    6        1570       3.81       4.27    -0.46     0.38
+    9        1506       4.05       4.20    -0.15     0.46
+    11       1455       4.35       4.28    +0.07     0.52
+    13       1318       4.77       4.52    +0.25     0.60
+
+    crossover week 11, bootstrapped over seasons at 95% [9, 14]
+
+    POS   cross   95% interval
+    RB       9    [ 6, 11]
+    WR      11    [ 9, 15]
+    QB      13    [ 8, 15]
+    TE      13    [ 8, 15]
+
+Three seasons and the missing busts move the headline from **12 [10, 15]** to
+**11 [9, 14]** and tighten running backs from [6, 13] to **[6, 11]**. The
+ordering is unchanged and is the part to carry: **a back's form is worth reading
+around week 9, a receiver's around 11, and a quarterback's essentially never.**
+
+**Independent confirmation, from a different method.** The `InSeasonLearning`
+work in `RESEARCH-PLAN.md` estimates `kappa`, the games of evidence it takes to
+move the preseason prior halfway, from player-week scatter rather than from any
+crossover: QB 12.14, RB 5.87, WR 10.84, TE 10.09. Those are the same ordering
+and nearly the same magnitudes as the crossover weeks above, computed from a
+completely different quantity. Two methods agreeing on RB-fast/QB-slow is worth
+more than either alone.
+
+**Bust and boom on sixteen seasons** move only slightly, all inside the
+thirteen-season intervals - which is itself the reassurance that the smaller
+sample was not badly biased on this particular question:
+
+    POS   BUST rounds 1-9 not startable   BOOM rounds 10-16 startable
+    QB    34% [28%, 39%]                  32% [26%, 39%]
+    RB    25% [22%, 28%]                  32% [26%, 37%]
+    WR    15% [12%, 17%]                  48% [41%, 55%]
+    TE    25% [19%, 31%]                  50% [42%, 59%]
+
+**What does not change.** The value. `LineupPromotion` is capped at five seasons
+whatever the outcome feed does, because it needs THIS league's own transaction
+and matchup history and that starts in 2021. The prize stays +8.5 points a team
+a season, 95% [+0.8, +16.3], best-case +12.7 to +14.3 at a blend weight near
+0.15-0.30, against a 125-point bar and against +208 for the injury channel the
+model already has. **A wider outcome sample sharpened the lag and left the
+verdict alone.**
