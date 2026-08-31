@@ -235,8 +235,21 @@ public class BoardValue {
                 }
                 continue;
             }
-            int next = made + 1 < PlanBacktest.MY_PICKS.length
-                    ? PlanBacktest.MY_PICKS[made + 1] : -1;
+            // LOOKAHEAD, because urgency was the wrong objective.
+            //
+            // The greedy rule took the position whose value was about to drop
+            // fastest, and that is not the same as the position that leads to
+            // the best team. A tight end's curve falls off a cliff early, so
+            // urgency kept buying tight ends at rounds 2 and 4 - premium picks
+            // on a slot only one man can start in - while a receiver with a
+            // shallower drop and far more value waited. Steepest drop is a
+            // property of a curve; best roster is the thing actually wanted.
+            //
+            // So each legal position is TAKEN, the rest of the draft is rolled
+            // out greedily by what each pick ADDS, and the finished roster is
+            // valued. The position whose finished roster is best wins. One ply
+            // of lookahead with a greedy tail - the same shape Model A uses in
+            // the rounds where it beats everything here.
             Position take = null;
             double most = -1e9;
             for(Position position : new Position[]{Position.RB, Position.WR,
@@ -246,27 +259,16 @@ public class BoardValue {
                         || !legal.canDraft(position, round(made))){
                     continue;
                 }
-                int early = taken(board, gone, position);
-                // How deep the position will be by my next pick.
-                //
-                // The first version guessed (next - pick) / 5, the same decay
-                // for every position, and that threw away the only signal this
-                // model has: positions do NOT fall away at the same rate, and
-                // the difference between them is the whole decision. It drafted
-                // TE TE QB QB with its first four picks and scored 1860.
-                //
-                // The rate comes from the board's own ADP order - how many of
-                // THIS position sit between the two picks - anchored on where
-                // the real draft has actually got to.
-                int later = next < 0 ? early
-                        : early + Math.max(0, adpDepth(board, position, next)
-                                - adpDepth(board, position, pick));
-                double gain = marginal(curve, pools, count, held, position, early, later);
-                if(RankDraft.mustTake(have, made, PlanBacktest.MY_PICKS.length, position)){
-                    gain = 1e9;
-                }
-                if(gain > most){
-                    most = gain;
+                List<Slot> after = new ArrayList<>(held);
+                after.add(new Slot(position, taken(board, gone, position)));
+                Map<Position, Integer> counts = new EnumMap<>(have);
+                counts.merge(position, 1, Integer::sum);
+                double finished = rollout(board, gone, curve, pools, count, after, counts,
+                        legal.canDraft(position, round(made))
+                                ? legal.draft("x", position, round(made)) : legal,
+                        made + 1);
+                if(finished > most){
+                    most = finished;
                     take = position;
                 }
             }
@@ -301,6 +303,57 @@ public class BoardValue {
             }
         }
         return count;
+    }
+
+    /**
+     * Fill the remaining picks greedily by what each adds, and value the result.
+     *
+     * The tail is greedy on VALUE, not on urgency, because urgency is what put
+     * tight ends in rounds 2 and 4. Board depth advances by ADP between picks,
+     * which is the same per-position rate the rest of this model uses - a single
+     * shared rate is the assumption that once drafted TE TE QB QB.
+     */
+    static double rollout(PlanBacktest.Board board, Set<String> gone,
+                          Map<Position, double[]> curve,
+                          Map<Position, List<List<Double>>> pools, int count,
+                          List<Slot> held, Map<Position, Integer> have,
+                          RosterRules.Roster legal, int from){
+        List<Slot> roster = new ArrayList<>(held);
+        Map<Position, Integer> mine = new EnumMap<>(have);
+        for(int made = from; made < PlanBacktest.MY_PICKS.length; made++){
+            int pick = PlanBacktest.MY_PICKS[made];
+            Position best = null;
+            double most = -1e9;
+            double base = empirical(roster, pools, curve, count);
+            for(Position position : new Position[]{Position.RB, Position.WR,
+                    Position.TE, Position.QB, Position.DEF}){
+                if(mine.getOrDefault(position, 0) >= MOST.get(position)
+                        || !legal.canDraft(position, round(made))){
+                    continue;
+                }
+                int rank = adpDepth(board, position, pick) + 1;
+                double[] mean = curve.get(position);
+                if(mean == null || rank >= mean.length){
+                    continue;
+                }
+                List<Slot> trial = new ArrayList<>(roster);
+                trial.add(new Slot(position, rank));
+                double adds = empirical(trial, pools, curve, count) - base;
+                if(adds > most){
+                    most = adds;
+                    best = position;
+                }
+            }
+            if(best == null){
+                break;
+            }
+            roster.add(new Slot(best, adpDepth(board, best, pick) + 1));
+            mine.merge(best, 1, Integer::sum);
+            if(legal.canDraft(best, round(made))){
+                legal = legal.draft("x", best, round(made));
+            }
+        }
+        return empirical(roster, pools, curve, count);
     }
 
     /** Which ROUND my nth pick is - 1-11 then 14-16, because 12 and 13 are keepers. */

@@ -38,12 +38,12 @@ of who is actually left, so it can be asked again at every pick - which
 is the thing a fixed shape, the committed plan included, cannot do.
 
 SEASON      POINTS   WHAT IT TOOK
-2021          2006   RB QB RB WR TE WR WR WR RB WR WR TE RB WR RB DEF
-2022          1855   RB QB RB RB TE RB WR WR TE WR WR RB WR WR WR DEF
-2023          1987   RB QB TE RB TE RB QB QB WR RB WR RB WR RB WR DEF
-2024          1929   RB QB TE TE QB RB RB WR RB WR WR RB WR WR WR DEF
-2025          1844   RB QB TE TE RB RB QB WR WR RB RB WR RB WR WR DEF
-mean          1924
+2021          2091   RB QB WR WR WR TE WR WR RB RB RB QB TE DEF RB RB
+2022          1862   RB QB WR TE WR WR WR WR RB WR RB RB RB TE DEF QB
+2023          2096   RB QB RB RB TE WR WR WR WR WR WR TE QB WR RB DEF
+2024          1940   RB QB WR TE RB RB WR WR RB RB WR WR WR QB TE DEF
+2025          2053   RB QB RB TE WR WR WR WR WR RB RB QB WR WR TE DEF
+mean          2008
 
 ================================================================
 IS IT ANY GOOD?
@@ -57,6 +57,7 @@ STRATEGY                     2021     2022     2023     2024     2025      mean 
 starter-sum (1-16)           1870     1947     2010     1985     2133      1989      +305     5/5
 best-nine (Model A)          1553     1731     2060     1749     1802      1779       +95     3/5
 RUNBOOK committed            2121     1861     2188     1907     2173      2050      +366     5/5
+RUNBOOK as written           2149     1817     2175     1845     2179      2033      +349     5/5
 board value                  2105     1853     2032     1823     2058      1974      +290     3/5
 RB-heavy folk rule           2014     1897     2185     1844     2091      2006      +322     5/5
 RUNBOOK front + SS back      2069     1850     2160     1895     2204      2036      +352     5/5
