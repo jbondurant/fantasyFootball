@@ -6,15 +6,24 @@ THE BOARD AS IT IS
 pick 7, round 1, 0 men gone. my roster (2): RB QB
 the rules allow here: [RB, WR, TE, DEF]
 still needed for a legal lineup: {QB=0, RB=1, WR=3, TE=1, DEF=1}
+THE PLAN says: RB
 
-POS   BEST AVAILABLE               RANK   ADDS NOW    VS WAIT   verdict
-RB    Jahmyr Gibbs                    1      130.7       16.7   TAKE NOW
-WR    Puka Nacua                      1      132.1       16.5   TAKE NOW
-TE    Brock Bowers                    1       69.2        0.0   he keeps
+POS   BEST AVAILABLE             RANK  ADDS NOW  VS WAIT         NEXT CLIFF   verdict
+RB    Jahmyr Gibbs                  1     130.7     16.7         after RB14   TAKE NOW
+WR    Puka Nacua                    1     132.1     21.7  after WR2 CROSSED   TAKE NOW - cliff
+TE    Brock Bowers                  1      69.2      0.0          after TE1   he keeps
 QB    Josh Allen                      -          -          -   REFUSED: a second QB is only ever a next-year keeper stash (RUNBOOK.md:191), and round 1 is before round 10
-DEF   Los Angeles Rams                1        0.0        0.0   he keeps
+DEF   Los Angeles Rams              1       0.0      0.0         none ahead   he keeps
 
-   the model takes: RB
+   the model takes: WR
+
+NEXT CLIFF is the one that decides this. A position's value does not
+slide, it steps: the raw rank curve falls off at a few places and is
+flat between them. CROSSED means my next pick lands on the far side of
+the next step, which is the only version of 'expensive to wait' that
+means anything. A smooth odds curve cannot show this - it is monotone
+by construction and was measured flattening the real cliff by five
+points - which is why the odds are an ingredient here and not the answer.
 
 ADDS NOW is what he adds to the season your STARTERS score, over the
 man the wire would give you. VS WAIT is that minus what the best of his
