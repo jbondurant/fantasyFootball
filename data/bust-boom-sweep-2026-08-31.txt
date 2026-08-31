@@ -1,0 +1,169 @@
+
+========== WOULD BUST AND BOOM REORDER A PICK? ==========
+
+800 scenarios, one sampled world shared by every cell, so two
+cells never differ by sampling noise. bust rate = boom rate on the
+main grid; the asymmetric check is at the bottom.
+bust multiplies a man's realised rate by 0.60, boom by 1.60,
+and detection after the lag is PERFECT - all three are generous.
+
+REFERENCE  rates at zero: this 2452.6, WeeklyStarterValue 2452.6, gap 0.000
+           identical - the channel is the only difference between them
+
+================================================================
+  PICK 79 (round 7)
+================================================================
+  shipped objective ranks: WR>RB>TE>DEF>QB
+
+  LAG    bust=boom=0%           bust=boom=5%           bust=boom=10%          bust=boom=20%          bust=boom=30%         
+  1wk    -                      WR>RB>TE>QB>DEF        WR>RB>TE>QB>DEF        WR>RB>TE>QB>DEF        WR>RB>TE>QB>DEF       
+  3wk    -                      WR>RB>TE>QB>DEF        WR>RB>TE>QB>DEF        WR>RB>TE>QB>DEF        WR>RB>TE>QB>DEF       
+  6wk    -                      -                      WR>RB>TE>QB>DEF        WR>RB>TE>QB>DEF        WR>RB>TE>QB>DEF       
+  12wk   -                      -                      -                      -                      WR>RB>TE>QB>DEF       
+  never  -                      -                      -                      -                      -                     
+
+  '-' means the order is EXACTLY the shipped one. Anything else is printed in full.
+
+  RATE     top, lag never     top, best lag      what moved it
+  0%       WR                 WR                 nothing
+  5%       WR                 WR                 nothing
+  10%      WR                 WR                 nothing
+  20%      WR                 WR                 nothing
+  30%      WR                 WR                 nothing
+
+  POS         shipped    20%/lag 3     change
+  RB             71.2         75.2       +4.0
+  WR             75.0         86.4      +11.4
+  TE             59.9         65.2       +5.4
+  QB             13.5         43.2      +29.7
+  DEF            25.8         28.1       +2.2
+
+================================================================
+  PICK 90 (round 8)
+================================================================
+  shipped objective ranks: WR>RB>TE>DEF>QB
+
+  LAG    bust=boom=0%           bust=boom=5%           bust=boom=10%          bust=boom=20%          bust=boom=30%         
+  1wk    -                      -                      WR>RB>TE>QB>DEF        WR>RB>TE>QB>DEF        WR>RB>TE>QB>DEF       
+  3wk    -                      -                      WR>RB>TE>QB>DEF        WR>RB>TE>QB>DEF        WR>RB>TE>QB>DEF       
+  6wk    -                      -                      WR>RB>TE>QB>DEF        WR>RB>TE>QB>DEF        WR>RB>TE>QB>DEF       
+  12wk   -                      -                      -                      WR>RB>TE>QB>DEF        WR>RB>TE>QB>DEF       
+  never  -                      -                      -                      -                      -                     
+
+  '-' means the order is EXACTLY the shipped one. Anything else is printed in full.
+
+  RATE     top, lag never     top, best lag      what moved it
+  0%       WR                 WR                 nothing
+  5%       WR                 WR                 nothing
+  10%      WR                 WR                 nothing
+  20%      WR                 WR                 nothing
+  30%      WR                 WR                 nothing
+
+  POS         shipped    20%/lag 3     change
+  RB             65.5         73.3       +7.8
+  WR             75.0         86.4      +11.4
+  TE             54.0         56.2       +2.1
+  QB             16.5         47.6      +31.1
+  DEF            25.8         28.1       +2.2
+
+================================================================
+  PICK 103 (round 9)
+================================================================
+  shipped objective ranks: RB>WR>TE>DEF>QB
+
+  LAG    bust=boom=0%           bust=boom=5%           bust=boom=10%          bust=boom=20%          bust=boom=30%         
+  1wk    -                      RB>WR>TE>QB>DEF        RB>WR>TE>QB>DEF        WR>TE>RB>QB>DEF        WR>QB>TE>RB>DEF       
+  3wk    -                      RB>WR>TE>QB>DEF        RB>WR>TE>QB>DEF        WR>TE>RB>QB>DEF        WR>TE>QB>RB>DEF       
+  6wk    -                      -                      RB>WR>TE>QB>DEF        WR>RB>TE>QB>DEF        WR>TE>RB>QB>DEF       
+  12wk   -                      -                      -                      WR>RB>TE>DEF>QB        WR>TE>RB>QB>DEF       
+  never  -                      -                      -                      WR>RB>TE>DEF>QB        WR>TE>RB>DEF>QB       
+
+  '-' means the order is EXACTLY the shipped one. Anything else is printed in full.
+
+  RATE     top, lag never     top, best lag      what moved it
+  0%       RB                 RB                 nothing
+  5%       RB                 RB                 nothing
+  10%      RB                 RB                 nothing
+  20%      WR                 WR                 the magnitude knob, NOT detection
+  30%      WR                 WR                 the magnitude knob, NOT detection
+
+  POS         shipped    20%/lag 3     change
+  RB             54.7         57.3       +2.6
+  WR             52.4         59.6       +7.2
+  TE             51.3         57.4       +6.1
+  QB             15.6         47.3      +31.7
+  DEF            26.4         28.5       +2.1
+
+================================================================
+  PICK 114 (round 10)
+================================================================
+  shipped objective ranks: WR>RB>TE>DEF>QB
+
+  LAG    bust=boom=0%           bust=boom=5%           bust=boom=10%          bust=boom=20%          bust=boom=30%         
+  1wk    -                      WR>TE>RB>QB>DEF        WR>TE>RB>QB>DEF        WR>TE>QB>RB>DEF        WR>QB>TE>RB>DEF       
+  3wk    -                      WR>TE>RB>QB>DEF        WR>TE>RB>QB>DEF        WR>TE>RB>QB>DEF        WR>TE>QB>RB>DEF       
+  6wk    -                      WR>TE>RB>QB>DEF        WR>TE>RB>QB>DEF        WR>TE>RB>QB>DEF        WR>TE>RB>QB>DEF       
+  12wk   -                      WR>TE>RB>DEF>QB        WR>TE>RB>QB>DEF        WR>TE>RB>QB>DEF        WR>TE>RB>QB>DEF       
+  never  -                      WR>TE>RB>DEF>QB        -                      WR>TE>RB>DEF>QB        WR>TE>RB>DEF>QB       
+
+  '-' means the order is EXACTLY the shipped one. Anything else is printed in full.
+
+  RATE     top, lag never     top, best lag      what moved it
+  0%       WR                 WR                 nothing
+  5%       WR                 WR                 nothing
+  10%      WR                 WR                 nothing
+  20%      WR                 WR                 nothing
+  30%      WR                 WR                 nothing
+
+  POS         shipped    20%/lag 3     change
+  RB             51.5         49.0       -2.5
+  WR             52.4         59.6       +7.2
+  TE             51.3         57.4       +6.1
+  QB             15.6         47.3      +31.7
+  DEF            18.3         25.3       +7.0
+
+================================================================
+  PICK 127 (round 11)
+================================================================
+  shipped objective ranks: WR>TE>RB>QB>DEF
+
+  LAG    bust=boom=0%           bust=boom=5%           bust=boom=10%          bust=boom=20%          bust=boom=30%         
+  1wk    -                      -                      -                      WR>TE>QB>RB>DEF        WR>QB>TE>RB>DEF       
+  3wk    -                      -                      -                      -                      WR>QB>TE>RB>DEF       
+  6wk    -                      -                      -                      -                      -                     
+  12wk   -                      -                      -                      -                      -                     
+  never  -                      -                      -                      -                      -                     
+
+  '-' means the order is EXACTLY the shipped one. Anything else is printed in full.
+
+  RATE     top, lag never     top, best lag      what moved it
+  0%       WR                 WR                 nothing
+  5%       WR                 WR                 nothing
+  10%      WR                 WR                 nothing
+  20%      WR                 WR                 nothing
+  30%      WR                 WR                 nothing
+
+  POS         shipped    20%/lag 3     change
+  RB             51.5         49.0       -2.5
+  WR             57.0         62.4       +5.4
+  TE             53.9         57.5       +3.5
+  QB             17.9         46.0      +28.1
+  DEF            16.9         19.8       +2.8
+
+================================================================
+  VERDICT
+================================================================
+  25 cells swept per pick, 5 picks.
+  orderings that differ from the shipped one: 60
+  cells where the TOP position changes: 10
+
+  The top position is the only part that decides a pick. A reorder
+  further down the list changes nothing Justin does.
+
+  AND OF THOSE TOP CHANGES, WHAT CAUSED THEM:
+    the magnitude knob alone (visible at lag 'never',
+    where the lineup is never allowed to react):        2 of 25
+    DETECTION, the channel actually under test:          0 of 25
+
+  Only the second row is evidence about the missing model. The first
+  is evidence about how hard I turned a dial I invented.

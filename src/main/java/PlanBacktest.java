@@ -52,7 +52,23 @@ public class PlanBacktest {
     // is the units bug that once printed 0.0 for defences.
     private static final Map<Boolean, Double> streamedDefence = new HashMap<>();
 
+    /**
+     * Override the streamed-defence rate, for the sensitivity check only.
+     *
+     * WireRateStress showed the shipped 8.75 is chosen by sorting undrafted
+     * defences on their REALISED season and averaging the best quarter of them,
+     * which is a choice made after the season. Hindsight-free streaming policies
+     * measured on the same five seasons return 7.5-7.7. This knob exists so the
+     * backtest can be rerun at the honest rate instead of the number being
+     * argued about; it is absent by default and the default path is untouched.
+     *
+     *   ./gradlew run -Pmain=PlanBacktest -PwireDef=7.69
+     */
     static synchronized double streamedDefencePerWeek(){
+        String override = System.getProperty("wireDef");
+        if(override != null && !override.isBlank()){
+            return Double.parseDouble(override.trim());
+        }
         return streamedDefence.computeIfAbsent(LeagueActuals.enabled(), scoring -> {
             try {
                 return WeeklyStarterValue.wireRates(

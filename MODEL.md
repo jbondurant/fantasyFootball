@@ -4850,3 +4850,139 @@ reaches Tuesday's tooling.
 trailing picks are artifacts. It is not a fair entrant and must not be read as
 the floor of the model field. The legitimate mixed entrant is `ModelA front + SS
 back` at 1862.
+
+## The two channels the objective cannot see, bounded (2026-08-31)
+
+Justin, the night before the draft: *"a round 11 pick should also likely be a
+wr/rb, not because I expect many starters to get injured, but because I expect
+some starters to bust, and some bench players to boom."* The mechanism he names
+is real and it is in the code: `WeeklyStarterValue.oneWeek()` drops a starter
+only when he is drawn `!up()` (injury, line 189) and ranks the survivors by
+`Draw::expected` (line 198), the preseason projection, which never updates.
+
+The question that pays before a draft is not whether the channel is missing. It
+is whether adding it would change a pick. `BustBoomSweep` bounds that, and the
+answer is no.
+
+### The sweep, and why it is a bound rather than a model
+
+`BustBoomValue` is `WeeklyStarterValue` with a bust/boom level attached to each
+player-season and the season split in two: weeks 1..LAG set the lineup on the
+preseason projection exactly as today, weeks LAG+1..17 set it on the realised
+level. Three free parameters - bust rate, boom rate, detection lag - swept over
+5 x 5 cells at each of picks 79, 90, 103, 114 and 127.
+
+It is deliberately over-powered in three ways, all pushing the channel's value
+UP: detection after the lag is **perfect**, the bust/boom multiplier is applied
+**on top of** a drawn historical season that already contains busts and booms,
+and promotion is **free** - no roster churn, no waiver cost, no week lost to a
+wrong call. A bound that survives all three survives an honest model.
+
+At bust = boom = 0 it reproduces `WeeklyStarterValue` **exactly** - 2452.6
+against 2452.6, gap 0.000 - because the bust/boom uniforms are drawn from a
+separate generator that leaves the shipped draw sequence untouched. That is
+checked at runtime in the tool and again in `BustBoomValueTest`.
+
+### The result, and the decomposition that matters
+
+Of 125 cells, 60 reorder something and **10 change the top position**. All ten
+are at pick 103, all RB -> WR, all at rates of 20% or more.
+
+But the top-position changes appear at lag **"never"** - where the lineup is
+forbidden to react at all. So they are not the missing channel. They are the
+magnitude knob: multiplying realised rates by 0.60 and 1.60 changes what men
+SCORE, quite apart from who gets STARTED. Separating the two:
+
+```
+the magnitude knob alone (visible at lag 'never')     2 of 25
+DETECTION, the channel actually under test            0 of 25
+```
+
+**Detection never changes the top position at any of Justin's picks, at any
+bust rate to 30% and any lag from one week to never.** The detection lag was
+predicted to be the hinge; it is not, because the thing it is a hinge on turns
+out not to move. Even the two knob-driven flips are at a pick where RB and WR
+start 2.3 points apart (54.7 against 52.4), which is inside anything.
+
+This agrees with two measurements already in the repo, from different
+directions. `StarterContribution`'s bust dial (2026-08-29) sorts its lineup by
+`Player::perGame` **after** the bust scaling - perfect detection at zero lag,
+the most generous corner this sweep contains - and the tight end lost in all
+thirty worlds. And the boom channel was measured directly on real outcomes
+(2026-08-30): a round-10 back outscores a top-twelve back 10% of the time, worth
+6.1 points in expectation, against a 125-point bar.
+
+### Where the value went instead: the quarterback
+
+The one large number in the sweep is the bench QB, which gains +28 to +32 points
+in every cell at 20% / lag 3, moving from fifth to second. It is structural -
+one quarterback slot means a boom quarterback displaces the starter outright -
+and it is also the most over-powered cell in the grid, since perfect detection
+of a quarterback's level is worth more than perfect detection of anyone else's.
+It never reaches the top of the ranking and so never changes a pick. Worth
+remembering as the place to look first if this is ever built properly.
+
+## The streamed-defence rate is chosen after the season (2026-08-31)
+
+This one **does** move a conclusion, and it is the more important of the two.
+
+`PlanBacktest.streamedDefencePerWeek()` returns 8.75 a week from
+`WeeklyStarterValue.wireRates()`. `LateRoundValue` turns it into "a drafted
+defence is worth -12.9 against streaming one". `wireRates` does two things and
+its comment defends only the first:
+
+1. it picks the candidate pool by **preseason ADP rank** - clean, and decided
+   before the season;
+2. it then sorts those candidates by **realised season rate** and averages the
+   best quarter of them - which is a choice made with the season already run.
+
+Step 2 sets the number. The comment - *"Chosen on expected rate, not on what the
+player went on to score"* - describes step 1 and is silent about step 2. This is
+a softened version of the MAX-over-undrafted-players fault that reversed two
+findings when it was fixed.
+
+`WireRateStress` measures what hindsight-free streaming policies actually
+return on the same five seasons and the same join:
+
+```
+band mean (never touch the wire)          6.41 /wk    no hindsight
+hold best undrafted by ADP, all season    6.44 /wk    no hindsight
+stream on form, react after week 2        7.69 /wk    no hindsight   <-- honest
+stream on form, react after week 4        7.48 /wk    no hindsight
+SHIPPED pooled top quartile               8.75 /wk    RANKS BY REALISED
+ORACLE best undrafted each week          18.99 /wk    the ceiling
+```
+
+The shipped rate is high by about 1.1 a week, roughly 19 points a season. It is
+not absurd - the oracle at 19.0 shows a matchup-driven streamer has room above
+7.7 - but nothing measurable supports it, and it was not chosen by a policy.
+
+### It flips the sign of both defence measurements
+
+The two existing numbers rest on the same 8.75, so correcting it moves both.
+`PlanBacktest` at the shipped rate against the honest one, via the new
+`-PwireDef` override:
+
+```
+                        8.7/wk    7.69/wk
+RUNBOOK committed         1998       1996
+[not legal] no DEF        2007       1988
+streaming's margin          +9         -8
+```
+
+Streaming led by 9 and now trails by 8. Measured against the drafted defence
+directly, on one denominator - same seasons, same feed, same 18 weeks, no
+borrowed constant - a held DEF1-3 returns 135.8 a season against 138.4 for an
+honest stream, a gap of 2.6 with a standard error near 9.
+
+**All of these are the same finding: it is a wash.** The claim that survives is
+not "-12.9, so let the defence fall" but "drafting against streaming is inside
+the noise in both directions, and a last-round pick is the cheapest spot you
+own". `RUNBOOK.md` already says the right thing - *"you MUST draft one... Stream
+by SWAPPING it during the season, never by skipping the pick"* - and its
+round-by-round table is flat from round 14 to 16. **Nothing in the runbook
+changes.** What changes is that streaming is no longer free upside, and the
+-12.9 must not be quoted again.
+
+Full output: `data/wire-rate-stress-2026-08-31.txt`,
+`data/bust-boom-sweep-2026-08-31.txt`.

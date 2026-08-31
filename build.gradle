@@ -86,6 +86,9 @@ tasks.register('run', JavaExec) {
      // leaves only the backtest columns, which is the fast way to inspect one
      // constant. 'window' overrides the shrinkage neighbourhood.
      'plans', 'window',
+     // PlanBacktest.streamedDefencePerWeek - override the streamed-defence rate
+     // for the WireRateStress sensitivity check. Absent by default.
+     'wireDef',
      // The season harvest (EraIngest / EraSample / RegimeShift / FormatProxyAudit).
      // 'rounds' how many rounds the replayed draft runs, 'format' which FFC
      // board, 'planSample' scores a seeded subset instead of all 415,650 plans,
