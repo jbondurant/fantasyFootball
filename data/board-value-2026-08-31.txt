@@ -1,0 +1,56 @@
+
+WHAT EACH POSITION IS WORTH, GIVEN WHAT I ALREADY HOLD
+
+16 seasons. mean season points by positional rank, marginal against
+the lineup this league starts. no weeks, no injury channel.
+
+holding Purdy (QB9) and Tuten (RB23) from the start.
+
+PICK                RB      WR      TE      QB     DEF   TAKE
+   7 -> 18           39      21       0       0       -   RB
+  18 -> 31           18      24      26       7       -   TE
+  31 -> 42           20      12       0       3       -   RB
+  42 -> 55           13       8      16      23       -   QB
+  55 -> 66            2      16      11       0       -   WR
+  66 -> 79            1      11       2       0       -   WR
+  79 -> 90            7       3       0       0       -   RB
+  90 -> 103           0       8       0       0       -   WR
+ 103 -> 114           0       0       0       0       -   RB
+ 114 -> 127           0       0       0       0       -   RB
+ 127 -> 162           0       0       0       0       -   RB
+ 162 -> 175           0       0       0       0       -   RB
+ 175 -> 186           0       0       0       0       -   WR
+ 186 -> end           0       0       0       0       -   DEF
+
+the shape this produces: RB TE RB QB WR WR RB WR RB RB RB RB WR DEF
+
+Each cell is what taking that position NOW is worth over taking it
+at my next pick, in lineup points, given the men I already hold. A
+second quarterback prices near zero on his own, without being told to.
+
+================================================================
+IS IT ANY GOOD?
+================================================================
+
+PHASE 4: every strategy on every season's REAL outcomes
+lineup QB/RB2/WR3/TE/FLEX2/DEF, 18 weeks, best legal lineup each week
+a defence slot the roster cannot fill is STREAMED at 8.7 points a week
+
+STRATEGY                     2021     2022     2023     2024     2025      mean    vs ADP    wins
+starter-sum (1-16)           1870     1947     2010     1985     2133      1989      +305     5/5
+best-nine (Model A)          1553     1731     2060     1749     1802      1779       +95     3/5
+RUNBOOK committed            2121     1861     2188     1907     2173      2050      +366     5/5
+RB-heavy folk rule           2014     1897     2185     1844     2091      2006      +322     5/5
+RUNBOOK front + SS back      2069     1850     2160     1895     2204      2036      +352     5/5
+ModelA front + SS back       1896     1943     2179     1989     1979      1997      +314     4/5
+[not legal] no DEF drafted     2132     1853     2191     1954     2166      2059      +376     5/5
+best available by ADP        1276     1689     1550     1839     2065      1684        +0     0/5
+board value                  2012     1886     1827     1781     2023      1906      +222     3/5
+
+Every strategy drafts from the same board at the same picks, so the only
+difference between two rows is the order of positions. 'best available by ADP'
+is the null hypothesis: never think about position at all.
+
+CAVEAT, and it is not small: the starter-sum sequence came from a model whose
+outcome pool was built from these same seasons. Its distributions saw them, even
+though this scoring does not. Read its row as flattered, and a narrow win as none.
