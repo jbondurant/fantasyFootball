@@ -166,6 +166,34 @@ public class ObjectiveAudit {
         // again. Printing the seasons separately is what tells them apart, so
         // it is printed always rather than when somebody remembers to look.
         boolean plans = !"false".equals(System.getProperty("plans"));
+        // The ranks are an index; what the objective actually adds up is the
+        // player they point at. Print the points, because "DEF13" and "87.2"
+        // are the same fact and only one of them can be compared to a marginal.
+        System.out.printf("%nWHAT AN UNFILLED SLOT IS WORTH, IN POINTS%n%n");
+        System.out.printf("%-32s %8s %8s %8s %8s %8s%n", "REPLACEMENT RANKS", "QB", "RB",
+                "WR", "TE", "DEF");
+        Map<String, Map<Position, Integer>> rankSets = new LinkedHashMap<>();
+        rankSets.put("SHIPPED (InsuranceTest)", shippedRanks);
+        rankSets.put("best left at my last pick", ReplacementRanks.atMyLastPick(configuration));
+        rankSets.put("starters only (textbook VORP)", ReplacementRanks.mandatory(configuration));
+        for(Map.Entry<String, Map<Position, Integer>> entry : rankSets.entrySet()){
+            Map<Position, Double> values = new RiskDiscountedValue(planner.points(),
+                    shippedMissed, entry.getValue(), shippedTrust,
+                    RiskDiscountedValue.NEIGHBOURHOOD, sharks).unfilledValues();
+            System.out.printf("%-32s", entry.getKey());
+            for(Position position : ALL){
+                int rank = entry.getValue().getOrDefault(position,
+                        position == Position.DEF ? 13 : 24);
+                System.out.printf(" %4d:%-3.0f", rank, values.getOrDefault(position, 0.0));
+            }
+            System.out.println();
+        }
+        System.out.println("\nrank:points. The quarterback number is four times the"
+                + " running back number and\nthat is not a units error - QB21 really"
+                + " does project near 280 in a six-point-TD\nleague while RB61 projects"
+                + " near 50. It is what SUPPRESSES quarterback value:\nthe marginal is"
+                + " the gap to replacement, and at quarterback the gap is small.");
+
         System.out.printf("%nWHAT EACH CONSTANT IS WORTH%n%n");
         System.out.printf("%-15s %-30s", "CONSTANT", "VARIANT");
         for(String season : seasons){
