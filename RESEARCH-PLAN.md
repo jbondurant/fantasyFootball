@@ -324,3 +324,142 @@ nothing in the next month of work will change a pick either.
 
 Model A is byte-identical after all of this: plan [RB, WR, RB, WR, WR, WR, TE,
 QB, QB]. Nothing here reaches Tuesday's tooling.
+
+## The pairwise-odds surface: which smoother, and how to know (2026-08-31)
+
+Justin's model - preseason ADP in, end-of-season points out, nothing from the
+weeks between - and the three questions about it. Everything below is from
+`PairwiseOdds`, on the 13 seasons that pass the existing join gate:
+
+    ./gradlew run -Pmain=PairwiseOdds -q        # ~20 s
+    data/pairwise-odds-2026-08-31.txt
+
+    13 seasons (2013-2025), 2,181 drafted men, 55,840 same-position pairs,
+    4 exact ties dropped. Caps QB 32, RB 60, WR 72, TE 32.
+
+### 1. The smoother: isotonic, then a moving average in LOG rank
+
+    strength s(rank)  = logit(win rate against the whole position that season),
+                        forced non-increasing by pool-adjacent-violators,
+                        then averaged over a window of constant width in log rank
+    P(P beats Q)      = logistic( alpha * (s(P) - s(Q)) ),  alpha fitted per position
+
+**Not a surface in two pick numbers - a curve in one.** A 2-D fit has to be
+taught three things it will otherwise get wrong in front of him at the draft:
+P(r, r) = 0.5, P(P, Q) = 1 - P(Q, P), and transitivity. The latent form gets all
+three for free, and it turns a two-dimensional fit into a one-dimensional curve,
+which is where the sample size goes. `PairwiseOddsTest` pins the coherence.
+
+**It cannot jitter, and that is a construction, not a hope.** PAVA output is
+non-increasing by definition, and a moving average of a non-increasing sequence
+is non-increasing - including the log-space one, whose window widens as it
+slides, because both window edges move right. Tested rather than asserted.
+
+**Against your instinct - a logistic in log pick numbers.** Right link, wrong
+predictor. `logit p = beta*(log Q - log P)` is the special case where the
+strength curve is a pure power law, and that assumption is exactly what erases
+the cliff. It is the WORST of the family on held-out log loss (0.60895, every
+isotonic variant beats it) and it is visibly wrong at both ends of the board:
+
+    RB       vs RB6:  ISO   LOG.25  FIXED8   LINE      vs RB18:  ISO  LOG.25  LINE
+    RB12             47%     44%     42%     38%
+    RB18             32%     28%     33%     31%
+    RB24             25%     23%     25%     27%                 42%    44%    45%
+    RB48             13%     13%     14%     18%                 24%    28%    33%
+    RB60             11%     11%     11%     16%                 21%    24%    29%
+
+The power law is 9 points too pessimistic about RB12 against RB6 - the pick
+Justin makes at 7 and 18 - and 5-7 points too generous about deep lottery
+tickets. One parameter cannot bend twice.
+
+### 2. Keeping the cliff: put the window in log rank, not in ranks
+
+You asked whether to sacrifice smooth-monotone or cliff-preserving. **Neither.
+The two are only in conflict because a fixed-width window is the wrong window.**
+Ranks are not equally informative: eight ranks either side is a reasonable
+neighbourhood at RB48 and a catastrophe at RB6, where it averages the cliff
+away. A window of constant width in LOG rank is narrow at the top and wide in
+the tail, which is the shape the problem has.
+
+The evidence is the held-out calibration table, RB, observed minus predicted:
+
+    EARLY \ LATE      RB1-12  RB13-24  RB25-36  RB37-48  RB49-60
+    fixed w=8   RB1-12  +3.8%    -5.0%    -0.6%    +0.1%    +0.7%
+    LOG h=0.25  RB1-12  +2.5%    -2.3%    +0.9%    +1.6%    +0.6%
+
+**The -5.0% is the cliff being smeared**: a fixed window makes the model give a
+tier-two back a 5-point better chance against a tier-one back than he really
+has. The log window halves that to -2.3%, and it costs nothing measurable in
+held-out log loss (0.60298 against 0.60202, both far inside the bar). Take
+`h = 0.25` in natural logs of rank - at RB6 that is ranks 5-8, at RB48 it is
+ranks 37-62.
+
+**What it still does not capture, and it is bounded:** the bottom-right diagonal
+stays at +5.0%. Deep-against-deep pairs (RB49-60 against RB49-60) are more of a
+coin flip than any single-slope model allows, because late men are more
+VARIABLE, not merely worse - which is the same thing the crossover curve said
+from the other side, "the same prize at longer odds". One curve carries the rest
+of the surface to within a couple of points. If a second dimension is ever added,
+it should be a spread that grows with rank, not more flexibility in the mean.
+
+### 3. The protocol, runnable tonight
+
+**Hold out SEASONS, never pairs.** 55,840 pairs come from 13 seasons; pairs
+inside one are scored on the same realised football. Holding out pairs would
+shrink the error bar by roughly sqrt(4,295) and report a certainty that is not
+there - the same trap that made 480 draws look like 480 observations yesterday.
+Thirteen folds, fit on twelve, score on the thirteenth.
+
+**Score with held-out log loss.** A proper score, so a model cannot buy it by
+being confidently wrong, and it is sensitive to the whole surface rather than to
+one cell. Accuracy is a poor gate here and the table shows why: BUCKET 12, the
+power law and every isotonic variant all land between 67.2% and 67.6%, so
+accuracy cannot tell them apart at all.
+
+**Bar the differences with `PowerBacktest.paired`, clustered on season** - the
+same instrument that prices the 125-point draft bar. Then read the result
+honestly:
+
+    SMOOTHER                  log loss   vs LOG-LIN   SE(seas)   95% bar   beats
+    BUCKET 12 (the old way)    0.60712     -0.00183    0.00421   0.00918    9/13
+    LOG-LINEAR in log rank     0.60895     +0.00000          -         -       -
+    ISOTONIC, no smoothing     0.60589     -0.00306    0.00325   0.00708    8/13
+    ISO + SMOOTH w=8           0.60202     -0.00693    0.00372   0.00811    9/13
+    ISO + LOG-SMOOTH h=0.25    0.60298     -0.00597    0.00372   0.00811   10/13
+    ISO + LOG-SMOOTH h=0.40    0.60295     -0.00600    0.00361   0.00787   10/13
+    ISO + LOG-SMOOTH h=0.90    0.60948     +0.00053    0.00225   0.00490    6/13
+
+**Not one row clears its own 95% bar.** So the honest statement is: at thirteen
+seasons the choice among these smoothers is NOT resolvable on log loss, and
+anyone who reports "w=8 is best" because it has the lowest number is doing
+exactly what the argmax-of-415,650-shapes did. What IS supported is weaker and
+still useful - every member of the isotonic family beats the power law in point
+estimate, the minimum is a broad flat basin from w=5 to w=12 and h=0.25 to 0.40,
+and h=0.90 (nearly a straight line again) is the only setting that loses. Pick
+from the middle of the basin because it is a basin, not because its number won.
+
+**Two things that add power here without adding seasons**, since log loss cannot
+separate them:
+
+- *The sign test.* h=0.25 and h=0.40 beat the power law in 10 of 13 seasons. A
+  consistent sign across folds is evidence a paired t-test on 13 numbers throws
+  away, and it is the right test for a small effect that is always in the same
+  direction.
+- *Calibration by region, not one summary number.* The -5.0% against -2.3% above
+  is a 2.7-point improvement at the one comparison Justin makes with his first
+  two picks, and it is completely invisible in a log loss averaged over 55,840
+  pairs that mostly live deep in the board. **Where a model is wrong matters more
+  than how wrong it is on average.** Gate on the region he drafts in.
+
+### 4. What to build, in one paragraph
+
+Per position: pool every same-season same-position pair over all usable seasons;
+compute each rank's win rate against its own position's field; take the logit;
+run PAVA for a non-increasing curve; smooth with a log-rank window at h = 0.25;
+fit one calibration slope by Newton. Read the surface as
+`logistic(alpha*(s(P) - s(Q)))`. Drop exact ties (there are 4). Fit on positional
+RANK and convert his live ADP pick numbers to positional rank off the board in
+front of him - rank is the stable index across thirteen seasons, pick number is
+not. Report it to him with the deep-against-deep +5% caveat attached, because
+that is the region where the late-round decisions actually are.
+
