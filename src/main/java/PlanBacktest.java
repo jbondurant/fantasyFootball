@@ -44,20 +44,25 @@ public class PlanBacktest {
      * copied out of it becomes a lie. This asks WeeklyStarterValue for the
      * number, so the two can never disagree.
      */
-    private static Double streamedDefence;
+    // Keyed on the scoring in force, not held as one number. The rate is
+    // computed FROM the outcome pool, so it is denominated in whatever units
+    // that pool is scored in - 8.7 a week under pts_half_ppr, 9.0 under the
+    // league's own rules. A single cached value would let a tool that scores
+    // both ways price the wire in one unit and the rosters in the other, which
+    // is the units bug that once printed 0.0 for defences.
+    private static final Map<Boolean, Double> streamedDefence = new HashMap<>();
 
     static synchronized double streamedDefencePerWeek(){
-        if(streamedDefence == null){
+        return streamedDefence.computeIfAbsent(LeagueActuals.enabled(), scoring -> {
             try {
-                streamedDefence = WeeklyStarterValue.wireRates(
+                return WeeklyStarterValue.wireRates(
                         AAAConfiguration.getInstance(),
                         WeeklyStarterValue.pool()).getOrDefault(Position.DEF, 0.0);
             }
             catch(Exception unavailable){
                 throw new RuntimeException("cannot price a streamed defence", unavailable);
             }
-        }
-        return streamedDefence;
+        });
     }
 
     /** Slot 7, keepers at r12 and r13. */

@@ -4215,3 +4215,137 @@ opponent chaos, `-PnoPolicy=true` drops the only expensive strategy.
 
 Model A remains byte-identical at 1812.8 / p10 1784.4, plan
 [RB, WR, RB, WR, WR, WR, TE, QB, QB]. Nothing here reaches Tuesday's tooling.
+
+## Every scoring rule, checked: two more mismatches, and the fix is off (2026-08-30)
+
+`ScoringAudit` found that the backtest grades quarterbacks at four points a
+passing touchdown while the league pays six. `pts_half_ppr` is a single
+precomputed number, so that could not be the only place it disagrees.
+`ScoringRuleAudit` walks all 34 categories in the league's `scoring_settings`
+against what that field measurably applies, and prices each gap for a starter.
+
+### What "standard" means, established rather than assumed
+
+Sleeper's advertised default for a new league and the arithmetic inside
+`pts_half_ppr` are two different things. So the audit first REBUILDS the
+published field from raw components using `LeagueScoringSettings.halfPprFeed()`
+and reports how many real stat lines come back exact:
+
+| season | skill lines exact | defence lines exact |
+|--------|-------------------|---------------------|
+| 2021   | 594 / 603 (fumbles charged) | 32 / 32 |
+| 2022   | 487 / 578 | 30 / 32 |
+| 2023   | 534 / 544 | 30 / 32 |
+| 2024   | 545 / 555 | 31 / 32 |
+| 2025   | 572 / 574 | 30 / 32 |
+
+That reconstruction is the evidence for every "standard" value below, and it
+turned up a fact worth knowing on its own: **the feed did not hold still.** In
+2021 `pts_half_ppr` charged -1 for every fumble; from 2023 it charges none;
+2022 is split between the two. A season total is not a stable unit across the
+harvest, which is the strongest argument for scoring outcomes from components.
+
+### The three mismatches
+
+| rule | league | standard | moves a starter, per season |
+|------|--------|----------|------------------------------|
+| `pass_td` | 6 | 4 | **QB +59.1** |
+| `fum` | -1 | 0 | QB -7.5, RB -2.2, WR -0.9, TE -0.7 |
+| `pts_allow_14_20` | 1 | 0 | **DEF +4.7** |
+
+Every other category agrees exactly. `pass_yd` and `rush_yd` look different at
+machine precision only - Sleeper serves scoring settings as 32-bit floats, so
+0.04 arrives as 0.03999999910593033.
+
+Net effect on a starting player-season, published field against league scoring,
+top 12 QB / 24 RB / 36 WR / 12 TE / 12 DEF pooled over five seasons:
+
+| pos | as graded | league | gap | of which rules | drift |
+|-----|-----------|--------|-----|----------------|-------|
+| QB  | 331.3 | 384.7 | **+53.4** | +51.6 | +1.8 |
+| RB  | 223.0 | 221.4 | -1.6 | -2.2 | +0.6 |
+| WR  | 192.9 | 192.3 | -0.6 | -0.9 | +0.3 |
+| TE  | 153.8 | 153.2 | -0.6 | -0.7 | +0.2 |
+| DEF | 150.5 | 155.2 | **+4.7** | +4.7 | +0.0 |
+
+"drift" is the part the rules do not explain - the 2021/2022 fumble vintage.
+
+### Yes, DEF is affected, and it is a level shift not a re-ranking
+
+The one defensive mismatch is worth +4.7 a season to every defence, because
+holding a team to 14-20 points is a common outcome and the league pays 1 for it.
+Per season the gap runs 3.8 to 5.5 on average, and the top defence is unchanged
+in all five seasons; between 0 and 4 of the top twelve swap adjacent places. So
+**what a defence is worth against a receiver moves; which defence to want does
+not.** Every finding about when to draft a defence was made about a DEF pool
+priced ~5 points a season light - real, and small next to the gaps that argument
+turned on.
+
+Note the projection side is NOT corrected and should not be: `SleeperProjections
+.scoreStatLine` falls back to `pts_half_ppr` for a defence because the
+projection feed publishes only a stub for one (no `def_td`, no points-allowed
+bands), so there is nothing to rescore from.
+
+### The corrected path, and why it is off
+
+`LeagueActuals` is the league-scored grader: `seasonPoints`,
+`seasonDefencePoints` and `weeklyPoints` dispatch on `-PleagueScoredActuals`,
+which **defaults to the old pts_half_ppr behaviour**. Off, they return
+byte-identical numbers to the `HistoricalActuals` / `WeeklyActuals` calls they
+replaced - `PlanBacktest` still prints RUNBOOK 1998 and Model A still lands on
+1812.8 / p10 1784.4. `PlanBacktest.board` and `OutcomeDistributions.load` both
+grade through it, so the roster scoring and the streamed-defence price move
+together; the wire rate is cached per flag value because it is denominated in
+whatever the pool is scored in (8.7 a week feed-scored, 9.0 league-scored).
+
+Anything that grades outcomes should call the dispatchers rather than the feed.
+That includes new seasons: one switch then moves the whole harvest.
+
+### What flipping it changes: nothing about the ranking
+
+`ScoringImpactReport` scores everything both ways in one process, and checks
+that both scorings draft the IDENTICAL roster in every season for every strategy
+- so a row's change is a pure re-measurement of one fixed roster, not a
+different plan.
+
+| strategy | as graded | corrected | change |
+|----------|-----------|-----------|--------|
+| RUNBOOK committed | 1998 | **2033** | +35 |
+| RUNBOOK front + SS back | 1977 | 2019 | +41 |
+| starter-sum (1-16) | 1900 | 1942 | +42 |
+| RB-heavy folk rule | 1884 | 1918 | +34 |
+| ModelA front + SS back | 1862 | 1903 | +41 |
+| best available by ADP | 1442 | 1463 | +21 |
+
+**The order is unchanged, top to bottom.** The RUNBOOK keeps first place. But
+its "lead" was never one: paired season by season under the corrected scoring it
+beats `RUNBOOK front + SS back` by 15 points with a paired standard error of 77,
+losing 2 of 5 seasons. That is a tie, and it was a tie before the fix too.
+
+### The bias was real and pointed the way it was said to
+
+Sliding the RUNBOOK's first quarterback from round 10 to each earlier round
+(swapping him with whoever held that pick, so the fourteen positions never
+change) shows the fix is worth +35 to the committed round-10 shape and +51 to
++57 to shapes that take one in rounds 1-3. Taking a quarterback early gains
+~21 points MORE from the fix than taking one late - exactly the direction a
+missing two points per passing touchdown predicts, since an early quarterback
+throws more of them.
+
+It still does not move the answer. The best round is 3 under both scorings, and
+round 3 beats round 10 by 52 points a season with a paired standard error of 54.
+The whole timing curve spans 78 points and the noise on any one comparison is
+the same size.
+
+    ./gradlew run -Pmain=ScoringRuleAudit -q
+    ./gradlew run -Pmain=ScoringImpactReport -q
+    ./gradlew run -Pmain=PlanBacktest -PleagueScoredActuals=true -q
+
+### One row in the table that is not evidence
+
+`best-nine (Model A)` runs Model A over all fourteen picks. Model A optimises
+the starting NINE, which two keepers plus seven picks already fill, so from
+round 8 its objective cannot tell one position from another and its trailing
+quarterbacks are an artefact of a question outside its domain. Read `ModelA
+front + SS back` instead. The row stays because other work is running against
+it.

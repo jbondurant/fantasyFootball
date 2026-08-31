@@ -76,7 +76,11 @@ tasks.register('run', JavaExec) {
      'noPolicy', 'restarts', 'randomShapes', 'tieBand', 'slateRows',
      // LeagueActuals.FLAG - grade outcomes under the league's own scoring
      // instead of Sleeper's pts_half_ppr. Off by default on purpose.
-     'leagueScoredActuals'].each { knob ->
+     'leagueScoredActuals',
+     // ObjectiveAudit - 'plans=false' skips the sixteen-round searches and
+     // leaves only the backtest columns, which is the fast way to inspect one
+     // constant. 'window' overrides the shrinkage neighbourhood.
+     'plans', 'window'].each { knob ->
         if (project.hasProperty(knob)) {
             systemProperty knob, project.property(knob)
         }
