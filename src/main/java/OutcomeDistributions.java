@@ -144,9 +144,13 @@ public class OutcomeDistributions {
 
     /** ADP joined to the weekly series, by normalised name. */
     public static List<Season> load(File adpFile, String season) throws Exception {
-        Map<String, Double> totals = new HashMap<>(
-                HistoricalActuals.pointsBySleeperID(season));
-        totals.putAll(HistoricalActuals.defencePointsBySleeperID(season));
+        // See LeagueActuals: off by default, and identical to the old feed
+        // reads when off. The pool has to move with the backtest, because
+        // PlanBacktest prices a streamed defence out of these same seasons -
+        // grading rosters in league points while pricing the wire in feed
+        // points would be the units bug that once printed 0.0 for defences.
+        Map<String, Double> totals = new HashMap<>(LeagueActuals.seasonPoints(season));
+        totals.putAll(LeagueActuals.seasonDefencePoints(season));
         Map<String, String> idByName = new HashMap<>();
         for(String id : totals.keySet()){
             Player player = Player.getPlayerFromSIDV2(id);
@@ -159,7 +163,7 @@ public class OutcomeDistributions {
         List<Map<String, Double>> weeklyPoints = new ArrayList<>();
         List<Set<String>> weeklyPlayed = new ArrayList<>();
         for(int week = 1; week <= WeeklyActuals.WEEKS; week++){
-            weeklyPoints.add(WeeklyActuals.pointsBySleeperID(season, week));
+            weeklyPoints.add(LeagueActuals.weeklyPoints(season, week));
             weeklyPlayed.add(WeeklyActuals.playedBySleeperID(season, week));
         }
 

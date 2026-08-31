@@ -67,11 +67,40 @@ public class RiskDiscountedValue implements RosterValue {
      */
     private final Map<Position, Double> unfilled = new EnumMap<>(Position.class);
 
+    /**
+     * Half-width of the rank neighbourhood a projection is shrunk toward.
+     *
+     * Hand-chosen on 2026-08-30 when the shrinkage target changed from the
+     * whole position to a local window, and never tested. ObjectiveAudit
+     * measures what the plan does as it varies; TrustCoefficient measures the
+     * trust coefficient that BELONGS with each width, which is the part that
+     * makes the two constants one constant rather than two.
+     */
+    public static final int NEIGHBOURHOOD = 6;
+
     public RiskDiscountedValue(Map<String, Double> projections,
                                Map<Position, Double> positionGamesMissed,
                                Map<Position, Integer> replacementRanks,
                                Map<Position, Double> reliability){
-        Map<String, Double> missed = draftSharks();
+        this(projections, positionGamesMissed, replacementRanks, reliability,
+                NEIGHBOURHOOD, draftSharks());
+    }
+
+    /**
+     * The same objective with its two hand-set inputs exposed: the width of the
+     * rank neighbourhood, and the per-player games-missed table.
+     *
+     * Only an audit should call this. Passing an empty table puts every player
+     * on his position's average, which is the cleanest way to ask what the
+     * per-player injury feed is actually buying.
+     */
+    public RiskDiscountedValue(Map<String, Double> projections,
+                               Map<Position, Double> positionGamesMissed,
+                               Map<Position, Integer> replacementRanks,
+                               Map<Position, Double> reliability,
+                               int window,
+                               Map<String, Double> perPlayerGamesMissed){
+        Map<String, Double> missed = perPlayerGamesMissed;
 
         // A projection is only worth believing as far as its position's
         // preseason ranking has historically predicted the season - 0.63 for
@@ -111,8 +140,8 @@ public class RiskDiscountedValue implements RosterValue {
             }
             List<Double> values = ranked.get(player.position);
             int rank = values.indexOf(entry.getValue());
-            int from = Math.max(0, rank - 6);
-            int to = Math.min(values.size(), rank + 7);
+            int from = Math.max(0, rank - window);
+            int to = Math.min(values.size(), rank + window + 1);
             double sum = 0;
             for(int i = from; i < to; i++){
                 sum += values.get(i);

@@ -141,6 +141,22 @@ public class PolicyBacktest {
     static double runPolicy(PlanBacktest.Board board,
                             Map<String, List<OutcomeDistributions.Season>> pool,
                             int scenarios, List<Position> plan){
+        return runPolicy(board, pool, scenarios, plan, null);
+    }
+
+    /**
+     * The same policy against a supplied objective, for auditing one.
+     *
+     * ObjectiveAudit needs to run this season after season with the risk
+     * objective's constants varied one at a time, and it cannot do that through
+     * -PriskObjective because that builds exactly one configuration. A null
+     * override keeps the flag behaviour, so every existing caller is unchanged.
+     */
+    static double runPolicy(PlanBacktest.Board board,
+                            Map<String, List<OutcomeDistributions.Season>> pool,
+                            int scenarios, List<Position> plan,
+                            java.util.function.Function<Map<String, Double>, RosterValue>
+                                    override){
         Map<String, Position> positionOf = new HashMap<>(board.positionOf());
         Map<String, Integer> tierOf = new HashMap<>();
         Map<Position, Integer> next = new EnumMap<>(Position.class);
@@ -154,7 +170,8 @@ public class PolicyBacktest {
         // out of risk-discounted projections, a definition with three measured
         // numbers rather than a simulation with ten judgement calls. It had
         // never been backtested; this is that run.
-        RosterValue value = Boolean.getBoolean("riskObjective")
+        RosterValue value = override != null ? override.apply(expected)
+                : Boolean.getBoolean("riskObjective")
                 ? riskValue(expected)
                 : new WeeklyStarterValue(positionOf, tierOf, pool, wireFrom(pool),
                         expected, scenarios, 424_242L);

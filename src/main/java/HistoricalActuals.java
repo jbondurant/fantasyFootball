@@ -42,6 +42,42 @@ public class HistoricalActuals {
         return points;
     }
 
+    /**
+     * Actual season points scored under the LEAGUE's settings, skill and
+     * defence together.
+     *
+     * pointsBySleeperID returns Sleeper's pts_half_ppr, which is a FOUR-point
+     * passing touchdown. This league pays six. Comparing a league-scored
+     * projection (HistoricalProjections.leaguePointsBySleeperID) against a
+     * pts_half_ppr actual therefore understates every quarterback's season by
+     * roughly sixty points and makes quarterback projections look worse than
+     * they are - the same class of units error that once printed 0.0 for
+     * defences. Anything joining projection to outcome wants this method.
+     */
+    public static Map<String, Double> leaguePointsBySleeperID(String season){
+        LeagueScoringSettings scoring =
+                SleeperLeague.getSeriousLeague().league.leagueScoringSettings;
+        Map<String, Double> points = new HashMap<>();
+        for(String data : new String[]{raw(season), rawDefence(season)}){
+            for(JsonElement element : JsonParser.parseString(data).getAsJsonArray()){
+                JsonObject row = element.getAsJsonObject();
+                JsonObject stats = row.getAsJsonObject("stats");
+                if(stats == null || !row.has("player_id")){
+                    continue;
+                }
+                points.put(row.get("player_id").getAsString(),
+                        SleeperProjections.scoreStatLine(stats, scoring));
+            }
+        }
+        return points;
+    }
+
+    static String rawDefence(String season){
+        String url = "https://api.sleeper.app/stats/nfl/" + season
+                + "?season_type=regular&position[]=DEF&order_by=pts_half_ppr";
+        return InOutUtilities.getCachedForever(url, "sleeperActualsDef" + season);
+    }
+
     /** sleeper id -> games actually played that season. */
     public static Map<String, Integer> gamesPlayedBySleeperID(String season){
         JsonArray rows = JsonParser.parseString(raw(season)).getAsJsonArray();

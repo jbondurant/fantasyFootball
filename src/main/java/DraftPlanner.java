@@ -26,6 +26,22 @@ import java.util.Set;
  * the score is the best legal nine - so an out-of-game keeper "costs a round
  * 9" only emergently, by benching my weakest pick.
  *
+ * DOMAIN: ROUNDS 1-7 ONLY. Justin, 2026-08-30: "Model A pretends we take qb
+ * Purdy and rb Tuten, at round 8 and 9, just for calculation purposes specific
+ * to my specific keeper situation. However, Model A should not be used after
+ * round 7." The best legal nine is the nine non-DEF starting slots, and the two
+ * keepers sit on the roster from the start, so two keepers plus seven picks
+ * fills those nine exactly. From round 8 the objective has nothing left to
+ * distinguish and the trailing positions it prints - the "QB, QB" on the end of
+ * [RB, WR, RB, WR, WR, WR, TE, QB, QB] - are an artifact of indifference, not a
+ * recommendation. DraftNight:131 says the same thing at the table: THE STARTING
+ * NINE IS FULL.
+ *
+ * So scoring this model as a full-draft strategy measures nothing. The
+ * "best-nine (Model A)" row in PlanBacktest.STRATEGIES, 1627, is this model run
+ * outside its domain and is not evidence about its quality; the honest mixed
+ * entry is "ModelA front + SS back", which uses it only for the front seven.
+ *
  * Risk is availability risk only, and it is tunable: branches are ranked by
  * mean - lambda * (mean - p_q), lambda 0 = pure expectation. The snipe
  * decomposition prints, for every position at every pick, the probability the

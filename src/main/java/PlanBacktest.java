@@ -159,9 +159,12 @@ public class PlanBacktest {
     }
 
     public static Board board(File adpFile, String season) throws Exception {
-        Map<String, Double> totals = new HashMap<>(
-                HistoricalActuals.pointsBySleeperID(season));
-        totals.putAll(HistoricalActuals.defencePointsBySleeperID(season));
+        // Graded through LeagueActuals, not the raw feed. With the flag off
+        // these are exactly HistoricalActuals/WeeklyActuals; with
+        // -PleagueScoredActuals=true the outcome is scored under the league's
+        // own rules, which pay 6 for a passing touchdown rather than 4.
+        Map<String, Double> totals = new HashMap<>(LeagueActuals.seasonPoints(season));
+        totals.putAll(LeagueActuals.seasonDefencePoints(season));
         Map<String, String> idByName = new HashMap<>();
         for(String id : totals.keySet()){
             Player player = Player.getPlayerFromSIDV2(id);
@@ -220,7 +223,7 @@ public class PlanBacktest {
         }
         List<Map<String, Double>> weekly = new ArrayList<>();
         for(int week = 1; week <= WeeklyActuals.WEEKS; week++){
-            weekly.add(WeeklyActuals.pointsBySleeperID(season, week));
+            weekly.add(LeagueActuals.weeklyPoints(season, week));
         }
         return new Board(season, ids, positionOf, weekly);
     }

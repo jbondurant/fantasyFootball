@@ -1,0 +1,93 @@
+harness check: at jitter 0, slot 7, every strategy and the policy reproduces its old
+single-slot score exactly (5 seasons x 9 strategies).
+opponent worlds: a top-100 player moves 13.4 selections on average;
+the first quarterback goes at 33 against 19 on the flat ADP board.
+
+POWER BACKTEST - how big does a gap have to be to mean anything?
+5 seasons x 12 slots x 8 opponent worlds = 480 paired draws, jitter 1.00
+baseline: RUNBOOK committed. every strategy sees the identical draws (common random numbers).
+
+STRATEGY                    mean   vs RUN  SE(iid) SE(seas)   95% bar     wins
+starter-sum (1-16)          1914      -93      8.4     44.0       122      30%
+best-nine (Model A)         1714     -293      7.1     39.4       109       4%   REAL
+RUNBOOK committed           2007       +0      0.0      0.0         0       0%   <- baseline
+RB-heavy folk rule          2046      +39      5.8     26.5        74      60%
+RUNBOOK front + SS back     2008       +1      4.7     10.2        28      51%
+ModelA front + SS back      1974      -33      7.1     33.7        94      41%
+[not legal] no DEF drafted    2017       +9      0.9     10.0        28      60%
+best available by ADP       1426     -581     10.4     63.3       176       0%   REAL
+starter-sum POLICY          1910      -97     10.0     73.3       204      37%
+
+SLOT 7 ONLY (Justin's seat), 40 draws:
+STRATEGY                    mean   vs RUN SE(seas)   95% bar
+starter-sum (1-16)          1880     -126     38.4       107   REAL
+best-nine (Model A)         1703     -303     46.5       129   REAL
+RUNBOOK committed           2006       +0      0.0         0   <- baseline
+RB-heavy folk rule          2053      +47     35.5        98
+RUNBOOK front + SS back     2000       -6     15.3        43
+ModelA front + SS back      1958      -47     35.9       100
+[not legal] no DEF drafted    2015       +9     10.0        28
+best available by ADP       1417     -589     66.0       183   REAL
+starter-sum POLICY          1898     -108     72.1       200
+
+
+MINIMUM DETECTABLE DIFFERENCE
+The number a challenger must beat the RUNBOOK by before we are entitled
+to believe it. Clustered on season, 4 degrees of freedom.
+
+   significance bar (95%, two-sided)      109 points   [range 28 - 204]
+   detectable at 80% power                146 points   [range 37 - 273]
+
+   the OLD instrument's bar               277 points   (5 seasons, seat 7, fixed opponents)
+   this design is 2.5x sharper.
+
+Every gap the repo has ranked strategies on - 30 to 150 points - sat inside the
+old bar. Nothing smaller than the new one is evidence either.
+
+WHERE THE UNCERTAINTY LIVES
+STRATEGY                 sd(season)   sd(draw)     SE now   SE floor
+starter-sum (1-16)               97        163       44.0       43.4
+best-nine (Model A)              87        136       39.4       38.9
+RB-heavy folk rule               58        115       26.5       26.0
+RUNBOOK front + SS back          20        102       10.2        9.0
+ModelA front + SS back           74        141       33.7       33.1
+[not legal] no DEF drafted         22          0       10.0       10.0
+best available by ADP           140        191       63.3       62.7
+starter-sum POLICY              163        164       73.3       72.9
+
+sd(season) is the part of a paired difference that is a property of the
+football year itself; sd(draw) is seat and opponent luck. Slots and worlds
+average the second down and cannot touch the first, so 'SE floor' is what this
+design would still have with infinitely many slots and opponent worlds on
+these five seasons.
+
+HOW MANY SEASONS WOULD IT TAKE?
+bar to call a gap real, at 12 slots x 8 worlds a season:
+   seasons           5        8       10       12       17
+   95% bar         104       70       60       53       43
+
+(FantasyPros half-PPR ADP starts in 2018 and Sleeper actuals reach 2009, so
+eight clean seasons and up to seventeen with a measured format proxy are
+reachable - that column is the return on the harvest.)
+
+
+WHICH ORDERINGS SURVIVE
+row minus column, in points. + / - marks a gap past that pair's own 95%
+clustered bar; upper case marks one that also survives Bonferroni over all 36 pairs.
+
+                             1     2     3     4     5     6     7     8     9
+ 1 starter-sum (1-16)        .  200*  -93  -132   -94   -60~ -103   488*    4 
+ 2 best-nine (Model A)   -200~     . -293~ -331- -294~ -260- -302~  288* -196~
+ 3 RUNBOOK committed       93   293*     .  -39    -1    33    -9   581+   97 
+ 4 RB-heavy folk rule     132   331+   39      .   37    71    29   620+  136 
+ 5 RUNBOOK front + SS ba   94   294*    1   -37      .   34    -8   582+   98 
+ 6 ModelA front + SS bac   60*  260+  -33   -71   -34      .  -42   548*   64 
+ 7 [not legal] no DEF dr  103   302*    9   -29     8    42      .  591+  106 
+ 8 best available by ADP -488~ -288~ -581- -620- -582- -548~ -591-     . -484~
+ 9 starter-sum POLICY      -4   196*  -97  -136   -98   -64  -106   484*     .
+
+   + / -  past this pair's 95% bar AND past the all-pairs bar
+   * / ~  past its own 95% bar only - one of these is expected by chance
+   blank  indistinguishable at this sample size
+
+ran in 7.9 s on 8 cores.
