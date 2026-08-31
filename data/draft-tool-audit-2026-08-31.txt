@@ -1,0 +1,61 @@
+AUDIT: DraftNight and LiveLateRounds against TRAPS.md
+Run 2026-08-31, the night before the draft. These are the two tools Justin
+will actually have open, so a trap live in them matters more than one anywhere
+else in the repo.
+
+CLEARED - and the biggest one is cleared for a reason worth knowing
+
+C13, the hindsight waiver-wire rate. NOT PRESENT in either tool.
+  wireRates() - which picks its pool by preseason rank and then averages the
+  best REALISED quarter - is called only by PlanBacktest.streamedDefencePerWeek.
+  WeeklyStarterValue.forCurrentBoard, which is what both live tools construct,
+  builds its wire from PROJECTIONS at the replacement rank instead:
+      wire.put(pos, projections.get(ids.get(index)) / 17.0)
+  That is hindsight-free. Verified by running both tools with -PhonestWire=true
+  and getting byte-identical output: the flag overrides a method the live path
+  never calls. The contamination is confined to the backtest.
+
+B8-B11, league scoring. NOT PRESENT. Both tools value men from PROJECTIONS,
+  which are built with this league's own settings including the 6-point passing
+  touchdown. The 4-versus-6 bug was in how OUTCOMES were graded, which is a
+  backtest concern. Nothing Justin sees tomorrow is scored at 4.
+
+A4/A5, keepers and roster size. CORRECT. LiveLateRounds seeds its roster from
+  planner.myKeeperIDs() and prints "my roster: 1QB 1RB" before the draft opens,
+  so Purdy and Tuten are on the roster and off the board.
+
+F26, Model A out of domain. CORRECTLY SCOPED, and it says so out loud:
+  "Round 1 is Model A's game - use DraftNight. This tool is for rounds 8+."
+
+A6, the free wire. DELIBERATE, not a trap. FREE_WIRE defaults on, so an
+  unfilled slot is filled from the wire at no roster cost. Turning it off
+  (-PnoFreeWire) moves every number a long way - a tight end goes 56.5 to
+  146.6 - but barely moves the ORDER, and the current setting is Justin's own
+  correction: the bench is fungible, you drop your least useful man and add
+  from the wire the same day, so the spot is not an extra cost at the margin.
+
+LIVE RISK - one, and it is latent rather than firing
+
+A1/A2, the quarterback cap. LiveLateRounds HAS NO CAP. It prices all five
+  positions at every pick, and with Purdy already held it puts Josh Allen at
+  ADDS 77.7 - not zero, because Allen out-projects Purdy and would take the
+  slot. The model is not wrong about that. But nothing stops the tool
+  recommending a quarterback, and drafting one would leave three on a
+  one-quarterback roster.
+  Not firing at pick 7: QB survives at 100%, so LOSS IF WAIT is 0.2 and the
+  verdict is "wait - he keeps". The risk is late, when backs and receivers are
+  thin and a quarterback could top the urgency column.
+  THE READ FOR TOMORROW: if LiveLateRounds ever ranks QB first, ignore it.
+  LiveBoard, which routes every candidate through RosterRules before pricing
+  it, refuses the same pick with a reason.
+
+DraftPlanner.worthTaking counts drafted quarterbacks only and cannot see a kept
+  one, so its cap permits three. Harmless in the rounds DraftNight uses it for:
+  Model A takes a quarterback only at slots 8 and 9, which are past the starting
+  nine and are its indifferent region.
+
+NOT AUDITED
+
+DraftNight's per-pick output. It is interactive - warm in 39.3s, then it waits
+  on stdin - so its mid-draft behaviour could not be exercised here without a
+  live board. Its rounds 1-7 engine is Model A, audited above.
