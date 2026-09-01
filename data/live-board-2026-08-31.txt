@@ -15,9 +15,9 @@ THE PLAN says: RB
 
 0 men actually gone; the 6 picks before mine simulated 200 times
 POS   LIKELIEST THERE            RANK   ODDS ADDS NOW VS WAIT     END  SWING     NEXT CLIFF
-RB    James Cook                    4    37%    238.5    47.1    2227    11% after RB8 CROSSED 
-WR    CeeDee Lamb                   3    43%    223.6    18.4    2195    12% after WR5 CROSSED 
-TE    Harold Fannin                 1   100%     45.2     0.0    2121    12%      after TE8 
+RB    James Cook                    4    37%    238.5    47.1    2204    12% after RB8 CROSSED 
+WR    CeeDee Lamb                   3    43%    223.6    18.4    2176    12% after WR5 CROSSED 
+TE    Harold Fannin                 1   100%     45.2     0.0    2109    13%      after TE8 
 QB    Josh Allen                      -          -          -   REFUSED: a second QB is only ever a next-year keeper stash (RUNBOOK.md:191), and round 1 is before round 10
 DEF   Los Angeles Rams              1   100%     19.9     0.0    2083    12%     after DEF4 
 

@@ -14,11 +14,11 @@ ROUND  PICK   THE MODEL TAKES            POS  check
 8      90     Matthew Golden             WR   
 9      103    Mark Andrews               TE   
 10     114    Jared Goff                 QB   
-11     127    Dalton Kincaid             TE   
-14     162    Malik Washington           WR   
-15     175    Jalen McMillan             WR   
+11     127    Jalen Coker                WR   
+14     162    Jalen McMillan             WR   
+15     175    Omar Cooper                WR   
 16     186    Kansas City Chiefs         DEF  
 
 FINAL ROSTER
-   {QB=2, RB=4, WR=7, TE=2, DEF=1}  (16 men, keepers included)
+   {QB=2, RB=4, WR=8, TE=1, DEF=1}  (16 men, keepers included)
    legal lineup? yes

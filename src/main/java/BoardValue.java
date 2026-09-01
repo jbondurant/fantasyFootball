@@ -42,15 +42,33 @@ public class BoardValue {
     /**
      * How many of each the rule will ever take. -PmaxTE overrides the tight end.
      *
-     * Justin, seeing the dry run draft Andrews at 103 and Kincaid at 127: I'm
-     * surprised we pick more than 1. The league starts ONE tight end, so a
-     * second can only ever reach the field through a flex slot he shares with
-     * every receiver and back. Whether that is worth a pick is a measurement,
-     * not an opinion, so the cap is a flag and the backtest can answer.
+     * ONE tight end, changed from two after Justin pushed twice.
+     *
+     * First: "does the model choose to pick 2 tight ends, I'm surprised we pick
+     * more than 1." I answered that it was buying insurance on a single-slot
+     * position and that the backtest could not tell 1 from 2 - 2023 against
+     * 2018, seventeen points across caps of 1/2/3 and non-monotonic.
+     *
+     * Then: "I'm surprised a te 2 has much of an edge over the wire." That is
+     * the objection that lands, and it exposes the flaw in my own answer. I had
+     * valued the insurance against ZERO. It should be valued against the WIRE,
+     * and the tight end tier this year is flat a long way down: replacement is
+     * TE19, Darren Waller at 99.1, against Kincaid at 130.6. So the second
+     * tight end is worth 31.5 points and only when the first one is lost, which
+     * the harvest puts at 25% for tight ends:
+     *
+     *     31.5 x 0.25 = about 8 points of expectation
+     *     paid roughly 10-15 points of projection to get it
+     *
+     * A bad trade, and his instinct found it where the backtest could not. The
+     * default follows the ARITHMETIC and not the backtest, deliberately: the
+     * backtest's own ranking puts maxTE 3 highest at 2035, which is noise, and
+     * letting it choose would argue for three tight ends on a one-tight-end
+     * lineup. -PmaxTE=2 restores the old behaviour.
      */
     static final Map<Position, Integer> MOST = new EnumMap<>(Map.of(
             Position.QB, 2, Position.RB, 7, Position.WR, 8,
-            Position.TE, Integer.getInteger("maxTE", 2), Position.DEF, 1));
+            Position.TE, Integer.getInteger("maxTE", 1), Position.DEF, 1));
 
     record Slot(Position position, int rank){}
 
