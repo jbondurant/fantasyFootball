@@ -22,8 +22,23 @@ import java.util.*;
  */
 public class RoundTable {
 
-    /** The committed plan, in the fourteen rounds Justin actually picks. */
-    static final String PLAN = "RB RB RB WR WR WR WR TE WR QB TE QB RB DEF";
+    /**
+     * The plan AS WRITTEN, which is not the string the backtest calls
+     * "RUNBOOK committed".
+     *
+     * Justin, on seeing the old column: how can the plan, selecting 2 QBs in
+     * addition to Purdy, make sense? It cannot, and it was my error to keep
+     * printing it after finding it. RUNBOOK.md:77 makes the round-10
+     * quarterback conditional - "if he is there, else RB/WR" - and :79 offers
+     * round 14 as the ALTERNATIVE to that stash, not an addition. The encoded
+     * string takes both conditionals as certain and adds a tight end at 11, so
+     * it drafts two quarterbacks and a second tight end, neither of which the
+     * document asks for.
+     *
+     * Resolved the way the document resolves them: one stash at 10, round 11
+     * free, round 14 skill.
+     */
+    static final String PLAN = "RB RB RB WR WR WR WR TE WR QB WR RB RB DEF";
 
     public static void main(String[] args) throws Exception {
         Map<String, List<DetectionLag.Man>> wider = NflverseBoards.usable(null);
@@ -65,9 +80,14 @@ public class RoundTable {
         int index = 0;
         for(int round = 1; round <= 16; round++){
             if(round == 12 || round == 13){
-                System.out.printf("%-7d %-10s %-10s %-9s   %s%n", round, "-",
-                        round == 12 ? "TUTEN" : "PURDY", "same",
-                        "keeper - not a pick for either rule");
+                // Printed in BOTH columns, because both rules hold these men
+                // from the first pick. A sixteen-round list that shows them
+                // under the plan and blank under the model reads as though the
+                // model does not have them, and it does - PlanBacktest.keeperIDs
+                // puts them on its roster and off its board before it drafts.
+                String who = round == 12 ? "TUTEN RB" : "PURDY QB";
+                System.out.printf("%-7d %-10s %-10s %-9s   %s%n", round, "kept",
+                        who, who, "held by both - costs this round, not a pick");
                 continue;
             }
             int pick = PlanBacktest.MY_PICKS[index];
@@ -85,6 +105,71 @@ public class RoundTable {
                     plan[index], mode == null ? "-" : mode.toString(), most, seen, spread,
                     mode != null && plan[index].equals(mode.toString()) ? "   <- agree" : "");
             index++;
+        }
+
+        // WHO, not just what. A position is an abstraction; the question at the
+        // table is whether to take this man, and a round-2 tight end means
+        // something different if it is Kelce than if it is the fourth one left.
+        System.out.printf("%n%nWHO THE MODEL ACTUALLY TOOK, BY SEASON%n%n");
+        System.out.printf("%-7s %-6s %s%n", "ROUND", "PICK", "the men, one per board");
+        for(int r = 0; r < 14; r++){
+            int pick = PlanBacktest.MY_PICKS[r];
+            StringBuilder line = new StringBuilder();
+            for(PlanBacktest.Board board : boards){
+                List<String> roster = BoardValue.adaptiveDraft(board, curve, pools,
+                        order.size());
+                int keepers = PlanBacktest.holdKeepers()
+                        ? PlanBacktest.keeperIDs(board).size() : 0;
+                int at = keepers + r;
+                if(at >= roster.size()){
+                    continue;
+                }
+                Player player = Player.getPlayerFromSIDV2(roster.get(at));
+                Position position = board.positionOf().get(roster.get(at));
+                line.append(line.isEmpty() ? "" : ", ")
+                        .append(board.season()).append(" ")
+                        .append(position).append(" ")
+                        .append(player == null ? "?" : player.lastName);
+            }
+            System.out.printf("%-7d %-6d %s%n", r < 11 ? r + 1 : r + 3, pick, line);
+        }
+
+        // WHO, not just what. Justin asked which tight end the model takes at
+        // round 2, and the position alone cannot answer it: taking the best
+        // tight end on the board at 18 is a different decision from taking the
+        // fourth, and only one of them is defensible.
+        int want = Integer.getInteger("round", 2);
+        int wantIndex = want <= 11 ? want - 1 : want - 3;
+        if(wantIndex >= 0 && wantIndex < 14){
+            System.out.printf("%n%s%nWHO THE MODEL ACTUALLY TOOK IN ROUND %d%n%s%n",
+                    "=".repeat(64), want, "=".repeat(64));
+            System.out.printf("%n%-8s %-24s %-5s %s%n",
+                    "SEASON", "THE MAN", "POS", "his rank at that position");
+            for(PlanBacktest.Board board : boards){
+                List<String> roster = BoardValue.adaptiveDraft(board, curve, pools,
+                        order.size());
+                int keepers = PlanBacktest.holdKeepers()
+                        ? PlanBacktest.keeperIDs(board).size() : 0;
+                int at = keepers + wantIndex;
+                if(at >= roster.size()){
+                    continue;
+                }
+                String id = roster.get(at);
+                Position position = board.positionOf().get(id);
+                int rank = 0;
+                for(String other : board.ids()){
+                    if(board.positionOf().get(other) == position){
+                        rank++;
+                        if(other.equals(id)){
+                            break;
+                        }
+                    }
+                }
+                Player player = Player.getPlayerFromSIDV2(id);
+                System.out.printf("%-8s %-24s %-5s %s%d%n", board.season(),
+                        player == null ? id : player.firstName + " " + player.lastName,
+                        position, position, rank);
+            }
         }
 
         System.out.printf("%nA round where the model splits three ways is the model saying the%n"
