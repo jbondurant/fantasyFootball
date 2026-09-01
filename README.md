@@ -40,6 +40,7 @@ fails if one does). Fallbacks are in `RUNBOOK.md`.
 ./gradlew run -Pmain=KeeperEligibility    # who is keeping whom, and for how long
 ./gradlew run -Pmain=WaitOrTake           # take him now, or gamble he lasts a round
 ./gradlew run -Pmain=AdpSnapshot          # record today's ADP; run often before the draft
+./gradlew run -Pmain=MarketMovers       # who the market moved on in the last days, and why Sleeper thinks so (-Pdays -Ptop -PminMove)
 ./gradlew run -Pmain=MockDraftReader -PdraftId=<link>   # archive a shared mock before it vanishes
 ./gradlew run -Pmain=KeeperChooser        # the same question by simulation
 ./gradlew run -Pmain=KeeperChooser -Psims=200   # ...with tighter error bars

@@ -82,6 +82,8 @@ And the live-feed check the build file has always asked for before a draft:
 
     ./gradlew smokeTest
 
+Optional, two minutes: `./gradlew run -Pmain=MarketMovers -q` prints who the market moved on in the last week (projection and Sleeper ADP, the day it happened, what Sleeper's own injury/news data says). The 2026-09-01 report is `data/market-movers-2026-09-01.txt`; the researched causes are `data/market-movers-2026-09-01-causes.md`. The one that matters: Josh Jacobs is on the commissioner exempt list (Sleeper projects him at 80 points now; his ADP still says 35), MarShawn Lloyd starts for Green Bay.
+
 (`./gradlew check` now runs the unit suite AND javadoc's reference check, so
 those two cannot be forgotten. `smokeTest` stays separate on purpose - it hits
 the real Sleeper and FantasyPros APIs, so it belongs before a draft rather than
