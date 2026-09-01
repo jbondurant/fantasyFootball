@@ -180,6 +180,13 @@ public class LiveDraft {
      */
     static void freezeWith(List<String> picks){
         frozen = List.copyOf(picks);
+        // BOTH HALVES OF THE SNAPSHOT, OR NEITHER. A harness's picks are
+        // simulated and have no real owners; leaving frozenOwners null here sent
+        // livePickOwners through to a LIVE network fetch inside tools meant to
+        // be offline, and compared real owners against simulated pick numbers -
+        // a spurious SEAT OWNER MISMATCH on every harness run. Empty means "no
+        // owners to compare", and the check is silent. TRAPS #61.
+        frozenOwners = Map.of();
     }
 
     static void thaw(){

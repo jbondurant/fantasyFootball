@@ -331,4 +331,11 @@ real every time.
     Compare it to the schedule every cycle, say how many picks were compared, and
     tell him to restart. Found by asking "what could still bite tonight that no
     measurement covers".
+61. **A snapshot with two halves and a second freeze path that fills one.**
+    freeze() captured picks and their owners together; freezeWith(), used by
+    every offline harness, captured picks only. The owner half fell through to a
+    live network fetch inside tools meant to run offline and compared real owners
+    against simulated pick numbers. Same fault as the warm-up divergence: one
+    thing assembled two ways. Caught reviewing my own commit within the minute;
+    a harness run would have shown it as a mismatch warning on a clean board.
 
