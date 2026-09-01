@@ -42,6 +42,19 @@ test {
     // scan sources re-run on their own; these two are not.
     inputs.file('DRAFT-READY.md').withPathSensitivity(PathSensitivity.RELATIVE)
     inputs.file('TRAPS.md').withPathSensitivity(PathSensitivity.RELATIVE)
+    inputs.file('DIAGNOSTIC.md').withPathSensitivity(PathSensitivity.RELATIVE)
+
+    // ONE JVM PER TEST CLASS.
+    //
+    // RoomTimingTest passes alone and failed in the full suite, twice, for a
+    // reason two hypotheses did not find: some earlier class leaves global
+    // state behind - a system property, a static cache - and a later class
+    // reads it. That is the same fault family as every population error found
+    // today, and it has now cost a leaked nine-round schedule (ModelAScheduleTest)
+    // and an unknown second leak. Rather than diagnose each one as it appears,
+    // give every class a fresh JVM so there is nothing to leak into. Slower;
+    // the suite already takes nine minutes and correctness is worth it.
+    forkEvery = 1
 }
 
 // Smoke tests: hit the live Sleeper and FantasyPros APIs and check the feeds

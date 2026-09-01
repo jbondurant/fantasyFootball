@@ -23,7 +23,72 @@ public class RoomFidelity {
 
     private static final int[][] BANDS = {{1, 7}, {8, 9}, {10, 13}, {14, 16}};
 
+    /** The last run's mean worst-band gap per position, for the noise floor. */
+    static Map<Position, Double> lastGaps = new EnumMap<>(Position.class);
+
+    /**
+     * THE NOISE FLOOR - what should have been measured first.
+     *
+     * Every comparison between room-model variants today read differences of
+     * 0.5 to 1.0 points in this tool as signal, without once asking how much the
+     * number moves when nothing changes but the dice. This runs the identical
+     * measurement on N different seed sets and reports the spread. A feature
+     * whose effect sits inside that spread is not a finding.
+     *
+     *   ./gradlew run -Pmain=RoomFidelity -PfullRounds=true -Pseeds=5 -q
+     */
+    static void noiseFloor(int seeds) throws Exception {
+        System.setProperty("scheduleRounds", "16");
+        System.setProperty("fullRounds", "true");
+        Map<Position, List<Double>> byPosition = new EnumMap<>(Position.class);
+        java.io.PrintStream real = System.out;
+        for(int s = 0; s < seeds; s++){
+            baseSeed = 31_000L + 1_000_003L * s;
+            lastGaps = new EnumMap<>(Position.class);
+            System.setOut(new java.io.PrintStream(java.io.OutputStream.nullOutputStream()));
+            try {
+                main(new String[0]);
+            }
+            finally {
+                System.setOut(real);
+            }
+            for(Map.Entry<Position, Double> entry : lastGaps.entrySet()){
+                byPosition.computeIfAbsent(entry.getKey(), u -> new ArrayList<>())
+                        .add(entry.getValue());
+            }
+        }
+        real.printf("%nNOISE FLOOR: the same held-out measurement on %d seed sets.%n"
+                + "nothing changes between rows but the dice.%n%n", seeds);
+        real.printf("%-5s %8s %8s %8s %10s%n", "POS", "mean", "min", "max", "spread");
+        for(Position position : new Position[]{Position.RB, Position.WR,
+                Position.TE, Position.QB}){
+            List<Double> values = byPosition.get(position);
+            if(values == null || values.isEmpty()){
+                continue;
+            }
+            double mean = values.stream().mapToDouble(Double::doubleValue).average().orElse(0);
+            double min = values.stream().mapToDouble(Double::doubleValue).min().orElse(0);
+            double max = values.stream().mapToDouble(Double::doubleValue).max().orElse(0);
+            real.printf("%-5s %8.1f %8.1f %8.1f %10.1f%n", position, mean, min, max,
+                    max - min);
+        }
+        real.printf("%nany feature whose held-out effect is smaller than the spread in%n"
+                + "its row was never distinguishable from a different roll of the dice.%n"
+                + "today's feature changes moved these numbers by 0.1 to 1.0 points.%n");
+    }
+
+    /** The base seed the simulated rooms are drawn from; varied to measure noise. */
+    static long baseSeed = 31_000L;
+
+    /** noiseFloor re-enters main for each seed; this stops main re-entering it. */
+    private static boolean measuringNoise;
+
     public static void main(String[] args) throws Exception {
+        if(System.getProperty("seeds") != null && !measuringNoise){
+            measuringNoise = true;
+            noiseFloor(Integer.getInteger("seeds", 5));
+            return;
+        }
         System.setProperty("scheduleRounds", "16");
         // The historical schedule is nine rounds unless this is set, and a
         // nine-round replay cannot say anything about rounds 10-16.
@@ -52,7 +117,7 @@ public class RoomFidelity {
             Map<Position, List<Integer>> sim = new EnumMap<>(Position.class);
             for(int trial = 0; trial < 30; trial++){
                 Map<String, Integer> takenAt =
-                        simulator.simulateOnce(new Random(31_000L + 7919L * trial));
+                        simulator.simulateOnce(new Random(baseSeed + 7919L * trial));
                 for(Map.Entry<String, Integer> entry : takenAt.entrySet()){
                     Player player = Player.getPlayerFromSIDV2(entry.getKey());
                     DraftSimulator.Slot slot = simulator.slotAt(entry.getValue());
@@ -125,8 +190,9 @@ public class RoomFidelity {
         }
         System.out.printf("%n%nMEAN WORST-BAND GAP OVER %d HELD-OUT SEASONS%n%n", seasons);
         for(Map.Entry<Position, double[]> entry : gapTotals.entrySet()){
-            System.out.printf("   %-5s %5.1f points%n", entry.getKey(),
-                    entry.getValue()[0] / entry.getValue()[1]);
+            double mean = entry.getValue()[0] / entry.getValue()[1];
+            lastGaps.put(entry.getKey(), mean);
+            System.out.printf("   %-5s %5.1f points%n", entry.getKey(), mean);
         }
         System.out.printf("%nthis is the number that answers whether the room model is%n"
                 + "credible per position. the 2026 comparison cannot: seven of this%n"

@@ -191,10 +191,24 @@ changed constantly. Specifically:
 
 In order. The first two are the ones that break the circle.
 
-1. **Establish the noise floor and refuse to read below it.** Run
-   `RoomFidelity` across five seed sets and report the per-position spread.
-   Any feature whose effect is inside that spread is not a finding. This is
-   one tool and one run and it should have been the first thing done.
+1. **Establish the noise floor and refuse to read below it.** DONE, same
+   afternoon, and it is the number that validates this whole document.
+   `RoomFidelity -PfullRounds=true -Pseeds=5` - the identical held-out
+   measurement on five seed sets, nothing changing but the dice:
+
+       POS    mean    min    max   spread
+       RB      7.8    7.2    8.3     1.1
+       WR      5.6    5.1    6.0     0.8
+       TE     10.8   10.2   11.4     1.3
+       QB     13.4   12.4   14.2     1.8
+
+   Every room-model feature change made today moved these numbers by 0.1 to
+   1.0 points. **Not one of them was distinguishable from a different roll of
+   the dice.** The scarcity feature, the run terms, the ADP offset, the
+   temperature sweep, the relative scaling - all of it was read inside this
+   band. The two things that DID exceed it were the floor (defences 10% to 0%
+   before round 10, a different metric entirely) and the population fixes to
+   the measurement itself.
 
 2. **Freeze the room model's feature set.** f0-f28, scarcity off. Stop adding
    features to a 435-row fit. Accept that 5-12 point positional timing error
