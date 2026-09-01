@@ -31,3 +31,17 @@ The table is the tool's; the causes below are from news read on 2026-09-01 and a
 | Patriots DEF, Cowboys DEF | ADP rising | none | Not researched. | — |
 
 Pattern: 22 of the ADP steps land on 09-01 - Sleeper's ADP is catching up to the cutdown weekend (08-29 to 08-30), not to a methodology change.
+
+## Evening refresh (cache re-fetched 19:54, report regenerated)
+
+New movers that entered the drafted pool with the evening ADP; causes from news read 19:55.
+
+| player | move | Sleeper data | cause (news) | kind |
+|---|---|---|---|---|
+| Kayshon Boutte WR HOU | ADP 238 -> 199 (step 08-28) | none | Traded from New England to Houston for S Jaylen Reed and a pick after Jayden Higgins tore his ACL; competing for WR2 with Hutchinson, Noel and Dell. Field-stretcher role, more a best-ball name. | beneficiary / trade |
+| Juwan Johnson TE NO | ADP 187 -> 163 (step 09-01) | none | No event found on him. Career-high 77 catches in 2025; Saints added tight ends and talk of more two-TE sets. The step coincides with Jordyn Tyson going to IR (08-30) - freed targets. Inferred. | inferred |
+| James Conner RB ARI | ADP 217 -> 231 (falling) | none | Opens the season on IR, designated to return, out at least four games (2025 foot injury). Allgeier RB1 for now, Love has a high-ankle sprain. | injury |
+| Malik Nabers WR NYG | ADP 30 -> 27 (rising, drift) | questionable knee (ACL) | Same story as the projection row: practising without the red jersey, expected Week 1. The market is pricing the return in. | injury return |
+| Oronde Gadsden TE LAC | ADP 145 -> 167 (falling further) | news 08-28 | Same cause as above (Njoku and Kolar added); the fall continued through the day. | depth chart |
+
+Evening pattern: Boutte, Johnson and Conner were outside ADP 200 this morning; the evening ADP pulled the first two inside the drafted pool, which is why the 17:00 report did not show them. Both sit in the range of the 162/175/186 seats.
