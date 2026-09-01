@@ -302,6 +302,15 @@ conditional **0.86**. So the approximation costs nothing, and the cutoff is
 worse mid-draft than on an empty board - the case is stronger where the tool
 runs than where it was first measured.
 
+**And scored against real drafts, which is the test that counts.** Every
+measurement above uses simulations from the very model the table is built from,
+so none of them can tell a right table from one reproducing its own generator.
+`RealDraftSurvival` scores it against the league's own 2024 and 2025 drafts,
+with the choice model fitted only on prior seasons: **ADP cutoff 3.35 men,
+survival 1.19**. The change holds up on real football. The gap between 0.85
+(simulated) and 1.19 (real) is the model misspecification the simulated tests
+structurally cannot see.
+
 `drain` - which sets the rank behind **VS WAIT** - carried the last hard-ADP
 estimator, counting men whose ADP fell in the window. Its prior is fitted now
 (`DrainPrediction`: retired 1.27, shipped 1.11 men per window). The room-observed
