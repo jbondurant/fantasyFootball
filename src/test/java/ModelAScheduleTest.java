@@ -17,10 +17,18 @@ import org.junit.jupiter.api.Test;
  */
 public class ModelAScheduleTest {
 
+    // CAPTURE ONCE. planAt() is called twice per test - nine rounds then
+    // sixteen - and this used to record the previous value on EVERY call, so
+    // the second capture stored "9" and @AfterEach restored 9 rather than
+    // whatever the JVM started with. That leaks a nine-round schedule into
+    // every test that runs after this class in the same JVM, and a nine-round
+    // board carries no defences at all.
     private String was;
+    private boolean captured;
 
     @AfterEach
     public void restore(){
+        captured = false;
         if(was == null){
             System.clearProperty("scheduleRounds");
         }
@@ -30,7 +38,10 @@ public class ModelAScheduleTest {
     }
 
     private List<Position> planAt(String rounds) throws Exception {
-        was = System.getProperty("scheduleRounds");
+        if(!captured){
+            was = System.getProperty("scheduleRounds");
+            captured = true;
+        }
         System.setProperty("scheduleRounds", rounds);
         AAAConfiguration configuration = AAAConfiguration.getInstance();
         int last = Integer.parseInt(configuration.getSeason()) - 1;

@@ -27,6 +27,15 @@ public class RoomTimingTest {
     @Test
     public void theSimulatedRoomDoesNotReachForAPositionTheRealRoomLeavesAlone()
             throws Exception {
+        // PIN THE SCHEDULE. LiveSetup.forTonight honours an existing
+        // scheduleRounds so the nine-round tools still work, which means a test
+        // that ran earlier in this JVM and set it to 9 leaks into this one -
+        // and a nine-round board carries no defences at all, so the whole test
+        // asserts nothing. It failed exactly that way. System properties are
+        // shared mutable state and test order is not guaranteed.
+        String was = System.getProperty("scheduleRounds");
+        System.setProperty("scheduleRounds", "16");
+        try {
         LiveSetup setup = LiveSetup.forTonight();
         DraftSimulator simulator = setup.simulator;
 
@@ -44,8 +53,32 @@ public class RoomTimingTest {
             }
         }
 
+        // DIAGNOSE, DO NOT GUESS. This passes alone and fails in the full
+        // suite, which means some earlier class leaves global state behind. Two
+        // hypotheses have already been wrong, so the message now carries the
+        // ambient state and one run settles it.
+        int defencesOnBoard = 0;
+        for(String id : simulator.players()){
+            Player player = Player.getPlayerFromSIDV2(id);
+            if(player != null && player.position == Position.DEF){
+                defencesOnBoard++;
+            }
+        }
+        int slots = 0;
+        for(int p = 1; p <= 200; p++){
+            if(simulator.slotAt(p) != null){
+                slots++;
+            }
+        }
+        String ambient = String.format(
+                " [scheduleRounds=%s, DraftPlanner.scheduleRounds()=%d, board=%d,"
+                        + " defences on board=%d, schedule slots=%d]",
+                System.getProperty("scheduleRounds"), DraftPlanner.scheduleRounds(),
+                simulator.players().size(), defencesOnBoard, slots);
+
         List<Integer> defences = simulated.get(Position.DEF);
-        assertNotNull(defences, "the simulated board must contain defences at all");
+        assertNotNull(defences,
+                "the simulated board must contain defences at all" + ambient);
         assertTrue(defences.size() > 50,
                 "expected plenty of simulated defence picks, got " + defences.size());
         double early = defences.stream().filter(round -> round <= 9).count()
@@ -67,6 +100,15 @@ public class RoomTimingTest {
                             + "% of the time in simulation against about 64% in"
                             + " the real drafts - the depth feature must not have"
                             + " pushed the skill positions late");
+        }
+        }
+        finally {
+            if(was == null){
+                System.clearProperty("scheduleRounds");
+            }
+            else {
+                System.setProperty("scheduleRounds", was);
+            }
         }
     }
 }

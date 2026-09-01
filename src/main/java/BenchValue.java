@@ -103,6 +103,42 @@ public class BenchValue {
         return round <= 9 ? ROUNDS_8_9 : round <= 12 ? ROUNDS_10_12 : ROUNDS_13_16;
     }
 
+    /**
+     * The same rates, measured over the band the ADVISED ROUND falls in.
+     *
+     * The no-argument form collects rounds 1-9, which is exactly rounds 8-9 in
+     * practice - the nine-round game spends 1-7 on starters, so there are no
+     * earlier bench picks and both windows return the identical 111 men. That
+     * is the right population for a round 8-9 pick.
+     *
+     * It is the WRONG one for a round 12 pick, and DraftNight.benchGuidance
+     * fires at round >= 8, which on the sixteen-round schedule runs to 16. The
+     * rates fall a long way across the draft - QB 87.7 over the wire in rounds
+     * 8-9 against 45.0 in rounds 10-16, RB 46.1 against 39.1 - so a late pick
+     * was being advised with early-pick numbers, overstating bench value by
+     * forty to ninety per cent. The ORDERING is the same in both, so the
+     * conclusion benchGuidance draws does not change; the magnitudes on screen
+     * were simply wrong.
+     */
+    public static Map<Position, Double> overWireByPosition(AAAConfiguration configuration,
+                                                           int forRound){
+        int from = forRound <= 9 ? 1 : forRound <= 12 ? 10 : 13;
+        int to = forRound <= 9 ? 9 : forRound <= 12 ? 12 : 16;
+        Map<Position, List<Double>> collected = new EnumMap<>(Position.class);
+        for(Bench bench : gather(configuration).benches()){
+            if(bench.round() >= from && bench.round() <= to){
+                collected.computeIfAbsent(bench.position(), u -> new ArrayList<>())
+                        .add(bench.overWire());
+            }
+        }
+        Map<Position, Double> means = new EnumMap<>(Position.class);
+        for(Map.Entry<Position, List<Double>> entry : collected.entrySet()){
+            means.put(entry.getKey(), entry.getValue().stream()
+                    .mapToDouble(Double::doubleValue).average().orElse(0));
+        }
+        return means;
+    }
+
     public static Map<Position, Double> overWireByPosition(AAAConfiguration configuration){
         Map<Position, List<Double>> collected = new EnumMap<>(Position.class);
         for(Bench bench : gather(configuration).benches()){

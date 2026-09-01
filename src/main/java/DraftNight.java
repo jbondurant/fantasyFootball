@@ -119,7 +119,10 @@ public class DraftNight {
             // full there is no next pick inside the game, so every position comes
             // back 100% SURVIVES / 0.0 COST / FREE - a table that looks like an
             // answer and contains nothing. Do not print it.
-            benchGuidance(benchBaseRate);
+            // Rates from the band this pick is actually in, not from rounds
+            // 8-9 whatever the round. See BenchValue.overWireByPosition(int).
+            benchGuidance(BenchValue.overWireByPosition(configuration, slot.round()),
+                    slot.round());
         }
         else {
             WaitCheck.report(timing, planner, simulator, state, points, waitRollouts);
@@ -183,9 +186,9 @@ public class DraftNight {
      * the position means overlap inside two standard errors, so no engine is
      * run - printing a ranking would be printing noise.
      */
-    static void benchGuidance(Map<Position, Double> baseRate){
-        System.out.printf("%n   THE STARTING NINE IS FULL - measured base rates, not an"
-                + " engine:%n");
+    static void benchGuidance(Map<Position, Double> baseRate, int round){
+        System.out.printf("%n   THE STARTING NINE IS FULL - measured base rates for"
+                + " ROUND %d picks, not an engine:%n", round);
         Map<Position, Double> ordered = new EnumMap<>(baseRate);
         ordered.entrySet().stream()
                 .sorted(Map.Entry.<Position, Double>comparingByValue().reversed())

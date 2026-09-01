@@ -124,7 +124,7 @@ tasks.register('run', JavaExec) {
      // built from. It replaces the hard ADP cutoff in expectedRank, which sets
      // every END TEAM number in the rollout. '0' restores the cutoff, which is
      // what every number tagged draft-ready-2026 was measured with.
-     'survivalDraws', 'temperature', 'sweep', 'dump', 'legend', 'defTrust', 'noFloor', 'fullRounds', 'noDepth', 'noScarcity', 'scarcity',
+     'survivalDraws', 'temperature', 'sweep', 'dump', 'legend', 'defTrust', 'noFloor', 'fullRounds', 'noDrift', 'noDepth', 'scarcity', 
      // LeagueActuals.FLAG - grade outcomes under the league's own scoring
      // instead of Sleeper's pts_half_ppr. Off by default on purpose.
      'leagueScoredActuals',

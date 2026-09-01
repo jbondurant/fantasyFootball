@@ -87,6 +87,41 @@ public class SelectionModel implements ChoiceModel {
      * small at exactly the position where scarcity is doing the most work.
      * Justin caught both, in that order.
      */
+    /**
+     * Each position's OWN scale: the spread from its best man to replacement.
+     *
+     * CLIFF_CAP is a flat hundred points, and the positions do not live on the
+     * same scale - QB1 is projected for 415 this year and DEF1 for 106.
+     * Measured by FeatureScales on the 2026 board, that flat cap makes f9 read
+     * 0.355 at QB and 0.020 at DEF, where it can never move a tree split, and
+     * makes f29 SATURATE at 1.000 for both RB and WR, where every elite man
+     * reads identically and the feature cannot tell RB1 from RB5. That is why
+     * scarcity did nothing for the two positions Justin drafts most.
+     *
+     * Dividing by the position's own spread instead makes the two features mean
+     * the same thing everywhere: 1.0 is "the whole distance from replacement to
+     * the best man at this position", whatever that distance is worth in points.
+     */
+    static Map<Position, Double> positionScale(List<String> board,
+            Map<String, Double> points, Map<Position, Integer> starterSlots){
+        Map<Position, Double> replacement =
+                replacementLevel(board, points, starterSlots);
+        Map<Position, Double> best = new EnumMap<>(Position.class);
+        for(String id : board){
+            Player player = Player.getPlayerFromSIDV2(id);
+            double value = points.getOrDefault(id, 0.0);
+            if(player != null && value > best.getOrDefault(player.position, 0.0)){
+                best.put(player.position, value);
+            }
+        }
+        Map<Position, Double> scale = new EnumMap<>(Position.class);
+        for(Map.Entry<Position, Double> entry : replacement.entrySet()){
+            double spread = best.getOrDefault(entry.getKey(), 0.0) - entry.getValue();
+            scale.put(entry.getKey(), Math.max(1.0, spread));
+        }
+        return scale;
+    }
+
     static Map<Position, Double> replacementLevel(List<String> board,
             Map<String, Double> points, Map<Position, Integer> starterSlots){
         Map<Position, List<Double>> byPosition = new EnumMap<>(Position.class);
@@ -858,6 +893,25 @@ public class SelectionModel implements ChoiceModel {
                 secondPoints.put(position, value);
             }
         }
+        // THE ABSOLUTE CAP IS FINE, AND I CHECKED THE WRONG THING FIRST.
+        //
+        // FeatureScales shows f9 reading 0.355 at quarterback and 0.020 at
+        // defence on the 2026 board, and f29 SATURATING at 1.000 for both RB
+        // and WR - so the flat hundred-point CLIFF_CAP looked like the same
+        // absolute-versus-relative fault Justin named on the market drift.
+        //
+        // It is not, and the model class is the reason. BOOSTED TREES ARE
+        // INVARIANT TO MONOTONE RESCALING: a tree splits on thresholds, so
+        // dividing by a hundred or by the position's own spread offers the same
+        // splits. Only ORDERING matters, and a cap breaks ordering solely among
+        // the men above it. Measured both ways: dividing by each position's
+        // spread made things WORSE (TE 12.4 -> 14.5 held-out), and removing the
+        // cap entirely changed nothing at all, to the last digit.
+        //
+        // Worth writing down because the hunt for oversights has to distinguish
+        // the two kinds. A POPULATION error changes which men are compared and
+        // therefore the ordering - those have all been real here. A SCALE error
+        // does not reach a tree at all.
         for(Map.Entry<Position, Integer> entry : bestAt.entrySet()){
             double second = secondPoints.getOrDefault(entry.getKey(), Double.NEGATIVE_INFINITY);
             double drop = second == Double.NEGATIVE_INFINITY
@@ -902,6 +956,18 @@ public class SelectionModel implements ChoiceModel {
                 continue;
             }
             double surplus = points.getOrDefault(choiceSet.get(a), 0.0) - floor;
+            // ABSOLUTE UNITS, BUT NOT CAPPED AT ONE.
+            //
+            // Points are fungible - a 25-point cliff at quarterback really is
+            // worth more in a lineup than a 5-point cliff at tight end, which
+            // is why dividing by each position's own spread made things WORSE
+            // (TE 12.4 -> 14.5 held-out) and why the absolute unit stays.
+            //
+            // The saturation is a separate fault and a real one: capped at
+            // CLIFF_CAP, RB and WR BOTH read exactly 1.000 for every elite man,
+            // so the feature cannot tell RB1 from RB5 at the two positions
+            // Justin drafts most. Scaled but uncapped, it keeps the units and
+            // keeps the ordering.
             features[a][29] = Math.min(Math.max(surplus, 0), CLIFF_CAP) / CLIFF_CAP;
         }
         return features;

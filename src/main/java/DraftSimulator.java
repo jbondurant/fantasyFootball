@@ -199,6 +199,17 @@ public class DraftSimulator {
                         || !pick.has("round") || pick.get("round").isJsonNull()){
                     continue;
                 }
+                // A KEEPER'S ROUND IS NOT EVIDENCE ABOUT WHEN A ROOM DRAFTS.
+                // The commissioner assigned it by the keeper rules; nobody chose
+                // that player there over the rest of the board. Trey McBride is
+                // kept at round 3 this year, so counting keepers would put the
+                // tight-end floor at 3 on a fact about a rule rather than about
+                // the room. It happens not to bind - tight ends really do go in
+                // round 1 - but the population was wrong.
+                com.google.gson.JsonElement keeper = pick.get("is_keeper");
+                if(keeper != null && !keeper.isJsonNull() && keeper.getAsBoolean()){
+                    continue;
+                }
                 Player player = Player.getPlayerFromSIDV2(
                         pick.get("player_id").getAsString());
                 if(player != null){

@@ -373,6 +373,16 @@ public class DefenceReality {
                         || !pick.has("round") || pick.get("round").isJsonNull()){
                     continue;
                 }
+                // A KEEPER IS NOT A DRAFT DECISION. He occupies a round the
+                // commissioner assigned him; nobody chose him there against the
+                // rest of the board. The SIMULATION never drafts keepers - they
+                // are pre-assigned - so counting them on the real side compares
+                // a distribution containing twenty-four keepers against one
+                // containing none. Seven of this year's are tight ends.
+                com.google.gson.JsonElement isKeeper = pick.get("is_keeper");
+                if(isKeeper != null && !isKeeper.isJsonNull() && isKeeper.getAsBoolean()){
+                    continue;
+                }
                 Player player = Player.getPlayerFromSIDV2(
                         pick.get("player_id").getAsString());
                 if(player != null){
