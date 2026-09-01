@@ -69,6 +69,27 @@ public class LiveCommittee {
         vote(timing, planner, simulator, state, roster, rollouts, scenarios);
     }
 
+    /**
+     * Every position sharing the highest vote count, in enum order.
+     *
+     * More than one means the vote is TIED and the first element is an
+     * accident of how Position happens to be declared. Callers must say so
+     * rather than printing it as a verdict.
+     */
+    static List<Position> topOf(Map<Position, Integer> tally){
+        int most = 0;
+        for(int count : tally.values()){
+            most = Math.max(most, count);
+        }
+        List<Position> leaders = new ArrayList<>();
+        for(Map.Entry<Position, Integer> entry : tally.entrySet()){
+            if(entry.getValue() == most){
+                leaders.add(entry.getKey());
+            }
+        }
+        return leaders;
+    }
+
     /** Runs the committee and prints the vote table. */
     static Position vote(TimingPlanner timing, DraftPlanner planner,
                          DraftSimulator simulator, DraftSimulator.SimState state,
@@ -104,6 +125,7 @@ public class LiveCommittee {
         }
         System.out.printf(" %8s   %s%n", "secs", "says");
         Map<Position, Integer> tally = new EnumMap<>(Position.class);
+        Map<String, Position> picked = new LinkedHashMap<>();
         for(Map.Entry<String, Map<Position, Double>> engine : votes.entrySet()){
             System.out.printf("%-14s", engine.getKey());
             Position pick = null;
@@ -118,17 +140,13 @@ public class LiveCommittee {
                 }
             }
             tally.merge(pick, 1, Integer::sum);
+            picked.put(engine.getKey(), pick);
             System.out.printf(" %8.1f   %s%n", seconds.get(engine.getKey()), pick);
         }
 
-        Position consensus = null;
-        int most = 0;
-        for(Map.Entry<Position, Integer> entry : tally.entrySet()){
-            if(entry.getValue() > most){
-                most = entry.getValue();
-                consensus = entry.getKey();
-            }
-        }
+        List<Position> leaders = topOf(tally);
+        Position consensus = leaders.get(0);
+        int most = tally.get(consensus);
         // When the starting nine is full, no available player can move the
         // objective, so every column reads the same number and the "winner" is
         // whichever position map iteration reached first. Reporting that as
@@ -167,6 +185,40 @@ public class LiveCommittee {
         Player player = Player.getPlayerFromSIDV2(best.get(consensus));
         System.out.printf("%n   %d of %d engines say %s -> %s%n", most, votes.size(),
                 consensus, player.firstName + " " + player.lastName);
+
+        // A TIE IS NOT A VERDICT.
+        //
+        // topOf() returns every position sharing the top count. The line above
+        // names leaders.get(0), which on a 2-2 split is whichever position is
+        // DECLARED FIRST in the Position enum - QB, then RB, then WR, then TE.
+        // That is not football, and it happened on the real board at round 3,
+        // pick 31: lookahead-2 and vorp-greedy said RB, lookahead-1 and
+        // hindsight said WR, and the screen printed "2 of 4 engines say RB"
+        // with nothing to mark it a coin flip. Say it plainly, and let the
+        // Kim-Nelson arbiter below settle it - a statistical verdict is
+        // exactly the right instrument for a tied vote.
+        if(leaders.size() > 1){
+            StringBuilder split = new StringBuilder();
+            for(Position position : leaders){
+                split.append(split.length() == 0 ? "" : " / ").append(position);
+            }
+            System.out.printf("   ^ SPLIT VOTE %s, %d each. The name above is enum order,"
+                    + "%n     not a decision. Read the KN line below, or the board"
+                    + " model.%n", split, most);
+        }
+
+        // The tally has four columns but not four independent opinions.
+        // lookahead-1 and hindsight are the SAME estimator - same HeadPolicy,
+        // same simulateFrom, same bestNine - differing only in seed offset and
+        // sample size. Measured: they agreed 9 of 9 stops. When they agree they
+        // are one voice holding two votes, so "3 of 4" is really 2 of 3.
+        Position ahead = picked.get("lookahead-1");
+        if(ahead != null && ahead == picked.get("hindsight")){
+            System.out.printf("   ^ lookahead-1 and hindsight are the same estimator with"
+                    + " a different%n     seed, so they are ONE voice with two votes:"
+                    + " read this as %d of %d.%n",
+                    ahead == consensus ? most - 1 : most, votes.size() - 1);
+        }
 
         // Kim-Nelson arbitration: a statistical verdict rather than a vote
         // count. It either PROVES the selection at 95% confidence or reports
