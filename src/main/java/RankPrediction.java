@@ -6,7 +6,7 @@ import java.util.*;
  *
  * expectedRank feeds every rollout in the board model, so it sets every END
  * TEAM number on the table. It decides who is gone with a HARD ADP CUTOFF -
- * `adpOf(id) < pick` - which is exactly the rule this repo's own wait-table
+ * {@code adpOf(id) < pick} - which is exactly the rule this repo's own wait-table
  * comment rejects: "a hard cutoff and false in both directions: a man at ADP
  * 6.9 is not certainly gone and one at 7.1 is not certainly there." The wait
  * table simulates survival instead. The rollout never got the same treatment.

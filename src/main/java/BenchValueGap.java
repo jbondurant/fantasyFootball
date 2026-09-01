@@ -26,7 +26,7 @@ import java.util.*;
  * The two columns are not the same measurement and must not be read as a
  * subtraction. MODEL SEES is one named man on today's board; MEASURED is the
  * average over this league's real rounds 8-9 picks at that position
- * (BenchValue.overWireByPosition filters round <= 9). They are the same order of
+ * (BenchValue.overWireByPosition filters rounds 1 to 9). They are the same order of
  * magnitude, which is the finding: the objective is in the right range, and the
  * missing channels are not costing a round-11 receiver his bid.
  *

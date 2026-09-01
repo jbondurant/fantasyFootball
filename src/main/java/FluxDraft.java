@@ -29,7 +29,7 @@ import java.util.Map;
  * is an LP relaxation rounded by taking the maximum-flux reaction - which is
  * the standard dFBA time-stepping scheme, and also, unavoidably, a greedy.
  *
- * The LP is small enough (4 reactions, <=7 timesteps) to solve by enumerating
+ * The LP is small enough (4 reactions, at most 7 timesteps) to solve by enumerating
  * integer allocations, so no solver dependency.
  *
  *   ./gradlew run -Pmain=FluxDraft [-Ptrials=400]

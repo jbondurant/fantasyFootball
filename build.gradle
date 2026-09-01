@@ -144,6 +144,25 @@ tasks.register('run', JavaExec) {
     }
 }
 
+// JAVADOC CHECKS REFERENCES, NOT HTML.
+//
+// `./gradlew javadoc` was failing on twenty errors and had clearly been failing
+// for a long time, so nobody ran it and it checked nothing. Eighteen of the
+// twenty were angle brackets in usage lines - "-PdraftId=<id>" read as an HTML
+// tag - and escaping those to &lt;id&gt; across seventeen files made the SOURCE
+// worse to read, which is a bad trade for a rendered page nobody opens.
+//
+// The two that mattered were {@link}s to StatLineProjections and
+// SleeperStatProjections: classes that no longer exist. That is the same
+// prose-drift family this repo has hit ten times - documentation naming
+// something the code does not have - and it is worth a build failing over.
+//
+// So: reference checking on, HTML and missing-@param off. The check that finds
+// stale documentation stays; the one that taxes readable comments goes.
+tasks.withType(Javadoc).configureEach {
+    options.addStringOption('Xdoclint:all,-html,-missing', '-quiet')
+}
+
 tasks.withType(JavaCompile).configureEach {
     options.compilerArgs << '-Xlint:unchecked' << '-Xlint:deprecation'
 }

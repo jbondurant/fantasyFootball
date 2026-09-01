@@ -9,7 +9,8 @@ import java.util.HashMap;
 /**
  * Sleeper's season projections. This is the only remaining feed that publishes
  * projected *stat lines*, so it backs both the raw points map here and the
- * league-scored projections in {@link StatLineProjections}.
+ * league-scored projections produced by {@link #scoreStatLine}, which absorbed
+ * the class this line used to name.
  */
 public class SleeperProjections {
 
