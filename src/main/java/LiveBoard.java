@@ -613,6 +613,20 @@ public class LiveBoard {
                 System.out.printf("   %-4s %s%n", entry.getKey(), entry.getValue());
             }
         }
+        // THE LEGEND IS THE SAME EVERY PICK, AND IT IS TWENTY-THREE LINES.
+        //
+        // Printed every cycle it pushes the verdict up off the visible screen -
+        // fourteen times a night, against a sixty second clock, with the answer
+        // furthest from the prompt he is about to type into. It explains the
+        // columns, which he needs once, not once per pick.
+        //
+        // Shown on the first answer of a session and on request thereafter.
+        if(legendShown && !Boolean.getBoolean("legend")){
+            System.out.printf("%n(column legend printed once this session;"
+                    + " -Plegend=true to repeat it)%n");
+            return ranked.isEmpty() ? null : ranked.get(0);
+        }
+        legendShown = true;
         System.out.printf("%nNEXT CLIFF is the one that decides this. A position's value does not%n"
                 + "slide, it steps: the raw rank curve falls off at a few places and is%n"
                 + "flat between them. CROSSED means my next pick lands on the far side of%n"
@@ -1106,6 +1120,9 @@ public class LiveBoard {
         }
         return gone + 1;
     }
+
+    /** Whether this session has already explained the columns. */
+    static boolean legendShown;
 
     /** The survival table in force, or null to fall back to the ADP cutoff. */
     static Survival SURVIVAL;
