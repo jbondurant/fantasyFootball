@@ -200,8 +200,11 @@ public class DraftNight {
 
     static void lateRounds(Map<Position, Double> baseRate){
         System.out.println("\n   The nine-round game is over - rounds 10-16 are keeper"
-                + " stashes now.\n   Run LateRoundTargets for live survival odds:"
-                + "\n     ./gradlew run -Pmain=LateRoundTargets -PdraftId=<id>"
+                + " stashes now.\n   Run LiveLateRounds for live survival odds:"
+                + "\n     ./gradlew run -Pmain=LiveLateRounds -PdraftId=<id>"
+                + "\n   (NOT LateRoundTargets - it never sets scheduleRounds=16, so"
+                + " its\n   survival race stops at pick 108 and my last three picks"
+                + " are 162,\n   175 and 186. LiveLateRounds sets it.)"
                 + "\n   LateRoundValue's base rate: QB stashes hit 41% of the time,"
                 + " rookies\n   and young players 23-24%, veterans 15%. My keeper pair"
                 + " is the weakest\n   in the league, so next year's pair is being"

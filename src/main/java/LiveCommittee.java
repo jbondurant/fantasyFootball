@@ -176,7 +176,7 @@ public class LiveCommittee {
                     + "%n%n   Model A is done. There is no engine for rounds 8+:"
                     + "%n     rounds 8-9   BenchValue's measured base rates, which"
                     + " DraftNight prints"
-                    + "%n     rounds 10+   -Pmain=LateRoundTargets (keeper option: a"
+                    + "%n     rounds 10+   -Pmain=LiveLateRounds (keeper option: a"
                     + " round-R stash is keepable at R)%n",
                     votes.get("lookahead-2").values().iterator().next());
             return consensus;
