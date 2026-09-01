@@ -1356,7 +1356,28 @@ public class LiveBoard {
             }
         }
         double observed = taken.isEmpty() ? 0 : (double) gone / taken.size();
-        double expected = adpRate(planner, position, pick, next);
+        // THE PRIOR IS FITTED NOW, NOT COUNTED FROM ADP. adpRate counts how
+        // many men of this position have an ADP falling in the window, which is
+        // the same hard-ADP reasoning expectedRank used until tonight - this
+        // was the last place still using it. The survival table gives the
+        // expected number gone by `next` less the expected number gone by
+        // `pick`, from the fitted opponent model.
+        //
+        // DrainPrediction, 2,080 (seat, position) cells:
+        //     shipped, room blended with ADP counts   1.27 men
+        //     survival table alone                    0.83
+        //     room blended with the survival prior    1.18
+        //
+        // The room term STAYS even though dropping it scores best. That
+        // measurement is model-consistent - the draws come from the very
+        // opponent model the survival table is fitted on, so it cannot tell
+        // "the prior is right" from "the prior is predicting itself". The room
+        // term is what catches a real room deviating from the model, and a
+        // simulation is the one place that can never happen.
+        double expected = SURVIVAL == null
+                ? adpRate(planner, position, pick, next)
+                : Math.max(0, SURVIVAL.expectedGone(position, next)
+                        - SURVIVAL.expectedGone(position, pick)) / (next - pick);
         // Half weight to the room after about thirty picks, which is roughly
         // when a run on a position stops being three men in a row.
         double trust = taken.size() / (taken.size() + 30.0);
