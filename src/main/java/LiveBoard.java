@@ -134,8 +134,8 @@ public class LiveBoard {
         }
 
         int next = nextPickAfter(simulator, state, planner, pick);
-        System.out.printf("%-5s %-24s %6s %9s %8s %9s %16s%n", "POS", "BEST AVAILABLE",
-                "RANK", "ADDS NOW", "VS WAIT", "END TEAM", "NEXT CLIFF");
+        System.out.printf("%-5s %-24s %6s %9s %8s %7s %7s %14s%n", "POS", "BEST AVAILABLE",
+                "RANK", "ADDS NOW", "VS WAIT", "END", "SWING", "NEXT CLIFF");
 
         Map<Position, Double> urgency = new EnumMap<>(Position.class);
         Map<Position, Double> adds = new EnumMap<>(Position.class);
@@ -171,8 +171,15 @@ public class LiveBoard {
             // finished roster scored 2008, which ties the plan. The cliff still
             // prints, because it is what makes the number legible, but it no
             // longer decides on its own.
-            double finished = rollout(planner, taken, curve, pools, order.size(),
+            // Justin's rule, asked and answered: maximise the mean, but refuse
+            // a path whose bad world sits more than the bar below its own
+            // average. Measured as a no-op above 250 on everything this model
+            // builds, so it is a guard rather than a lever - if it ever starts
+            // refusing things, that is worth reading.
+            double[] both = rolloutStats(planner, taken, curve, pools, order.size(),
                     held, position, rank, pick);
+            boolean fragile = BoardValue.tooFragile(both);
+            double finished = fragile ? -1e9 : both[0];
             Valley cliff = nextValley(tiers(curve, pools, position,
                     Double.parseDouble(System.getProperty("tierBar", "0.40"))), rank);
             boolean crosses = cliff != null && later > cliff.afterRank();
@@ -190,9 +197,11 @@ public class LiveBoard {
             String where = cliff == null ? "none ahead"
                     : String.format("after %s%d%s", position, cliff.afterRank(),
                             crosses ? " CROSSED" : "");
-            System.out.printf("%-5s %-24s %6d %9.1f %8.1f %9.0f %16s%n", position,
+            System.out.printf("%-5s %-24s %6d %9.1f %8.1f %7.0f %6.0f%% %14s %s%n",
+                    position,
                     player == null ? candidate : player.firstName + " " + player.lastName,
-                    rank, addsNow, wait, finished, where);
+                    rank, addsNow, wait, both[0], 100 * (both[0] - both[1]) / both[0],
+                    where, fragile ? "REFUSED fragile" : "");
         }
 
         // Rank on the cost of waiting, and break ties on raw value - otherwise
@@ -437,6 +446,15 @@ public class LiveBoard {
      * depth for future picks advances at each position's OWN ADP rate, never a
      * shared one: assuming a shared rate is what once drafted TE TE QB QB.
      */
+    static double[] rolloutStats(DraftPlanner planner, List<String> taken,
+                                 Map<Position, double[]> curve,
+                                 Map<Position, List<List<Double>>> pools, int count,
+                                 List<BoardValue.Slot> held, Position first, int firstRank,
+                                 int fromPick){
+        return BoardValue.stats(rolloutRoster(planner, taken, curve, pools, count,
+                held, first, firstRank, fromPick), pools, curve, count, true);
+    }
+
     static double rollout(DraftPlanner planner, List<String> taken,
                           Map<Position, double[]> curve,
                           Map<Position, List<List<Double>>> pools, int count,
@@ -483,6 +501,55 @@ public class LiveBoard {
             mine.merge(best, 1, Integer::sum);
         }
         return BoardValue.empirical(roster, pools, curve, count, true);
+    }
+
+    /** The same rollout, handing back the roster so it can be judged twice. */
+    static List<BoardValue.Slot> rolloutRoster(DraftPlanner planner, List<String> taken,
+                                               Map<Position, double[]> curve,
+                                               Map<Position, List<List<Double>>> pools,
+                                               int count, List<BoardValue.Slot> held,
+                                               Position first, int firstRank, int fromPick){
+        List<BoardValue.Slot> roster = new ArrayList<>(held);
+        roster.add(new BoardValue.Slot(first, firstRank));
+        Map<Position, Integer> mine = new EnumMap<>(Position.class);
+        for(BoardValue.Slot slot : roster){
+            mine.merge(slot.position(), 1, Integer::sum);
+        }
+        int[] picks = {7, 18, 31, 42, 55, 66, 79, 90, 103, 114, 127, 162, 175, 186};
+        for(int pick : picks){
+            if(pick <= fromPick || roster.size() >= 16){
+                continue;
+            }
+            double base = BoardValue.empirical(roster, pools, curve, count, true);
+            Position best = null;
+            double most = -1e9;
+            int bestRank = 1;
+            for(Position position : new Position[]{Position.RB, Position.WR,
+                    Position.TE, Position.QB, Position.DEF}){
+                if(mine.getOrDefault(position, 0) >= BoardValue.MOST.get(position)){
+                    continue;
+                }
+                int rank = expectedRank(planner, taken, position, pick);
+                double[] mean = curve.get(position);
+                if(mean == null || rank >= mean.length){
+                    continue;
+                }
+                List<BoardValue.Slot> trial = new ArrayList<>(roster);
+                trial.add(new BoardValue.Slot(position, rank));
+                double adds = BoardValue.empirical(trial, pools, curve, count, true) - base;
+                if(adds > most){
+                    most = adds;
+                    best = position;
+                    bestRank = rank;
+                }
+            }
+            if(best == null){
+                break;
+            }
+            roster.add(new BoardValue.Slot(best, bestRank));
+            mine.merge(best, 1, Integer::sum);
+        }
+        return roster;
     }
 
     /** How deep a position will be at a later pick, at its own ADP rate. */

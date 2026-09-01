@@ -8,14 +8,14 @@ the rules allow here: [RB, WR, TE, DEF]
 still needed for a legal lineup: {QB=0, RB=1, WR=3, TE=1, DEF=1}
 THE PLAN says: RB
 
-POS   BEST AVAILABLE             RANK  ADDS NOW  VS WAIT  END TEAM       NEXT CLIFF
-RB    Jahmyr Gibbs                  1     293.4     64.2      2263 after RB1 CROSSED
-WR    Puka Nacua                    1     262.8     50.0      2246 after WR2 CROSSED
-TE    Brock Bowers                  1      93.3      0.0      2225        after TE1
+POS   BEST AVAILABLE             RANK  ADDS NOW  VS WAIT     END   SWING     NEXT CLIFF
+RB    Jahmyr Gibbs                  1     301.6     89.2    2271     16% after RB2 CROSSED REFUSED fragile
+WR    Puka Nacua                    1     261.1     39.5    2233     11% after WR3 CROSSED 
+TE    Brock Bowers                  1      90.0      0.0    2206     14%      after TE2 
 QB    Josh Allen                      -          -          -   REFUSED: a second QB is only ever a next-year keeper stash (RUNBOOK.md:191), and round 1 is before round 10
-DEF   Los Angeles Rams              1       0.0      0.0      2123       none ahead
+DEF   Los Angeles Rams              1       0.0      0.0    2107     13%     none ahead 
 
-   the model takes: RB
+   the model takes: WR
 
 NEXT CLIFF is the one that decides this. A position's value does not
 slide, it steps: the raw rank curve falls off at a few places and is

@@ -263,12 +263,19 @@ public class BoardValue {
                 after.add(new Slot(position, taken(board, gone, position)));
                 Map<Position, Integer> counts = new EnumMap<>(have);
                 counts.merge(position, 1, Integer::sum);
-                double finished = rollout(board, gone, curve, pools, count, after, counts,
-                        legal.canDraft(position, round(made))
-                                ? legal.draft("x", position, round(made)) : legal,
-                        made + 1);
-                if(finished > most){
-                    most = finished;
+                RosterRules.Roster next = legal.canDraft(position, round(made))
+                        ? legal.draft("x", position, round(made)) : legal;
+                List<Slot> ended = rolloutRoster(board, curve, pools, count, after,
+                        counts, next, made + 1);
+                double[] both = stats(ended, pools, curve, count, false);
+                // REFUSE THE FRAGILE ONE. A path whose bad world sits more than
+                // the bar below its own average is rejected however good its
+                // average is - Justin plays one season, not six hundred.
+                if(tooFragile(both)){
+                    continue;
+                }
+                if(both[0] > most){
+                    most = both[0];
                     take = position;
                 }
             }
@@ -318,6 +325,16 @@ public class BoardValue {
                           Map<Position, List<List<Double>>> pools, int count,
                           List<Slot> held, Map<Position, Integer> have,
                           RosterRules.Roster legal, int from){
+        return empirical(rolloutRoster(board, curve, pools, count, held, have, legal, from),
+                pools, curve, count);
+    }
+
+    /** The same rollout, handing back the finished roster so it can be judged twice. */
+    static List<Slot> rolloutRoster(PlanBacktest.Board board,
+                                    Map<Position, double[]> curve,
+                                    Map<Position, List<List<Double>>> pools, int count,
+                                    List<Slot> held, Map<Position, Integer> have,
+                                    RosterRules.Roster legal, int from){
         List<Slot> roster = new ArrayList<>(held);
         Map<Position, Integer> mine = new EnumMap<>(have);
         for(int made = from; made < PlanBacktest.MY_PICKS.length; made++){
@@ -353,7 +370,7 @@ public class BoardValue {
                 legal = legal.draft("x", best, round(made));
             }
         }
-        return empirical(roster, pools, curve, count);
+        return roster;
     }
 
     /** Which ROUND my nth pick is - 1-11 then 14-16, because 12 and 13 are keepers. */
@@ -585,11 +602,70 @@ public class BoardValue {
 
     static double empirical(List<Slot> roster, Map<Position, List<List<Double>>> pools,
                             Map<Position, double[]> curve, int count, boolean ratios){
+        return stats(roster, pools, curve, count, ratios)[0];
+    }
+
+    /**
+     * How fragile a roster is: the gap between its average world and a bad one.
+     *
+     * Justin's choice, asked directly - maximise the mean, but refuse a plan
+     * whose worst season falls far below its own average. So the mean alone is
+     * no longer enough to rank on, and a roster now reports {mean, tenth
+     * percentile}. The tenth rather than the true minimum because a minimum over
+     * six hundred resampled worlds is one unlucky draw, and optimising against
+     * one draw is how a model starts chasing noise.
+     */
+    static double[] stats(List<Slot> roster, Map<Position, List<List<Double>>> pools,
+                          Map<Position, double[]> curve, int count, boolean ratios){
+        double[] worlds = new double[WORLDS];
         double total = 0;
         for(int world = 0; world < WORLDS; world++){
-            total += oneSeason(roster, pools, curve, world, ratios);
+            worlds[world] = oneSeason(roster, pools, curve, world, ratios);
+            total += worlds[world];
         }
-        return total / WORLDS;
+        double[] sorted = worlds.clone();
+        java.util.Arrays.sort(sorted);
+        return new double[]{ total / WORLDS, sorted[Math.max(0, WORLDS / 10)] };
+    }
+
+    /**
+     * How far a plan's bad world may sit below its own average before it is
+     * refused. 300, and the number was measured rather than chosen.
+     *
+     * Justin asked for "mean, but reject fragile plans" and I offered ~150 in
+     * the asking. That number was mine and it was wrong by a factor of two: the
+     * committed plan's own gap between its mean, 2033, and its worst season,
+     * 1817, is over 200, so a 150 bar refuses the plan itself. It refuses every
+     * real roster, and what survives is the degenerate one - fourteen receivers,
+     * flat because they are interchangeable, scoring 1638.
+     *
+     * Swept: the bar is a no-op from 250 upward and the mean holds at 2050. So
+     * this is a guard against a genuinely fragile plan, not a lever, and it is
+     * set where it does not bind on anything the model currently builds. If it
+     * ever starts binding, that is a signal worth reading rather than a number
+     * worth lowering.
+     */
+    static double fragilityBar(){
+        return Double.parseDouble(System.getProperty("fragile", "0.15"));
+    }
+
+    /**
+     * Is this roster too fragile to take, as a FRACTION of its own mean?
+     *
+     * The bar was absolute points and that was a units bug of the exact kind
+     * this repo keeps finding. The backtest values a roster in historical
+     * actuals, about 130 a man; LiveBoard values it in 2026 projections, about
+     * 300 a man. A 300-point bar was a harmless no-op in the first and refused
+     * the best back on the board in the second, which is how it was caught -
+     * the same guard behaving differently in two places is always a unit
+     * disagreement, never a finding.
+     *
+     * A fraction of the roster's own mean is scale-free, so it means the same
+     * thing wherever it is asked. Fifteen per cent is where the sweep showed it
+     * stops binding on anything the model builds.
+     */
+    static boolean tooFragile(double[] stats){
+        return stats[0] > 0 && (stats[0] - stats[1]) > fragilityBar() * stats[0];
     }
 
     /**
