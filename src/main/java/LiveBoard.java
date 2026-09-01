@@ -966,13 +966,25 @@ public class LiveBoard {
      * the board, and at pick 186 it says 56 backs are gone against a true 50.9.
      *
      * A man really taken counts 1. Everyone else counts his probability of
-     * being gone by that seat, summed. KNOWN APPROXIMATION, stated rather than
-     * hidden: that probability is unconditional, so a man who has visibly
-     * survived past his ADP is still counted at his prior rather than at
-     * P(gone by p | survived to now). It over-counts slightly, and most for
-     * fallers late in the draft. The exact conditional needs the current pick
-     * threaded through every caller; the unconditional form already closes 97%
-     * of the measured gap.
+     * being gone by that seat, summed. That probability is UNCONDITIONAL - a
+     * man who has visibly survived past his ADP is counted at his prior rather
+     * than at P(gone by p | survived to now), which is the smaller and exact
+     * quantity.
+     *
+     * MEASURED, not assumed. RankPrediction scored this with no picks known,
+     * which is the one regime where the approximation is exact and therefore
+     * invisible. MidDraftRank scores all three forms at every (seat now, seat
+     * later, position) cell of a real draft, 21,840 of them:
+     *
+     *     hard ADP cutoff (retired)        4.32 men
+     *     survival, unconditional (ships)  0.85
+     *     survival, exact conditional      0.86
+     *
+     * So the correction is not worth threading the current pick through every
+     * caller - it is 0.01 men WORSE, which is to say indistinguishable. And the
+     * cutoff is worse mid-draft (4.32) than it was with an empty board (2.69),
+     * so the case for this change is stronger where the tool actually runs than
+     * where it was first measured.
      */
     static int expectedRank(DraftPlanner planner, List<String> taken,
                             Position position, int pick){
