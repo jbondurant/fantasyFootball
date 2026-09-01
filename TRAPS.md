@@ -153,3 +153,70 @@ the half of `Draft2026` that had never had one. `ModelAAudit` is the tool;
     as "2 of 4 engines say RB" with nothing to say it was a coin flip. It
     happened at round 3 on the real board, in the rounds that matter, and in
     the direction the keeper slate has already gutted.
+
+## H. The night before the draft
+
+Added 2026-09-01, later the same day, from two more adversarial passes and from
+following the measurements where they went. Several of these are faults in code
+written that morning to fix the ones above - the catalogue is not a record of
+old sins.
+
+35. **A silent estimator is worse than a loud one.** `PolicyTournament` buckets
+    the board into maps keyed by SKILL positions and indexes them with the
+    player's own position, so the first DEFENCE threw. Defences joined the board
+    when DEF entered `PairwiseOdds.CAP`, and `Draft2026` forces
+    `scheduleRounds=16`, so they are always there: the Kim-Nelson arbiter had
+    NEVER RUN in the tool Justin uses, and the catch reported it as an ordinary
+    fallback. Its own comment claimed "45-64 rollouts, 1.2s worst case" - a
+    number measured while it was dead. The real cost is 8.4s. A `catch` that
+    prints only `getMessage()` cannot locate a NullPointerException; name the
+    frame.
+36. **The legend must name the column the code ranks on.** The footer under the
+    table said VS WAIT "is what to rank on". The sort has always ranked on END
+    TEAM. They disagree in practice, so a reader following the printed
+    instruction takes a different player than the tool recommends. Ten instances
+    of prose drift in this project and this was the first in text the user
+    reads.
+37. **A greedy tail with no legality constraint prices an impossible roster.**
+    `rolloutRoster` was pure marginal capped by `MOST`, so it often finished
+    with NO DEFENCE and was then charged the streaming penalty - which made
+    taking a defence NOW look like the only way to ever have one. A defence in
+    round 7 or 8 in five of six drafts. Reserve seats for unfilled named
+    starting slots, derived from the lineup, never typed.
+38. **A rank must index the list its curve was built from.** `projectionRanks`
+    ranked the whole pool while `thisYear` builds the curve from the DRAFTABLE
+    pool, so every held man was priced against twenty-four players who are not
+    in it - Chase 29 points under his own projection. The fix is not to add the
+    keepers back: putting them in the sorted list shifts everyone below them
+    instead (Penix, 51 points). Slot them in by counting how many draftable men
+    beat them.
+39. **A refused pick must still occupy its seat.** TRAPS A1 again, still open
+    after being named: a man the rules declined went into a print list and never
+    onto the roster, so a ceiling of two was counted against one and `full()`
+    read fifteen on a roster of sixteen. `MOST` was the only thing standing
+    between that and a third quarterback. Record him - and NOT through `draft()`,
+    which must keep refusing, or no model can be stopped from PLANNING an
+    illegal roster.
+40. **One failed cycle must not end the night.** `Draft2026` had no guard
+    between freezing the picks snapshot and thawing it, and the engine that
+    could throw - the board model, the one read first and the only one speaking
+    after round 7 - was the one NOT wrapped, while the second opinion was. One
+    refused read from Sleeper and he re-pays the whole warm against a sixty
+    second clock.
+41. **A harness that does not warm what the tool warms certifies nothing.**
+    `LivePathStress` never called `warmSurvival`, so every rollout it exercised
+    fell back to the estimator the survival table had retired. "70 picks priced,
+    0 throws, defence at round 10" was true of a configuration nobody runs, and
+    it went into DRAFT-READY as verification of one that does. Print which rule
+    was measured.
+42. **A model validated only against its own simulations is not validated.**
+    Every measurement of the survival table - 2.69 to 0.08 - scored it against
+    more draws from the model it is built from, which cannot separate a right
+    table from one reproducing its own generator. On the league's REAL 2024 and
+    2025 drafts the same table scores 1.19 against the cutoff's 3.35: the change
+    holds, and the 0.85-to-1.19 gap is the misspecification the simulated tests
+    are structurally unable to see. The same test then REVERSED a judgement
+    made hours earlier on simulated evidence alone - the room-observed term in
+    `drain`, kept on the argument that a simulation cannot exercise
+    misspecification, and dropped when a real draft could.
+
