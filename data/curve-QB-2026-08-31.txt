@@ -1,0 +1,30 @@
+
+THE 2026 QB CURVE
+
+RANK  PLAYER                   PROJECTED    DROP BEATS LDR   TIER  
+QB1   Josh Allen                   415.5    35.5        0%      1  <<< TIER ENDS HERE
+QB2   Lamar Jackson                380.0     1.2        0%      2  
+QB3   Drake Maye                   378.8     6.6       49%      2  
+QB4   Joe Burrow                   372.1     6.2       49%      2  
+QB5   Dak Prescott                 365.9     2.7       45%      2  
+QB6   Brock Purdy                  363.2     7.8       45%      2  
+QB7   Trevor Lawrence              355.4     0.1       43%      2  
+QB8   Caleb Williams               355.3     2.8       45%      2  
+QB9   Jalen Hurts                  352.5     1.8       45%      2  
+QB10  Jayden Daniels               350.7     3.0       43%      2  
+QB11  Bo Nix                       347.7     0.2       45%      2  
+QB12  Justin Herbert               347.5     2.8       44%      2  
+QB13  Patrick Mahomes              344.7     0.5       41%      2  
+QB14  Matthew Stafford             344.2     0.8       42%      2  
+QB15  Jared Goff                   343.5     2.9       43%      2  
+QB16  Jaxson Dart                  340.5     8.0       40%      2  <<< TIER ENDS HERE
+QB17  Jordan Love                  332.5     5.5        0%      3  
+QB18  Kyler Murray                 327.1     0.2       48%      3  
+QB19  Baker Mayfield               326.9    11.9       49%      3  
+QB20  Tyler Shough                 314.9     0.2       46%      3  
+
+detected valleys: after QB1 (drop 35.5)  after QB16 (drop 8.0)  after QB22 (drop 12.3)  after QB28 (drop 37.2)  after QB29 (drop 23.0)  after QB30 (drop 20.8)  after QB31 (drop 51.1)  
+
+DROP is to the next rank on the RAW projections. The detector
+runs isotonic first, so it fires on the step left after noise is
+pooled - which is not always the biggest raw drop, and is the point.

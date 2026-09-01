@@ -496,8 +496,30 @@ public class BoardValue {
             List<List<Double>> byRank = new ArrayList<>();
             for(int rank = 0; rank <= cap; rank++){
                 List<Double> pool = new ArrayList<>();
-                int from = Math.max(1, (int) Math.floor(rank * Math.exp(-0.25)));
-                int to = Math.min(cap, (int) Math.ceil(rank * Math.exp(0.25)));
+                // A MINIMUM ABSOLUTE WIDTH, because a log window is far too
+                // narrow at the top of the board.
+                //
+                // Justin: Robinson's odds against Gibbs should be much higher
+                // than McCaffrey's, because Robinson is 2.3% below him and
+                // McCaffrey is 14.6% below. They were not - Robinson came out
+                // at 55%, ABOVE even money, despite projecting lower, which is
+                // impossible from the projections alone.
+                //
+                // The cause was here. A +/-25% log window makes rank 1's pool
+                // ranks 1-2 and rank 2's pool ranks 2-3, so adjacent men were
+                // drawing their scatter from DIFFERENT distributions, and that
+                // difference swamped a 2.3% gap. The pool's idiosyncrasy was
+                // deciding, not the projections.
+                //
+                // Scatter does vary down a board, but not between RB1 and RB2.
+                // Six ranks either side at the top means the whole first tier
+                // shares one scatter estimate, so what separates two men there
+                // is their projected points - which is the input Justin wants
+                // driving this, and the thing Boris Chen's ADP-only method
+                // cannot see at all.
+                int half = Math.max(6, (int) Math.round(rank * 0.25));
+                int from = Math.max(1, rank - half);
+                int to = Math.min(cap, rank + half);
                 for(int r = from; r <= to; r++){
                     pool.addAll(entry.getValue().getOrDefault(r, List.of()));
                 }
