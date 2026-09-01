@@ -25,6 +25,14 @@ public class TailLegality {
                 DraftPlanner.keepersFromProperty(configuration), choice, earliness);
         Set<String> kept = LiveBoard.kept(configuration);
         Map<Position, double[]> curve = LiveBoard.thisYear(planner, kept);
+        // The tail's every future rank comes from LiveBoard.expectedRank, so
+        // this measures a different tail depending on whether the survival
+        // table is up. It never built one, and the survival table is exactly
+        // what moved the late DEF and TE ranks - the two positions the tail is
+        // being audited for. Same knob as everywhere else: -PsurvivalDraws=0.
+        LiveBoard.warmSurvival(planner, planner.simulator());
+        System.out.printf("survival table: %s%n", LiveBoard.SURVIVAL == null
+                ? "OFF - measuring the retired ADP cutoff" : "on, as in Draft2026");
         Map<String, List<DetectionLag.Man>> wider = NflverseBoards.usable(null);
         List<String> order = new ArrayList<>(new TreeMap<>(wider).keySet());
         List<PairwiseOdds.Man> men = PairwiseOdds.nflverseMen(wider, order);

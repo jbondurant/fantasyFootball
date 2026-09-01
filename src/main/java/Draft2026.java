@@ -90,61 +90,95 @@ public class Draft2026 {
                 return;
             }
             long began = System.nanoTime();
-            // One snapshot for the whole cycle. Without this the header, the
-            // board model and Model A each fetch their own picks list, so a
-            // manager picking during the sixteen seconds Model A takes leaves
-            // the two halves of the screen answering about different boards.
-            LiveDraft.freeze(draftID);
-            int round = roundNow(simulator, planner, draftID);
-            System.out.printf("%n================ ROUND %d ================%n", round);
-            // THE FAST ANSWER FIRST. The board model takes half a second and
-            // Model A takes sixteen, so printing them in that order means an
-            // answer is on screen almost immediately and the second opinion
-            // arrives while it is being read - rather than sixteen seconds of
-            // nothing against a sixty second clock.
-            System.out.printf("%n--- THE BOARD MODEL (knows the 24 keepers) ---%n");
-            LiveBoard.answer(configuration, planner, simulator, draftID, curve, pools,
-                    order, men, kept);
-            System.out.printf("%n(board model in %.1fs - Model A follows)%n",
-                    (System.nanoTime() - began) / 1e9);
-            if(round <= 7){
-                System.out.printf("%n--- MODEL A (proven rounds 1-7, second opinion) ---%n");
-                try {
-                    DraftNight.answer(configuration, planner, timing, simulator, points,
-                            benchBaseRate, draftID, rollouts, scenarios, waitRollouts);
-                }
-                catch(Exception failed){
-                    System.out.printf("   Model A failed this cycle: %s%n"
-                            + "   the board model above stands on its own%n", failed);
-                }
-            }
-            else {
-                // SAY THE TRUE REASON. This used to assert "its starting nine
-                // is full", which is false on the RUNBOOK's own recommended
-                // shape - tight end deferred to round 8 leaves the nine short,
-                // and the audit measured Model A's spread there at 3.79,
-                // LARGER than round 7's 2.75. The gate itself is right: Justin
-                // set it, Model A is only proven in rounds 1-7. But telling
-                // him his nine is full when he still needs a tight end could
-                // cost him the tight end.
-                Map<Position, Integer> missing =
-                        LiveBoard.stillNeeds(planner, simulator, draftID);
-                if(missing.isEmpty()){
-                    System.out.printf("%n(Model A is silent from round 8 - its starting"
-                            + " nine IS full, so it%nis indifferent here and must not be"
-                            + " read.)%n");
+            // ONE BAD CYCLE MUST NOT END THE NIGHT.
+            //
+            // Everything below is inside a try/finally now. Three calls in this
+            // block are declared `throws Exception` - the freeze itself, which
+            // reads Sleeper over the network; roundNow; and LiveBoard.answer -
+            // and only DraftNight.answer was ever guarded. So a refused HTTP
+            // read, or any board the fast engine had not anticipated, walked
+            // out of main and ENDED THE PROCESS, taking the warm engine with
+            // it: both models, sixteen seasons of nflverse, the scatter pools
+            // and now the survival table, all of which are paid once and would
+            // have to be paid again against a sixty-second clock.
+            //
+            // The asymmetry was the fault. The engine Justin reads first, and
+            // the only one that speaks after round 7, was the one that could
+            // kill the session; the second opinion could not. DraftNight's own
+            // loop has had this guard all along.
+            //
+            // The thaw moves into the finally for the same reason: a snapshot
+            // that outlives its cycle is a board frozen for the rest of the
+            // draft, and it looks completely normal on screen.
+            try {
+                // One snapshot for the whole cycle. Without this the header, the
+                // board model and Model A each fetch their own picks list, so a
+                // manager picking during the sixteen seconds Model A takes leaves
+                // the two halves of the screen answering about different boards.
+                LiveDraft.freeze(draftID);
+                int round = roundNow(simulator, planner, draftID);
+                System.out.printf("%n================ ROUND %d ================%n", round);
+                // THE FAST ANSWER FIRST. The board model takes half a second and
+                // Model A takes sixteen, so printing them in that order means an
+                // answer is on screen almost immediately and the second opinion
+                // arrives while it is being read - rather than sixteen seconds of
+                // nothing against a sixty second clock.
+                System.out.printf("%n--- THE BOARD MODEL (knows the 24 keepers) ---%n");
+                LiveBoard.answer(configuration, planner, simulator, draftID, curve, pools,
+                        order, men, kept);
+                System.out.printf("%n(board model in %.1fs - Model A follows)%n",
+                        (System.nanoTime() - began) / 1e9);
+                if(round <= 7){
+                    System.out.printf("%n--- MODEL A (proven rounds 1-7, second opinion) ---%n");
+                    try {
+                        DraftNight.answer(configuration, planner, timing, simulator, points,
+                                benchBaseRate, draftID, rollouts, scenarios, waitRollouts);
+                    }
+                    catch(Exception failed){
+                        System.out.printf("   Model A failed this cycle: %s%n"
+                                + "   the board model above stands on its own%n", failed);
+                    }
                 }
                 else {
-                    System.out.printf("%n(Model A is silent from round 8 - it is only"
-                            + " proven in rounds 1-7.%nNote your starting nine is NOT yet"
-                            + " full: still needs %s.%nThe board model above knows that"
-                            + " and is pricing it.)%n", missing);
+                    // SAY THE TRUE REASON. This used to assert "its starting nine
+                    // is full", which is false on the RUNBOOK's own recommended
+                    // shape - tight end deferred to round 8 leaves the nine short,
+                    // and the audit measured Model A's spread there at 3.79,
+                    // LARGER than round 7's 2.75. The gate itself is right: Justin
+                    // set it, Model A is only proven in rounds 1-7. But telling
+                    // him his nine is full when he still needs a tight end could
+                    // cost him the tight end.
+                    Map<Position, Integer> missing =
+                            LiveBoard.stillNeeds(planner, simulator, draftID);
+                    if(missing.isEmpty()){
+                        System.out.printf("%n(Model A is silent from round 8 - its starting"
+                                + " nine IS full, so it%nis indifferent here and must not be"
+                                + " read.)%n");
+                    }
+                    else {
+                        System.out.printf("%n(Model A is silent from round 8 - it is only"
+                                + " proven in rounds 1-7.%nNote your starting nine is NOT yet"
+                                + " full: still needs %s.%nThe board model above knows that"
+                                + " and is pricing it.)%n", missing);
+                    }
                 }
+                System.out.printf("%n(both answered in %.1fs, both against the same"
+                                + " %d-pick board)%n",
+                        (System.nanoTime() - began) / 1e9, LiveDraft.frozenSize());
             }
-            System.out.printf("%n(both answered in %.1fs, both against the same"
-                            + " %d-pick board)%n",
-                    (System.nanoTime() - began) / 1e9, LiveDraft.frozenSize());
-            LiveDraft.thaw();
+            catch(Exception failed){
+                // Loud, named, and survivable. The engines stay warm, so the
+                // next press of enter is another half-second answer rather
+                // than another forty seconds of warm-up.
+                System.out.printf("%n   *** THIS CYCLE FAILED: %s%n"
+                        + "   *** the board may have moved mid-read, or Sleeper"
+                        + " refused the read.%n"
+                        + "   *** Both engines are still warm - press enter to"
+                        + " try again.%n", failed);
+            }
+            finally {
+                LiveDraft.thaw();
+            }
         }
     }
 

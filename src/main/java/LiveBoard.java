@@ -741,98 +741,24 @@ public class LiveBoard {
                 held, first, firstRank, fromPick), pools, curve, count, true);
     }
 
+    /**
+     * The same tail, scored instead of handed back.
+     *
+     * DELEGATES. This used to be eighty-seven lines identical to
+     * {@link #rolloutRoster} but for its last statement, twenty-five line
+     * comment block and all, and nothing called it - so it was the copy that
+     * would rot unnoticed while its prose still promised a legal lineup.
+     * rulesRoster's own javadoc names that failure ("a second copy of this loop
+     * is exactly how the two would drift apart - which is the failure this repo
+     * has hit six times") a hundred lines below where it was happening.
+     */
     static double rollout(DraftPlanner planner, List<String> taken,
                           Map<Position, double[]> curve,
                           Map<Position, List<List<Double>>> pools, int count,
                           List<BoardValue.Slot> held, Position first, int firstRank,
                           int fromPick){
-        List<BoardValue.Slot> roster = new ArrayList<>(held);
-        roster.add(new BoardValue.Slot(first, firstRank));
-        Map<Position, Integer> mine = new EnumMap<>(Position.class);
-        for(BoardValue.Slot slot : roster){
-            mine.merge(slot.position(), 1, Integer::sum);
-        }
-        int[] picks = {7, 18, 31, 42, 55, 66, 79, 90, 103, 114, 127, 162, 175, 186};
-
-        // THE TAIL MUST END WITH A LEGAL LINEUP.
-        //
-        // This loop was pure marginal capped by MOST, with no legality
-        // constraint at all, so it frequently finished with NO DEFENCE - a
-        // defence's marginal is about twenty points and a skill man's is larger
-        // for most of the draft, so the greedy tail simply never got round to
-        // one. BoardValue.oneSeason then charges those rosters the "drop your
-        // weakest man to stream" penalty.
-        //
-        // That made NOT taking the defence now look like never taking it, so
-        // taking it now won. Measured by the second adversarial pass: a defence
-        // in round 7 or 8 in five of six drafts, against DRAFT-READY's claim
-        // that the model refuses a defence before round ten. At seed 0 pick 79
-        // the table showed WR Alec Pierce adding 144.6 with his cliff CROSSED
-        // against a defence adding 19.9 whose VS WAIT was 0.0 - and took the
-        // defence, on one point in 2004 against a 125-point bar.
-        //
-        // This is TRAPS A7 living inside the quantity the verdict ranks on. It
-        // is also the answer to the DryRun round-8 defence I left open: not a
-        // structural truth about constant marginals, a rollout that was allowed
-        // to imagine an illegal roster.
-        //
-        // The requirement is DERIVED FROM THE LINEUP, never typed per position
-        // - the same discipline RosterRules.ceiling() holds to.
-        Map<Position, Integer> required = RosterRules.live().empty().stillNeeds();
-        int seatsLeft = 0;
-        for(int pick : picks){
-            if(pick > fromPick){
-                seatsLeft++;
-            }
-        }
-        for(int pick : picks){
-            if(pick <= fromPick || roster.size() >= 16){
-                continue;
-            }
-            seatsLeft--;
-            // How many of the remaining seats are already spoken for by named
-            // starting slots this roster has not filled. When that uses up
-            // everything left, the tail may only take what it still owes.
-            int owed = 0;
-            for(Map.Entry<Position, Integer> need : required.entrySet()){
-                owed += Math.max(0, need.getValue()
-                        - mine.getOrDefault(need.getKey(), 0));
-            }
-            boolean mustFill = owed > seatsLeft;
-            double base = BoardValue.empirical(roster, pools, curve, count, true);
-            Position best = null;
-            double most = -1e9;
-            int bestRank = 1;
-            for(Position position : new Position[]{Position.RB, Position.WR,
-                    Position.TE, Position.QB, Position.DEF}){
-                if(mine.getOrDefault(position, 0) >= BoardValue.MOST.get(position)){
-                    continue;
-                }
-                if(mustFill && mine.getOrDefault(position, 0)
-                        >= required.getOrDefault(position, 0)){
-                    continue;   // no seats to spare for a position already filled
-                }
-                int rank = expectedRank(planner, taken, position, pick);
-                double[] mean = curve.get(position);
-                if(mean == null || rank >= mean.length){
-                    continue;
-                }
-                List<BoardValue.Slot> trial = new ArrayList<>(roster);
-                trial.add(new BoardValue.Slot(position, rank));
-                double adds = BoardValue.empirical(trial, pools, curve, count, true) - base;
-                if(adds > most){
-                    most = adds;
-                    best = position;
-                    bestRank = rank;
-                }
-            }
-            if(best == null){
-                break;
-            }
-            roster.add(new BoardValue.Slot(best, bestRank));
-            mine.merge(best, 1, Integer::sum);
-        }
-        return BoardValue.empirical(roster, pools, curve, count, true);
+        return BoardValue.empirical(rolloutRoster(planner, taken, curve, pools, count,
+                held, first, firstRank, fromPick), pools, curve, count, true);
     }
 
     /** The same rollout, handing back the roster so it can be judged twice. */
@@ -1467,13 +1393,45 @@ public class LiveBoard {
     static RosterRules.Roster rulesRoster(DraftPlanner planner, DraftSimulator simulator,
             DraftSimulator.SimState state, List<String> mine, List<String> declined){
         RosterRules.Roster roster = RosterRules.live().justins();
+        int lastRound = 0;
         for(String id : mine){
             Player player = Player.getPlayerFromSIDV2(id);
             if(player == null || planner.myKeeperIDs().contains(id)){
                 continue;
             }
             Integer at = state.takenAtOf(id);
-            int taken_at = at == null ? 1 : simulator.slotAt(at).round();
+            // A MAN THE BOARD DOES NOT CARRY STILL COST A ROUND, AND NOT ROUND
+            // ONE.
+            //
+            // takenAtOf is null for anyone past the ADP cut, and minePicks now
+            // hands those men to this loop - the old attribution dropped them,
+            // so `at == null ? 1` was never reached in anger. It filed every
+            // one of them in round one, which round one usually already holds:
+            // the rules then declined an ordinary pick and the screen printed
+            // "ON MY ROSTER BUT OUTSIDE THE RULES - counted anyway: WR <name>
+            // (round 1): round 1 is already spent". Measured on a six-seat
+            // board: roundsSpent [1, 1, 3, 4, 5, 6, 12, 13], with round 2 never
+            // marked and roundsRemaining offering nine picks against eight
+            // seats.
+            //
+            // minePicks walks his seats in order, so his round is the next one
+            // this roster has not already spent. legalAt is unchanged at every
+            // round of the draft - pinned by
+            // OffBoardRoundLedgerTest.theLedgerFixDoesNotMoveWhatIsLegal,
+            // because whyNotDraft counts only rounds AFTER the one it is asked
+            // about and the phantom was always behind it.
+            int taken_at;
+            if(at != null){
+                taken_at = simulator.slotAt(at).round();
+            }
+            else {
+                taken_at = lastRound + 1;
+                while(taken_at <= RosterRules.live().rounds()
+                        && roster.roundsSpent().contains(taken_at)){
+                    taken_at++;
+                }
+            }
+            lastRound = Math.max(lastRound, taken_at);
             // A REFUSED PICK MUST STILL COUNT. This used to be an `if` with no
             // `else`, so a man the rules would have declined left NO TRACE on
             // the rules roster - and the quarterback ceiling of two was then
