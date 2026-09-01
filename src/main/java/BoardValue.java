@@ -67,8 +67,11 @@ public class BoardValue {
      * lineup. -PmaxTE=2 restores the old behaviour.
      */
     static final Map<Position, Integer> MOST = new EnumMap<>(Map.of(
-            Position.QB, 2, Position.RB, 7, Position.WR, 8,
-            Position.TE, Integer.getInteger("maxTE", 1), Position.DEF, 1));
+            Position.QB, Integer.getInteger("maxQB", 2),
+            Position.RB, Integer.getInteger("maxRB", 7),
+            Position.WR, Integer.getInteger("maxWR", 8),
+            Position.TE, Integer.getInteger("maxTE", 1),
+            Position.DEF, 1));
 
     record Slot(Position position, int rank){}
 
@@ -422,8 +425,24 @@ public class BoardValue {
             double base = empirical(roster, pools, curve, count);
             for(Position position : new Position[]{Position.RB, Position.WR,
                     Position.TE, Position.QB, Position.DEF}){
-                if(mine.getOrDefault(position, 0) >= MOST.get(position)
-                        || !legal.canDraft(position, round(made))){
+                // LEGALITY ONLY IN THE TAIL, not appetite.
+                //
+                // Justin: the 3 TE model should be indicative of a problem with
+                // the model, and we should fix that. He is right and it is not
+                // the noise I called it. MOST is a hand-typed appetite - RB 7,
+                // WR 8 - and it was consulted HERE, inside the greedy tail, and
+                // the tail is how a candidate gets EVALUATED. So an arbitrary
+                // parameter was contaminating the evaluation rather than merely
+                // bounding the roster, and the symptom was a score that is
+                // non-monotonic in a cap that never binds: maxTE 1 and 14 both
+                // give 2023, while maxTE 3 gives 2035 by changing an RB/WR
+                // decision in a season where the tight end count never differs.
+                //
+                // The tail now asks only whether a pick is LEGAL. What the
+                // roster should want is the valuation's job, and if the
+                // valuation cannot be trusted to decline a third tight end then
+                // capping it is hiding the fault rather than fixing it.
+                if(!legal.canDraft(position, round(made))){
                     continue;
                 }
                 int rank = adpDepth(board, position, pick) + 1;
@@ -781,11 +800,41 @@ public class BoardValue {
      * bracket the comment describes had never been printed. That is TRAPS.md F27
      * exactly: prose describing a mechanism the code does not implement.
      *
-     * Off by default, so every number computed so far is unchanged: with the
-     * flag absent the fill sorts on the drawn points, which is what it has
-     * always done. On, it sorts on the mean of the man's rank - what you knew
-     * before the season - and still counts what he drew, which is the stingy end
-     * of the bracket and the hindsight-free one.
+     * OFF by default, which is a KNOWN BIAS and not a clean choice. Read this
+     * before trusting any depth number this model produces.
+     *
+     * Justin: the 3 TE model should be indicative of a problem with the model,
+     * and we should fix that. He was right and this is the problem. With the
+     * flag off the fill sorts on DRAWN points, so the model plays whichever
+     * tight end turned out better - which nobody can do in August. That is
+     * TRAPS.md C12, the fault that has already reversed several findings here.
+     *
+     * It explains the symptom exactly. Under hindsight every extra body is a
+     * lottery ticket that is always cashed correctly, so more bodies are always
+     * better, depth is overvalued, and a third tight end on a one-tight-end
+     * lineup looks good. The appetite cap was the only thing stopping it, which
+     * means capping it was hiding the fault - his words, and correct.
+     *
+     * AND JUSTIN'S OTHER OBSERVATION, which is the useful half: this is not a
+     * bug in every format. In BEST BALL the lineup IS set retrospectively -
+     * your optimal starters are chosen for you after the week is played - so
+     * sorting on realised points is not hindsight there, it is the rules. This
+     * setting is the correct model for best ball and the wrong one for a league
+     * where a human sets a lineup on Sunday morning. The same code, honest in
+     * one format and cheating in the other.
+     *
+     * SO WHY IS IT STILL THE DEFAULT. Turning it on removes the cap dependence
+     * completely - 1736/1594 at every maxTE from 1 to 14, where before the
+     * score wandered between 2023 and 2043 - which is the proof that hindsight
+     * was driving it. But the resulting model drafts SIXTEEN RECEIVERS in two
+     * of five seasons, because with depth worth nothing the marginal collapses
+     * and the search stops discriminating. That is a worse thing to hand
+     * somebody at a draft than a documented bias.
+     *
+     * So the honest state, the night before: the model is biased toward depth
+     * and the bias is measured. -PlineupByExpected removes it and breaks the
+     * search. Fixing the marginal so it still discriminates without hindsight
+     * is the first post-draft job, and it is a real one.
      */
     static final boolean BY_EXPECTED = Boolean.getBoolean("lineupByExpected");
 
