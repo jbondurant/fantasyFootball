@@ -424,7 +424,12 @@ public class LiveBoard {
             String where = cliff == null ? "none ahead"
                     : String.format("after %s%d%s", position, cliff.afterRank(),
                             crosses ? " CROSSED" : "");
-            System.out.printf("%-5s %-24s %6d %5.0f%% %8.1f %7.1f %7.0f %5.0f%% %14s %s%n",
+            // END was %7.0f, which printed WR 1921 and TE 1921 at pick 66 and
+            // then chose TE with nothing on screen to explain it - 13 of 84
+            // priced picks in the audit showed two rows tied to the printed
+            // digit. Now that the legend correctly says END TEAM decides, the
+            // reader must be able to see WHICH end team is larger.
+            System.out.printf("%-5s %-24s %6d %5.0f%% %8.1f %7.1f %7.1f %5.0f%% %14s %s%n",
                     position,
                     player == null ? candidate : player.firstName + " " + player.lastName,
                     rank, 100 * share, addsNow, wait, both[0],
@@ -474,10 +479,22 @@ public class LiveBoard {
                 + "means anything. A smooth odds curve cannot show this - it is monotone%n"
                 + "by construction and was measured flattening the real cliff by five%n"
                 + "points - which is why the odds are an ingredient here and not the answer.%n");
-        System.out.printf("%nADDS NOW is what he adds to the season your STARTERS score, over the%n"
-                + "man the wire would give you. VS WAIT is that minus what the best of his%n"
-                + "position would add at pick %s - so it is the cost of waiting, and it is%n"
-                + "what to rank on. A position the rules refuse is never priced at all.%n",
+        // THE LEGEND NAMED THE WRONG COLUMN. It used to end "VS WAIT ... is
+        // what to rank on", and the code has never ranked on VS WAIT - it
+        // ranks on END TEAM, as the comment at the sort says outright. They
+        // disagree in practice: at pick 79 of the audit's seed 0, VS WAIT
+        // picks the receiver and END TEAM picks the defence, so a reader
+        // following the printed instruction takes a different player than the
+        // tool recommends. Six instances of prose drift in this project and
+        // this is the first one in text Justin actually reads.
+        System.out.printf("%nEND TEAM is what the verdict ranks on: the whole season my%n"
+                + "STARTING NINE scores if I take him here and play the draft out.%n"
+                + "That is the number to compare across rows.%n"
+                + "%nADDS NOW is what he adds over the man the wire would give you, and%n"
+                + "VS WAIT is that minus what the best of his position would add at%n"
+                + "pick %s - the cost of waiting. They are the WHY behind END TEAM,%n"
+                + "not the ranking: where they disagree with END TEAM, END TEAM wins.%n"
+                + "A position the rules refuse is never priced at all.%n",
                 next < 0 ? "(none left)" : String.valueOf(next));
     }
 
@@ -720,10 +737,52 @@ public class LiveBoard {
             mine.merge(slot.position(), 1, Integer::sum);
         }
         int[] picks = {7, 18, 31, 42, 55, 66, 79, 90, 103, 114, 127, 162, 175, 186};
+
+        // THE TAIL MUST END WITH A LEGAL LINEUP.
+        //
+        // This loop was pure marginal capped by MOST, with no legality
+        // constraint at all, so it frequently finished with NO DEFENCE - a
+        // defence's marginal is about twenty points and a skill man's is larger
+        // for most of the draft, so the greedy tail simply never got round to
+        // one. BoardValue.oneSeason then charges those rosters the "drop your
+        // weakest man to stream" penalty.
+        //
+        // That made NOT taking the defence now look like never taking it, so
+        // taking it now won. Measured by the second adversarial pass: a defence
+        // in round 7 or 8 in five of six drafts, against DRAFT-READY's claim
+        // that the model refuses a defence before round ten. At seed 0 pick 79
+        // the table showed WR Alec Pierce adding 144.6 with his cliff CROSSED
+        // against a defence adding 19.9 whose VS WAIT was 0.0 - and took the
+        // defence, on one point in 2004 against a 125-point bar.
+        //
+        // This is TRAPS A7 living inside the quantity the verdict ranks on. It
+        // is also the answer to the DryRun round-8 defence I left open: not a
+        // structural truth about constant marginals, a rollout that was allowed
+        // to imagine an illegal roster.
+        //
+        // The requirement is DERIVED FROM THE LINEUP, never typed per position
+        // - the same discipline RosterRules.ceiling() holds to.
+        Map<Position, Integer> required = RosterRules.live().empty().stillNeeds();
+        int seatsLeft = 0;
+        for(int pick : picks){
+            if(pick > fromPick){
+                seatsLeft++;
+            }
+        }
         for(int pick : picks){
             if(pick <= fromPick || roster.size() >= 16){
                 continue;
             }
+            seatsLeft--;
+            // How many of the remaining seats are already spoken for by named
+            // starting slots this roster has not filled. When that uses up
+            // everything left, the tail may only take what it still owes.
+            int owed = 0;
+            for(Map.Entry<Position, Integer> need : required.entrySet()){
+                owed += Math.max(0, need.getValue()
+                        - mine.getOrDefault(need.getKey(), 0));
+            }
+            boolean mustFill = owed > seatsLeft;
             double base = BoardValue.empirical(roster, pools, curve, count, true);
             Position best = null;
             double most = -1e9;
@@ -732,6 +791,10 @@ public class LiveBoard {
                     Position.TE, Position.QB, Position.DEF}){
                 if(mine.getOrDefault(position, 0) >= BoardValue.MOST.get(position)){
                     continue;
+                }
+                if(mustFill && mine.getOrDefault(position, 0)
+                        >= required.getOrDefault(position, 0)){
+                    continue;   // no seats to spare for a position already filled
                 }
                 int rank = expectedRank(planner, taken, position, pick);
                 double[] mean = curve.get(position);
@@ -769,10 +832,52 @@ public class LiveBoard {
             mine.merge(slot.position(), 1, Integer::sum);
         }
         int[] picks = {7, 18, 31, 42, 55, 66, 79, 90, 103, 114, 127, 162, 175, 186};
+
+        // THE TAIL MUST END WITH A LEGAL LINEUP.
+        //
+        // This loop was pure marginal capped by MOST, with no legality
+        // constraint at all, so it frequently finished with NO DEFENCE - a
+        // defence's marginal is about twenty points and a skill man's is larger
+        // for most of the draft, so the greedy tail simply never got round to
+        // one. BoardValue.oneSeason then charges those rosters the "drop your
+        // weakest man to stream" penalty.
+        //
+        // That made NOT taking the defence now look like never taking it, so
+        // taking it now won. Measured by the second adversarial pass: a defence
+        // in round 7 or 8 in five of six drafts, against DRAFT-READY's claim
+        // that the model refuses a defence before round ten. At seed 0 pick 79
+        // the table showed WR Alec Pierce adding 144.6 with his cliff CROSSED
+        // against a defence adding 19.9 whose VS WAIT was 0.0 - and took the
+        // defence, on one point in 2004 against a 125-point bar.
+        //
+        // This is TRAPS A7 living inside the quantity the verdict ranks on. It
+        // is also the answer to the DryRun round-8 defence I left open: not a
+        // structural truth about constant marginals, a rollout that was allowed
+        // to imagine an illegal roster.
+        //
+        // The requirement is DERIVED FROM THE LINEUP, never typed per position
+        // - the same discipline RosterRules.ceiling() holds to.
+        Map<Position, Integer> required = RosterRules.live().empty().stillNeeds();
+        int seatsLeft = 0;
+        for(int pick : picks){
+            if(pick > fromPick){
+                seatsLeft++;
+            }
+        }
         for(int pick : picks){
             if(pick <= fromPick || roster.size() >= 16){
                 continue;
             }
+            seatsLeft--;
+            // How many of the remaining seats are already spoken for by named
+            // starting slots this roster has not filled. When that uses up
+            // everything left, the tail may only take what it still owes.
+            int owed = 0;
+            for(Map.Entry<Position, Integer> need : required.entrySet()){
+                owed += Math.max(0, need.getValue()
+                        - mine.getOrDefault(need.getKey(), 0));
+            }
+            boolean mustFill = owed > seatsLeft;
             double base = BoardValue.empirical(roster, pools, curve, count, true);
             Position best = null;
             double most = -1e9;
@@ -781,6 +886,10 @@ public class LiveBoard {
                     Position.TE, Position.QB, Position.DEF}){
                 if(mine.getOrDefault(position, 0) >= BoardValue.MOST.get(position)){
                     continue;
+                }
+                if(mustFill && mine.getOrDefault(position, 0)
+                        >= required.getOrDefault(position, 0)){
+                    continue;   // no seats to spare for a position already filled
                 }
                 int rank = expectedRank(planner, taken, position, pick);
                 double[] mean = curve.get(position);
