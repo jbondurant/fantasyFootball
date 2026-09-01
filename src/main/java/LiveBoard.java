@@ -1058,6 +1058,18 @@ public class LiveBoard {
         private final int draws;
 
         Survival(DraftPlanner planner, DraftSimulator simulator, int draws, long seed){
+            this(planner.points().keySet(), simulator, draws, seed);
+        }
+
+        /**
+         * The same, over an explicit pool.
+         *
+         * A historical season is not a DraftPlanner - RealDraftSurvival scores
+         * this table against the league's own 2025 draft, which is the only
+         * non-circular test of it available. Everything the live path uses goes
+         * through the constructor above.
+         */
+        Survival(Collection<String> pool, DraftSimulator simulator, int draws, long seed){
             this.draws = draws;
             Map<String, List<Integer>> collected = new HashMap<>();
             for(int d = 0; d < draws; d++){
@@ -1075,7 +1087,7 @@ public class LiveBoard {
             }
             for(Position position : Position.values()){
                 double[] byPick = new double[202];
-                for(String id : planner.points().keySet()){
+                for(String id : pool){
                     Player player = Player.getPlayerFromSIDV2(id);
                     if(player == null || player.position != position){
                         continue;
