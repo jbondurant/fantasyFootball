@@ -71,7 +71,43 @@ import java.util.Set;
  */
 public class SelectionModel implements ChoiceModel {
 
-    public static final int FEATURES = 29;
+    public static final int FEATURES = 30;
+
+    /**
+     * The last man at each position anybody starts: slots x twelve teams.
+     *
+     * QB12, TE12, RB24, WR36 - textbook replacement level, and the baseline a
+     * surplus has to be measured against. Computed from the AVAILABLE BOARD.
+     *
+     * Not from the choice set, which is the top sixty by ADP and holds three or
+     * four tight ends - its median is about TE2, which is what f9 already says.
+     * And not from the full points map either: that still contains the
+     * twenty-four kept men, SEVEN of them tight ends this year, so the TE12 it
+     * finds is a man nobody can draft and the surplus it reports is far too
+     * small at exactly the position where scarcity is doing the most work.
+     * Justin caught both, in that order.
+     */
+    static Map<Position, Double> replacementLevel(List<String> board,
+            Map<String, Double> points, Map<Position, Integer> starterSlots){
+        Map<Position, List<Double>> byPosition = new EnumMap<>(Position.class);
+        for(String id : board){
+            Player player = Player.getPlayerFromSIDV2(id);
+            double value = points.getOrDefault(id, 0.0);
+            if(player != null && value > 0){
+                byPosition.computeIfAbsent(player.position, u -> new ArrayList<>())
+                        .add(value);
+            }
+        }
+        Map<Position, Double> out = new EnumMap<>(Position.class);
+        for(Map.Entry<Position, List<Double>> entry : byPosition.entrySet()){
+            List<Double> values = entry.getValue();
+            values.sort(Comparator.reverseOrder());
+            int slots = starterSlots.getOrDefault(entry.getKey(), 1);
+            int index = Math.min(values.size() - 1, Math.max(0, slots * 12 - 1));
+            out.put(entry.getKey(), values.get(index));
+        }
+        return out;
+    }
     public static final int GAME_ROUNDS = 9;
     static final int CHOICE_SET = 60;
     static final double ADP_LIMIT = 250.0;
@@ -515,6 +551,13 @@ public class SelectionModel implements ChoiceModel {
         // is a fact the model should read off the drafts, not be told.
         boolean withDefences = DraftPlanner.scheduleRounds() > GAME_ROUNDS;
         List<String> board = new ArrayList<>();
+        // REPLACEMENT LEVEL IS FIXED AT THE START OF THE DRAFT.
+        //
+        // Passing the CURRENT board recomputes it every pick, so it drifts down
+        // as the pool empties and everyone's surplus inflates late - measured,
+        // that made TE fidelity worse than having no feature at all (13.6
+        // against 12.4). Real VORP is a property of the pool you started with.
+        List<String> startingBoard;
         for(Map.Entry<String, Double> entry : adp.entrySet()){
             Player player = Player.getPlayerFromSIDV2(entry.getKey());
             if(player == null || !(StartingLineup.isSkillPosition(player.position)
@@ -526,6 +569,9 @@ public class SelectionModel implements ChoiceModel {
             }
             board.add(entry.getKey());
         }
+        // Snapshot before a single pick is made. This list already excludes the
+        // kept men and anyone past ADP_LIMIT, so it is the draftable pool.
+        startingBoard = new ArrayList<>(board);
 
         List<Observation> observations = new ArrayList<>();
         List<Position> recentPicks = new ArrayList<>();
@@ -566,7 +612,7 @@ public class SelectionModel implements ChoiceModel {
                 long qbHolders = rosters.values().stream()
                         .filter(counts -> counts.getOrDefault(Position.QB, 0) > 0).count();
                 observations.add(new Observation(
-                        features(choiceSet, adp, points, new Context(
+                        featuresWithBoard(startingBoard, choiceSet, adp, points, new Context(
                                 rosters.computeIfAbsent(manager, u -> new EnumMap<>(Position.class)),
                                 qbEarliness.getOrDefault(manager, 0.0), recentPicks,
                                 pickNumber, firstOfPair, secondOfPair, waitFraction,
@@ -641,10 +687,37 @@ public class SelectionModel implements ChoiceModel {
     }
 
     /** The feature matrix for one choice set - also used by the simulator. */
+    /** Same as features(choiceSet, adp, points, context, board), board first. */
+    static double[][] featuresWithBoard(List<String> board, List<String> choiceSet,
+                                        Map<String, Double> adp,
+                                        Map<String, Double> points, Context context){
+        return features(choiceSet, adp, points, context, board);
+    }
+
     public static double[][] features(List<String> choiceSet,
                                       Map<String, Double> adp,
                                       Map<String, Double> points,
                                       Context context){
+        // No board given, so replacement level cannot be computed over the
+        // population it has to be computed over. f29 stays ZERO rather than
+        // being computed from the wrong one - which is the mistake that made it
+        // useless in the first place.
+        return features(choiceSet, adp, points, context, null);
+    }
+
+    /**
+     * @param board every player still AVAILABLE, keepers and drafted men gone.
+     *              Replacement level is computed from this and nothing else:
+     *              the choice set is the top sixty by ADP and cannot reach TE12,
+     *              and the full points map still contains the twenty-four kept
+     *              men, seven of whom are tight ends this year. Both give a
+     *              baseline that is not replacement.
+     */
+    public static double[][] features(List<String> choiceSet,
+                                      Map<String, Double> adp,
+                                      Map<String, Double> points,
+                                      Context context,
+                                      List<String> board){
         Map<Position, Integer> roster = context.roster();
         double managerQBEarliness = context.qbEarliness();
         List<Position> recentPicks = context.recentPicks();
@@ -681,6 +754,15 @@ public class SelectionModel implements ChoiceModel {
             features[a][7] = position.equals(Position.TE) ? 1.0 : 0.0;
             features[a][8] = position.equals(Position.QB)
                     ? runCount(recentPicks, Position.QB) : 0.0;
+            // NO PER-POSITION RUN TERMS. f8 is QB-only and stays that way: I
+            // added RB, TE and DEF run counts on the theory that f8's own note
+            // ("a shared coefficient cancels itself") argued for one per
+            // position rather than none, and measured them on held-out seasons.
+            // They do nothing - QB 15.5 to 15.8, TE 11.7 to 12.1, WR 5.4 to 6.0,
+            // all inside the noise - and three more parameters fitted to 435
+            // observations is a cost, as the nine-round gate showed when the
+            // depth features were left switched on there.
+
 
             double fall = context.pickNumber() - adp.getOrDefault(choiceSet.get(a), 999.0);
             features[a][10] = Math.min(Math.max(fall, 0), 48) / 24.0;
@@ -747,7 +829,8 @@ public class SelectionModel implements ChoiceModel {
             //      its gate over the linear one. Off, that configuration is
             //      byte-identical to before this change; on, the sixteen-round
             //      one keeps the whole gain.
-            if(DraftPlanner.scheduleRounds() > GAME_ROUNDS){
+            if(DraftPlanner.scheduleRounds() > GAME_ROUNDS
+                    && !Boolean.getBoolean("noDepth")){
                 double depth = Math.min(1.0, context.pickNumber() / 192.0);
                 features[a][24] = depth;
                 features[a][25] = features[a][5] * depth;
@@ -780,6 +863,46 @@ public class SelectionModel implements ChoiceModel {
             double drop = second == Double.NEGATIVE_INFINITY
                     ? CLIFF_CAP : bestPoints.get(entry.getKey()) - second;
             features[entry.getValue()][9] = Math.min(Math.max(drop, 0), CLIFF_CAP) / CLIFF_CAP;
+        }
+
+        // f29  SCARCITY: surplus over REPLACEMENT at his own position.
+        //
+        //      f9 is the cliff from the best remaining to the second best - one
+        //      step. That is not why an elite tight end goes in round 3. He goes
+        //      because the gap to REPLACEMENT is enormous while the gap to TE2
+        //      may be nothing, and the rank features are cross-positional, so a
+        //      143-point tight end always looks worse than a 300-point back
+        //      however scarce he is.
+        //
+        //      MY FIRST VERSION OF THIS DID NOT MEASURE SCARCITY AT ALL, and it
+        //      is worth saying why because the null result looked like evidence.
+        //      I used the median of the position WITHIN THE CHOICE SET - and the
+        //      choice set is the top sixty by ADP, which holds three or four
+        //      tight ends. Its median is about TE2, so the feature was computing
+        //      "how much better than TE2", which is nearly what f9 already says.
+        //      Redundant by construction. Justin: "isn't it a bad sign that the
+        //      scarcity isn't working when it should... it points at a logical
+        //      failure". It did.
+        //
+        //      Replacement is the last man at that position anybody starts:
+        //      slots x twelve teams, so QB12, TE12, RB24, WR36. Computed from
+        //      the full points map rather than the choice set, because that is
+        //      the whole point - the baseline must not move with what is left on
+        //      the board sixty deep.
+        Map<Position, Double> replacement = board == null ? Map.of()
+                : replacementLevel(board, points, starterSlots);
+        for(int a = 0; a < n; a++){
+            if(!Boolean.getBoolean("scarcity")
+                    || DraftPlanner.scheduleRounds() <= GAME_ROUNDS){
+                break;
+            }
+            Player who = Player.getPlayerFromSIDV2(choiceSet.get(a));
+            Double floor = who == null ? null : replacement.get(who.position);
+            if(floor == null){
+                continue;
+            }
+            double surplus = points.getOrDefault(choiceSet.get(a), 0.0) - floor;
+            features[a][29] = Math.min(Math.max(surplus, 0), CLIFF_CAP) / CLIFF_CAP;
         }
         return features;
     }

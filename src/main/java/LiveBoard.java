@@ -1152,8 +1152,28 @@ public class LiveBoard {
      * measured before this change.
      */
     static double[] believe(Position position, double[] projected){
+        // DEFAULT 1: NO SHRINKAGE. THE JUSTIFICATION FOR FLATTENING WAS
+        // WITHDRAWN AND THE CODE WAS NOT.
+        //
+        // This shipped at 0 - the defence curve forced flat - on a spearman of
+        // 0.019 between preseason defence ORDER and the season. That number
+        // came from ADP ordering on era boards and was applied to a curve built
+        // from PROJECTIONS, and I retracted it the same day: measured properly,
+        // same data and same statistic for every position, defences read slope
+        // 1.26 +- 0.53 and spearman 0.221 against skill's 0.39-0.55. Weaker,
+        // not worthless, and the slope cannot be told from 1.
+        //
+        // I withdrew the reasoning in the transcript and left the code running
+        // in the shipped model, where it was quietly pricing every defence at
+        // the same 84 points. Justin asked me to look for oversights of this
+        // shape; this was the first one I found and the only one that was live.
+        //
+        // -PdefTrust=0 restores the flattening for anyone who wants to measure
+        // it. The mechanism is worth keeping - a position whose rank order
+        // predicts nothing SHOULD have a flat curve - but nothing here has
+        // earned it.
         double trust = position == Position.DEF
-                ? Double.parseDouble(System.getProperty("defTrust", "0")) : 1.0;
+                ? Double.parseDouble(System.getProperty("defTrust", "1")) : 1.0;
         if(trust >= 1.0){
             return projected;
         }

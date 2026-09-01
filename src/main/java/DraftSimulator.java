@@ -283,7 +283,21 @@ public class DraftSimulator {
                 }
             }
             int round = pick.get("round").getAsInt();
-            if(round <= SelectionModel.GAME_ROUNDS){
+            // HISTORICAL SCHEDULES STOPPED AT NINE ROUNDS, ALWAYS.
+            //
+            // Every backtest and every calibration gate in this repo replays a
+            // past season nine rounds deep, so nothing has ever validated what
+            // the room does in rounds 10-16 against a season it did not see -
+            // which is exactly where defences and keeper stashes live. It is
+            // why my first attempt to check the room model on held-out seasons
+            // produced 0% in every late band and no defences at all: the rounds
+            // were not in the schedule.
+            //
+            // -PfullRounds=true builds the whole draft. Off by default, so
+            // every number those gates have ever produced still reproduces.
+            int deepest = Boolean.getBoolean("fullRounds")
+                    ? Integer.MAX_VALUE : SelectionModel.GAME_ROUNDS;
+            if(round <= deepest){
                 schedule.add(new Slot(pick.get("pick_no").getAsInt(), round, manager, isKeeper));
             }
         }
@@ -513,7 +527,8 @@ public class DraftSimulator {
             Map<Position, Integer> roster = state.rosters.computeIfAbsent(
                     slot.manager(), u -> new EnumMap<>(Position.class));
             double[] probabilities = managerModels.getOrDefault(slot.manager(), model)
-                    .choiceProbabilities(SelectionModel.features(choiceSet, adp, points,
+                    .choiceProbabilities(SelectionModel.featuresWithBoard(initialBoard,
+                            choiceSet, adp, points,
                             new SelectionModel.Context(roster,
                                     qbEarliness.getOrDefault(slot.manager(), 0.0),
                                     state.recentPicks, slot.pickNumber(),
@@ -578,7 +593,7 @@ public class DraftSimulator {
                 long qbHolders = rosters.values().stream()
                         .filter(counts -> counts.getOrDefault(Position.QB, 0) > 0).count();
                 double[] probabilities = managerModels.getOrDefault(slot.manager(), model)
-                        .choiceProbabilities(SelectionModel.features(
+                        .choiceProbabilities(SelectionModel.featuresWithBoard(initialBoard,
                         choiceSet, adp, points, new SelectionModel.Context(
                                 roster,
                                 qbEarliness.getOrDefault(slot.manager(), 0.0), recentPicks,
