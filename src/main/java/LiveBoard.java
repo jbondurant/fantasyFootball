@@ -123,6 +123,42 @@ public class LiveBoard {
         System.out.printf("still needed for a legal lineup: %s%n", roster.stillNeeds());
         System.out.printf("THE PLAN says: %s%n%n", Tomorrow.PLAN.getOrDefault(round, "-"));
 
+        // THE BOARD AS IT WILL BE, not as it is.
+        //
+        // Justin: why are we looking at Gibbs and Nacua, those two will almost
+        // never be available at my pick 7. Correct, and the tool was showing
+        // them because the draft has not started - `taken` is empty, so "best
+        // available" was literally the best man in football. At pick 7 six men
+        // are gone, and planning against a board that will never exist is
+        // worse than not planning.
+        //
+        // Real picks stay authoritative. Only the picks BETWEEN the live draft
+        // and mine are filled in, and they are filled from ADP, which is the
+        // same per-position rate the rest of this model uses. Once the draft
+        // reaches my seat this does nothing at all.
+        List<String> board = new ArrayList<>(taken);
+        int assumed = 0;
+        if(taken.size() < pick - 1){
+            List<Map.Entry<String, Double>> byAdp = new ArrayList<>();
+            for(String id : planner.points().keySet()){
+                double adp = SleeperProjections.adpOf(id);
+                if(adp < Double.MAX_VALUE && !board.contains(id)){
+                    byAdp.add(Map.entry(id, adp));
+                }
+            }
+            byAdp.sort(Map.Entry.comparingByValue());
+            for(Map.Entry<String, Double> entry : byAdp){
+                if(board.size() >= pick - 1){
+                    break;
+                }
+                board.add(entry.getKey());
+                assumed++;
+            }
+            System.out.printf("%d men actually gone, %d more assumed gone by ADP"
+                    + " before pick %d%n", taken.size(), assumed, pick);
+        }
+        taken = board;
+
         // My roster as (position, rank) on the live board.
         List<BoardValue.Slot> held = new ArrayList<>();
         for(String id : mine){
