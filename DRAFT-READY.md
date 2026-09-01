@@ -53,6 +53,13 @@ looks at nothing reports "clean" just as loudly as one that looked at
 everything. As of 2026-09-01: **161 rank-checked, 96 checked for a missing
 projection, nothing flagged.**
 
+And the live-feed check the build file has always asked for before a draft:
+
+    ./gradlew smokeTest
+
+It hits the real Sleeper and FantasyPros APIs and checks the feeds still look
+the way the code expects. Green as of 2026-09-01.
+
 Fallbacks if the main tool misbehaves:
 
     ./gradlew run -Pmain=DraftNight -Pkeepers=Tuten,Purdy -q       # rounds 1-7
