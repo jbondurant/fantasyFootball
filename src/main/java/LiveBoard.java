@@ -319,7 +319,7 @@ public class LiveBoard {
         // His rank is his own place on the projection curve and it does not
         // move. Clamped at the cap because past it the curve has no entry and a
         // real man would price at zero.
-        Map<String, Integer> rankOf = projectionRanks(planner);
+        Map<String, Integer> rankOf = projectionRanks(planner, kept);
         for(String id : mine){
             Player player = Player.getPlayerFromSIDV2(id);
             if(player != null){
@@ -1081,11 +1081,31 @@ public class LiveBoard {
      * draftable subset - Tuten is the same back whether or not he can be
      * drafted.
      */
-    static Map<String, Integer> projectionRanks(DraftPlanner planner){
+    /**
+     * A held man's rank must index the SAME list the curve was built from.
+     *
+     * This ranked the whole of planner.points() while thisYear() builds the
+     * curve from the DRAFTABLE pool - keepers removed. So every man on Justin's
+     * roster indexed a list he was then priced against by twenty-four players
+     * who are not in it, and every one of them came out low: Ja'Marr Chase
+     * priced at 227.5 against his own projection of 256.6, a 29-point error on
+     * the best receiver on the board; Fannin -13.9; Tuten -15.7; Purdy -10.7.
+     * The moment Justin drafted the best receiver available, the model priced
+     * him as WR2.
+     *
+     * Justin's own two keepers stay in the ranking because they occupy slots on
+     * HIS roster and have to be priced. Everyone else's keeper never occupies a
+     * slot of his, so removing them is what makes his men's ranks line up with
+     * the curve.
+     */
+    static Map<String, Integer> projectionRanks(DraftPlanner planner, Set<String> kept){
         Map<Position, List<Map.Entry<String, Double>>> byPosition =
                 new EnumMap<>(Position.class);
         for(Map.Entry<String, Double> entry : planner.points().entrySet()){
             Player player = Player.getPlayerFromSIDV2(entry.getKey());
+            if(kept.contains(entry.getKey())){
+                continue;
+            }
             if(player != null && CAP.containsKey(player.position)){
                 byPosition.computeIfAbsent(player.position, u -> new ArrayList<>())
                         .add(entry);
@@ -1097,6 +1117,33 @@ public class LiveBoard {
             for(int i = 0; i < men.size(); i++){
                 rankOf.put(men.get(i).getKey(), i + 1);
             }
+        }
+
+        // JUSTIN'S OWN KEEPERS ARE SLOTTED IN, NOT INSERTED.
+        //
+        // They have to be priced - they occupy two slots on the roster being
+        // scored - but they are not in the curve, so putting them into the
+        // sorted list above shifts every man below them by one and prices HIM
+        // wrong instead. Measured: with Purdy in the list, Michael Penix came
+        // out 51.1 points off his own projection. A keeper's rank is therefore
+        // how many draftable men beat him, plus one, which leaves every other
+        // rank exactly where it was. He then reads the curve at the draftable
+        // man nearest him, which is the closest honest price available for
+        // somebody who is not on the board.
+        for(String id : planner.myKeeperIDs()){
+            Player player = Player.getPlayerFromSIDV2(id);
+            Double his = planner.points().get(id);
+            if(player == null || his == null || !CAP.containsKey(player.position)){
+                continue;
+            }
+            int better = 0;
+            for(Map.Entry<String, Double> man
+                    : byPosition.getOrDefault(player.position, List.of())){
+                if(man.getValue() > his){
+                    better++;
+                }
+            }
+            rankOf.put(id, better + 1);
         }
         return rankOf;
     }

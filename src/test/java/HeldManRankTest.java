@@ -29,7 +29,7 @@ public class HeldManRankTest {
         DraftPlanner planner = DraftPlanner.forCurrentSeason(configuration,
                 DraftPlanner.keepersFromProperty(configuration), choice, earliness);
 
-        Map<String, Integer> rankOf = LiveBoard.projectionRanks(planner);
+        Map<String, Integer> rankOf = LiveBoard.projectionRanks(planner, LiveBoard.kept(AAAConfiguration.getInstance()));
         assertFalse(rankOf.isEmpty(), "somebody must be ranked");
 
         // Justin's keepers must have real, distinct, non-trivial ranks. Under
@@ -46,7 +46,7 @@ public class HeldManRankTest {
 
         // The ranking is a property of the projection pool alone, so it cannot
         // depend on a board state at all - which is the whole fix.
-        Map<String, Integer> again = LiveBoard.projectionRanks(planner);
+        Map<String, Integer> again = LiveBoard.projectionRanks(planner, LiveBoard.kept(AAAConfiguration.getInstance()));
         assertEquals(rankOf, again, "the same pool must rank the same way twice");
     }
 
@@ -59,7 +59,7 @@ public class HeldManRankTest {
         DraftPlanner planner = DraftPlanner.forCurrentSeason(configuration,
                 DraftPlanner.keepersFromProperty(configuration), choice, earliness);
 
-        Map<String, Integer> rankOf = LiveBoard.projectionRanks(planner);
+        Map<String, Integer> rankOf = LiveBoard.projectionRanks(planner, LiveBoard.kept(AAAConfiguration.getInstance()));
         List<Integer> backs = new ArrayList<>();
         for(Map.Entry<String, Integer> entry : rankOf.entrySet()){
             Player player = Player.getPlayerFromSIDV2(entry.getKey());
