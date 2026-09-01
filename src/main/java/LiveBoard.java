@@ -39,6 +39,27 @@ import java.util.*;
  */
 public class LiveBoard {
 
+    /**
+     * Position caps INCLUDING the defence, which PairwiseOdds.CAP does not have.
+     *
+     * That map was built for the pairwise-odds work, which deliberately covered
+     * only the skill positions, and this class then used it to decide who goes
+     * in the 2026 value curve. So defences were absent from the curve, drew a
+     * level of zero, and were worth literally nothing - which is why the DEF row
+     * read 0.0 at every round.
+     *
+     * I explained that 0.0 three times tonight as the interchangeability
+     * result: defences are a coin flip, the bench is fungible, streaming is
+     * free. All of that is true and none of it was the reason. The reason was
+     * that the position was not in the model. A whole-draft dry run found it in
+     * one pass, having survived every single-pick check.
+     *
+     * Thirty-two, because there are thirty-two of them.
+     */
+    static final Map<Position, Integer> CAP = new EnumMap<>(Map.of(
+            Position.QB, 32, Position.RB, 60, Position.WR, 72,
+            Position.TE, 32, Position.DEF, 32));
+
     public static void main(String[] args) throws Exception {
         System.setProperty("scheduleRounds", System.getProperty("scheduleRounds", "16"));
         AAAConfiguration configuration = AAAConfiguration.getInstance();
@@ -188,7 +209,7 @@ public class LiveBoard {
             if(kept.contains(entry.getKey())){
                 continue;               // on somebody's roster, not on the board
             }
-            if(player != null && PairwiseOdds.CAP.containsKey(player.position)){
+            if(player != null && CAP.containsKey(player.position)){
                 ordered.computeIfAbsent(player.position, u -> new ArrayList<>())
                         .add(entry.getKey());
             }
@@ -496,7 +517,7 @@ public class LiveBoard {
     }
 
     static List<Valley> valleysHistorical(List<PairwiseOdds.Man> men, Position position){
-        int cap = PairwiseOdds.CAP.getOrDefault(position, 0);
+        int cap = CAP.getOrDefault(position, 0);
         double[] total = new double[cap + 2];
         double[] seen = new double[cap + 2];
         for(PairwiseOdds.Man man : men){
@@ -734,7 +755,7 @@ public class LiveBoard {
             if(kept.contains(entry.getKey())){
                 continue;
             }
-            if(player != null && PairwiseOdds.CAP.containsKey(player.position)){
+            if(player != null && CAP.containsKey(player.position)){
                 byPosition.computeIfAbsent(player.position, u -> new ArrayList<>())
                         .add(entry.getValue());
             }
@@ -743,7 +764,7 @@ public class LiveBoard {
         for(Map.Entry<Position, List<Double>> entry : byPosition.entrySet()){
             List<Double> values = entry.getValue();
             values.sort(Comparator.reverseOrder());
-            int cap = PairwiseOdds.CAP.get(entry.getKey());
+            int cap = CAP.get(entry.getKey());
             double[] out = new double[cap + 2];
             for(int rank = 1; rank <= cap && rank <= values.size(); rank++){
                 out[rank] = values.get(rank - 1);
