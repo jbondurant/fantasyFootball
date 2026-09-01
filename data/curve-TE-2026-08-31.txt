@@ -1,0 +1,30 @@
+
+THE 2026 TE CURVE
+
+RANK  PLAYER                   PROJECTED    DROP BEATS LDR   TIER  
+TE1   Brock Bowers                 202.5    15.6        0%      1  
+TE2   Trey McBride                 186.9    13.5       47%      1  <<< TIER ENDS HERE
+TE3   Colston Loveland             173.4    13.8        0%      2  
+TE4   Tyler Warren                 159.6     1.1       44%      2  
+TE5   Sam LaPorta                  158.5    15.1       42%      2  <<< TIER ENDS HERE
+TE6   Harold Fannin                143.4     2.5        0%      3  
+TE7   Tucker Kraft                 140.9     2.3       45%      3  
+TE8   Kyle Pitts                   138.6     0.3       44%      3  
+TE9   George Kittle                138.3     1.9       49%      3  
+TE10  Travis Kelce                 136.4     3.9       47%      3  
+TE11  Mark Andrews                 132.5     1.9       47%      3  
+TE12  Dalton Kincaid               130.6     1.1       44%      3  
+TE13  Brenton Strange              129.5     3.2       42%      3  
+TE14  Isaiah Likely                126.3     1.5       41%      3  <<< TIER ENDS HERE
+TE15  Jake Ferguson                124.8     0.3        0%      4  
+TE16  Hunter Henry                 124.5     2.5       50%      4  
+TE17  T.J. Hockenson               122.0     3.1       50%      4  
+TE18  Dalton Schultz               118.9     5.1       45%      4  
+TE19  Oronde Gadsden               113.8     0.2       44%      4  
+TE20  Chig Okonkwo                 113.6     0.2       44%      4  
+
+detected valleys: after TE2 (drop 13.5)  after TE5 (drop 15.1)  after TE14 (drop 1.5)  after TE21 (drop 0.5)  after TE27 (drop 8.4)  after TE29 (drop 1.1)  after TE30 (drop 2.6)  after TE31 (drop 3.8)  
+
+DROP is to the next rank on the RAW projections. The detector
+runs isotonic first, so it fires on the step left after noise is
+pooled - which is not always the biggest raw drop, and is the point.

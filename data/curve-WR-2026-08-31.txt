@@ -1,0 +1,30 @@
+
+THE 2026 WR CURVE
+
+RANK  PLAYER                   PROJECTED    DROP BEATS LDR   TIER  
+WR1   Puka Nacua                   259.0     2.4        0%      1  
+WR2   Ja'Marr Chase                256.6    21.5       45%      1  <<< TIER ENDS HERE
+WR3   Jaxon Smith-Njigba           235.1     7.6        0%      2  
+WR4   Amon-Ra St. Brown            227.5     5.0       47%      2  <<< TIER ENDS HERE
+WR5   CeeDee Lamb                  222.5     2.5        0%      3  
+WR6   Nico Collins                 220.0    12.3       49%      3  
+WR7   A.J. Brown                   207.7     2.0       41%      3  
+WR8   George Pickens               205.7     0.3       42%      3  
+WR9   Justin Jefferson             205.4     0.2       43%      3  
+WR10  Drake London                 205.2    10.3       41%      3  <<< TIER ENDS HERE
+WR11  Chris Olave                  194.9     1.2        0%      4  
+WR12  Malik Nabers                 193.7     4.5       47%      4  
+WR13  DeVonta Smith                189.2     1.5       49%      4  
+WR14  Zay Flowers                  187.7     0.0       47%      4  
+WR15  Ladd McConkey                187.7     0.5       49%      4  
+WR16  Mike Evans                   187.2     0.3       47%      4  
+WR17  Tee Higgins                  186.9     1.4       49%      4  
+WR18  Emeka Egbuka                 185.5     0.2       48%      4  
+WR19  Rashee Rice                  185.3     0.8       47%      4  
+WR20  Tetairoa McMillan            184.5     1.1       49%      4  
+
+detected valleys: after WR2 (drop 21.5)  after WR4 (drop 5.0)  after WR10 (drop 10.3)  after WR28 (drop 8.6)  after WR38 (drop 0.6)  after WR54 (drop 9.7)  after WR63 (drop 4.8)  
+
+DROP is to the next rank on the RAW projections. The detector
+runs isotonic first, so it fires on the step left after noise is
+pooled - which is not always the biggest raw drop, and is the point.

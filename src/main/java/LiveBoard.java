@@ -173,7 +173,8 @@ public class LiveBoard {
             // longer decides on its own.
             double finished = rollout(planner, taken, curve, pools, order.size(),
                     held, position, rank, pick);
-            Valley cliff = nextValley(valleys(curve, position), rank);
+            Valley cliff = nextValley(tiers(curve, pools, position,
+                    Double.parseDouble(System.getProperty("tierBar", "0.40"))), rank);
             boolean crosses = cliff != null && later > cliff.afterRank();
             // The cliff, not the odds, is what decides this. Crossing one means
             // the man you come back to is on the far side of a real drop; not
@@ -235,6 +236,74 @@ public class LiveBoard {
      */
     record Valley(int afterRank, double drop){}
 
+    /**
+     * Tiers the way Boris Chen builds them: groups that are statistically
+     * INDISTINGUISHABLE, not groups separated by a big enough gap.
+     *
+     * Justin asked for cliffs that come out similar to or better than his tiers.
+     * His method clusters players whose expert rankings overlap - two men are in
+     * one tier when you cannot tell them apart, and a tier boundary is where you
+     * can. That is a different question from "is this drop bigger than X", and
+     * it is the right one: a 7-point gap between two men who each swing 60
+     * points is nothing, and a 20-point gap between two men who barely swing is
+     * a wall.
+     *
+     * A threshold on drops cannot express that, and mine did not: it called the
+     * 7-point step after Gibbs a cliff and buried the 36.9-point step after
+     * Robinson in a list of fifteen. The isotonic pass that was supposed to save
+     * it is a no-op here - thisYear() sorts projections, so the curve is already
+     * monotone and there is nothing for pool-adjacent-violators to pool. It
+     * earns its keep on historical actuals, which are noisy, and does nothing on
+     * a sorted projection curve.
+     *
+     * So this asks the question directly, using both halves of the model: what
+     * are the odds the man one rank BELOW outscores the man above him, given
+     * this year's projected gap and sixteen years of measured scatter at those
+     * ranks? Near a half means the same tier. Well under a half means a wall.
+     * No threshold on points anywhere - the units are probability, so a
+     * quarterback and a defence are judged on the same scale.
+     */
+    static List<Valley> tiers(Map<Position, double[]> curve,
+                              Map<Position, List<List<Double>>> pools, Position position,
+                              double bar){
+        double[] level = curve.get(position);
+        if(level == null){
+            return List.of();
+        }
+        // Against the TIER LEADER, not against the next man down.
+        //
+        // The first version compared each rank to rank+1 and found no tiers at
+        // all in backs or receivers, which is correct and useless: adjacent
+        // ranks are always near coin-flips once sixteen years of scatter are in
+        // the comparison. Boris Chen does not ask whether you can tell RB7 from
+        // RB8, he asks whether you can tell RB8 from the best man in RB8's
+        // group. Difference accumulates down a tier until it is visible, and
+        // where it becomes visible is the wall.
+        List<Valley> walls = new ArrayList<>();
+        int leader = 1;
+        for(int rank = 2; rank < level.length; rank++){
+            if(level[rank] <= 0 || level[leader] <= 0){
+                continue;
+            }
+            int below = 0;
+            for(int world = 0; world < BoardValue.WORLDS; world++){
+                double best = BoardValue.drawn(pools, position, leader, world, curve, true);
+                double him = BoardValue.drawn(pools, position, rank, world, curve, true);
+                if(him > best){
+                    below++;
+                }
+            }
+            double beats = (double) below / BoardValue.WORLDS;
+            if(beats < bar){
+                // He is distinguishable from his leader, so the tier ended at
+                // the man above him and he starts the next one.
+                walls.add(new Valley(rank - 1, level[rank - 1] - level[rank]));
+                leader = rank;
+            }
+        }
+        return walls;
+    }
+
     /** Valleys in THIS year's curve, isotonic so noise pools away and steps stay. */
     static List<Valley> valleys(Map<Position, double[]> curve, Position position){
         double[] raw = curve.get(position);
@@ -259,11 +328,31 @@ public class LiveBoard {
             return List.of();
         }
         Collections.sort(steps);
-        double bar = Math.max(steps.get((int) (steps.size() * 0.75)), 4);
+        double median = steps.get(steps.size() / 2);
+        // A CLIFF IS BIG RELATIVE TO THE LEVEL, not merely above the 75th
+        // percentile of steps.
+        //
+        // Justin, on being told the running back cliff was after RB1: "isn't
+        // the cliff after gibbs and robinson". He was right and the detector
+        // was wrong. A percentile bar found FIFTEEN valleys in a sixty-rank
+        // curve, at which point the word means nothing, and it fired on the
+        // 7-point step after Gibbs while the real 36.9-point step after
+        // Robinson was just another entry in the list.
+        //
+        // 7.0 off 299.9 is two per cent and is rounding. 36.9 off 292.9 is
+        // thirteen per cent and is a tier boundary. So a step qualifies only if
+        // it is at least a twentieth of what the rank above it is worth AND
+        // several times the typical step - the first test is what makes it a
+        // cliff, the second stops a flat tail full of tiny numbers producing
+        // proportionally large ones.
         List<Valley> found = new ArrayList<>();
         for(int i = 0; i + 1 < fitted.length; i++){
-            if(fitted[i] - fitted[i + 1] >= bar){
-                found.add(new Valley(i + 1, fitted[i] - fitted[i + 1]));
+            double drop = fitted[i] - fitted[i + 1];
+            if(fitted[i] <= 0){
+                continue;
+            }
+            if(drop >= 0.05 * fitted[i] && drop >= 3 * median){
+                found.add(new Valley(i + 1, drop));
             }
         }
         return found;

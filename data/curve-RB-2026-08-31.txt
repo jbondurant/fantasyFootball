@@ -1,0 +1,30 @@
+
+THE 2026 RB CURVE
+
+RANK  PLAYER                   PROJECTED    DROP BEATS LDR   TIER  
+RB1   Jahmyr Gibbs                 299.9     7.0        0%      1  
+RB2   Bijan Robinson               292.9    36.9       55%      1  
+RB3   Christian McCaffrey          256.0     1.7       42%      1  
+RB4   Jonathan Taylor              254.3     9.0       42%      1  <<< TIER ENDS HERE
+RB5   James Cook                   245.3     6.9        0%      2  
+RB6   Derrick Henry                238.4     8.5       43%      2  <<< TIER ENDS HERE
+RB7   De'Von Achane                229.9     1.7        0%      3  
+RB8   Saquon Barkley               228.2     1.5       52%      3  
+RB9   Chase Brown                  226.7     1.2       53%      3  
+RB10  Kenneth Walker               225.5     6.6       49%      3  
+RB11  Omarion Hampton              218.9     7.5       47%      3  
+RB12  Ashton Jeanty                211.4    18.9       42%      3  <<< TIER ENDS HERE
+RB13  Breece Hall                  192.5     0.5        0%      4  
+RB14  Kyren Williams               192.0     1.9       50%      4  
+RB15  David Montgomery             190.1     0.4       51%      4  
+RB16  Travis Etienne               189.7     0.2       51%      4  
+RB17  D'Andre Swift                189.5     0.7       47%      4  
+RB18  Javonte Williams             188.8     0.5       47%      4  
+RB19  Jeremiyah Love               188.3     2.2       48%      4  
+RB20  Josh Jacobs                  186.1     5.9       45%      4  
+
+detected valleys: after RB4 (drop 9.0)  after RB6 (drop 8.5)  after RB12 (drop 18.9)  after RB23 (drop 18.8)  after RB35 (drop 8.1)  after RB42 (drop 10.3)  after RB46 (drop 10.7)  after RB51 (drop 1.1)  
+
+DROP is to the next rank on the RAW projections. The detector
+runs isotonic first, so it fires on the step left after noise is
+pooled - which is not always the biggest raw drop, and is the point.

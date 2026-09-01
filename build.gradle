@@ -90,7 +90,7 @@ tasks.register('run', JavaExec) {
      // off the board. The pick schedule always gave up rounds 12 and 13 for
      // them; without this the roster never received them, so a plan drafting
      // no quarterback looked illegal when for him it is not. Off by default.
-     'holdKeepers', 'planSample', 'format', 'noKeepers', 'honestWire', 'from', 'to', 'eraBoards', 'lineupByExpected', 'round',
+     'holdKeepers', 'planSample', 'format', 'noKeepers', 'honestWire', 'from', 'to', 'eraBoards', 'lineupByExpected', 'round', 'tierBar',
      // LeagueActuals.FLAG - grade outcomes under the league's own scoring
      // instead of Sleeper's pts_half_ppr. Off by default on purpose.
      'leagueScoredActuals',
