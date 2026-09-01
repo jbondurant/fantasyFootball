@@ -78,6 +78,8 @@ Re-verified after the overnight fixes, 2026-09-01:
     Model A shape             RB WR RB WR WR WR TE QB QB   (unchanged)
     BoardValue backtest       mean 1931, worst 1748
     board at pick 7           RB Cook > WR Lamb > TE Fannin > DEF Rams
+    live path, 5 full drafts  70 picks priced, 0 throws, every roster legal
+    defence taken at          round 10 in all five - the measured optimum
 
 The backtest moved 4 points on the mean and 44 on the worst season. Both sit
 well inside the 125-point bar, and everything that moved them was a bug fix -
@@ -150,7 +152,14 @@ imagine a roster with no defence.
    in-sample (2051-2077 against 1935) and is chosen by every leave-one-season-
    out fold, but held out it is worth +108 - a tie. `-Plambda=0.6` reaches it.
 
-   Still chosen, still unfitted: the 15% fragility bar.
+   Still chosen, still unfitted: the 15% fragility bar. **Corrected
+   2026-09-01:** it does not refuse anything on this board. `FragilityBinding`
+   walks his fourteen seats and asks the shipped predicate - 66 position-picks
+   priced, **0 refused**, widest swing 15.0% against the 15% bar, and 59 of the
+   66 within two points of it. It is not dead code that could never fire; it is
+   a threshold sitting ON the edge of the distribution rather than clear of it.
+   Which means "the model refuses fragile picks" is not something to rely on
+   tonight - the roster rules do the refusing, and they are tested.
 3. Scatter is indexed by draftable rank but learned from full-board rank.
 4. ANSWERED 2026-09-01, and the answer is EXPECTATION. The scorer is honest.
    `ScorerHonestyAudit` scores each roster twice - shipped fill against a fill
