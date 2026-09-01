@@ -152,6 +152,32 @@ public class LiveBoard {
         // be on. Before the draft starts slotOf() returns pick 1, which is not
         // Justin's, and the first version cheerfully priced taking a man at a
         // pick he does not own against waiting until one he does.
+        // IS THE SIMULATOR STILL IN STEP WITH THE REAL DRAFT?
+        //
+        // DraftSimulator.stateAfter advances its schedule only for a man on our
+        // board. Its own comment claims the opposite - "anything not on our
+        // board (a defense, a kicker, an unknown id) advances the schedule
+        // without touching the pool" - and the code is the authority: the
+        // increment sits inside the board.contains guard.
+        //
+        // Keepers are fine, because the loop above skips their keeper slots, so
+        // each keeper pick consumes exactly one. What drifts is a real pick of a
+        // man our board does not carry - a kicker, someone past the ADP cut, an
+        // id we do not know. He spends a live pick and the schedule does not
+        // move, so every later pick is priced one seat early, silently.
+        //
+        // Not fixed here. That increment is core, Model A shares it, and the
+        // draft is tonight; a wrong fix costs more than the fault, whose
+        // exposure is low with 237 men on the board for 168 live picks. So it
+        // is DETECTED instead. Wrong and loud beats wrong and quiet.
+        if(slot != null && slot.pickNumber() != taken.size() + 1){
+            System.out.printf("%n   *** SCHEDULE DRIFT: %d picks are in, so the draft is on"
+                    + " pick %d,%n   *** but the simulator believes it is on pick %d."
+                    + " Somebody drafted%n   *** a man this board does not carry. Every"
+                    + " number below is priced%n   *** for the wrong slot - trust"
+                    + " DraftNight and the RUNBOOK until it clears.%n",
+                    taken.size(), taken.size() + 1, slot.pickNumber());
+        }
         int onPick = slot == null ? 200 : slot.pickNumber();
         int pick = onPick;
         for(int p = onPick; p <= 200; p++){
@@ -346,7 +372,20 @@ public class LiveBoard {
             int howOften = seenAt == null ? 0 : seenAt.getOrDefault(candidate, 0);
             double share = ranks == null || ranks.isEmpty() ? 1
                     : (double) howOften / ranks.size();
-            String why = roster.whyNotDraft(position, round);
+            // The rules say what is LEGAL; MOST says what is WANTED. LiveBoard
+            // consulted only the first, so a second defence - legal from round
+            // 10, because a stash is starters-plus-one and the rules cannot
+            // know that nobody keeps a defence - was offerable. MOST has capped
+            // DEF at one all along and this loop never asked it.
+            int already = 0;
+            for(BoardValue.Slot slot2 : held){
+                if(slot2.position() == position){
+                    already++;
+                }
+            }
+            String why = already >= BoardValue.MOST.getOrDefault(position, 99)
+                    ? "already hold " + already + ", which is all this roster wants"
+                    : roster.whyNotDraft(position, round);
             if(why != null){
                 Player player = Player.getPlayerFromSIDV2(candidate);
                 System.out.printf("%-5s %-24s %8s %10s %10s   REFUSED: %s%n", position,

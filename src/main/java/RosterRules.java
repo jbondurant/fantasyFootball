@@ -234,6 +234,18 @@ public final class RosterRules {
             return 0;                       // this league starts no kicker
         }
         if(!flexEligible(position)){
+            // Starters plus one stash. Note this permits a SECOND DEFENCE from
+            // round 10, which is wrong in football and right here: a stash is a
+            // next-year keeper and nobody keeps a defence, since preseason
+            // defence ranking correlates 0.277 with the season against 0.578
+            // for the skill positions. But that is a MEASURED fact about a
+            // position, not a property of the lineup, and this method is
+            // deliberately a function of the lineup alone - typing DEF here
+            // fails ceilingsAreDerivedFromTheLineupNotTyped, which exists to
+            // stop exactly that creeping in.
+            //
+            // So the appetite belongs one layer up, where it already is:
+            // BoardValue.MOST caps DEF at one. LiveBoard now consults it.
             return startersAt(position) + STASH_PER_UNFLEXABLE_POSITION;
         }
         int neededElsewhere = 0;
