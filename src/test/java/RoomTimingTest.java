@@ -50,7 +50,7 @@ public class RoomTimingTest {
                 "expected plenty of simulated defence picks, got " + defences.size());
         double early = defences.stream().filter(round -> round <= 9).count()
                 / (double) defences.size();
-        assertTrue(early <= 0.15,
+        assertTrue(early <= 0.03,
                 "the simulated room takes " + Math.round(100 * early) + "% of its"
                         + " defences in rounds 1-9; this league has taken NONE"
                         + " before round 10 in five drafts, and a room that"

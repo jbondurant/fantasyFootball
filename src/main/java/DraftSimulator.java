@@ -126,6 +126,84 @@ public class DraftSimulator {
     }
 
     /** Season-level extras from the frozen archives, for the lab features. */
+    /**
+     * NO POSITION GOES EARLIER THAN THIS LEAGUE HAS EVER TAKEN IT.
+     *
+     * One rule, derived from the league's own five drafts, applied to every
+     * position. For quarterbacks, backs, receivers and tight ends the earliest
+     * observed round is 1, so it does nothing at all. For defences it is round
+     * 10, over 58 observations with none earlier - and that is the whole of its
+     * effect.
+     *
+     * It exists because the feature work could not close the gap on its own.
+     * DefenceReality measured the simulated room taking 19% of its defences
+     * inside round 9 against a real 0%; the DEF intercept and the depth
+     * interactions took that to 10%, all of it in rounds 8-9, with the whole
+     * distribution still sitting about two rounds early. The 2026 market is the
+     * reason it will not close further - the earliest defence ADP is 98, which
+     * is round 9, so the national board keeps offering one a round before this
+     * league would ever take it.
+     *
+     * That is a fact about the room, not a preference of Justin's, and the room
+     * model exists to reproduce the room. -PnoFloor=true removes it.
+     */
+    static Map<Position, Integer> floors;
+
+    static synchronized Map<Position, Integer> floors(){
+        if(floors != null){
+            return floors;
+        }
+        Map<Position, Integer> earliest = new EnumMap<>(Position.class);
+        if(Boolean.getBoolean("noFloor")){
+            floors = earliest;
+            return floors;
+        }
+        AAAConfiguration configuration = AAAConfiguration.getInstance();
+        for(String season : configuration.getPreviousSeasons()){
+            DraftBacktest.Season past;
+            try {
+                past = new DraftBacktest.Season(configuration, season);
+            }
+            catch(RuntimeException unavailable){
+                continue;
+            }
+            for(com.google.gson.JsonElement element : past.picks){
+                com.google.gson.JsonObject pick = element.getAsJsonObject();
+                if(!pick.has("player_id") || pick.get("player_id").isJsonNull()
+                        || !pick.has("round") || pick.get("round").isJsonNull()){
+                    continue;
+                }
+                Player player = Player.getPlayerFromSIDV2(
+                        pick.get("player_id").getAsString());
+                if(player != null){
+                    earliest.merge(player.position, pick.get("round").getAsInt(),
+                            Math::min);
+                }
+            }
+        }
+        floors = earliest;
+        return floors;
+    }
+
+    /** Drop candidates whose position has never gone this early in this league. */
+    static List<String> notBeforeThisLeagueEverHas(List<String> choiceSet, int round){
+        Map<Position, Integer> earliest = floors();
+        if(earliest.isEmpty()){
+            return choiceSet;
+        }
+        List<String> allowed = new ArrayList<>();
+        for(String id : choiceSet){
+            Player player = Player.getPlayerFromSIDV2(id);
+            Integer floor = player == null ? null : earliest.get(player.position);
+            if(floor == null || round >= floor){
+                allowed.add(id);
+            }
+        }
+        // Never hand the model an empty choice set - if the floors would empty
+        // it, the floors are wrong about this board and the board wins.
+        return allowed.isEmpty() ? choiceSet : allowed;
+    }
+
     public static Extras extrasFor(AAAConfiguration configuration, String season,
                                    int earlinessCutoff){
         return new Extras(
@@ -399,9 +477,9 @@ public class DraftSimulator {
                 state.scheduleIndex++;
                 continue;
             }
-            List<String> choiceSet = new ArrayList<>(
-                    state.board.subList(0, Math.min(state.board.size(),
-                            SelectionModel.CHOICE_SET)));
+            List<String> choiceSet = notBeforeThisLeagueEverHas(
+                    new ArrayList<>(state.board.subList(0, Math.min(state.board.size(),
+                            SelectionModel.CHOICE_SET))), slot.round());
             double[] shape = turnShape.getOrDefault(slot.pickNumber(),
                     new double[]{0, 0, 1.0});
             long qbHolders = state.rosters.values().stream()
@@ -465,8 +543,10 @@ public class DraftSimulator {
                         state);
             }
             else {
-                List<String> choiceSet = new ArrayList<>(
-                        board.subList(0, Math.min(board.size(), SelectionModel.CHOICE_SET)));
+                List<String> choiceSet = notBeforeThisLeagueEverHas(
+                        new ArrayList<>(board.subList(0,
+                                Math.min(board.size(), SelectionModel.CHOICE_SET))),
+                        slot.round());
                 double[] shape = turnShape.getOrDefault(slot.pickNumber(),
                         new double[]{0, 0, 1.0});
                 long qbHolders = rosters.values().stream()

@@ -37,6 +37,35 @@ public class DefenceReality {
         doesTheCurvePlateau(setup);
         howPredictiveIsEachPosition();
         doesTheSimulatedRoomAgree(setup);
+        whatTheMarketSaysThisYear(setup);
+    }
+
+    /**
+     * CLAIM 5: is the 2026 BOARD itself telling the room to take defences early?
+     *
+     * The simulated room can only pick from a choice set of the sixty best
+     * remaining by ADP. If this year's defence ADPs sit early, defences enter
+     * that set early and no amount of feature work will keep the room off them
+     * - the market, not the model, would be the thing saying "take one".
+     */
+    private static void whatTheMarketSaysThisYear(LiveSetup setup){
+        System.out.printf("%n%n=== 5. WHAT THE 2026 MARKET SAYS ===%n%n");
+        List<double[]> defences = new ArrayList<>();
+        for(String id : setup.planner.points().keySet()){
+            Player player = Player.getPlayerFromSIDV2(id);
+            double adp = SleeperProjections.adpOf(id);
+            if(player != null && player.position == Position.DEF && adp > 0){
+                defences.add(new double[]{adp});
+            }
+        }
+        defences.sort(Comparator.comparingDouble(a -> a[0]));
+        System.out.printf("the ten earliest defence ADPs on the 2026 board:%n   ");
+        for(int i = 0; i < Math.min(10, defences.size()); i++){
+            System.out.printf("%.0f ", defences.get(i)[0]);
+        }
+        System.out.printf("%n%nround of the earliest defence by ADP: %.0f%n",
+                defences.isEmpty() ? -1 : Math.ceil(defences.get(0)[0] / 12.0));
+        System.out.printf("his league has never taken one before round 10 (pick 109).%n");
     }
 
     /**
@@ -86,6 +115,25 @@ public class DefenceReality {
                     100.0 * was.stream().filter(r -> r <= 9).count() / was.size(),
                     sim.get(sim.size() / 2), sim.get(0),
                     100.0 * sim.stream().filter(r -> r <= 9).count() / sim.size());
+        }
+        // WHERE exactly are the remaining early defences? "rounds 1-9" lumps a
+        // pick at round 9 - which the 2026 market itself puts at ADP 98 - in
+        // with one at round 4, and those are very different faults.
+        List<Integer> simDef = simulated.get(Position.DEF);
+        List<Integer> realDef = real.get(Position.DEF);
+        if(simDef != null && realDef != null){
+            System.out.printf("%nDEFENCES BY BAND, real against simulated:%n");
+            System.out.printf("%-10s %10s %10s%n", "BAND", "REAL", "SIM");
+            int[][] bands = {{1, 7}, {8, 9}, {10, 13}, {14, 16}};
+            for(int[] band : bands){
+                long was = realDef.stream()
+                        .filter(r -> r >= band[0] && r <= band[1]).count();
+                long now = simDef.stream()
+                        .filter(r -> r >= band[0] && r <= band[1]).count();
+                System.out.printf("rounds %-4s %9.0f%% %9.0f%%%n",
+                        band[0] + "-" + band[1],
+                        100.0 * was / realDef.size(), 100.0 * now / simDef.size());
+            }
         }
         System.out.printf("%ncompare the DEF row against section 1: in five real drafts%n"
                 + "the earliest defence ever taken was round 10 and NONE went in%n"

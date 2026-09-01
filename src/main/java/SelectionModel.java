@@ -71,7 +71,7 @@ import java.util.Set;
  */
 public class SelectionModel implements ChoiceModel {
 
-    public static final int FEATURES = 25;
+    public static final int FEATURES = 29;
     public static final int GAME_ROUNDS = 9;
     static final int CHOICE_SET = 60;
     static final double ADP_LIMIT = 250.0;
@@ -716,25 +716,45 @@ public class SelectionModel implements ChoiceModel {
             //      about defences: the feature set covered four positions out
             //      of five, so the fifth inherited the baseline's behaviour.
             features[a][23] = position.equals(Position.DEF) ? 1.0 : 0.0;
-            // f24  HOW DEEP THIS MANAGER IS, as a fraction of a full roster.
+            // f24  HOW DEEP THE DRAFT IS, exactly.
             //
-            //      The feature set had NO measure of draft depth at all - only
-            //      proxies - so a depth-2 tree could not express "this position
-            //      AND late", which is the shape of every positional timing
-            //      rule the room actually follows. With f23 alone the simulated
-            //      room still took 17% of its defences in rounds 1-9 against a
-            //      real 0%; an intercept can shift an average but cannot bend a
-            //      curve.
+            //      The feature set had NO measure of depth - only proxies - so
+            //      a depth-2 tree could not express "this position AND late",
+            //      which is the shape of every positional timing rule a room
+            //      follows. My first version summed the manager's roster as a
+            //      stand-in; Context has carried the exact pick number all
+            //      along and I did not look.
             //
-            //      Derived from the roster already in the Context, so nothing
-            //      new is threaded through. General on purpose: paired with the
-            //      positional intercepts it lets the model learn each
-            //      position's own timing, which is why TE and QB move too.
-            double deep = 0;
-            for(int count : context.roster().values()){
-                deep += count;
+            // f25-f28  EACH POSITION'S OWN TIMING CURVE: the intercept times
+            //      the depth, for QB, RB, TE and DEF, with WR the baseline -
+            //      the same family as the f5-f7 intercepts and the f4/f16/f17
+            //      earliness interactions. Handing the tree the product
+            //      directly rather than asking it to discover the split is what
+            //      the existing interaction features already do.
+            //
+            //      This is general on purpose. Defences are where it was
+            //      diagnosable - none taken before round 10 in five real drafts
+            //      against 19% simulated inside round 9 - but a room has a
+            //      timing curve for every position, and four of the five had no
+            //      way to express one.
+            //      INERT IN THE NINE-ROUND GAME. These exist to model what a
+            //      room does LATE, and the nine-round schedule has no late -
+            //      it stops before a single defence has ever been taken in
+            //      this league. Left switched on there they are four extra
+            //      parameters and one dead column fitted to 435 observations,
+            //      and they cost real accuracy: BoostLab's 2024 calibration
+            //      went 0.60% to 1.00% and the boosted model stopped clearing
+            //      its gate over the linear one. Off, that configuration is
+            //      byte-identical to before this change; on, the sixteen-round
+            //      one keeps the whole gain.
+            if(DraftPlanner.scheduleRounds() > GAME_ROUNDS){
+                double depth = Math.min(1.0, context.pickNumber() / 192.0);
+                features[a][24] = depth;
+                features[a][25] = features[a][5] * depth;
+                features[a][26] = features[a][6] * depth;
+                features[a][27] = features[a][7] * depth;
+                features[a][28] = features[a][23] * depth;
             }
-            features[a][24] = Math.min(1.0, deep / 16.0);
             features[a][22] = context.young().contains(choiceSet.get(a))
                     ? context.pickNumber() / 108.0 : 0.0;
         }
