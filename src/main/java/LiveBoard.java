@@ -123,41 +123,75 @@ public class LiveBoard {
         System.out.printf("still needed for a legal lineup: %s%n", roster.stillNeeds());
         System.out.printf("THE PLAN says: %s%n%n", Tomorrow.PLAN.getOrDefault(round, "-"));
 
-        // THE BOARD AS IT WILL BE, not as it is.
+        // THE BOARD AS IT WILL BE, weighted by how often it turns out that way.
         //
         // Justin: why are we looking at Gibbs and Nacua, those two will almost
-        // never be available at my pick 7. Correct, and the tool was showing
-        // them because the draft has not started - `taken` is empty, so "best
-        // available" was literally the best man in football. At pick 7 six men
-        // are gone, and planning against a board that will never exist is
-        // worse than not planning.
+        // never be available at my pick 7. Right - the draft had not started, so
+        // `taken` was empty and "best available" was the best man in football.
         //
-        // Real picks stay authoritative. Only the picks BETWEEN the live draft
-        // and mine are filled in, and they are filled from ADP, which is the
-        // same per-position rate the rest of this model uses. Once the draft
-        // reaches my seat this does nothing at all.
-        List<String> board = new ArrayList<>(taken);
-        int assumed = 0;
-        if(taken.size() < pick - 1){
-            List<Map.Entry<String, Double>> byAdp = new ArrayList<>();
-            for(String id : planner.points().keySet()){
-                double adp = SleeperProjections.adpOf(id);
-                if(adp < Double.MAX_VALUE && !board.contains(id)){
-                    byAdp.add(Map.entry(id, adp));
-                }
+        // The first fix assumed everyone with an ADP under my pick was gone,
+        // which is a hard cutoff and false in both directions: a man at ADP 6.9
+        // is not certainly gone and one at 7.1 is not certainly there. So this
+        // SIMULATES the picks between here and my seat, many times, using the
+        // opponent model the rest of the repo is fitted on, and asks what is
+        // actually on the board when I get there.
+        //
+        // What comes back is a distribution rather than a name. A position whose
+        // best man is the same in every trial is a different proposition from one
+        // that could be four different players, and the second number is what
+        // tells them apart.
+        // Every man at each position, best projection first. Rank in this list
+        // IS the index into the value curve, so the two can never disagree.
+        Map<Position, List<String>> ordered = new EnumMap<>(Position.class);
+        for(Map.Entry<String, Double> entry : planner.points().entrySet()){
+            Player player = Player.getPlayerFromSIDV2(entry.getKey());
+            if(player != null && PairwiseOdds.CAP.containsKey(player.position)){
+                ordered.computeIfAbsent(player.position, u -> new ArrayList<>())
+                        .add(entry.getKey());
             }
-            byAdp.sort(Map.Entry.comparingByValue());
-            for(Map.Entry<String, Double> entry : byAdp){
-                if(board.size() >= pick - 1){
-                    break;
-                }
-                board.add(entry.getKey());
-                assumed++;
-            }
-            System.out.printf("%d men actually gone, %d more assumed gone by ADP"
-                    + " before pick %d%n", taken.size(), assumed, pick);
         }
-        taken = board;
+        for(List<String> ids : ordered.values()){
+            ids.sort(Comparator.comparingDouble(
+                    (String id) -> planner.points().getOrDefault(id, 0.0)).reversed());
+        }
+        int trials = Integer.getInteger("waitTrials", 200);
+        Map<Position, List<Integer>> ranksAt = new EnumMap<>(Position.class);
+        Map<Position, Map<String, Integer>> whoAt = new EnumMap<>(Position.class);
+        if(taken.size() < pick - 1){
+            for(int trial = 0; trial < trials; trial++){
+                Random random = new Random(661_000L + 7919L * trial);
+                DraftSimulator.SimState branch = state.copy();
+                while(simulator.slotOf(branch) != null
+                        && simulator.slotOf(branch).pickNumber() < pick){
+                    simulator.simulateOneFrom(branch, random);
+                }
+                for(Position position : new Position[]{Position.RB, Position.WR,
+                        Position.TE, Position.QB, Position.DEF}){
+                    // His own PROJECTION RANK, which is what indexes the value
+                    // curve. The first version counted taken men encountered
+                    // during a HashMap walk, which has no order, so the rank it
+                    // reported was noise - and it showed as Nacua being "WR3"
+                    // while also being the best receiver on the board in every
+                    // trial, which cannot both be true.
+                    List<String> byProjection = ordered.get(position);
+                    if(byProjection == null){
+                        continue;
+                    }
+                    for(int rank = 1; rank <= byProjection.size(); rank++){
+                        String id = byProjection.get(rank - 1);
+                        if(branch.takenAtOf(id) == null){
+                            ranksAt.computeIfAbsent(position, u -> new ArrayList<>())
+                                    .add(rank);
+                            whoAt.computeIfAbsent(position, u -> new HashMap<>())
+                                    .merge(id, 1, Integer::sum);
+                            break;
+                        }
+                    }
+                }
+            }
+            System.out.printf("%d men actually gone; the %d picks before mine simulated"
+                    + " %d times%n", taken.size(), pick - 1 - taken.size(), trials);
+        }
 
         // My roster as (position, rank) on the live board.
         List<BoardValue.Slot> held = new ArrayList<>();
@@ -170,18 +204,29 @@ public class LiveBoard {
         }
 
         int next = nextPickAfter(simulator, state, planner, pick);
-        System.out.printf("%-5s %-24s %6s %9s %8s %7s %7s %14s%n", "POS", "BEST AVAILABLE",
-                "RANK", "ADDS NOW", "VS WAIT", "END", "SWING", "NEXT CLIFF");
+        System.out.printf("%-5s %-24s %6s %6s %8s %7s %7s %6s %14s%n", "POS",
+                "LIKELIEST THERE", "RANK", "ODDS", "ADDS NOW", "VS WAIT", "END",
+                "SWING", "NEXT CLIFF");
 
         Map<Position, Double> urgency = new EnumMap<>(Position.class);
         Map<Position, Double> adds = new EnumMap<>(Position.class);
         Map<Position, String> best = new EnumMap<>(Position.class);
         for(Position position : new Position[]{Position.RB, Position.WR, Position.TE,
                 Position.QB, Position.DEF}){
-            String candidate = bestAvailable(planner, taken, position);
+            Map<String, Integer> seenAt = whoAt.get(position);
+            String candidate = seenAt == null || seenAt.isEmpty()
+                    ? bestAvailable(planner, taken, position)
+                    : seenAt.entrySet().stream().max(Map.Entry.comparingByValue())
+                            .map(Map.Entry::getKey).orElse(null);
             if(candidate == null){
                 continue;
             }
+            // How often the man named here is really the one waiting, and how
+            // deep the position is when I get there, averaged over the trials.
+            List<Integer> ranks = ranksAt.get(position);
+            int howOften = seenAt == null ? 0 : seenAt.getOrDefault(candidate, 0);
+            double share = ranks == null || ranks.isEmpty() ? 1
+                    : (double) howOften / ranks.size();
             String why = roster.whyNotDraft(position, round);
             if(why != null){
                 Player player = Player.getPlayerFromSIDV2(candidate);
@@ -191,7 +236,10 @@ public class LiveBoard {
                         "-", "-", "-", why);
                 continue;
             }
-            int rank = depth(planner, taken, position, candidate);
+            int rank = ranks == null || ranks.isEmpty()
+                    ? depth(planner, taken, position, candidate)
+                    : (int) Math.round(ranks.stream().mapToInt(Integer::intValue)
+                            .average().orElse(1));
             int later = next < 0 ? rank : rank + drain(planner, taken, position, pick, next);
             double base = BoardValue.empirical(held, pools, curve, order.size(), true);
             List<BoardValue.Slot> now = new ArrayList<>(held);
@@ -233,10 +281,11 @@ public class LiveBoard {
             String where = cliff == null ? "none ahead"
                     : String.format("after %s%d%s", position, cliff.afterRank(),
                             crosses ? " CROSSED" : "");
-            System.out.printf("%-5s %-24s %6d %9.1f %8.1f %7.0f %6.0f%% %14s %s%n",
+            System.out.printf("%-5s %-24s %6d %5.0f%% %8.1f %7.1f %7.0f %5.0f%% %14s %s%n",
                     position,
                     player == null ? candidate : player.firstName + " " + player.lastName,
-                    rank, addsNow, wait, both[0], 100 * (both[0] - both[1]) / both[0],
+                    rank, 100 * share, addsNow, wait, both[0],
+                    100 * (both[0] - both[1]) / both[0],
                     where, fragile ? "REFUSED fragile" : "");
         }
 
