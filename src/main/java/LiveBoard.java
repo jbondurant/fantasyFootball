@@ -1294,28 +1294,36 @@ public class LiveBoard {
             }
         }
         double observed = taken.isEmpty() ? 0 : (double) gone / taken.size();
-        // THE PRIOR IS FITTED NOW, NOT COUNTED FROM ADP. adpRate counts how
-        // many men of this position have an ADP falling in the window, which is
-        // the same hard-ADP reasoning expectedRank used until tonight - this
-        // was the last place still using it. The survival table gives the
-        // expected number gone by `next` less the expected number gone by
-        // `pick`, from the fitted opponent model.
+        // THE ROOM TERM EXISTED TO RESCUE A BAD PRIOR, AND THE PRIOR IS GOOD NOW.
         //
-        // DrainPrediction, 2,080 (seat, position) cells:
-        //     shipped, room blended with ADP counts   1.27 men
-        //     survival table alone                    0.83
-        //     room blended with the survival prior    1.18
+        // This blended the room's observed rate with a prior that counted men
+        // whose ADP fell in the window. That prior was poor, so the room was
+        // worth listening to. The prior is now the fitted survival table, and
+        // on the league's OWN 2024 and 2025 drafts the blend is worse than the
+        // prior alone (RealMidDraft, 360 cells):
         //
-        // The room term STAYS even though dropping it scores best. That
-        // measurement is model-consistent - the draws come from the very
-        // opponent model the survival table is fitted on, so it cannot tell
-        // "the prior is right" from "the prior is predicting itself". The room
-        // term is what catches a real room deviating from the model, and a
-        // simulation is the one place that can never happen.
-        double expected = SURVIVAL == null
-                ? adpRate(planner, position, pick, next)
-                : Math.max(0, SURVIVAL.expectedGone(position, next)
-                        - SURVIVAL.expectedGone(position, pick)) / (next - pick);
+        //     retired: room blended with ADP counts   1.89 men
+        //     room blended with the survival prior    1.72
+        //     the survival prior alone                1.56
+        //
+        // I KEPT THE ROOM TERM A FEW HOURS AGO and said so in the commit: the
+        // simulated comparison also preferred the prior alone, and I refused it
+        // on the grounds that those draws come from the model the prior is
+        // fitted on, so they could not exercise misspecification. That argument
+        // was reasonable and it was WRONG - real drafts can exercise it, they
+        // do, and they agree with the simulations. Two seasons is a small
+        // sample and the cells are correlated, so this is a 10% improvement on
+        // a consistent sign rather than a proven one; the sign is consistent
+        // across both kinds of test, which is the best evidence available.
+        //
+        // The room term SURVIVES on the fallback path, where the prior is once
+        // again the ADP count and once again poor.
+        if(SURVIVAL != null){
+            return Math.max(0, (int) Math.round(Math.max(0,
+                    SURVIVAL.expectedGone(position, next)
+                            - SURVIVAL.expectedGone(position, pick))));
+        }
+        double expected = adpRate(planner, position, pick, next);
         // Half weight to the room after about thirty picks, which is roughly
         // when a run on a position stops being three men in a row.
         double trust = taken.size() / (taken.size() + 30.0);

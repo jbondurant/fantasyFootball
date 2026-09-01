@@ -12,8 +12,10 @@ import java.util.*;
  * still uses it.
  *
  * The survival table gives a fitted prior instead - the expected number gone by
- * `next` minus the expected number gone by `pick` - so this measures whether
- * swapping the prior helps, on simulated drafts held out from the table.
+ * `next` minus the expected number gone by `pick`. As of 2026-09-01 drain uses
+ * that prior ALONE: the room-observed term it used to blend in was there to
+ * rescue a poor ADP-counting prior, and against a fitted one it adds noise.
+ * Measured both here and, decisively, on real drafts by RealMidDraft.
  *
  *   ./gradlew run -Pmain=DrainPrediction -Pkeepers=Tuten,Purdy -Psims=60 -q
  */
@@ -118,18 +120,20 @@ public class DrainPrediction {
         System.out.printf("mean absolute error, men per window:%n");
         System.out.printf("   RETIRED: room blended with ADP counts   %.2f%n",
                 retiredError / cells);
-        System.out.printf("   SHIPPED: room blended, survival prior   %.2f%n",
+        System.out.printf("   SHIPPED: survival prior alone, rounded  %.2f%n",
                 shippedError / cells);
-        System.out.printf("   survival table alone                    %.2f%n",
+        System.out.printf("   the same prior, NOT rounded             %.2f%n",
                 survivalError / cells);
-        System.out.printf("   same, without drain's integer rounding  %.2f%n",
+        System.out.printf("   room blended with the prior (retired)   %.2f%n",
                 blendError / cells);
         System.out.printf("%nshipped is %.2f men per window better than the retired rule.%n",
                 (retiredError - shippedError) / cells);
-        System.out.printf("survival ALONE would score %.2f - better still, and NOT taken:%n"
-                + "these draws come from the opponent model the table is fitted on,%n"
-                + "so that number cannot separate a right prior from one predicting%n"
-                + "itself. the room term catches a room the model did not expect.%n",
-                survivalError / cells);
+        System.out.printf("%nthe room term is GONE from drain as of 2026-09-01. i kept it%n"
+                + "at first because this comparison is model-consistent - the draws%n"
+                + "come from the opponent model the prior is fitted on, so it could%n"
+                + "not separate a right prior from one predicting itself. RealMidDraft%n"
+                + "settles it on the league's own 2024 and 2025 drafts, where the%n"
+                + "prior alone also wins (1.56 against 1.72). both kinds of test agree,%n"
+                + "so the argument for keeping it is spent.%n");
     }
 }
