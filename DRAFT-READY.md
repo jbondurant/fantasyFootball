@@ -336,13 +336,32 @@ survival 1.19**. The change holds up on real football. The gap between 0.85
 structurally cannot see.
 
 `drain` - which sets the rank behind **VS WAIT** - carried the last hard-ADP
-estimator, counting men whose ADP fell in the window. Its prior is fitted now
-(`DrainPrediction`: retired 1.27, shipped 1.11 men per window). The room-observed
-term STAYS, though dropping it scores better still at 0.83: those draws come
-from the very opponent model the table is fitted on, so that number cannot
-separate a right prior from one predicting itself, and the room term is what
-catches a real room deviating from the model. END TEAM and the ordering do not
-move; VS WAIT does - the receiver's cost of waiting at pick 7 goes 18.4 to 31.0.
+estimator, counting men whose ADP fell in the window. Its prior is fitted now,
+and as of later the same day it uses that prior **alone**.
+
+I kept the room-observed term at first, and was wrong. The simulated comparison
+already preferred the prior alone; I refused it because those draws come from
+the very model the prior is fitted on, so they cannot exercise misspecification
+- and the room term is what catches a room the model did not expect. Real
+drafts can exercise it. `RealMidDraft`, on the league's own 2024 and 2025
+drafts, 360 cells:
+
+    retired: room blended with ADP counts   1.89 men
+    room blended with the survival prior    1.72
+    the survival prior alone                1.56
+
+Both kinds of test agree, so the argument for keeping it is spent. The room term
+was there to rescue a *poor* prior; against a fitted one it adds noise. It
+survives on the fallback path, where the prior is the ADP count again. Two
+seasons is a small sample and the cells are correlated - a consistent sign, not
+a proven effect.
+
+The related asymmetry is fine as it stands: `expectedRank` never watched the
+room, and blending it in makes that **worse** on the same real drafts (1.63
+against 1.57), because it already counts every man really taken at certainty.
+
+END TEAM and the ordering do not move; VS WAIT does - the receiver's cost of
+waiting at pick 7 goes 18.4 to 31.0.
 
 ## Is there a better pairwise model? No.
 
