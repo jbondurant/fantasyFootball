@@ -271,6 +271,7 @@ public class LiveBoard {
         }
         int trials = Integer.getInteger("waitTrials", 200);
         Set<String> reallyGone = new HashSet<>(taken);
+        Map<Position, double[]> seasonsOf = new EnumMap<>(Position.class);
         Map<Position, List<Integer>> ranksAt = new EnumMap<>(Position.class);
         Map<Position, Map<String, Integer>> whoAt = new EnumMap<>(Position.class);
         if(taken.size() < pick - 1){
@@ -415,8 +416,15 @@ public class LiveBoard {
             // average. Measured as a no-op above 250 on everything this model
             // builds, so it is a guard rather than a lever - if it ever starts
             // refusing things, that is worth reading.
-            double[] both = rolloutStats(planner, taken, curve, pools, order.size(),
-                    held, position, rank, pick);
+            // Keep the per-world seasons, not just the summary. The paired
+            // difference between two candidates is the only thing that says
+            // whether the gap printed between them is real, and it cannot be
+            // recovered from two means. Costs nothing extra - the summary is
+            // derived from these.
+            double[] worlds = rolloutSeasons(planner, taken, curve, pools,
+                    order.size(), held, position, rank, pick);
+            seasonsOf.put(position, worlds);
+            double[] both = BoardValue.summarise(worlds);
             boolean fragile = BoardValue.tooFragile(both);
             double finished = both[0];
             if(fragile){
@@ -480,6 +488,44 @@ public class LiveBoard {
                 .thenComparing(Comparator.comparingDouble(
                         (Position p) -> urgency.getOrDefault(p, -1e9)).reversed()));
         String verdict = ranked.isEmpty() ? "nothing legal" : ranked.get(0).toString();
+
+        // IS THE MARGIN BIGGER THAN THE NOISE IN IT?
+        //
+        // The table prints END TEAM to a decimal and the eye reads 1917.5 over
+        // 1892.5 as a decision, with nothing on screen to say whether
+        // twenty-five points is a lot. Model A's Kim-Nelson arbiter answers
+        // exactly this for its own engines; the board model had no equivalent.
+        //
+        // TWO DIFFERENT QUESTIONS, AND THIS IS THE SMALLER ONE. The 125-point
+        // bar in DRAFT-READY asks whether one STRATEGY beats another over a
+        // season - an unbounded total, dominated by season-to-season luck, and
+        // this repo has spent a week establishing that it does not resolve.
+        // What is asked here is bounded and per-decision: does taking this
+        // position beat taking that one, IN EXPECTATION, from this board? Both
+        // candidates are scored on the SAME worlds, so the difference is paired
+        // and its noise is far smaller than either total's.
+        //
+        // That is the distinction the project already reached the hard way -
+        // bounded per-decision estimands resolve, unbounded point totals do
+        // not. So SEPARATED here does NOT mean "this pick is worth 25 points of
+        // season"; it means the model's preference between the two is real
+        // rather than an artefact of how many worlds were drawn.
+        String margin = null;
+        if(ranked.size() >= 2){
+            double[] leader = seasonsOf.get(ranked.get(0));
+            double[] runnerUp = seasonsOf.get(ranked.get(1));
+            if(leader != null && runnerUp != null){
+                double[] gap = margin(leader, runnerUp);
+                boolean proven = gap[0] > 2 * gap[1];
+                margin = String.format(
+                        "   %s leads %s by %.1f +/- %.1f (paired, 2 s.e.) - %s%n",
+                        ranked.get(0), ranked.get(1), gap[0], gap[1],
+                        proven ? "SEPARATED (the preference is real; it is not a"
+                                        + " claim about season points)"
+                                : "INSIDE THE NOISE, treat as a coin flip and use"
+                                        + " your own read");
+            }
+        }
         if(allRefused){
             System.out.printf("%n   every position is over the %.0f%% swing bar, so the bar"
                     + " cannot%n   discriminate here - ranking on END TEAM instead. This is"
@@ -487,6 +533,9 @@ public class LiveBoard {
                     + " the pick.%n", 100 * BoardValue.fragilityBar());
         }
         System.out.printf("%n   the model takes: %s%n", verdict);
+        if(margin != null){
+            System.out.print(margin);
+        }
         System.out.printf("%nNEXT CLIFF is the one that decides this. A position's value does not%n"
                 + "slide, it steps: the raw rank curve falls off at a few places and is%n"
                 + "flat between them. CROSSED means my next pick lands on the far side of%n"
@@ -732,6 +781,38 @@ public class LiveBoard {
      * depth for future picks advances at each position's OWN ADP rate, never a
      * shared one: assuming a shared rate is what once drafted TE TE QB QB.
      */
+    /** The per-world seasons for a candidate, for a PAIRED comparison. */
+    static double[] rolloutSeasons(DraftPlanner planner, List<String> taken,
+                                   Map<Position, double[]> curve,
+                                   Map<Position, List<List<Double>>> pools, int count,
+                                   List<BoardValue.Slot> held, Position first,
+                                   int firstRank, int fromPick){
+        return BoardValue.seasons(rolloutRoster(planner, taken, curve, pools, count,
+                held, first, firstRank, fromPick), pools, curve, count, true);
+    }
+
+    /**
+     * Is the leader's margin over the runner-up bigger than the noise in it?
+     *
+     * Paired across worlds, so this is the standard error of the DIFFERENCE and
+     * not of either total. Returns {margin, standard error}.
+     */
+    static double[] margin(double[] leader, double[] runnerUp){
+        int n = Math.min(leader.length, runnerUp.length);
+        double total = 0;
+        for(int i = 0; i < n; i++){
+            total += leader[i] - runnerUp[i];
+        }
+        double mean = total / n;
+        double sumSquares = 0;
+        for(int i = 0; i < n; i++){
+            double difference = (leader[i] - runnerUp[i]) - mean;
+            sumSquares += difference * difference;
+        }
+        double sd = n < 2 ? 0 : Math.sqrt(sumSquares / (n - 1));
+        return new double[]{mean, sd / Math.sqrt(n)};
+    }
+
     static double[] rolloutStats(DraftPlanner planner, List<String> taken,
                                  Map<Position, double[]> curve,
                                  Map<Position, List<List<Double>>> pools, int count,

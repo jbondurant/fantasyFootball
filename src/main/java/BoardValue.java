@@ -751,15 +751,44 @@ public class BoardValue {
      */
     static double[] stats(List<Slot> roster, Map<Position, List<List<Double>>> pools,
                           Map<Position, double[]> curve, int count, boolean ratios){
-        double[] worlds = new double[WORLDS];
+        double[] worlds = seasons(roster, pools, curve, count, ratios);
         double total = 0;
-        for(int world = 0; world < WORLDS; world++){
-            worlds[world] = oneSeason(roster, pools, curve, world, ratios);
-            total += worlds[world];
+        for(double season : worlds){
+            total += season;
         }
         double[] sorted = worlds.clone();
         java.util.Arrays.sort(sorted);
         return new double[]{ total / WORLDS, sorted[Math.max(0, WORLDS / 10)] };
+    }
+
+    /** Mean and 10th percentile of an already-drawn set of seasons. */
+    static double[] summarise(double[] worlds){
+        double total = 0;
+        for(double season : worlds){
+            total += season;
+        }
+        double[] sorted = worlds.clone();
+        java.util.Arrays.sort(sorted);
+        return new double[]{ total / worlds.length,
+                sorted[Math.max(0, worlds.length / 10)] };
+    }
+
+    /**
+     * The season this roster scores in EACH world, in world order.
+     *
+     * World `w` uses the same drawn ratios for every roster, so two candidates
+     * compared index-by-index are PAIRED - and the difference between them
+     * carries far less noise than either number does on its own. That is the
+     * only honest way to ask whether a 25-point gap on the table is real, and
+     * without it the screen prints differences it cannot support.
+     */
+    static double[] seasons(List<Slot> roster, Map<Position, List<List<Double>>> pools,
+                            Map<Position, double[]> curve, int count, boolean ratios){
+        double[] worlds = new double[WORLDS];
+        for(int world = 0; world < WORLDS; world++){
+            worlds[world] = oneSeason(roster, pools, curve, world, ratios);
+        }
+        return worlds;
     }
 
     /**
