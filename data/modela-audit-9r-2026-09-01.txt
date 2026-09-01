@@ -1,0 +1,121 @@
+
+============ MODEL A, ADVERSARIAL ============
+schedule 9 rounds | warm 17.4s | trials 150, scenarios 60, waitTrials 200
+
+--- 1  SETUP ---
+   me                604136387620438016
+   kept league-wide  24
+   MY keepers        2  [Tuten 159pts, Purdy 363pts]
+   board             205 men
+   slots             96 live, 12 keeper (earliest keeper slot is pick 32)
+   MY slots          9 live [7, 18, 31, 42, 55, 66, 79, 90, 103], 0 keeper
+
+--- 2  ALIGNMENT (stateAfter vs the real pick count) ---
+   clean replay      96 picks, 0 really drifted
+   LiveBoard's shipped drift test on this CLEAN board:
+      would warn at 65 of 97 refreshes, first at 31 picks in
+      DraftNight.scheduleDrift would warn at 0
+   one off-board pick at pick 20:
+      first wrong slot after 20 picks are in, worst lag 3 slot(s)
+      my roster after 60 real picks: clean 8, after one off-board pick 8
+      both live tools now print DraftNight.scheduleDrift for this;
+      Model A printed nothing at all until 2026-09-01.
+
+--- 3  BOUNDARY (where the objective really goes flat) ---
+   ROUND PICK   roster   nine full spread     verdict  
+   1     7      2        no        87.28      speaks   
+   2     18     3        no        40.87      speaks   
+   3     31     4        no        36.29      speaks   
+   4     42     5        no        27.04      speaks   
+   5     55     6        no        38.04      speaks   
+   6     66     7        no        38.18      speaks   
+   7     79     8        no        18.96      speaks   
+   8     90     9        no        5.98       speaks   
+   9     103    10       no        136.40     speaks   
+   Draft2026 runs Model A when MY NEXT pick is round <= 7.
+
+   ...and with Justin playing Model A's own plan,
+   [RB, WR, RB, WR, WR, WR, TE, QB, QB]:
+   ROUND PICK   roster   nine full spread     verdict  
+   1     7      2        no        87.28      speaks   
+   2     18     3        no        40.96      speaks   
+   3     31     4        no        37.33      speaks   
+   4     42     5        no        31.55      speaks   
+   5     55     6        no        25.42      speaks   
+   6     66     7        no        28.92      speaks   
+   7     79     8        no        1.25       speaks   
+   8     90     9        YES       0.00       SILENT   
+   9     103    10       YES       0.00       SILENT   
+
+   ...and with Justin playing the RUNBOOK front, tight end deferred to round 8,
+   [RB, WR, RB, WR, WR, WR, RB, TE, QB]:
+   ROUND PICK   roster   nine full spread     verdict  
+   1     7      2        no        87.28      speaks   
+   2     18     3        no        40.96      speaks   
+   3     31     4        no        37.33      speaks   
+   4     42     5        no        31.55      speaks   
+   5     55     6        no        25.42      speaks   
+   6     66     7        no        28.92      speaks   
+   7     79     8        no        1.25       speaks   
+   8     90     9        no        2.50       speaks   
+   9     103    10       YES       0.00       SILENT   
+
+--- 4  COMMITTEE (can they disagree?) ---
+   ROUND PICK   | lookahead-2 lookahead-1 hindsight   vorp-greedy | spread(L2)  verdict
+   1     7      | RB          RB          RB          RB          | 83.50     4 of 4 say RB
+   2     18     | WR          WR          WR          WR          | 40.87     4 of 4 say WR
+   3     31     | RB          WR          WR          RB          | 37.02     2 of 4 say RB   <- TIE, broken by enum order
+   4     42     | WR          WR          WR          QB          | 24.94     3 of 4 say WR
+   5     55     | WR          WR          WR          WR          | 31.17     4 of 4 say WR
+   6     66     | WR          WR          WR          WR          | 22.92     4 of 4 say WR
+   7     79     | WR          WR          WR          WR          | 12.32     4 of 4 say WR
+   8     90     | WR          WR          WR          WR          | 5.98      4 of 4 say WR
+   9     103    | TE          TE          TE          TE          | 136.40    4 of 4 say TE
+
+   1 of 9 picks were decided by a TIE the vote does not report as one.
+   pairwise agreement over 9 picks:
+      L2 = L1    8/9
+      L1 = HS    9/9
+      L2 = HS    8/9
+      L2 = VG    8/9
+   lookahead-1 and hindsight are the same estimator with a different
+   seed offset and sample size - LiveCommittee's own comment says hindsight
+   solves each scenario EXACTLY with no tail policy, which it does not.
+
+--- 5  CLOCK (engine seconds per pick, 60s budget) ---
+   ROUND PICK   picks-in vote(s)   wait(s)   total(s) 
+   1     7      6        15.7      1.0       16.7     
+   2     18     17       19.5      0.9       20.4     
+   3     31     30       11.2      0.6       11.8     
+   4     42     39       8.5       0.8       9.3      
+   5     55     50       8.1       0.8       9.0      
+   6     66     59       7.1       0.9       8.0      
+   7     79     70       5.6       0.8       6.4      
+   8     90     79       4.6       0.0       4.6      
+   9     103    90       3.4       0.0       3.4      
+
+--- 6  KEEPERS ---
+   ROUND PICK   kept-best keeper pts   keeper marginal
+   1     7      0        522.0        522.0       
+   2     18     0        522.0        522.0       
+   3     31     0        522.0        522.0       
+   4     42     0        522.0        522.0       
+   5     55     0        522.0        174.5       
+   6     66     0        522.0        174.5       
+   7     79     0        522.0        174.5       
+   8     90     0        522.0        174.5       
+   9     103    0        522.0        46.7        
+
+   kept men still on the board            0  (must be 0)
+   times a kept man was best-available    0  (must be 0)
+   roster/keeper problems                 0
+
+--- 7  OFF-TURN READS (whose board is being named?) ---
+   picks in   on pick  best RB named                best WR named               
+   0          1        Gibbs                        Chase                       
+   3          4        McCaffrey                    St. Brown                   
+   6          7        Cook                         St. Brown                   
+   picks-in 6 is Justin's own pick 7. Refreshing before it names men
+   who will not be there, though the POSITION the engines vote for is
+   still computed at pick 7 - simulateFrom only calls my policy at my slots.
+EXIT 0

@@ -1,0 +1,98 @@
+nine-round plan, keepers [Tuten r12, Purdy r13], 300 rollouts, lambda 0.00, quantile 0.10
+my picks: [7, 18, 31, 42, 55, 66, 79, 90, 103]
+
+round 1 (overall pick 7):
+   POS      mean      p10   risk-adj
+   QB     1772.1   1748.2     1772.1
+   RB     1819.7   1794.7     1819.7   <- take
+   WR     1796.4   1771.2     1796.4
+   TE     1732.3   1711.8     1732.3
+
+round 2 (overall pick 18):
+   POS      mean      p10   risk-adj
+   QB     1806.0   1778.4     1806.0
+   RB     1812.1   1785.7     1812.1
+   WR     1814.7   1792.1     1814.7   <- take
+   TE     1769.5   1745.9     1769.5
+
+round 3 (overall pick 31):
+   POS      mean      p10   risk-adj
+   QB     1791.6   1762.7     1791.6
+   RB     1814.3   1792.1     1814.3   <- take
+   WR     1809.4   1784.2     1809.4
+   TE     1780.0   1756.7     1780.0
+
+round 4 (overall pick 42):
+   POS      mean      p10   risk-adj
+   QB     1793.5   1765.2     1793.5
+   RB     1795.7   1770.2     1795.7
+   WR     1813.5   1790.9     1813.5   <- take
+   TE     1784.4   1761.3     1784.4
+
+round 5 (overall pick 55):
+   POS      mean      p10   risk-adj
+   QB     1799.9   1777.1     1799.9
+   RB     1803.0   1781.8     1803.0
+   WR     1813.3   1790.9     1813.3   <- take
+   TE     1798.8   1778.3     1798.8
+
+round 6 (overall pick 66):
+   POS      mean      p10   risk-adj
+   QB     1808.1   1782.2     1808.1
+   RB     1803.6   1783.3     1803.6
+   WR     1812.6   1788.3     1812.6   <- take
+   TE     1808.0   1785.8     1808.0
+
+round 7 (overall pick 79):
+   POS      mean      p10   risk-adj
+   QB     1811.0   1785.6     1811.0
+   RB     1809.6   1785.3     1809.6
+   WR     1809.6   1784.3     1809.6
+   TE     1812.6   1788.3     1812.6   <- take
+
+round 8 (overall pick 90):
+   POS      mean      p10   risk-adj
+   QB     1812.5   1788.3     1812.5   <- take
+   RB     1811.9   1786.6     1811.9
+   WR     1811.8   1786.6     1811.8
+   TE     1811.9   1786.6     1811.9
+
+round 9 (overall pick 103):
+   POS      mean      p10   risk-adj
+   QB     1812.5   1788.3     1812.5   <- take
+   RB     1812.5   1788.3     1812.5
+   WR     1812.5   1788.3     1812.5
+   TE     1812.5   1788.3     1812.5
+
+plan [RB, WR, RB, WR, WR, WR, TE, QB, QB]
+expected best-nine 1812.5 (+/- 1.2), p10 1788.3, risk-adjusted (lambda 0.00) 1812.5
+
+wait-or-take, under this plan (per position: the player I'd wait
+for, how often he's gone by my next pick, the drop when he is):
+
+   PICK   POS  USUAL TARGET                P(gone) drop if gone
+   7      QB   Josh Allen                       9%         35.8
+   7      WR   CeeDee Lamb                     99%         23.7
+   7      TE   Harold Fannin                    0%          0.0
+   18     QB   Josh Allen                      75%         35.7
+   18     RB   Breece Hall                     92%          9.7
+   18     TE   Harold Fannin                    1%          5.1
+   31     QB   Lamar Jackson                   25%         17.0
+   31     WR   Mike Evans                      44%          5.6
+   31     TE   Harold Fannin                    1%          5.1
+   42     QB   Lamar Jackson                   65%         14.1
+   42     RB   Jadarian Price                  70%         13.6
+   42     TE   Harold Fannin                    3%          5.1
+   55     QB   Dak Prescott                    27%         12.5
+   55     RB   Rhamondre Stevenson             81%          9.4
+   55     TE   Harold Fannin                   28%          5.2
+   66     QB   Dak Prescott                    52%         13.2
+   66     RB   J.K. Dobbins                    76%          6.3
+   66     TE   Harold Fannin                   38%          5.0
+   79     QB   Dak Prescott                    35%         10.7
+   79     RB   Jordan Mason                    61%          6.5
+   79     WR   Matthew Golden                  56%          5.3
+   90     RB   MarShawn Lloyd                  36%          8.2
+   90     WR   Matthew Golden                  67%          3.7
+   90     TE   Travis Kelce                    37%          3.8
+EXIT 0
