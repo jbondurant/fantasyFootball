@@ -1,0 +1,24 @@
+
+WHAT EACH RULE TAKES, ROUND BY ROUND
+
+ROUND   PICK       THE PLAN   MODEL       how often the model agreed with itself
+1       7          RB         WR          3 of 5   WRx3 RBx2
+2       18         RB         TE          3 of 5   TEx3 RBx1 WRx1
+3       31         RB         WR          3 of 5   WRx3 RBx1 TEx1
+4       42         WR         WR          3 of 5   WRx3 RBx1 TEx1   <- agree
+5       55         WR         WR          5 of 5   WRx5   <- agree
+6       66         WR         WR          5 of 5   WRx5   <- agree
+7       79         WR         RB          3 of 5   RBx3 WRx2
+8       90         TE         RB          3 of 5   RBx3 WRx2
+9       103        WR         RB          3 of 5   RBx3 WRx2
+10      114        QB         QB          2 of 5   QBx2 RBx1 WRx1 TEx1   <- agree
+11      127        TE         WR          2 of 5   WRx2 QBx1 RBx1 TEx1
+12      -          TUTEN      same        keeper - not a pick for either rule
+13      -          PURDY      same        keeper - not a pick for either rule
+14      162        QB         WR          2 of 5   WRx2 QBx1 TEx1 DEFx1
+15      175        RB         RB          2 of 5   RBx2 TEx2 DEFx1   <- agree
+16      186        DEF        DEF         3 of 5   DEFx3 QBx1 RBx1   <- agree
+
+A round where the model splits three ways is the model saying the
+round is free, not the model being confused. Read the spread, not the
+mode - five boards cannot support a confident mode on their own.
