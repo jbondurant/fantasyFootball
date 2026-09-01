@@ -41,11 +41,15 @@ public class CycleTiming {
         if(!defence.isEmpty()){
             pools.put(Position.DEF, defence);
         }
+        // Build the survival table, as Draft2026 does - otherwise this times a
+        // path that falls back to the ADP cutoff and is not what he runs.
+        double survivalCost = LiveBoard.warmSurvival(planner, simulator);
         String draftID = configuration.getDraftID();
 
         PrintStream real = System.out;
         PrintStream quiet = new PrintStream(OutputStream.nullOutputStream());
 
+        real.printf("%nsurvival table %.0fs at warm, paid once%n", survivalCost);
         real.printf("%n%-10s %10s %10s %10s%n", "", "BOARD", "MODEL A", "CYCLE");
         double worst = 0;
         for(int run = 1; run <= 3; run++){
