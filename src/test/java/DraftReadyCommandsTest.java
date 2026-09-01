@@ -21,8 +21,12 @@ public class DraftReadyCommandsTest {
     @Test
     public void everyToolTheDiagnosticCitesExists() throws Exception {
         String doc = Files.readString(Path.of("DIAGNOSTIC.md"));
-        // Tools are cited in backticks, sometimes with flags: `RoomFidelity -PfullRounds=true`
-        Matcher matcher = Pattern.compile("`([A-Z][A-Za-z0-9]+)(?: -P[^`]*)?`").matcher(doc);
+        // Tools are cited in backticks, sometimes with flags: `RoomFidelity -PfullRounds=true`.
+        // A tool is CamelCase with a lowercase letter in it; SCREAMING_CASE like
+        // `MOST` is a constant and must not be mistaken for one - the first run of
+        // this test flagged BoardValue.MOST as a missing tool.
+        Matcher matcher = Pattern.compile("`([A-Z][A-Za-z0-9]*[a-z][A-Za-z0-9]*)(?: -P[^`]*)?`")
+                .matcher(doc);
         Set<String> cited = new LinkedHashSet<>();
         while(matcher.find()){
             cited.add(matcher.group(1));

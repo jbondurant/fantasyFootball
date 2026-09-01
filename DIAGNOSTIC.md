@@ -239,7 +239,9 @@ In order. The first two are the ones that break the circle.
    JVM, was a real leak and is fixed regardless); the third, structural fix
    makes the question moot. `RoomTimingTest` now also prints the ambient state
    it sees in its failure message, so if it ever fails again the message says
-   why. Full check running under the new setting as this is written.
+   why. Full check under the new setting: **green, 15m 3s** (was 9m with
+   shared JVMs; the six minutes buy a suite whose classes cannot poison each
+   other).
 
 6. **For TE, the one real unknown: measure, do not guess.** It is off by ~11
    on both held-out seasons and the mechanism is not known. The tool to build
