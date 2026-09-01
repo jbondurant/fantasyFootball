@@ -302,4 +302,10 @@ real every time.
     restored 9 into the JVM for every class after it, and a nine-round board
     carries no defences. Capture once. Or fork a JVM per class and have nothing
     to leak into - which is what the build does now.
+57. **A number written before its measurement ran.** I typed "spearman -0.32
+    over nine managers" into DIAGNOSTIC.md and a commit message while the tool
+    that would produce it was still in the same shell command, then ran it: 0.01
+    over ten. Same conclusion, fabricated figure, in the document whose whole
+    subject is numbers being wrong. Write the number AFTER the tool prints it,
+    or write "pending" - never a plausible placeholder.
 

@@ -92,9 +92,14 @@ drafts. **This is where the day went.**
 - **What the floor does not fix** - 57% of defences in rounds 10-13 against a
   real 29% - is a soft shape on 58 observations. It is not going to be fixed
   by anything fitted to those 58 observations.
-- **TE is consistently off (~11 points both seasons).** Real reason still
-  unknown. Seven TEs are kept this year, so the 2026 comparison is confounded
-  and only the held-out one counts.
+- **TE is consistently off (~11 points both seasons), and the reason is now
+  known: it is a limit, not a bug.** `TightEndHabit` shows the model cannot
+  tell WHICH manager reaches for a tight end (real-vs-sim correlation -0.09 and
+  0.19), and the real data shows why nothing could: a manager's own first-TE
+  round in 2024 predicts his 2025 round at spearman 0.01. The habit does not
+  persist year to year. The aggregate gap is a bimodal reality averaged into a
+  unimodal simulation, and it stays with this much data. Seven TEs are kept this
+  year, so the 2026 comparison is confounded and only the held-out one counts.
 
 ### 4. The survival table - who is still there at each of his seats
 
@@ -245,6 +250,21 @@ In order. The first two are the ones that break the circle.
    season, each manager's real first-TE round against his simulated one and the
    rank correlation across managers. 1.0 means the model knows WHO reaches; 0
    means it is guessing which manager.
+
+   **RUN, same evening, and it closes the question.** Real-vs-simulated
+   correlation across managers: **-0.09 in 2024, 0.19 in 2025.** The model
+   hands almost every manager the same 6-8 round habit. But the real column
+   explains why no feature can fix it: KevinDA took his tight end in round 3 in
+   2024 and round 16 in 2025; itsabust round 2 then round 5; BHier 13 then 10.
+   **A manager's own 2024 round predicts his 2025 round at spearman 0.01 over
+   the ten managers in both seasons.** (I first wrote "-0.32 over nine" here
+   before the measurement had run - a number typed ahead of its evidence, the
+   exact fault this document is about. Corrected in the same hour.) The habit
+   does not persist, so there
+   is nothing in the history for a per-manager feature to learn. The ~11-point
+   aggregate TE gap is the model averaging a bimodal reality - some rooms
+   reach in rounds 2-4, some wait to 13-16 - into a unimodal 6-8, and it will
+   stay that way with this much data. **Not a bug. A limit.** Stop here.
 
 7. **Then stop.** The draft is tonight. What is on screen is verified,
    robust across feeds, and honest about its own uncertainty. The remaining
