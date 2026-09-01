@@ -123,7 +123,13 @@ public class Draft2026 {
         int from = on == null ? 200 : on.pickNumber();
         for(int p = from; p <= 200; p++){
             DraftSimulator.Slot mine = simulator.slotAt(p);
-            if(mine != null && planner.me().equals(mine.manager())){
+            // A KEEPER SLOT IS NOT A PICK. Rounds 12 and 13 are Justin's and
+            // select nobody - Tuten sits in pick 138, Purdy in 151. Without
+            // this the header read ROUND 12 for two rounds while LiveBoard
+            // priced pick 138 and answered "nothing legal", across exactly the
+            // stretch where the tight end and defence still have to be found.
+            if(mine != null && planner.me().equals(mine.manager())
+                    && !mine.keeperSlot()){
                 return mine.round();
             }
         }

@@ -156,7 +156,15 @@ public class LiveBoard {
         int pick = onPick;
         for(int p = onPick; p <= 200; p++){
             DraftSimulator.Slot mineAt = simulator.slotAt(p);
-            if(mineAt != null && planner.me().equals(mineAt.manager())){
+            // A KEEPER SLOT IS NOT A PICK. Rounds 12 and 13 belong to Justin
+            // and select nobody - Tuten sits in pick 138 and Purdy in 151 - so
+            // scanning for "a slot that is mine" finds them and prices a pick
+            // that does not exist. Measured: from pick 113 until about 152 the
+            // tool answered "nothing legal" on every refresh, which is exactly
+            // the stretch where the tight end and defence still have to be
+            // found. slotOf() already asks keeperSlot(); this scan never did.
+            if(mineAt != null && planner.me().equals(mineAt.manager())
+                    && !mineAt.keeperSlot()){
                 pick = p;
                 break;
             }
@@ -174,6 +182,7 @@ public class LiveBoard {
         // What the rules permit here, before anything is priced.
         RosterRules rules = RosterRules.live();
         RosterRules.Roster roster = rules.justins();
+        List<String> declined = new ArrayList<>();
         for(String id : mine){
             Player player = Player.getPlayerFromSIDV2(id);
             if(player == null || planner.myKeeperIDs().contains(id)){
@@ -181,9 +190,31 @@ public class LiveBoard {
             }
             Integer at = state.takenAtOf(id);
             int taken_at = at == null ? 1 : simulator.slotAt(at).round();
+            // A REFUSED PICK MUST STILL COUNT. This used to be an `if` with no
+            // `else`, so a man the rules would have declined left NO TRACE on
+            // the rules roster - and the quarterback ceiling of two was then
+            // counted against one. That is a route to a third quarterback
+            // through the roster type's own refusal becoming amnesia, which is
+            // exactly the "structurally impossible" claim TRAPS A1 makes.
+            //
+            // He is on the real roster whatever the rules think, so the rules
+            // roster must know about him. Where they refuse, say so out loud
+            // rather than silently dropping him: a disagreement between the
+            // rules and the board is a fact about the draft, not noise.
             if(roster.canDraft(player.position, taken_at)){
                 roster = roster.draft(player.firstName + " " + player.lastName,
                         player.position, taken_at);
+            }
+            else {
+                declined.add(player.position + " " + player.firstName + " "
+                        + player.lastName + " (round " + taken_at + "): "
+                        + roster.whyNotDraft(player.position, taken_at));
+            }
+        }
+        if(!declined.isEmpty()){
+            System.out.printf("%nON MY ROSTER BUT OUTSIDE THE RULES - counted anyway:%n");
+            for(String why : declined){
+                System.out.printf("   %s%n", why);
             }
         }
         List<Position> legal = roster.legalAt(round);
@@ -929,7 +960,11 @@ public class LiveBoard {
                              DraftPlanner planner, int pick){
         for(int at = pick + 1; at <= 200; at++){
             DraftSimulator.Slot slot = simulator.slotAt(at);
-            if(slot != null && planner.me().equals(slot.manager())){
+            // Same keeper-slot fault as the scan above: rounds 12 and 13 are
+            // mine and select nobody, so "my next pick" must skip them or the
+            // wait is priced against a pick that never happens.
+            if(slot != null && planner.me().equals(slot.manager())
+                    && !slot.keeperSlot()){
                 return at;
             }
         }
