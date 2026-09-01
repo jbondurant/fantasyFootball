@@ -57,6 +57,11 @@ And the live-feed check the build file has always asked for before a draft:
 
     ./gradlew smokeTest
 
+(`./gradlew check` now runs the unit suite AND javadoc's reference check, so
+those two cannot be forgotten. `smokeTest` stays separate on purpose - it hits
+the real Sleeper and FantasyPros APIs, so it belongs before a draft rather than
+before every commit. This is the one to remember.)
+
 It hits the real Sleeper and FantasyPros APIs and checks the feeds still look
 the way the code expects. Green as of 2026-09-01.
 

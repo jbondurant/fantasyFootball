@@ -144,6 +144,18 @@ tasks.register('run', JavaExec) {
     }
 }
 
+// `check` RUNS JAVADOC TOO.
+//
+// javadoc costs two seconds and had been red for months, which is how two
+// {@link}s to deleted classes survived in the source. A check nobody runs is
+// not a check, and the fix for that is not remembering harder - it is hanging
+// it off the one people already run. smokeTest deliberately stays out: it hits
+// the live Sleeper and FantasyPros APIs, so it belongs before a draft rather
+// than before every commit, and DRAFT-READY names it there.
+tasks.named('check').configure {
+    dependsOn tasks.named('javadoc')
+}
+
 // JAVADOC CHECKS REFERENCES, NOT HTML.
 //
 // `./gradlew javadoc` was failing on twenty errors and had clearly been failing
