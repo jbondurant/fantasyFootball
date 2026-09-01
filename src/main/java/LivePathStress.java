@@ -19,7 +19,6 @@ import java.util.*;
  */
 public class LivePathStress {
     public static void main(String[] args) throws Exception {
-        System.setProperty("scheduleRounds", "16");
         int seeds = Integer.getInteger("seeds", 3);
                 // ONE WARM-UP, SHARED. See LiveSetup: five separate copies of this
         // block had drifted apart, three of them measuring a configuration

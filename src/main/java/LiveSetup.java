@@ -58,7 +58,11 @@ public final class LiveSetup {
 
     /** Exactly what Draft2026 runs on. Nothing else may assemble this. */
     public static LiveSetup forTonight() throws Exception {
-        System.setProperty("scheduleRounds", "16");
+        // Honour an explicit -PscheduleRounds, default to sixteen. Draft2026
+        // used to write this line itself and so did three harnesses; it lives
+        // here now so they cannot disagree about it.
+        System.setProperty("scheduleRounds",
+                System.getProperty("scheduleRounds", "16"));
         AAAConfiguration configuration = AAAConfiguration.getInstance();
         int last = Integer.parseInt(configuration.getSeason()) - 1;
         Map<String, Double> earliness = SelectionModel.qbEarliness(configuration, last);

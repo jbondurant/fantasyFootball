@@ -31,7 +31,6 @@ import java.util.*;
 public class Draft2026 {
 
     public static void main(String[] args) throws Exception {
-        System.setProperty("scheduleRounds", System.getProperty("scheduleRounds", "16"));
         AAAConfiguration configuration = AAAConfiguration.getInstance();
         String draftID = System.getProperty("draftId", configuration.getDraftID());
         // 150, which is DraftNight's own default. I had this at 300 and the

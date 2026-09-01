@@ -20,7 +20,6 @@ import java.util.*;
 public class DryRun {
 
     public static void main(String[] args) throws Exception {
-        System.setProperty("scheduleRounds", System.getProperty("scheduleRounds", "16"));
                 // ONE WARM-UP, SHARED. See LiveSetup: five separate copies of this
         // block had drifted apart, three of them measuring a configuration
         // nobody runs.

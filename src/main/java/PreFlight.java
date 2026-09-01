@@ -18,14 +18,12 @@ import java.util.*;
  */
 public class PreFlight {
     public static void main(String[] args) throws Exception {
-        // BUILD THE SCHEDULE Draft2026 BUILDS. Without this the simulator
-        // defaults to the nine-round game and this check reported "9 live
-        // seats" - a complaint about its own configuration, not about the
-        // draft. That is the same fault the adversarial pass found in
-        // LivePathStress: a checker not set up like the tool it checks
-        // certifies nothing.
-        System.setProperty("scheduleRounds", "16");
-        AAAConfiguration configuration = AAAConfiguration.getInstance();
+        // Assembled the ONE way the live path is assembled, so this cannot
+        // check a different draft configuration than Draft2026 runs. Its first
+        // version built its own and reported "9 live seats" - a complaint about
+        // itself. See LiveSetup.
+        LiveSetup setup = LiveSetup.forTonight();
+        AAAConfiguration configuration = setup.configuration;
         JsonObject draft = configuration.getDraftJson();
         List<String> complaints = new ArrayList<>();
 
@@ -74,12 +72,8 @@ public class PreFlight {
 
         // Where he sits, and what he already owns.
         DraftSimulator.Slot first = null;
-        int last = Integer.parseInt(configuration.getSeason()) - 1;
-        Map<String, Double> earliness = SelectionModel.qbEarliness(configuration, last);
-        ChoiceModel choice = BoostedSelectionModel.fitShipped(configuration, last, earliness);
-        DraftPlanner planner = DraftPlanner.forCurrentSeason(configuration,
-                DraftPlanner.keepersFromProperty(configuration), choice, earliness);
-        DraftSimulator simulator = planner.simulator();
+        DraftPlanner planner = setup.planner;
+        DraftSimulator simulator = setup.simulator;
         List<Integer> seats = new ArrayList<>();
         for(int p = 1; p <= 200; p++){
             DraftSimulator.Slot slot = simulator.slotAt(p);
