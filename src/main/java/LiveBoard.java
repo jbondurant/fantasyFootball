@@ -139,14 +139,7 @@ public class LiveBoard {
         DraftSimulator.SimState state = simulator.stateAfter(taken);
         DraftSimulator.Slot slot = simulator.slotOf(state);
 
-        List<String> mine = new ArrayList<>(planner.myKeeperIDs());
-        for(String id : taken){
-            Integer at = state.takenAtOf(id);
-            if(at != null && simulator.slotAt(at) != null
-                    && planner.me().equals(simulator.slotAt(at).manager())){
-                mine.add(id);
-            }
-        }
+        List<String> mine = minePicks(planner, simulator, taken);
 
         // Always price MY next pick, never whichever pick the draft happens to
         // be on. Before the draft starts slotOf() returns pick 1, which is not
@@ -265,6 +258,7 @@ public class LiveBoard {
                     (String id) -> planner.points().getOrDefault(id, 0.0)).reversed());
         }
         int trials = Integer.getInteger("waitTrials", 200);
+        Set<String> reallyGone = new HashSet<>(taken);
         Map<Position, List<Integer>> ranksAt = new EnumMap<>(Position.class);
         Map<Position, Map<String, Integer>> whoAt = new EnumMap<>(Position.class);
         if(taken.size() < pick - 1){
@@ -289,7 +283,16 @@ public class LiveBoard {
                     }
                     for(int rank = 1; rank <= byProjection.size(); rank++){
                         String id = byProjection.get(rank - 1);
-                        if(branch.takenAtOf(id) == null){
+                        // `takenAtOf` is permanently null for a man the
+                        // simulator's board does not carry - anyone past ADP
+                        // 250 - so once somebody drafted such a player the tool
+                        // went on offering him at every refresh. Caught at pick
+                        // 175: RB Malik Davis, ADP 686, named, drafted, then
+                        // named twice more. He is checked against the REAL
+                        // picks as well. His rank is still his index in this
+                        // list, which is what the curve is indexed by, so
+                        // skipping him does not disturb the correspondence.
+                        if(branch.takenAtOf(id) == null && !reallyGone.contains(id)){
                             ranksAt.computeIfAbsent(position, u -> new ArrayList<>())
                                     .add(rank);
                             whoAt.computeIfAbsent(position, u -> new HashMap<>())
@@ -1325,4 +1328,36 @@ public class LiveBoard {
         short1.values().removeIf(missing -> missing <= 0);
         return short1;
     }
+    /**
+     * WHOSE PICK WAS IT?
+     *
+     * Answered by the SEAT, not by whether our board happens to carry the man.
+     * This asked the simulator where each id landed, and stateAfter only places
+     * a man it carries - so if Justin spent a pick on anyone past ADP 250, a
+     * deep sleeper or a kicker, the answer was null and his own man vanished
+     * from his own roster. The tool then read a roster one short, priced the
+     * pick he had already spent, and stayed one short for the rest of the night.
+     *
+     * livePicks drops keeper picks, so the nth entry of `taken` is the nth LIVE
+     * slot. Walking them in step attributes every pick correctly whether or not
+     * the man is on our board. The drift detector is what guarantees the two
+     * stay in step.
+     */
+    static List<String> minePicks(DraftPlanner planner, DraftSimulator simulator,
+            List<String> taken){
+        List<String> mine = new ArrayList<>(planner.myKeeperIDs());
+        int live = 0;
+        for(int p = 1; p <= 200 && live < taken.size(); p++){
+            DraftSimulator.Slot seat = simulator.slotAt(p);
+            if(seat == null || seat.keeperSlot()){
+                continue;
+            }
+            String id = taken.get(live++);
+            if(planner.me().equals(seat.manager()) && !mine.contains(id)){
+                mine.add(id);
+            }
+        }
+        return mine;
+    }
+
 }
