@@ -163,6 +163,12 @@ public class LiveBoard {
         // distrust a tool that was working. DraftNight.scheduleDrift counts
         // LIVE slots, which is the quantity taken.size() actually measures, and
         // fires 0 times on the same replay.
+        String owners = DraftNight.scheduleOwnerDrift(
+                p -> simulator.slotAt(p) == null ? null : simulator.slotAt(p).manager(),
+                LiveDraft.livePickOwners(draftID));
+        if(owners != null){
+            System.out.print(owners);
+        }
         String drift = DraftNight.scheduleDrift(simulator, state, taken.size());
         if(drift != null){
             System.out.print(drift);

@@ -94,6 +94,12 @@ public class DraftNight {
         if(drift != null){
             System.out.print(drift);
         }
+        String owners = scheduleOwnerDrift(
+                p -> simulator.slotAt(p) == null ? null : simulator.slotAt(p).manager(),
+                LiveDraft.livePickOwners(draftID));
+        if(owners != null){
+            System.out.print(owners);
+        }
         if(slot == null){
             lateRounds(benchBaseRate);
             return;
@@ -158,6 +164,50 @@ public class DraftNight {
      * @param picksIn how many LIVE picks are really in - LiveDraft.livePicks
      *                already drops the keepers.
      */
+    /**
+     * DID A PICK CHANGE HANDS AFTER WARM?
+     *
+     * The schedule is built once from draft_order and never re-read. A trade
+     * mid-draft swaps who owns a seat on Sleeper; the feed says who really made
+     * each pick (picked_by); the schedule says who was expected to. Compare
+     * every live pick. Pure function so it can be tested without a warm.
+     *
+     * Prints how many picks it compared, on purpose: if Sleeper's picked_by and
+     * the schedule's manager ids were ever in different id spaces, that would
+     * read as 100% mismatched and be obvious, rather than as silence.
+     */
+    static String scheduleOwnerDrift(java.util.function.IntFunction<String> scheduledOwner,
+                                     Map<Integer, String> actualOwner){
+        List<String> swapped = new ArrayList<>();
+        int compared = 0;
+        for(Map.Entry<Integer, String> entry : actualOwner.entrySet()){
+            String expected = scheduledOwner.apply(entry.getKey());
+            if(expected == null){
+                continue;           // off the schedule; the slot-count drift sees that
+            }
+            compared++;
+            if(!expected.equals(entry.getValue())){
+                swapped.add(String.format("pick %d: schedule says %s, Sleeper says %s",
+                        entry.getKey(), HumanOfInterest.getHumanFromID(expected),
+                        HumanOfInterest.getHumanFromID(entry.getValue())));
+            }
+        }
+        if(swapped.isEmpty()){
+            return null;
+        }
+        StringBuilder text = new StringBuilder(String.format(
+                "%n   *** SEAT OWNER MISMATCH on %d of %d picks compared - a pick trade"
+                        + " after warm,%n   *** or the schedule is stale. My roster and"
+                        + " every seat below may be%n   *** attributed to the wrong"
+                        + " manager. QUIT AND RESTART Draft2026 (30s) so the%n"
+                        + "   *** schedule is rebuilt from the live draft order.%n",
+                swapped.size(), compared));
+        for(String line : swapped){
+            text.append("   ***   ").append(line).append(String.format("%n"));
+        }
+        return text.toString();
+    }
+
     static String scheduleDrift(DraftSimulator simulator, DraftSimulator.SimState state,
                                 int picksIn){
         DraftSimulator.Slot slot = simulator.slotOf(state);

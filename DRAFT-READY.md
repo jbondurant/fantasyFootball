@@ -15,6 +15,12 @@ screen while Model A is still thinking.
 
 Rounds 8-16 Model A goes quiet and says why. That is deliberate, not a failure.
 
+**If a pick trade happens mid-draft, quit and restart `Draft2026` (30s).** The
+seat schedule is built once at warm; the screen now prints SEAT OWNER MISMATCH
+when Sleeper says a pick was made by someone other than the schedule expected,
+and names the picks. Until you restart, your roster and every seat may be
+attributed to the wrong manager.
+
 **Rank on the END TEAM column.** ADDS NOW and VS WAIT explain the pick; END
 TEAM decides it. Where they disagree, END TEAM wins.
 

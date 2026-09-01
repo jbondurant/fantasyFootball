@@ -322,4 +322,13 @@ real every time.
     `TrainingRows`). The conclusion drawn from it was measured on the right fit
     and stands; the number under it was the wrong population's. Even the
     document about population errors had one.
+60. **A schedule built once and never re-read.** The seat order comes from
+    Sleeper's draft_order at warm and AAAConfiguration caches that JSON for the
+    life of the process. A pick trade during the draft changes who owns a seat on
+    Sleeper and nothing in the tool; minePicks walks the stale schedule and the
+    slot-count drift detector, which only counts, cannot see an owner swap. The
+    feed sends picked_by on every pick and fetchPicks parsed it and threw it away.
+    Compare it to the schedule every cycle, say how many picks were compared, and
+    tell him to restart. Found by asking "what could still bite tonight that no
+    measurement covers".
 

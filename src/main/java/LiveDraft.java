@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
 import java.util.stream.IntStream;
@@ -159,10 +160,15 @@ public class LiveDraft {
      * models answer the same question.
      */
     private static List<String> frozen = null;
+    /** pick_no -> picked_by, captured in the SAME fetch as `frozen`, frozen with it. */
+    private static Map<Integer, String> frozenOwners = null;
+    private static Map<Integer, String> lastOwners = new HashMap<>();
 
     static void freeze(String draftID) throws Exception {
         frozen = null;
+        frozenOwners = null;
         frozen = livePicks(draftID);
+        frozenOwners = new HashMap<>(lastOwners);
     }
 
     /**
@@ -178,6 +184,26 @@ public class LiveDraft {
 
     static void thaw(){
         frozen = null;
+        frozenOwners = null;
+    }
+
+    /**
+     * Who actually made each live pick, by pick number.
+     *
+     * The seat schedule is built ONCE at warm from Sleeper's draft_order, and
+     * AAAConfiguration caches that JSON for the life of the process. A pick
+     * trade after warm changes who owns a seat on Sleeper and changes nothing
+     * here - minePicks keeps walking the stale schedule and attributes picks to
+     * the wrong manager, silently. The drift detector counts slots and cannot
+     * see an owner swap. This is the data that can: the feed carries picked_by
+     * per pick, and it was being parsed and thrown away.
+     */
+    static Map<Integer, String> livePickOwners(String draftID) throws Exception {
+        if(frozenOwners != null){
+            return frozenOwners;
+        }
+        fetchPicks(draftID);
+        return lastOwners;
     }
 
     /** How many picks the frozen snapshot holds, or -1 when not frozen. */
@@ -203,7 +229,12 @@ public class LiveDraft {
         }
         ordered.sort(Comparator.comparingInt(o -> o.get("pick_no").getAsInt()));
         List<String> ids = new ArrayList<>();
+        Map<Integer, String> owners = new HashMap<>();
         for(JsonObject pick : ordered){
+            JsonElement by = pick.get("picked_by");
+            if(by != null && !by.isJsonNull() && pick.has("pick_no")){
+                owners.put(pick.get("pick_no").getAsInt(), by.getAsString());
+            }
             JsonElement keeper = pick.get("is_keeper");
             if(keeper != null && !keeper.isJsonNull() && keeper.getAsBoolean()){
                 continue;   // keepers already sit in the simulator's schedule
@@ -213,6 +244,7 @@ public class LiveDraft {
                 ids.add(id.getAsString());
             }
         }
+        lastOwners = owners;
         return ids;
     }
 }
