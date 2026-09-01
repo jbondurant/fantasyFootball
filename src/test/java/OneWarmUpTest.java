@@ -18,6 +18,14 @@ import org.junit.jupiter.api.Test;
  * Two of those I wrote AFTER the fault had already been named once. Care is
  * not the fix; there being one place to assemble it is. This test is what
  * keeps that true.
+ *
+ * IT IS THE WEAKER OF THE TWO CHECKS. The list below is maintained by hand and
+ * therefore missed LiveBoard's own main and DefenceTiming - two more copies,
+ * found only because a published number moved. SurvivalDependentToolsTest
+ * DERIVES its set from what each file actually calls, so a tool written
+ * tomorrow is covered without anybody remembering. Keep both: this one also
+ * catches a tool that assembles pools or sets the schedule itself, which the
+ * derived one does not look at.
  */
 public class OneWarmUpTest {
 
