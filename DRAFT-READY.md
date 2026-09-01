@@ -218,12 +218,19 @@ a pick into a keeper slot; Model A had no drift detector at all; and a tied
 committee vote was printed as a verdict decided by enum declaration order, which
 happened on the real board at round 3.
 
-**Still open, not fixed:** an off-board man - anyone past ADP 250 - is offered
-again after somebody drafts him, and if JUSTIN takes one he vanishes from his
-own roster count. Needs someone reaching past ADP 250 in rounds 13-16. The
-corrected drift warning now fires when it happens, so it is wrong and loud
-rather than wrong and quiet. Also `-Pkeepers` is ignored by `DraftNight` and the
-other fallbacks; harmless tonight because both keepers are declared on Sleeper.
+**8. A man past ADP 250 broke both the roster and the board.** Listed as still
+open when this section was first written; fixed since. The simulator's board
+stops at ADP 250 and both faults asked it about a man outside it. Justin's
+roster was built by asking where each id landed, so a deep sleeper HE drafted
+came back null and vanished from his own roster - one short for the rest of the
+night. Picks are now attributed by SEAT, which is right whether or not the board
+carries the man. And the simulated arm judged availability the same way, so once
+anybody drafted such a player the tool kept offering him: caught at pick 175,
+RB Malik Davis, ADP 686, named, drafted, then named twice more.
+
+**Still open, not fixed:** `-Pkeepers` is ignored by `DraftNight` and the other
+fallbacks - harmless tonight because both keepers are declared on Sleeper, so
+the tools read them from the live draft anyway.
 
 ## The clock, measured
 
