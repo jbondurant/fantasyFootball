@@ -93,8 +93,18 @@ Re-verified after the overnight fixes, 2026-09-01:
                               is how you described Model A in the first place
     BoardValue backtest       mean 1931, worst 1748
     board at pick 7           RB Cook > WR Lamb > TE Fannin > DEF Rams
-    live path, 5 full drafts  70 picks priced, 0 throws, every roster legal
-    defence taken at          round 10 in all five - the measured optimum
+    live path, 3 full drafts  42 picks priced, 0 throws, every roster legal
+    defence taken at          round 9 in all three
+
+**Corrected 2026-09-01.** The line above used to read "5 full drafts, 70 picks,
+defence at round 10 in all five". Those numbers were real but they measured the
+WRONG CONFIGURATION: `LivePathStress` never called `warmSurvival`, so
+`LiveBoard.SURVIVAL` was null and every rollout inside the `answer()` it
+exercises fell back to the retired ADP cutoff. It was certifying last night's
+estimator, not tonight's. It warms the table now and prints which rule it
+measured. With the shipped configuration the defence goes at round 9 rather
+than round 10 - `DefenceTiming` prices those at 1927.9 and 1930.8, so 2.9
+points against a 125-point bar, immaterial either way.
 
 The backtest moved 4 points on the mean and 44 on the worst season. Both sit
 well inside the 125-point bar, and everything that moved them was a bug fix -
