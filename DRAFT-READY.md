@@ -37,6 +37,22 @@ As of 2026-09-01 it says ALL CLEAR: season 2026, status `pre_draft`, starts
 Purdy held, 24 keepers league-wide, 0 picks in. If it complains, believe it
 before you believe the board.
 
+Worth one more minute before you start - it checks the DATA rather than the
+draft settings:
+
+    ./gradlew run -Pmain=BoardSanity -Pkeepers=Tuten,Purdy -q
+
+Every model here is downstream of two numbers per player, a projection and an
+ADP, both fetched and cached. Neither had ever been checked for the failure
+that matters on draft day: a man who got hurt in August still carrying an
+August projection. `BoardSanity` flags anyone the room drafts inside the top
+twelve of his position while the projections rank him outside the top forty
+(or the reverse), and anyone inside ADP 120 with no usable projection at all.
+It reports how many men it actually examined, because a check that silently
+looks at nothing reports "clean" just as loudly as one that looked at
+everything. As of 2026-09-01: **161 rank-checked, 96 checked for a missing
+projection, nothing flagged.**
+
 Fallbacks if the main tool misbehaves:
 
     ./gradlew run -Pmain=DraftNight -Pkeepers=Tuten,Purdy -q       # rounds 1-7
