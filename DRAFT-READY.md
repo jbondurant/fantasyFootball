@@ -291,6 +291,33 @@ season totals everywhere else.
 
 Costs 3s at warm, paid once. `-PsurvivalDraws=0` restores the tagged rule.
 
+## Is there a better pairwise model? No.
+
+You asked whether a boosted model might beat the odds surface. Ten families
+were fitted and scored leave-one-season-out over 65,855 pairs and 16 seasons
+(`./gradlew run -Pmain=OddsSurfaces -q`):
+
+    incumbent, isotonic + log-smooth h=0.25    0.59991   baseline
+    Bradley-Terry MLE + same smooth            0.59990   tie
+    logit d + d*m + d^3                        0.59805   best challenger
+    kernel surface                             0.60160   worse
+    boosted on latent strength                 0.60372   worse, significantly
+    boosted on features, no structure          0.61153   worse, significantly
+
+The best challenger beats the incumbent by 2.29 fold-SE, which clears a
+single-comparison 95% bar - but it is one of ten, and an exact sign-flip test
+over all 65,536 assignments puts it at **p = 0.23 family-wise**. Nothing is
+distinguishable from what ships. Every family that IS significant is
+significantly **worse**, boosted trees worst of all.
+
+Two things worth keeping from the exercise. The apparent "winner" is not a
+richer model - `d*m` telescopes into a latent strength that is quadratic in
+log-rank, so the only direction even pointing at an improvement is a *smoother*
+strength curve, not a second dimension. And an untested claim in the shipped
+code checked out: `PairwiseOdds.strength` says a full Bradley-Terry iteration
+"lands in the same place", and it does (0.59990 vs 0.59991, p = 0.94). No ninth
+prose fault.
+
 ## The clock, measured
 
 `CycleTiming` times the real `Draft2026` cycle with output swallowed:
