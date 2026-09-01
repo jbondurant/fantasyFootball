@@ -435,6 +435,32 @@ So the first pick is source-proof, which is worth more than it looks: the
 verdict is driven by the SHAPE of the positional curves, which the shops agree
 about, rather than by anyone's point estimate of a particular man.
 
+## The two engines optimise different lineups, and that is deliberate
+
+Worth knowing when you read them side by side, because it is written nowhere
+else and it explains what each is for.
+
+    Model A       StartingLineup.bestNine - the NINE SKILL slots.
+                  Non-skill positions are skipped outright, so a defence is
+                  worth EXACTLY ZERO to it.
+    board model   BoardValue.oneSeason - QB 1, RB 2, WR 3, TE 1, DEF 1,
+                  FLEX 2. Ten slots: the league's actual lineup, defence
+                  included.
+
+Neither is wrong. They answer different questions. But two things follow that
+matter at the table:
+
+- **Only the board model can advise you on a defence.** Model A cannot see one.
+  Its sixteen-round tail is six straight running backs and no defence, which
+  would be an illegal roster - not a bug, just a model with nothing to say
+  about a slot it does not score.
+- **"Model A is silent from round 8" is not politeness.** After round 7 the
+  remaining questions - the defence, the bench, the keeper stashes - are
+  largely ones its objective cannot see. The board model answers those.
+
+Pinned by `TwoObjectivesTest`, so neither gets quietly "fixed" to match the
+other.
+
 ## Where the model has an opinion, and where it is guessing
 
 The table now says whether its own top row is separated from the runner-up.
