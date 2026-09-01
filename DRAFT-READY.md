@@ -40,7 +40,7 @@ behind.
 **If you want the honest state of the models in one page, read
 `DIAGNOSTIC.md`.** Short version: the recommendation is robust - RB at pick 7,
 separated, under four projection feeds, unmoved by anything changed today - and
-the room model is data-limited at 435 rows, so its remaining 5-13 point timing
+the room model is data-limited at 857 selections, so its remaining 5-13 point timing
 errors are near the floor that five seasons allow. The noise floor on that
 measurement is 0.8-1.8 points; every room-model tune attempted today moved it by
 less than that.
