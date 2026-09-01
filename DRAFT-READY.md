@@ -72,6 +72,18 @@ more than noise would give, but no single comparison clears the bar.
     BoardValue backtest       mean 1935, worst 1792, hindsight-free
     RUNBOOK / DraftNight / LiveLateRounds   zero diff since the freeze
 
+Re-verified after the overnight fixes, 2026-09-01:
+
+    full suite                green,  tests
+    Model A shape             RB WR RB WR WR WR TE QB QB   (unchanged)
+    BoardValue backtest       mean 1931, worst 1748
+    board at pick 7           RB Cook > WR Lamb > TE Fannin > DEF Rams
+
+The backtest moved 4 points on the mean and 44 on the worst season. Both sit
+well inside the 125-point bar, and everything that moved them was a bug fix -
+held men priced at their own projection, and a rollout that can no longer
+imagine a roster with no defence.
+
 ## What is TRUE about the model here
 
 - 24 league keepers are off the board. It will not name a man somebody owns.
