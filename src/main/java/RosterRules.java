@@ -591,6 +591,30 @@ public final class RosterRules {
         }
 
         /**
+         * A man the rules would REFUSE, who is on the roster anyway.
+         *
+         * Sleeper is the authority on what Justin owns, not this type. When the
+         * live board reads back a pick these rules would have declined - a
+         * second tight end, a man in a round the rules reserve - he is still on
+         * the roster, and the alternative to recording him is AMNESIA: the
+         * caller printed him to a list and dropped him, so the quarterback
+         * ceiling of two was counted against one, and `full()` read fifteen on
+         * a roster of sixteen. The second adversarial pass found exactly that:
+         * `the rules allow here: [QB, RB, WR, TE, DEF]` with two quarterbacks
+         * already held, with only BoardValue.MOST standing between that and a
+         * third; and a seventeenth man priced past the end of the draft.
+         *
+         * This is deliberately NOT draft(). draft() still refuses, so no model
+         * can plan an illegal roster through it - that guarantee is the point
+         * of the type. This records a fact about the world that has already
+         * happened, and it is named so that using it to dodge a refusal reads
+         * as obviously wrong.
+         */
+        public Roster holdAnyway(String name, Position position, int round){
+            return new Roster(append(new Man(name, position, Origin.DRAFTED, round)));
+        }
+
+        /**
          * Run a whole plan - a list of positions, one per LIVE pick, in order.
          * This is the shape every model in the repo speaks in, mapped onto the
          * rounds the keepers left behind. It throws on the first pick that is

@@ -1286,9 +1286,14 @@ public class LiveBoard {
                         player.position, taken_at);
             }
             else {
+                // COUNT HIM ANYWAY. The comment above has always said the rules
+                // roster must know about him; until now the code only printed
+                // him and moved on, which is the amnesia TRAPS A1 names.
                 declined.add(player.position + " " + player.firstName + " "
                         + player.lastName + " (round " + taken_at + "): "
                         + roster.whyNotDraft(player.position, taken_at));
+                roster = roster.holdAnyway(player.firstName + " "
+                        + player.lastName, player.position, taken_at);
             }
         }
         return roster;
