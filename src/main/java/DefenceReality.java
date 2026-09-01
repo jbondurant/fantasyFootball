@@ -38,6 +38,50 @@ public class DefenceReality {
         howPredictiveIsEachPosition();
         doesTheSimulatedRoomAgree(setup);
         whatTheMarketSaysThisYear(setup);
+        howFarThisLeagueDriftsFromTheMarket(setup);
+    }
+
+    /**
+     * CLAIM 6: by how much does THIS LEAGUE disagree with the national market,
+     * per position?
+     *
+     * Justin: "my league historically disagrees with that market and that
+     * should be part of the model." Quite right, and it is the criticism that
+     * kills the floor - a floor says "never before round 10", which is a
+     * constraint; the league taking defences consistently later than ADP says
+     * is a FACT, and facts belong in the model where they can also explain the
+     * two rounds of drift the floor never touched.
+     *
+     * For every position, over every stored draft: the pick a man really went
+     * at, minus the pick the market said he would go at. Positive means this
+     * league waits longer than the market.
+     */
+    private static void howFarThisLeagueDriftsFromTheMarket(LiveSetup setup){
+        System.out.printf("%n%n=== 6. HOW FAR THIS LEAGUE DRIFTS FROM THE MARKET ===%n%n");
+        Map<Position, List<Double>> drift = MarketDrift.measurePerPick();
+        System.out.printf("%-5s %8s %14s %s%n", "POS", "n", "median ratio",
+                "reading (keeper-corrected, relative)");
+        for(Position position : new Position[]{Position.RB, Position.WR, Position.TE,
+                Position.QB, Position.DEF}){
+            List<Double> values = drift.get(position);
+            if(values == null || values.isEmpty()){
+                continue;
+            }
+            List<Double> sorted = new ArrayList<>(values);
+            Collections.sort(sorted);
+            double median = sorted.get(sorted.size() / 2);
+            double mean = sorted.stream().mapToDouble(Double::doubleValue)
+                    .average().orElse(0);
+            System.out.printf("%-5s %8d %14.2f %s%n", position, values.size(), median,
+                    Math.abs(median - 1.0) < 0.12 ? "follows the market"
+                            : median > 1 ? "waits LONGER than the market says"
+                                    : "reaches EARLIER than the market says");
+        }
+        System.out.printf("%nratio of the live pick a man really went at to the live pick%n"
+                + "he was expected at ONCE THE KEEPERS ARE OFF THE BOARD. 1.00 is the%n"
+                + "market exactly. the first version of this measured absolute picks%n"
+                + "against an uncorrected baseline and reported the whole league%n"
+                + "reaching, which was two dozen absent players, not a habit.%n");
     }
 
     /**
@@ -116,6 +160,41 @@ public class DefenceReality {
                     sim.get(sim.size() / 2), sim.get(0),
                     100.0 * sim.stream().filter(r -> r <= 9).count() / sim.size());
         }
+        // EVERY POSITION, NOT JUST THE ONE WITH THE OBVIOUS SYMPTOM.
+        //
+        // Justin: "isn't the model requiring fine tuning for defenses which
+        // makes me question the credibility of the other positions". The right
+        // answer to that is not reassurance, it is the same table for all five
+        // - if the room model is wrong somewhere else it should be visible in
+        // exactly this form, and it is: look at the tight ends.
+        System.out.printf("%nWHOLE DISTRIBUTION, REAL vs SIM, EVERY POSITION%n");
+        System.out.printf("%-5s %-22s %s%n", "POS", "REAL   1-7 8-9 10-13 14-16",
+                "SIM    1-7 8-9 10-13 14-16   worst band gap");
+        int[][] allBands = {{1, 7}, {8, 9}, {10, 13}, {14, 16}};
+        for(Position position : new Position[]{Position.RB, Position.WR, Position.TE,
+                Position.QB, Position.DEF}){
+            List<Integer> was = real.get(position);
+            List<Integer> now = simulated.get(position);
+            if(was == null || now == null || was.isEmpty() || now.isEmpty()){
+                continue;
+            }
+            StringBuilder realRow = new StringBuilder();
+            StringBuilder simRow = new StringBuilder();
+            double worst = 0;
+            for(int[] band : allBands){
+                double r = 100.0 * was.stream()
+                        .filter(x -> x >= band[0] && x <= band[1]).count() / was.size();
+                double m = 100.0 * now.stream()
+                        .filter(x -> x >= band[0] && x <= band[1]).count() / now.size();
+                realRow.append(String.format("%5.0f", r));
+                simRow.append(String.format("%5.0f", m));
+                worst = Math.max(worst, Math.abs(r - m));
+            }
+            System.out.printf("%-5s %-22s %-22s %5.0f points%s%n", position,
+                    realRow.toString(), simRow.toString(), worst,
+                    worst > 15 ? "   <- WRONG" : worst > 10 ? "   <- off" : "");
+        }
+
         // WHERE exactly are the remaining early defences? "rounds 1-9" lumps a
         // pick at round 9 - which the 2026 market itself puts at ADP 98 - in
         // with one at round 4, and those are very different faults.

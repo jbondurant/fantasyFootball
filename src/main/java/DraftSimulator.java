@@ -88,6 +88,32 @@ public class DraftSimulator {
         for(Slot slot : this.schedule){
             slotByPickNumber.put(slot.pickNumber(), slot);
         }
+        // THE LEAGUE'S DISAGREEMENT WITH THE MARKET IS IN THE MODEL, AS
+        // PREFERENCES RATHER THAN AS AN OFFSET TO ADP.
+        //
+        // Justin: "my league historically disagrees with that market and that
+        // should be part of the model." It does disagree, and MarketDrift now
+        // measures it properly - keeper-corrected and as a ratio: RB 0.97,
+        // WR 0.89, TE 1.15, QB 1.22, DEF 1.16. Backs and receivers follow the
+        // national board; this room waits on the other three.
+        //
+        // I tried correcting ADP by exactly that, TWICE. The first attempt used
+        // a broken measurement - absolute picks against a baseline that still
+        // counted the twenty-four kept men, which reported the whole league
+        // reaching by up to nineteen picks when it was two dozen absent players.
+        // Justin caught both faults. Corrected and re-run, the offset STILL
+        // loses: held-out 2025 goes 0.70% to 1.28%, at his own slots 0.45% to
+        // 0.60%, QB-timing MAE 1.95 to 2.47.
+        //
+        // The reason is double-counting. f5-f7's own comment says the league
+        // bias won its contest "expressed as preferences rather than pick
+        // offsets" - the positional intercepts, and now their depth
+        // interactions, already absorb a position going later here than the
+        // market says. Shifting the ruler underneath them corrects twice.
+        //
+        // So the disagreement lives in f23 and f25-f28, which is where it does
+        // work, and MarketDrift stays as the measurement that shows how big it
+        // is. -PnoDrift is honoured by MarketDrift for anyone re-running this.
         this.initialBoard = new ArrayList<>(board);
         this.initialBoard.sort(Comparator.comparingDouble(id -> adp.getOrDefault(id, 999.0)));
         this.adp = adp;
