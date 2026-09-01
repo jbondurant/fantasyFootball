@@ -271,6 +271,20 @@ public class BoardValue {
                 // REFUSE THE FRAGILE ONE. A path whose bad world sits more than
                 // the bar below its own average is rejected however good its
                 // average is - Justin plays one season, not six hundred.
+                // -Pfloor ranks on the TENTH PERCENTILE instead of filtering on
+                // it. Justin's own formulation, arrived at by reading the swing
+                // column: "is it essentially doing .84*2271 - .89*2233". Those
+                // two products ARE the two floors, and comparing them directly
+                // is strictly better design than my bar - it is continuous, so
+                // nothing sits one point the wrong side of a threshold I chose,
+                // and it needs no threshold at all.
+                if(RANK_ON_FLOOR){
+                    if(both[1] > most){
+                        most = both[1];
+                        take = position;
+                    }
+                    continue;
+                }
                 if(tooFragile(both)){
                     continue;
                 }
@@ -645,6 +659,8 @@ public class BoardValue {
      * ever starts binding, that is a signal worth reading rather than a number
      * worth lowering.
      */
+    static final boolean RANK_ON_FLOOR = Boolean.getBoolean("floor");
+
     static double fragilityBar(){
         return Double.parseDouble(System.getProperty("fragile", "0.15"));
     }
