@@ -23,7 +23,7 @@ If something looks wrong mid-draft, the restore point is one command:
     git checkout draft-ready-2026
 
 Everything after that tag was added on 2026-09-01. It is better tested than
-the tag - 478 tests against 389 - but the tag is what a full week of
+the tag - 491 tests against 389 - but the tag is what a full week of
 independent verification stands behind.
 
 Fallbacks if the main tool misbehaves:
@@ -86,13 +86,15 @@ more than noise would give, but no single comparison clears the bar.
 
 Re-verified after the overnight fixes, 2026-09-01:
 
-    full suite                green, 478 tests
+    full suite                green, 491 tests
     Model A shape             RB WR RB WR WR WR TE QB RB
                               rounds 1-7 unchanged; round 9 was QB, and the
                               cap now counts Purdy - Purdy r8, Tuten r9, which
                               is how you described Model A in the first place
     BoardValue backtest       mean 1931, worst 1748
-    board at pick 7           RB Cook > WR Lamb > TE Fannin > DEF Rams
+    board at pick 7           RB Cook 1917.5 > WR Lamb 1892.5 >
+                              TE Fannin 1829.1 > DEF Rams 1829.2;
+                              a second QB refused by the rules
     live path, 3 full drafts  42 picks priced, 0 throws, every roster legal
     defence taken at          round 9 in all three
 
