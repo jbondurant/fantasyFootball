@@ -53,7 +53,8 @@ public class CurveCheck {
                 "RANK", "PLAYER", "PROJECTED", "DROP", "BEATS LDR", "TIER", "");
         int leader = 1;
         int tier = 1;
-        for(int rank = 1; rank <= Math.min(20, byPoints.size()); rank++){
+        int from = Integer.getInteger("fromRank", 1);
+        for(int rank = from; rank <= Math.min(from + 19, byPoints.size()); rank++){
             Player player = Player.getPlayerFromSIDV2(byPoints.get(rank - 1).getKey());
             double points = raw[rank];
             double drop = rank + 1 < raw.length && raw[rank + 1] > 0

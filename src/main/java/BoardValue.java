@@ -39,9 +39,18 @@ import java.util.*;
 public class BoardValue {
 
     /** Bench men, priced from what this league's real bench picks returned. */
+    /**
+     * How many of each the rule will ever take. -PmaxTE overrides the tight end.
+     *
+     * Justin, seeing the dry run draft Andrews at 103 and Kincaid at 127: I'm
+     * surprised we pick more than 1. The league starts ONE tight end, so a
+     * second can only ever reach the field through a flex slot he shares with
+     * every receiver and back. Whether that is worth a pick is a measurement,
+     * not an opinion, so the cap is a flag and the backtest can answer.
+     */
     static final Map<Position, Integer> MOST = new EnumMap<>(Map.of(
             Position.QB, 2, Position.RB, 7, Position.WR, 8,
-            Position.TE, 2, Position.DEF, 1));
+            Position.TE, Integer.getInteger("maxTE", 2), Position.DEF, 1));
 
     record Slot(Position position, int rank){}
 
