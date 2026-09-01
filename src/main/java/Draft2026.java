@@ -45,29 +45,24 @@ public class Draft2026 {
         System.out.printf("%nwarming both engines - paid ONCE%n");
         long warm = System.nanoTime();
 
-        int last = Integer.parseInt(configuration.getSeason()) - 1;
-        Map<String, Double> earliness = SelectionModel.qbEarliness(configuration, last);
-        ChoiceModel choice = BoostedSelectionModel.fitShipped(configuration, last, earliness);
-        DraftPlanner planner = DraftPlanner.forCurrentSeason(configuration,
-                DraftPlanner.keepersFromProperty(configuration), choice, earliness);
-        DraftSimulator simulator = planner.simulator();
+        // ONE WARM-UP, SHARED WITH EVERY HARNESS THAT CERTIFIES THIS TOOL.
+        // Five separate copies of this block existed and three of them warmed
+        // a configuration nobody runs - including two harnesses whose numbers
+        // reached DRAFT-READY. LiveSetup.forTonight is now the only way to
+        // assemble it, so a harness cannot measure something else by accident.
+        LiveSetup setup = LiveSetup.forTonight();
+        DraftPlanner planner = setup.planner;
+        DraftSimulator simulator = setup.simulator;
+        Set<String> kept = setup.kept;
+        Map<Position, double[]> curve = setup.curve;
+        Map<Position, List<List<Double>>> pools = setup.pools;
+        List<String> order = setup.order;
+        List<PairwiseOdds.Man> men = setup.men;
+        double survivalCost = setup.survivalSeconds;
         TimingPlanner timing = new TimingPlanner(planner);
         timing.fillWaitingTable(200);
         Map<String, Double> points = planner.points();
         Map<Position, Double> benchBaseRate = BenchValue.overWireByPosition(configuration);
-
-        Map<String, List<DetectionLag.Man>> wider = NflverseBoards.usable(null);
-        List<String> order = new ArrayList<>(new TreeMap<>(wider).keySet());
-        List<PairwiseOdds.Man> men = PairwiseOdds.nflverseMen(wider, order);
-        Set<String> kept = LiveBoard.kept(configuration);
-        Map<Position, double[]> curve = LiveBoard.thisYear(planner, kept);
-        double survivalCost = LiveBoard.warmSurvival(planner, simulator);
-        Map<Position, List<List<Double>>> pools =
-                new EnumMap<>(BoardValue.pools(men, curve));
-        List<List<Double>> defence = LiveBoard.defenceScatter();
-        if(!defence.isEmpty()){
-            pools.put(Position.DEF, defence);
-        }
 
         System.out.printf("warm in %.0fs. %d men kept league-wide.%n",
                 (System.nanoTime() - warm) / 1e9, kept.size());

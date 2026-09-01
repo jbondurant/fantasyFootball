@@ -17,25 +17,18 @@ import java.util.*;
  */
 public class FragilityBinding {
     public static void main(String[] args) throws Exception {
-        System.setProperty("scheduleRounds", "16");
-        AAAConfiguration configuration = AAAConfiguration.getInstance();
-        int last = Integer.parseInt(configuration.getSeason()) - 1;
-        Map<String, Double> earliness = SelectionModel.qbEarliness(configuration, last);
-        ChoiceModel choice = BoostedSelectionModel.fitShipped(configuration, last, earliness);
-        DraftPlanner planner = DraftPlanner.forCurrentSeason(configuration,
-                DraftPlanner.keepersFromProperty(configuration), choice, earliness);
-        DraftSimulator simulator = planner.simulator();
-        Set<String> kept = LiveBoard.kept(configuration);
-        Map<Position, double[]> curve = LiveBoard.thisYear(planner, kept);
-        Map<String, List<DetectionLag.Man>> wider = NflverseBoards.usable(null);
-        List<String> order = new ArrayList<>(new TreeMap<>(wider).keySet());
-        List<PairwiseOdds.Man> men = PairwiseOdds.nflverseMen(wider, order);
-        Map<Position, List<List<Double>>> pools =
-                new EnumMap<>(BoardValue.pools(men, curve));
-        List<List<Double>> defence = LiveBoard.defenceScatter();
-        if(!defence.isEmpty()){
-            pools.put(Position.DEF, defence);
-        }
+                // ONE WARM-UP, SHARED. See LiveSetup: five separate copies of this
+        // block had drifted apart, three of them measuring a configuration
+        // nobody runs.
+        LiveSetup setup = LiveSetup.forTonight();
+        AAAConfiguration configuration = setup.configuration;
+        DraftPlanner planner = setup.planner;
+        DraftSimulator simulator = setup.simulator;
+        Set<String> kept = setup.kept;
+        Map<Position, double[]> curve = setup.curve;
+        Map<Position, List<List<Double>>> pools = setup.pools;
+        List<String> order = setup.order;
+        List<PairwiseOdds.Man> men = setup.men;
 
         Random random = new Random(90125L);
         List<String> taken = new ArrayList<>();

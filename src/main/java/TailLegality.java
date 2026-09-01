@@ -14,34 +14,18 @@ import java.util.*;
  */
 public class TailLegality {
     public static void main(String[] args) throws Exception {
-        AAAConfiguration configuration = AAAConfiguration.getInstance();
-        System.out.printf("%nrequired starters, DERIVED from the lineup: %s%n",
-                RosterRules.live().empty().stillNeeds());
-
-        int last = Integer.parseInt(configuration.getSeason()) - 1;
-        var earliness = SelectionModel.qbEarliness(configuration, last);
-        ChoiceModel choice = BoostedSelectionModel.fitShipped(configuration, last, earliness);
-        DraftPlanner planner = DraftPlanner.forCurrentSeason(configuration,
-                DraftPlanner.keepersFromProperty(configuration), choice, earliness);
-        Set<String> kept = LiveBoard.kept(configuration);
-        Map<Position, double[]> curve = LiveBoard.thisYear(planner, kept);
-        // The tail's every future rank comes from LiveBoard.expectedRank, so
-        // this measures a different tail depending on whether the survival
-        // table is up. It never built one, and the survival table is exactly
-        // what moved the late DEF and TE ranks - the two positions the tail is
-        // being audited for. Same knob as everywhere else: -PsurvivalDraws=0.
-        LiveBoard.warmSurvival(planner, planner.simulator());
-        System.out.printf("survival table: %s%n", LiveBoard.SURVIVAL == null
-                ? "OFF - measuring the retired ADP cutoff" : "on, as in Draft2026");
-        Map<String, List<DetectionLag.Man>> wider = NflverseBoards.usable(null);
-        List<String> order = new ArrayList<>(new TreeMap<>(wider).keySet());
-        List<PairwiseOdds.Man> men = PairwiseOdds.nflverseMen(wider, order);
-        Map<Position, List<List<Double>>> pools =
-                new EnumMap<>(BoardValue.pools(men, curve));
-        List<List<Double>> defence = LiveBoard.defenceScatter();
-        if(!defence.isEmpty()){
-            pools.put(Position.DEF, defence);
-        }
+                // ONE WARM-UP, SHARED. See LiveSetup: five separate copies of this
+        // block had drifted apart, three of them measuring a configuration
+        // nobody runs.
+        LiveSetup setup = LiveSetup.forTonight();
+        AAAConfiguration configuration = setup.configuration;
+        DraftPlanner planner = setup.planner;
+        DraftSimulator simulator = setup.simulator;
+        Set<String> kept = setup.kept;
+        Map<Position, double[]> curve = setup.curve;
+        Map<Position, List<List<Double>>> pools = setup.pools;
+        List<String> order = setup.order;
+        List<PairwiseOdds.Man> men = setup.men;
 
         // Justin's two keepers, the roster every rollout starts from.
         List<BoardValue.Slot> held = new ArrayList<>();

@@ -190,20 +190,19 @@ imagine a roster with no defence.
    in-sample (2051-2077 against 1935) and is chosen by every leave-one-season-
    out fold, but held out it is worth +108 - a tie. `-Plambda=0.6` reaches it.
 
-   Still chosen, still unfitted: the 15% fragility bar. **Corrected
-   2026-09-01:** it does not refuse anything on this board. `FragilityBinding`
-   walks his fourteen seats and asks the shipped predicate - 66 position-picks
-   priced, **0 refused**, widest swing 15.0% against the 15% bar, and 59 of the
-   66 within two points of it. It is not dead code that could never fire; it is
-   a threshold sitting ON the edge of the distribution rather than clear of it.
-   Which means "the model refuses fragile picks" is not something to rely on
-   tonight - the roster rules do the refusing, and they are tested.
+   Still chosen, still unfitted: the 15% fragility bar. **Measured, and then
+   re-measured 2026-09-01** - the first measurement was taken on a harness that
+   had not warmed the survival table or the sixteen-round schedule, so it
+   described a configuration nobody runs. On the shipped one, `FragilityBinding`
+   walks his fourteen seats: **70 position-picks priced, 1 refused**, widest
+   swing 15.1% against the 15% bar, statistic spanning 11.4% to 15.1%.
 
-   The swing statistic itself spans only **2.4 points** across a whole draft
-   (12.6% narrowest, 13.6% median, 15.0% widest). A lower bar WOULD fire, so
-   this is not a quantity with no variation - but it would be sorting picks on
-   a 2.4-point spread when board-to-board noise here is measured in tens of
-   points. The bar is both above the data and short of signal to place better.
+   So it is very nearly inert rather than wholly inert - it fires once in
+   seventy. The first version of this paragraph said "0 refused... it checks
+   nothing", which was both wrong and overstated. What holds is the weaker
+   claim: the bar sits ON the edge of the distribution rather than clear of it,
+   so "the model refuses fragile picks" is not a thing to lean on tonight. The
+   roster rules do the refusing, and they are tested.
 3. ANSWERED 2026-09-01, and it CLOSES. The concrete worry was that Justin's
    draftable RB4 is James Cook, who is really RB6 once Taylor and Achane are
    kept - so the model attaches RB4's historical volatility to an RB6-quality

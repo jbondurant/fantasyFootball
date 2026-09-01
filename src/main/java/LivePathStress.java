@@ -21,42 +21,18 @@ public class LivePathStress {
     public static void main(String[] args) throws Exception {
         System.setProperty("scheduleRounds", "16");
         int seeds = Integer.getInteger("seeds", 3);
-        AAAConfiguration configuration = AAAConfiguration.getInstance();
-        int last = Integer.parseInt(configuration.getSeason()) - 1;
-        Map<String, Double> earliness = SelectionModel.qbEarliness(configuration, last);
-        ChoiceModel choice = BoostedSelectionModel.fitShipped(configuration, last, earliness);
-        DraftPlanner planner = DraftPlanner.forCurrentSeason(configuration,
-                DraftPlanner.keepersFromProperty(configuration), choice, earliness);
-        DraftSimulator simulator = planner.simulator();
-        Map<String, List<DetectionLag.Man>> wider = NflverseBoards.usable(null);
-        List<String> order = new ArrayList<>(new TreeMap<>(wider).keySet());
-        List<PairwiseOdds.Man> men = PairwiseOdds.nflverseMen(wider, order);
-        Set<String> kept = LiveBoard.kept(configuration);
-        Map<Position, double[]> curve = LiveBoard.thisYear(planner, kept);
-        // THE STRESS MUST RUN THE CONFIGURATION THAT SHIPS.
-        //
-        // This harness certified "no throw at any of his seats, across 3 full
-        // drafts" while never calling warmSurvival - so LiveBoard.SURVIVAL was
-        // null throughout and every rollout inside the answer it was exercising
-        // fell back to adpCutoffRank, the rule the survival table RETIRED. The
-        // claim in this class's own javadoc - "the printed path, not a
-        // reimplementation of it" - was therefore true of last night's printed
-        // path and not tonight's. Draft2026 and LiveBoard both warm the table;
-        // the thing that proves they do not throw did not.
-        //
-        // -PsurvivalDraws=0 still turns it off, which is how the retired rule
-        // stays reproducible.
-        double survivalCost = LiveBoard.warmSurvival(planner, simulator);
-        System.out.printf("survival table: %s (%.0fs)%n",
-                LiveBoard.SURVIVAL == null ? "OFF - the retired ADP cutoff is what"
-                        + " this run exercises" : "on, as it is in Draft2026",
-                survivalCost);
-        Map<Position, List<List<Double>>> pools =
-                new EnumMap<>(BoardValue.pools(men, curve));
-        List<List<Double>> defence = LiveBoard.defenceScatter();
-        if(!defence.isEmpty()){
-            pools.put(Position.DEF, defence);
-        }
+                // ONE WARM-UP, SHARED. See LiveSetup: five separate copies of this
+        // block had drifted apart, three of them measuring a configuration
+        // nobody runs.
+        LiveSetup setup = LiveSetup.forTonight();
+        AAAConfiguration configuration = setup.configuration;
+        DraftPlanner planner = setup.planner;
+        DraftSimulator simulator = setup.simulator;
+        Set<String> kept = setup.kept;
+        Map<Position, double[]> curve = setup.curve;
+        Map<Position, List<List<Double>>> pools = setup.pools;
+        List<String> order = setup.order;
+        List<PairwiseOdds.Man> men = setup.men;
         String draftID = configuration.getDraftID();
 
         PrintStream real = System.out;
