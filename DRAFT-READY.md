@@ -23,8 +23,16 @@ If something looks wrong mid-draft, the restore point is one command:
     git checkout draft-ready-2026
 
 Everything after that tag was added on 2026-09-01. It is better tested than
-the tag - 491 tests against 389 - but the tag is what a full week of
-independent verification stands behind.
+the tag but the tag is what a full week of independent verification stands
+behind.
+
+**If you want the honest state of the models in one page, read
+`DIAGNOSTIC.md`.** Short version: the recommendation is robust - RB at pick 7,
+separated, under four projection feeds, unmoved by anything changed today - and
+the room model is data-limited at 435 rows, so its remaining 5-13 point timing
+errors are near the floor that five seasons allow. The noise floor on that
+measurement is 0.8-1.8 points; every room-model tune attempted today moved it by
+less than that.
 
 **Run this first, once, before anything else.** It reads Sleeper right now and
 checks every assumption the models make about this draft:
