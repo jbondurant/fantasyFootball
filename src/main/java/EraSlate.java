@@ -62,7 +62,32 @@ public class EraSlate {
                        int round, boolean mine){}
 
     /**
-     * -PleagueKeepers=true. Off leaves every existing number untouched.
+     * -PleagueKeepers=true, and OFF by default although the real board has
+     * twenty-four keepers on it. That deserves an explanation.
+     *
+     * I tried making it the default, because the backtest was drafting against
+     * a pool twenty-two deep men richer than Justin's and that is simply the
+     * wrong league. Three tests failed and one of them was right to: this flag
+     * on with `holdKeepers` OFF is an INCONSISTENT state. The league's
+     * twenty-four come off the board, but Justin's two are not put on his
+     * roster, so the picks they spent eat two of his fourteen and his draft is
+     * silently shortened. The two flags have to move together, and holdKeepers
+     * defaults off with a good deal of the suite pinned to that.
+     *
+     * So the truthful configuration is BOTH, and every future measurement
+     * should use it:
+     *
+     *     -PholdKeepers=true -PleagueKeepers=true
+     *
+     * The cost of leaving it off is nothing at the table. LiveBoard has
+     * excluded all twenty-four since Justin caught it naming Puka Nacua, who
+     * is on somebody else's roster - only the BACKTEST ever measured the wrong
+     * league. And what the realistic board changes is confidence rather than
+     * conclusions: every gap that was a tie is still a tie, the plan still
+     * nominally leads BoardValue (+72 down to +57). What goes is the ground
+     * under the front half - the men who made an early back worth more than an
+     * early receiver are kept, so on the real board rounds 1-9 position order
+     * is not a measurable quantity at all.
      *
      * Default OFF deliberately: every backtest figure on record - the plan at
      * 2007, BoardValue at 1935 - was measured on the two-keeper board, and a
