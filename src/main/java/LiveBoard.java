@@ -61,7 +61,10 @@ public class LiveBoard {
         // it. A year where the backs fall off a cliff at RB8 and a year where
         // they glide to RB30 must not produce the same list, and they did while
         // this read historical mean points by rank.
-        Map<Position, double[]> curve = thisYear(planner);
+        Set<String> kept = kept(configuration);
+        System.out.printf("%d men are already kept league-wide and cannot be drafted%n",
+                kept.size());
+        Map<Position, double[]> curve = thisYear(planner, kept);
         // LAST SIXTEEN YEARS' UNCERTAINTY, as ratios rather than points, so what
         // is imported is how far outcomes scatter around a rank - never where
         // the rank sits.
@@ -145,6 +148,9 @@ public class LiveBoard {
         Map<Position, List<String>> ordered = new EnumMap<>(Position.class);
         for(Map.Entry<String, Double> entry : planner.points().entrySet()){
             Player player = Player.getPlayerFromSIDV2(entry.getKey());
+            if(kept.contains(entry.getKey())){
+                continue;               // on somebody's roster, not on the board
+            }
             if(player != null && PairwiseOdds.CAP.containsKey(player.position)){
                 ordered.computeIfAbsent(player.position, u -> new ArrayList<>())
                         .add(entry.getKey());
@@ -661,10 +667,36 @@ public class LiveBoard {
      * the rth best man at that position is projected for on the board in front
      * of him - cliffs, plateaus and all.
      */
-    static Map<Position, double[]> thisYear(DraftPlanner planner){
+    /**
+     * Everyone already kept, by ANY team. None of them can be drafted.
+     *
+     * Justin: puka is a keeper, that's an issue with the model. It was the worst
+     * one found all session. The draftable pool was built from planner.points(),
+     * which is every man with a projection, so twenty-four men who are already on
+     * somebody's roster were being ranked, tiered and recommended - and all three
+     * of the model's picks at 7 were kept men. Nacua, Taylor and Bowers are on
+     * other people's teams.
+     *
+     * This is not a small correction to the board, it is a different board:
+     * twenty-four men gone before a pick is made, most of them from the top.
+     */
+    static Set<String> kept(AAAConfiguration configuration){
+        Set<String> out = new HashSet<>();
+        for(Keeper keeper : configuration.getTodaysKeepers()){
+            if(keeper.player != null && keeper.player.sleeperIDString != null){
+                out.add(keeper.player.sleeperIDString);
+            }
+        }
+        return out;
+    }
+
+    static Map<Position, double[]> thisYear(DraftPlanner planner, Set<String> kept){
         Map<Position, List<Double>> byPosition = new EnumMap<>(Position.class);
         for(Map.Entry<String, Double> entry : planner.points().entrySet()){
             Player player = Player.getPlayerFromSIDV2(entry.getKey());
+            if(kept.contains(entry.getKey())){
+                continue;
+            }
             if(player != null && PairwiseOdds.CAP.containsKey(player.position)){
                 byPosition.computeIfAbsent(player.position, u -> new ArrayList<>())
                         .add(entry.getValue());
@@ -745,6 +777,7 @@ public class LiveBoard {
 
     static String bestAvailable(DraftPlanner planner, List<String> taken, Position position){
         Set<String> gone = new HashSet<>(taken);
+        gone.addAll(kept(AAAConfiguration.getInstance()));
         String best = null;
         double most = -1;
         for(Map.Entry<String, Double> entry : planner.points().entrySet()){

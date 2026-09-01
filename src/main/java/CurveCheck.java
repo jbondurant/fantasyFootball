@@ -22,14 +22,16 @@ public class CurveCheck {
                 DraftPlanner.keepersFromProperty(configuration), choice, earliness);
 
         Position want = Position.valueOf(System.getProperty("pos", "RB"));
-        Map<Position, double[]> curve = LiveBoard.thisYear(planner);
+        // Kept men are on somebody's roster, so they are not on the curve.
+        Set<String> kept = LiveBoard.kept(configuration);
+        Map<Position, double[]> curve = LiveBoard.thisYear(planner, kept);
         double[] raw = curve.get(want);
 
         // Names in projection order, so a rank has a face.
         List<Map.Entry<String, Double>> byPoints = new ArrayList<>();
         for(Map.Entry<String, Double> entry : planner.points().entrySet()){
             Player player = Player.getPlayerFromSIDV2(entry.getKey());
-            if(player != null && player.position == want){
+            if(player != null && player.position == want && !kept.contains(entry.getKey())){
                 byPoints.add(entry);
             }
         }
