@@ -26,7 +26,7 @@ The table is the tool's; the causes below are from news read on 2026-09-01 and a
 | TreVeyon Henderson RB NE | ADP 50 -> 55 (09-01) | questionable, leg | Slipped in practice 08-24, right foot/ankle; no timeline given. | injury (unclear) |
 | Ja'Kobi Lane WR BAL | ADP 161 -> 148 (08-31) | news 08-25 | No event; camp buzz and Lamar Jackson praise. | hype |
 | Oronde Gadsden TE LAC | ADP 145 -> 158 (drift) | news 08-28 | Chargers added Njoku and Kolar; he played in the first exhibition while they sat. | depth chart |
-| Denzel Boston WR CLE | ADP 158 -> 170 (09-01) | news 08-29 | Nothing found beyond a crowded WR room. | unexplained |
+| Denzel Boston WR CLE | ADP 158 -> 170 (09-01) | news 08-29 | Played in the preseason finale while Jeudy and Concepcion rested, which reads as WR3 at best despite an early depth chart listing him first. | depth chart |
 | Javonte Williams RB DAL | proj +4 (09-01) | news 08-30 | Nothing beyond routine outlook pieces. | drift |
 | Patriots DEF, Cowboys DEF | ADP rising | none | Not researched. | — |
 
