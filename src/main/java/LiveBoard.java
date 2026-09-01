@@ -170,7 +170,21 @@ public class LiveBoard {
         // draft is tonight; a wrong fix costs more than the fault, whose
         // exposure is low with 237 men on the board for 168 live picks. So it
         // is DETECTED instead. Wrong and loud beats wrong and quiet.
-        if(slot != null && slot.pickNumber() != taken.size() + 1){
+        // ONLY WARN WHEN THE SIMULATOR IS BEHIND.
+        //
+        // The first version of this compared pickNumber against taken.size()+1
+        // for INEQUALITY, and it was a false alarm on a clean board: slotOf()
+        // skips keeper slots, of which this league has twenty-four with the
+        // earliest at pick 32, so the returned pick number legitimately runs
+        // AHEAD of the count. Measured on a clean 168-pick replay it fired at
+        // 137 of 169 refreshes, first at 31 picks in, telling Justin to
+        // distrust the board model from round 3 to the end of the draft.
+        //
+        // A false alarm that makes him abandon the tool is worse than the
+        // silent fault it was added to catch. The real fault - a live pick
+        // spent on a man the board does not carry - makes the simulator fall
+        // BEHIND, never ahead, so only behind is worth saying.
+        if(slot != null && slot.pickNumber() < taken.size() + 1){
             System.out.printf("%n   *** SCHEDULE DRIFT: %d picks are in, so the draft is on"
                     + " pick %d,%n   *** but the simulator believes it is on pick %d."
                     + " Somebody drafted%n   *** a man this board does not carry. Every"
