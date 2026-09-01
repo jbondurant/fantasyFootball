@@ -14,6 +14,9 @@ import org.junit.jupiter.api.Test;
 public class OffBoardPickTest {
 
     private static DraftPlanner planner() throws Exception {
+        // minePicks walks the SEAT SCHEDULE, so the schedule has to be the
+        // one Draft2026 builds or this tests a different set of seats.
+        System.setProperty("scheduleRounds", "16");
         AAAConfiguration configuration = AAAConfiguration.getInstance();
         int last = Integer.parseInt(configuration.getSeason()) - 1;
         Map<String, Double> earliness = SelectionModel.qbEarliness(configuration, last);

@@ -24,6 +24,11 @@ public class SurvivalRankTest {
     }
 
     private static DraftPlanner planner() throws Exception {
+        // THE LIVE PATH IS SIXTEEN ROUNDS. Without this the simulator builds
+        // the nine-round game - 108 picks - and this test probes pick 114,
+        // which that schedule never reaches. It would be certifying the
+        // survival rule on a schedule Draft2026 does not run.
+        System.setProperty("scheduleRounds", "16");
         AAAConfiguration configuration = AAAConfiguration.getInstance();
         int last = Integer.parseInt(configuration.getSeason()) - 1;
         Map<String, Double> earliness = SelectionModel.qbEarliness(configuration, last);
