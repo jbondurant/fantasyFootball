@@ -1,3 +1,4 @@
+import java.util.Map;
 import PlayerImportAndSetup.Position;
 import java.util.*;
 
@@ -82,6 +83,11 @@ public class Draft2026 {
                 return;
             }
             long began = System.nanoTime();
+            // One snapshot for the whole cycle. Without this the header, the
+            // board model and Model A each fetch their own picks list, so a
+            // manager picking during the sixteen seconds Model A takes leaves
+            // the two halves of the screen answering about different boards.
+            LiveDraft.freeze(draftID);
             int round = roundNow(simulator, planner, draftID);
             System.out.printf("%n================ ROUND %d ================%n", round);
             // THE FAST ANSWER FIRST. The board model takes half a second and
@@ -106,11 +112,32 @@ public class Draft2026 {
                 }
             }
             else {
-                System.out.printf("%n(Model A is silent from round 8 - its starting nine"
-                        + " is full, so it%nis indifferent here and must not be read.)%n");
+                // SAY THE TRUE REASON. This used to assert "its starting nine
+                // is full", which is false on the RUNBOOK's own recommended
+                // shape - tight end deferred to round 8 leaves the nine short,
+                // and the audit measured Model A's spread there at 3.79,
+                // LARGER than round 7's 2.75. The gate itself is right: Justin
+                // set it, Model A is only proven in rounds 1-7. But telling
+                // him his nine is full when he still needs a tight end could
+                // cost him the tight end.
+                Map<Position, Integer> missing =
+                        LiveBoard.stillNeeds(planner, simulator, draftID);
+                if(missing.isEmpty()){
+                    System.out.printf("%n(Model A is silent from round 8 - its starting"
+                            + " nine IS full, so it%nis indifferent here and must not be"
+                            + " read.)%n");
+                }
+                else {
+                    System.out.printf("%n(Model A is silent from round 8 - it is only"
+                            + " proven in rounds 1-7.%nNote your starting nine is NOT yet"
+                            + " full: still needs %s.%nThe board model above knows that"
+                            + " and is pricing it.)%n", missing);
+                }
             }
-            System.out.printf("%n(both answered in %.1fs)%n",
-                    (System.nanoTime() - began) / 1e9);
+            System.out.printf("%n(both answered in %.1fs, both against the same"
+                            + " %d-pick board)%n",
+                    (System.nanoTime() - began) / 1e9, LiveDraft.frozenSize());
+            LiveDraft.thaw();
         }
     }
 

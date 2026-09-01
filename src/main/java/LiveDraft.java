@@ -143,7 +143,45 @@ public class LiveDraft {
     }
 
     /** Player ids in pick order from the live draft. */
+    /**
+     * ONE BOARD PER SCREEN.
+     *
+     * Draft2026 asks Sleeper for the picks three separate times in a single
+     * cycle - once in roundNow, once inside LiveBoard.answer, once inside
+     * DraftNight.answer - and the reads are uncached, so a manager who picks
+     * during the sixteen seconds between the first and the last leaves the two
+     * halves of the screen describing DIFFERENT boards. That is worst exactly
+     * when it matters: during a run at a position, which is the situation the
+     * board model exists to catch.
+     *
+     * freeze() takes one snapshot and hands the same list to every caller
+     * until thaw(). It is not a performance cache - it is what makes the two
+     * models answer the same question.
+     */
+    private static List<String> frozen = null;
+
+    static void freeze(String draftID) throws Exception {
+        frozen = null;
+        frozen = livePicks(draftID);
+    }
+
+    static void thaw(){
+        frozen = null;
+    }
+
+    /** How many picks the frozen snapshot holds, or -1 when not frozen. */
+    static int frozenSize(){
+        return frozen == null ? -1 : frozen.size();
+    }
+
     static List<String> livePicks(String draftID) throws Exception {
+        if(frozen != null){
+            return frozen;
+        }
+        return fetchPicks(draftID);
+    }
+
+    private static List<String> fetchPicks(String draftID) throws Exception {
         String data = InOutUtilities.getLiveWebPage(
                 "https://api.sleeper.app/v1/draft/" + draftID + "/picks",
                 "livePicks" + draftID);

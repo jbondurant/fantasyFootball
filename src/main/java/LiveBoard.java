@@ -221,36 +221,8 @@ public class LiveBoard {
 
         // What the rules permit here, before anything is priced.
         RosterRules rules = RosterRules.live();
-        RosterRules.Roster roster = rules.justins();
         List<String> declined = new ArrayList<>();
-        for(String id : mine){
-            Player player = Player.getPlayerFromSIDV2(id);
-            if(player == null || planner.myKeeperIDs().contains(id)){
-                continue;
-            }
-            Integer at = state.takenAtOf(id);
-            int taken_at = at == null ? 1 : simulator.slotAt(at).round();
-            // A REFUSED PICK MUST STILL COUNT. This used to be an `if` with no
-            // `else`, so a man the rules would have declined left NO TRACE on
-            // the rules roster - and the quarterback ceiling of two was then
-            // counted against one. That is a route to a third quarterback
-            // through the roster type's own refusal becoming amnesia, which is
-            // exactly the "structurally impossible" claim TRAPS A1 makes.
-            //
-            // He is on the real roster whatever the rules think, so the rules
-            // roster must know about him. Where they refuse, say so out loud
-            // rather than silently dropping him: a disagreement between the
-            // rules and the board is a fact about the draft, not noise.
-            if(roster.canDraft(player.position, taken_at)){
-                roster = roster.draft(player.firstName + " " + player.lastName,
-                        player.position, taken_at);
-            }
-            else {
-                declined.add(player.position + " " + player.firstName + " "
-                        + player.lastName + " (round " + taken_at + "): "
-                        + roster.whyNotDraft(player.position, taken_at));
-            }
-        }
+        RosterRules.Roster roster = rulesRoster(planner, simulator, state, mine, declined);
         if(!declined.isEmpty()){
             System.out.printf("%nON MY ROSTER BUT OUTSIDE THE RULES - counted anyway:%n");
             for(String why : declined){
@@ -1123,5 +1095,77 @@ public class LiveBoard {
             out.append(out.isEmpty() ? "" : " ").append(player == null ? "?" : player.position);
         }
         return out.toString();
+    }
+
+    /**
+     * Justin's roster under the rules, as the board model sees it.
+     *
+     * Extracted so that nothing else has to rebuild it. Draft2026 needs the
+     * same roster to say WHY Model A is silent at round 8, and a second copy
+     * of this loop is exactly how the two would drift apart - which is the
+     * failure this repo has hit six times.
+     *
+     * Men the rules decline are appended to `declined` and still counted, for
+     * the reason the loop body gives.
+     */
+    static RosterRules.Roster rulesRoster(DraftPlanner planner, DraftSimulator simulator,
+            DraftSimulator.SimState state, List<String> mine, List<String> declined){
+        RosterRules.Roster roster = RosterRules.live().justins();
+        for(String id : mine){
+            Player player = Player.getPlayerFromSIDV2(id);
+            if(player == null || planner.myKeeperIDs().contains(id)){
+                continue;
+            }
+            Integer at = state.takenAtOf(id);
+            int taken_at = at == null ? 1 : simulator.slotAt(at).round();
+            // A REFUSED PICK MUST STILL COUNT. This used to be an `if` with no
+            // `else`, so a man the rules would have declined left NO TRACE on
+            // the rules roster - and the quarterback ceiling of two was then
+            // counted against one. That is a route to a third quarterback
+            // through the roster type's own refusal becoming amnesia, which is
+            // exactly the "structurally impossible" claim TRAPS A1 makes.
+            //
+            // He is on the real roster whatever the rules think, so the rules
+            // roster must know about him. Where they refuse, say so out loud
+            // rather than silently dropping him: a disagreement between the
+            // rules and the board is a fact about the draft, not noise.
+            if(roster.canDraft(player.position, taken_at)){
+                roster = roster.draft(player.firstName + " " + player.lastName,
+                        player.position, taken_at);
+            }
+            else {
+                declined.add(player.position + " " + player.firstName + " "
+                        + player.lastName + " (round " + taken_at + "): "
+                        + roster.whyNotDraft(player.position, taken_at));
+            }
+        }
+        return roster;
+    }
+
+    /**
+     * What Justin's starting nine is still missing, by position.
+     *
+     * Empty means the nine is genuinely full. Draft2026 used to assert that at
+     * round 8 without checking, and on the RUNBOOK's own recommended shape -
+     * tight end deferred to round 8 - it was false.
+     */
+    static Map<Position, Integer> stillNeeds(DraftPlanner planner,
+            DraftSimulator simulator, String draftID) throws Exception {
+        List<String> taken = LiveDraft.livePicks(draftID);
+        DraftSimulator.SimState state = simulator.stateAfter(taken);
+        List<String> mine = new ArrayList<>(planner.myKeeperIDs());
+        for(String id : taken){
+            Integer at = state.takenAtOf(id);
+            if(at != null && simulator.slotAt(at) != null
+                    && planner.me().equals(simulator.slotAt(at).manager())
+                    && !mine.contains(id)){
+                mine.add(id);
+            }
+        }
+        Map<Position, Integer> short1 = new EnumMap<>(
+                rulesRoster(planner, simulator, state, mine, new ArrayList<>())
+                        .stillNeeds());
+        short1.values().removeIf(missing -> missing <= 0);
+        return short1;
     }
 }
