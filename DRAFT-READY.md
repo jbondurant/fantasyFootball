@@ -26,6 +26,17 @@ Everything after that tag was added on 2026-09-01. It is better tested than
 the tag - 491 tests against 389 - but the tag is what a full week of
 independent verification stands behind.
 
+**Run this first, once, before anything else.** It reads Sleeper right now and
+checks every assumption the models make about this draft:
+
+    ./gradlew run -Pmain=PreFlight -Pkeepers=Tuten,Purdy -q
+
+As of 2026-09-01 it says ALL CLEAR: season 2026, status `pre_draft`, starts
+20:45 EDT, 12 teams, 16 rounds, snake, your first pick 7, your 14 live seats
+`[7, 18, 31, 42, 55, 66, 79, 90, 103, 114, 127, 162, 175, 186]`, Tuten and
+Purdy held, 24 keepers league-wide, 0 picks in. If it complains, believe it
+before you believe the board.
+
 Fallbacks if the main tool misbehaves:
 
     ./gradlew run -Pmain=DraftNight -Pkeepers=Tuten,Purdy -q       # rounds 1-7
