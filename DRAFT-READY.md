@@ -28,7 +28,8 @@ TEAM decides it. Where they disagree, END TEAM wins.
 the ones on disk were fetched at 00:04 and nothing refetches before 20:45
 otherwise; injury news lands during the day:
 
-    rm -f sleeperProjections2026*.txt cbsProjections_*2026*.txt fantasyProsADP2026*.txt
+    rm -f sleeperProjections2026$(date +%F).txt cbsProjections_*$(date +%F).txt fantasyProsADP$(date +%F).txt
+    (today's files only - the older sleeperProjections2026<date>.txt files are the daily history MarketMovers reads; the old wildcard deleted them)
 
 **Run HEAD, not the tag.** `DIAGNOSTIC.md` has the head-to-head: HEAD beats the
 restore point on every axis that clears the noise floor (rank prediction on real
