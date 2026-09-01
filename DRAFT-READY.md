@@ -46,9 +46,15 @@ Fallbacks, unchanged and independently verified all week:
 2. `lostBelow=0.55` and the 15% fragility bar are numbers I CHOSE. Nothing
    fits them to an outcome.
 3. Scatter is indexed by draftable rank but learned from full-board rank.
-4. Nobody has audited whether PlanBacktest.seasonPoints - the scorer every
-   comparison rests on - fills its own lineup by expectation or by hindsight.
-   If it cheats, the honest model is being marked down for being honest.
+4. ANSWERED 2026-09-01, and the answer is EXPECTATION. The scorer is honest.
+   `ScorerHonestyAudit` scores each roster twice - shipped fill against a fill
+   sorted on the week's realised points - and the hindsight fill is worth +114
+   points a season, on all ten strategies and all five seasons, against a
+   clustered 95% bar of 35. A scorer already cheating would show a premium of
+   zero. So the honest model is NOT being marked down for being honest; the
+   88 points it lost are a model-side difference, and 88 is inside the bar.
+   Still not cleared, both catalogued: the availability channel, and the
+   streamed-defence rate (C13), which bites only a roster holding no defence.
 5. MOST is hand-typed where RosterRules derives ceilings properly.
 
 ## Running experiments while agents work

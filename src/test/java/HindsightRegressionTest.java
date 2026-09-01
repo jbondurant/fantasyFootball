@@ -70,6 +70,95 @@ class HindsightRegressionTest {
     }
 
     /**
+     * The hindsight fill EXISTS, is reachable, and is not what the default does.
+     *
+     * Added 2026-09-01 with the three-argument seasonPoints. The test above
+     * proves the shipped scorer collects 180 on a board rigged against it; this
+     * proves 720 was actually available, from the same code, on the same board,
+     * by flipping one argument. Without it, "the honest fill scores 180" is
+     * consistent with a scorer that simply cannot count higher.
+     */
+    @Test
+    void theShippedScorerIsTheHonestArmAndTheHindsightArmIsReachable(){
+        PlanBacktest.Board board = board(
+                Map.of("qbA", Position.QB, "qbB", Position.QB, "def", Position.DEF),
+                List.of("qbA", "qbB", "def"),
+                Map.of("qbA", 10.0, "qbB", 40.0, "def", 0.0));
+        List<String> roster = List.of("qbA", "qbB", "def");
+
+        assertEquals(PlanBacktest.seasonPoints(board, roster),
+                PlanBacktest.seasonPoints(board, roster, false), 1e-9,
+                "the two-argument scorer must BE the honest arm - if this ever fails,"
+                        + " every published number was computed by the other one");
+        assertEquals(18 * 10.0, PlanBacktest.seasonPoints(board, roster, false), 1e-9);
+        assertEquals(18 * 40.0, PlanBacktest.seasonPoints(board, roster, true), 1e-9,
+                "the hindsight arm must reach 720, or ScorerHonestyAudit is"
+                        + " measuring a premium against a scorer that cannot cheat");
+    }
+
+    /**
+     * HINDSIGHT CAN NEVER BE WORTH LESS THAN HONESTY, on any board.
+     *
+     * This is the property that makes the audit's number readable. The honest
+     * fill picks one feasible lineup; the hindsight fill picks the best-scoring
+     * feasible lineup, so the gap is bounded below by zero by construction. A
+     * negative premium would mean the two arms are not scoring the same roster
+     * under the same lineup rules and the audit's verdict means nothing.
+     *
+     * Randomised over 200 boards rather than asserted on one, because the flex
+     * slots are where a per-position greedy could go wrong and a single fixture
+     * would not find it. The non-vacuity check at the end is the usual one: a
+     * run where the premium was zero everywhere would pass trivially.
+     */
+    @Test
+    void theHindsightFillIsNeverWorseThanTheHonestOneOnAnyBoard(){
+        java.util.Random random = new java.util.Random(20260901L);
+        int strictlyBetter = 0;
+        for(int trial = 0; trial < 200; trial++){
+            Map<String, Position> positionOf = new HashMap<>();
+            List<String> byRank = new ArrayList<>();
+            List<String> roster = new ArrayList<>();
+            Position[] spread = {Position.QB, Position.QB, Position.RB, Position.RB,
+                    Position.RB, Position.RB, Position.WR, Position.WR, Position.WR,
+                    Position.WR, Position.WR, Position.TE, Position.TE, Position.DEF};
+            for(int man = 0; man < spread.length; man++){
+                String id = "m" + man;
+                positionOf.put(id, spread[man]);
+                byRank.add(id);
+                roster.add(id);
+            }
+            List<Map<String, Double>> weekly = new ArrayList<>();
+            for(int week = 0; week < WeeklyActuals.WEEKS; week++){
+                Map<String, Double> points = new HashMap<>();
+                for(String id : byRank){
+                    // a fifth of the league misses any given week, so the
+                    // availability channel is exercised too
+                    if(random.nextInt(5) > 0){
+                        points.put(id, random.nextDouble() * 40);
+                    }
+                }
+                weekly.add(points);
+            }
+            PlanBacktest.Board board =
+                    new PlanBacktest.Board("fixture", byRank, positionOf, weekly);
+
+            double honest = PlanBacktest.seasonPoints(board, roster, false);
+            double cheating = PlanBacktest.seasonPoints(board, roster, true);
+            assertTrue(cheating >= honest - 1e-9,
+                    "trial " + trial + ": reading the future scored " + cheating
+                            + " against " + honest + " for not reading it, so the two"
+                            + " arms are not scoring the same roster");
+            if(cheating > honest + 1e-9){
+                strictlyBetter++;
+            }
+        }
+        assertTrue(strictlyBetter > 150,
+                "the fixtures must be ones where hindsight actually pays or the"
+                        + " assertion above is vacuous; it paid in " + strictlyBetter
+                        + " of 200");
+    }
+
+    /**
      * The same property one layer down, in the objective LiveLateRounds runs.
      *
      * WeeklyStarterValue.oneWeek sorts the men who are up by Draw::expected and

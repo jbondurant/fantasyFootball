@@ -423,8 +423,35 @@ public class PlanBacktest {
      * Preseason rank understates a real manager, who learns during the season.
      * It is applied identically to every strategy, so the comparison stays fair,
      * and it never uses information from the future.
+     *
+     * AUDITED 2026-09-01, because the paragraph above is exactly the kind of
+     * prose this repo has been burnt by three times (TRAPS.md F27) and nobody
+     * had checked it against the code. It is TRUE: the only sort key below is
+     * boardRank, which is the index into board.ids(), which PlanBacktest.board
+     * builds by sorting the season's FantasyPros preseason ADP file on its AVG
+     * column. The week's realised points enter in exactly two places - deciding
+     * who PLAYED, and being added up - and in neither does a bigger number move
+     * a man up the depth chart.
+     *
+     * The three-argument form below exists so that claim is MEASURED rather
+     * than described: ScorerHonestyAudit scores the same rosters both ways and
+     * prints the premium hindsight would have been worth. Nothing in the repo
+     * passes byRealised = true except that audit and its tests.
      */
     public static double seasonPoints(Board board, List<String> roster){
+        return seasonPoints(board, roster, false);
+    }
+
+    /**
+     * The same eighteen weeks, with the depth chart set either way.
+     *
+     * byRealised = false is the shipped scorer and the only thing any published
+     * number was computed with. byRealised = true is the counterfactual - a
+     * manager who reads the box score before he sets his lineup - and it is
+     * here to be SUBTRACTED, not used. It is also the correct scorer for best
+     * ball, where choosing retrospectively is the rules rather than cheating.
+     */
+    public static double seasonPoints(Board board, List<String> roster, boolean byRealised){
         // A streamed defence OCCUPIES A ROSTER SPOT. The roster is sixteen -
         // ten starters and six bench - and fourteen picks plus two keepers
         // fills it, so taking a defence off waivers means dropping somebody.
@@ -453,9 +480,17 @@ public class PlanBacktest {
                             u -> new ArrayList<>()).add(id);
                 }
             }
+            // THE DEPTH CHART. Preseason ADP rank by default; the week's result
+            // only under the audit's counterfactual. Built inside the week loop
+            // because the realised key changes every week and the honest one
+            // does not - which is itself the difference between them.
+            Comparator<String> depthChart = byRealised
+                    ? Comparator.comparingDouble(
+                            (String id) -> points.getOrDefault(id, 0.0)).reversed()
+                    : Comparator.comparingInt(
+                            id -> boardRank.getOrDefault(id, Integer.MAX_VALUE));
             for(List<String> ids : up.values()){
-                ids.sort(Comparator.comparingInt(
-                        id -> boardRank.getOrDefault(id, Integer.MAX_VALUE)));
+                ids.sort(depthChart);
             }
             List<String> flex = new ArrayList<>();
             total += fill(up.get(Position.QB), 1, null, points);
@@ -470,8 +505,7 @@ public class PlanBacktest {
             total += defence == null || defence.isEmpty()
                     ? streamedDefencePerWeek()
                     : fill(defence, 1, null, points);
-            flex.sort(Comparator.comparingInt(
-                    id -> boardRank.getOrDefault(id, Integer.MAX_VALUE)));
+            flex.sort(depthChart);
             for(int slot = 0; slot < 2 && slot < flex.size(); slot++){
                 total += points.getOrDefault(flex.get(slot), 0.0);
             }
