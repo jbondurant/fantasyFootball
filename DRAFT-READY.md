@@ -20,6 +20,32 @@ Fallbacks, unchanged and independently verified all week:
     ./gradlew run -Pmain=LiveLateRounds -Pkeepers=Tuten,Purdy -q   # rounds 8+
     ./gradlew run -Pmain=PairwiseOdds -Pfrom=79 -Pto=90 -q         # wait odds
 
+## The truthful ranking, measured 2026-09-01
+
+Every headline number in this repo was measured on a board twenty-two deep men
+richer than Justin's. On the real one - `-PholdKeepers=true -PleagueKeepers=true`
+- the field collapses:
+
+    starter-sum (1-16)        1848
+    RB-heavy folk rule        1842
+    RUNBOOK as written        1840
+    RUNBOOK front + SS back   1837
+    RUNBOOK committed         1833
+    board value               1812
+    ------------------------------
+    best available by ADP     1524
+
+Six strategies inside THIRTY-SIX POINTS against a 125-point bar. That is a dead
+heat, and it is the honest end of a week's work: on this league's real board the
+choice of plan is not a measurable quantity. The only result that survives - the
+only one that ever did - is that every plausible plan beats drafting off ADP by
+about three hundred points a season.
+
+Which is worth saying plainly: the value was never in picking the right plan. It
+was in having one at all, and in the model refusing the picks that are actually
+wrong - a third quarterback, a man somebody else keeps, a defence before round
+ten.
+
 ## Verified at the tag
 
     full suite                green, 389 tests

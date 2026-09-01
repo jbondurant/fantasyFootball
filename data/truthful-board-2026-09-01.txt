@@ -1,0 +1,24 @@
+
+PHASE 4: every strategy on every season's REAL outcomes
+lineup QB/RB2/WR3/TE/FLEX2/DEF, 18 weeks, best legal lineup each week
+a defence slot the roster cannot fill is STREAMED at 8.7 points a week
+
+STRATEGY                     2021     2022     2023     2024     2025      mean    vs ADP    wins
+starter-sum (1-16)           1923     1613     2021     1690     1993      1848      +324     5/5
+best-nine (Model A)          1471     1589     1840     1635     1569      1621       +97     4/5
+RUNBOOK committed            1853     1866     1858     1766     1823      1833      +309     5/5
+RUNBOOK as written           1805     1871     1942     1759     1822      1840      +316     5/5
+board value                  1967     1745     2025     1717     1607      1812      +288     5/5
+RB-heavy folk rule           1744     1849     1886     1911     1822      1842      +318     5/5
+RUNBOOK front + SS back      1829     1843     1966     1697     1848      1837      +313     5/5
+ModelA front + SS back       1827     1743     2007     1785     1842      1841      +317     5/5
+[not legal] no DEF drafted     1864     1859     1862     1812     1816      1843      +318     5/5
+best available by ADP        1327     1494     1730     1468     1600      1524        +0     0/5
+
+Every strategy drafts from the same board at the same picks, so the only
+difference between two rows is the order of positions. 'best available by ADP'
+is the null hypothesis: never think about position at all.
+
+CAVEAT, and it is not small: the starter-sum sequence came from a model whose
+outcome pool was built from these same seasons. Its distributions saw them, even
+though this scoring does not. Read its row as flattered, and a narrow win as none.
