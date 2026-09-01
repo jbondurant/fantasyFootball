@@ -463,3 +463,155 @@ front of him - rank is the stable index across thirteen seasons, pick number is
 not. Report it to him with the deep-against-deep +5% caveat attached, because
 that is the region where the late-round decisions actually are.
 
+
+## Can a different MODEL FAMILY beat it? Four tried, none clears (2026-09-01)
+
+Justin asked specifically about a boosted model, and this is the one place in the
+repo where the data could support real capacity: 65,855 same-position pairs over
+sixteen seasons, against the 125-point bar that has flattened every season-level
+comparison. Everything below is from `OddsFamilies`, on the sixteen nflverse
+seasons:
+
+    ./gradlew run -Pmain=OddsFamilies -q        # ~30 s
+    data/odds-families-2026-09-01.txt
+
+    16 seasons (2010-2025), 2,613 drafted men, 65,855 pairs, 1 exact tie dropped.
+
+The incumbent's own protocol, unchanged: hold out SEASONS not pairs, score with
+held-out log loss, bar it with `PowerBacktest.paired` clustered on season. On
+sixteen seasons the incumbent scores **0.59991** (it was 0.60298 on thirteen).
+
+### The four families, all fixed before any score was read
+
+    FAMILY                          log loss   vs INCUMB   SE(seas)   95% bar   beats
+    INCUMBENT iso+log h=0.25         0.59991    +0.00000          -         -       -
+    BOOSTED STRENGTH                 0.60372    +0.00381    0.00111   0.00236    2/16
+    SPREAD, curve frozen             0.59990    -0.00002    0.00002   0.00004    3/16
+    SPREAD, curve refitted           0.59964    -0.00027    0.00017   0.00037   11/16
+    BOOSTED BOTH                     0.60373    +0.00382    0.00111   0.00237    2/16
+    BOOSTED SURFACE (no structure)   0.61153    +0.01162    0.00248   0.00529    2/16
+    LOG-LINEAR (old challenger)      0.60410    +0.00418    0.00273   0.00581    5/16
+
+**NOT ONE ROW CLEARS ITS OWN BAR IN THE IMPROVING DIRECTION, and three of them
+clear it going the wrong way.** The incumbent should not be replaced. That is the
+whole answer and it did not need a fifth family; trying more until one looks good
+finds the luckiest, not the best.
+
+### What each family bought, and what it cost
+
+**Boosting the MEAN is real and NEGATIVE.** `BOOSTED STRENGTH` replaces
+isotonic-plus-smoother with 300 depth-2 trees on the Bradley-Terry likelihood,
+PAVA-projected back to monotone. It loses by +0.00381 against a bar of 0.00236 -
+past the bar, in 14 of 16 seasons. Adding flexibility where the curve is already
+estimated makes the fit worse, which is what R2's note predicted from the other
+direction. Section 6 of the tool varies the settings (100/300/600 trees, depth
+1/2/3/4) and **all twelve boosted rows lose past their own bars**, so this is not
+an artifact of hyperparameters copied from `BoostedSelectionModel`.
+
+**Abandoning the STRUCTURE is much worse, and incoherent besides.**
+`BOOSTED SURFACE` fits trees on the pair itself - features (early, late, log gap,
+rank gap) - with a plain binary logistic loss. It is the best-calibrated model in
+the table by region (every RB cell within 0.9 points, including the deep diagonal
+at -0.1%) and it still loses on log loss by +0.01162, three times its bar. And it
+gives up exactly the three properties the latent form exists to guarantee:
+
+    FAMILY                        |P(r,r)-.5|   antisym   order  monotone  worst  strong-ST
+    INCUMBENT                        0.0e+00   2.2e-16       0         0   0.0%      0.00%
+    BOOSTED SURFACE                  2.1e-01   4.9e-01     573      2050  34.1%     25.11%
+
+A man is not a coin flip against himself (off by 21 points), P(a,b) + P(b,a) is
+not 1 (off by 49 points), 573 pairs make the DEEPER man the favourite, and a
+quarter of all rank triples break strong stochastic transitivity. At the table
+that is a matrix that contradicts itself out loud. **The structure is not a
+constraint the fit is paying for - it is the product.**
+
+### The spread: real at running back, and still not enough
+
+The direct fix for the diagnosed miss. Each rank gets a spread as well as a
+strength, `sigma(r) = r^tau`, and
+
+    z = alpha * (s(P) - s(Q)) / sqrt( (sigma(P)^2 + sigma(Q)^2) / 2 )
+
+`tau = 0` reproduces the incumbent exactly, so the family is nested around it.
+Two versions, and the difference between them is the lesson:
+
+- **curve frozen at the incumbent's** - `tau` maximises at 0.000 at all four
+  positions and the family collapses onto the incumbent. That is a fact about the
+  fitting ORDER, not about football: a curve estimated under `tau = 0` has
+  already absorbed whatever a spread would have explained.
+- **curve refitted at every tau** by local scoring (Newton step, then PAVA, then
+  the same h=0.25 log-rank smoother, iterated to a fixed point) - which is the
+  fair test.
+
+Refitted, the answer splits by position, and it is stable:
+
+    POS   tau     sigma(RB60)/sigma(RB1)   tau chosen in each of the 16 training folds
+    QB    0.000                     1.00   0 in 13 of 16, 0.44-0.67 in 3
+    RB    0.573                    10.44   0.48 - 0.62, never zero, in all 16
+    WR    0.000                     1.00   0.00 in all 16
+    TE    0.000                     1.00   0 in 14 of 16
+
+**At running back the second dimension is real and reproducible**: every one of
+the sixteen leave-one-season-out folds finds a spread that grows about tenfold
+from RB1 to RB60, and none of them finds zero. At wide receiver every fold finds
+exactly nothing. Quarterback and tight end flip between 0 and something, which is
+noise wearing a decimal point.
+
+And it still does not pay. Held out it is **-0.00027 against a bar of 0.00037**,
+better in 11 of 16 seasons - the only family that even points the right way, and
+a tie. In the region Justin actually drafts in it gets closest: **-0.00087
+against a bar of 0.00094**, better in 12 of 16. Closest is not clear.
+
+It also gives up something, exactly as the algebra says it must. Dividing by a
+scale that grows with rank can turn the surface back up, so a deeper man reads as
+a better bet against the same opponent than a shallower one: **200 such pairs,
+worst jump 0.6 percentage points, and 0.44% of triples break strong stochastic
+transitivity.** `P(r, r) = 0.5`, antisymmetry and the rank order survive intact.
+At 0.6 points that is invisible at the table - but it is a property traded away
+for a gap that does not clear its bar, which is a bad trade at any size.
+
+### Calibration by region, at the top of the board
+
+The one comparison Justin makes with his first pick, held out and pooled over
+sixteen folds, observed minus predicted:
+
+    EARLY \ LATE          RB1-12  RB13-24  RB49-60      WR1-12  WR13-24  WR61-72
+    INCUMBENT      1-12    +2.1%    -1.8%    +0.9%       -1.9%    -0.9%    -1.8%
+    BOOSTED STR    1-12    +0.9%    -1.6%    +2.0%       -2.9%    -1.0%    -0.1%
+    SPREAD refit   1-12    +3.2%    +0.1%    -1.2%       -2.0%    -0.9%    -1.9%
+    BOOSTED SURF   1-12    +0.9%    -0.4%    -0.1%       +0.7%    -0.2%    -0.9%
+    LOG-LINEAR     1-12   +12.0%    -0.5%    -2.4%       +5.4%    +4.7%    -3.3%
+
+No challenger is uniformly better where he picks. Boosting the strength halves
+the incumbent's RB1-12 miss (+2.1% to +0.9%) and makes the WR1-12 miss worse
+(-1.9% to -2.9%) - and it loses on log loss past its bar in that same region
+(+0.00361 against 0.00210). The spread improves the RB13-24 column to +0.1% and
+worsens the RB1-12 diagonal to +3.2%. **The trades are lateral.** The incumbent's
+own worst cell, deep-against-deep at +7.9%, is improved by the boosted strength
+to +6.2% and by the spread only to +7.7%, and neither buys a real log loss.
+
+### Verdict
+
+**Keep the incumbent. The surface cannot be improved at this sample size.** The
+one finding worth carrying forward is that the diagnosed miss has a name and a
+number now - `sigma` grows about tenfold across the running back board, found
+independently in all sixteen folds - and that knowing it is true is still not the
+same as being able to price it. Revisit if the sample ever reaches twenty-plus
+seasons; nothing about the model class needs revisiting.
+
+Two bugs were caught by writing the tests first, and both are recorded here
+because they are the kind that look like results:
+
+- **The histogram binning silently disabled the top of the board.** At 32
+  quantile bins over 60-72 ranks the edges land two ranks apart, so RANK 1 AND
+  RANK 2 SHARED A BIN and no tree could ever separate them. The boosted curve was
+  structurally unable to fit the steepest part of the board, and the symptom -
+  probabilities at rank 1 shrunk toward the field - looked exactly like honest
+  regularisation. What caught it was a test that plants a known strength curve
+  and asks the fit to return it: 0.070 off at rank 1, 0.005 everywhere else.
+  `BINS = 128` now exceeds every cap.
+- **The strength curve's LEVEL is unidentified and it drifted.** Only differences
+  of `mu` enter the likelihood, so the local-scoring iteration wandered 1.64 in
+  level between 20 rounds and 200 while every probability stayed identical.
+  Centring each round pins it, which is what makes "has the fit converged" a
+  question the curve can answer at all.

@@ -1,0 +1,305 @@
+
+CAN A DIFFERENT MODEL FAMILY BEAT THE INCUMBENT ODDS SURFACE?
+
+P(the man at positional rank P outscores the man at rank Q), Q < P, same
+position, same season. seasons 16 (2010-2025)   drafted men 2613   pairs 65855
+caps: QB 32 RB 60 WR 72 TE 32   boosting: 300 trees, depth 2, rate 0.10 (copied, not tuned)
+
+
+1. LEAVE-ONE-SEASON-OUT, ALL 65855 PAIRS
+
+Fitted on fifteen seasons, scored on the sixteenth, sixteen times. The held-out
+unit is the SEASON. Every family that was tried is in this table; none was
+dropped for scoring badly, because reporting only the best of several families
+finds the luckiest and not the best.
+
+FAMILY                             log loss    vs INCUMB   SE(seas)   95% bar  beats verdict
+INCUMBENT iso+log h=0.25            0.59991     +0.00000    0.00000   0.00000     0/16 <- baseline
+BOOSTED STRENGTH                    0.60372     +0.00381    0.00111   0.00236     2/16 REAL, and worse
+SPREAD, curve frozen                0.59990     -0.00002    0.00002   0.00004     3/16 TIE - inside its own bar
+SPREAD, curve refitted              0.59964     -0.00027    0.00017   0.00037    11/16 TIE - inside its own bar
+BOOSTED BOTH                        0.60373     +0.00382    0.00111   0.00237     2/16 REAL, and worse
+BOOSTED SURFACE (no structure)      0.61153     +0.01162    0.00248   0.00529     2/16 REAL, and worse
+LOG-LINEAR (old challenger)         0.60410     +0.00418    0.00273   0.00581     5/16 TIE - inside its own bar
+
+The bar is 95%, two-sided, clustered on season, from the same
+PowerBacktest.paired that prices the 125-point draft bar. A gap smaller
+than the bar is a TIE however good the point estimate looks.
+
+
+2. WHAT THE SPREAD PARAMETER ACTUALLY FOUND
+
+sigma(r) = r^tau, fitted on all 16 seasons. tau = 0 is the incumbent - one
+strength curve, constant spread. tau > 0 says late men are more VARIABLE and
+not merely worse, which is the diagnosed miss.
+
+POS    tau frozen  tau refit      alpha  sigma(deep)   log-lik gain
+QB          0.000      0.000      0.993         1.00            0.0
+RB          0.000      0.573      1.000        10.44            4.3
+WR          0.000      0.000      1.001         1.00            0.0
+TE          0.000      0.000      0.933         1.00            0.0
+
+tau frozen is the maximum when the curve is left at the incumbent's; it is 0
+everywhere, which is a fact about the fitting order - that curve has already
+absorbed whatever a spread would explain. tau refit re-estimates the curve at
+every tau, which is the fair test. sigma(deep) is how many times wider the
+deepest man's spread comes out than the first man's. log-lik gain is IN-SAMPLE
+and buys nothing on its own - one free parameter always gains in-sample.
+Table 1 is where it has to survive.
+
+The likelihood profile in tau, RB, in-sample, so it is visible whether tau is
+identified at all or the surface is flat in it:
+
+tau        log-lik - tau0
+0.00                 +0.0
+0.10                 -4.8
+0.20                 -5.0
+0.30                 -2.3
+0.40                 +1.2
+0.60                 +4.2
+0.80                 -1.5
+1.00                -14.7
+1.20                -33.8
+
+And the tau each of the 16 TRAINING folds chose for itself, which is what the
+held-out table was scored with:
+
+QB      0.67  0.00  0.00  0.00  0.00  0.44  0.00  0.00  0.00  0.00  0.00  0.58  0.00  0.00  0.00  0.00
+RB      0.58  0.58  0.56  0.61  0.60  0.57  0.60  0.51  0.62  0.57  0.48  0.59  0.58  0.58  0.51  0.59
+WR      0.00  0.00  0.00  0.00  0.00  0.00  0.00  0.00  0.00  0.00  0.00  0.00  0.00  0.00  0.00  0.00
+TE      0.00  0.34  0.00  0.00  0.00  0.00  0.00  0.00  0.00  0.00  0.00  0.00  0.00  0.00  0.00  0.26
+
+
+3. DOES THE FIT STILL MEAN ANYTHING AT THE TABLE?
+
+Fitted on all 16 seasons, then read over every rank pair in the grid. The
+incumbent's whole design argument is that these hold by construction; a
+challenger has to say what it gives up.
+
+FAMILY                           |P(r,r)-.5|    antisym    order   monotone  worst jump  strong-ST
+INCUMBENT iso+log h=0.25           0.00e+00   2.22e-16        0          0        0.0%      0.00%
+BOOSTED STRENGTH                   0.00e+00   1.11e-16        0          0        0.0%      0.00%
+SPREAD, curve frozen               0.00e+00   2.22e-16        0          0        0.0%      0.00%
+SPREAD, curve refitted             0.00e+00   2.22e-16        0        200        0.6%      0.44%
+BOOSTED BOTH                       0.00e+00   1.11e-16        0          0        0.0%      0.00%
+BOOSTED SURFACE (no structure)     2.10e-01   4.94e-01      573       2050       34.1%     25.11%
+LOG-LINEAR (old challenger)        0.00e+00   2.22e-16        0          0        0.0%      0.00%
+
+|P(r,r)-.5| a man against himself must be a coin flip. antisym  P(a,b)+P(b,a)
+must be 1. order  how many pairs where the better rank is the underdog.
+monotone  how many pairs where a DEEPER man is given a better chance than a
+shallower one against the same opponent, and the worst such jump. strong-ST
+is the share of rank triples breaking strong stochastic transitivity:
+P(a beats c) >= max(P(a beats b), P(b beats c)).
+
+
+4. CALIBRATION BY REGION - RB, HELD OUT, POOLED OVER 16 FOLDS
+
+Observed minus predicted, percentage points. A 2.7-point miss at the top of
+the board is invisible in a log loss averaged over 55,000 mostly-deep pairs,
+and where a model is wrong matters more than how wrong it is on average.
+
+n                RB1-12    RB13-24    RB25-36    RB37-48    RB49-60
+RB1-12             1056       2304       2268       2160       1920
+RB13-24               0       1056       2268       2160       1920
+RB25-36               0          0       1026       2160       1920
+RB37-48               0          0          0        990       1920
+RB49-60               0          0          0          0        801
+
+INCUMBENT iso+log h=0.25
+EARLY \ LATE     RB1-12    RB13-24    RB25-36    RB37-48    RB49-60
+RB1-12            +2.1%      -1.8%      -0.1%      +1.0%      +0.9%
+RB13-24               -      -0.7%      +0.8%      +0.8%      -2.8%
+RB25-36               -          -      +0.4%      +0.6%      -2.2%
+RB37-48               -          -          -      -2.2%      -1.3%
+RB49-60               -          -          -          -      +7.9%
+
+BOOSTED STRENGTH
+EARLY \ LATE     RB1-12    RB13-24    RB25-36    RB37-48    RB49-60
+RB1-12            +0.9%      -1.6%      -0.2%      +0.4%      +2.0%
+RB13-24               -      -0.2%      +0.2%      -0.4%      -1.2%
+RB25-36               -          -      +0.2%      -0.2%      +0.4%
+RB37-48               -          -          -      +0.3%      +2.1%
+RB49-60               -          -          -          -      +6.2%
+
+SPREAD, curve frozen
+EARLY \ LATE     RB1-12    RB13-24    RB25-36    RB37-48    RB49-60
+RB1-12            +2.1%      -1.8%      -0.1%      +1.0%      +0.9%
+RB13-24               -      -0.7%      +0.8%      +0.8%      -2.8%
+RB25-36               -          -      +0.4%      +0.6%      -2.2%
+RB37-48               -          -          -      -2.2%      -1.3%
+RB49-60               -          -          -          -      +7.9%
+
+SPREAD, curve refitted
+EARLY \ LATE     RB1-12    RB13-24    RB25-36    RB37-48    RB49-60
+RB1-12            +3.2%      +0.1%      +0.4%      +0.5%      -1.2%
+RB13-24               -      +0.1%      +1.7%      +2.0%      -2.9%
+RB25-36               -          -      +0.8%      +1.4%      -2.2%
+RB37-48               -          -          -      -2.2%      -1.8%
+RB49-60               -          -          -          -      +7.7%
+
+BOOSTED BOTH
+EARLY \ LATE     RB1-12    RB13-24    RB25-36    RB37-48    RB49-60
+RB1-12            +0.9%      -1.6%      -0.2%      +0.4%      +2.0%
+RB13-24               -      -0.2%      +0.2%      -0.4%      -1.2%
+RB25-36               -          -      +0.2%      -0.2%      +0.4%
+RB37-48               -          -          -      +0.3%      +2.1%
+RB49-60               -          -          -          -      +6.2%
+
+BOOSTED SURFACE (no structure)
+EARLY \ LATE     RB1-12    RB13-24    RB25-36    RB37-48    RB49-60
+RB1-12            +0.9%      -0.4%      -0.2%      -0.5%      -0.1%
+RB13-24               -      +0.4%      +0.2%      +0.3%      -0.3%
+RB25-36               -          -      -0.2%      +0.3%      +0.2%
+RB37-48               -          -          -      -0.6%      +0.3%
+RB49-60               -          -          -          -      -0.1%
+
+LOG-LINEAR (old challenger)
+EARLY \ LATE     RB1-12    RB13-24    RB25-36    RB37-48    RB49-60
+RB1-12           +12.0%      -0.5%      -0.5%      -1.4%      -2.4%
+RB13-24               -      -3.5%      -0.6%      -3.6%      -8.6%
+RB25-36               -          -      +0.8%      -3.0%      -7.7%
+RB37-48               -          -          -      -4.2%      -3.6%
+RB49-60               -          -          -          -      +7.6%
+
+
+And the same for WR, where Justin spends four of his first six picks.
+
+n                WR1-12    WR13-24    WR25-36    WR37-48    WR49-60    WR61-72
+WR1-12             1056       2304       2304       2160       2088       1128
+WR13-24               0       1055       2304       2160       2088       1128
+WR25-36               0          0       1056       2160       2088       1128
+WR37-48               0          0          0        990       2088       1128
+WR49-60               0          0          0          0        931       1128
+WR61-72               0          0          0          0          0        367
+
+INCUMBENT iso+log h=0.25
+EARLY \ LATE     WR1-12    WR13-24    WR25-36    WR37-48    WR49-60    WR61-72
+WR1-12            -1.9%      -0.9%      -0.3%      +0.2%      +0.9%      -1.8%
+WR13-24               -      +1.7%      -0.8%      -0.0%      -0.2%      -2.2%
+WR25-36               -          -      -0.3%      +0.7%      +3.1%      -3.3%
+WR37-48               -          -          -      -0.0%      +0.3%      -2.6%
+WR49-60               -          -          -          -      -0.6%      -2.8%
+WR61-72               -          -          -          -          -      +3.4%
+
+BOOSTED STRENGTH
+EARLY \ LATE     WR1-12    WR13-24    WR25-36    WR37-48    WR49-60    WR61-72
+WR1-12            -2.9%      -1.0%      -0.1%      +0.2%      +0.5%      -0.1%
+WR13-24               -      +0.4%      -0.3%      +0.1%      -0.7%      +0.7%
+WR25-36               -          -      -0.2%      +0.3%      +1.9%      +0.2%
+WR37-48               -          -          -      +1.4%      -0.7%      +1.8%
+WR49-60               -          -          -          -      +0.9%      +2.8%
+WR61-72               -          -          -          -          -      +4.9%
+
+SPREAD, curve frozen
+EARLY \ LATE     WR1-12    WR13-24    WR25-36    WR37-48    WR49-60    WR61-72
+WR1-12            -1.9%      -0.9%      -0.3%      +0.2%      +0.9%      -1.8%
+WR13-24               -      +1.7%      -0.8%      -0.0%      -0.2%      -2.2%
+WR25-36               -          -      -0.3%      +0.7%      +3.1%      -3.3%
+WR37-48               -          -          -      -0.0%      +0.3%      -2.6%
+WR49-60               -          -          -          -      -0.6%      -2.8%
+WR61-72               -          -          -          -          -      +3.4%
+
+SPREAD, curve refitted
+EARLY \ LATE     WR1-12    WR13-24    WR25-36    WR37-48    WR49-60    WR61-72
+WR1-12            -2.0%      -0.9%      -0.3%      +0.3%      +1.0%      -1.9%
+WR13-24               -      +1.7%      -0.7%      +0.1%      -0.2%      -2.3%
+WR25-36               -          -      -0.2%      +0.8%      +3.1%      -3.5%
+WR37-48               -          -          -      +0.0%      +0.2%      -2.9%
+WR49-60               -          -          -          -      -0.7%      -3.0%
+WR61-72               -          -          -          -          -      +3.3%
+
+BOOSTED BOTH
+EARLY \ LATE     WR1-12    WR13-24    WR25-36    WR37-48    WR49-60    WR61-72
+WR1-12            -2.9%      -1.0%      -0.1%      +0.2%      +0.5%      -0.1%
+WR13-24               -      +0.4%      -0.3%      +0.1%      -0.7%      +0.7%
+WR25-36               -          -      -0.2%      +0.3%      +1.9%      +0.1%
+WR37-48               -          -          -      +1.4%      -0.7%      +1.8%
+WR49-60               -          -          -          -      +0.9%      +2.8%
+WR61-72               -          -          -          -          -      +4.9%
+
+BOOSTED SURFACE (no structure)
+EARLY \ LATE     WR1-12    WR13-24    WR25-36    WR37-48    WR49-60    WR61-72
+WR1-12            +0.7%      -0.2%      -0.1%      -0.4%      -0.1%      -0.9%
+WR13-24               -      +1.3%      -0.5%      +0.3%      -0.7%      +0.3%
+WR25-36               -          -      -0.3%      +0.5%      +1.2%      -1.1%
+WR37-48               -          -          -      +1.2%      -0.9%      -0.1%
+WR49-60               -          -          -          -      +0.3%      +0.6%
+WR61-72               -          -          -          -          -      +1.4%
+
+LOG-LINEAR (old challenger)
+EARLY \ LATE     WR1-12    WR13-24    WR25-36    WR37-48    WR49-60    WR61-72
+WR1-12            +5.4%      +4.7%      +2.2%      +0.8%      -0.4%      -3.3%
+WR13-24               -      +2.3%      -3.2%      -4.4%      -7.0%      -9.0%
+WR25-36               -          -      -1.1%      -1.7%      -2.8%      -9.5%
+WR37-48               -          -          -      -0.9%      -3.6%      -7.1%
+WR49-60               -          -          -          -      -1.7%      -3.4%
+WR61-72               -          -          -          -          -      +3.3%
+
+
+5. THE REGION JUSTIN DRAFTS IN (pick 7 is RB/WR 1-12)
+
+The same paired test as table 1, restricted. A family that is right where he
+picks and wrong in the tail is worth more to him than the average says.
+
+TOP OF THE BOARD - early rank 1-12, RB and WR   (20748 held-out pairs)
+the first pick, where the cliff is
+
+FAMILY                             log loss    vs INCUMB   SE(seas)   95% bar  beats verdict
+INCUMBENT iso+log h=0.25            0.51431     +0.00000    0.00000   0.00000     0/16 <- baseline
+BOOSTED STRENGTH                    0.51792     +0.00361    0.00098   0.00210     4/16 REAL, and worse
+SPREAD, curve frozen                0.51431     -0.00000    0.00000   0.00000     8/16 TIE - inside its own bar
+SPREAD, curve refitted              0.51345     -0.00087    0.00044   0.00094    12/16 TIE - inside its own bar
+BOOSTED BOTH                        0.51794     +0.00362    0.00099   0.00211     4/16 REAL, and worse
+BOOSTED SURFACE (no structure)      0.52293     +0.00861    0.00383   0.00817     4/16 REAL, and worse
+LOG-LINEAR (old challenger)         0.52415     +0.00983    0.00681   0.01451     5/16 TIE - inside its own bar
+
+DEEP AGAINST DEEP - both ranks past 36   (10343 held-out pairs)
+the diagnosed miss, and the reason the spread family exists
+
+FAMILY                             log loss    vs INCUMB   SE(seas)   95% bar  beats verdict
+INCUMBENT iso+log h=0.25            0.63765     +0.00000    0.00000   0.00000     0/16 <- baseline
+BOOSTED STRENGTH                    0.63942     +0.00177    0.00275   0.00586     7/16 TIE - inside its own bar
+SPREAD, curve frozen                0.63765     +0.00000    0.00000   0.00000     1/16 TIE - inside its own bar
+SPREAD, curve refitted              0.63759     -0.00006    0.00015   0.00032     8/16 TIE - inside its own bar
+BOOSTED BOTH                        0.63942     +0.00177    0.00275   0.00586     7/16 TIE - inside its own bar
+BOOSTED SURFACE (no structure)      0.64631     +0.00866    0.00500   0.01067     4/16 TIE - inside its own bar
+LOG-LINEAR (old challenger)         0.63910     +0.00145    0.00145   0.00309     8/16 TIE - inside its own bar
+
+EVERYTHING ELSE   (34764 held-out pairs)
+so the two regions above can be read as a split
+
+FAMILY                             log loss    vs INCUMB   SE(seas)   95% bar  beats verdict
+INCUMBENT iso+log h=0.25            0.62886     +0.00000    0.00000   0.00000     0/16 <- baseline
+BOOSTED STRENGTH                    0.63325     +0.00439    0.00122   0.00260     4/16 REAL, and worse
+SPREAD, curve frozen                0.62884     -0.00003    0.00003   0.00007     5/16 TIE - inside its own bar
+SPREAD, curve refitted              0.62889     +0.00003    0.00032   0.00068     8/16 TIE - inside its own bar
+BOOSTED BOTH                        0.63325     +0.00439    0.00122   0.00260     4/16 REAL, and worse
+BOOSTED SURFACE (no structure)      0.64288     +0.01402    0.00245   0.00522     1/16 REAL, and worse
+LOG-LINEAR (old challenger)         0.63096     +0.00210    0.00173   0.00368     6/16 TIE - inside its own bar
+
+
+6. IS THE VERDICT AN ARTIFACT OF THE COPIED SETTINGS?
+
+300 trees, depth 2, rate 0.1 were copied from BoostedSelectionModel, which
+chose them on a different problem. This varies them. NOTHING IS SELECTED FROM
+THIS TABLE - it exists only so the verdict above cannot be blamed on one
+arbitrary setting. Picking the best row here would be the argmax-of-a-noisy
+field mistake the bake-off refused.
+
+FAMILY                             log loss    vs INCUMB   SE(seas)   95% bar  beats verdict
+INCUMBENT iso+log h=0.25            0.59991     +0.00000    0.00000   0.00000     0/16 <- baseline
+BOOSTED STRENGTH t=100 d=2          0.60363     +0.00372    0.00108   0.00230     2/16 REAL, and worse
+BOOSTED SURFACE  t=100 d=2          0.60486     +0.00495    0.00138   0.00293     3/16 REAL, and worse
+BOOSTED STRENGTH t=300 d=1          0.60366     +0.00374    0.00105   0.00225     2/16 REAL, and worse
+BOOSTED SURFACE  t=300 d=1          0.60325     +0.00334    0.00093   0.00197     3/16 REAL, and worse
+BOOSTED STRENGTH t=300 d=2          0.60372     +0.00381    0.00111   0.00236     2/16 REAL, and worse
+BOOSTED SURFACE  t=300 d=2          0.61153     +0.01162    0.00248   0.00529     2/16 REAL, and worse
+BOOSTED STRENGTH t=300 d=3          0.60369     +0.00378    0.00115   0.00246     2/16 REAL, and worse
+BOOSTED SURFACE  t=300 d=3          0.61530     +0.01539    0.00289   0.00617     1/16 REAL, and worse
+BOOSTED STRENGTH t=600 d=2          0.60372     +0.00381    0.00113   0.00242     2/16 REAL, and worse
+BOOSTED SURFACE  t=600 d=2          0.61563     +0.01572    0.00299   0.00637     1/16 REAL, and worse
+BOOSTED STRENGTH t=600 d=4          0.60370     +0.00379    0.00115   0.00245     2/16 REAL, and worse
+BOOSTED SURFACE  t=600 d=4          0.62116     +0.02125    0.00354   0.00755     1/16 REAL, and worse
+
+Every row is against the same incumbent, with its own clustered bar.
