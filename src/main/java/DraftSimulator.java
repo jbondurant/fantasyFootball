@@ -294,9 +294,28 @@ public class DraftSimulator {
     /**
      * Draft night's entry point: replay the picks that have really happened
      * into a SimState, so the live board becomes the root the engine plans
-     * from. Picks arrive in pick_no order; anything not on our board (a
-     * defense, a kicker, an unknown id) advances the schedule without
-     * touching the pool.
+     * from. Picks arrive in pick_no order.
+     *
+     * ANYTHING NOT ON OUR BOARD CONSUMES NOTHING. The increment sits inside the
+     * board.contains guard below, so an id we do not carry advances neither the
+     * schedule nor the pool. Until 2026-09-01 this paragraph said the opposite -
+     * "advances the schedule without touching the pool" - which is prose drift
+     * (TRAPS F27), and wrong in the more dangerous direction: it describes a
+     * simulator that stays in step when the code's does not.
+     *
+     * The behaviour is RIGHT for a keeper. The loop below skips his keeper slot
+     * first, so a keeper consumes exactly one thing whether Sleeper flags the
+     * pick is_keeper (LiveDraft.livePicks drops it, the while-loop eats the
+     * slot) or the commissioner hand-entered it as an ordinary pick (the id
+     * arrives, finds no board entry, and the while-loop has already eaten the
+     * slot). Both orders align, and a keeper entered at the WRONG round drifts
+     * only between the real pick and the scheduled slot, then re-syncs.
+     *
+     * It is WRONG for a real pick of a man the board does not carry - a kicker,
+     * someone past the ADP cut, an id we do not know. He spends a live pick, the
+     * schedule does not move, and from there every pick is priced one seat early
+     * and attributed to the wrong manager. Not changed the night before a draft;
+     * DraftNight.scheduleDrift DETECTS it and both live tools print it.
      */
     public SimState stateAfter(List<String> takenInOrder){
         SimState state = initialState();
@@ -345,9 +364,27 @@ public class DraftSimulator {
     /**
      * A copy of the state with `chosen` taken at the state's current slot -
      * the branch point for a policy pricing one of its own candidate picks.
+     *
+     * "The state's current slot" has to mean the same thing here as it does in
+     * slotOf(), and it did not. slotOf() scans FORWARD past keeper slots and
+     * does not write the index back, so a state whose scheduleIndex is resting
+     * on a keeper slot reports one pick and branched into another: the man went
+     * into a slot that selects nobody, was credited to the keeper's owner, cost
+     * no live pick, and left one extra real pick to be simulated before the
+     * brancher's next turn. WaitCheck - Model A's own wait-or-take table -
+     * branches straight off a state from stateAfter, and this league has
+     * twenty-four keeper slots. Pinned by ScheduleDriftTest.
      */
     public SimState branchWith(SimState state, String chosen){
         SimState branch = state.copy();
+        while(branch.scheduleIndex < schedule.size()
+                && schedule.get(branch.scheduleIndex).keeperSlot()){
+            branch.scheduleIndex++;
+        }
+        if(branch.scheduleIndex >= schedule.size()){
+            throw new IllegalStateException("branchWith past the end of the schedule -"
+                    + " there is no slot left to spend on " + chosen);
+        }
         applyPick(branch, schedule.get(branch.scheduleIndex), chosen);
         branch.scheduleIndex++;
         return branch;

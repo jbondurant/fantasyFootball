@@ -170,27 +170,23 @@ public class LiveBoard {
         // draft is tonight; a wrong fix costs more than the fault, whose
         // exposure is low with 237 men on the board for 168 live picks. So it
         // is DETECTED instead. Wrong and loud beats wrong and quiet.
-        // ONLY WARN WHEN THE SIMULATOR IS BEHIND.
         //
-        // The first version of this compared pickNumber against taken.size()+1
-        // for INEQUALITY, and it was a false alarm on a clean board: slotOf()
-        // skips keeper slots, of which this league has twenty-four with the
-        // earliest at pick 32, so the returned pick number legitimately runs
-        // AHEAD of the count. Measured on a clean 168-pick replay it fired at
-        // 137 of 169 refreshes, first at 31 picks in, telling Justin to
-        // distrust the board model from round 3 to the end of the draft.
-        //
-        // A false alarm that makes him abandon the tool is worse than the
-        // silent fault it was added to catch. The real fault - a live pick
-        // spent on a man the board does not carry - makes the simulator fall
-        // BEHIND, never ahead, so only behind is worth saying.
-        if(slot != null && slot.pickNumber() < taken.size() + 1){
-            System.out.printf("%n   *** SCHEDULE DRIFT: %d picks are in, so the draft is on"
-                    + " pick %d,%n   *** but the simulator believes it is on pick %d."
-                    + " Somebody drafted%n   *** a man this board does not carry. Every"
-                    + " number below is priced%n   *** for the wrong slot - trust"
-                    + " DraftNight and the RUNBOOK until it clears.%n",
-                    taken.size(), taken.size() + 1, slot.pickNumber());
+        // THE DETECTOR ITSELF WAS WRONG, and loudly. It compared the slot's
+        // PICK NUMBER against the pick COUNT, and those are only the same
+        // question while no keeper slot has gone by. A keeper slot is a pick
+        // number that consumes no pick; this league has twenty-four of them and
+        // the earliest is pick 32, so from round 3 onward the two quantities
+        // part company on a perfectly clean board and never rejoin. Measured by
+        // ModelAAudit on a clean 168-pick replay: it would have fired at 137 of
+        // 169 refreshes, starting at 31 picks in, telling Justin all night to
+        // distrust a tool that was working. DraftNight.scheduleDrift counts
+        // LIVE slots, which is the quantity taken.size() actually measures, and
+        // fires 0 times on the same replay.
+        String drift = DraftNight.scheduleDrift(simulator, state, taken.size());
+        if(drift != null){
+            System.out.print(drift);
+            System.out.printf("   *** Every number below is priced for the wrong slot -"
+                    + " trust the%n   *** RUNBOOK until it clears.%n");
         }
         int onPick = slot == null ? 200 : slot.pickNumber();
         int pick = onPick;

@@ -90,6 +90,10 @@ public class DraftNight {
         List<String> taken = LiveDraft.livePicks(draftID);
         DraftSimulator.SimState state = simulator.stateAfter(taken);
         DraftSimulator.Slot slot = simulator.slotOf(state);
+        String drift = scheduleDrift(simulator, state, taken.size());
+        if(drift != null){
+            System.out.print(drift);
+        }
         if(slot == null){
             lateRounds(benchBaseRate);
             return;
@@ -120,6 +124,58 @@ public class DraftNight {
         else {
             WaitCheck.report(timing, planner, simulator, state, points, waitRollouts);
         }
+    }
+
+    /**
+     * IS THE SIMULATOR STILL IN STEP WITH THE REAL DRAFT?
+     *
+     * `DraftSimulator.stateAfter` advances its schedule only for a man on our
+     * board - the increment sits inside the `board.contains` guard. That is
+     * right for a keeper, whose keeper slot the loop above has already skipped.
+     * It is wrong for a real pick of a man the board does not carry: a kicker,
+     * someone past the ADP cut, an id we do not know. He spends a live pick, the
+     * schedule does not move, and every later pick is priced one seat early -
+     * and so is every attribution of a player to a manager, which is how
+     * DraftNight builds MY ROSTER.
+     *
+     * LiveBoard detects this; Model A shared the same increment and said
+     * nothing. Returns the warning to print, or null when the board is in step.
+     *
+     * THE COMPARISON IS AGAINST LIVE SLOTS, NOT PICK NUMBERS. LiveBoard's
+     * version of this check reads `slot.pickNumber() != taken.size() + 1`, and
+     * those are only the same question while no keeper slot has gone by. A
+     * keeper slot IS a pick number and consumes no pick, so the moment the
+     * draft passes one the two quantities part company permanently - and this
+     * league has twenty-four of them, the earliest of them in the opening
+     * rounds. Written that way the detector fires on a perfectly clean board
+     * and tells Justin to distrust a tool that is working. Pinned by
+     * ScheduleDriftTest.aKeeperSlotIsNotDrift, whose own first failure was
+     * against exactly that formula.
+     *
+     * @param picksIn how many LIVE picks are really in - LiveDraft.livePicks
+     *                already drops the keepers.
+     */
+    static String scheduleDrift(DraftSimulator simulator, DraftSimulator.SimState state,
+                                int picksIn){
+        DraftSimulator.Slot slot = simulator.slotOf(state);
+        if(slot == null){
+            return null;
+        }
+        int liveSlotsBefore = 0;
+        for(int pick = 1; pick < slot.pickNumber(); pick++){
+            DraftSimulator.Slot before = simulator.slotAt(pick);
+            if(before != null && !before.keeperSlot()){
+                liveSlotsBefore++;
+            }
+        }
+        if(liveSlotsBefore == picksIn){
+            return null;
+        }
+        return String.format("%n   *** SCHEDULE DRIFT: %d picks are in, but the simulator is"
+                + " on its%n   *** slot number %d (pick %d), which has %d live picks before"
+                + " it.%n   *** Somebody drafted a man this board does not carry. My roster"
+                + "%n   *** and every number below may be attributed to the wrong seat.%n",
+                picksIn, liveSlotsBefore + 1, slot.pickNumber(), liveSlotsBefore);
     }
 
     /**

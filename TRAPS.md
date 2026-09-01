@@ -107,3 +107,49 @@ but happens not to is not fixed.
 28. **A mean-based lineup makes every bench man worth exactly zero**, because an
     average cannot beat a better average. Pool the neighbourhood as a
     DISTRIBUTION instead; the spread is the only part that pays a bench pick.
+
+## G. The live path
+
+Added 2026-09-01, from the adversarial pass over Model A and `DraftNight` -
+the half of `Draft2026` that had never had one. `ModelAAudit` is the tool;
+`ScheduleDriftTest` is the pin.
+
+29. **A pick of a man the board does not carry consumes no slot.**
+    `DraftSimulator.stateAfter` increments the schedule INSIDE its
+    `board.contains` guard. That is right for a keeper - the loop above has
+    already eaten his keeper slot - and wrong for a kicker, a man past the ADP
+    cut, or an id we do not know. From that pick on, every seat is priced one
+    early and every player is attributed to the wrong manager, which is how
+    both live tools build Justin's roster. Not changed the night before a
+    draft; DETECTED, and both tools print it.
+30. **A pick NUMBER is not a pick COUNT.** The detector for 29 first shipped as
+    `slot.pickNumber() != taken.size() + 1`. A keeper slot is a pick number
+    that consumes no pick, and this league has twenty-four of them with the
+    earliest at pick 32, so on a perfectly clean 168-pick replay that test
+    fires at 137 of 169 refreshes, starting in round 3, and tells Justin all
+    night to distrust a tool that is working. Count LIVE slots.
+31. **`slotOf` and `branchWith` must mean the same slot.** `slotOf` scans
+    forward past keeper slots and does not write the index back, so a state
+    resting on a keeper slot reported one pick and branched into another -
+    the man credited to the keeper's owner, costing no live pick, leaving one
+    extra real pick before the brancher's next turn. `WaitCheck`, Model A's own
+    wait-or-take table, branches straight off a state from `stateAfter`.
+32. **A round test standing in for a roster test is exact only on one roster.**
+    Model A goes indifferent when the starting NINE IS FULL, not when the round
+    turns 8. Measured: playing Model A's own plan the spread is 2.75 at round 7
+    and exactly 0.00 from round 8, so the boundary is right to the round - but
+    on a roster that still owes a tight end at round 8, which is the shape the
+    RUNBOOK itself recommends, the objective still discriminates and
+    `Draft2026` has already gone silent.
+33. **Four engines are not four opinions.** `LiveCommittee`'s `hindsight` and
+    its `lookahead` at depth 1 are the SAME estimator - one-position
+    `HeadPolicy`, `simulateFrom`, `bestNine` - differing only in seed offset and
+    sample size. They agreed 9 of 9 on the live board. The comment above them
+    says hindsight solves each scenario exactly with no tail policy, which is
+    prose drift (F27), and the duplicate carries two of the four votes.
+34. **A plurality with no tie rule is a tie rule.** `vote` tallies into an
+    `EnumMap` and scans with a strict `>`, so a 2-2 split goes to whichever
+    position is DECLARED first - QB before RB before WR before TE - and prints
+    as "2 of 4 engines say RB" with nothing to say it was a coin flip. It
+    happened at round 3 on the real board, in the rounds that matter, and in
+    the direction the keeper slate has already gutted.

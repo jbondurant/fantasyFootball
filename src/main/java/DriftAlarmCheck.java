@@ -28,6 +28,7 @@ public class DriftAlarmCheck {
         List<String> taken = new ArrayList<>();
         int aheadFires = 0;
         int behindFires = 0;
+        int shippedFires = 0;
         int refreshes = 0;
         while(simulator.slotOf(state) != null && taken.size() < 190){
             DraftSimulator.Slot slot = simulator.slotOf(state);
@@ -37,6 +38,9 @@ public class DriftAlarmCheck {
             }
             if(slot.pickNumber() < taken.size() + 1){
                 behindFires++;
+            }
+            if(DraftNight.scheduleDrift(simulator, state, taken.size()) != null){
+                shippedFires++;
             }
             String before = null;
             for(String id : planner.points().keySet()){
@@ -53,7 +57,15 @@ public class DriftAlarmCheck {
                 + " expected, NOT drift%n", aheadFires);
         System.out.printf("   simulator BEHIND the count    %d times  <- the real fault%n",
                 behindFires);
-        System.out.printf("%nthe warning now fires only on BEHIND, so a clean board is"
-                + " silent.%nthe old test was inequality, which fired on every AHEAD too.%n");
+        System.out.printf("%n   THE SHIPPED DETECTOR fires        %d times  <- must be 0%n",
+                shippedFires);
+        System.out.printf("%nthe retired detector compared a PICK NUMBER against a pick"
+                + " COUNT.%nthose diverge the moment a keeper slot goes by, and this league"
+                + " has 24.%nDraftNight.scheduleDrift counts LIVE SLOTS, which is the"
+                + " quantity%ntaken.size() actually measures, so it is silent on a clean"
+                + " board.%n");
+        if(shippedFires != 0){
+            throw new IllegalStateException("the drift detector fires on a clean board");
+        }
     }
 }
