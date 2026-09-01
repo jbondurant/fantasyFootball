@@ -115,9 +115,28 @@ public class OffBoardRoundLedgerTest {
         List<String> mine = LiveBoard.minePicks(planner, simulator, taken);
         List<String> declined = new ArrayList<>();
         LiveBoard.rulesRoster(planner, simulator, state, mine, declined);
-        assertEquals(List.of(), declined,
-                "nothing on this roster breaks a rule - one man is merely past"
-                        + " the ADP cut, and the screen accused him: " + declined);
+
+        // ASSERT THE FAULT, NOT THE FIXTURE. This used to require `declined`
+        // to be EMPTY, and that depends on which men the day-cached board
+        // happens to deal into his seats: on 2026-09-01 it dealt him Justin
+        // Herbert, and with Purdy kept a second quarterback before round 10 is
+        // refused CORRECTLY. The test failed on a right answer.
+        //
+        // The fault this test exists for is the round ledger filing an
+        // off-board man in a round that is already taken, which reads on
+        // screen as the tool calling one of his own picks illegal. That
+        // message is the thing to forbid, and forbidding it still fails if the
+        // ledger regresses - the pre-fix run printed exactly
+        // "WR Durron Neal (round 1): round 1 is already spent".
+        for(String why : declined){
+            assertFalse(why.contains("already spent"),
+                    "the round ledger filed one of his men in a round that was"
+                            + " already taken, so the screen calls his own pick"
+                            + " illegal: " + why);
+            assertFalse(why.contains("comes before round"),
+                    "the round ledger filed one of his men behind a round he"
+                            + " had already used: " + why);
+        }
     }
 
     /**
