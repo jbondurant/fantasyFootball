@@ -297,11 +297,27 @@ public class LiveBoard {
 
         // My roster as (position, rank) on the live board.
         List<BoardValue.Slot> held = new ArrayList<>();
+        // A MAN I ALREADY HOLD IS PRICED BY WHO HE IS, NOT BY WHO ELSE WENT.
+        //
+        // This used to call depth(), which counts how many of a position have
+        // LEFT THE BOARD - so a man on my own roster was repriced by other
+        // people's picks. Tuten read RB1 before a single pick was made, and
+        // RB55 by round 15: the best back in football, then nearly nothing,
+        // without ever playing a down. Worse, every back I hold got the SAME
+        // rank, and BoardValue.drawn is keyed on position-and-rank, so they all
+        // drew identically in all six hundred worlds - my roster's composition
+        // was invisible to the model that is supposed to be roster-aware.
+        //
+        // His rank is his own place on the projection curve and it does not
+        // move. Clamped at the cap because past it the curve has no entry and a
+        // real man would price at zero.
+        Map<String, Integer> rankOf = projectionRanks(planner);
         for(String id : mine){
             Player player = Player.getPlayerFromSIDV2(id);
             if(player != null){
+                int cap = CAP.getOrDefault(player.position, 1);
                 held.add(new BoardValue.Slot(player.position,
-                        depth(planner, taken, player.position, id)));
+                        Math.min(cap, rankOf.getOrDefault(id, cap))));
             }
         }
 
@@ -311,6 +327,7 @@ public class LiveBoard {
                 "SWING", "NEXT CLIFF");
 
         Map<Position, Double> urgency = new EnumMap<>(Position.class);
+        Set<Position> refused = new HashSet<>();
         Map<Position, Double> adds = new EnumMap<>(Position.class);
         Map<Position, String> best = new EnumMap<>(Position.class);
         for(Position position : new Position[]{Position.RB, Position.WR, Position.TE,
@@ -365,7 +382,10 @@ public class LiveBoard {
             double[] both = rolloutStats(planner, taken, curve, pools, order.size(),
                     held, position, rank, pick);
             boolean fragile = BoardValue.tooFragile(both);
-            double finished = fragile ? -1e9 : both[0];
+            double finished = both[0];
+            if(fragile){
+                refused.add(position);
+            }
             Valley cliff = nextValley(tiers(curve, pools, position,
                     Double.parseDouble(System.getProperty("tierBar", "0.40"))), rank);
             boolean crosses = cliff != null && later > cliff.afterRank();
@@ -391,15 +411,40 @@ public class LiveBoard {
                     where, fragile ? "REFUSED fragile" : "");
         }
 
-        // Rank on the cost of waiting, and break ties on raw value - otherwise
-        // an empty board, where nothing has drained yet and every wait costs
-        // zero, is decided by whichever position the loop reached first.
-        String verdict = urgency.entrySet().stream()
-                .max(Comparator.<Map.Entry<Position, Double>>comparingDouble(
-                                e -> Math.round(e.getValue() * 10) / 10.0)
-                        .thenComparingDouble(e -> adds.getOrDefault(e.getKey(), 0.0)))
-                .map(e -> e.getKey().toString())
-                .orElse("nothing legal");
+        // A GUARD THAT REFUSES EVERYTHING IS NOT A GUARD.
+        //
+        // The fragility filter used to set a refused path to -1e9. When it
+        // refused SOME positions that ranks them last, which is the intent. But
+        // it refuses ALL of them from about round 5 on, and then every value is
+        // -1e9, they tie, and the verdict fell through to the tie-break on ADDS
+        // NOW - which is the greedy urgency rule this file's own comments say
+        // was replaced because it scored 1916 and spent round 2 on a tight end.
+        // So at the picks where the guard bit hardest, the tool printed a
+        // verdict from an objective it had abandoned, and said END TEAM above it.
+        //
+        // Measured by an adversarial audit: it binds on 12 of 12 openings at
+        // pick 7. I had reported it as a no-op, from a BACKTEST sweep where it
+        // genuinely is one - the live board values a man at about 300 where the
+        // backtest values him at 130, and 15% of a mean is a different thing in
+        // each. The same units mistake as the 300-point absolute bar, one level
+        // up.
+        //
+        // Now: refusal ranks a position last only while something survives. If
+        // everything is refused the guard has no information, so rank on END
+        // among all of them and SAY so, rather than quietly changing objective.
+        List<Position> ranked = new ArrayList<>(urgency.keySet());
+        boolean allRefused = refused.size() == urgency.size() && !urgency.isEmpty();
+        ranked.sort(Comparator.<Position>comparingInt(
+                        p -> !allRefused && refused.contains(p) ? 1 : 0)
+                .thenComparing(Comparator.comparingDouble(
+                        (Position p) -> urgency.getOrDefault(p, -1e9)).reversed()));
+        String verdict = ranked.isEmpty() ? "nothing legal" : ranked.get(0).toString();
+        if(allRefused){
+            System.out.printf("%n   every position is over the %.0f%% swing bar, so the bar"
+                    + " cannot%n   discriminate here - ranking on END TEAM instead. This is"
+                    + " the%n   guard admitting it has nothing to say, not a warning about"
+                    + " the pick.%n", 100 * BoardValue.fragilityBar());
+        }
         System.out.printf("%n   the model takes: %s%n", verdict);
         System.out.printf("%nNEXT CLIFF is the one that decides this. A position's value does not%n"
                 + "slide, it steps: the raw rank curve falls off at a few places and is%n"
@@ -877,6 +922,35 @@ public class LiveBoard {
             curve.put(entry.getKey(), out);
         }
         return curve;
+    }
+
+    /**
+     * Every man's own rank at his position, kept men included.
+     *
+     * Kept men are not on the draftable board but they ARE on somebody's
+     * roster, and Justin's two are on his. Their quality is their place among
+     * everyone, so this ranks the whole projection pool rather than the
+     * draftable subset - Tuten is the same back whether or not he can be
+     * drafted.
+     */
+    static Map<String, Integer> projectionRanks(DraftPlanner planner){
+        Map<Position, List<Map.Entry<String, Double>>> byPosition =
+                new EnumMap<>(Position.class);
+        for(Map.Entry<String, Double> entry : planner.points().entrySet()){
+            Player player = Player.getPlayerFromSIDV2(entry.getKey());
+            if(player != null && CAP.containsKey(player.position)){
+                byPosition.computeIfAbsent(player.position, u -> new ArrayList<>())
+                        .add(entry);
+            }
+        }
+        Map<String, Integer> rankOf = new HashMap<>();
+        for(List<Map.Entry<String, Double>> men : byPosition.values()){
+            men.sort(Map.Entry.<String, Double>comparingByValue().reversed());
+            for(int i = 0; i < men.size(); i++){
+                rankOf.put(men.get(i).getKey(), i + 1);
+            }
+        }
+        return rankOf;
     }
 
     /** How many of a position have gone, plus one - his rank on THIS board. */
