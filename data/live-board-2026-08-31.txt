@@ -1,4 +1,3 @@
-WARNING: https://api.sleeper.app/v1/draft/1390416723227742208/picks unreachable - using the last cached copy, which may be several picks stale.
 
 (the draft is on pick 1, which is not mine - pricing my next, pick 7)
 
@@ -10,11 +9,11 @@ still needed for a legal lineup: {QB=0, RB=1, WR=3, TE=1, DEF=1}
 THE PLAN says: RB
 
 POS   BEST AVAILABLE             RANK  ADDS NOW  VS WAIT  END TEAM       NEXT CLIFF
-RB    Jahmyr Gibbs                  1     130.7     16.7      1880       after RB14
-WR    Puka Nacua                    1     132.1     21.7      1879 after WR2 CROSSED
-TE    Brock Bowers                  1      69.2      0.0      1852        after TE1
+RB    Jahmyr Gibbs                  1     293.4     64.2      2263 after RB1 CROSSED
+WR    Puka Nacua                    1     262.8     50.0      2246 after WR2 CROSSED
+TE    Brock Bowers                  1      93.3      0.0      2225        after TE1
 QB    Josh Allen                      -          -          -   REFUSED: a second QB is only ever a next-year keeper stash (RUNBOOK.md:191), and round 1 is before round 10
-DEF   Los Angeles Rams              1       0.0      0.0      1783       none ahead
+DEF   Los Angeles Rams              1       0.0      0.0      2123       none ahead
 
    the model takes: RB
 

@@ -437,14 +437,58 @@ public class BoardValue {
      * back's bad ones, and that is measured, not assumed.
      */
     static Map<Position, List<List<Double>>> pools(List<PairwiseOdds.Man> men){
+        return pools(men, null);
+    }
+
+    /**
+     * THIS YEAR'S CURVE, LAST SIXTEEN YEARS' UNCERTAINTY.
+     *
+     * Justin: "the training can learn from before but it shouldn't learn any
+     * ordering... it should produce a different average list of positions each
+     * season due to the curves of player projection dropoffs being different
+     * for each position for each year."
+     *
+     * The version before this learned historical MEAN POINTS BY RANK and valued
+     * a 2026 roster with it, which imports 2010-2025's average dropoff shape and
+     * cannot produce a different answer in a year whose board is shaped
+     * differently. It was learning the ordering, which is exactly what he says
+     * it must not do.
+     *
+     * Split into the two things they are. History supplies the RELATIONSHIP: at
+     * a given positional rank, how far do real outcomes scatter around what that
+     * rank is worth - the spread, the busts, the deep men who beat starters.
+     * That is stable across years and is what sixteen seasons can honestly
+     * teach. The LEVEL and the SHAPE come from the board actually being drafted,
+     * so this year's valleys are this year's.
+     *
+     * So a pool entry is a RATIO, not a point total: what men at this rank
+     * really returned, divided by what that rank was centrally worth. Applied to
+     * a 2026 projection, a rank whose history is volatile stays volatile and a
+     * rank whose 2026 projection has fallen off a cliff shows the cliff.
+     *
+     * `level` null keeps the old behaviour, which the backtest needs - a
+     * historical season must be valued with its own board, not with 2026's.
+     */
+    static Map<Position, List<List<Double>>> pools(List<PairwiseOdds.Man> men,
+                                                   Map<Position, double[]> level){
         Map<Position, Map<Integer, List<Double>>> raw = new EnumMap<>(Position.class);
+        Map<Position, double[]> centre = RankDraft.pointsByRank(men);
         for(PairwiseOdds.Man man : men){
             int cap = PairwiseOdds.CAP.getOrDefault(man.position(), 0);
             if(man.rank() > cap || man.rank() < 1){
                 continue;
             }
+            double points = man.points();
+            if(level != null){
+                // Store the ratio to what this rank was centrally worth, so the
+                // pool carries SCATTER and not level.
+                double[] mean = centre.get(man.position());
+                double middle = mean != null && man.rank() < mean.length
+                        ? mean[man.rank()] : 0;
+                points = middle <= 0 ? 1.0 : points / middle;
+            }
             raw.computeIfAbsent(man.position(), u -> new HashMap<>())
-                    .computeIfAbsent(man.rank(), u -> new ArrayList<>()).add(man.points());
+                    .computeIfAbsent(man.rank(), u -> new ArrayList<>()).add(points);
         }
         Map<Position, List<List<Double>>> out = new EnumMap<>(Position.class);
         for(Map.Entry<Position, Map<Integer, List<Double>>> entry : raw.entrySet()){
@@ -477,15 +521,30 @@ public class BoardValue {
      */
     static double drawn(Map<Position, List<List<Double>>> pools, Position position,
                         int rank, int world, Map<Position, double[]> curve){
+        return drawn(pools, position, rank, world, curve, false);
+    }
+
+    /**
+     * One man's outcome in one world.
+     *
+     * With `ratios` the pool holds scatter rather than points, so the draw is
+     * multiplied by what THIS year's board says the rank is worth. That is the
+     * whole point of the split: the uncertainty is sixteen years old and the
+     * curve is this morning's.
+     */
+    static double drawn(Map<Position, List<List<Double>>> pools, Position position,
+                        int rank, int world, Map<Position, double[]> curve, boolean ratios){
+        double[] mean = curve.get(position);
+        double level = mean != null && rank < mean.length ? mean[rank] : 0;
         List<List<Double>> byRank = pools.get(position);
         if(byRank == null || rank >= byRank.size() || byRank.get(rank).isEmpty()){
-            double[] mean = curve.get(position);
-            return mean != null && rank < mean.length ? mean[rank] : 0;
+            return level;
         }
         List<Double> pool = byRank.get(rank);
         int index = Math.floorMod(world * 2654435761L
                 + position.ordinal() * 40503L + rank * 2246822519L, pool.size());
-        return pool.get(index);
+        double draw = pool.get(index);
+        return ratios ? draw * level : draw;
     }
 
     /**
@@ -499,9 +558,14 @@ public class BoardValue {
      */
     static double empirical(List<Slot> roster, Map<Position, List<List<Double>>> pools,
                             Map<Position, double[]> curve, int count){
+        return empirical(roster, pools, curve, count, false);
+    }
+
+    static double empirical(List<Slot> roster, Map<Position, List<List<Double>>> pools,
+                            Map<Position, double[]> curve, int count, boolean ratios){
         double total = 0;
         for(int world = 0; world < WORLDS; world++){
-            total += oneSeason(roster, pools, curve, world);
+            total += oneSeason(roster, pools, curve, world, ratios);
         }
         return total / WORLDS;
     }
@@ -527,6 +591,11 @@ public class BoardValue {
 
     static double oneSeason(List<Slot> roster, Map<Position, List<List<Double>>> pools,
                             Map<Position, double[]> curve, int world){
+        return oneSeason(roster, pools, curve, world, false);
+    }
+
+    static double oneSeason(List<Slot> roster, Map<Position, List<List<Double>>> pools,
+                            Map<Position, double[]> curve, int world, boolean ratios){
         // {what his rank promised, what he drew}. Both are needed the moment the
         // lineup may be set on one and scored on the other.
         Map<Position, List<double[]>> pool = new EnumMap<>(Position.class);
@@ -536,7 +605,7 @@ public class BoardValue {
                     ? mean[slot.rank()] : 0;
             pool.computeIfAbsent(slot.position(), u -> new ArrayList<>())
                     .add(new double[]{expected,
-                            drawn(pools, slot.position(), slot.rank(), world, curve)});
+                            drawn(pools, slot.position(), slot.rank(), world, curve, ratios)});
         }
         Comparator<double[]> best = BY_EXPECTED
                 ? Comparator.comparingDouble((double[] man) -> man[0]).reversed()

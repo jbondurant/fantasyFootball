@@ -56,8 +56,16 @@ public class LiveBoard {
         Map<String, List<DetectionLag.Man>> wider = NflverseBoards.usable(null);
         List<String> order = new ArrayList<>(new TreeMap<>(wider).keySet());
         List<PairwiseOdds.Man> men = PairwiseOdds.nflverseMen(wider, order);
-        Map<Position, double[]> curve = RankDraft.pointsByRank(men);
-        Map<Position, List<List<Double>>> pools = BoardValue.pools(men);
+        // THIS YEAR'S CURVE. The level and the shape come from the 2026 board
+        // being drafted, not from a sixteen-year average of boards that are not
+        // it. A year where the backs fall off a cliff at RB8 and a year where
+        // they glide to RB30 must not produce the same list, and they did while
+        // this read historical mean points by rank.
+        Map<Position, double[]> curve = thisYear(planner);
+        // LAST SIXTEEN YEARS' UNCERTAINTY, as ratios rather than points, so what
+        // is imported is how far outcomes scatter around a rank - never where
+        // the rank sits.
+        Map<Position, List<List<Double>>> pools = BoardValue.pools(men, curve);
 
         List<String> taken = LiveDraft.livePicks(draftID);
         DraftSimulator.SimState state = simulator.stateAfter(taken);
@@ -149,14 +157,14 @@ public class LiveBoard {
             }
             int rank = depth(planner, taken, position, candidate);
             int later = next < 0 ? rank : rank + drain(planner, taken, position, pick, next);
-            double base = BoardValue.empirical(held, pools, curve, order.size());
+            double base = BoardValue.empirical(held, pools, curve, order.size(), true);
             List<BoardValue.Slot> now = new ArrayList<>(held);
             now.add(new BoardValue.Slot(position, rank));
-            double addsNow = BoardValue.empirical(now, pools, curve, order.size()) - base;
+            double addsNow = BoardValue.empirical(now, pools, curve, order.size(), true) - base;
             List<BoardValue.Slot> then = new ArrayList<>(held);
             then.add(new BoardValue.Slot(position, later));
             double wait = addsNow
-                    - (BoardValue.empirical(then, pools, curve, order.size()) - base);
+                    - (BoardValue.empirical(then, pools, curve, order.size(), true) - base);
             // Rank on the ROSTER I END WITH, not on the drop I avoid. Ranking
             // by the drop scored 1916 in backtest and bought tight ends in
             // round 2; rolling the rest of the draft out and valuing the
@@ -165,7 +173,7 @@ public class LiveBoard {
             // longer decides on its own.
             double finished = rollout(planner, taken, curve, pools, order.size(),
                     held, position, rank, pick);
-            Valley cliff = nextValley(valleys(men, position), rank);
+            Valley cliff = nextValley(valleys(curve, position), rank);
             boolean crosses = cliff != null && later > cliff.afterRank();
             // The cliff, not the odds, is what decides this. Crossing one means
             // the man you come back to is on the far side of a real drop; not
@@ -227,7 +235,41 @@ public class LiveBoard {
      */
     record Valley(int afterRank, double drop){}
 
-    static List<Valley> valleys(List<PairwiseOdds.Man> men, Position position){
+    /** Valleys in THIS year's curve, isotonic so noise pools away and steps stay. */
+    static List<Valley> valleys(Map<Position, double[]> curve, Position position){
+        double[] raw = curve.get(position);
+        if(raw == null){
+            return List.of();
+        }
+        double[] mean = new double[Math.max(0, raw.length - 1)];
+        double[] weight = new double[mean.length];
+        for(int i = 0; i < mean.length; i++){
+            mean[i] = raw[i + 1];
+            weight[i] = raw[i + 1] > 0 ? 1 : 0;
+        }
+        double[] fitted = PairwiseOdds.isotonicDecreasing(mean, weight);
+        List<Double> steps = new ArrayList<>();
+        for(int i = 0; i + 1 < fitted.length; i++){
+            double drop = fitted[i] - fitted[i + 1];
+            if(drop > 0){
+                steps.add(drop);
+            }
+        }
+        if(steps.isEmpty()){
+            return List.of();
+        }
+        Collections.sort(steps);
+        double bar = Math.max(steps.get((int) (steps.size() * 0.75)), 4);
+        List<Valley> found = new ArrayList<>();
+        for(int i = 0; i + 1 < fitted.length; i++){
+            if(fitted[i] - fitted[i + 1] >= bar){
+                found.add(new Valley(i + 1, fitted[i] - fitted[i + 1]));
+            }
+        }
+        return found;
+    }
+
+    static List<Valley> valleysHistorical(List<PairwiseOdds.Man> men, Position position){
         int cap = PairwiseOdds.CAP.getOrDefault(position, 0);
         double[] total = new double[cap + 2];
         double[] seen = new double[cap + 2];
@@ -322,7 +364,7 @@ public class LiveBoard {
             if(pick <= fromPick || roster.size() >= 16){
                 continue;
             }
-            double base = BoardValue.empirical(roster, pools, curve, count);
+            double base = BoardValue.empirical(roster, pools, curve, count, true);
             Position best = null;
             double most = -1e9;
             int bestRank = 1;
@@ -338,7 +380,7 @@ public class LiveBoard {
                 }
                 List<BoardValue.Slot> trial = new ArrayList<>(roster);
                 trial.add(new BoardValue.Slot(position, rank));
-                double adds = BoardValue.empirical(trial, pools, curve, count) - base;
+                double adds = BoardValue.empirical(trial, pools, curve, count, true) - base;
                 if(adds > most){
                     most = adds;
                     best = position;
@@ -351,7 +393,7 @@ public class LiveBoard {
             roster.add(new BoardValue.Slot(best, bestRank));
             mine.merge(best, 1, Integer::sum);
         }
-        return BoardValue.empirical(roster, pools, curve, count);
+        return BoardValue.empirical(roster, pools, curve, count, true);
     }
 
     /** How deep a position will be at a later pick, at its own ADP rate. */
@@ -366,6 +408,39 @@ public class LiveBoard {
             }
         }
         return gone + 1;
+    }
+
+    /**
+     * The 2026 projection curve: what each positional rank is worth THIS year.
+     *
+     * Justin: the model "should produce a different average list of positions
+     * each season due to the curves of player projection dropoffs being
+     * different for each position for each year". This is the input that makes
+     * that true. Ranks are by projection within a position, so index r is what
+     * the rth best man at that position is projected for on the board in front
+     * of him - cliffs, plateaus and all.
+     */
+    static Map<Position, double[]> thisYear(DraftPlanner planner){
+        Map<Position, List<Double>> byPosition = new EnumMap<>(Position.class);
+        for(Map.Entry<String, Double> entry : planner.points().entrySet()){
+            Player player = Player.getPlayerFromSIDV2(entry.getKey());
+            if(player != null && PairwiseOdds.CAP.containsKey(player.position)){
+                byPosition.computeIfAbsent(player.position, u -> new ArrayList<>())
+                        .add(entry.getValue());
+            }
+        }
+        Map<Position, double[]> curve = new EnumMap<>(Position.class);
+        for(Map.Entry<Position, List<Double>> entry : byPosition.entrySet()){
+            List<Double> values = entry.getValue();
+            values.sort(Comparator.reverseOrder());
+            int cap = PairwiseOdds.CAP.get(entry.getKey());
+            double[] out = new double[cap + 2];
+            for(int rank = 1; rank <= cap && rank <= values.size(); rank++){
+                out[rank] = values.get(rank - 1);
+            }
+            curve.put(entry.getKey(), out);
+        }
+        return curve;
     }
 
     /** How many of a position have gone, plus one - his rank on THIS board. */
