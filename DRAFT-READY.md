@@ -75,7 +75,10 @@ more than noise would give, but no single comparison clears the bar.
 Re-verified after the overnight fixes, 2026-09-01:
 
     full suite                green, 457 tests
-    Model A shape             RB WR RB WR WR WR TE QB QB   (unchanged)
+    Model A shape             RB WR RB WR WR WR TE QB RB
+                              rounds 1-7 unchanged; round 9 was QB, and the
+                              cap now counts Purdy - Purdy r8, Tuten r9, which
+                              is how you described Model A in the first place
     BoardValue backtest       mean 1931, worst 1748
     board at pick 7           RB Cook > WR Lamb > TE Fannin > DEF Rams
     live path, 5 full drafts  70 picks priced, 0 throws, every roster legal
