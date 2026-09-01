@@ -39,8 +39,13 @@ public class DryRun {
         Map<Position, List<String>> ordered = new EnumMap<>(Position.class);
         for(String id : planner.points().keySet()){
             Player player = Player.getPlayerFromSIDV2(id);
+            // LiveBoard.CAP, which has the defence in it. PairwiseOdds.CAP does
+            // not, and using it here meant the defence was never a candidate -
+            // so at round 16, where the rules allow ONLY a defence, the search
+            // found nothing and the draft ended one pick short with an illegal
+            // roster.
             if(player != null && !kept.contains(id)
-                    && PairwiseOdds.CAP.containsKey(player.position)){
+                    && LiveBoard.CAP.containsKey(player.position)){
                 ordered.computeIfAbsent(player.position, u -> new ArrayList<>()).add(id);
             }
         }
@@ -80,8 +85,9 @@ public class DryRun {
             String bestId = null;
             for(Position position : new Position[]{Position.RB, Position.WR,
                     Position.TE, Position.QB, Position.DEF}){
-                if(!legal.canDraft(position, round)){
-                    continue;
+                if(!legal.canDraft(position, round)
+                        || have.getOrDefault(position, 0) >= BoardValue.MOST.get(position)){
+                    continue;   // the same appetite caps the backtested rule uses
                 }
                 String candidate = null;
                 int rank = 0;
@@ -116,11 +122,23 @@ public class DryRun {
             System.out.printf("%-6d %-6d %-26s %-4s %s%n",
                     round, slot.pickNumber(), name, best, check);
             mine.add(bestId);
-            held.add(new BoardValue.Slot(best,
-                    held.size()));
+            // HIS RANK, not the roster's size. The first version passed
+            // held.size() as the positional rank, which is meaningless and made
+            // every later pick value a different man than the one named.
+            int taken = 0;
+            for(String id : ordered.getOrDefault(best, List.of())){
+                if(id.equals(bestId)){
+                    break;
+                }
+                taken++;
+            }
+            held.add(new BoardValue.Slot(best, taken + 1));
             have.merge(best, 1, Integer::sum);
             legal = legal.canDraft(best, round) ? legal.draft(name, best, round) : legal;
-            simulator.simulateOneFrom(state, random);
+            // TAKE HIM OFF THE BOARD. Without this the simulator never learns I
+            // drafted anybody, so the same man is "best available" at every one
+            // of my picks - the first run took Jayden Reed three rounds running.
+            state = simulator.branchWith(state, bestId);
         }
 
         System.out.printf("%nFINAL ROSTER%n");

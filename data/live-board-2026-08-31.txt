@@ -1,4 +1,5 @@
 24 men are already kept league-wide and cannot be drafted
+defence scatter from 32 ranks of sleeper actuals
 
 engine warm - paid ONCE, not per pick
 press enter to re-read the board and answer; q to quit
@@ -18,7 +19,7 @@ RB    James Cook                    4    37%    238.5    47.1    2227    11% aft
 WR    CeeDee Lamb                   3    43%    223.6    18.4    2195    12% after WR5 CROSSED 
 TE    Harold Fannin                 1   100%     45.2     0.0    2121    12%      after TE8 
 QB    Josh Allen                      -          -          -   REFUSED: a second QB is only ever a next-year keeper stash (RUNBOOK.md:191), and round 1 is before round 10
-DEF   Los Angeles Rams              1   100%     20.0     0.0    2083    12%     after DEF1 
+DEF   Los Angeles Rams              1   100%     19.9     0.0    2083    12%     after DEF4 
 
    the model takes: RB
 
@@ -35,6 +36,6 @@ man the wire would give you. VS WAIT is that minus what the best of his
 position would add at pick 18 - so it is the cost of waiting, and it is
 what to rank on. A position the rules refuse is never priced at all.
 
-(answered in 1.5s)
+(answered in 1.0s)
 
 [enter] refresh  |  q quit > done - good luck.

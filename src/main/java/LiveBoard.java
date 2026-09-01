@@ -89,7 +89,14 @@ public class LiveBoard {
         // LAST SIXTEEN YEARS' UNCERTAINTY, as ratios rather than points, so what
         // is imported is how far outcomes scatter around a rank - never where
         // the rank sits.
-        Map<Position, List<List<Double>>> pools = BoardValue.pools(men, curve);
+        Map<Position, List<List<Double>>> pools =
+                new EnumMap<>(BoardValue.pools(men, curve));
+        List<List<Double>> defence = defenceScatter();
+        if(!defence.isEmpty()){
+            pools.put(Position.DEF, defence);
+            System.out.printf("defence scatter from %d ranks of sleeper actuals%n",
+                    defence.size() - 1);
+        }
 
         // WARM ONCE, ANSWER MANY TIMES.
         //
@@ -738,6 +745,73 @@ public class LiveBoard {
      * This is not a small correction to the board, it is a different board:
      * twenty-four men gone before a pick is made, most of them from the top.
      */
+    /**
+     * Scatter for defences, which the nflverse harvest cannot supply.
+     *
+     * nflverse stats_player_week lists individual men - CB, DE, DL - and has no
+     * team defences at all, so PairwiseOdds.nflverseMen excluding them was right
+     * for that source. The consequence was that defences had no measured
+     * uncertainty anywhere, and once they were put into the 2026 curve they were
+     * treated as CERTAIN while every other man was uncertain.
+     *
+     * Sleeper does have them, league-scored, and the FFC boards carry defence
+     * ADP: thirteen seasons join, twelve to twenty-three ranked defences a year
+     * against twenty-nine to thirty-two scored. Same shape as the skill pools -
+     * a ratio to what that rank was centrally worth, pooled over a
+     * neighbourhood - so a defence now carries real spread instead of a
+     * pretence of certainty.
+     */
+    static List<List<Double>> defenceScatter(){
+        Map<Integer, List<Double>> byRank = new HashMap<>();
+        try {
+            Map<String, EraBoards.Board> boards = EraBoards.usable("ppr",
+                    EraIngest.MIN_RATE, EraIngest.minDepth());
+            for(Map.Entry<String, EraBoards.Board> entry : boards.entrySet()){
+                Map<String, Double> points = LeagueActuals.seasonDefencePoints(entry.getKey());
+                int rank = 0;
+                for(String id : entry.getValue().ids()){
+                    if(entry.getValue().positionOf().get(id) != Position.DEF){
+                        continue;
+                    }
+                    rank++;
+                    Double scored = points.get(id);
+                    if(scored != null && scored > 0){
+                        byRank.computeIfAbsent(rank, u -> new ArrayList<>()).add(scored);
+                    }
+                }
+            }
+        }
+        catch(Exception unavailable){
+            return List.of();
+        }
+        if(byRank.isEmpty()){
+            return List.of();
+        }
+        int cap = CAP.get(Position.DEF);
+        double[] mean = new double[cap + 1];
+        for(int rank = 1; rank <= cap; rank++){
+            List<Double> seen = byRank.getOrDefault(rank, List.of());
+            mean[rank] = seen.isEmpty() ? 0 : seen.stream()
+                    .mapToDouble(Double::doubleValue).average().orElse(0);
+        }
+        List<List<Double>> out = new ArrayList<>();
+        for(int rank = 0; rank <= cap; rank++){
+            List<Double> pool = new ArrayList<>();
+            int half = Math.max(6, (int) Math.round(rank * 0.25));
+            for(int r = Math.max(1, rank - half); r <= Math.min(cap, rank + half); r++){
+                double middle = mean[r];
+                if(middle <= 0){
+                    continue;
+                }
+                for(double scored : byRank.getOrDefault(r, List.of())){
+                    pool.add(scored / middle);
+                }
+            }
+            out.add(pool);
+        }
+        return out;
+    }
+
     static Set<String> kept(AAAConfiguration configuration){
         Set<String> out = new HashSet<>();
         for(Keeper keeper : configuration.getTodaysKeepers()){
