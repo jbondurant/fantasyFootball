@@ -74,7 +74,7 @@ more than noise would give, but no single comparison clears the bar.
 
 Re-verified after the overnight fixes, 2026-09-01:
 
-    full suite                green,  tests
+    full suite                green, 457 tests
     Model A shape             RB WR RB WR WR WR TE QB QB   (unchanged)
     BoardValue backtest       mean 1931, worst 1748
     board at pick 7           RB Cook > WR Lamb > TE Fannin > DEF Rams
