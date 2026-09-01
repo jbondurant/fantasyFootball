@@ -45,6 +45,7 @@ public class DrainPrediction {
         double shippedError = 0;
         double survivalError = 0;
         double blendError = 0;
+        double retiredError = 0;
         int cells = 0;
 
         for(int s = 0; s < sims; s++){
@@ -68,8 +69,27 @@ public class DrainPrediction {
                             trueDrain++;
                         }
                     }
-                    // A: what ships - room blended with the ADP-count prior.
+                    // A: what ships.
                     double shipped = LiveBoard.drain(planner, taken, position, pick, next);
+                    // A0: the RETIRED rule, room blended with the ADP-count
+                    // prior, reconstructed here so the baseline stays
+                    // reproducible after drain itself changed. Same integer
+                    // rounding as drain, which matters - the truth is an
+                    // integer, so rounding is worth about 0.07 men.
+                    int goneA0 = 0;
+                    for(String id : taken){
+                        Player playerA0 = Player.getPlayerFromSIDV2(id);
+                        if(playerA0 != null && playerA0.position == position){
+                            goneA0++;
+                        }
+                    }
+                    double observedA0 = taken.isEmpty() ? 0
+                            : (double) goneA0 / taken.size();
+                    double trustA0 = taken.size() / (taken.size() + 30.0);
+                    double retired = Math.max(0, Math.round(
+                            (trustA0 * observedA0 + (1 - trustA0)
+                                    * LiveBoard.adpRate(planner, position, pick, next))
+                                    * (next - pick)));
                     // B: the survival table alone.
                     double pure = Math.max(0, survival.expectedGone(position, next)
                             - survival.expectedGone(position, pick));
@@ -87,6 +107,7 @@ public class DrainPrediction {
                     double blended = trust * observed + (1 - trust) * pure;
 
                     shippedError += Math.abs(shipped - trueDrain);
+                    retiredError += Math.abs(retired - trueDrain);
                     survivalError += Math.abs(pure - trueDrain);
                     blendError += Math.abs(blended - trueDrain);
                     cells++;
@@ -95,14 +116,20 @@ public class DrainPrediction {
         }
         System.out.printf("%n%d drafts, %d (seat, position) cells.%n%n", sims, cells);
         System.out.printf("mean absolute error, men per window:%n");
-        System.out.printf("   shipped: room blended with ADP counts   %.2f%n",
+        System.out.printf("   RETIRED: room blended with ADP counts   %.2f%n",
+                retiredError / cells);
+        System.out.printf("   SHIPPED: room blended, survival prior   %.2f%n",
                 shippedError / cells);
         System.out.printf("   survival table alone                    %.2f%n",
                 survivalError / cells);
-        System.out.printf("   room blended with survival prior        %.2f%n",
+        System.out.printf("   same, without drain's integer rounding  %.2f%n",
                 blendError / cells);
-        double best = Math.min(survivalError, blendError);
-        System.out.printf("%nbest alternative is %.2f men per window better than shipped.%n",
-                (shippedError - best) / cells);
+        System.out.printf("%nshipped is %.2f men per window better than the retired rule.%n",
+                (retiredError - shippedError) / cells);
+        System.out.printf("survival ALONE would score %.2f - better still, and NOT taken:%n"
+                + "these draws come from the opponent model the table is fitted on,%n"
+                + "so that number cannot separate a right prior from one predicting%n"
+                + "itself. the room term catches a room the model did not expect.%n",
+                survivalError / cells);
     }
 }
