@@ -70,6 +70,43 @@ public class LiveBoard {
         // the rank sits.
         Map<Position, List<List<Double>>> pools = BoardValue.pools(men, curve);
 
+        // WARM ONCE, ANSWER MANY TIMES.
+        //
+        // Justin has sixty seconds a pick. A cold run is 29.8 of them, and
+        // almost all of that is what comes BEFORE this line: fitting the
+        // opponent model, loading sixteen seasons of nflverse, building the
+        // scatter pools. None of it changes during a draft. Paying it once and
+        // then looping is what DraftNight does and is the only reason it is
+        // usable at a table.
+        System.out.printf("%nengine warm - paid ONCE, not per pick%n");
+        System.out.println("press enter to re-read the board and answer; q to quit");
+        java.io.BufferedReader keyboard = new java.io.BufferedReader(
+                new java.io.InputStreamReader(System.in));
+        boolean first = true;
+        while(true){
+            if(!first){
+                System.out.printf("%n[enter] refresh  |  q quit > ");
+                System.out.flush();
+                String line = keyboard.readLine();
+                if(line == null || line.trim().equalsIgnoreCase("q")){
+                    System.out.println("done - good luck.");
+                    return;
+                }
+            }
+            first = false;
+            long began = System.nanoTime();
+            answer(configuration, planner, simulator, draftID, curve, pools, order,
+                    men, kept);
+            System.out.printf("%n(answered in %.1fs)%n", (System.nanoTime() - began) / 1e9);
+        }
+    }
+
+    /** One pick's answer, on the board as it stands right now. */
+    static void answer(AAAConfiguration configuration, DraftPlanner planner,
+                       DraftSimulator simulator, String draftID,
+                       Map<Position, double[]> curve,
+                       Map<Position, List<List<Double>>> pools, List<String> order,
+                       List<PairwiseOdds.Man> men, Set<String> kept) throws Exception {
         List<String> taken = LiveDraft.livePicks(draftID);
         DraftSimulator.SimState state = simulator.stateAfter(taken);
         DraftSimulator.Slot slot = simulator.slotOf(state);
