@@ -61,6 +61,7 @@ public class Draft2026 {
         List<PairwiseOdds.Man> men = PairwiseOdds.nflverseMen(wider, order);
         Set<String> kept = LiveBoard.kept(configuration);
         Map<Position, double[]> curve = LiveBoard.thisYear(planner, kept);
+        double survivalCost = LiveBoard.warmSurvival(planner, simulator);
         Map<Position, List<List<Double>>> pools =
                 new EnumMap<>(BoardValue.pools(men, curve));
         List<List<Double>> defence = LiveBoard.defenceScatter();
@@ -70,6 +71,12 @@ public class Draft2026 {
 
         System.out.printf("warm in %.0fs. %d men kept league-wide.%n",
                 (System.nanoTime() - warm) / 1e9, kept.size());
+        if(LiveBoard.SURVIVAL != null){
+            System.out.printf("survival table: %.0fs of that, paid once. It replaces the"
+                    + "%nhard ADP cutoff in the rollout - measured 2.69 men of error per"
+                    + "%nposition-seat down to 0.08. -PsurvivalDraws=0 restores the old"
+                    + " rule.%n", survivalCost);
+        }
         System.out.println("press enter each time it is your turn; q to quit");
 
         java.io.BufferedReader keyboard = new java.io.BufferedReader(

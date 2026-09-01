@@ -86,6 +86,10 @@ public class LiveBoard {
         System.out.printf("%d men are already kept league-wide and cannot be drafted%n",
                 kept.size());
         Map<Position, double[]> curve = thisYear(planner, kept);
+        double survivalCost = warmSurvival(planner, simulator);
+        if(SURVIVAL != null){
+            System.out.printf("survival table built in %.0fs (paid once)%n", survivalCost);
+        }
         // LAST SIXTEEN YEARS' UNCERTAINTY, as ratios rather than points, so what
         // is imported is how far outcomes scatter around a rank - never where
         // the rank sits.
@@ -942,8 +946,57 @@ public class LiveBoard {
      * that pick and we have no evidence either way. The first term is fact and
      * the second is the prior it falls back to for picks that have not happened.
      */
+    /**
+     * WHO IS GONE BY A LATER PICK - weighted by survival, not cut off by ADP.
+     *
+     * The shipped rule was `adpOf(id) < pick`: everyone with an ADP better than
+     * the seat counts as gone, everyone else counts as there. That is exactly
+     * the rule this file's own wait-table comment rejects twenty lines further
+     * down - "a hard cutoff and false in both directions: a man at ADP 6.9 is
+     * not certainly gone and one at 7.1 is not certainly there". The wait table
+     * simulates survival; the rollout, which sets every END TEAM number on the
+     * table, never got the same treatment.
+     *
+     * RankPrediction measures the gap on the fitted opponent model, scoring on
+     * simulations the survival rule was not fitted to: mean absolute error per
+     * position-seat is 2.69 men for the cutoff and 0.08 for survival. The
+     * errors are not noise, they are systematic and they grow with the pick -
+     * at pick 42 the cutoff says two tight ends are gone when 0.1 really are,
+     * so the model priced the third-best tight end while the best was still on
+     * the board, and at pick 186 it says 56 backs are gone against a true 50.9.
+     *
+     * A man really taken counts 1. Everyone else counts his probability of
+     * being gone by that seat, summed. KNOWN APPROXIMATION, stated rather than
+     * hidden: that probability is unconditional, so a man who has visibly
+     * survived past his ADP is still counted at his prior rather than at
+     * P(gone by p | survived to now). It over-counts slightly, and most for
+     * fallers late in the draft. The exact conditional needs the current pick
+     * threaded through every caller; the unconditional form already closes 97%
+     * of the measured gap.
+     */
     static int expectedRank(DraftPlanner planner, List<String> taken,
                             Position position, int pick){
+        Survival survival = SURVIVAL;
+        if(survival == null){
+            return adpCutoffRank(planner, taken, position, pick);
+        }
+        double gone = survival.expectedGone(position, pick);
+        if(taken != null){
+            for(String id : taken){
+                Player player = Player.getPlayerFromSIDV2(id);
+                if(player != null && player.position == position){
+                    // He is certainly gone; replace his prior with certainty.
+                    gone += 1.0 - survival.probabilityGone(id, pick);
+                }
+            }
+        }
+        return (int) Math.round(gone) + 1;
+    }
+
+    /** The rule as it was: a hard ADP cutoff. Kept for comparison and as the
+     *  fallback when no survival table has been built. */
+    static int adpCutoffRank(DraftPlanner planner, List<String> taken,
+                             Position position, int pick){
         Set<String> already = taken == null ? Set.of() : new HashSet<>(taken);
         int gone = 0;
         for(String id : planner.points().keySet()){
@@ -956,6 +1009,100 @@ public class LiveBoard {
             }
         }
         return gone + 1;
+    }
+
+    /** The survival table in force, or null to fall back to the ADP cutoff. */
+    static Survival SURVIVAL;
+
+    /**
+     * Build the survival table once, at warm.
+     *
+     * `-PsurvivalDraws=0` turns it off and restores the ADP cutoff, which is
+     * the behaviour every number tagged draft-ready-2026 was measured with.
+     * Returns the seconds it cost, so callers can print it: this is paid once
+     * per session, never per pick.
+     */
+    static double warmSurvival(DraftPlanner planner, DraftSimulator simulator){
+        int draws = Integer.getInteger("survivalDraws", 200);
+        if(draws <= 0){
+            SURVIVAL = null;
+            return 0;
+        }
+        long began = System.nanoTime();
+        SURVIVAL = new Survival(planner, simulator, draws, 31_337L);
+        return (System.nanoTime() - began) / 1e9;
+    }
+
+    /**
+     * P(a man is gone by a given pick), from simulated drafts.
+     *
+     * Built once. `expectedGone` is precomputed per position and pick so the
+     * hot path does not walk the whole pool - a receiver pool is over a
+     * thousand men and this is called inside every rollout.
+     */
+    static final class Survival {
+        private final Map<String, int[]> wentAt = new HashMap<>();
+        private final Map<Position, double[]> gone = new EnumMap<>(Position.class);
+        private final int draws;
+
+        Survival(DraftPlanner planner, DraftSimulator simulator, int draws, long seed){
+            this.draws = draws;
+            Map<String, List<Integer>> collected = new HashMap<>();
+            for(int d = 0; d < draws; d++){
+                Map<String, Integer> once = simulator.simulateOnce(
+                        new Random(seed + 7919L * d));
+                for(Map.Entry<String, Integer> entry : once.entrySet()){
+                    collected.computeIfAbsent(entry.getKey(), u -> new ArrayList<>())
+                            .add(entry.getValue());
+                }
+            }
+            for(Map.Entry<String, List<Integer>> entry : collected.entrySet()){
+                int[] picks = entry.getValue().stream().mapToInt(Integer::intValue)
+                        .sorted().toArray();
+                wentAt.put(entry.getKey(), picks);
+            }
+            for(Position position : Position.values()){
+                double[] byPick = new double[202];
+                for(String id : planner.points().keySet()){
+                    Player player = Player.getPlayerFromSIDV2(id);
+                    if(player == null || player.position != position){
+                        continue;
+                    }
+                    for(int pick = 1; pick <= 201; pick++){
+                        byPick[pick] += probabilityGone(id, pick);
+                    }
+                }
+                gone.put(position, byPick);
+            }
+        }
+
+        /** How many of a position are expected gone before this pick. */
+        double expectedGone(Position position, int pick){
+            double[] byPick = gone.get(position);
+            if(byPick == null){
+                return 0;
+            }
+            return byPick[Math.max(1, Math.min(byPick.length - 1, pick))];
+        }
+
+        double probabilityGone(String id, int pick){
+            int[] picks = wentAt.get(id);
+            if(picks == null || picks.length == 0){
+                return 0;
+            }
+            int low = 0;
+            int high = picks.length;
+            while(low < high){
+                int mid = (low + high) >>> 1;
+                if(picks[mid] < pick){
+                    low = mid + 1;
+                }
+                else {
+                    high = mid;
+                }
+            }
+            return low / (double) draws;
+        }
     }
 
     /**
