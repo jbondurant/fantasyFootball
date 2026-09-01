@@ -326,6 +326,7 @@ public class LiveBoard {
                 "LIKELIEST THERE", "RANK", "ODDS", "ADDS NOW", "VS WAIT", "END",
                 "SWING", "NEXT CLIFF");
 
+        Map<Position, String> alsoLikely = new EnumMap<>(Position.class);
         Map<Position, Double> urgency = new EnumMap<>(Position.class);
         Set<Position> refused = new HashSet<>();
         Map<Position, Double> adds = new EnumMap<>(Position.class);
@@ -346,6 +347,36 @@ public class LiveBoard {
             int howOften = seenAt == null ? 0 : seenAt.getOrDefault(candidate, 0);
             double share = ranks == null || ranks.isEmpty() ? 1
                     : (double) howOften / ranks.size();
+            // WHO ARE THE OTHER SIXTY-THREE PER CENT?
+            //
+            // This column names ONE man and prints how often he is really the
+            // one waiting. At pick 7 that reads "James Cook 37%", which means
+            // that two times in three it is somebody else and the screen has
+            // never said who. Naming only the modal man makes a 37% guess look
+            // like the plan - the same overconfidence as reporting the top pair
+            // of positions and calling the third beaten.
+            if(share < 0.6 && seenAt != null && seenAt.size() > 1){
+                StringBuilder others = new StringBuilder();
+                seenAt.entrySet().stream()
+                        .filter(entry -> !entry.getKey().equals(candidate))
+                        .sorted(Map.Entry.<String, Integer>comparingByValue().reversed())
+                        .limit(2)
+                        .forEach(entry -> {
+                            Player other = Player.getPlayerFromSIDV2(entry.getKey());
+                            if(other == null){
+                                return;
+                            }
+                            others.append(others.length() == 0 ? "" : ", ")
+                                    .append(other.firstName.charAt(0)).append(". ")
+                                    .append(other.lastName)
+                                    .append(String.format(" %.0f%%",
+                                            100.0 * entry.getValue()
+                                                    / Math.max(1, ranks.size())));
+                        });
+                if(others.length() > 0){
+                    alsoLikely.put(position, others.toString());
+                }
+            }
             // The rules say what is LEGAL; MOST says what is WANTED. LiveBoard
             // consulted only the first, so a second defence - legal from round
             // 10, because a stash is starters-plus-one and the rules cannot
@@ -574,6 +605,13 @@ public class LiveBoard {
         System.out.printf("%n   the model takes: %s%n", verdict);
         if(margin != null){
             System.out.print(margin);
+        }
+        if(!alsoLikely.isEmpty()){
+            System.out.printf("%nWHO ELSE MIGHT BE THERE - where the named man is under 60%%,%n"
+                    + "these are the next likeliest at that position:%n");
+            for(Map.Entry<Position, String> entry : alsoLikely.entrySet()){
+                System.out.printf("   %-4s %s%n", entry.getKey(), entry.getValue());
+            }
         }
         System.out.printf("%nNEXT CLIFF is the one that decides this. A position's value does not%n"
                 + "slide, it steps: the raw rank curve falls off at a few places and is%n"
