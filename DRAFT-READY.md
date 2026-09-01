@@ -50,3 +50,15 @@ Fallbacks, unchanged and independently verified all week:
    comparison rests on - fills its own lineup by expectation or by hindsight.
    If it cheats, the honest model is being marked down for being honest.
 5. MOST is hand-typed where RosterRules derives ceilings properly.
+
+## Running experiments while agents work
+
+Do not benchmark the main tree while an agent is editing it. The same
+configuration returned 1954 and then 1928 twenty minutes apart, because
+`BoardValue.java` was rewritten between the two runs. Use an isolated snapshot:
+
+    git worktree add -f /tmp/ff-stable draft-ready-2026
+    ln -sfn <repo>/data/nflverse /tmp/ff-stable/data/nflverse
+
+It reproduces the tagged 1935 / 1792 exactly. `data/nflverse` is gitignored -
+131MB, fetched not authored - so the symlink is required.
