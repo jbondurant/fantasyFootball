@@ -71,7 +71,7 @@ import java.util.Set;
  */
 public class SelectionModel implements ChoiceModel {
 
-    public static final int FEATURES = 23;
+    public static final int FEATURES = 25;
     public static final int GAME_ROUNDS = 9;
     static final int CHOICE_SET = 60;
     static final double ADP_LIMIT = 250.0;
@@ -702,6 +702,39 @@ public class SelectionModel implements ChoiceModel {
             features[a][19] = context.rookies().contains(choiceSet.get(a)) ? 1.0 : 0.0;
             features[a][20] = context.adpSpreadCentered().getOrDefault(choiceSet.get(a), 0.0) / 10.0;
             features[a][21] = context.formerPlayers().contains(choiceSet.get(a)) ? 1.0 : 0.0;
+            // f23  DEFENCE INTERCEPT. Every other position has one - QB, RB
+            //      and TE at f5-f7, with WR as the baseline - and until
+            //      2026-09-01 a defence was scored as though it were a
+            //      receiver. The room could not learn what it plainly does:
+            //      DefenceReality measures 58 defences over five real drafts,
+            //      NONE before round 10 and a median of round 15, against a
+            //      simulated room taking 19% of them in rounds 1-9 and one as
+            //      early as round 4. The model was reaching for a defence
+            //      because it believed the room would take one.
+            //
+            //      This is the general form of the fault rather than a rule
+            //      about defences: the feature set covered four positions out
+            //      of five, so the fifth inherited the baseline's behaviour.
+            features[a][23] = position.equals(Position.DEF) ? 1.0 : 0.0;
+            // f24  HOW DEEP THIS MANAGER IS, as a fraction of a full roster.
+            //
+            //      The feature set had NO measure of draft depth at all - only
+            //      proxies - so a depth-2 tree could not express "this position
+            //      AND late", which is the shape of every positional timing
+            //      rule the room actually follows. With f23 alone the simulated
+            //      room still took 17% of its defences in rounds 1-9 against a
+            //      real 0%; an intercept can shift an average but cannot bend a
+            //      curve.
+            //
+            //      Derived from the roster already in the Context, so nothing
+            //      new is threaded through. General on purpose: paired with the
+            //      positional intercepts it lets the model learn each
+            //      position's own timing, which is why TE and QB move too.
+            double deep = 0;
+            for(int count : context.roster().values()){
+                deep += count;
+            }
+            features[a][24] = Math.min(1.0, deep / 16.0);
             features[a][22] = context.young().contains(choiceSet.get(a))
                     ? context.pickNumber() / 108.0 : 0.0;
         }

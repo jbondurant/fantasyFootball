@@ -1121,6 +1121,62 @@ public class LiveBoard {
         return gone + 1;
     }
 
+    /**
+     * BELIEVE A POSITION'S RANK ORDER ONLY AS FAR AS IT PREDICTS ANYTHING.
+     *
+     * The curve says DEF1 is worth 106 and DEF16 is worth 86, and until
+     * 2026-09-01 the live model spent picks on that twenty-point gap. It should
+     * not have, because the gap is not predictable:
+     *
+     *   DefenceReality   spearman of preseason defence order against what the
+     *                    season did: 0.019, over twelve seasons. RB 0.497,
+     *                    WR 0.524, TE 0.333, QB 0.357.
+     *   TrustCoefficient the regression slope of realised gap on projected gap,
+     *                    inside the window the objective uses: -0.00 +- 1.58
+     *                    for DEF, and -5.19 at the narrowest window. Every
+     *                    skill position sits at or above 1.
+     *
+     * TrustCoefficient had already written the conclusion in prose - "a bias
+     * that lifts the best defence lifts the replacement defence with it, and
+     * only the gap between them can buy a pick" - and nothing acted on it. The
+     * live path applied no shrinkage at all.
+     *
+     * So a position is believed as far as its slope: believed(rank) = mean +
+     * trust x (projected(rank) - mean). At trust 1 nothing moves, which is
+     * every skill position. At trust 0 the curve goes FLAT, which is the
+     * defences: every defence worth the same in expectation, so there is
+     * nothing to gain by taking one early and it falls to the end of the draft
+     * where Justin's league has always put it.
+     *
+     * -PdefTrust=1 restores the old behaviour and reproduces every number
+     * measured before this change.
+     */
+    static double[] believe(Position position, double[] projected){
+        double trust = position == Position.DEF
+                ? Double.parseDouble(System.getProperty("defTrust", "0")) : 1.0;
+        if(trust >= 1.0){
+            return projected;
+        }
+        double total = 0;
+        int seen = 0;
+        for(int rank = 1; rank < projected.length; rank++){
+            if(projected[rank] > 0){
+                total += projected[rank];
+                seen++;
+            }
+        }
+        if(seen == 0){
+            return projected;
+        }
+        double mean = total / seen;
+        double[] believed = new double[projected.length];
+        for(int rank = 1; rank < projected.length; rank++){
+            believed[rank] = projected[rank] <= 0 ? projected[rank]
+                    : mean + trust * (projected[rank] - mean);
+        }
+        return believed;
+    }
+
     /** Whether this session has already explained the columns. */
     static boolean legendShown;
 
@@ -1351,7 +1407,7 @@ public class LiveBoard {
             for(int rank = 1; rank <= cap && rank <= values.size(); rank++){
                 out[rank] = values.get(rank - 1);
             }
-            curve.put(entry.getKey(), out);
+            curve.put(entry.getKey(), believe(entry.getKey(), out));
         }
         return curve;
     }
