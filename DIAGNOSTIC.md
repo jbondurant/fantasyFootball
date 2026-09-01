@@ -236,7 +236,11 @@ In order. The first two are the ones that break the circle.
    on both held-out seasons and the mechanism is not known. The tool to build
    is a per-manager TE-timing check on real drafts - which managers take a TE
    early, and does the simulation give *those* managers the same habit. That
-   is a population question, not a feature question.
+   is a population question, not a feature question. **Written as
+   `TightEndHabit` the same evening; not yet run** - it reports, per held-out
+   season, each manager's real first-TE round against his simulated one and the
+   rank correlation across managers. 1.0 means the model knows WHO reaches; 0
+   means it is guessing which manager.
 
 7. **Then stop.** The draft is tonight. What is on screen is verified,
    robust across feeds, and honest about its own uncertainty. The remaining

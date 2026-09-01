@@ -249,3 +249,57 @@ because it stops anybody looking.
     LANDED before believing what its absence tells you, or the test-the-test
     habit produces false findings of its own.
 
+## J. The wrong population
+
+Added 2026-09-01, evening. Justin named the class - "look for other such
+oversights" - after the first one, and every genuine fault found afterwards was
+an instance of it: a statistic computed over one set of men and applied to
+another. Distinguish it from a SCALE error, which never reaches a tree model at
+all (a tree splits on thresholds; monotone rescaling changes nothing). Scale
+errors were chased for an hour and found to be nothing. Population errors were
+real every time.
+
+47. **Replacement level taken from the choice set.** The scarcity feature's
+    baseline was the median of a position WITHIN the top sixty by ADP - three
+    or four tight ends, so about TE2. It computed "better than TE2", which the
+    cliff feature already says, and did nothing. A null result where theory
+    predicts a signal is evidence of a logical failure, not evidence about
+    football.
+48. **Replacement level with the keepers still in it.** Rebuilt from the full
+    points map, which contains the twenty-four kept men - seven tight ends this
+    year - so the TE12 it found could not be drafted by anyone. Take it from the
+    board that actually exists.
+49. **A baseline that moves.** Passing the CURRENT board recomputed replacement
+    every pick, so it drifted down as the pool emptied and inflated late
+    surplus - worse than no feature (13.6 vs 12.4). Replacement is a property of
+    the pool you started with. Fix it at draft start.
+50. **Keepers counted as draft decisions.** RoomFidelity built the "real"
+    positional timing from every pick, keepers included, while the simulation
+    never drafts one. Corrected, RB went from 5.0 to 8.0 and QB from 15.6 to
+    12.4 - the position called solid was the worst of the skill three, and the
+    one called worst was not. The measurement was contaminated in a way that
+    reversed the conclusion.
+51. **A keeper's round as evidence of when a room drafts.** floors() counted
+    McBride's round-3 keeper slot as a tight end being drafted in round 3. The
+    commissioner assigned that round; nobody chose him there.
+52. **Bench rates from the wrong round band.** benchGuidance advises round 8+
+    from rates measured on rounds 8-9, and fires through round 16 where the
+    true rates are 40-95% lower. Same ordering, wrong magnitudes on screen.
+53. **A retracted justification left in shipped code.** The defence curve
+    stayed flattened for hours after the 0.019 spearman behind it was
+    withdrawn - measured on ADP order and applied to a projection curve. The
+    claim was retracted in conversation; the code kept running. Retract in a
+    commit or it did not happen.
+54. **Comparing the best cell against the best cell.** BoostLab reports its
+    best tree configuration, which changes between runs, so on/off comparisons
+    of a feature were made across different models. Compare the SHIPPED cell.
+55. **No noise floor before comparing variants.** Every room-model tune was
+    read as signal at 0.1 to 1.0 points. The seed-to-seed spread of the same
+    measurement is 0.8 to 1.8. Not one tune was distinguishable from dice. The
+    floor should be the first tool built, not the last.
+56. **A test that restores the wrong value.** ModelAScheduleTest captured "the
+    previous value" on every call; the second call stored "9" and @AfterEach
+    restored 9 into the JVM for every class after it, and a nine-round board
+    carries no defences. Capture once. Or fork a JVM per class and have nothing
+    to leak into - which is what the build does now.
+

@@ -17,6 +17,31 @@ import org.junit.jupiter.api.Test;
  */
 public class DraftReadyCommandsTest {
 
+    /** DIAGNOSTIC.md names every tool its numbers came from; those must exist too. */
+    @Test
+    public void everyToolTheDiagnosticCitesExists() throws Exception {
+        String doc = Files.readString(Path.of("DIAGNOSTIC.md"));
+        // Tools are cited in backticks, sometimes with flags: `RoomFidelity -PfullRounds=true`
+        Matcher matcher = Pattern.compile("`([A-Z][A-Za-z0-9]+)(?: -P[^`]*)?`").matcher(doc);
+        Set<String> cited = new LinkedHashSet<>();
+        while(matcher.find()){
+            cited.add(matcher.group(1));
+        }
+        List<String> missing = new ArrayList<>();
+        for(String name : cited){
+            boolean main = Files.exists(Path.of("src/main/java/" + name + ".java"));
+            boolean test = Files.exists(Path.of("src/test/java/" + name + ".java"));
+            if(!main && !test){
+                missing.add(name);
+            }
+        }
+        assertTrue(cited.size() >= 15,
+                "expected DIAGNOSTIC.md to cite many tools, found " + cited.size());
+        assertEquals(List.of(), missing,
+                "DIAGNOSTIC.md cites tools that do not exist: " + missing
+                        + " - a number whose tool is gone cannot be reproduced");
+    }
+
     @Test
     public void everyMainNamedInTheDocumentExists() throws Exception {
         String doc = Files.readString(Path.of("DRAFT-READY.md"));
