@@ -130,7 +130,15 @@ public class LiveBoard {
     }
 
     /** One pick's answer, on the board as it stands right now. */
-    static void answer(AAAConfiguration configuration, DraftPlanner planner,
+    /**
+     * Prints the board and RETURNS the position it recommends.
+     *
+     * The verdict was printed and thrown away, so nothing could drive a whole
+     * draft with the tool's own advice - a harness had to invent its own pick
+     * rule, which then is not a test of the tool. Returning it changes no
+     * output; every existing caller ignores it.
+     */
+    static Position answer(AAAConfiguration configuration, DraftPlanner planner,
                        DraftSimulator simulator, String draftID,
                        Map<Position, double[]> curve,
                        Map<Position, List<List<Double>>> pools, List<String> order,
@@ -499,6 +507,7 @@ public class LiveBoard {
                 + "not the ranking: where they disagree with END TEAM, END TEAM wins.%n"
                 + "A position the rules refuse is never priced at all.%n",
                 next < 0 ? "(none left)" : String.valueOf(next));
+        return ranked.isEmpty() ? null : ranked.get(0);
     }
 
     /**

@@ -165,6 +165,17 @@ public class LiveDraft {
         frozen = livePicks(draftID);
     }
 
+    /**
+     * Freeze an explicit board, for harnesses that replay a draft offline.
+     *
+     * The live path can only be exercised end to end if something can hand it
+     * a board that has not happened yet. Same snapshot mechanism, so what the
+     * harness drives is the shipped code path and not a copy of it.
+     */
+    static void freezeWith(List<String> picks){
+        frozen = List.copyOf(picks);
+    }
+
     static void thaw(){
         frozen = null;
     }
