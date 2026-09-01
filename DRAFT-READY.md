@@ -59,8 +59,41 @@ Fallbacks, unchanged and independently verified all week:
    1-9 stops being measurable, because the men who made an early back or an
    early receiver worth something are on somebody else's roster.
    Data: `data/keeper-slate-impact-2026-09-01.txt`, `data/keeper-slate-2026-09-01.txt`.
-2. `lostBelow=0.55` and the 15% fragility bar are numbers I CHOSE. Nothing
-   fits them to an outcome.
+2. ANSWERED 2026-09-01 for `lostBelow`, and the answer is that IT CANNOT BE
+   FITTED, which is a better answer than a number. `BenchCalibration` prices
+   what the model says a bench pick adds to a realistic roster - keepers plus
+   Model A's seven, every starting slot covered - and asks it to reproduce what
+   this league's 434 real bench picks returned over the wire: 44.0 in rounds
+   8-9, 32.8 in 10-12, 31.2 in 13-16.
+
+       threshold, all lost -> wire   best chi-square  9.7 at lostBelow 1.10
+       threshold, all lost -> best   best chi-square 16.1 at lostBelow 1.05
+       blend, expected + L(drawn-expected)   33.8 at lambda 1.00
+
+   None clears 5.99, so no setting of either form reproduces the measurement.
+   The reason is a CEILING, not a mis-set knob: rounds 13-16 tops out at 22.5
+   / 20.3 / 14.0 against a target of 31.2 +/- 6.6, so that band is out of reach
+   at every setting swept. And the least-bad threshold, 1.10, is past the
+   collapse - the backtest reads 1577 / 1472 there against 1970 at 0.85.
+
+   THE TWO QUANTITIES ARE NOT THE SAME QUANTITY, and that is the finding. The
+   model prices a LINEUP MARGINAL; `BenchValue` measured a man's OWN season
+   over the wire whether or not he ever started. Priced on the target's own
+   estimand, from the same pools, with nothing fitted at all, the model gives
+   53.4 / 33.5 / 25.7 against 44.0 / 32.8 / 31.2 - chi-square 7.0 against a
+   7.81 bar at three degrees of freedom, NOT REJECTED. So the outcome
+   distribution is already right and the gap is entirely the question.
+   Unchanged under `-PleagueScoredActuals=true` (target 45.4 / 33.8 / 32.2,
+   chi-square 6.3), so it is not a units artefact.
+
+   0.55 therefore STAYS, on the grounds that nothing identifies it: the
+   backtest is flat from 0.40 to 0.85 (68 points against a 125-point bar) and
+   the over-wire target has resolution (5.2 points per 0.1) but rejects the
+   model rather than choosing a value. Blend lambda 0.5-0.75 backtests better
+   in-sample (2051-2077 against 1935) and is chosen by every leave-one-season-
+   out fold, but held out it is worth +108 - a tie. `-Plambda=0.6` reaches it.
+
+   Still chosen, still unfitted: the 15% fragility bar.
 3. Scatter is indexed by draftable rank but learned from full-board rank.
 4. ANSWERED 2026-09-01, and the answer is EXPECTATION. The scorer is honest.
    `ScorerHonestyAudit` scores each roster twice - shipped fill against a fill

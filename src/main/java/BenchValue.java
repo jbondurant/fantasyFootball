@@ -53,6 +53,56 @@ public class BenchValue {
      * at zero. This is the base rate other tools adjust; it lives here so there
      * is one source of truth for it rather than a number copied out of output.
      */
+    /**
+     * The round bands, as the thing a model is asked to reproduce.
+     *
+     * The three numbers this league's own history produced - 44.0 in rounds
+     * 8-9, 32.8 in 10-12, 31.2 in 13-16 - have been quoted in prose since they
+     * were measured and nothing has ever ASKED for them programmatically, so
+     * anything wanting to fit against them had to retype them. That is the
+     * one-home rule and the prose-drift trap at once: a constant copied out of
+     * output stops tracking the calculation the moment either moves.
+     *
+     * Each band comes back as {mean, two standard errors, n}. The bar matters
+     * as much as the number: 111 picks of a distribution whose top ten run from
+     * 125 to 172 while its median is zero is not a precise estimate of
+     * anything, and a fit that lands inside the bar has not been told much.
+     *
+     * NOTE WHAT THIS QUANTITY IS, because it is not a lineup marginal. It is
+     * the man's OWN season over the wire line, floored at zero, whether or not
+     * he ever started. A bench receiver who scores 150 behind three better
+     * receivers counts his full 150 over the wire here and adds nothing at all
+     * to a lineup. See {@link BenchCalibration}, which is about exactly that
+     * gap.
+     */
+    public static Map<String, double[]> overWireByBand(AAAConfiguration configuration){
+        Map<String, List<Double>> collected = new java.util.LinkedHashMap<>();
+        collected.put(ROUNDS_8_9, new ArrayList<>());
+        collected.put(ROUNDS_10_12, new ArrayList<>());
+        collected.put(ROUNDS_13_16, new ArrayList<>());
+        for(Bench bench : gather(configuration).benches()){
+            collected.get(band(bench.round())).add(bench.overWire());
+        }
+        Map<String, double[]> out = new java.util.LinkedHashMap<>();
+        for(Map.Entry<String, List<Double>> entry : collected.entrySet()){
+            List<Double> values = entry.getValue();
+            double mean = values.stream().mapToDouble(Double::doubleValue)
+                    .average().orElse(0);
+            out.put(entry.getKey(), new double[]{mean, twoStandardErrorsOf(values),
+                    values.size()});
+        }
+        return out;
+    }
+
+    public static final String ROUNDS_8_9 = "rounds 8-9";
+    public static final String ROUNDS_10_12 = "rounds 10-12";
+    public static final String ROUNDS_13_16 = "rounds 13-16";
+
+    /** Which band a round falls in. The same split {@link #report} prints. */
+    public static String band(int round){
+        return round <= 9 ? ROUNDS_8_9 : round <= 12 ? ROUNDS_10_12 : ROUNDS_13_16;
+    }
+
     public static Map<Position, Double> overWireByPosition(AAAConfiguration configuration){
         Map<Position, List<Double>> collected = new EnumMap<>(Position.class);
         for(Bench bench : gather(configuration).benches()){
@@ -93,7 +143,15 @@ public class BenchValue {
             }
             Map<String, Double> actuals;
             try {
-                actuals = HistoricalActuals.pointsBySleeperID(season);
+                // Through the dispatcher, not the raw feed. LeagueActuals says
+                // it plainly - "anything that grades outcomes should call the
+                // dispatchers rather than the raw feed, so one switch moves all
+                // of it at once" - and this file was one of the places still
+                // reading pts_half_ppr directly. With the flag off it is
+                // byte-identical; with -PleagueScoredActuals=true the target
+                // numbers arrive in the SAME scoring the model values a roster
+                // in, which is the only way the two are comparable at all.
+                actuals = LeagueActuals.seasonPoints(season);
             }
             catch(Exception missing){
                 continue;
@@ -106,7 +164,7 @@ public class BenchValue {
             // than scored zero, so an unplayable year cannot masquerade as a bust.
             Map<String, Double> nextActuals = new HashMap<>();
             try {
-                nextActuals = HistoricalActuals.pointsBySleeperID(
+                nextActuals = LeagueActuals.seasonPoints(
                         String.valueOf(Integer.parseInt(season) + 1));
             }
             catch(Exception noNextSeason){
@@ -273,13 +331,18 @@ public class BenchValue {
      * smaller than these bars is not a gap.
      */
     static double twoStandardErrors(List<Bench> group){
-        int n = group.size();
+        return twoStandardErrorsOf(group.stream().map(Bench::overWire).toList());
+    }
+
+    /** The same bar over bare numbers, so a band can ask for it too. */
+    public static double twoStandardErrorsOf(List<Double> values){
+        int n = values.size();
         if(n < 2){
             return 0.0;
         }
-        double mean = group.stream().mapToDouble(Bench::overWire).average().orElse(0);
-        double variance = group.stream()
-                .mapToDouble(b -> (b.overWire() - mean) * (b.overWire() - mean))
+        double mean = values.stream().mapToDouble(Double::doubleValue).average().orElse(0);
+        double variance = values.stream()
+                .mapToDouble(v -> (v - mean) * (v - mean))
                 .sum() / (n - 1);
         return 2.0 * Math.sqrt(variance / n);
     }

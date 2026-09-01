@@ -5275,3 +5275,125 @@ man kept is 2 by arithmetic rather than by measurement — it priced Purdy as th
 second-best quarterback alive. Worth +17, inside the bar, and not the story.
 
 Data: `data/keeper-slate-impact-2026-09-01.txt`, `data/keeper-slate-2026-09-01.txt`.
+
+---
+
+# The bench constant, fitted to a measurement and refused by it (2026-09-01)
+
+`BoardValue.oneSeason` has exactly one free parameter, and it is the only
+reason that model owns a bench at all: a man whose drawn season falls below
+`lostBelow` times what his rank normally returns counts as **lost**, is
+benched, and the lineup fills by expectation from whoever is left. It works —
+without it the marginal of a bench man is exactly zero and the search drafted
+sixteen receivers. `0.55` was chosen in one sitting and nothing had ever asked
+it to reproduce anything.
+
+`BenchValue` had the target all along and it had never been called: 434 real
+bench picks from this league, five seasons, joined to what each man actually
+scored, floored at the wire line. **44.0** points in rounds 8-9, **32.8** in
+10-12, **31.2** in 13-16. It is now `BenchValue.overWireByBand`, asked for
+rather than retyped.
+
+`BenchCalibration` prices the model's own bench picks against a realistic
+roster — Purdy and Tuten held, then Model A's seven, `RB WR RB WR WR WR TE`, so
+every starting slot is covered before the first bench pick and a bench man can
+only pay through availability — and sweeps three one-parameter families.
+
+## No form reproduces it
+
+    threshold, all lost -> wire (shipped)   best chi-square  9.7  at lostBelow 1.10
+    threshold, all lost -> his best man     best chi-square 16.1  at lostBelow 1.05
+    blend, expected + L(drawn - expected)   best chi-square 33.8  at lambda 1.00
+
+Three bands, one fitted parameter, 95% at 5.99. Nothing clears it.
+
+**It is a ceiling, not a mis-set knob.** The highest rounds 13-16 value
+reachable anywhere on the grid is 22.5 (threshold/wire), 20.3
+(threshold/best man) and 14.0 (blend), against a target of 31.2 ± 6.6. That
+band is *out of reach at every setting*, so no amount of turning gets there.
+The model's implied bench value decays far faster with round than the
+measurement does: 27.2 → 8.1 → 1.3 at the shipped 0.55, against 44.0 → 32.8 →
+31.2.
+
+**And the least-bad setting is past the collapse.** 1.10 backtests 1577 mean /
+1472 worst, against 1970 at 0.85. The fit's preferred value is exactly where
+the model stops working, which is evidence about the fit and not a discovery.
+
+## Because they are not the same quantity
+
+`BenchValue` measures a man's **own** season over the wire, floored at zero,
+whether or not he ever entered a lineup. `BoardValue` computes a **lineup
+marginal** — what the roster's best legal lineup gains by owning him. A bench
+receiver who scores 150 behind three better receivers is worth 150-over-wire to
+the first and nothing at all to the second.
+
+Priced on the target's own estimand, from the same pools, at the same picks,
+with **nothing fitted**:
+
+    BAND             MARGINAL   OWN/WIRE   MEASURED   +/-2se
+    rounds 8-9           27.2       53.4       44.0      9.2
+    rounds 10-12          8.1       33.5       32.8      6.9
+    rounds 13-16          1.3       25.7       31.2      6.6
+
+    chi-square:  MARGINAL 148,  OWN/WIRE 7.0  (bar 7.81, three dof, none fitted)
+
+**The outcome distribution is already right.** Sixteen seasons of nflverse
+scatter, with no parameter at all, reproduce what this league's real bench
+picks returned. The gap between the two columns is the question being asked,
+not an error in the model. Under `-PleagueScoredActuals=true` the target moves
+to 45.4 / 33.8 / 32.2 and OWN/WIRE improves to 6.3, so this is not a
+4-versus-6-point-passing-touchdown artefact.
+
+## So the parameter is not identified, and 0.55 stays
+
+Two independent things could have set it and neither does:
+
+- **the backtest cannot.** 1939 / 1935 / 1954 / 1970 across lostBelow 0.30 to
+  0.85 — 35 points against a 125-point bar. Flat.
+- **the over-wire target has the resolution but rejects the model.** 5.2 points
+  of rounds 8-9 value per 0.1 of lostBelow, against a 9.2-point bar, so it
+  *could* pin the parameter to about ±0.09 — if the model could reach the
+  target at all. It cannot, so the interval 1.05-1.15 around the minimum is not
+  an error bar; it is where the miss is smallest.
+
+TRAPS.md D21 applies exactly: a parameter that cannot be identified should not
+be tuned. `lostBelow` stays at 0.55.
+
+## The blend, and why it is still a tie
+
+Justin's continuous form — order the lineup on `expected + lambda * (drawn -
+expected)`, lambda 0 a useless bench and lambda 1 best ball — fits the bands
+*worse* than the threshold (33.8 against 9.7), because it overshoots rounds 8-9
+to 53.4 while still reaching only 14.0 in 13-16. It backtests better:
+
+    lostBelow=0.55 (shipped)   1890 1792 2097 1841 2053   mean 1935  worst 1792
+    blend lambda=0.50         2134 1924 2067 2056 2074   mean 2051  worst 1924
+    blend lambda=0.75         2134 1880 2238 2031 2102   mean 2077  worst 1880
+
+but that table is scored on the seasons the row was chosen from. Choosing the
+rule on four seasons and meeting the fifth, five times, the blend is picked
+every fold — lambda 0.75 four times, 0.50 once — and returns **2043 against the
+shipped 1935: +108, inside the 125-point bar. A tie.** The direction is
+consistent and the size is not measurable, which is the honest summary.
+
+It is also a strong claim about football: lambda 0.75 is a manager who is
+three-quarters prescient about season totals. `-Plambda=0.6` reaches it and it
+is off by default.
+
+## Two side findings
+
+**The "never empty a position" guard never guarded.** It read
+`entry.getValue().size() > 1` from inside that same list's own `removeIf`, and
+`ArrayList.removeIf` tests every element before removing any of them — so
+`size()` reported the original count however many were already doomed. Two men
+at a position who both had bad seasons were *both* dropped and the slot fell to
+the wire, which is precisely what the comment above it promised could not
+happen. The behaviour is kept, because it is arguably the better model, and it
+is now a named choice: `-PwireWhenAllLost=false` fields the best-expected man
+instead, worth +39 mean / +7 worst, inside the bar.
+
+**`BenchValue` graded outcomes off the raw feed** rather than through
+`LeagueActuals`, which is the one place the repo says everything that grades an
+outcome must go. Now dispatched; byte-identical with the flag off.
+
+Run it: `./gradlew run -Pmain=BenchCalibration -PholdKeepers=true`
