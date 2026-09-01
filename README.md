@@ -9,6 +9,22 @@ and nothing else. Sleeper creates a new league id every August; everything
 else - the draft, last season's draft, the other managers, the scoring
 settings, the season - is read back from the API.
 
+## Draft night
+
+Read `DIAGNOSTIC.md` for the honest state of the models and `DRAFT-READY.md`
+for the at-the-table instructions. The live tool and its three pre-flight checks:
+
+```
+./gradlew run -Pmain=PreFlight -Pkeepers=Tuten,Purdy -q     # right draft, right settings, 14 seats, 24 keepers
+./gradlew run -Pmain=BoardSanity -Pkeepers=Tuten,Purdy -q   # projections and ADP tell the same story
+./gradlew smokeTest                                          # the live APIs still look the way the code expects
+./gradlew run -Pmain=Draft2026 -Pkeepers=Tuten,Purdy -q     # the live tool: board model, then Model A
+```
+
+Every live-path tool warms through `LiveSetup.forTonight()` - never assemble the
+planner, curve, pools and survival table by hand (`SurvivalDependentToolsTest`
+fails if one does). Fallbacks are in `RUNBOOK.md`.
+
 ## Running
 
 ```
@@ -16,10 +32,10 @@ settings, the season - is read back from the API.
 ./gradlew run -Pmain=ProjectionSources    # projection feeds: status, and where they disagree
 ./gradlew run -Pmain=KeeperPlan           # the keeper decision, whole-draft optimized
 ./gradlew run -Pmain=KeeperPlan -Pprojections=borischen   # ...valued on another source's numbers
-./gradlew run -Pmain=DraftPlanner         # position to take each round, with risk + snipe odds
+./gradlew run -Pmain=DraftPlanner         # Model A: position per round for rounds 1-7 (nine skill slots, no defence)
 ./gradlew run -Pmain=DraftPlanner -Ptrials=500 -Prisk=0.5   # ...risk-averse, tighter error bars
 ./gradlew run -Pmain=TradeFinder          # trades worth proposing
-./gradlew run -Pmain=SleeperLiveDraft     # draft-day advice
+./gradlew run -Pmain=SleeperLiveDraft     # older draft-day advice; superseded by Draft2026 above
 ./gradlew run -Pmain=KeeperValuation      # which keepers are worth a slot
 ./gradlew run -Pmain=KeeperEligibility    # who is keeping whom, and for how long
 ./gradlew run -Pmain=WaitOrTake           # take him now, or gamble he lasts a round
@@ -36,7 +52,9 @@ settings, the season - is read back from the API.
 `KeeperValuation` optimises the nine skill starting slots - QB, RB, RB, WR, WR,
 WR, TE, FLEX, FLEX. The defense is left out on purpose: it comes from a late
 pick every year, it never competes for the picks that decide a season, and the
-whole position spans 19 points from best to twelfth.
+whole position spans 19 points from best to twelfth. (That is Model A's
+objective. The board model in `Draft2026` scores the league's real ten-slot
+lineup, defence included - see `DIAGNOSTIC.md` section 5.)
 
 Nine slots means nine picks fill them, so keeping a player frees the round-nine
 pick whatever round he nominally costs. He is worth a keeper slot only if he
