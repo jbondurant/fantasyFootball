@@ -3,38 +3,39 @@ Sleeper half-PPR ADP: negative change = rising (drafted earlier). 'step' = the d
 
 == PROJECTION MOVERS (league points, |change| >= 3) ==
 player                   pos team    from      to  change   step           Sleeper's own data says
-Josh Jacobs              RB  GB     186.1    80.2  -105.9   step 09-01 100% injury Questionable -> NA (Groin); news 08-30
-MarShawn Lloyd           RB  GB      48.3   137.0   +88.7   step 09-01 100% news 08-31
+Josh Jacobs              RB  GB     186.1    80.2  -105.9   step 09-01 100% injury Questionable -> NA (Groin); news 09-01
+MarShawn Lloyd           RB  GB      48.3   137.0   +88.7   step 09-01 100% news 09-01
 Kyler Murray             QB  MIN    316.7   327.1   +10.4   step 08-28 100% news 08-31
-Malik Nabers             WR  NYG    186.3   193.7    +7.4   step 08-27 100% questionable Knee - ACL; news 08-31
+Malik Nabers             WR  NYG    186.3   193.7    +7.4   step 08-27 100% questionable Knee - ACL; news 09-01
 Tyler Allgeier           RB  ARI     65.4    72.7    +7.3   step 08-28 100% news 08-31
-Javonte Williams         RB  DAL    188.8   193.0    +4.2   step 09-01 100% news 08-30
+Javonte Williams         RB  DAL    188.8   193.0    +4.2   step 09-01 100% news 09-01
 
 == ADP MOVERS (ranked relatively; |change| >= 3 picks) ==
 player                   pos team    from      to  change    rel   step           Sleeper's own data says
-MarShawn Lloyd           RB  GB     180.4   136.0   -44.4   -25%   drift          news 08-31
-Josh Jacobs              RB  GB      27.1    34.6    +7.5   +28%   step 09-01 65% injury Questionable -> NA (Groin); news 08-30
-Mike Washington          RB  LV     159.3   137.8   -21.5   -13%   step 08-31 110% news 08-31
-Jordyn Tyson             WR  NO      90.3   103.9   +13.6   +15%   step 09-01 60% injury Doubtful -> IR (Hamstring); news 08-30
-Keenan Allen             WR  IND    202.5   177.4   -25.1   -12%   step 08-28 94% news 08-30
-Kaelon Black             RB  SF     181.7   160.9   -20.8   -11%   step 09-01 82% news 08-28
-New England Patriots     DEF NE     150.9   134.1   -16.8   -11%   step 09-01 98% 
-Dallas Cowboys           DEF DAL    223.6   199.3   -24.3   -11%   step 08-31 70% 
-Jayden Higgins           WR  HOU    194.3   215.0   +20.7   +11%   step 09-01 74% ir Knee - ACL
-Omar Cooper              WR  NYJ    178.4   197.2   +18.8   +11%   step 08-28 76% 
-Oronde Gadsden           TE  LAC    144.7   157.9   +13.2    +9%   drift          news 08-28
-Sam Darnold              QB  SEA    167.6   182.8   +15.2    +9%   step 08-28 95% news 08-26
-TreVeyon Henderson       RB  NE      50.5    55.0    +4.5    +9%   step 09-01 62% questionable Leg; news 08-31
-Ja'Kobi Lane             WR  BAL    160.7   148.5   -12.2    -8%   step 08-31 110% news 08-25
-Nicholas Singleton       RB  TEN    197.3   213.3   +16.0    +8%   step 09-01 92% news 08-30
-Tyrone Tracy             RB  NYG    134.7   145.6   +10.9    +8%   step 09-01 112% injury healthy -> Questionable (Neck); news 08-30
-Kenyon Sadiq             TE  NYJ    174.8   188.8   +14.0    +8%   step 09-01 94% questionable Abdomen; news 08-31
-Jakobi Meyers            WR  JAX    118.9   128.3    +9.4    +8%   drift          questionable Hand
-Tyler Shough             QB  NO     175.0   188.7   +13.7    +8%   step 08-27 99% news 08-27
-Denzel Boston            WR  CLE    157.6   169.8   +12.2    +8%   step 09-01 87% news 08-29
+MarShawn Lloyd           RB  GB     180.4   136.1   -44.3   -25%   drift          news 09-01
+Josh Jacobs              RB  GB      27.1    34.8    +7.7   +28%   step 09-01 66% injury Questionable -> NA (Groin); news 09-01
+Kayshon Boutte           WR  HOU    237.9   199.1   -38.8   -16%   step 08-28 66% 
+Mike Washington          RB  LV     159.3   137.3   -22.0   -14%   step 08-31 107% news 09-01
+Jordyn Tyson             WR  NO      90.3   104.7   +14.4   +16%   step 09-01 62% injury Doubtful -> IR (Hamstring); news 08-30
+Oronde Gadsden           TE  LAC    144.7   166.5   +21.8   +15%   drift          news 08-28
+Juwan Johnson            TE  NO     187.2   163.4   -23.8   -13%   step 09-01 81% 
+Keenan Allen             WR  IND    202.5   177.7   -24.8   -12%   step 08-28 96% news 09-01
+Kaelon Black             RB  SF     181.7   160.4   -21.3   -12%   step 09-01 82% news 08-28
+New England Patriots     DEF NE     150.9   134.8   -16.1   -11%   step 09-01 98% 
+Malik Nabers             WR  NYG     30.4    27.3    -3.1   -10%   drift          questionable Knee - ACL; news 09-01
+Jayden Higgins           WR  HOU    194.3   215.6   +21.3   +11%   step 09-01 75% ir Knee - ACL
+Omar Cooper              WR  NYJ    178.4   197.4   +19.0   +11%   step 08-28 75% 
+Tyrone Tracy             RB  NYG    134.7   148.9   +14.2   +11%   step 09-01 109% injury healthy -> Questionable (Neck); news 09-01
+Ja'Kobi Lane             WR  BAL    160.7   146.3   -14.4    -9%   step 08-31 93% news 08-25
+TreVeyon Henderson       RB  NE      50.5    55.3    +4.8   +10%   step 09-01 65% questionable Leg; news 09-01
+Denzel Boston            WR  CLE    157.6   172.3   +14.7    +9%   step 09-01 89% news 08-29
+Kenyon Sadiq             TE  NYJ    174.8   190.3   +15.5    +9%   step 09-01 94% questionable Abdomen; news 08-31
+Sam Darnold              QB  SEA    167.6   181.9   +14.3    +9%   step 08-28 101% news 08-26
+Jakobi Meyers            WR  JAX    118.9   129.0   +10.1    +8%   drift          questionable Hand
 
 == INJURY DESIGNATIONS TODAY (drafted pool, anything beyond Questionable) ==
-   Josh Jacobs              RB  GB   adp   34.6  NA (Groin)
-   Jordyn Tyson             WR  NO   adp  103.9  IR (Hamstring)
-   Zach Charbonnet          RB  SEA  adp  143.0  PUP (Knee - ACL)
-   Tank Dell                WR  HOU  adp  192.1  IR (Knee - ACL + MCL)
+   Josh Jacobs              RB  GB   adp   34.8  NA (Groin)
+   Jordyn Tyson             WR  NO   adp  104.7  IR (Hamstring)
+   Zach Charbonnet          RB  SEA  adp  142.3  PUP (Knee - ACL)
+   Isiah Pacheco            RB  DET  adp  173.2  IR (Back)
+   Tank Dell                WR  HOU  adp  194.0  IR (Knee - ACL + MCL)
