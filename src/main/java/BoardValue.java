@@ -727,6 +727,40 @@ public class BoardValue {
         for(List<double[]> values : pool.values()){
             values.sort(best);
         }
+        // STREAMING A DEFENCE NEEDS A ROSTER SPOT, and at the last pick there
+        // is not one.
+        //
+        // Justin: wouldn't it be a bug if defense reads 0.0 at round 16. It
+        // was. An unfilled defence slot was credited the replacement man for
+        // free at EVERY round, so a defence added nothing anywhere and the
+        // model never once chose one on value - RosterRules forced it when the
+        // picks ran out, and the right pick was arriving for the wrong reason.
+        //
+        // Free is correct while a spot remains: defences are interchangeable,
+        // the bench is fungible, and you drop your least useful man and stream
+        // one the same day. That is Justin's own correction and it still holds.
+        // It stops holding when the roster is FULL, because then the man you
+        // drop is a real one - which is exactly what PlanBacktest.seasonPoints
+        // has always charged and what this valuation never did. The model was
+        // optimising something the scorer did not measure.
+        //
+        // So: no defence and no spare spot means the weakest man on the roster
+        // goes to make room for the stream.
+        boolean hasDefence = pool.containsKey(Position.DEF)
+                && !pool.get(Position.DEF).isEmpty();
+        if(!hasDefence && roster.size() >= RosterRules.live().size()){
+            List<double[]> weakest = null;
+            double least = Double.MAX_VALUE;
+            for(List<double[]> values : pool.values()){
+                if(!values.isEmpty() && values.get(values.size() - 1)[1] < least){
+                    least = values.get(values.size() - 1)[1];
+                    weakest = values;
+                }
+            }
+            if(weakest != null){
+                weakest.remove(weakest.size() - 1);
+            }
+        }
         double total = 0;
         List<double[]> flex = new ArrayList<>();
         total += fillDrawn(pool, Position.QB, 1, curve, flex, false);
