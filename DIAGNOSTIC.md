@@ -166,6 +166,7 @@ tested.
 | legend named the wrong ranking column | reader takes a different player than the tool |
 | one bad Sleeper read ended the session | re-pay the whole warm against the clock |
 | legend reprinted every pick, 23 of 45 lines | verdict pushed off screen |
+| schedule built once at warm, owner of each pick never re-read | a mid-draft pick trade would misattribute his roster silently; now SEAT OWNER MISMATCH names the picks and says restart |
 
 Added: paired margin between top two; the whole tied set when not separated;
 the men actually available at a coin-flip seat; who else is likely there when

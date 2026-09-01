@@ -54,4 +54,27 @@ public class PickTradeTest {
         assertNull(DraftNight.scheduleOwnerDrift(p -> null, actual),
                 "an unknown pick number is the slot-count detector's job, not this one's");
     }
+
+    /**
+     * A harness freeze must freeze BOTH halves of the snapshot.
+     *
+     * freeze() captures picks and owners together; freezeWith(), used by every
+     * offline harness, captured picks only - so the owner half fell through to
+     * a live network fetch inside tools meant to run offline, and compared real
+     * owners against simulated pick numbers. A bogus draft id makes the proof
+     * self-evident: a real fetch would throw; an empty map means none happened.
+     */
+    @Test
+    public void aHarnessFreezeLeavesNoOwnersToFetch() throws Exception {
+        try {
+            LiveDraft.freezeWith(List.of("sim-1", "sim-2"));
+            Map<Integer, String> owners = LiveDraft.livePickOwners("not-a-real-draft-id");
+            assertTrue(owners.isEmpty(),
+                    "simulated picks have no real owners; the check must have"
+                            + " nothing to compare and must not fetch");
+        }
+        finally {
+            LiveDraft.thaw();
+        }
+    }
 }
