@@ -43,6 +43,11 @@ test {
     inputs.file('DRAFT-READY.md').withPathSensitivity(PathSensitivity.RELATIVE)
     inputs.file('TRAPS.md').withPathSensitivity(PathSensitivity.RELATIVE)
     inputs.file('DIAGNOSTIC.md').withPathSensitivity(PathSensitivity.RELATIVE)
+    // RunbookCitationTest reads RUNBOOK.md; DraftReadyCommandsTest reads README.md.
+    // TRAPS #45: a test that reads a file gradle does not know about is UP-TO-DATE
+    // when that file changes, and passes with a planted fault in it.
+    inputs.file('RUNBOOK.md').withPathSensitivity(PathSensitivity.RELATIVE)
+    inputs.file('README.md').withPathSensitivity(PathSensitivity.RELATIVE)
 
     // ONE JVM PER TEST CLASS.
     //

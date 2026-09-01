@@ -46,6 +46,29 @@ public class DraftReadyCommandsTest {
                         + " - a number whose tool is gone cannot be reproduced");
     }
 
+    /**
+     * README.md and RUNBOOK.md carry -Pmain= command lists too, and README's is
+     * the one that rots quietly - SleeperLiveDraft sat there as "draft-day
+     * advice" for a week after Draft2026 replaced it.
+     */
+    @Test
+    public void everyMainNamedInTheOtherDocumentsExists() throws Exception {
+        List<String> missing = new ArrayList<>();
+        int named = 0;
+        for(String file : List.of("README.md", "RUNBOOK.md")){
+            Matcher matcher = Pattern.compile("-Pmain=([A-Za-z0-9_]+)")
+                    .matcher(Files.readString(Path.of(file)));
+            while(matcher.find()){
+                named++;
+                if(!Files.exists(Path.of("src/main/java/" + matcher.group(1) + ".java"))){
+                    missing.add(file + " names " + matcher.group(1));
+                }
+            }
+        }
+        assertTrue(named >= 10, "expected README and RUNBOOK to name many mains, found " + named);
+        assertEquals(List.of(), missing, "commands in the docs that no longer exist: " + missing);
+    }
+
     @Test
     public void everyMainNamedInTheDocumentExists() throws Exception {
         String doc = Files.readString(Path.of("DRAFT-READY.md"));
