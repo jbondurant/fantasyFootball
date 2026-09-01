@@ -191,7 +191,7 @@ changed constantly. Specifically:
    recomputed every pick. A harness that never warmed the survival table.
    Three tools certifying configurations nobody runs.
 3. **Symptoms were fixed one feature at a time on a data-limited model.** Each
-   feature was fitted to 435 rows, moved a held-out number by less than its
+   feature was fitted to 857 selections (423 in the gate), moved a held-out number by less than its
    noise, and was kept or dropped on that basis.
 4. **A retracted justification was left in shipped code.** The defence curve
    stayed flattened for hours after I withdrew the 0.019 spearman that
@@ -221,7 +221,7 @@ In order. The first two are the ones that break the circle.
    the measurement itself.
 
 2. **Freeze the room model's feature set.** f0-f28, scarcity off. Stop adding
-   features to a 435-row fit. Accept that 5-12 point positional timing error
+   features to an 857-selection fit. Accept that 5-13 point positional timing error
    is what five seasons of one league can support. Every gate is green at this
    configuration and the recommendation has not moved.
 
