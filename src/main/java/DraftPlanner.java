@@ -83,19 +83,35 @@ public class DraftPlanner {
      * NOT inert, and the sentence that used to sit here said it was: "which has
      * never had enough picks to reach three quarterbacks inside nine rounds".
      * It counts the drafted PREFIX only and cannot see a kept quarterback, so
-     * with Purdy held two drafted men make three - and Model A's own plan ends
-     * QB QB. It is harmless in practice because Model A is a rounds 1-7 model
-     * and rounds 8-9 are the region where its objective is already indifferent,
-     * but the cap does not do what its comment claimed. Fixing it means passing
-     * the keepers in, which changes a frozen tool the night before a draft, so
-     * it is recorded rather than done.
+     * with Purdy held two drafted men make three - and Model A's own plan ended
+     * QB QB.
+     *
+     * DONE 2026-09-01, having been recorded and deferred earlier the same day.
+     * The reason for deferring was that it changes a frozen tool the night
+     * before a draft. What changed my mind is that the cap being wrong makes
+     * Model A contradict JUSTIN'S OWN description of it: he says Model A
+     * "pretends we take qb Purdy and rb Tuten, at round 8 and 9, just for
+     * calculation purposes". It was printing QB at both.
+     *
+     * The blast radius is small and checked: rounds 1-7, which is the whole of
+     * Model A's proven domain, contain no quarterback, so the plan there cannot
+     * move. At round 9 the audit measured all four positions scoring exactly
+     * 1812.5 - the objective is indifferent, so only the printed shape changes.
      */
-    private static boolean worthTaking(Position candidate, List<Position> prefix){
+    private static boolean worthTaking(Position candidate, List<Position> prefix,
+                                       List<Position> alreadyHeld){
         if(candidate != Position.DEF && candidate != Position.QB){
             return true;
         }
         int held = 0;
         for(Position position : prefix){
+            if(position == candidate){
+                held++;
+            }
+        }
+        // The men he ALREADY OWNS count against the cap. They are on the
+        // roster being scored; a cap that cannot see them is not a cap.
+        for(Position position : alreadyHeld){
             if(position == candidate){
                 held++;
             }
@@ -183,6 +199,18 @@ public class DraftPlanner {
 
     DraftSimulator simulator(){
         return simulator;
+    }
+
+    /** The positions Justin already owns, for the appetite cap. */
+    private List<Position> keptPositions(){
+        List<Position> held = new ArrayList<>();
+        for(String id : myKeeperIDs){
+            Player player = Player.getPlayerFromSIDV2(id);
+            if(player != null){
+                held.add(player.position);
+            }
+        }
+        return held;
     }
 
     List<String> myKeeperIDs(){
@@ -293,7 +321,7 @@ public class DraftPlanner {
             double bestScore = Double.NEGATIVE_INFINITY;
             double[] bestStats = null;
             for(Position candidate : positions()){
-                if(!worthTaking(candidate, chosenPositions)){
+                if(!worthTaking(candidate, chosenPositions, keptPositions())){
                     continue;
                 }
                 List<Position> prefix = new ArrayList<>(chosenPositions);
