@@ -18,7 +18,18 @@ Rounds 8-16 Model A goes quiet and says why. That is deliberate, not a failure.
 **Rank on the END TEAM column.** ADDS NOW and VS WAIT explain the pick; END
 TEAM decides it. Where they disagree, END TEAM wins.
 
-If something looks wrong mid-draft, the restore point is one command:
+**Before warming, delete today's API caches so the projections are fresh** -
+the ones on disk were fetched at 00:04 and nothing refetches before 20:45
+otherwise; injury news lands during the day:
+
+    rm -f sleeperProjections2026*.txt cbsProjections_*2026*.txt fantasyProsADP2026*.txt
+
+**Run HEAD, not the tag.** `DIAGNOSTIC.md` has the head-to-head: HEAD beats the
+restore point on every axis that clears the noise floor (rank prediction on real
+drafts 1.19 vs 3.35 men; defences before round 10 0% vs 19%; ten correctness
+fixes that would have misled you at the table). The tag is insurance only, for
+the case where HEAD throws at the table - which the whole-draft stress says it
+does not:
 
     git checkout draft-ready-2026
 

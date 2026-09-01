@@ -272,6 +272,35 @@ In order. The first two are the ones that break the circle.
    robust across feeds, and honest about its own uncertainty. The remaining
    errors are inside the fog of the projections themselves.
 
+## HEAD against the restore point: run HEAD
+
+Justin: "can we fix things to be better than the restore point". They already
+are, on every axis that clears the noise floor, and the restore point exists as
+insurance only. Head to head, same tools, same real drafts:
+
+| axis | `draft-ready-2026` (tag) | HEAD | tool |
+|---|---|---|---|
+| who is gone by a later pick, vs the league's REAL 2024/2025 drafts | 3.35 men error (ADP cutoff) | **1.19 men** (survival table) | `RealDraftSurvival` |
+| simulated defences before round 10 (real: 0 of 58) | 19% | **0%** | `DefenceReality` |
+| rollout tails that imagine a roster with no defence | often - produced a DEF in round 7-8 in 5 of 6 drafts | **0 of 5** | `TailLegality` |
+| a held man priced at his own projection | Chase 29 points under | **exact** | `HeldManCurveIndexTest` |
+| schedule-drift warning on a clean board | fires 137 of 168 refreshes | **0** | `DriftAlarmCheck` |
+| Kim-Nelson tiebreaker in the live tool | dead - threw on the first defence | **runs, PROVEN RB in 126 rollouts** | `Draft2026` |
+| legend names the column the code ranks on | no (VS WAIT) | **yes (END TEAM)** | `TableLegendTest` |
+| one failed Sleeper read | ends the session, re-pay the warm | **survives, engines stay warm** | `CycleSurvivesAFailureTest` |
+| a pick the rules refuse still occupies its seat | no (TRAPS A1 open) | **yes** | `DeclinedManStillCountsTest` |
+| margin between top two positions | printed as a verdict, no error bar | **paired 2 s.e.; tied set named; men listed at a coin flip** | `MarginTest`, `OpinionCount` |
+| pick-7 verdict | RB | RB, separated, under four feeds | `BoardSourceCheck` |
+| tests | 389 | ~510, one JVM per class | `./gradlew check` |
+
+Nothing in the right-hand column is a tune inside the noise; each is a
+correctness fix or a change validated on real drafts. The two things that are
+the same - the pick-7 verdict and the underlying projections - are the two
+things that were already right.
+
+**Tonight: run HEAD.** Use the tag only if HEAD throws at the table, which
+`LivePathStress` says it does not across 42 priced picks.
+
 ## What tonight rests on
 
     PreFlight       ALL CLEAR - right draft, right settings, 14 seats, 24 keepers
