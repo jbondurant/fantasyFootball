@@ -82,18 +82,18 @@ public class OpinionCount {
                             at < 0 ? all : all.substring(at));
                 }
                 for(String printed : captured.toString().split("\n")){
-                    if(printed.contains("leads") && printed.contains("+/-")){
+                    if(printed.contains("SEPARATED from every other")
+                            || printed.contains("INSIDE THE NOISE of each other")){
                         line = printed.trim();
                     }
                 }
                 seats++;
-                boolean isSeparated = line.contains("SEPARATED");
+                boolean isSeparated = line.contains("SEPARATED from every other");
                 if(isSeparated){
                     separated++;
                 }
                 String gap = line.isEmpty() ? "(only one legal position)"
-                        : line.substring(0, Math.min(34, line.indexOf("(paired") < 0
-                                ? Math.min(34, line.length()) : line.indexOf("(paired"))).trim();
+                        : line.length() > 46 ? line.substring(0, 46) : line;
                 seenAt.merge(slot.pickNumber(), 1, Integer::sum);
                 if(isSeparated){
                     separatedAt.merge(slot.pickNumber(), 1, Integer::sum);

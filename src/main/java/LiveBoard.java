@@ -511,58 +511,83 @@ public class LiveBoard {
         // season"; it means the model's preference between the two is real
         // rather than an artefact of how many worlds were drawn.
         String margin = null;
-        if(ranked.size() >= 2){
+        if(ranked.size() >= 2 && seasonsOf.get(ranked.get(0)) != null){
+            // THE TIED SET, NOT THE TOP PAIR.
+            //
+            // The first version of this compared the leader against the runner-
+            // up only. If THREE positions are statistically indistinguishable,
+            // that reports one pair and implies the third was beaten - which
+            // understates the ambiguity in exactly the direction that flatters
+            // the model. Boris Chen tiers are the shape this project already
+            // uses everywhere else: report the group you cannot tell apart,
+            // compared to the LEADER rather than to the neighbour.
             double[] leader = seasonsOf.get(ranked.get(0));
-            double[] runnerUp = seasonsOf.get(ranked.get(1));
-            if(leader != null && runnerUp != null){
-                double[] gap = margin(leader, runnerUp);
-                boolean proven = gap[0] > 2 * gap[1];
-                StringBuilder text = new StringBuilder(String.format(
-                        "   %s leads %s by %.1f +/- %.1f (paired, 2 s.e.) - %s%n",
-                        ranked.get(0), ranked.get(1), gap[0], gap[1],
-                        proven ? "SEPARATED (the preference is real; it is not a"
-                                        + " claim about season points)"
-                                : "INSIDE THE NOISE, treat as a coin flip"));
-                if(!proven){
-                    // GIVE HIM SOMETHING TO DECIDE ON. Telling him the two
-                    // positions are worth the same and stopping there leaves
-                    // him with less than he started with. If the POSITION does
-                    // not matter, the MAN might - and the model knows who is
-                    // actually on the board, which is the part he cannot hold
-                    // in his head at pick 127 with a clock running.
-                    text.append("   The position does not decide it here. The men"
-                            + " actually available:\n");
-                    for(Position position : List.of(ranked.get(0), ranked.get(1))){
-                        List<String> byProjection = ordered.get(position);
-                        if(byProjection == null){
+            List<Position> tied = new ArrayList<>();
+            List<String> beaten = new ArrayList<>();
+            for(int i = 1; i < ranked.size(); i++){
+                double[] other = seasonsOf.get(ranked.get(i));
+                if(other == null){
+                    continue;
+                }
+                double[] gap = margin(leader, other);
+                if(gap[0] <= 2 * gap[1]){
+                    tied.add(ranked.get(i));
+                }
+                else {
+                    beaten.add(String.format("%s by %.1f +/- %.1f",
+                            ranked.get(i), gap[0], gap[1]));
+                }
+            }
+            StringBuilder text = new StringBuilder();
+            if(tied.isEmpty()){
+                text.append(String.format("   %s is SEPARATED from every other"
+                                + " position (nearest: %s, paired 2 s.e.).%n"
+                                + "   The preference is real - that is not a claim"
+                                + " about season points.%n",
+                        ranked.get(0), beaten.isEmpty() ? "none" : beaten.get(0)));
+            }
+            else {
+                StringBuilder names = new StringBuilder(ranked.get(0).toString());
+                for(Position position : tied){
+                    names.append(" / ").append(position);
+                }
+                text.append(String.format("   %s are INSIDE THE NOISE of each other"
+                        + " (paired, 2 s.e.).%n", names));
+                text.append("   The position does not decide it here. The men"
+                        + " actually available:\n");
+                List<Position> show = new ArrayList<>();
+                show.add(ranked.get(0));
+                show.addAll(tied);
+                for(Position position : show){
+                    List<String> byProjection = ordered.get(position);
+                    if(byProjection == null){
+                        continue;
+                    }
+                    StringBuilder who = new StringBuilder();
+                    int shown = 0;
+                    for(String id : byProjection){
+                        if(taken.contains(id) || kept.contains(id)){
                             continue;
                         }
-                        StringBuilder names = new StringBuilder();
-                        int shown = 0;
-                        for(String id : byProjection){
-                            if(taken.contains(id) || kept.contains(id)){
-                                continue;
-                            }
-                            Player who = Player.getPlayerFromSIDV2(id);
-                            if(who == null){
-                                continue;
-                            }
-                            names.append(names.length() == 0 ? "" : ",  ")
-                                    .append(who.firstName.charAt(0)).append(". ")
-                                    .append(who.lastName)
-                                    .append(String.format(" %.0f",
-                                            planner.points().getOrDefault(id, 0.0)));
-                            if(++shown == 3){
-                                break;
-                            }
+                        Player player = Player.getPlayerFromSIDV2(id);
+                        if(player == null){
+                            continue;
                         }
-                        text.append(String.format("     %-4s %s%n", position, names));
+                        who.append(who.length() == 0 ? "" : ",  ")
+                                .append(player.firstName.charAt(0)).append(". ")
+                                .append(player.lastName)
+                                .append(String.format(" %.0f",
+                                        planner.points().getOrDefault(id, 0.0)));
+                        if(++shown == 3){
+                            break;
+                        }
                     }
-                    text.append("   Take the one you believe in. The model has no"
-                            + " preference to overrule.\n");
+                    text.append(String.format("     %-4s %s%n", position, who));
                 }
-                margin = text.toString();
+                text.append("   Take the one you believe in. The model has no"
+                        + " preference to overrule.\n");
             }
+            margin = text.toString();
         }
         if(allRefused){
             System.out.printf("%n   every position is over the %.0f%% swing bar, so the bar"

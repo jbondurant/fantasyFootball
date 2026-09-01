@@ -472,15 +472,23 @@ pick is worth 25 points of season.
 `OpinionCount` asks it at all fourteen seats across five simulated rooms
 (`-Pmain=OpinionCount -Pseeds=5`):
 
-    pick   7   RB over WR   real in ALL 5      <- the one it is surest about
-    pick  31   RB over WR   real in all 5
-    pick  66   WR over TE   real in all 5
-    pick  55   WR over TE   4 of 5
-    pick  42 / 103 / 114 / 186              3 of 5
-    pick  18                                2 of 5
-    pick  79 / 162 / 175                    1 of 5
-    pick  90   TE over DEF  COIN FLIP in all 5
-    pick 127   WR over RB   COIN FLIP in all 5
+    pick   7   RB separated from every other   real in ALL 5   <- surest
+    pick  31   RB separated                    real in all 5
+    pick  66   WR separated                    real in all 5
+    pick  55   WR separated                    4 of 5
+    pick  42 / 103 / 114 / 186                                 3 of 5
+    pick  18   RB / WR inside the noise                        2 of 5
+    pick  79   WR / TE / DEF inside the noise                  1 of 5
+    pick 162 / 175                                             1 of 5
+    pick  90   TE / DEF / WR inside the noise   COIN FLIP in all 5
+    pick 127   WR / RB inside the noise         COIN FLIP in all 5
+
+Note picks 79 and 90: **three** positions tied, not two. The first version of
+this compared only the leader against the runner-up, which reported one pair
+and implied the third had been beaten - understating the ambiguity in exactly
+the direction that flatters the model. It now reports the whole indistinguishable
+set, compared to the leader rather than to the neighbour, which is the Boris
+Chen shape this project uses everywhere else.
 
 **3 of 14 seats separated in every room; 2 are a coin flip in every one.** At
 most seats it depends on how the draft actually unfolds, which is the honest
