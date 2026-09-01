@@ -265,8 +265,45 @@ public class BoardValue {
                 counts.merge(position, 1, Integer::sum);
                 RosterRules.Roster next = legal.canDraft(position, round(made))
                         ? legal.draft("x", position, round(made)) : legal;
-                List<Slot> ended = rolloutRoster(board, curve, pools, count, after,
-                        counts, next, made + 1);
+                // TWO PLY when -Pdepth=2: try every legal SECOND pick too and
+                // keep the best, instead of handing the next pick straight to
+                // the greedy tail. Justin has twelve seconds a pick where this
+                // costs half of one, so the question is whether depth buys
+                // anything that sampling did not.
+                List<Slot> ended;
+                if(LOOKAHEAD >= 2 && made + 1 < PlanBacktest.MY_PICKS.length){
+                    ended = null;
+                    double deepest = -1e9;
+                    for(Position second : new Position[]{Position.RB, Position.WR,
+                            Position.TE, Position.QB, Position.DEF}){
+                        if(counts.getOrDefault(second, 0) >= MOST.get(second)
+                                || !next.canDraft(second, round(made + 1))){
+                            continue;
+                        }
+                        List<Slot> two = new ArrayList<>(after);
+                        two.add(new Slot(second,
+                                adpDepth(board, second, PlanBacktest.MY_PICKS[made + 1]) + 1));
+                        Map<Position, Integer> deeper = new EnumMap<>(counts);
+                        deeper.merge(second, 1, Integer::sum);
+                        List<Slot> tail = rolloutRoster(board, curve, pools, count, two,
+                                deeper, next.canDraft(second, round(made + 1))
+                                        ? next.draft("y", second, round(made + 1)) : next,
+                                made + 2);
+                        double value = empirical(tail, pools, curve, count);
+                        if(value > deepest){
+                            deepest = value;
+                            ended = tail;
+                        }
+                    }
+                    if(ended == null){
+                        ended = rolloutRoster(board, curve, pools, count, after,
+                                counts, next, made + 1);
+                    }
+                }
+                else {
+                    ended = rolloutRoster(board, curve, pools, count, after,
+                            counts, next, made + 1);
+                }
                 double[] both = stats(ended, pools, curve, count, false);
                 // REFUSE THE FRAGILE ONE. A path whose bad world sits more than
                 // the bar below its own average is rejected however good its
@@ -562,7 +599,17 @@ public class BoardValue {
     }
 
     /** Scenarios drawn once and held, so two rosters always meet the same worlds. */
-    static final int WORLDS = 600;
+    /**
+     * Scenarios drawn once and held. -Pworlds raises it.
+     *
+     * Justin has more time than the half second a pick currently costs and
+     * asked whether spending it improves anything. More worlds is the cheapest
+     * thing to spend it on and also the least likely to help: the worlds are
+     * RESAMPLED from sixteen seasons, so more of them estimate the same sixteen
+     * seasons more precisely and cannot learn anything those seasons do not
+     * contain. Measured rather than assumed.
+     */
+    static final int WORLDS = Integer.getInteger("worlds", 600);
 
     /**
      * One man's outcome in one world.
@@ -660,6 +707,18 @@ public class BoardValue {
      * worth lowering.
      */
     static final boolean RANK_ON_FLOOR = Boolean.getBoolean("floor");
+
+    /**
+     * How many picks the search looks ahead before the tail turns greedy.
+     *
+     * Named `lookahead`, not `depth`. Something in this JVM already owns a
+     * system property called "depth" and sets it to 0, so -Pdepth=2 arrived as
+     * "0" and the two-ply branch never ran - which is why depth 1 and depth 2
+     * produced byte-identical results and differed by 0.4 seconds. The
+     * allowlist test passes a flag like that happily, because the flag IS
+     * forwarded; it is the VALUE that is stolen. Worth a test of its own.
+     */
+    static final int LOOKAHEAD = Integer.getInteger("lookahead", 1);
 
     static double fragilityBar(){
         return Double.parseDouble(System.getProperty("fragile", "0.15"));
