@@ -237,8 +237,14 @@ the tools read them from the live draft anyway.
 `CycleTiming` times the real `Draft2026` cycle with output swallowed:
 
     board model   0.3 - 0.6s
-    Model A      14.7 - 16.3s
-    worst cycle        16.6s   against a sixty second clock
+    Model A      24.5 - 25.0s
+    worst cycle        25.3s   against a sixty second clock
+
+Model A got SLOWER overnight, on purpose. The Kim-Nelson arbiter - the
+statistical tiebreaker - had been throwing on the first defence it met and
+being caught as "no contenders", so it never ran in `Draft2026` at all. It
+runs now (PROVEN RB after 126 rollouts at pick 1) and costs 8.4 seconds. The
+comment claiming "1.2s worst case" was measured while it was dead.
 
 The "4-11s" quoted elsewhere was the bare nine-round `DraftNight`, not this.
 Press enter EARLY. The board model answers in under a second and it is the one
