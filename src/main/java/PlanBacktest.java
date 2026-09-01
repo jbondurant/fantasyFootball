@@ -321,9 +321,77 @@ public class PlanBacktest {
         return held;
     }
 
-    /** -PholdKeepers=true. Off leaves every existing number untouched. */
+    /**
+     * -PholdKeepers=true. Off leaves every existing number untouched.
+     *
+     * -PleagueKeepers implies it: with all twenty-four off the board Justin
+     * holds his two by construction, and a roster that holds a quarterback and
+     * a back must say so to RosterRules or the legality arithmetic below goes
+     * wrong in the other direction.
+     */
     public static boolean holdKeepers(){
-        return Boolean.getBoolean("holdKeepers");
+        return Boolean.getBoolean("holdKeepers") || EraSlate.enabled();
+    }
+
+    /**
+     * The keeper slots Justin starts with, as (position, board rank).
+     *
+     * Purdy is QB9 and Tuten RB23, so that is what the valuation must be told.
+     * BoardValue read these off a running count of who had left the board,
+     * which for the first man kept is 2 by arithmetic and not by measurement -
+     * it priced Purdy as the second-best quarterback alive. Harmless while the
+     * only thing gone was the keepers themselves and plainly wrong the moment
+     * twenty-four men are, so it is corrected here rather than there, and only
+     * behind the flag: every number on record was measured with the old
+     * behaviour and must stay reproducible tonight.
+     *
+     *   ./gradlew run -Pmain=BoardValue -PholdKeepers=true -PkeeperRanks=true
+     */
+    public static boolean keeperRanks(){
+        return Boolean.getBoolean("keeperRanks") || EraSlate.enabled();
+    }
+
+    /** Everyone kept LEAGUE-WIDE on this board, mine included. Empty unless flagged. */
+    public static List<String> offBoard(Board board){
+        if(EraSlate.enabled()){
+            return EraSlate.heldOn(board);
+        }
+        return holdKeepers() ? keeperIDs(board) : List.of();
+    }
+
+    /** The ones of those that are mine, and go onto my roster. */
+    public static List<String> heldByMe(Board board){
+        if(EraSlate.enabled()){
+            return EraSlate.mineOn(board);
+        }
+        return holdKeepers() ? keeperIDs(board) : List.of();
+    }
+
+    /** A pick a keeper has already spent selects nobody. Empty unless flagged. */
+    public static Set<Integer> spentPicks(){
+        return EraSlate.enabled() ? EraSlate.occupiedPicks() : Set.of();
+    }
+
+    /**
+     * A man's positional rank on this board, which is what a value curve indexes.
+     *
+     * Counted over the WHOLE board rather than over who is still on it, because
+     * the curve is "what the nth best back at this position returns" and the men
+     * above him being kept does not promote him. Somebody not on the board reads
+     * one past the deepest man of his position, the same convention the pools use.
+     */
+    public static int rankOn(Board board, String him){
+        Position position = board.positionOf().get(him);
+        int rank = 0;
+        for(String id : board.ids()){
+            if(board.positionOf().get(id) == position){
+                rank++;
+                if(id.equals(him)){
+                    return rank;
+                }
+            }
+        }
+        return rank + 1;
     }
 
     /**
@@ -354,20 +422,25 @@ public class PlanBacktest {
         }
         Set<String> gone = new HashSet<>();
         List<String> mine = new ArrayList<>();
-        if(holdKeepers()){
-            // Off the board - nobody drafts a man I already own - and onto the
-            // roster, so the empty slot he fills is actually filled.
-            for(String id : keeperIDs(board)){
-                gone.add(id);
-                mine.add(id);
-            }
-        }
+        // Off the board - nobody drafts a man somebody already owns - and mine
+        // onto the roster, so the empty slot he fills is actually filled. With
+        // -PleagueKeepers that is all twenty-four, of which two are mine.
+        gone.addAll(offBoard(board));
+        mine.addAll(heldByMe(board));
         Set<Integer> myPicks = new HashSet<>();
         for(int pick : MY_PICKS){
             myPicks.add(pick);
         }
+        // The picks those keepers have already spent. Removing the men without
+        // removing the picks would have the other eleven consume twenty-four
+        // EXTRA men off the bottom of the board, which is a different wrong
+        // board rather than a smaller one.
+        Set<Integer> spent = spentPicks();
         int taken = 0;
         for(int pick = 1; pick <= 200 && taken < MY_PICKS.length; pick++){
+            if(!myPicks.contains(pick) && spent.contains(pick)){
+                continue;
+            }
             if(myPicks.contains(pick)){
                 String choice = wanted.isEmpty() ? bestAvailable(board, gone, null)
                         : bestAvailable(board, gone, wanted.get(taken));

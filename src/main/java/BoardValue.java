@@ -104,12 +104,24 @@ public class BoardValue {
      * truth is between, so -PbestBall prints the hindsight end and the
      * difference is the bracket rather than a claim.
      *
-     * DEFAULT IS THE GENEROUS END, and it is hindsight. With the flag off the
-     * fill sorts on what each man DREW, so every number this file has ever
-     * printed assumes a manager who always ended up starting the right one. That
-     * is not a small assumption and it is the direction that flatters depth. The
-     * flag is implemented in oneSeason below; between 2026-08-30 and 2026-08-31
-     * this paragraph described it and nothing read it.
+     * THE DEFAULT IS THE HONEST END, and this paragraph said the opposite for
+     * several hours after the code changed under it.
+     *
+     * It used to read "DEFAULT IS THE GENEROUS END, and it is hindsight... the
+     * fill sorts on what each man DREW". That was true when written and false
+     * from the moment BY_EXPECTED was flipped on: the fill now sorts on what
+     * was EXPECTED and scores what was DRAWN. A reader trusting the old text
+     * would have believed the default was the exact reverse of what it is.
+     *
+     * TRAPS.md F27, the fourth time in three days, and the one that has cost
+     * this repo the most: a comment on the objective is what gets quoted when
+     * somebody asks what the model believes, and three separate wrong answers
+     * tonight came from quoting one. Left as a record rather than silently
+     * corrected, because the pattern is the finding.
+     *
+     * -PbestBall restores the drawn-points fill, which is not a legacy switch
+     * but the correct model for best ball, where the lineup really is chosen
+     * after the week is played.
      */
 
     public static void main(String[] args) throws Exception {
@@ -236,13 +248,22 @@ public class BoardValue {
         Set<String> gone = new HashSet<>();
         List<String> mine = new ArrayList<>();
         List<Slot> held = new ArrayList<>();
-        if(PlanBacktest.holdKeepers()){
-            for(String id : PlanBacktest.keeperIDs(board)){
-                gone.add(id);
-                mine.add(id);
-                Position position = board.positionOf().get(id);
-                held.add(new Slot(position, taken(board, gone, position)));
-            }
+        // EVERYONE KEPT, off the board; MINE, onto the roster. With
+        // -PleagueKeepers that is twenty-four and two; otherwise it is the two
+        // that are both, and this reduces to what it always did - the two are
+        // at different positions, so counting them together or one at a time
+        // gives the same taken() either way.
+        gone.addAll(PlanBacktest.offBoard(board));
+        for(String id : PlanBacktest.heldByMe(board)){
+            mine.add(id);
+            Position position = board.positionOf().get(id);
+            // His REAL rank on this board when asked for, rather than a count
+            // of who is gone: Purdy is QB9, and taken() called here answers 2
+            // because two men have left, not because anyone measured him. See
+            // PlanBacktest.keeperRanks.
+            held.add(new Slot(position, PlanBacktest.keeperRanks()
+                    ? PlanBacktest.rankOn(board, id)
+                    : taken(board, gone, position)));
         }
         Map<Position, Integer> have = new EnumMap<>(Position.class);
         // Every candidate goes through RosterRules before it is priced. The
@@ -256,9 +277,15 @@ public class BoardValue {
         for(int pick : PlanBacktest.MY_PICKS){
             myPicks.add(pick);
         }
+        // Picks a keeper has already spent select nobody - see
+        // PlanBacktest.spentPicks. Empty unless -PleagueKeepers.
+        Set<Integer> spent = PlanBacktest.spentPicks();
         int made = 0;
         for(int pick = 1; pick <= 200 && made < PlanBacktest.MY_PICKS.length; pick++){
             if(!myPicks.contains(pick)){
+                if(spent.contains(pick)){
+                    continue;
+                }
                 String other = PlanBacktest.bestAvailableSkill(board, gone);
                 if(other != null){
                     gone.add(other);
@@ -829,6 +856,123 @@ public class BoardValue {
      */
     static final boolean BY_EXPECTED = !Boolean.getBoolean("bestBall");
 
+    /**
+     * HOW A MANAGER SETS HIS LINEUP, as ONE parameterised family instead of two
+     * unrelated switches. Extracted 2026-09-01 so the parameter could be FITTED
+     * rather than chosen; see {@link BenchCalibration}.
+     *
+     * There are two forms, and they are the two Justin named:
+     *
+     *   THRESHOLD.  A man whose drawn season falls below `lostBelow` times what
+     *     his rank normally returns counts as LOST and is benched outright; the
+     *     lineup then fills by EXPECTATION from whoever is left. lostBelow 0 is
+     *     nobody ever lost, which is the useless bench - a man chosen on
+     *     preseason expectation can never enter a lineup, so his marginal is
+     *     exactly zero and the search drafts sixteen receivers. lostBelow 1 is
+     *     "bench anybody who fell short of his projection at all", which is a
+     *     lot of hindsight wearing a threshold.
+     *
+     *   BLEND.  No benching at all. The lineup is ORDERED on
+     *
+     *         expected + lambda * (drawn - expected)
+     *
+     *     so lambda 0 is the same useless bench as lostBelow 0, and lambda 1 is
+     *     perfect hindsight - which is best ball's actual rule, not this
+     *     league's, and is what -PbestBall already prints. Anything between is
+     *     "you work some of it out during the season". Justin's proposal, and
+     *     it is the better-shaped object: continuous, so nothing sits one point
+     *     the wrong side of a threshold somebody picked.
+     *
+     * HINDSIGHT, declared rather than denied: BOTH forms leak some. The
+     * threshold uses the realised season to decide who is benched; the blend
+     * uses it to decide the whole order. That is the point - a bench is worth
+     * nothing to a manager who learns nothing - and the parameter is exactly
+     * "how much does he work out". What must never leak is the SCORE: the
+     * points counted are always the draw of whoever was selected, never the
+     * best draw available.
+     */
+    /**
+     * `wireWhenAllLost` is the THIRD choice in here and it was never a choice -
+     * it was an accident, and it is the shipped behaviour.
+     *
+     * When every man a roster owns at a position has a lost season, somebody
+     * still has to occupy the slot. Two answers are defensible: he starts his
+     * least-bad man, or he drops them and streams the wire. The code did the
+     * second, the comment beside it promised the first, and nobody had noticed
+     * because the mechanism that decided was a bug (see {@link #bench}).
+     *
+     * TRUE is the wire, and it is the default because every number on record -
+     * 1935 mean, 1792 worst, the whole tagged backtest - was measured with it.
+     * FALSE is what the comment always claimed. -PwireWhenAllLost=false.
+     * It matters to the very question being fitted, because it is exactly the
+     * world a second body at a position is owned FOR, so it is swept beside
+     * lostBelow rather than assumed.
+     */
+    record Selection(boolean blend, double lostBelow, double lambda,
+                     boolean wireWhenAllLost){
+
+        /** What the LINEUP is ordered on. Never what it is scored on. */
+        double order(double expected, double drawn){
+            return blend ? expected + lambda * (drawn - expected) : expected;
+        }
+
+        /** Is this man benched before the lineup is even set? Threshold form only. */
+        boolean lost(double expected, double drawn){
+            return !blend && expected > 0 && drawn < lostBelow * expected;
+        }
+
+        Selection fielding(boolean wire){
+            return new Selection(blend, lostBelow, lambda, wire);
+        }
+
+        static Selection threshold(double lostBelow){
+            return new Selection(false, lostBelow, 0, WIRE_WHEN_ALL_LOST);
+        }
+
+        static Selection blend(double lambda){
+            return new Selection(true, 0, lambda, WIRE_WHEN_ALL_LOST);
+        }
+    }
+
+    /** -PwireWhenAllLost=false makes a position that loses everybody field its best man. */
+    static final boolean WIRE_WHEN_ALL_LOST =
+            !"false".equals(System.getProperty("wireWhenAllLost"));
+
+    /**
+     * The shipped rule. -PlostBelow sets the threshold; -Plambda switches to the
+     * blend and sets its weight. Passing both is a contradiction and the blend
+     * wins, loudly - a run that silently used one of two rules would be worse
+     * than a crash.
+     */
+    static Selection shipped(){
+        String lambda = System.getProperty("lambda");
+        if(lambda != null && !lambda.isBlank()){
+            if(System.getProperty("lostBelow") != null){
+                throw new IllegalArgumentException(
+                        "-Plambda and -PlostBelow are two different lineup rules;"
+                                + " pass one");
+            }
+            return Selection.blend(Double.parseDouble(lambda.trim()));
+        }
+        return Selection.threshold(
+                Double.parseDouble(System.getProperty("lostBelow", "0.55")));
+    }
+
+    /**
+     * MUTABLE, and only so a sweep can exist.
+     *
+     * Every other knob in this file is a final read of a system property, which
+     * is right for a knob you set once at the command line and wrong for one
+     * whose whole purpose is to be varied thirty times inside a single run. A
+     * fit that had to fork a JVM per grid point would take an hour and nobody
+     * would run it twice.
+     *
+     * Nothing but {@link BenchCalibration} assigns this, it is assigned from one
+     * thread, and it is restored after every sweep. If a second writer ever
+     * appears, make it a parameter on stats()/oneSeason() instead.
+     */
+    static Selection SELECTION = shipped();
+
     static double oneSeason(List<Slot> roster, Map<Position, List<List<Double>>> pools,
                             Map<Position, double[]> curve, int world){
         return oneSeason(roster, pools, curve, world, false);
@@ -864,21 +1008,19 @@ public class BoardValue {
         //
         // No new data: the threshold reads the same pooled ratios everything
         // else here draws from.
-        double lost = Double.parseDouble(System.getProperty("lostBelow", "0.55"));
-        for(Map.Entry<Position, List<double[]>> entry : pool.entrySet()){
-            double[] mean = curve.get(entry.getKey());
-            entry.getValue().removeIf(man -> {
-                if(!BY_EXPECTED || man[0] <= 0){
-                    return false;       // realised-fill needs no availability
-                }
-                boolean gone = man[1] < lost * man[0];
-                // Never empty a position entirely - somebody starts, even a
-                // busted man, and the wire fills only what nobody can.
-                return gone && entry.getValue().size() > 1;
-            });
+        //
+        // WHICH RULE is BoardValue.SELECTION - threshold or blend, see the
+        // record above. The blend benches nobody and does its work in the
+        // ordering instead, so this loop is a no-op under it.
+        Selection rule = SELECTION;
+        if(BY_EXPECTED){                  // realised-fill needs no availability
+            for(Map.Entry<Position, List<double[]>> entry : pool.entrySet()){
+                bench(entry.getValue(), rule);
+            }
         }
         Comparator<double[]> best = BY_EXPECTED
-                ? Comparator.comparingDouble((double[] man) -> man[0]).reversed()
+                ? Comparator.comparingDouble(
+                        (double[] man) -> rule.order(man[0], man[1])).reversed()
                 : Comparator.comparingDouble((double[] man) -> man[1]).reversed();
         for(List<double[]> values : pool.values()){
             values.sort(best);
@@ -996,6 +1138,54 @@ public class BoardValue {
             }
         }
         return total;
+    }
+
+    /**
+     * Bench everyone this rule calls LOST.
+     *
+     * WHAT IT REPLACES DID NOT DO WHAT ITS COMMENT SAID. The old guard read
+     *
+     *     return gone && entry.getValue().size() > 1;
+     *
+     * from inside that same list's own removeIf, above a comment promising
+     * "never empty a position entirely - somebody starts, even a busted man".
+     * ArrayList.removeIf tests every element BEFORE it removes any of them, so
+     * size() reported the ORIGINAL count throughout however many were already
+     * doomed. Two men at a position who both had bad seasons were therefore
+     * BOTH deleted and the slot fell to the wire - the exact thing the comment
+     * said could not happen. Only a one-man position was ever protected.
+     *
+     * The behaviour is kept and the comment is withdrawn, because the accident
+     * is arguably the better model: a manager whose backs have all fallen over
+     * does go to the wire, and `replacement` is the wire. It is now a stated
+     * choice on {@link Selection} instead of an emergent property of a bug, so
+     * it can be swept - and {@link BenchCalibration} sweeps it, since "all my
+     * men at this position are lost" is precisely the world a second body is
+     * owned for.
+     *
+     * Who survives under wireWhenAllLost=false is stated rather than left to
+     * list order: the best by EXPECTATION, because otherwise a roster's value
+     * would depend on the order it happened to be drafted in.
+     */
+    static void bench(List<double[]> men, Selection rule){
+        if(men.size() <= 1){
+            return;                       // one man always starts, lost or not
+        }
+        List<double[]> playing = new ArrayList<>();
+        double[] fallback = null;
+        for(double[] man : men){
+            if(man[0] <= 0 || !rule.lost(man[0], man[1])){
+                playing.add(man);
+            }
+            if(fallback == null || man[0] > fallback[0]){
+                fallback = man;
+            }
+        }
+        if(playing.isEmpty() && !rule.wireWhenAllLost()){
+            playing.add(fallback);        // all lost, and somebody still starts
+        }
+        men.clear();
+        men.addAll(playing);
     }
 
     /** The mean man just past where this league stops drafting the position. */
