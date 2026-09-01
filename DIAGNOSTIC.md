@@ -226,11 +226,15 @@ In order. The first two are the ones that break the circle.
    simulated room (7, 31, 66), 2 coin flips in every room (90, 127), 9
    room-dependent. That is the honest state and no feature today moved it.
 
-5. **Fix the measurement harness once, structurally.** The in-suite
-   `RoomTimingTest` failure is shared static state leaking between test
-   classes - the same fault class as everything above. Either fork a JVM per
-   test class (`forkEvery`) or make `LiveSetup` reset every static it touches.
-   Stop diagnosing it one hypothesis at a time.
+5. **Fix the measurement harness once, structurally.** DONE: `forkEvery = 1`
+   in `build.gradle`, one JVM per test class, nothing left to leak into. The
+   in-suite `RoomTimingTest` failure was shared static state between classes -
+   the same fault class as everything above. Two hypotheses about *which*
+   state were wrong (one of them, `ModelAScheduleTest` restoring "9" into the
+   JVM, was a real leak and is fixed regardless); the third, structural fix
+   makes the question moot. `RoomTimingTest` now also prints the ambient state
+   it sees in its failure message, so if it ever fails again the message says
+   why. Full check running under the new setting as this is written.
 
 6. **For TE, the one real unknown: measure, do not guess.** It is off by ~11
    on both held-out seasons and the mechanism is not known. The tool to build
