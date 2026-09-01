@@ -104,7 +104,17 @@ Fallbacks, unchanged and independently verified all week:
    88 points it lost are a model-side difference, and 88 is inside the bar.
    Still not cleared, both catalogued: the availability channel, and the
    streamed-defence rate (C13), which bites only a roster holding no defence.
-5. MOST is hand-typed where RosterRules derives ceilings properly.
+5. ANSWERED 2026-09-01, and better than the proposed fix. `MOST` no longer
+   binds at all: raising every cap to fourteen changes neither the drafted
+   roster nor the backtest, on either path. Two changes removed the need for
+   it - the greedy tail now asks only whether a pick is LEGAL, and the bench
+   earns its place through availability rather than hindsight, so the
+   valuation self-limits.
+
+   Kept as a backstop and pinned by `AppetiteCapTripwireTest`. The day that
+   test fails, the valuation has stopped discriminating and wants
+   investigating - NOT a tighter cap. Capping it would be hiding the fault,
+   which is what was happening when the model wanted three tight ends.
 
 ## Running experiments while agents work
 
