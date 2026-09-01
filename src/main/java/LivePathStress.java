@@ -33,6 +33,24 @@ public class LivePathStress {
         List<PairwiseOdds.Man> men = PairwiseOdds.nflverseMen(wider, order);
         Set<String> kept = LiveBoard.kept(configuration);
         Map<Position, double[]> curve = LiveBoard.thisYear(planner, kept);
+        // THE STRESS MUST RUN THE CONFIGURATION THAT SHIPS.
+        //
+        // This harness certified "no throw at any of his seats, across 3 full
+        // drafts" while never calling warmSurvival - so LiveBoard.SURVIVAL was
+        // null throughout and every rollout inside the answer it was exercising
+        // fell back to adpCutoffRank, the rule the survival table RETIRED. The
+        // claim in this class's own javadoc - "the printed path, not a
+        // reimplementation of it" - was therefore true of last night's printed
+        // path and not tonight's. Draft2026 and LiveBoard both warm the table;
+        // the thing that proves they do not throw did not.
+        //
+        // -PsurvivalDraws=0 still turns it off, which is how the retired rule
+        // stays reproducible.
+        double survivalCost = LiveBoard.warmSurvival(planner, simulator);
+        System.out.printf("survival table: %s (%.0fs)%n",
+                LiveBoard.SURVIVAL == null ? "OFF - the retired ADP cutoff is what"
+                        + " this run exercises" : "on, as it is in Draft2026",
+                survivalCost);
         Map<Position, List<List<Double>>> pools =
                 new EnumMap<>(BoardValue.pools(men, curve));
         List<List<Double>> defence = LiveBoard.defenceScatter();
