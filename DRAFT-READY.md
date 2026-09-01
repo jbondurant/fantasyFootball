@@ -193,7 +193,23 @@ imagine a roster with no defence.
    this is not a quantity with no variation - but it would be sorting picks on
    a 2.4-point spread when board-to-board noise here is measured in tens of
    points. The bar is both above the data and short of signal to place better.
-3. Scatter is indexed by draftable rank but learned from full-board rank.
+3. ANSWERED 2026-09-01, and it CLOSES. The concrete worry was that Justin's
+   draftable RB4 is James Cook, who is really RB6 once Taylor and Achane are
+   kept - so the model attaches RB4's historical volatility to an RB6-quality
+   man. `RankIndexCheck` measures how fast scatter actually moves with rank:
+
+       RB   rank 2  SD 0.43     rank 12  SD 0.42
+            rank 4  SD 0.42     rank 20  SD 0.45
+            rank 6  SD 0.43     rank 30  SD 0.51
+
+   Rank 4 against rank 6 - the size of the error this fault causes - is **0.01
+   of a standard deviation**. Scatter is flat from rank 2 to rank 20 and only
+   widens past 30, so a two-or-three rank offset is noise. Carried as a known
+   fault since it was found; it can be dropped.
+
+   Worth keeping from the same table: receivers scatter at SD 0.33 against
+   backs at 0.43, about **30% less volatile**, which is a real cross-position
+   fact and not an artefact of indexing.
 4. ANSWERED 2026-09-01, and the answer is EXPECTATION. The scorer is honest.
    `ScorerHonestyAudit` scores each roster twice - shipped fill against a fill
    sorted on the week's realised points - and the hindsight fill is worth +114
@@ -362,6 +378,29 @@ against 1.57), because it already counts every man really taken at certainty.
 
 END TEAM and the ordering do not move; VS WAIT does - the receiver's cost of
 waiting at pick 7 goes 18.4 to 31.0.
+
+## Does tonight's pick depend on whose numbers you use? No.
+
+The board rests on one projection feed, Rotowire via Sleeper, and everything on
+the table is downstream of it. The three automatic shops disagree by 40-65
+points on elite players, so this is not hypothetical.
+
+`BoardSourceCheck` runs the board model at pick 7 under each feed:
+
+    sleeper                  RB   (best likely there: James Cook)
+    espn                     RB   (Derrick Henry)
+    cbs                      RB   (Derrick Henry)
+    blend:sleeper,espn,cbs   RB   (Derrick Henry)
+
+One distinct verdict. `SourceSensitivity` says the same of Model A's committed
+sequence - every source's best sequence starts with **R**: sleeper RRRWWWT,
+espn RRRWWTW, cbs RWRWWTT, blend RWRWRWT. They diverge after pick 7, but under
+any single source the four plans span 11-42 points, all inside the 125-point
+bar.
+
+So the first pick is source-proof, which is worth more than it looks: the
+verdict is driven by the SHAPE of the positional curves, which the shops agree
+about, rather than by anyone's point estimate of a particular man.
 
 ## Is there a better pairwise model? No.
 
