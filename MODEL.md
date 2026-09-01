@@ -1,5 +1,15 @@
 # The draft model
 
+> **Read `DIAGNOSTIC.md` first (2026-09-01).** This file describes **Model A**
+> — the nine-skill-slot objective (`DraftPlanner`/`DraftNight`), no defence,
+> rounds 1–7 proven — and its component plan. It is accurate for Model A and
+> historical for everything else: the shipped live tool is `Draft2026`, whose
+> board model (`LiveBoard`/`BoardValue.oneSeason`) scores the league's real
+> ten-slot lineup, defence included, over sixteen rounds, with a survival table
+> replacing the ADP cutoff. The two objectives coexist on purpose
+> (`TwoObjectivesTest`). "Defense excluded from the optimization" below is a
+> statement about Model A only.
+
 One model, one number per decision. This replaces the collection of partial
 valuations (pick surplus, VORP variants, forced-script simulation) whose
 answers moved with their hidden assumptions.

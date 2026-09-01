@@ -308,4 +308,11 @@ real every time.
     over ten. Same conclusion, fabricated figure, in the document whose whole
     subject is numbers being wrong. Write the number AFTER the tool prints it,
     or write "pending" - never a plausible placeholder.
+58. **A line-number citation and an edit above it, seconds apart.** RosterRules
+    prints "RUNBOOK.md:191" on screen when it refuses a second quarterback. I
+    wrote a test to pin that citation and, in the same command, edited RUNBOOK's
+    fallback ladder above line 191 - moving the rule to 206 and making the code's
+    citation stale before the test could run. Line numbers in code are references
+    that nothing updates. Re-check them after ANY edit to the cited file, or
+    cite an anchor rather than a number.
 
