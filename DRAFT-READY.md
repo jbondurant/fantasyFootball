@@ -1,20 +1,32 @@
-# The verified state, 2026-08-31, before the overnight work
+# Draft night, 2026-09-01 20:45
 
-Tagged `draft-ready-2026`. Justin draws his draft 2026-09-01 20:45. Everything
-after this tag is experimental; if any of it misbehaves, come back here and
-every number below is what you get.
-
-    git checkout draft-ready-2026
-
-## What to run at the table
+## Run this. Start it before the draft does.
 
     ./gradlew run -Pmain=Draft2026 -Pkeepers=Tuten,Purdy -q
 
-Warms once, ~25s. Then press enter at each of your picks:
-board model answers in ~1s, Model A follows for rounds 1-7 (~16s total).
-Rounds 8-16 it says why Model A is silent rather than printing noise.
+Warms once, about **30s** (26s of engines plus 3s for the survival table).
+Then press enter at each of your picks.
 
-Fallbacks, unchanged and independently verified all week:
+**The board model answers in under a second. Model A follows, and the whole
+cycle is 25s of your 60.** So press enter EARLY - the moment the pick before
+yours lands, not at :40. If the clock is short, the board model's line is the
+one to read: it is the model that knows the 24 keepers, and it is already on
+screen while Model A is still thinking.
+
+Rounds 8-16 Model A goes quiet and says why. That is deliberate, not a failure.
+
+**Rank on the END TEAM column.** ADDS NOW and VS WAIT explain the pick; END
+TEAM decides it. Where they disagree, END TEAM wins.
+
+If something looks wrong mid-draft, the restore point is one command:
+
+    git checkout draft-ready-2026
+
+Everything after that tag was added on 2026-09-01. It is better tested than
+the tag - 470-odd tests against 389 - but the tag is what a full week of
+independent verification stands behind.
+
+Fallbacks if the main tool misbehaves:
 
     ./gradlew run -Pmain=DraftNight -Pkeepers=Tuten,Purdy -q       # rounds 1-7
     ./gradlew run -Pmain=LiveLateRounds -Pkeepers=Tuten,Purdy -q   # rounds 8+
