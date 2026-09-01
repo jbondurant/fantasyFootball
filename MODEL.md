@@ -5216,3 +5216,62 @@ a season, 95% [+0.8, +16.3], best-case +12.7 to +14.3 at a blend weight near
 0.15-0.30, against a 125-point bar and against +208 for the injury channel the
 model already has. **A wider outcome sample sharpened the lag and left the
 verdict alone.**
+
+---
+
+## The backtest was drafting against the wrong board (2026-09-01)
+
+Every backtest figure in this document was measured stripping **two** keepers
+from the historical board — Purdy and Tuten. This is a twelve-team keeper
+league and every team keeps two, so the real board is missing **twenty-four**,
+most of them from the top: Nacua, Taylor, Bowers, Smith-Njigba, McBride,
+Achane, Collins, LaPorta. `LiveBoard` was corrected for this; the backtest was
+not.
+
+`EraSlate` transplants the whole slate the way `EraKeepers` transplants
+Justin's: by **positional ADP rank**, never by price. Bucky Irving costs a
+13th, and a 13th-round back on the 2015 board is a replacement-level man being
+called a keeper. It also transplants the **picks** — a keeper spends its
+owner's selection, so twenty-four picks choose nobody; removing the men without
+removing the picks would have the other eleven eat twenty-four extra players
+off the *bottom* of the board, which is a different wrong board rather than a
+smaller one. Justin's own two are unchanged, and their ranks still come from
+`EraKeepers`.
+
+`-PleagueKeepers=true`, **off by default**. `KeeperSlateImpact` scores both
+boards in one process:
+
+    STRATEGY                       2 KEEPERS   24 KEEPERS    shift   paired se
+    RUNBOOK committed                   2029         1833     -196          63
+    RUNBOOK as written                  2007         1840     -167          78
+    RUNBOOK front + SS back             2007         1837     -170          61
+    RB-heavy folk rule                  1978         1842     -136          53
+    starter-sum (1-16)                  1976         1848     -128          99
+    board value (fixed shape)           1968         1812     -156          71
+    ModelA front + SS back              1956         1841     -115          45
+    board value (adaptive)              1935         1783     -152          82
+    best-nine (Model A)                 1752         1621     -131          50
+    best available by ADP               1579         1524      -55         126
+
+**The shift is not uniform**, which is the only reason it counts: 141 points
+between the strategy hurt most and the one hurt least, over the 125-point bar.
+
+**The ordering changes and the change means nothing.** The committed plan falls
+from 2nd to 7th and starter-sum climbs from 6th to 1st — but the serious field
+was 95 points wide before and is 65 wide now, both inside the bar, and seven
+strategies now sit within fifteen points of each other. What a realistic board
+removes is not a winner but the illusion that rounds 1–9 position order was
+ever being measured. The men who made an early back worth more than an early
+receiver are on somebody else's roster.
+
+**The plan against the board model**, the question that mattered: +72 becomes
++57. A tie both times, and the paired standard error nearly doubles, 51 to 87 —
+the realistic board is *noisier* per season as well as lower, because a
+shallower pool makes it matter more which men happen to land where.
+
+Separately, `-PkeeperRanks` corrects a real fault: `BoardValue` read a kept
+man's rank off a running count of who had left the board, which for the first
+man kept is 2 by arithmetic rather than by measurement — it priced Purdy as the
+second-best quarterback alive. Worth +17, inside the bar, and not the story.
+
+Data: `data/keeper-slate-impact-2026-09-01.txt`, `data/keeper-slate-2026-09-01.txt`.
