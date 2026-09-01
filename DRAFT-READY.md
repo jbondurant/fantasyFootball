@@ -102,19 +102,27 @@ adversarial pass found a defence in round 7 or 8 in five of six drafts - and
 the preference was never measurable in the first place. `DefenceTiming` holds
 the roster shape fixed and moves only the round the defence goes in:
 
-    pick   7  1824.6      pick  79  1926.3      pick 127  1925.2
-    pick  18  1868.4      pick  90  1929.7      pick 162  1922.0
-    pick  31  1879.6      pick 103  1927.9      pick 175  1917.9
-    pick  42  1903.4      pick 114  1930.8 <-   pick 186  1917.7
-    pick  55  1914.5
-    pick  66  1924.1      whole spread 106.2, against a 125-point bar
+    pick   7  1824.6      pick  79  1932.0 <-  pick 127  1927.5
+    pick  18  1870.7      pick  90  1926.6      pick 162  1922.7
+    pick  31  1879.4      pick 103  1927.0      pick 175  1920.3
+    pick  42  1902.0      pick 114  1926.3      pick 186  1920.4
+    pick  55  1924.8
+    pick  66  1928.0      whole spread 107.5, against a 125-point bar
 
-The peak IS round 10, which is where the heuristic pointed; round 8 is 1.1
-points off it; and the entire axis from round 1 to round 16 fits inside one
-bar. So the round is not a measurable quantity and it was never a refusal the
-objective could enforce. The ordering is smooth and sensible in both directions
-- too early wastes a premium pick, too late gets a worse defence - which is
-more than noise would give, but no single comparison clears the bar.
+**Re-measured 2026-09-01, and the peak moved.** The first version of this table
+was produced by a tool that called `expectedRank` without ever building the
+survival table, so every rank in it came from the retired ADP cutoff - the
+third tool that day found doing exactly that, and its numbers were already in
+this document. On the shipped configuration the peak is **pick 79, round 7**,
+not round 10 as published. Everything from pick 55 to pick 127 sits within 7.3
+points, which is why the peak wanders.
+
+The conclusion is unchanged and is the part that matters: the entire axis from
+round 1 to round 16 spans 107.5 against a 125-point bar, so the round is NOT a
+measurable quantity, and "refuses a defence before round ten" was never a
+refusal the objective could enforce. What is real is the left-hand end - taking
+a defence in the first four rounds costs 30 to 107 points, and that is a
+genuine mistake the model will not make.
 
 ## Verified at the tag
 

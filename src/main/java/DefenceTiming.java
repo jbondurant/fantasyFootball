@@ -21,23 +21,16 @@ public class DefenceTiming {
     static final int[] PICKS = {7, 18, 31, 42, 55, 66, 79, 90, 103, 114, 127, 162, 175, 186};
 
     public static void main(String[] args) throws Exception {
-        AAAConfiguration configuration = AAAConfiguration.getInstance();
-        int last = Integer.parseInt(configuration.getSeason()) - 1;
-        var earliness = SelectionModel.qbEarliness(configuration, last);
-        ChoiceModel choice = BoostedSelectionModel.fitShipped(configuration, last, earliness);
-        DraftPlanner planner = DraftPlanner.forCurrentSeason(configuration,
-                DraftPlanner.keepersFromProperty(configuration), choice, earliness);
-        Set<String> kept = LiveBoard.kept(configuration);
-        Map<Position, double[]> curve = LiveBoard.thisYear(planner, kept);
-        Map<String, List<DetectionLag.Man>> wider = NflverseBoards.usable(null);
-        List<String> order = new ArrayList<>(new TreeMap<>(wider).keySet());
-        List<PairwiseOdds.Man> men = PairwiseOdds.nflverseMen(wider, order);
-        Map<Position, List<List<Double>>> pools =
-                new EnumMap<>(BoardValue.pools(men, curve));
-        List<List<Double>> defence = LiveBoard.defenceScatter();
-        if(!defence.isEmpty()){
-            pools.put(Position.DEF, defence);
-        }
+        // ONE WARM-UP. This called LiveBoard.expectedRank while never building
+        // the survival table, so every rank in the table below came from the
+        // ADP cutoff that table retired - and the numbers reached DRAFT-READY
+        // as a fact about what ships. Third time in one day. See LiveSetup.
+        LiveSetup setup = LiveSetup.forTonight();
+        AAAConfiguration configuration = setup.configuration;
+        DraftPlanner planner = setup.planner;
+        Set<String> kept = setup.kept;
+        Map<Position, double[]> curve = setup.curve;
+        Map<Position, List<List<Double>>> pools = setup.pools;
 
         // The shape DryRun plays, keepers included. Only the defence moves.
         List<Position> base = new ArrayList<>(List.of(

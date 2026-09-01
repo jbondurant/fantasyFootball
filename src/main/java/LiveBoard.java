@@ -61,46 +61,22 @@ public class LiveBoard {
             Position.TE, 32, Position.DEF, 32));
 
     public static void main(String[] args) throws Exception {
-        System.setProperty("scheduleRounds", System.getProperty("scheduleRounds", "16"));
-        AAAConfiguration configuration = AAAConfiguration.getInstance();
+        // THE LIVE TOOL WARMS THE WAY THE LIVE TOOL WARMS. This built its own
+        // copy of the setup and was the NINTH such copy, sitting outside the
+        // very list that exists to make a ninth impossible.
+        LiveSetup setup = LiveSetup.forTonight();
+        AAAConfiguration configuration = setup.configuration;
         String draftID = System.getProperty("draftId", configuration.getDraftID());
-
-        List<Keeper> myKeepers = DraftPlanner.keepersFromProperty(configuration);
-        int last = Integer.parseInt(configuration.getSeason()) - 1;
-        Map<String, Double> earliness = SelectionModel.qbEarliness(configuration, last);
-        ChoiceModel choice = BoostedSelectionModel.fitShipped(configuration, last, earliness);
-        DraftPlanner planner = DraftPlanner.forCurrentSeason(configuration, myKeepers,
-                choice, earliness);
-        DraftSimulator simulator = planner.simulator();
-
-        // Sixteen seasons of what men at each rank really returned.
-        Map<String, List<DetectionLag.Man>> wider = NflverseBoards.usable(null);
-        List<String> order = new ArrayList<>(new TreeMap<>(wider).keySet());
-        List<PairwiseOdds.Man> men = PairwiseOdds.nflverseMen(wider, order);
-        // THIS YEAR'S CURVE. The level and the shape come from the 2026 board
-        // being drafted, not from a sixteen-year average of boards that are not
-        // it. A year where the backs fall off a cliff at RB8 and a year where
-        // they glide to RB30 must not produce the same list, and they did while
-        // this read historical mean points by rank.
-        Set<String> kept = kept(configuration);
+        DraftPlanner planner = setup.planner;
+        DraftSimulator simulator = setup.simulator;
+        Set<String> kept = setup.kept;
+        Map<Position, double[]> curve = setup.curve;
+        Map<Position, List<List<Double>>> pools = setup.pools;
+        List<String> order = setup.order;
+        List<PairwiseOdds.Man> men = setup.men;
         System.out.printf("%d men are already kept league-wide and cannot be drafted%n",
                 kept.size());
-        Map<Position, double[]> curve = thisYear(planner, kept);
-        double survivalCost = warmSurvival(planner, simulator);
-        if(SURVIVAL != null){
-            System.out.printf("survival table built in %.0fs (paid once)%n", survivalCost);
-        }
-        // LAST SIXTEEN YEARS' UNCERTAINTY, as ratios rather than points, so what
-        // is imported is how far outcomes scatter around a rank - never where
-        // the rank sits.
-        Map<Position, List<List<Double>>> pools =
-                new EnumMap<>(BoardValue.pools(men, curve));
-        List<List<Double>> defence = defenceScatter();
-        if(!defence.isEmpty()){
-            pools.put(Position.DEF, defence);
-            System.out.printf("defence scatter from %d ranks of sleeper actuals%n",
-                    defence.size() - 1);
-        }
+        System.out.printf("%s%n", setup.rule());
 
         // WARM ONCE, ANSWER MANY TIMES.
         //
