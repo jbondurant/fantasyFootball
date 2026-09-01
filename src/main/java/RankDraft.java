@@ -252,7 +252,18 @@ public class RankDraft {
         return true;
     }
 
+    /**
+     * The draftable board. Kept men are on somebody's roster and are not on it.
+     *
+     * Justin caught this in LiveBoard - twenty-four men are kept league-wide and
+     * every recommendation was naming one of them. The same pool is built here
+     * and had the same fault, so the fix belongs here rather than at each caller.
+     */
     static Map<Position, List<Double>> board(Position[] shown){
+        return board(shown, LiveBoard.kept(AAAConfiguration.getInstance()));
+    }
+
+    static Map<Position, List<Double>> board(Position[] shown, java.util.Set<String> kept){
         Map<Position, List<Double>> adp = new EnumMap<>(Position.class);
         for(Position position : shown){
             adp.put(position, new ArrayList<>());
@@ -261,6 +272,9 @@ public class RankDraft {
                 System.getProperty("projections", "sleeper")).keySet()){
             Player player = Player.getPlayerFromSIDV2(id);
             double value = SleeperProjections.adpOf(id);
+            if(kept.contains(id)){
+                continue;
+            }
             if(player != null && adp.containsKey(player.position) && value < Double.MAX_VALUE){
                 adp.get(player.position).add(value);
             }
