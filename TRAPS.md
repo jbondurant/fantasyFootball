@@ -220,3 +220,32 @@ old sins.
     `drain`, kept on the argument that a simulation cannot exercise
     misspecification, and dropped when a real draft could.
 
+## I. Checks that are not checking
+
+Added 2026-09-01. Four in one day, which makes it a category rather than an
+accident. None of these is a bug in the model; each is a piece of verification
+that looked green while verifying nothing, which is worse than having none,
+because it stops anybody looking.
+
+43. **A suite nobody runs.** `./gradlew smokeTest` - the live-API check the
+    build file has always said to run before a draft - was red for hours while
+    `./gradlew test` stayed green and I ran only that. Green on the suite you
+    happen to run is not green. The fix is not remembering: `check` now runs
+    what is cheap, and DRAFT-READY names the one that is not.
+44. **A build red long enough to become scenery.** `./gradlew javadoc` had
+    failed for months on eighteen cosmetic HTML complaints, and hiding among
+    them were two `{@link}`s to classes that no longer exist. Turn off the
+    check that costs readability, keep the one that finds stale documentation,
+    and hang it off `check` so it cannot rot again.
+45. **A test that cannot see its own input.** `DraftReadyCommandsTest` reads
+    DRAFT-READY.md. Gradle did not know that, so the task was UP-TO-DATE and
+    the test never ran - it passed with a deliberately planted dead command in
+    the file. Declare the documents as task inputs. A check that cannot observe
+    the thing it checks is decoration.
+46. **A plant that does not land looks exactly like a vacuous test.** Testing
+    whether `TableLegendTest` bites, I planted a forbidden string, saw the test
+    pass, and nearly recorded it as vacuous. The plant had not applied - my
+    replacement text did not match the source. It bites. VERIFY THE PLANT
+    LANDED before believing what its absence tells you, or the test-the-test
+    habit produces false findings of its own.
+
