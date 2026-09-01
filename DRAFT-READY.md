@@ -41,8 +41,24 @@ Fallbacks, unchanged and independently verified all week:
 
 ## What is KNOWN TO BE WRONG, and is the overnight list
 
-1. The backtest models TWO keepers; the league has TWENTY-FOUR. Every score
-   here was measured on a board ~22 men deeper than tomorrow's.
+1. ANSWERED 2026-09-01, and it was MATERIALLY MISLEADING, not merely imprecise.
+   `EraSlate` transplants all twenty-four keepers by positional ADP rank and
+   skips the twenty-four picks they spend; `-PleagueKeepers=true` turns it on
+   and it is OFF by default, so every figure above still reproduces.
+   `KeeperSlateImpact` scores both boards in one process:
+
+       every strategy loses 55 to 196 points  -  a 141-point spread, over the bar
+       the serious field narrows from 95 points wide to 65, both under the bar
+       the plan falls from 2nd to 7th and starter-sum rises from 6th to 1st
+       plan vs BoardValue: +72 becomes +57, a tie either way, and the paired
+       standard error nearly doubles (51 -> 87)
+
+   So no, it does not change which model wins - it removes the grounds for
+   thinking one did. On the board Justin actually faces, seven strategies sit
+   inside fifteen points of each other and the ORDER of positions in rounds
+   1-9 stops being measurable, because the men who made an early back or an
+   early receiver worth something are on somebody else's roster.
+   Data: `data/keeper-slate-impact-2026-09-01.txt`, `data/keeper-slate-2026-09-01.txt`.
 2. `lostBelow=0.55` and the 15% fragility bar are numbers I CHOSE. Nothing
    fits them to an outcome.
 3. Scatter is indexed by draftable rank but learned from full-board rank.

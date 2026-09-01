@@ -98,6 +98,15 @@ tasks.register('run', JavaExec) {
      // leagueKeepers; separable so the two effects can be measured apart.
      // Both off by default: every score on record was measured without them.
      'leagueKeepers', 'keeperRanks',
+     // BoardValue.Selection - the OTHER form of the lineup rule. -PlostBelow
+     // benches a man whose season fell below a fraction of what his rank
+     // returns; -Plambda instead orders the lineup on
+     // expected + lambda * (drawn - expected), which is continuous and has
+     // best ball at lambda 1. Exactly one of the two may be passed.
+     // 'wireWhenAllLost=false' makes a position that loses every man it owns
+     // field its least-bad one instead of streaming the wire; true is shipped
+     // and is what every recorded backtest number was measured with.
+     'lambda', 'wireWhenAllLost',
      // LeagueActuals.FLAG - grade outcomes under the league's own scoring
      // instead of Sleeper's pts_half_ppr. Off by default on purpose.
      'leagueScoredActuals',
