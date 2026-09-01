@@ -43,8 +43,27 @@ about three hundred points a season.
 
 Which is worth saying plainly: the value was never in picking the right plan. It
 was in having one at all, and in the model refusing the picks that are actually
-wrong - a third quarterback, a man somebody else keeps, a defence before round
-ten.
+wrong - a third quarterback, a man somebody else keeps.
+
+**Corrected 2026-09-01, overnight.** That sentence used to end "...and a defence
+before round ten." Two things were wrong with it. The model did not do it - an
+adversarial pass found a defence in round 7 or 8 in five of six drafts - and
+the preference was never measurable in the first place. `DefenceTiming` holds
+the roster shape fixed and moves only the round the defence goes in:
+
+    pick   7  1824.6      pick  79  1926.3      pick 127  1925.2
+    pick  18  1868.4      pick  90  1929.7      pick 162  1922.0
+    pick  31  1879.6      pick 103  1927.9      pick 175  1917.9
+    pick  42  1903.4      pick 114  1930.8 <-   pick 186  1917.7
+    pick  55  1914.5
+    pick  66  1924.1      whole spread 106.2, against a 125-point bar
+
+The peak IS round 10, which is where the heuristic pointed; round 8 is 1.1
+points off it; and the entire axis from round 1 to round 16 fits inside one
+bar. So the round is not a measurable quantity and it was never a refusal the
+objective could enforce. The ordering is smooth and sensible in both directions
+- too early wastes a premium pick, too late gets a worse defence - which is
+more than noise would give, but no single comparison clears the bar.
 
 ## Verified at the tag
 
@@ -63,7 +82,7 @@ ten.
   hindsight.
 - Tiers are Boris-Chen-shaped: groups you cannot tell apart, from 2026
   projections and sixteen years of measured scatter.
-- 0.5s per pick warm.
+- 0.5s per pick warm for the board model; see the measured cycle below.
 
 ## What is KNOWN TO BE WRONG, and is the overnight list
 
@@ -141,6 +160,83 @@ ten.
    test fails, the valuation has stopped discriminating and wants
    investigating - NOT a tighter cap. Capping it would be hiding the fault,
    which is what was happening when the model wanted three tight ends.
+
+## What the overnight adversarial passes found, 2026-09-01
+
+Two independent agents audited the live path and Model A. Both found the same
+first fault, which is the one that mattered.
+
+**1. The drift warning cried wolf and would have made him abandon the tool.**
+The detector added the previous night compared a SLOT NUMBER against a PICK
+COUNT. A keeper slot is a pick number that consumes no pick, this league has
+twenty-four of them, and `LiveDraft.livePicks` drops keeper picks - so on a
+perfectly clean board the two quantities part company from round 3 and never
+rejoin. Measured on a clean 168-pick replay: it fires at **137 of 168
+refreshes**, printing "trust DraftNight and the RUNBOOK until it clears". It
+never clears. `DraftNight.scheduleDrift` now counts LIVE SLOTS, which is the
+quantity the pick count actually measures; `DriftAlarmCheck` replays a clean
+draft and throws if it ever fires. It fires 0 times.
+
+**2. The legend named the wrong column.** The footer said VS WAIT "is what to
+rank on". The code has always ranked on END TEAM. They disagree in practice, so
+a reader following the printed instruction took a different player than the
+tool recommended. END also printed to the whole point, showing two rows as
+tied when the verdict had a preference; it now prints one decimal.
+
+**3. The rollout could imagine a roster with no defence.** The greedy tail was
+pure marginal with no legality constraint, so it often finished with none, and
+those rosters were charged the streaming penalty - which made taking a defence
+NOW look like the only way to ever have one. `TailLegality` measures 0 of 5
+tails finishing without a defence, where they finished `{QB=2, RB=5, WR=8,
+TE=1}` before. This is TRAPS A7 living inside the quantity the verdict ranks on.
+
+**4. Every man on his roster was priced below his own projection.** Held men
+were ranked against the whole pool while the curve is built from the draftable
+pool, so each indexed a list he was being counted against by twenty-four
+players who are not in it. Ja'Marr Chase priced 29.1 points under his own
+projection: the moment Justin drafted the best receiver on the board, the model
+priced him as WR2. Every draftable man now indexes his own projection exactly.
+
+**5. TRAPS A1's amnesia was still open, with a comment claiming otherwise.**
+A pick the rules declined went into a print list and never onto the roster, so
+the quarterback ceiling of two was counted against one and `full()` read fifteen
+on a roster of sixteen. `BoardValue.MOST` was the only thing standing between
+that and a third quarterback - far more load-bearing than "appetite". Closed by
+`Roster.holdAnyway`, which records a man the rules refuse without weakening
+`draft()`, so no model can still PLAN an illegal roster.
+
+**6. Two halves of the screen could describe different boards.** `Draft2026`
+read the picks endpoint three times per cycle, uncached, across sixteen seconds
+of Model A. One snapshot per cycle now; the footer says how many picks it held.
+
+**7. The screen sent him to a tool that stops at pick 108.** `LateRoundTargets`
+never sets `scheduleRounds=16`; his last three picks are 162, 175 and 186. Both
+on-screen instructions now name `LiveLateRounds`, which does set it.
+
+Also fixed: `branchWith` did not mean the same slot as `slotOf` and could spend
+a pick into a keeper slot; Model A had no drift detector at all; and a tied
+committee vote was printed as a verdict decided by enum declaration order, which
+happened on the real board at round 3.
+
+**Still open, not fixed:** an off-board man - anyone past ADP 250 - is offered
+again after somebody drafts him, and if JUSTIN takes one he vanishes from his
+own roster count. Needs someone reaching past ADP 250 in rounds 13-16. The
+corrected drift warning now fires when it happens, so it is wrong and loud
+rather than wrong and quiet. Also `-Pkeepers` is ignored by `DraftNight` and the
+other fallbacks; harmless tonight because both keepers are declared on Sleeper.
+
+## The clock, measured
+
+`CycleTiming` times the real `Draft2026` cycle with output swallowed:
+
+    board model   0.3 - 0.6s
+    Model A      14.7 - 16.3s
+    worst cycle        16.6s   against a sixty second clock
+
+The "4-11s" quoted elsewhere was the bare nine-round `DraftNight`, not this.
+Press enter EARLY. The board model answers in under a second and it is the one
+that knows the twenty-four keepers - read it and let Model A arrive while you
+decide.
 
 ## Running experiments while agents work
 
