@@ -743,7 +743,14 @@ public class DraftPlanner {
         Map<String, Double> earliness = SelectionModel.qbEarliness(configuration, lastCompleted);
         ChoiceModel model = BoostedSelectionModel.fitShipped(configuration, lastCompleted, earliness);
         DraftPlanner planner = forCurrentSeason(configuration, myKeepers, model, earliness);
-        System.out.printf("nine-round plan, keepers %s, %d rollouts, lambda %.2f, quantile %.2f%n",
+        // SAY WHICH SCHEDULE. This printed "nine-round plan" whatever
+        // scheduleRounds said, and Draft2026 runs Model A at SIXTEEN - so the
+        // header described a different model than the one below it whenever
+        // anybody looked at the live configuration. Rounds 1-9 happen to be
+        // identical between the two, which is the reassuring part and is
+        // exactly why the mislabel could sit here unnoticed.
+        System.out.printf("%d-round plan, keepers %s, %d rollouts, lambda %.2f,"
+                        + " quantile %.2f%n", scheduleRounds(),
                 myKeepers.isEmpty() ? "as declared on Sleeper"
                         : myKeepers.stream().map(keeper -> keeper.player.lastName
                                 + " r" + keeper.roundCanBeKept).toList().toString(),

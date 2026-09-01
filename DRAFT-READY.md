@@ -102,6 +102,13 @@ Re-verified after the overnight fixes, 2026-09-01:
                               rounds 1-7 unchanged; round 9 was QB, and the
                               cap now counts Purdy - Purdy r8, Tuten r9, which
                               is how you described Model A in the first place
+    Model A, 9 vs 16 rounds   rounds 1-9 IDENTICAL. DraftPlanner's own main
+                              runs the nine-round game and that is the shape
+                              above; Draft2026 runs Model A at sixteen. They
+                              agree exactly where it is trusted, pinned by
+                              ModelAScheduleTest. The header used to say
+                              "nine-round plan" under both, so nothing on
+                              screen would have said otherwise.
     BoardValue backtest       mean 1931, worst 1748
     board at pick 7           RB Cook 1917.5 > WR Lamb 1892.5 >
                               TE Fannin 1829.1 > DEF Rams 1829.2;
