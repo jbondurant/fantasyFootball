@@ -101,7 +101,7 @@ public class BoardValue {
      * The one judgement is who fills the slot within a season. Taking the best
      * REALISED man assumes a manager who always ends up playing his better
      * player; taking the best EXPECTED man assumes one who never reacts. The
-     * truth is between, so -PlineupByExpected prints the stingy end and the
+     * truth is between, so -PbestBall prints the hindsight end and the
      * difference is the bracket rather than a claim.
      *
      * DEFAULT IS THE GENEROUS END, and it is hindsight. With the flag off the
@@ -790,53 +790,44 @@ public class BoardValue {
     }
 
     /**
-     * -PlineupByExpected: fill the slots by EXPECTATION, score them on the DRAW.
+     * -PbestBall: fill the slots by the DRAW, which is what best ball does.
      *
      * The comment at the head of this file has promised this flag since the
-     * bench half went in - "the truth is between, so -PlineupByExpected prints
+     * bench half went in - "the truth is between, so -PbestBall prints
      * the stingy end and the difference is the bracket rather than a claim" -
      * and until 2026-08-31 nothing read it. build.gradle forwarded the name, so
-     * -PlineupByExpected=true was accepted, forwarded and ignored, and the
+     * -PbestBall=true was accepted, forwarded and ignored, and the
      * bracket the comment describes had never been printed. That is TRAPS.md F27
      * exactly: prose describing a mechanism the code does not implement.
      *
-     * OFF by default, which is a KNOWN BIAS and not a clean choice. Read this
-     * before trusting any depth number this model produces.
+     * ON by default: the lineup is set on what was KNOWN, and scored on what
+     * happened.
      *
-     * Justin: the 3 TE model should be indicative of a problem with the model,
-     * and we should fix that. He was right and this is the problem. With the
-     * flag off the fill sorts on DRAWN points, so the model plays whichever
-     * tight end turned out better - which nobody can do in August. That is
-     * TRAPS.md C12, the fault that has already reversed several findings here.
+     * Justin would not let the maxTE=3 result go - the 3 TE model should be
+     * indicative of a problem, and we should fix that. It was. Filling by DRAWN
+     * points means playing whichever tight end turned out better, which nobody
+     * can do in August: TRAPS.md C12, the fault that has already reversed
+     * several findings here. Under it every extra body is a lottery ticket
+     * always cashed correctly, so more bodies are always better and the
+     * appetite cap was the only thing stopping a third tight end. Capping it
+     * was hiding the fault.
      *
-     * It explains the symptom exactly. Under hindsight every extra body is a
-     * lottery ticket that is always cashed correctly, so more bodies are always
-     * better, depth is overvalued, and a third tight end on a one-tight-end
-     * lineup looks good. The appetite cap was the only thing stopping it, which
-     * means capping it was hiding the fault - his words, and correct.
+     * Turning it on the first time BROKE the model: it drafted sixteen
+     * receivers in two of five seasons, because a bench man chosen on preseason
+     * expectation can never enter a lineup, so his marginal is exactly zero and
+     * the search stops discriminating. That is not an argument for hindsight,
+     * it is the discovery that this model had no honest reason to own a bench
+     * at all. The availability channel in oneSeason is that reason, and with it
+     * the cap sweep is monotone and converges - 1935, 1955, 1957, 1957 for
+     * maxTE 1, 2, 3, 14 - where before it wandered non-monotonically.
      *
-     * AND JUSTIN'S OTHER OBSERVATION, which is the useful half: this is not a
-     * bug in every format. In BEST BALL the lineup IS set retrospectively -
-     * your optimal starters are chosen for you after the week is played - so
-     * sorting on realised points is not hindsight there, it is the rules. This
-     * setting is the correct model for best ball and the wrong one for a league
-     * where a human sets a lineup on Sunday morning. The same code, honest in
-     * one format and cheating in the other.
-     *
-     * SO WHY IS IT STILL THE DEFAULT. Turning it on removes the cap dependence
-     * completely - 1736/1594 at every maxTE from 1 to 14, where before the
-     * score wandered between 2023 and 2043 - which is the proof that hindsight
-     * was driving it. But the resulting model drafts SIXTEEN RECEIVERS in two
-     * of five seasons, because with depth worth nothing the marginal collapses
-     * and the search stops discriminating. That is a worse thing to hand
-     * somebody at a draft than a documented bias.
-     *
-     * So the honest state, the night before: the model is biased toward depth
-     * and the bias is measured. -PlineupByExpected removes it and breaks the
-     * search. Fixing the marginal so it still discriminates without hindsight
-     * is the first post-draft job, and it is a real one.
+     * AND BEST BALL IS WHY THE OLD BEHAVIOUR SURVIVES AS A FLAG. Justin's
+     * observation, and it is the useful half: in best ball the lineup IS chosen
+     * retrospectively, so sorting on realised points is not hindsight there, it
+     * is the rules. -PbestBall is not a legacy switch, it is the correct model
+     * for a different format - honest in one game and cheating in the other.
      */
-    static final boolean BY_EXPECTED = Boolean.getBoolean("lineupByExpected");
+    static final boolean BY_EXPECTED = !Boolean.getBoolean("bestBall");
 
     static double oneSeason(List<Slot> roster, Map<Position, List<List<Double>>> pools,
                             Map<Position, double[]> curve, int world){
@@ -855,6 +846,36 @@ public class BoardValue {
             pool.computeIfAbsent(slot.position(), u -> new ArrayList<>())
                     .add(new double[]{expected,
                             drawn(pools, slot.position(), slot.rank(), world, curve, ratios)});
+        }
+        // WHO IS AVAILABLE, which is the only honest reason to own a bench.
+        //
+        // Without this, removing hindsight leaves a bench man worth EXACTLY
+        // zero - he can never enter a lineup chosen on preseason expectation -
+        // so the marginal collapses, the search stops discriminating and it
+        // drafts sixteen receivers. That is what happened the first time
+        // BY_EXPECTED was switched on.
+        //
+        // A bench man is worth what he is worth when the man ahead is LOST. So
+        // a drawn season far below what that rank normally returns counts as
+        // lost, the manager benches him - which is a thing anybody can see by
+        // October, unlike knowing who will outscore whom - and the lineup is
+        // filled by EXPECTATION from whoever is left. Selection uses only what
+        // was knowable; scoring still uses what happened.
+        //
+        // No new data: the threshold reads the same pooled ratios everything
+        // else here draws from.
+        double lost = Double.parseDouble(System.getProperty("lostBelow", "0.55"));
+        for(Map.Entry<Position, List<double[]>> entry : pool.entrySet()){
+            double[] mean = curve.get(entry.getKey());
+            entry.getValue().removeIf(man -> {
+                if(!BY_EXPECTED || man[0] <= 0){
+                    return false;       // realised-fill needs no availability
+                }
+                boolean gone = man[1] < lost * man[0];
+                // Never empty a position entirely - somebody starts, even a
+                // busted man, and the wire fills only what nobody can.
+                return gone && entry.getValue().size() > 1;
+            });
         }
         Comparator<double[]> best = BY_EXPECTED
                 ? Comparator.comparingDouble((double[] man) -> man[0]).reversed()
