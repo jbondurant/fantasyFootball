@@ -259,6 +259,38 @@ RB Malik Davis, ADP 686, named, drafted, then named twice more.
 fallbacks - harmless tonight because both keepers are declared on Sleeper, so
 the tools read them from the live draft anyway.
 
+## The one real modelling change of the night
+
+Everything else above is a fault fixed. This is a different rule.
+
+`expectedRank` decides who is gone by a later pick, and it feeds every rollout,
+so it sets every END TEAM number on the table. It used a **hard ADP cutoff** -
+gone if his ADP beats the seat, there otherwise. That is the rule this repo
+already rejects for the wait table, in a comment twenty lines away: *"a hard
+cutoff and false in both directions: a man at ADP 6.9 is not certainly gone and
+one at 7.1 is not certainly there."* The wait table simulates survival; the
+rollout never got the same treatment.
+
+`RankPrediction` scores both against the fitted opponent model, on simulations
+the survival rule was not fitted to:
+
+    mean absolute error per position-seat
+      hard ADP cutoff     2.69 men
+      survival weighted   0.08 men
+
+The errors were systematic rather than noisy. At pick 42 the cutoff said two
+tight ends were gone when 0.1 really are - so the model priced the third-best
+tight end while the best was still on the board. At pick 186 it said 56 backs
+were gone against a true 50.9.
+
+**The backtest cannot see this change.** It replays historical boards where who
+went is known rather than predicted, and scores 1931 either way. That is the
+wrong instrument, not evidence of no effect - which is why the case rests on the
+bounded per-decision measurement, the same reason this repo trusts those over
+season totals everywhere else.
+
+Costs 3s at warm, paid once. `-PsurvivalDraws=0` restores the tagged rule.
+
 ## The clock, measured
 
 `CycleTiming` times the real `Draft2026` cycle with output swallowed:
