@@ -223,8 +223,11 @@ public class LiveCommittee {
         // Kim-Nelson arbitration: a statistical verdict rather than a vote
         // count. It either PROVES the selection at 95% confidence or reports
         // an honest tie, and it spends rollouts only on live contenders
-        // (measured: 45-64 on contested early picks, 0-8 on settled ones,
-        // 1.2s worst case).
+        // (measured 2026-09-01: 126 rollouts and 8.4s at pick 1. The older
+        // note here said "45-64 rollouts, 1.2s worst case" - that was measured
+        // while the arbiter was silently dead, throwing on the first defence it
+        // met and being counted as a fast no-op. It is the single most
+        // expensive thing in the cycle.)
         long knStart = System.currentTimeMillis();
         PolicyTournament.RankingSelection kn = arbiter(timing, planner, simulator,
                 state, roster);
@@ -276,8 +279,14 @@ public class LiveCommittee {
             return null;
         }
         catch(RuntimeException problem){
-            System.out.println("   (KN arbiter unavailable: " + problem.getMessage()
-                    + " - falling back to the vote)");
+            // NAME THE PLACE. This printed only getMessage(), and a
+            // NullPointerException's message describes the expression, not the
+            // file - so the arbiter was dead in Draft2026 for an unknown length
+            // of time with nothing on screen to locate it.
+            StackTraceElement[] frames = problem.getStackTrace();
+            String where = frames.length == 0 ? "unknown" : frames[0].toString();
+            System.out.println("   (KN arbiter unavailable: " + problem
+                    + "\n    at " + where + " - falling back to the vote)");
             return null;
         }
     }

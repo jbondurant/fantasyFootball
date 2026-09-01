@@ -398,7 +398,24 @@ public class PolicyTournament {
                 top.put(position, new ArrayList<>());
             }
             for(String sleeperID : board){
-                top.get(Player.getPlayerFromSIDV2(sleeperID).position).add(sleeperID);
+                // A DEFENCE IS NOT A SKILL POSITION. `top` is keyed by SKILL
+                // only, so this threw a NullPointerException the moment
+                // defences joined the board - which they did when DEF was
+                // added to PairwiseOdds.CAP, and Draft2026 forces
+                // scheduleRounds=16, so they are always there. The whole KN
+                // arbiter has been dead in the tool Justin actually runs ever
+                // since, degrading silently to the vote count it is meant to
+                // adjudicate. It arbitrates between skill positions; anything
+                // else simply is not its question.
+                Player player = Player.getPlayerFromSIDV2(sleeperID);
+                if(player == null){
+                    continue;
+                }
+                List<String> bucket = top.get(player.position);
+                if(bucket == null){
+                    continue;
+                }
+                bucket.add(sleeperID);
             }
             for(Position position : SKILL){
                 List<String> ids = top.get(position);
@@ -1790,8 +1807,19 @@ public class PolicyTournament {
                     if(takenAt.getOrDefault(sleeperID, Integer.MAX_VALUE) < pick){
                         continue;
                     }
-                    alive.get(Player.getPlayerFromSIDV2(sleeperID).position)
-                            .add(points.getOrDefault(sleeperID, 0.0));
+                    // Skill-only map, and defences are on the board whenever
+                    // scheduleRounds > 9 - which Draft2026 forces. Same fault
+                    // as ScenarioRecorder above, and it is what actually killed
+                    // the KN arbiter in the live tool.
+                    Player player = Player.getPlayerFromSIDV2(sleeperID);
+                    if(player == null){
+                        continue;
+                    }
+                    List<Double> bucket = alive.get(player.position);
+                    if(bucket == null){
+                        continue;
+                    }
+                    bucket.add(points.getOrDefault(sleeperID, 0.0));
                 }
                 for(Position position : SKILL){
                     List<Double> values = alive.get(position);
