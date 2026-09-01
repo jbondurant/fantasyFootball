@@ -34,7 +34,15 @@ public class DryRun {
         List<PairwiseOdds.Man> men = PairwiseOdds.nflverseMen(wider, order);
         Set<String> kept = LiveBoard.kept(configuration);
         Map<Position, double[]> curve = LiveBoard.thisYear(planner, kept);
-        Map<Position, List<List<Double>>> pools = BoardValue.pools(men, curve);
+        Map<Position, List<List<Double>>> pools =
+                new EnumMap<>(BoardValue.pools(men, curve));
+        // LiveBoard adds this and DryRun did not, so its defences were drawn as
+        // CERTAIN while every other man was uncertain - a second way the harness
+        // was not playing the tool's game.
+        List<List<Double>> defence = LiveBoard.defenceScatter();
+        if(!defence.isEmpty()){
+            pools.put(Position.DEF, defence);
+        }
 
         Map<Position, List<String>> ordered = new EnumMap<>(Position.class);
         for(String id : planner.points().keySet()){
@@ -70,6 +78,7 @@ public class DryRun {
         }
         Map<Position, Integer> have = new EnumMap<>(Position.class);
         List<String> mine = new ArrayList<>();
+        List<String> gone = new ArrayList<>();
 
         System.out.printf("%-6s %-6s %-26s %-4s %s%n",
                 "ROUND", "PICK", "THE MODEL TAKES", "POS", "check");
@@ -80,6 +89,12 @@ public class DryRun {
                 continue;
             }
             int round = slot.round();
+            List<String> goneNow = new ArrayList<>();
+            for(String id : planner.points().keySet()){
+                if(state.takenAtOf(id) != null){
+                    goneNow.add(id);
+                }
+            }
             Position best = null;
             double most = -1e9;
             String bestId = null;
@@ -102,9 +117,20 @@ public class DryRun {
                 if(candidate == null){
                     continue;
                 }
-                List<BoardValue.Slot> after = new ArrayList<>(held);
-                after.add(new BoardValue.Slot(position, rank));
-                double value = BoardValue.empirical(after, pools, curve, order.size(), true);
+                // THE SAME RULE LiveBoard USES, which this file's header
+                // claimed and did not do. It ranked on a one-ply marginal -
+                // value(held + him) - where LiveBoard rolls the rest of the
+                // draft out and values the FINISHED roster, and also applies a
+                // fragility filter. Those are different rules and they choose
+                // differently: ranking on the one-ply marginal is the greedy
+                // urgency rule that scored 1916 and spent round 2 on a tight
+                // end. A whole-draft harness that plays a rule nobody drafts
+                // with cannot audit the tool, which is the entire point of it.
+                // The real taken list, so the rollout plans against the board
+                // that exists rather than the one ADP predicted in August.
+                double[] both = LiveBoard.rolloutStats(planner, gone, curve, pools,
+                        order.size(), held, position, rank, slot.pickNumber());
+                double value = BoardValue.tooFragile(both) ? -1e9 : both[0];
                 if(value > most){
                     most = value;
                     best = position;

@@ -823,14 +823,32 @@ public class LiveBoard {
         return roster;
     }
 
-    /** How deep a position will be at a later pick, at its own ADP rate. */
+    /**
+     * How deep a position will be at a later pick - counting who has REALLY
+     * gone, not only who ADP expects to have gone.
+     *
+     * This took a `taken` list and never read it. Every future rank in the
+     * rollout came from ADP alone, so the rollout planned against a board that
+     * existed only in August: by round 8 the real board and the ADP board have
+     * diverged badly, and a run on a position is invisible. It showed up as
+     * DryRun drafting a DEFENCE at round 8 once it started using this rule -
+     * a pick every measurement in the repo says is wrong, produced by a rollout
+     * that could not see what had actually been drafted.
+     *
+     * Now: a man is gone if he is really gone, OR if ADP expects him gone by
+     * that pick and we have no evidence either way. The first term is fact and
+     * the second is the prior it falls back to for picks that have not happened.
+     */
     static int expectedRank(DraftPlanner planner, List<String> taken,
                             Position position, int pick){
+        Set<String> already = taken == null ? Set.of() : new HashSet<>(taken);
         int gone = 0;
         for(String id : planner.points().keySet()){
             Player player = Player.getPlayerFromSIDV2(id);
-            double adp = SleeperProjections.adpOf(id);
-            if(player != null && player.position == position && adp < pick){
+            if(player == null || player.position != position){
+                continue;
+            }
+            if(already.contains(id) || SleeperProjections.adpOf(id) < pick){
                 gone++;
             }
         }
