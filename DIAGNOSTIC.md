@@ -12,7 +12,8 @@ than two paired standard errors, under all four projection feeds. That has not
 moved through a single change made today. What moved, repeatedly, were the
 *numbers I used to judge the model* - and most of today's "findings" were
 faults in those measurements, not in the model. The room model is fitted on
-435 observations and is at or near the accuracy floor that much data allows;
+857 selections (2021-2025, sixteen rounds; `TrainingRows`) and is at or near
+the accuracy floor that much data allows;
 tuning it further by adding features is fitting noise, and the nine-round gate
 proved that twice.
 
@@ -55,7 +56,8 @@ ratios. `BoardValue.pools`, `LiveBoard.defenceScatter`.
 ### 3. The room model - who takes whom, when
 
 `BoostedSelectionModel`, 300 trees depth 2, fitted on this league's 2021-2025
-drafts. **This is where the day went.**
+drafts - 857 selections at the live sixteen-round schedule (`TrainingRows`).
+**This is where the day went.**
 
 | measured | tool | confidence |
 |---|---|---|
@@ -76,9 +78,12 @@ drafts. **This is where the day went.**
 
 **What is actually wrong, stated plainly:**
 
-- **It is data-limited.** 435 training rows. Every feature added is fitted to
-  435 rows, and the nine-round gate degraded from 0.60% to 1.00% the moment
-  five extra columns were left switched on there. The 5-12 point fidelity
+- **It is data-limited.** 857 training selections in the shipped fit
+  (`TrainingRows`); the nine-round gate that judges features fits on 423. Every
+  feature added is fitted to that, and the gate degraded from 0.60% to 1.00% the
+  moment five extra columns were left switched on there. (I quoted "435" for
+  most of the day - the gate's size, not the shipped fit's. Wrong population,
+  right conclusion; TRAPS #59.) The 5-12 point fidelity
   errors are probably close to the floor for this much data. **Adding features
   is not the lever.** I spent most of the day pulling it anyway.
 - **The defence timing is a hard boundary, not a soft shift.** 0 of 58 before

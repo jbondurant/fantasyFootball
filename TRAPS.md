@@ -315,4 +315,11 @@ real every time.
     citation stale before the test could run. Line numbers in code are references
     that nothing updates. Re-check them after ANY edit to the cited file, or
     cite an anchor rather than a number.
+59. **The gate's sample size quoted as the model's.** "435 rows" appeared in
+    DIAGNOSTIC.md, the agent definition and a memory file as the size of the
+    shipped room-model fit. It was BoostLab's 2024 gate set - 2021-2023, rounds
+    1-13, actually 423. The shipped fit is 857 (2021-2025, rounds 1-16;
+    `TrainingRows`). The conclusion drawn from it was measured on the right fit
+    and stands; the number under it was the wrong population's. Even the
+    document about population errors had one.
 
