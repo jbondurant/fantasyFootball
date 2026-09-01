@@ -160,6 +160,12 @@ imagine a roster with no defence.
    a threshold sitting ON the edge of the distribution rather than clear of it.
    Which means "the model refuses fragile picks" is not something to rely on
    tonight - the roster rules do the refusing, and they are tested.
+
+   The swing statistic itself spans only **2.4 points** across a whole draft
+   (12.6% narrowest, 13.6% median, 15.0% widest). A lower bar WOULD fire, so
+   this is not a quantity with no variation - but it would be sorting picks on
+   a 2.4-point spread when board-to-board noise here is measured in tens of
+   points. The bar is both above the data and short of signal to place better.
 3. Scatter is indexed by draftable rank but learned from full-board rank.
 4. ANSWERED 2026-09-01, and the answer is EXPECTATION. The scorer is honest.
    `ScorerHonestyAudit` scores each roster twice - shipped fill against a fill

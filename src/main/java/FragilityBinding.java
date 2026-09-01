@@ -117,9 +117,23 @@ public class FragilityBinding {
         System.out.printf("worst swing seen anywhere: %.1f%% against a %.0f%% bar.%n",
                 100 * worstSwing, 100 * bar);
         swings.sort(Comparator.reverseOrder());
-        System.out.printf("%nthe five widest swings in the draft:%n");
-        for(int i = 0; i < Math.min(5, swings.size()); i++){
-            System.out.printf("   %.1f%%%n", 100 * swings.get(i));
+        double widest = swings.get(0);
+        double narrowest = swings.get(swings.size() - 1);
+        double median = swings.get(swings.size() / 2);
+        System.out.printf("%nthe swing statistic across all %d position-picks:%n", priced);
+        System.out.printf("   widest    %.1f%%%n   median    %.1f%%%n   narrowest %.1f%%%n",
+                100 * widest, 100 * median, 100 * narrowest);
+        System.out.printf("   full range %.1f points%n", 100 * (widest - narrowest));
+        if(widest - narrowest < 0.04){
+            System.out.printf("%nAND THE STATISTIC BARELY VARIES: %.1f points from the%n"
+                    + "safest pick in the draft to the most fragile. A LOWER bar%n"
+                    + "would fire - this is not a quantity with no variation - but%n"
+                    + "it would be sorting picks on a %.1f-point spread, and the%n"
+                    + "board-to-board noise in this repo is measured in tens of%n"
+                    + "points. So the honest reading is that the bar is placed%n"
+                    + "above the data AND that there is little signal underneath%n"
+                    + "it to place it more usefully.%n",
+                    100 * (widest - narrowest), 100 * (widest - narrowest));
         }
         int near = 0;
         for(double swing : swings){
