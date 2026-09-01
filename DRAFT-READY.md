@@ -23,7 +23,7 @@ If something looks wrong mid-draft, the restore point is one command:
     git checkout draft-ready-2026
 
 Everything after that tag was added on 2026-09-01. It is better tested than
-the tag - 470-odd tests against 389 - but the tag is what a full week of
+the tag - 478 tests against 389 - but the tag is what a full week of
 independent verification stands behind.
 
 Fallbacks if the main tool misbehaves:
@@ -86,7 +86,7 @@ more than noise would give, but no single comparison clears the bar.
 
 Re-verified after the overnight fixes, 2026-09-01:
 
-    full suite                green, 457 tests
+    full suite                green, 478 tests
     Model A shape             RB WR RB WR WR WR TE QB RB
                               rounds 1-7 unchanged; round 9 was QB, and the
                               cap now counts Purdy - Purdy r8, Tuten r9, which
