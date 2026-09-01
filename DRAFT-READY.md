@@ -435,6 +435,37 @@ So the first pick is source-proof, which is worth more than it looks: the
 verdict is driven by the SHAPE of the positional curves, which the shops agree
 about, rather than by anyone's point estimate of a particular man.
 
+## Where the model has an opinion, and where it is guessing
+
+The table now says whether its own top row is separated from the runner-up.
+The test is PAIRED - both candidates scored on the same worlds - so it is
+asking a bounded per-decision question, not the unbounded season question the
+125-point bar is about. "SEPARATED" means the preference is real, NOT that the
+pick is worth 25 points of season.
+
+`OpinionCount` asks it at all fourteen seats across five simulated rooms
+(`-Pmain=OpinionCount -Pseeds=5`):
+
+    pick   7   RB over WR   real in ALL 5      <- the one it is surest about
+    pick  31   RB over WR   real in all 5
+    pick  66   WR over TE   real in all 5
+    pick  55   WR over TE   4 of 5
+    pick  42 / 103 / 114 / 186              3 of 5
+    pick  18                                2 of 5
+    pick  79 / 162 / 175                    1 of 5
+    pick  90   TE over DEF  COIN FLIP in all 5
+    pick 127   WR over RB   COIN FLIP in all 5
+
+**3 of 14 seats separated in every room; 2 are a coin flip in every one.** At
+most seats it depends on how the draft actually unfolds, which is the honest
+answer rather than a hedge.
+
+Two things follow. Your **first pick is the one the model is surest about** -
+separated in every room, and source-proof besides. And at a coin-flip seat the
+model is not being modest, it is being accurate: the two positions really are
+worth the same from that board, and your own read on the men is the better
+instrument. Use it there without feeling you are overruling anything.
+
 ## Is there a better pairwise model? No.
 
 You asked whether a boosted model might beat the odds surface. Ten families
