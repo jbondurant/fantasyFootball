@@ -23,6 +23,7 @@ public class OpinionCount {
         DraftSimulator simulator = setup.simulator;
         Set<String> kept = setup.kept;
 
+        boolean[] dumped = {false};
         PrintStream real = System.out;
         PrintStream quiet = new PrintStream(OutputStream.nullOutputStream());
         java.io.ByteArrayOutputStream captured = new java.io.ByteArrayOutputStream();
@@ -70,9 +71,15 @@ public class OpinionCount {
                     System.setOut(real);
                     LiveDraft.thaw();
                 }
-                if(seats == 0 && System.getProperty("dump") != null){
-                    real.printf("%n---- FIRST SEAT, FULL CAPTURE ----%n%s%n"
-                            + "---- END CAPTURE ----%n%n", captured.toString());
+                if(System.getProperty("dump") != null
+                        && captured.toString().contains("INSIDE THE NOISE")
+                        && !dumped[0]){
+                    dumped[0] = true;
+                    String all = captured.toString();
+                    int at = all.indexOf("the model takes");
+                    real.printf("%n---- FIRST COIN-FLIP SEAT ----%n%s%n"
+                            + "---- END ----%n%n",
+                            at < 0 ? all : all.substring(at));
                 }
                 for(String printed : captured.toString().split("\n")){
                     if(printed.contains("leads") && printed.contains("+/-")){

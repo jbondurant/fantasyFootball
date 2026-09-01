@@ -517,13 +517,51 @@ public class LiveBoard {
             if(leader != null && runnerUp != null){
                 double[] gap = margin(leader, runnerUp);
                 boolean proven = gap[0] > 2 * gap[1];
-                margin = String.format(
+                StringBuilder text = new StringBuilder(String.format(
                         "   %s leads %s by %.1f +/- %.1f (paired, 2 s.e.) - %s%n",
                         ranked.get(0), ranked.get(1), gap[0], gap[1],
                         proven ? "SEPARATED (the preference is real; it is not a"
                                         + " claim about season points)"
-                                : "INSIDE THE NOISE, treat as a coin flip and use"
-                                        + " your own read");
+                                : "INSIDE THE NOISE, treat as a coin flip"));
+                if(!proven){
+                    // GIVE HIM SOMETHING TO DECIDE ON. Telling him the two
+                    // positions are worth the same and stopping there leaves
+                    // him with less than he started with. If the POSITION does
+                    // not matter, the MAN might - and the model knows who is
+                    // actually on the board, which is the part he cannot hold
+                    // in his head at pick 127 with a clock running.
+                    text.append("   The position does not decide it here. The men"
+                            + " actually available:\n");
+                    for(Position position : List.of(ranked.get(0), ranked.get(1))){
+                        List<String> byProjection = ordered.get(position);
+                        if(byProjection == null){
+                            continue;
+                        }
+                        StringBuilder names = new StringBuilder();
+                        int shown = 0;
+                        for(String id : byProjection){
+                            if(taken.contains(id) || kept.contains(id)){
+                                continue;
+                            }
+                            Player who = Player.getPlayerFromSIDV2(id);
+                            if(who == null){
+                                continue;
+                            }
+                            names.append(names.length() == 0 ? "" : ",  ")
+                                    .append(who.firstName.charAt(0)).append(". ")
+                                    .append(who.lastName)
+                                    .append(String.format(" %.0f",
+                                            planner.points().getOrDefault(id, 0.0)));
+                            if(++shown == 3){
+                                break;
+                            }
+                        }
+                        text.append(String.format("     %-4s %s%n", position, names));
+                    }
+                    text.append("   Take the one you believe in. The model has no"
+                            + " preference to overrule.\n");
+                }
+                margin = text.toString();
             }
         }
         if(allRefused){
