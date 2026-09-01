@@ -294,6 +294,23 @@ season totals everywhere else.
 
 Costs 3s at warm, paid once. `-PsurvivalDraws=0` restores the tagged rule.
 
+Tested again where it actually runs. The first measurement used an empty board,
+which is the one regime where the rule's approximation is exact and therefore
+invisible. `MidDraftRank` scores every (seat now, seat later, position) cell of
+a real draft, 21,840 of them: cutoff **4.32**, shipped **0.85**, exact
+conditional **0.86**. So the approximation costs nothing, and the cutoff is
+worse mid-draft than on an empty board - the case is stronger where the tool
+runs than where it was first measured.
+
+`drain` - which sets the rank behind **VS WAIT** - carried the last hard-ADP
+estimator, counting men whose ADP fell in the window. Its prior is fitted now
+(`DrainPrediction`: retired 1.27, shipped 1.11 men per window). The room-observed
+term STAYS, though dropping it scores better still at 0.83: those draws come
+from the very opponent model the table is fitted on, so that number cannot
+separate a right prior from one predicting itself, and the room term is what
+catches a real room deviating from the model. END TEAM and the ordering do not
+move; VS WAIT does - the receiver's cost of waiting at pick 7 goes 18.4 to 31.0.
+
 ## Is there a better pairwise model? No.
 
 You asked whether a boosted model might beat the odds surface. Ten families
