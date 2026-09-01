@@ -79,7 +79,7 @@ public final class RosterRules {
      * A quarterback and a defence have exactly one door into the lineup each.
      * Nothing about a second one can ever be started while the first is
      * healthy, so his only value is as a NEXT-YEAR KEEPER STASH - Justin's own
-     * rule, RUNBOOK.md:191, "take a young QB when the keeper case is the point,
+     * rule, RUNBOOK.md:206, "take a young QB when the keeper case is the point,
      * not the lineup". One stash is a plan; two is a wasted spot on a sixteen-man
      * roster. Hence 1.
      *
@@ -91,7 +91,7 @@ public final class RosterRules {
     static final int STASH_PER_UNFLEXABLE_POSITION = 1;
 
     /**
-     * The round a stash is allowed to be taken, RUNBOOK.md:191: "Rounds 10-12
+     * The round a stash is allowed to be taken, RUNBOOK.md:206: "Rounds 10-12
      * is the band where the QB keeper term peaks."
      *
      * A second quarterback before this is not a stash, it is a model that has
@@ -544,7 +544,7 @@ public final class RosterRules {
             if(!flexEligible(position) && count(position) >= startersAt(position)
                     && round < EARLIEST_STASH_ROUND){
                 return "a second " + position + " is only ever a next-year keeper"
-                        + " stash (RUNBOOK.md:191), and round " + round
+                        + " stash (RUNBOOK.md:206), and round " + round
                         + " is before round " + EARLIEST_STASH_ROUND;
             }
             Roster after = new Roster(append(new Man(position.name().toLowerCase(),

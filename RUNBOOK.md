@@ -52,9 +52,24 @@ Reading the output:
 
 ## Fallback ladder (if the tool fails)
 
-1. `./gradlew run -Pmain=DraftPlanner` — slower, single engine, still adaptive.
+The live tool is `./gradlew run -Pmain=Draft2026 -Pkeepers=Tuten,Purdy -q`
+(board model first, Model A second; 25s of the 60). If it fails:
+
+1. `./gradlew run -Pmain=DraftNight -Pkeepers=Tuten,Purdy -q` for rounds 1–7,
+   `./gradlew run -Pmain=LiveLateRounds -Pkeepers=Tuten,Purdy -q` for rounds 8+.
+   (`DraftPlanner` alone is Model A's nine-round planner, not a live tool — it
+   scores nine skill slots with no defence, and it does not read the board.)
 2. The committed plan below — no compute needed.
-3. Best available at a position you still need.
+3. Best available at a position you still need. Never a defence before round 10
+   — this league has taken 0 of 58 there — and Brenton Strange (TE, ADP 167) is
+   98% likely to be there at pick 175.
+
+Reading the BOARD MODEL's screen (the top half of `Draft2026`): rank on the
+**END TEAM** column. Below the table it says whether the leader is SEPARATED
+from the rest (paired, 2 s.e.) or INSIDE THE NOISE; if inside, it names the men
+actually available at each tied position — take the one you believe in, the
+model has no preference to overrule. "WHO ELSE MIGHT BE THERE" lists the next
+likeliest men where the named one is under 60%.
 
 ## The committed plan (laptop-dies fallback)
 
