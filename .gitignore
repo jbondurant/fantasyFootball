@@ -27,3 +27,6 @@ data/external-projections/*.csv
 # showed a stray untracked entry and one of them nearly committed it.
 data/nflverse/
 data/nflverse
+
+# Agent worktrees live here; they are checkouts of this same repo.
+.claude/worktrees/
