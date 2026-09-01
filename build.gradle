@@ -29,6 +29,19 @@ test {
     useJUnitPlatform {
         excludeTags 'smoke'
     }
+    // TESTS THAT READ DOCUMENTS MUST RE-RUN WHEN THE DOCUMENTS CHANGE.
+    //
+    // DraftReadyCommandsTest checks that every `-Pmain=` DRAFT-READY tells
+    // Justin to type names a class that exists. It passed with a deliberately
+    // planted dead command, because gradle had no idea the test read that file
+    // and declared the task UP-TO-DATE. A check that cannot see its own input
+    // is not a check - the third one of those found in a day, and the only one
+    // I wrote myself.
+    //
+    // src/main/java is already an input through compilation, so the tests that
+    // scan sources re-run on their own; these two are not.
+    inputs.file('DRAFT-READY.md').withPathSensitivity(PathSensitivity.RELATIVE)
+    inputs.file('TRAPS.md').withPathSensitivity(PathSensitivity.RELATIVE)
 }
 
 // Smoke tests: hit the live Sleeper and FantasyPros APIs and check the feeds
