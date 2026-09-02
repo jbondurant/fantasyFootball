@@ -153,11 +153,21 @@ public class DraftExpectation {
 
         // BEFORE: simulate the whole draft, room model at every seat.
         Map<String, List<Double>> simulated = new TreeMap<>();
+        Map<String, Double> simPickSum = new HashMap<>();
+        Map<String, Integer> simPickCount = new HashMap<>();
+        int simHoles = 0;
+        int simRosters = 0;
+        Map<String, Integer> holesByPosition = new TreeMap<>();
+        double simBench = 0;
         long t0 = System.currentTimeMillis();
         for(int trial = 0; trial < trials; trial++){
             DraftSimulator.SimState state = simulator.initialState();
             simulator.simulateFrom(state, new Random(DraftSimulator.SEED + 104729L * trial), "", null);
             Map<String, List<String>> rosters = rostersFrom(state.takenAt, managerAt);
+            for(Map.Entry<String, Integer> taken : state.takenAt.entrySet()){
+                simPickSum.merge(taken.getKey(), (double) taken.getValue(), Double::sum);
+                simPickCount.merge(taken.getKey(), 1, Integer::sum);
+            }
             for(String manager : slotOf.keySet()){
                 List<TeamRankings.Man> men = new ArrayList<>();
                 for(String id : keepersOf.getOrDefault(manager, List.of())){
@@ -166,8 +176,17 @@ public class DraftExpectation {
                 for(String id : rosters.getOrDefault(manager, List.of())){
                     men.add(man(id, points.getOrDefault(id, 0.0), false, state.takenAt.get(id)));
                 }
-                simulated.computeIfAbsent(manager, k -> new ArrayList<>())
-                        .add(TeamRankings.bestLineup(men).starters());
+                TeamRankings.Lineup lineup = TeamRankings.bestLineup(men);
+                simulated.computeIfAbsent(manager, k -> new ArrayList<>()).add(lineup.starters());
+                simHoles += lineup.holes();
+                for(Map.Entry<String, Integer> need : TeamRankings.FIXED.entrySet()){
+                    long have = men.stream().filter(m -> m.position().equals(need.getKey())).count();
+                    if(have < need.getValue()){
+                        holesByPosition.merge(need.getKey(), (int) (need.getValue() - have), Integer::sum);
+                    }
+                }
+                simBench += TeamRankings.benchTotal(lineup);
+                simRosters++;
             }
         }
         double simSeconds = (System.currentTimeMillis() - t0) / 1000.0;
@@ -186,9 +205,17 @@ public class DraftExpectation {
         }
         Map<Integer, String> managerBySlot = new HashMap<>();
         for(Map.Entry<String, Integer> e : slotOf.entrySet()){ managerBySlot.put(e.getValue(), e.getKey()); }
+        int realHoles = 0;
+        double realBench = 0;
+        Map<String, Integer> realPick = new HashMap<>();
         for(Map.Entry<Integer, List<TeamRankings.Man>> e : real.entrySet()){
-            actual.put(managerBySlot.getOrDefault(e.getKey(), "slot " + e.getKey()),
-                    TeamRankings.bestLineup(e.getValue()).starters());
+            TeamRankings.Lineup lineup = TeamRankings.bestLineup(e.getValue());
+            actual.put(managerBySlot.getOrDefault(e.getKey(), "slot " + e.getKey()), lineup.starters());
+            realHoles += lineup.holes();
+            realBench += TeamRankings.benchTotal(lineup);
+            for(TeamRankings.Man m : e.getValue()){
+                if(!m.keeper()){ realPick.put(m.id(), m.pickNo()); }
+            }
         }
 
         Map<String, Double> expected = new TreeMap<>();
@@ -213,6 +240,9 @@ public class DraftExpectation {
                     actual.getOrDefault(manager, 0.0), actualRank.getOrDefault(manager, 0)));
         }
         rows.sort(Comparator.comparingDouble(Row::diff).reversed());
+        double leagueMean = 0;
+        for(Row r : rows){ leagueMean += r.diff(); }
+        leagueMean /= Math.max(1, rows.size());
 
         String today = LocalDate.now().toString();
         StringBuilder out = new StringBuilder();
@@ -220,17 +250,59 @@ public class DraftExpectation {
                 today, trials, simSeconds, System.getProperty("projections", "sleeper")));
         out.append("EXPECTED = mean best-lineup starters a seat with these keepers gets when the fitted room drafts every pick.\n");
         out.append("ACTUAL = the roster the manager holds today, same lineup rule, same projections. DIFF = his own picks against his seat.\n\n");
-        out.append(String.format("%-14s %4s  %-22s %9s %6s %4s   %8s %4s   %7s%n", "manager", "slot", "keepers", "expected", "+/-", "rk", "actual", "rk", "diff"));
+        out.append(String.format("%-14s %4s  %-22s %9s %6s %4s   %8s %4s   %7s %9s%n", "manager", "slot", "keepers", "expected", "+/-", "rk", "actual", "rk", "diff", "vs league"));
         for(Row r : rows){
-            out.append(String.format("%-14s %4d  %-22s %9.1f %6.1f %4d   %8.1f %4d   %+7.1f%n",
+            out.append(String.format("%-14s %4d  %-22s %9.1f %6.1f %4d   %8.1f %4d   %+7.1f %+9.1f%n",
                     r.manager(), r.slot(), String.join(", ", r.keepers()), r.expected(), r.standardError(), r.expectedRank(),
-                    r.actual(), r.actualRank(), r.diff()));
+                    r.actual(), r.actualRank(), r.diff(), r.diff() - leagueMean));
         }
         double meanDiff = 0;
         for(Row r : rows){ meanDiff += r.diff(); }
         meanDiff /= Math.max(1, rows.size());
         out.append(String.format("%nleague mean DIFF %+.1f: real managers beat the fitted room by this much on average"
                 + " (they draft on projections the room model only approximates), so read each DIFF against it.%n", meanDiff));
+
+        // WHY THE MEAN IS NOT ZERO. Both worlds draft the same pool, so if the
+        // room model allocated men to lineups as well as the league does, the
+        // twelve expected totals would sum to the twelve actual ones. Two ways
+        // the simulation can waste projected points: men left in empty slots or
+        // on benches (allocation), and men the room takes at their national ADP
+        // whose projection has collapsed - the model knows where a man USUALLY
+        // goes, not that his season changed last week.
+        out.append(String.format("%nWHY THE MEAN IS NOT ZERO%n"));
+        out.append(String.format("   empty lineup slots per roster:  simulated %.2f   actual %.2f%n",
+                simHoles / (double) Math.max(1, simRosters), realHoles / (double) Math.max(1, real.size())));
+        out.append(String.format("   bench points per roster:        simulated %.0f   actual %.0f%n",
+                simBench / Math.max(1, simRosters), realBench / Math.max(1, real.size())));
+        StringBuilder byPos = new StringBuilder();
+        for(Map.Entry<String, Integer> e : holesByPosition.entrySet()){
+            byPos.append(String.format(" %s %.2f", e.getKey(), e.getValue() / (double) Math.max(1, simRosters)));
+        }
+        out.append("   simulated empty slots by position (per roster):").append(byPos).append("\n");
+        List<String> gaps = new ArrayList<>(simPickCount.keySet());
+        Map<String, Double> simMeanPick = new HashMap<>();
+        for(String id : gaps){ simMeanPick.put(id, simPickSum.get(id) / simPickCount.get(id)); }
+        // men the room drafts EARLY (mean simulated pick inside the first 100) whose
+        // projection ranks far below where that pick should buy
+        List<String> ranked = new ArrayList<>(points.keySet());
+        ranked.sort(Comparator.comparingDouble((String id) -> -points.getOrDefault(id, 0.0)));
+        Map<String, Integer> projRank = new HashMap<>();
+        for(int i = 0; i < ranked.size(); i++){ projRank.put(ranked.get(i), i + 1); }
+        gaps.removeIf(id -> simPickCount.get(id) < trials * 0.5 || simMeanPick.get(id) > 100);
+        gaps.sort(Comparator.comparingDouble((String id) -> -(projRank.getOrDefault(id, 999) - simMeanPick.get(id))));
+        out.append("   men the room takes early whose projection says otherwise (sim mean pick vs overall projection rank; real pick):\n");
+        int shown = 0;
+        for(String id : gaps){
+            int pr = projRank.getOrDefault(id, 999);
+            double sp = simMeanPick.get(id);
+            if(pr - sp < 40){ break; }
+            Player p = Player.getPlayerFromSIDV2(id);
+            out.append(String.format("      %-22s %-3s sim pick %5.1f (%3d%% of drafts)  projection rank %3d  proj %5.1f  real pick %s%n",
+                    p == null ? id : p.firstName + " " + p.lastName, p == null || p.position == null ? "?" : p.position.name(),
+                    sp, 100 * simPickCount.get(id) / trials, pr, points.getOrDefault(id, 0.0),
+                    realPick.containsKey(id) ? String.valueOf(realPick.get(id)) : "undrafted"));
+            if(++shown == 8){ break; }
+        }
         System.out.print(out);
         Files.createDirectories(Path.of("data"));
         Files.writeString(Path.of("data", "draft-expectation-" + today + ".txt"), out.toString(), StandardCharsets.UTF_8);
@@ -252,9 +324,12 @@ public class DraftExpectation {
          .append("</style></head><body><h1>Draft expectation vs result</h1><div class='sub'>")
          .append(trials).append(" simulated drafts from the pre-draft league (24 keepers, no pick made), the fitted room model choosing every seat. ")
          .append("EXPECTED is the mean best-lineup starters that seat and those keepers yield; ACTUAL is the roster held today, same lineup rule, same projections. DIFF is the manager's own drafting against his seat. Sorted by DIFF.</div>");
-        h.append("<table><tr><th>Manager</th><th>Slot</th><th>Keepers</th><th>Expected</th><th>&plusmn;</th><th>Rank</th><th>Actual</th><th>Rank</th><th>Diff</th><th></th></tr>");
+        h.append("<table><tr><th>Manager</th><th>Slot</th><th>Keepers</th><th>Expected</th><th>&plusmn;</th><th>Rank</th><th>Actual</th><th>Rank</th><th>Diff</th><th>vs league</th><th></th></tr>");
         double maxAbs = 1;
         for(Row r : rows){ maxAbs = Math.max(maxAbs, Math.abs(r.diff())); }
+        double meanDiff = 0;
+        for(Row r : rows){ meanDiff += r.diff(); }
+        meanDiff /= Math.max(1, rows.size());
         String me = System.getProperty("me", "justinb314");
         for(Row r : rows){
             double d = r.diff();
@@ -263,12 +338,10 @@ public class DraftExpectation {
              .append("</td><td>").append(String.format("%.0f", r.standardError())).append("</td><td>").append(r.expectedRank())
              .append("</td><td><b>").append(String.format("%.0f", r.actual())).append("</b></td><td>").append(r.actualRank())
              .append("</td><td class='").append(d >= 0 ? "up" : "down").append("'>").append(String.format("%+.0f", d)).append("</td>")
+             .append("<td class='").append(d - meanDiff >= 0 ? "up" : "down").append("'>").append(String.format("%+.0f", d - meanDiff)).append("</td>")
              .append("<td style='text-align:left;min-width:160px'><span class='bar' style='width:").append(String.format("%.0f", 150 * Math.abs(d) / maxAbs))
              .append("px;background:var(--").append(d >= 0 ? "up" : "down").append(")'></span></td></tr>");
         }
-        double meanDiff = 0;
-        for(Row r : rows){ meanDiff += r.diff(); }
-        meanDiff /= Math.max(1, rows.size());
         h.append("</table><div class='sub' style='margin-top:18px'>League mean DIFF ").append(String.format("%+.0f", meanDiff))
          .append(": real managers beat the fitted room by this much on average, so read each DIFF against it. Expected ranks are what the seats and keepers alone would produce; actual ranks are the rosters as drafted. A manager above his expectation out-drafted his seat by that many projected starter points, on this feed, before a game is played.</div></body></html>");
         return h.toString();
