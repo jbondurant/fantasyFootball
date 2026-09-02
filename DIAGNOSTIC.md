@@ -333,4 +333,10 @@ Two facts for the next model pass, both from the real 2026 board:
 - **The two engines split at pick 18** (board model Hall +10.2, Model A Nabers
   +5.3) and nothing on screen said so. See the open task to name cross-engine
   splits explicitly.
+- **The post-draft check went red on one test, `ModelAScheduleTest`**, which
+  pinned an exact seven-round shape across the two schedules. The evening
+  projections flipped round 2 between RB and WR in one schedule only; the plan's
+  own gap there was 0.8 points against a 4.2 tie. Rewritten to the repo's tie
+  convention (TRAPS #62). Everything else - 523 tests, including the three new
+  tools - passed on the final code.
 

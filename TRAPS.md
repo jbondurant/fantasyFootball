@@ -339,3 +339,14 @@ real every time.
     thing assembled two ways. Caught reviewing my own commit within the minute;
     a harness run would have shown it as a mismatch warning on a clean board.
 
+62. **A test that pinned a coin flip.** `ModelAScheduleTest` demanded that the
+    nine-round and sixteen-round plans agree exactly in rounds 1-7. Under the
+    evening projections (re-fetched 20:10 for the draft) the two schedules
+    landed on opposite sides of the round-2 RB/WR choice - the nine-round plan's
+    own gap between them was 0.8 points against a two-standard-error tie of 4.2.
+    That is the same coin flip Justin faced live at pick 18. The suite went red
+    after the draft on a fact the model had been saying all along: round 2 is
+    a tie. Fixed by asserting agreement only where the nine-round plan has a
+    clear preference (gap beyond two standard errors) and printing the coin
+    flips. A shape test that ignores the margins is asserting the seed.
+
