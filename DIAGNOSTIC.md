@@ -317,3 +317,20 @@ things that were already right.
     cycle           25s of 60; press enter early
 
 Restore point if anything misbehaves: `git checkout draft-ready-2026`.
+
+## After the draft (2026-09-01, 22:15)
+
+The draft ran to 192 picks with the tool live at every seat; no alarm fired.
+`TeamRankings` (new, report-only) scores every roster's best legal lineup under
+league scoring: Justin 9th of 12 by projected starters (1856), 1st by bench (976).
+Two facts for the next model pass, both from the real 2026 board:
+
+- **Defences went in rounds 6 and 9** (slots 1 and 2). "0 of 58 before round 10
+  across five drafts" is now 2 of 70, and the learned floor
+  (`DraftSimulator.floors()`, never earlier than the league has ever taken it)
+  moves to round 6 the moment 2026 joins the training set. The floor was a
+  description of five seasons, not a law of this room.
+- **The two engines split at pick 18** (board model Hall +10.2, Model A Nabers
+  +5.3) and nothing on screen said so. See the open task to name cross-engine
+  splits explicitly.
+

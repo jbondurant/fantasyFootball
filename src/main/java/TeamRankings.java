@@ -33,7 +33,7 @@ import java.util.TreeMap;
  * projection response, so a man projected at full strength while on IR is
  * visible for what he is. Report-only; nothing here feeds a model.
  *
- *     ./gradlew run -Pmain=TeamRankings [-Pprojections=sleeper|blend:sleeper,espn,cbs]
+ *     ./gradlew run -Pmain=TeamRankings [-Pprojections=sleeper|blend:sleeper,espn,cbs] [-Pme=justinb314]
  *
  * Writes {@code data/team-rankings-<date>.html} and prints the ranking.
  */
