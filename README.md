@@ -41,6 +41,8 @@ fails if one does). Fallbacks are in `RUNBOOK.md`.
 ./gradlew run -Pmain=WaitOrTake           # take him now, or gamble he lasts a round
 ./gradlew run -Pmain=AdpSnapshot          # record today's ADP; run often before the draft
 ./gradlew run -Pmain=MarketMovers       # who the market moved on in the last days, and why Sleeper thinks so (-Pdays -Ptop -PminMove)
+./gradlew run -Pmain=TeamRankings       # every roster's best legal lineup scored and ranked, HTML in data/ (-Pprojections -Pme)
+./gradlew run -Pmain=DraftExpectation   # each seat's expected starters (room model drafts every seat from the pre-draft league) vs the roster actually drafted (-Ptrials)
 ./gradlew run -Pmain=MockDraftReader -PdraftId=<link>   # archive a shared mock before it vanishes
 ./gradlew run -Pmain=KeeperChooser        # the same question by simulation
 ./gradlew run -Pmain=KeeperChooser -Psims=200   # ...with tighter error bars

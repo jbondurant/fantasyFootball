@@ -340,6 +340,12 @@ Two facts for the next model pass, both from the real 2026 board:
   convention (TRAPS #62). Everything else - 523 tests, including the three new
   tools - passed on the final code.
 
+`DraftExpectation` (2026-09-02, report-only) simulates the draft 200 times from the
+pre-draft league with the room model at every seat and sets each seat's expected
+best-lineup starters against the roster actually drafted. League mean gain +18
+(real managers beat the fitted room); Justin +44, fourth-best drafting from the
+ninth-best seat-and-keepers; JakeSK +65 and BHier +61 top, JFMarino -40 bottom.
+
 ## Fix list after the 2026 draft (ranked by value for the effort)
 
 1. **One verdict line at the top of every pick**: SEPARATED (position, margin),

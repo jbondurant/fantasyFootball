@@ -1,0 +1,19 @@
+DRAFT EXPECTATION vs RESULT  2026-09-02  (200 simulated drafts, room model at every seat, 5s; projections: sleeper)
+EXPECTED = mean best-lineup starters a seat with these keepers gets when the fitted room drafts every pick.
+ACTUAL = the roster the manager holds today, same lineup rule, same projections. DIFF = his own picks against his seat.
+
+manager        slot  keepers                 expected    +/-   rk     actual   rk      diff
+JakeSK            1  Kraft, Nacua              1892.6    8.5    2     1957.2    1     +64.6
+BHier             2  Daniels, Pitts            1807.9    4.5   10     1868.7    7     +60.8
+tommyrads        11  Warren, Williams          1797.9    3.5   12     1854.1   10     +56.2
+justinb314        7  Tuten, Purdy              1812.4    4.2    9     1856.1    9     +43.7
+itsabust         12  Smith-Njigba, Irving      1877.8    6.3    4     1916.4    2     +38.6
+KevinDA           4  Achane, Loveland          1889.3    6.2    3     1915.5    3     +26.2
+Hamrliks         10  Maye, Brown               1876.4    4.2    5     1880.0    5      +3.5
+d0ddi             5  Williams, LaPorta         1868.0    3.8    6     1868.9    6      +0.9
+patekxwater       6  Collins, Dowdle           1856.9    4.7    8     1856.1    8      -0.7
+jerem9604         9  Taylor, Bowers            1896.5    7.1    1     1890.3    4      -6.2
+Renteez           3  Williams, McConkey        1865.4    4.0    7     1830.9   11     -34.5
+JFMarino          8  McBride, Olave            1806.0    5.2   11     1766.5   12     -39.5
+
+league mean DIFF +17.8: real managers beat the fitted room by this much on average (they draft on projections the room model only approximates), so read each DIFF against it.
