@@ -159,6 +159,10 @@ tasks.register('run', JavaExec) {
      'committeeSeconds', 'alwaysArbiter',
      // InOutUtilities.getTodaysWebPage - serve league-state files from this directory instead of today's cache (the unit tests set it to data/fixtures/2026-pre-draft).
      'fixtureDir',
+     // DraftSimulator - 'noNeed=true' lets a simulated roster end with empty starting slots (A/B); 'collapse' is the projection-vs-ADP rank gap that re-slots a man (default 60, 0 off).
+     'noNeed', 'collapse',
+     // DraftExpectation - 'who=<last name>' prints which seats take that man and where.
+     'who',
      // LeagueActuals.FLAG - grade outcomes under the league's own scoring
      // instead of Sleeper's pts_half_ppr. Off by default on purpose.
      'leagueScoredActuals',

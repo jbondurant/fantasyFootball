@@ -376,3 +376,31 @@ real every time.
     (`-DfixtureDir`, set only for unit tests); feeds still float. A test that
     reads the world is a test of the world, and the world does not hold still.
 
+66. **A floor that says when a defence CAN go, and nothing that says one MUST.**
+    The learned floor kept simulated defences out of the early rounds; no rule
+    made a roster end legal. Across 200 simulated 2026 drafts the room left a
+    defence slot empty in 12% of rosters and a quarterback in 2% - the league,
+    never - and an empty slot scores zero, so every seat's expectation sat ~10
+    points under what the league drafts. `DraftSimulator.mustFill` now confines
+    a seat with no more picks than empty slots to those positions. Neutral on the
+    held-out seasons (RoomFidelity within 0.2 of baseline at every position).
+
+67. **A "collapse" rule that was really a disagreement rule.** First version:
+    any man whose projection rank sat 60 places below his ADP rank was re-slotted
+    to the price of his projection. It fixed Jacobs and made QB timing on the
+    held-out seasons 2.5 points worse - beyond the noise floor - because that
+    disagreement is systematic (the feed underrates rookies, the league pays six
+    for passing touchdowns) and the positional terms already carry it. Rewritten
+    as `RecentCollapse`: a drop of 30% or more inside the last two weeks in the
+    projection archive, which is news in time, not opinion. Fires on Jacobs alone
+    today; inert on history because the archive begins 2026-08-25. Fidelity
+    unchanged. A rule is named by what it detects, not by the case that motivated it.
+
+68. **An A/B whose two arms agree to the decimal is one arm.** The off-arm passed
+    its flags through an unquoted zsh variable; zsh does not word-split, so
+    `-DnoNeed=true -Dcollapse=0` arrived as ONE property named noNeed with the
+    value "true -Dcollapse=0" - false to Boolean.getBoolean - and both arms ran
+    with the rules on. Caught because the outputs matched exactly, which real
+    arms never do. Pass flags literally, and read identical arms as a harness
+    fault before reading them as a result.
+

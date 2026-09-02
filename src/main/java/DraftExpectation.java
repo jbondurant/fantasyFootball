@@ -153,17 +153,43 @@ public class DraftExpectation {
 
         // BEFORE: simulate the whole draft, room model at every seat.
         Map<String, List<Double>> simulated = new TreeMap<>();
+        // -Pwho=<last name>: which seats take this man, how often, and where.
+        String who = System.getProperty("who");
+        String whoId = null;
+        if(who != null && who.matches("\\d+|[A-Z]{2,3}")){
+            whoId = who;   // a sleeper id (or a defence's team code) names the man exactly
+        }
+        else if(who != null){
+            // "Jacobs" or "Josh Jacobs"; among several men of that name, the best-projected one
+            double best = -1;
+            for(String id : points.keySet()){
+                Player p = Player.getPlayerFromSIDV2(id);
+                if(p == null || p.lastName == null){ continue; }
+                String full = (p.firstName + " " + p.lastName).trim();
+                if((p.lastName.equalsIgnoreCase(who) || full.equalsIgnoreCase(who)) && points.get(id) > best){
+                    best = points.get(id);
+                    whoId = id;
+                }
+            }
+        }
+        Map<String, Integer> whoSeat = new TreeMap<>();
+        List<Double> whoPicks = new ArrayList<>();
         Map<String, Double> simPickSum = new HashMap<>();
         Map<String, Integer> simPickCount = new HashMap<>();
         int simHoles = 0;
         int simRosters = 0;
         Map<String, Integer> holesByPosition = new TreeMap<>();
+        Map<String, Integer> holesBySeat = new TreeMap<>();
         double simBench = 0;
         long t0 = System.currentTimeMillis();
         for(int trial = 0; trial < trials; trial++){
             DraftSimulator.SimState state = simulator.initialState();
             simulator.simulateFrom(state, new Random(DraftSimulator.SEED + 104729L * trial), "", null);
             Map<String, List<String>> rosters = rostersFrom(state.takenAt, managerAt);
+            if(whoId != null && state.takenAt.containsKey(whoId)){
+                whoSeat.merge(managerAt.apply(state.takenAt.get(whoId)), 1, Integer::sum);
+                whoPicks.add((double) state.takenAt.get(whoId));
+            }
             for(Map.Entry<String, Integer> taken : state.takenAt.entrySet()){
                 simPickSum.merge(taken.getKey(), (double) taken.getValue(), Double::sum);
                 simPickCount.merge(taken.getKey(), 1, Integer::sum);
@@ -179,6 +205,7 @@ public class DraftExpectation {
                 TeamRankings.Lineup lineup = TeamRankings.bestLineup(men);
                 simulated.computeIfAbsent(manager, k -> new ArrayList<>()).add(lineup.starters());
                 simHoles += lineup.holes();
+                holesBySeat.merge(manager, lineup.holes(), Integer::sum);
                 for(Map.Entry<String, Integer> need : TeamRankings.FIXED.entrySet()){
                     long have = men.stream().filter(m -> m.position().equals(need.getKey())).count();
                     if(have < need.getValue()){
@@ -279,6 +306,14 @@ public class DraftExpectation {
             byPos.append(String.format(" %s %.2f", e.getKey(), e.getValue() / (double) Math.max(1, simRosters)));
         }
         out.append("   simulated empty slots by position (per roster):").append(byPos).append("\n");
+        List<Map.Entry<String, Integer>> holeSeats = new ArrayList<>(holesBySeat.entrySet());
+        holeSeats.sort(Map.Entry.<String, Integer>comparingByValue().reversed());
+        StringBuilder bySeat = new StringBuilder();
+        for(Map.Entry<String, Integer> e : holeSeats){
+            if(e.getValue() == 0){ continue; }
+            bySeat.append(String.format(" %s(slot %d) %.2f", e.getKey(), slotOf.getOrDefault(e.getKey(), 0), e.getValue() / (double) trials));
+        }
+        out.append("   simulated empty slots by seat (per draft):").append(bySeat.length() == 0 ? " none" : bySeat).append("\n");
         List<String> gaps = new ArrayList<>(simPickCount.keySet());
         Map<String, Double> simMeanPick = new HashMap<>();
         for(String id : gaps){ simMeanPick.put(id, simPickSum.get(id) / simPickCount.get(id)); }
@@ -302,6 +337,17 @@ public class DraftExpectation {
                     sp, 100 * simPickCount.get(id) / trials, pr, points.getOrDefault(id, 0.0),
                     realPick.containsKey(id) ? String.valueOf(realPick.get(id)) : "undrafted"));
             if(++shown == 8){ break; }
+        }
+        if(whoId != null){
+            double[] wp = meanAndError(whoPicks);
+            out.append(String.format("%nWHO TAKES %s: in %d of %d drafts, mean pick %.1f (s.e. %.1f)%n",
+                    who, whoPicks.size(), trials, wp[0], wp[1]));
+            List<Map.Entry<String, Integer>> seats = new ArrayList<>(whoSeat.entrySet());
+            seats.sort(Map.Entry.<String, Integer>comparingByValue().reversed());
+            for(Map.Entry<String, Integer> e : seats){
+                out.append(String.format("   %-14s slot %2d   %3d%% of drafts%n", e.getKey(),
+                        slotOf.getOrDefault(e.getKey(), 0), 100 * e.getValue() / Math.max(1, trials)));
+            }
         }
         System.out.print(out);
         Files.createDirectories(Path.of("data"));

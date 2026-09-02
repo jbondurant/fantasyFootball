@@ -2,6 +2,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Every candidate feature, one gate each: fit through 2023 with the shipped
@@ -91,7 +92,8 @@ public class FeatureLab {
                 extras24.teEarliness(), extras24.rbEarliness(), extras24.teamOf(),
                 extras24.rookies(), extras24.adpSpreadCentered(), extras24.keeperStackTeams(),
                 extras24.formerPlayersByManager(), extras24.young(),
-                HistoricalProjections.leaguePointsBySleeperID(configuration, "2024"));
+                HistoricalProjections.leaguePointsBySleeperID(configuration, "2024"),
+                Set.of());
         double leagueScored = calibration(leagueTrain, shipped, season24, qbE,
                 leagueExtras24, configuration, trials);
         System.out.printf("%n   %-22s %10.2f%% %+9.2f%%   (input swap, not a feature)%n",

@@ -4,6 +4,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.EnumMap;
@@ -48,10 +49,11 @@ public class DraftSimulator {
                          Map<String, Set<String>> keeperStackTeams,
                          Map<String, Set<String>> formerPlayersByManager,
                          Set<String> young,
-                         Map<String, Double> pointsOverride){
+                         Map<String, Double> pointsOverride,
+                         Set<String> recentlyCollapsed){
         public static Extras none(){
             return new Extras(Map.of(), Map.of(), Map.of(), Set.of(), Map.of(), Map.of(),
-                    Map.of(), Set.of(), Map.of());
+                    Map.of(), Set.of(), Map.of(), Set.of());
         }
     }
 
@@ -114,9 +116,14 @@ public class DraftSimulator {
         // So the disagreement lives in f23 and f25-f28, which is where it does
         // work, and MarketDrift stays as the measurement that shows how big it
         // is. -PnoDrift is honoured by MarketDrift for anyone re-running this.
+        // Collapsed men are re-slotted to the price of their projection - see
+        // effectiveAdp. This is per-man and fires only on a large gap, unlike
+        // the uniform offset above.
+        Map<String, Double> priced = effectiveAdp(adp, points, Integer.getInteger("collapse", 60),
+                extras.recentlyCollapsed());
         this.initialBoard = new ArrayList<>(board);
-        this.initialBoard.sort(Comparator.comparingDouble(id -> adp.getOrDefault(id, 999.0)));
-        this.adp = adp;
+        this.initialBoard.sort(Comparator.comparingDouble(id -> priced.getOrDefault(id, 999.0)));
+        this.adp = priced;
         this.points = points;
         this.initialRosters = keeperRosters;
         this.model = model;
@@ -223,6 +230,112 @@ public class DraftSimulator {
     }
 
     /** Drop candidates whose position has never gone this early in this league. */
+    /** The lineup every roster must be able to fill by the end of the draft - BoardValue.lineup's fixed slots. */
+    static final Map<Position, Integer> REQUIRED = Map.of(
+            Position.QB, 1, Position.RB, 2, Position.WR, 3, Position.TE, 1, Position.DEF, 1);
+
+    /**
+     * A ROSTER ENDS LEGAL. When a seat has no more picks left than empty
+     * starting slots, its choice is confined to the positions still empty -
+     * what every real manager does in the last rounds and what the fitted room
+     * did not: across 200 simulated 2026 drafts it left a defence slot empty in
+     * 12% of rosters (the league: never), which alone put every seat's
+     * expectation about ten points below what the league drafts
+     * (DraftExpectation, 2026-09-02). The learned floor says when a defence CAN
+     * go; this says one MUST. Unchanged while there is slack; when the top-60
+     * window holds no man at a needed position it widens to the first eight on
+     * the whole board who are. -PnoNeed=true turns it off for A/B.
+     */
+    static List<String> mustFill(List<String> choiceSet, List<String> board,
+                                 Map<Position, Integer> roster, int picksLeft,
+                                 java.util.function.Function<String, Position> positionOf){
+        if(Boolean.getBoolean("noNeed")){
+            return choiceSet;
+        }
+        Set<Position> needed = EnumSet.noneOf(Position.class);
+        int gaps = 0;
+        for(Map.Entry<Position, Integer> slot : REQUIRED.entrySet()){
+            int short_ = slot.getValue() - roster.getOrDefault(slot.getKey(), 0);
+            if(short_ > 0){
+                needed.add(slot.getKey());
+                gaps += short_;
+            }
+        }
+        if(gaps == 0 || gaps < picksLeft){
+            return choiceSet;
+        }
+        List<String> narrowed = new ArrayList<>();
+        for(String id : choiceSet){
+            if(needed.contains(positionOf.apply(id))){
+                narrowed.add(id);
+            }
+        }
+        if(!narrowed.isEmpty()){
+            return narrowed;
+        }
+        List<String> widened = new ArrayList<>();
+        for(String id : board){
+            if(needed.contains(positionOf.apply(id))){
+                widened.add(id);
+                if(widened.size() == 8){
+                    break;
+                }
+            }
+        }
+        return widened.isEmpty() ? choiceSet : widened;
+    }
+
+    /**
+     * A MAN WHOSE SEASON CHANGED LAST WEEK IS NOT WHERE HIS ADP SAYS. National
+     * ADP lags news by days; a room prices it the same night. Jacobs went on the
+     * exempt list on 2026-08-30 with a possible ten-game suspension: Sleeper's
+     * ADP still said 35 on draft night, his projection said the 209th man, the
+     * fitted room took him 40th in every simulation and the real room let him
+     * fall to 105. For any man whose projection rank sits at least `threshold`
+     * places below his ADP rank (both ranks over the men who have an ADP), his
+     * effective ADP becomes the ADP at his projection rank - the market's price
+     * for a man who projects like that. Smaller disagreements are left alone:
+     * they are what f23-f28 already carry, and rescaling them would double
+     * count (see the constructor's note on the reverted uniform offset).
+     * -Pcollapse=<places> sets the threshold; 0 disables.
+     *
+     * ONLY men in {@code recentlyCollapsed} are eligible (RecentCollapse: a
+     * drop in the projection archive inside the last two weeks). Applied to
+     * every man whose projection merely disagrees with his ADP, this rule made
+     * QB timing on the held-out seasons 2.5 points worse - beyond the noise
+     * floor - because that disagreement is systematic and already carried by
+     * the positional terms. A collapse is a change in time; the archive begins
+     * 2026-08-25, so on historical boards the set is empty and nothing moves.
+     */
+    static Map<String, Double> effectiveAdp(Map<String, Double> adp, Map<String, Double> points, int threshold,
+                                            Set<String> recentlyCollapsed){
+        if(threshold <= 0 || recentlyCollapsed == null || recentlyCollapsed.isEmpty()){
+            return adp;
+        }
+        List<String> byAdp = new ArrayList<>();
+        for(Map.Entry<String, Double> e : adp.entrySet()){
+            if(e.getValue() != null && e.getValue() < 999){
+                byAdp.add(e.getKey());
+            }
+        }
+        byAdp.sort(Comparator.comparingDouble(adp::get));
+        List<String> byPoints = new ArrayList<>(byAdp);
+        byPoints.sort(Comparator.comparingDouble((String id) -> -points.getOrDefault(id, 0.0)));
+        Map<String, Integer> projRank = new HashMap<>();
+        for(int i = 0; i < byPoints.size(); i++){
+            projRank.put(byPoints.get(i), i + 1);
+        }
+        Map<String, Double> out = new HashMap<>(adp);
+        for(int a = 1; a <= byAdp.size(); a++){
+            String id = byAdp.get(a - 1);
+            int p = projRank.get(id);
+            if(recentlyCollapsed.contains(id) && p - a >= threshold){
+                out.put(id, adp.get(byAdp.get(Math.min(p, byAdp.size()) - 1)));
+            }
+        }
+        return out;
+    }
+
     static List<String> notBeforeThisLeagueEverHas(List<String> choiceSet, int round){
         Map<Position, Integer> earliest = floors();
         if(earliest.isEmpty()){
@@ -252,7 +365,8 @@ public class DraftSimulator {
                 Map.of(),
                 SelectionModel.formerPlayersBefore(configuration, season),
                 HistoricalProjections.youngForSeason(configuration, season, 2),
-                Map.of());
+                Map.of(),
+                Set.of());   // no projection archive before 2026: the collapse rule is inert on history
     }
 
     /**
@@ -271,7 +385,8 @@ public class DraftSimulator {
                 Map.of(),
                 SelectionModel.formerPlayersBefore(configuration, configuration.getSeason()),
                 SleeperProjections.youngPlayers(2),
-                Map.of());
+                Map.of(),
+                RecentCollapse.today());
     }
 
     /** The same, with the extras' kept-QB stack teams derived from the picks. */
@@ -344,7 +459,8 @@ public class DraftSimulator {
         }
         Extras withStacks = new Extras(extras.teEarliness(), extras.rbEarliness(),
                 extras.teamOf(), extras.rookies(), extras.adpSpreadCentered(), keeperStacks,
-                extras.formerPlayersByManager(), extras.young(), extras.pointsOverride());
+                extras.formerPlayersByManager(), extras.young(), extras.pointsOverride(),
+                extras.recentlyCollapsed());
         Map<String, Double> simulatorPoints = extras.pointsOverride().isEmpty()
                 ? season.rawPoints : extras.pointsOverride();
         return new DraftSimulator(schedule, board, season.adp, simulatorPoints, rosters,
@@ -599,6 +715,17 @@ public class DraftSimulator {
                         new ArrayList<>(board.subList(0,
                                 Math.min(board.size(), SelectionModel.CHOICE_SET))),
                         slot.round());
+                int picksLeft = 0;
+                for(int i = state.scheduleIndex; i < schedule.size(); i++){
+                    Slot later = schedule.get(i);
+                    if(!later.keeperSlot() && later.manager().equals(slot.manager())){
+                        picksLeft++;
+                    }
+                }
+                choiceSet = mustFill(choiceSet, board, roster, picksLeft, id -> {
+                    Player player = Player.getPlayerFromSIDV2(id);
+                    return player == null ? null : player.position;
+                });
                 double[] shape = turnShape.getOrDefault(slot.pickNumber(),
                         new double[]{0, 0, 1.0});
                 long qbHolders = rosters.values().stream()

@@ -342,9 +342,17 @@ Two facts for the next model pass, both from the real 2026 board:
 
 `DraftExpectation` (2026-09-02, report-only) simulates the draft 200 times from the
 pre-draft league with the room model at every seat and sets each seat's expected
-best-lineup starters against the roster actually drafted. League mean gain +18
-(real managers beat the fitted room); Justin +44, fourth-best drafting from the
-ninth-best seat-and-keepers; JakeSK +65 and BHier +61 top, JFMarino -40 bottom.
+best-lineup starters against the roster actually drafted. First run: league mean
+gain +17.8, which a faithful room cannot produce (both worlds draft the same pool).
+Two room-model faults, both fixed the same day (fix-list item 10): the room left a
+defence slot empty in 12% of simulated rosters and a quarterback in 2% (an empty
+slot scores zero; slot 1, which owns the last pick of every even round, was left
+short in 28% of drafts), and it took Jacobs at pick 40 in every draft on an ADP the
+news had passed. With `DraftSimulator.mustFill` and `RecentCollapse` the mean gain
+is -0.8, no simulated roster ends short, and held-out fidelity is unchanged within
+0.2 of baseline at every position. Result: BHier +52 and tommyrads +47 out-drafted
+their seats most, Justin +35 (third) from the ninth-best seat-and-keepers, JFMarino
+-53 and Renteez -50 least; jerem9604 had the second-best seat and drafted 33 below it.
 
 ## Fix list after the 2026 draft (ranked by value for the effort)
 
@@ -378,7 +386,7 @@ ninth-best seat-and-keepers; JakeSK +65 and BHier +61 top, JFMarino -40 bottom.
    whether that trade was right; `LeagueActuals` and `TeamRankings` against
    December standings is the measurement. Start collecting from week 1.
 9. **PR `keeper-rules` -> `master`** (due 2026-09-03).
-10. **Two room-model limits `DraftExpectation` exposed (2026-09-02).** Across 200
+10. **DONE 2026-09-02 - Two room-model limits `DraftExpectation` exposed.** Fixed the same day: `mustFill` (a roster ends legal; TRAPS #66) and `RecentCollapse` (a man whose projection dropped 30%+ in the last two weeks is re-slotted to the price of his projection; the first, disagreement-based version hurt QB fidelity by 2.5 and was replaced, TRAPS #67). League mean gain +17.8 -> -0.8; RoomFidelity within 0.2 of baseline. Original finding: Across 200
     simulated drafts the fitted room leaves a DEF slot empty in 12% of rosters
     (real managers: never) and strands 67 more projected points per roster on
     the bench; and it takes collapsed men at their national ADP - Jacobs at pick

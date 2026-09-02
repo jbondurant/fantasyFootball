@@ -680,7 +680,8 @@ public class DraftPlanner {
         }
         DraftSimulator.Extras extras = new DraftSimulator.Extras(base.teEarliness(),
                 base.rbEarliness(), base.teamOf(), base.rookies(), base.adpSpreadCentered(),
-                keeperStacks, base.formerPlayersByManager(), base.young(), Map.of());
+                keeperStacks, base.formerPlayersByManager(), base.young(), Map.of(),
+                base.recentlyCollapsed());
         DraftSimulator simulator = new DraftSimulator(schedule, board, adp, points, rosters,
                 model, earliness, extras);
         return new DraftPlanner(simulator, me, myKeeperIDs, points);
