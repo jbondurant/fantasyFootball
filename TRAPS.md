@@ -350,3 +350,29 @@ real every time.
     clear preference (gap beyond two standard errors) and printing the coin
     flips. A shape test that ignores the margins is asserting the seed.
 
+63. **A scheduled job that cannot read the files it schedules.** The daily
+    `AdpSnapshot` was installed as a launchd agent and smoke-kicked: zsh could not
+    open its own script under `~/Documents`. Not a path error - a launchd-spawned
+    `ls` lists the file, a launchd-spawned `head` gets "Operation not permitted".
+    macOS protects Documents from background agents, and no dialog appears for
+    one. Caught only because the job was kicked once by hand after installing;
+    a job installed and trusted would have failed silently at 09:30 every day.
+    Never install a schedule without running it once from the scheduler itself.
+
+64. **A timing instrument that measured a different question every day.**
+    `CycleTiming` froze whatever the live draft held. Before the draft that was
+    a pick-1 board (the "25s" in DRAFT-READY); after it, a finished draft with
+    Model A silent (11s, measured 2026-09-02 and nearly written up as the
+    committee's speed). The real pick-7 board on draft night cost 42s. Now it
+    freezes the first six picks of the real 2026 draft - one board, one
+    question, reproducible. An instrument whose input drifts is not measuring.
+
+65. **A suite that read the live league, the morning after the league changed.**
+    Four tests written against the pre-draft league (two keepers per roster,
+    no pick made) failed on 2026-09-02 with no code change behind them: Sleeper
+    had emptied every roster's keepers field overnight and the planner derived
+    "kept" from it. Three hours of a check went to a league with no keepers.
+    The suite now reads the league's state from `data/fixtures/2026-pre-draft`
+    (`-DfixtureDir`, set only for unit tests); feeds still float. A test that
+    reads the world is a test of the world, and the world does not hold still.
+

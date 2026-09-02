@@ -577,17 +577,23 @@ prose fault.
 
 ## The clock, measured
 
-`CycleTiming` times the real `Draft2026` cycle with output swallowed:
+`CycleTiming` times the real `Draft2026` cycle with output swallowed, on a
+FIXED board: the first six picks of the real 2026 draft, Justin's pick 7 on the
+clock (measured 2026-09-02):
 
-    board model   0.3 - 0.6s
-    Model A      24.5 - 25.0s
-    worst cycle        25.3s   against a sixty second clock
+    board model   0.1 - 0.3s
+    Model A      26.6 - 27.2s
+    worst cycle        27.4s   against a sixty second clock
 
-Model A got SLOWER overnight, on purpose. The Kim-Nelson arbiter - the
-statistical tiebreaker - had been throwing on the first defence it met and
-being caught as "no contenders", so it never ran in `Draft2026` at all. It
-runs now (PROVEN RB after 126 rollouts at pick 1) and costs 8.4 seconds. The
-comment claiming "1.2s worst case" was measured while it was dead.
+On draft night that same board cost 42 seconds: lookahead-2 23s, lookahead-1
+6s, hindsight 3s, then the Kim-Nelson arbiter 10s proving a vote that was
+already unanimous. Two changes since. Model A's engines now run cheapest-first
+inside a budget (`-PcommitteeSeconds`, default 25) and lookahead-2 takes the
+rollouts that fit - 79 of 150 on this board, with a floor of 40. And the
+arbiter runs only when the vote is split (`-PalwaysArbiter=true` forces it);
+it is the statistical tiebreaker, and a unanimous vote has nothing to break.
+The earlier "25s" here was measured on a pick-1 board, before any pick existed
+to make the engines work (TRAPS #64).
 
 The "4-11s" quoted elsewhere was the bare nine-round `DraftNight`, not this.
 Press enter EARLY. The board model answers in under a second and it is the one

@@ -29,6 +29,14 @@ test {
     useJUnitPlatform {
         excludeTags 'smoke'
     }
+    // THE SUITE SEES THE LEAGUE AS IT STOOD BEFORE THE 2026 DRAFT. Sleeper
+    // rewrites league state after a draft (every roster's keepers field went
+    // from two to zero on 2026-09-02) and four tests written against the
+    // pre-draft league failed with no code change behind them. The files in
+    // data/fixtures/2026-pre-draft are served by InOutUtilities.getTodaysWebPage
+    // in place of the day's cache; feeds not in that directory still float.
+    // smokeTest and run never get this property - they are meant to see today.
+    systemProperty 'fixtureDir', "$projectDir/data/fixtures/2026-pre-draft"
     // TESTS THAT READ DOCUMENTS MUST RE-RUN WHEN THE DOCUMENTS CHANGE.
     //
     // DraftReadyCommandsTest checks that every `-Pmain=` DRAFT-READY tells
@@ -147,6 +155,10 @@ tasks.register('run', JavaExec) {
      'days', 'top', 'minMove',
      // TeamRankings - which manager's row to highlight.
      'me',
+     // LiveCommittee - Model A's wall-clock budget for its engines (default 25s; all of Model A then lands under 30s) and whether the KN arbiter runs on a unanimous vote.
+     'committeeSeconds', 'alwaysArbiter',
+     // InOutUtilities.getTodaysWebPage - serve league-state files from this directory instead of today's cache (the unit tests set it to data/fixtures/2026-pre-draft).
+     'fixtureDir',
      // LeagueActuals.FLAG - grade outcomes under the league's own scoring
      // instead of Sleeper's pts_half_ppr. Off by default on purpose.
      'leagueScoredActuals',

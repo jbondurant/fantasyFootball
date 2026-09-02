@@ -350,21 +350,21 @@ Two facts for the next model pass, both from the real 2026 board:
    defences in rounds 6 and 9 after 0 of 58 before round 10; a hard "never
    earlier than ever" floor should be a prior with weight, not a wall. Rerun
    `TrainingRows` and `RoomFidelity -Pseeds=5` with 2026 in.
-3. **Make the suite hermetic and fast.** `ModelAScheduleTest` read the day's live
+3. **HALF DONE 2026-09-02 - Make the suite hermetic and fast.** League STATE is now pinned: `data/fixtures/2026-pre-draft` is served to unit tests in place of the day's cache (TRAPS #65). Feeds still float and the two slowest classes are untouched. `ModelAScheduleTest` read the day's live
    feed and flipped when the feed moved; pin tests to a committed snapshot
    (`data/projection-snapshots.csv` already exists - add a `snapshot:<date>`
    source to `ProjectionSources`). Then shorten the two slowest classes (chip
    filed). Target: a full check under 15 minutes on a quiet machine.
-4. **Model A within the clock.** Measured 44s at pick 7 against 25s documented;
+4. **DONE 2026-09-02 - Model A within the clock.** Engines run cheap-first inside a 25s budget (`-PcommitteeSeconds`), lookahead-2 takes the rollouts that fit (79 of 150 on the real pick-7 board), and the KN arbiter runs only on a split vote. `CycleTiming` now freezes the first six picks of the real 2026 draft: worst cycle 27.4s, from 42s on draft night (TRAPS #64). Measured 44s at pick 7 against 25s documented;
    lookahead-2 took 23s and the KN arbiter 10s. Either budget it to land inside
    30s or run it concurrently with the board model so the screen never waits.
-5. **Injury tags on the live tables.** Sleeper's injury_status is in the same
+5. **DONE 2026-09-02 - Injury tags on the live tables.** Sleeper's injury_status is in the same
    response the model reads (`MarketMovers` already parses it); print IR / PUP /
    NA / Sus next to a man's name so a full projection on a hurt man is visible.
-6. **Skip keeper picks in the owner-mismatch check.** Keepers cannot be traded
+6. **DONE 2026-09-02 - Skip keeper picks in the owner-mismatch check.** Keepers cannot be traded
    mid-draft, and a mock built from the league copies them without a league
    user, which is the only reason the rehearsal screamed. Zero loss of detection.
-7. **Run `AdpSnapshot` daily for real.** It ran on five of the last eight days;
+7. **DONE 2026-09-02, with a caveat - Run `AdpSnapshot` daily for real.** A launchd agent cannot read `~/Documents` (TRAPS #63), so in draft season it runs with the `/today` brief; the launchd version is in `tools/launchd/` for when access is granted. It ran on five of the last eight days;
    the movers report is only as good as the history. A scheduled task, not a
    memory.
 8. **Set up the season-outcome check now.** Bench is worth zero in the objective

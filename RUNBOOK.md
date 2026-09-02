@@ -35,8 +35,11 @@ Then press **enter** at each of your picks. It re-reads the live board
 (uncached) and prints the committee vote plus the wait-or-take table from the
 current state.
 
-Warm-up is **~18s and is paid once**; each pick after that costs **4-11s**,
-measured against the paused mock on 2026-08-29. Running the tools separately
+Warm-up is **~40s and is paid once**; each pick after that costs **about 27s**
+(the board model under a second, Model A the rest), measured by `CycleTiming` on
+the first six picks of the real 2026 draft on 2026-09-02. The older "4-11s" was
+measured on a pick-1 board with the arbiter dead; draft night itself cost 42s
+before Model A was given a budget and the arbiter was limited to split votes. Running the tools separately
 costs 25-45s per pick, because each one pays the warm-up again — that was the
 single biggest draft-night risk before this existed.
 

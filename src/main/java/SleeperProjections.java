@@ -211,6 +211,33 @@ public class SleeperProjections {
         return cachedAdp.getOrDefault(sleeperID, Double.MAX_VALUE);
     }
 
+    private static HashMap<String, String> cachedInjury;
+
+    /**
+     * Sleeper's injury designation for a man - Questionable, Doubtful, Out, IR,
+     * PUP, Sus, NA - from the same response the projections come from. Null
+     * when he carries none. The live tables tag names with it so a full
+     * projection on a hurt man is visible for what it is.
+     */
+    public static synchronized String injuryStatusOf(String sleeperID){
+        if(cachedInjury == null){
+            HashMap<String, String> status = new HashMap<>();
+            for(JsonElement jsonPlayer : getTodaysProjections()){
+                JsonObject record = jsonPlayer.getAsJsonObject();
+                JsonElement player = record.get("player");
+                if(player == null || !player.isJsonObject()){
+                    continue;
+                }
+                JsonElement value = player.getAsJsonObject().get("injury_status");
+                if(value != null && !value.isJsonNull()){
+                    status.put(record.get("player_id").getAsString(), value.getAsString());
+                }
+            }
+            cachedInjury = status;
+        }
+        return cachedInjury.get(sleeperID);
+    }
+
     public static void main(String[] args){
         HashMap<String, Double> scores = parseTodaysWebPage();
         System.out.println("projected " + scores.size() + " players for the " + getSeason() + " season");

@@ -15,8 +15,18 @@ import java.util.*;
  * terminal.
  *
  *   ./gradlew run -Pmain=CycleTiming -Pkeepers=Tuten,Purdy -q
+ *
+ * Times a FIXED board: the first six picks of the real 2026 draft, so Justin's
+ * pick 7 is on the clock with Model A live. Before 2026-09-02 it froze whatever
+ * the live draft held, which measured a pick-1 board before the draft and a
+ * finished draft (Model A silent) after it - the same tool, three different
+ * questions. That real pick-7 board took the committee 42s on draft night.
  */
 public class CycleTiming {
+    /** Gibbs, Robinson, Chase, McCaffrey, St. Brown, Cook - picks 1-6 of the real 2026 draft. */
+    static final List<String> PICK_SEVEN_BOARD =
+            List.of("9221", "9509", "7564", "4034", "7547", "8138");
+
     public static void main(String[] args) throws Exception {
                 // ONE WARM-UP, SHARED. See LiveSetup: five separate copies of this
         // block had drifted apart, three of them measuring a configuration
@@ -46,7 +56,7 @@ public class CycleTiming {
         real.printf("%n%-10s %10s %10s %10s%n", "", "BOARD", "MODEL A", "CYCLE");
         double worst = 0;
         for(int run = 1; run <= 3; run++){
-            LiveDraft.freeze(draftID);
+            LiveDraft.freezeWith(PICK_SEVEN_BOARD);
             System.setOut(quiet);
             long a = System.nanoTime();
             LiveBoard.answer(configuration, planner, simulator, draftID, curve, pools,

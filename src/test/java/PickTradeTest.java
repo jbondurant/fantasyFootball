@@ -77,4 +77,23 @@ public class PickTradeTest {
             LiveDraft.thaw();
         }
     }
+
+    /**
+     * Keeper picks are never compared. A keeper cannot change hands mid-draft,
+     * and a mock built from the league copies its keepers in with no league
+     * user on them - the 2026-09-01 rehearsal alarmed on 22 of 24 such picks
+     * before the mock had started. On the real draft all 24 matched anyway.
+     */
+    @Test
+    public void keeperPicksAreNotCompared(){
+        List<com.google.gson.JsonObject> picks = List.of(
+                com.google.gson.JsonParser.parseString(
+                        "{\"pick_no\":32,\"is_keeper\":true,\"picked_by\":\"\"}").getAsJsonObject(),
+                com.google.gson.JsonParser.parseString(
+                        "{\"pick_no\":8,\"is_keeper\":false,\"picked_by\":\"u8\"}").getAsJsonObject(),
+                com.google.gson.JsonParser.parseString(
+                        "{\"pick_no\":9,\"picked_by\":\"u9\"}").getAsJsonObject());
+        Map<Integer, String> owners = LiveDraft.liveOwners(picks);
+        assertEquals(Map.of(8, "u8", 9, "u9"), owners, "the keeper at 32 is not in the map");
+    }
 }

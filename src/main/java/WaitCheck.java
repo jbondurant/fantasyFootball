@@ -145,7 +145,9 @@ public class WaitCheck {
                     : expected < 10 ? "cheap (" + String.format("%.0f", expected) + " pts)"
                     : "COSTLY (" + String.format("%.0f", expected) + " pts)";
             System.out.printf("%-5s %-24s %9.0f%% %14.1f   %s%n", position,
-                    player.firstName + " " + player.lastName, survives * 100, drop, verdict);
+                    player.firstName + " " + player.lastName
+                            + LiveBoard.injuryTag(SleeperProjections.injuryStatusOf(id)),
+                    survives * 100, drop, verdict);
         }
         System.out.println("\nSURVIVES = still on the board at my next pick."
                 + "  COST IF GONE = points between him and the next man at his"

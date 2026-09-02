@@ -375,6 +375,7 @@ public class LiveBoard {
                             others.append(others.length() == 0 ? "" : ", ")
                                     .append(other.firstName.charAt(0)).append(". ")
                                     .append(other.lastName)
+                                    .append(injuryTag(SleeperProjections.injuryStatusOf(entry.getKey())))
                                     .append(String.format(" %.0f%%",
                                             100.0 * entry.getValue()
                                                     / Math.max(1, ranks.size())));
@@ -400,8 +401,9 @@ public class LiveBoard {
             if(why != null){
                 Player player = Player.getPlayerFromSIDV2(candidate);
                 System.out.printf("%-5s %-24s %8s %10s %10s   REFUSED: %s%n", position,
-                        player == null ? candidate
-                                : player.firstName + " " + player.lastName,
+                        (player == null ? candidate
+                                : player.firstName + " " + player.lastName)
+                                + injuryTag(SleeperProjections.injuryStatusOf(candidate)),
                         "-", "-", "-", why);
                 continue;
             }
@@ -467,7 +469,8 @@ public class LiveBoard {
             // reader must be able to see WHICH end team is larger.
             System.out.printf("%-5s %-24s %6d %5.0f%% %8.1f %7.1f %7.1f %5.0f%% %14s %s%n",
                     position,
-                    player == null ? candidate : player.firstName + " " + player.lastName,
+                    (player == null ? candidate : player.firstName + " " + player.lastName)
+                            + injuryTag(SleeperProjections.injuryStatusOf(candidate)),
                     rank, 100 * share, addsNow, wait, both[0],
                     100 * (both[0] - both[1]) / both[0],
                     where, fragile ? "REFUSED fragile" : "");
@@ -589,6 +592,7 @@ public class LiveBoard {
                         who.append(who.length() == 0 ? "" : ",  ")
                                 .append(player.firstName.charAt(0)).append(". ")
                                 .append(player.lastName)
+                                .append(injuryTag(SleeperProjections.injuryStatusOf(id)))
                                 .append(String.format(" %.0f",
                                         planner.points().getOrDefault(id, 0.0)));
                         if(++shown == 3){
@@ -1204,6 +1208,25 @@ public class LiveBoard {
     }
 
     /** Whether this session has already explained the columns. */
+    /**
+     * A short tag for a man's name from Sleeper's injury designation: [Q]
+     * Questionable, [D] Doubtful, [O] Out, and IR / PUP / Sus / NA as they are.
+     * Empty when he carries none. Printed wherever the live screen names a man,
+     * because the projection feed does not always price the designation - on
+     * 2026-09-01 it had Jacobs at 80 but Pacheco (IR) at his full 49.
+     */
+    static String injuryTag(String status){
+        if(status == null || status.isBlank()){
+            return "";
+        }
+        switch(status){
+            case "Questionable": return " [Q]";
+            case "Doubtful": return " [D]";
+            case "Out": return " [O]";
+            default: return " [" + status + "]";
+        }
+    }
+
     static boolean legendShown;
 
     /** The survival table in force, or null to fall back to the ADP cutoff. */

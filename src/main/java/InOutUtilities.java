@@ -86,7 +86,34 @@ public class InOutUtilities {
         }
     }
 
+    /**
+     * The test suite is pinned to a snapshot of the LEAGUE'S STATE. With
+     * -DfixtureDir set (build.gradle sets it for the unit tests, never for
+     * smokeTest or run), a file named {@code <fixtureDir>/<filepathStart>.txt}
+     * is served instead of today's cache, and nothing is fetched for it.
+     * Files not in the directory fall through to the normal path, so the
+     * projection and ADP feeds still float with the day.
+     *
+     * Why: on 2026-09-02, the morning after the draft, Sleeper had emptied every
+     * roster's keepers field (two per roster the day before, zero after), the
+     * planner derived "kept" from it, and four tests written against the
+     * pre-draft league failed for a reason no code change had caused. The
+     * suite must see the league the tests describe - data/fixtures/2026-pre-draft
+     * is the league as it stood on 2026-09-01, keepers declared, no pick made.
+     */
     public static String getTodaysWebPage(String webURL, String filepathStart){
+        String fixtureDir = System.getProperty("fixtureDir");
+        if(fixtureDir != null && !fixtureDir.isBlank()){
+            File fixture = new File(fixtureDir, filepathStart + ".txt");
+            if(fixture.isFile()){
+                try {
+                    return java.nio.file.Files.readString(fixture.toPath());
+                }
+                catch(java.io.IOException unreadable){
+                    throw new RuntimeException("fixture exists but cannot be read: " + fixture, unreadable);
+                }
+            }
+        }
         String todaysFilePath = "./" + filepathStart + DateUtility.getTodaysDate() + ".txt";
         File f = new File(todaysFilePath);
         if(!f.exists() || f.isDirectory()) {

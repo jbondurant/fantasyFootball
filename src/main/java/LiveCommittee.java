@@ -98,25 +98,53 @@ public class LiveCommittee {
         Map<String, Map<Position, Double>> votes = new LinkedHashMap<>();
         Map<String, Double> seconds = new LinkedHashMap<>();
 
+        // ENGINES IN COST ORDER, INSIDE A BUDGET. Measured at pick 7 of the
+        // real 2026 draft (sixteen-round schedule): lookahead-2 23.2s,
+        // lookahead-1 6.2s, hindsight 2.5s, greedy 0s, then the KN arbiter
+        // 10.2s - 42s against a 60-second pick clock, with "25s" documented
+        // from a nine-round measurement. The cheap engines run first, and
+        // lookahead-2 then takes as many rollouts as fit what is left of
+        // -PcommitteeSeconds (default 25: the wait-or-take table that follows
+        // costs ~2s outside this budget, and 25 lands all of Model A under 30). Its cost is about four times
+        // lookahead-1's (four second-pick branches under each first), so
+        // lookahead-1's measured time predicts it - see fitRollouts.
+        double budget = Double.parseDouble(System.getProperty("committeeSeconds", "25"));
+        long start = System.currentTimeMillis();
+        Map<Position, Double> greedyVote = greedy(timing, state, roster, best,
+                slotPick(simulator, state));
+        double greedySeconds = (System.currentTimeMillis() - start) / 1000.0;
+
         long t0 = System.currentTimeMillis();
-        votes.put("lookahead-2", lookahead(timing, planner, simulator, state, roster,
-                best, rollouts, 2));
-        seconds.put("lookahead-2", (System.currentTimeMillis() - t0) / 1000.0);
+        Map<Position, Double> hindsightVote = hindsight(timing, planner, simulator, state,
+                roster, best, scenarios);
+        double hindsightSeconds = (System.currentTimeMillis() - t0) / 1000.0;
 
         t0 = System.currentTimeMillis();
-        votes.put("lookahead-1", lookahead(timing, planner, simulator, state, roster,
-                best, rollouts, 1));
-        seconds.put("lookahead-1", (System.currentTimeMillis() - t0) / 1000.0);
+        Map<Position, Double> oneVote = lookahead(timing, planner, simulator, state, roster,
+                best, rollouts, 1);
+        double oneSeconds = (System.currentTimeMillis() - t0) / 1000.0;
 
+        double remaining = budget - (System.currentTimeMillis() - start) / 1000.0;
+        int twoRollouts = fitRollouts(rollouts, oneSeconds, remaining);
+        if(twoRollouts < rollouts){
+            System.out.printf("%n   (lookahead-2 at %d of %d rollouts to land inside the"
+                    + " %.0fs committee budget; -PcommitteeSeconds changes it)%n",
+                    twoRollouts, rollouts, budget);
+        }
         t0 = System.currentTimeMillis();
-        votes.put("hindsight", hindsight(timing, planner, simulator, state, roster,
-                best, scenarios));
-        seconds.put("hindsight", (System.currentTimeMillis() - t0) / 1000.0);
+        Map<Position, Double> twoVote = lookahead(timing, planner, simulator, state, roster,
+                best, twoRollouts, 2);
+        double twoSeconds = (System.currentTimeMillis() - t0) / 1000.0;
 
-        t0 = System.currentTimeMillis();
-        votes.put("vorp-greedy", greedy(timing, state, roster, best, slotPick(simulator,
-                state)));
-        seconds.put("vorp-greedy", (System.currentTimeMillis() - t0) / 1000.0);
+        // Display order is unchanged: the slow, deep engine first.
+        votes.put("lookahead-2", twoVote);
+        seconds.put("lookahead-2", twoSeconds);
+        votes.put("lookahead-1", oneVote);
+        seconds.put("lookahead-1", oneSeconds);
+        votes.put("hindsight", hindsightVote);
+        seconds.put("hindsight", hindsightSeconds);
+        votes.put("vorp-greedy", greedyVote);
+        seconds.put("vorp-greedy", greedySeconds);
 
         List<Position> positions = new ArrayList<>(best.keySet());
         System.out.printf("%n%-14s", "ENGINE");
@@ -183,8 +211,9 @@ public class LiveCommittee {
         }
 
         Player player = Player.getPlayerFromSIDV2(best.get(consensus));
-        System.out.printf("%n   %d of %d engines say %s -> %s%n", most, votes.size(),
-                consensus, player.firstName + " " + player.lastName);
+        System.out.printf("%n   %d of %d engines say %s -> %s%s%n", most, votes.size(),
+                consensus, player.firstName + " " + player.lastName,
+                LiveBoard.injuryTag(SleeperProjections.injuryStatusOf(best.get(consensus))));
 
         // A TIE IS NOT A VERDICT.
         //
@@ -228,6 +257,15 @@ public class LiveCommittee {
         // while the arbiter was silently dead, throwing on the first defence it
         // met and being counted as a fast no-op. It is the single most
         // expensive thing in the cycle.)
+        // The arbiter settles SPLITS. When every engine already agrees it
+        // spends ~10s proving what the vote said, so it is skipped unless
+        // asked for - the budget above is what that pays for.
+        boolean unanimous = leaders.size() == 1 && most == votes.size();
+        if(unanimous && !Boolean.getBoolean("alwaysArbiter")){
+            System.out.printf("%n   (unanimous - KN arbiter skipped, it settles splits;"
+                    + " -PalwaysArbiter=true runs it anyway)%n");
+            return consensus;
+        }
         long knStart = System.currentTimeMillis();
         PolicyTournament.RankingSelection kn = arbiter(timing, planner, simulator,
                 state, roster);
@@ -289,6 +327,21 @@ public class LiveCommittee {
                     + "\n    at " + where + " - falling back to the vote)");
             return null;
         }
+    }
+
+    /**
+     * How many depth-2 rollouts fit the remaining budget, predicted from the
+     * measured depth-1 time (depth 2 costs about four times depth 1: four
+     * second-pick branches under each first). Never below 40 - fewer is noise
+     * dressed as an estimate - and never above what was asked for.
+     */
+    static int fitRollouts(int rollouts, double oneSeconds, double remainingSeconds){
+        double predicted = 4 * oneSeconds;
+        if(predicted <= 0 || predicted <= remainingSeconds){
+            return rollouts;
+        }
+        int scaled = (int) Math.floor(rollouts * Math.max(0, remainingSeconds) / predicted);
+        return Math.max(40, Math.min(rollouts, scaled));
     }
 
     static int slotPick(DraftSimulator simulator, DraftSimulator.SimState state){

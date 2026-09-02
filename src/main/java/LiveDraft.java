@@ -236,12 +236,7 @@ public class LiveDraft {
         }
         ordered.sort(Comparator.comparingInt(o -> o.get("pick_no").getAsInt()));
         List<String> ids = new ArrayList<>();
-        Map<Integer, String> owners = new HashMap<>();
         for(JsonObject pick : ordered){
-            JsonElement by = pick.get("picked_by");
-            if(by != null && !by.isJsonNull() && pick.has("pick_no")){
-                owners.put(pick.get("pick_no").getAsInt(), by.getAsString());
-            }
             JsonElement keeper = pick.get("is_keeper");
             if(keeper != null && !keeper.isJsonNull() && keeper.getAsBoolean()){
                 continue;   // keepers already sit in the simulator's schedule
@@ -251,7 +246,29 @@ public class LiveDraft {
                 ids.add(id.getAsString());
             }
         }
-        lastOwners = owners;
+        lastOwners = liveOwners(ordered);
         return ids;
+    }
+
+    /**
+     * picked_by per LIVE pick. Keeper picks are skipped: a keeper cannot change
+     * hands mid-draft, and a mock built from the league copies the keepers in
+     * without a league user on them - which is the only reason the 2026-09-01
+     * rehearsal printed SEAT OWNER MISMATCH on 22 of 24 picks before the mock
+     * had started. On the real draft every keeper pick carried its slot owner.
+     */
+    static Map<Integer, String> liveOwners(List<JsonObject> picks){
+        Map<Integer, String> owners = new HashMap<>();
+        for(JsonObject pick : picks){
+            JsonElement keeper = pick.get("is_keeper");
+            if(keeper != null && !keeper.isJsonNull() && keeper.getAsBoolean()){
+                continue;
+            }
+            JsonElement by = pick.get("picked_by");
+            if(by != null && !by.isJsonNull() && pick.has("pick_no")){
+                owners.put(pick.get("pick_no").getAsInt(), by.getAsString());
+            }
+        }
+        return owners;
     }
 }

@@ -30,3 +30,6 @@ data/nflverse
 
 # Agent worktrees live here; they are checkouts of this same repo.
 .claude/worktrees/
+
+# daily AdpSnapshot job log (tools/adp_snapshot_daily.sh)
+data/logs/
