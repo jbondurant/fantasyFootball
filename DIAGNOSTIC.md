@@ -340,3 +340,36 @@ Two facts for the next model pass, both from the real 2026 board:
   convention (TRAPS #62). Everything else - 523 tests, including the three new
   tools - passed on the final code.
 
+## Fix list after the 2026 draft (ranked by value for the effort)
+
+1. **One verdict line at the top of every pick**: SEPARATED (position, margin),
+   TIE (the men available), or SPLIT (board model vs Model A, both margins). Four
+   of Justin's questions on draft night were about reading the screen, not the
+   model. Chip filed.
+2. **Soften the learned floor and add 2026 to the training set.** The room took
+   defences in rounds 6 and 9 after 0 of 58 before round 10; a hard "never
+   earlier than ever" floor should be a prior with weight, not a wall. Rerun
+   `TrainingRows` and `RoomFidelity -Pseeds=5` with 2026 in.
+3. **Make the suite hermetic and fast.** `ModelAScheduleTest` read the day's live
+   feed and flipped when the feed moved; pin tests to a committed snapshot
+   (`data/projection-snapshots.csv` already exists - add a `snapshot:<date>`
+   source to `ProjectionSources`). Then shorten the two slowest classes (chip
+   filed). Target: a full check under 15 minutes on a quiet machine.
+4. **Model A within the clock.** Measured 44s at pick 7 against 25s documented;
+   lookahead-2 took 23s and the KN arbiter 10s. Either budget it to land inside
+   30s or run it concurrently with the board model so the screen never waits.
+5. **Injury tags on the live tables.** Sleeper's injury_status is in the same
+   response the model reads (`MarketMovers` already parses it); print IR / PUP /
+   NA / Sus next to a man's name so a full projection on a hurt man is visible.
+6. **Skip keeper picks in the owner-mismatch check.** Keepers cannot be traded
+   mid-draft, and a mock built from the league copies them without a league
+   user, which is the only reason the rehearsal screamed. Zero loss of detection.
+7. **Run `AdpSnapshot` daily for real.** It ran on five of the last eight days;
+   the movers report is only as good as the history. A scheduled task, not a
+   memory.
+8. **Set up the season-outcome check now.** Bench is worth zero in the objective
+   and Justin finished 1st by bench, 9th by starters. Only actual results can say
+   whether that trade was right; `LeagueActuals` and `TeamRankings` against
+   December standings is the measurement. Start collecting from week 1.
+9. **PR `keeper-rules` -> `master`** (due 2026-09-03).
+
