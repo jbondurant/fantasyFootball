@@ -378,4 +378,13 @@ ninth-best seat-and-keepers; JakeSK +65 and BHier +61 top, JFMarino -40 bottom.
    whether that trade was right; `LeagueActuals` and `TeamRankings` against
    December standings is the measurement. Start collecting from week 1.
 9. **PR `keeper-rules` -> `master`** (due 2026-09-03).
+10. **Two room-model limits `DraftExpectation` exposed (2026-09-02).** Across 200
+    simulated drafts the fitted room leaves a DEF slot empty in 12% of rosters
+    (real managers: never) and strands 67 more projected points per roster on
+    the bench; and it takes collapsed men at their national ADP - Jacobs at pick
+    40 in every simulation with an 80-point projection, where the real room let
+    him fall to 105. Together they put every seat's expectation ~18 points below
+    what the league actually drafts. Fixes: a roster-need term for DEF (the
+    learned floor says when a defence CAN go, nothing says one MUST), and let a
+    projection far below a man's ADP rank lower his choice probability.
 
