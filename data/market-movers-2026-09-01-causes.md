@@ -6,7 +6,7 @@ The table is the tool's; the causes below are from news read on 2026-09-01 and a
 
 | player | move | Sleeper data | cause (news) | kind |
 |---|---|---|---|---|
-| Josh Jacobs RB GB | proj 186 -> 80; ADP 27 -> 35 | injury -> NA (groin) | Placed on the commissioner exempt list 08-30 after two misdemeanor charges (battery, property damage) from a May incident; cannot practice or play; first court date Week 11. Groin is a red herring. ADP has barely moved: rooms are still taking him at 35. | legal |
+| Josh Jacobs RB GB | proj 186 -> 80; ADP 27 -> 35 | injury -> NA (groin) | Placed on the commissioner exempt list 08-30 after two misdemeanor charges (battery, property damage) from a May incident; cannot practice or play; first court date Week 11. Groin is a red herring. ADP has barely moved: rooms are still taking him at 35. **Justin, 2026-09-02:** a possible 10-game suspension was being reported, which is why real rooms let him fall (105th in ours) before Sleeper's ADP moved - the room prices news faster than the national feed. | legal |
 | MarShawn Lloyd RB GB | proj 48 -> 137; ADP 180 -> 136 | news 08-31 | Packers' starter with Jacobs out; ESPN's final mock took him 70th. GB also traded a 2028 6th to PIT for Kaleb Johnson (08-30) as depth. | beneficiary |
 | Kyler Murray QB MIN | proj +10 (08-28) | news | Named Vikings starter over J.J. McCarthy; Rotowire raised the line after preseason ended 08-28. | depth chart |
 | Malik Nabers WR NYG | proj +7 (08-27) | questionable, knee (ACL) | Practised without the red jersey; Harbaugh: "reasonable to assume" ready Week 1 (09-13). Left practice early once on 08-26. | injury return |
