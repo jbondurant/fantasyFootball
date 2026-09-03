@@ -1,0 +1,21 @@
+MARKET MOVERS  2026-09-01 -> 2026-09-02  (2 cached days; 186 drafted players compared; league scoring (as the model scores))
+Sleeper half-PPR ADP: negative change = rising (drafted earlier). 'step' = the day carrying most of the move; a drift has no single day.
+
+== PROJECTION MOVERS (league points, |change| >= 3) ==
+player                   pos team    from      to  change   step           Sleeper's own data says
+
+== ADP MOVERS (ranked relatively; |change| >= 3 picks) ==
+player                   pos team    from      to  change    rel   step           Sleeper's own data says
+Kayshon Boutte           WR  HOU    199.1   178.3   -20.8   -10%   step 09-02 100% 
+Jordyn Tyson             WR  NO     104.7   108.7    +4.0    +4%   step 09-02 100% ir Hamstring
+Oronde Gadsden           TE  LAC    166.5   171.8    +5.3    +3%   step 09-02 100% news 09-01
+Tyjae Spears             RB  TEN    170.8   167.4    -3.4    -2%   step 09-02 100% 
+Alvin Kamara             RB  NO     156.7   159.7    +3.0    +2%   step 09-02 100% questionable Knee; news 09-02
+Kenyon Sadiq             TE  NYJ    190.3   193.8    +3.5    +2%   step 09-02 100% questionable Abdomen
+
+== INJURY DESIGNATIONS TODAY (drafted pool, anything beyond Questionable) ==
+   Josh Jacobs              RB  GB   adp   35.3  NA (Groin)
+   Jordyn Tyson             WR  NO   adp  108.7  IR (Hamstring)
+   Zach Charbonnet          RB  SEA  adp  142.1  PUP (Knee - ACL)
+   Isiah Pacheco            RB  DET  adp  174.8  IR (Back)
+   Tank Dell                WR  HOU  adp  195.3  IR (Knee - ACL + MCL)
