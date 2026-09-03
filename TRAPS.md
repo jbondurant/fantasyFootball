@@ -454,3 +454,13 @@ real every time.
     used. A per-owner counterfactual must not vary in what it puts back on the
     board, or the column measures the owners' rosters and not their seats.
 
+74. **A pair priced one man at a time.** The ladder's "best pair" took the
+    ledger's two highest standalone deltas and handed them to the planner as
+    two keepers - Watson r10 and Stafford r10 for BHier. The league does not
+    allow two keepers at one round: the later-ADP man goes a round dearer
+    (KeeperPricing, applied by KeeperChooser.priceHypothetical). Priced
+    separately the pair shared one slot, the second man burned nothing, and
+    the gain read 30.7 instead of 27.5. Justin remembered the rule from the
+    table alone. Pairs are priced as pairs, and the planner now says so out
+    loud when two keepers of one manager arrive at the same round.
+

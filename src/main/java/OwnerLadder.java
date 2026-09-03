@@ -384,15 +384,15 @@ public class OwnerLadder {
         StringBuilder out = new StringBuilder();
         out.append(String.format("OWNER LADDER  %s  (%d simulated drafts per rung, room model at every seat, %.0fs)%n", today, trials, seconds));
         out.append("SLOT = this owner's keepers phantomed, others as declared; KEEPERS = as declared; BEST PAIR = the ledger's two highest-valued keepers for this owner; DRAFTED = the roster held today.\n\n");
-        out.append(String.format("%-12s %4s %7s %8s %-34s %6s %9s %-34s %6s %8s %8s%n", "owner", "slot", "SLOT", "KEEPERS", "kept (points alone)", "worth", "BEST PAIR", "should have been", "gain", "DRAFTED", "drafting"));
+        out.append(String.format("%-12s %4s %7s %8s %-40s %6s %9s %-40s %6s %8s %8s%n", "owner", "slot", "SLOT", "KEEPERS", "kept (points alone)", "worth", "BEST PAIR", "should have been", "gain", "DRAFTED", "drafting"));
         for(String m : managers){
             double s = slotOnly.getOrDefault(m, new double[]{0, 0})[0];
             double k = withKeepers.getOrDefault(m, new double[]{0, 0})[0];
             double b = bestPairRung.getOrDefault(m, new double[]{k, 0})[0];
             double d = drafted.getOrDefault(m, 0.0);
-            out.append(String.format("%-12s %4d %7.1f %8.1f %-34s %+6.1f %9.1f %-34s %+6.1f %8.1f %+8.1f%s%n",
-                    m, slotOf.getOrDefault(m, 0), s, k, cut(keptLabel.getOrDefault(m, "?"), 34), k - s,
-                    b, cut(shouldLabel.getOrDefault(m, "?"), 34), b - k, d, d - k,
+            out.append(String.format("%-12s %4d %7.1f %8.1f %-40s %+6.1f %9.1f %-40s %+6.1f %8.1f %+8.1f%s%n",
+                    m, slotOf.getOrDefault(m, 0), s, k, cut(keptLabel.getOrDefault(m, "?"), 40), k - s,
+                    b, cut(shouldLabel.getOrDefault(m, "?"), 40), b - k, d, d - k,
                     butHas.containsKey(m) ? " (" + butHas.get(m) + ")" : ""));
         }
         out.append(String.format("%nEACH KEEPER ALONE (top %d by the ledger, plus any kept man outside them): points over the keeperless seat%n", top));
