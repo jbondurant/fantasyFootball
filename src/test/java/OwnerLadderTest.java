@@ -44,4 +44,22 @@ public class OwnerLadderTest {
         assertEquals("Stafford", best.get(1).name());
         assertFalse(best.stream().allMatch(OwnerLadder.Candidate::kept), "BHier did not keep his best pair");
     }
+
+    @Test
+    public void theValuedListIsTheTopThreePlusAnyKeptManOutsideThem(){
+        List<OwnerLadder.Candidate> c = List.of(
+                new OwnerLadder.Candidate("Watson", "WR", 10, 28.5, false),
+                new OwnerLadder.Candidate("Stafford", "QB", 10, 9.1, false),
+                new OwnerLadder.Candidate("Dobbins", "RB", 9, 7.1, false),
+                new OwnerLadder.Candidate("Pitts", "TE", 13, 2.1, true),
+                new OwnerLadder.Candidate("Daniels", "QB", 7, -5.2, true));
+        List<OwnerLadder.Candidate> v = OwnerLadder.toValue(c, 3);
+        assertEquals(List.of("Watson", "Stafford", "Dobbins", "Pitts", "Daniels"),
+                v.stream().map(OwnerLadder.Candidate::name).toList(), "top three, then the two kept men outside them");
+        List<OwnerLadder.Candidate> mine = List.of(
+                new OwnerLadder.Candidate("Tuten", "RB", 12, 16.3, true),
+                new OwnerLadder.Candidate("Purdy", "QB", 13, 10.4, true),
+                new OwnerLadder.Candidate("Flowers", "WR", 5, 5.6, false));
+        assertEquals(3, OwnerLadder.toValue(mine, 3).size(), "both kept men are already inside the three");
+    }
 }

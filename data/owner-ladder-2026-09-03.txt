@@ -1,0 +1,58 @@
+OWNER LADDER  2026-09-03  (200 simulated drafts per rung, room model at every seat, 438s)
+SLOT = this owner keeps nobody (others as declared); KEEPERS = as declared; BEST PAIR = the ledger's two highest-valued keepers for this owner; DRAFTED = the roster held today.
+
+owner        slot     SLOT  KEEPERS   worth BEST PAIR    gain  DRAFTED drafting   best pair (ledger)
+JakeSK          1   1819.0   1936.7  +117.7    1937.0    +0.3   1957.2    +20.5   Puka Nacua r13 + Rhamondre Stevenson r10
+BHier           2   1803.1   1818.1   +15.0    1847.1   +29.1   1868.7    +50.6   Christian Watson r10 + Matthew Stafford r10
+Renteez         3   1805.6   1880.7   +75.2    1880.7    +0.0   1830.9    -49.8   Javonte Williams r6 + Ladd McConkey r6 (kept)
+KevinDA         4   1799.7   1908.1  +108.3    1908.1    +0.0   1915.5     +7.4   De'Von Achane r5 + Colston Loveland r10 (kept)
+d0ddi           5   1797.1   1876.3   +79.2    1876.3    +0.0   1868.9     -7.4   Kyren Williams r8 + Sam LaPorta r11 (kept)
+patekxwater     6   1790.7   1875.8   +85.1    1875.8    +0.0   1856.1    -19.7   Nico Collins r8 + Rico Dowdle r13 (kept)
+justinb314      7   1781.2   1820.6   +39.3    1820.6    +0.0   1856.1    +35.5   Bhayshul Tuten r12 + Brock Purdy r13 (kept)
+JFMarino        8   1774.7   1818.1   +43.4    1838.7   +20.6   1766.5    -51.6   Chris Olave r5 + Rome Odunze r6
+jerem9604       9   1797.1   1924.1  +127.1    1924.1    +0.0   1890.3    -33.8 (but has Josh Jacobs, exempt list)   Jonathan Taylor r4 + Brock Bowers r7 (kept)
+Hamrliks       10   1789.8   1895.7  +105.9    1895.7    +0.0   1880.0    -15.8   Chase Brown r14 + Drake Maye r13 (kept)
+tommyrads      11   1766.0   1808.1   +42.0    1819.3   +11.2   1854.1    +46.1   Rashee Rice r5 + Caleb Williams r14
+itsabust       12   1790.9   1906.3  +115.4    1906.3    +0.0   1916.4    +10.1   Jaxon Smith-Njigba r5 + Bucky Irving r13 (kept)
+
+EACH KEEPER ALONE (top 3 by the ledger, plus any kept man outside them): points over the keeperless seat
+   owner        keeper                   pos  rnd   ladder    +/-   ledger
+   JakeSK       Puka Nacua               WR  r13    +109.2    5.3   +113.0  kept
+   JakeSK       Rhamondre Stevenson      RB  r10     +15.6    5.1    +13.9
+   JakeSK       Tucker Kraft             TE  r11     +10.5    5.0     +3.9  kept
+   BHier        Christian Watson         WR  r10     +40.6    5.4    +28.5
+   BHier        Matthew Stafford         QB  r10      +4.9    5.3     +9.1
+   BHier        J.K. Dobbins             RB  r9      +17.2    5.4     +7.1
+   BHier        Kyle Pitts               TE  r13     +16.3    5.3     +2.1  kept
+   BHier        Jayden Daniels           QB  r7       -1.2    5.5     -5.2  kept
+   Renteez      Javonte Williams         RB  r6      +51.8    4.8    +39.1  kept
+   Renteez      Ladd McConkey            WR  r6      +34.8    5.1    +36.9  kept
+   Renteez      D'Andre Swift            RB  r4      +20.3    4.7    +11.7
+   KevinDA      De'Von Achane            RB  r5      +66.8    5.2    +53.9  kept
+   KevinDA      Colston Loveland         TE  r10     +42.4    5.9    +34.1  kept
+   KevinDA      Luther Burden            WR  r11     +36.4    5.7    +27.8
+   d0ddi        Kyren Williams           RB  r8      +52.2    4.9    +47.7  kept
+   d0ddi        Sam LaPorta              TE  r11     +26.8    5.0    +17.7  kept
+   d0ddi        DeVonta Smith            WR  r4      +19.7    4.7     +8.8
+   patekxwater  Nico Collins             WR  r8      +75.8    4.8    +74.3  kept
+   patekxwater  Rico Dowdle              RB  r13     +11.7    4.8     +3.1  kept
+   patekxwater  Brenton Strange          TE  r10      -0.2    5.0     +0.0
+   justinb314   Bhayshul Tuten           RB  r12     +24.7    4.4    +16.3  kept
+   justinb314   Brock Purdy              QB  r13     +15.2    4.5    +10.4  kept
+   justinb314   Zay Flowers              WR  r4      +17.2    4.4     +5.6
+   JFMarino     Chris Olave              WR  r5      +39.0    4.5    +29.5  kept
+   JFMarino     Rome Odunze              WR  r6      +28.1    5.0    +19.5
+   JFMarino     Justin Herbert           QB  r13      +5.9    4.6     +0.4
+   JFMarino     Trey McBride             TE  r3       +6.5    4.8     -2.6  kept
+   jerem9604    Jonathan Taylor          RB  r4      +69.9    4.1    +67.0  kept
+   jerem9604    Brock Bowers             TE  r7      +52.5    4.4    +58.5  kept
+   jerem9604    Cam Skattebo             RB  r9      +31.5    4.2    +38.8
+   Hamrliks     Chase Brown              RB  r14     +78.2    4.6    +77.5  kept
+   Hamrliks     Drake Maye               QB  r13     +30.8    4.3    +35.6  kept
+   Hamrliks     Bryce Young              QB  r10     -33.0    4.9    +21.7
+   tommyrads    Rashee Rice              WR  r5      +38.2    4.3    +28.6
+   tommyrads    Caleb Williams           QB  r14     +20.8    4.1    +22.4  kept
+   tommyrads    Tyler Warren             TE  r8      +24.8    4.4    +19.3  kept
+   itsabust     Jaxon Smith-Njigba       WR  r5      +78.6    4.3    +74.4  kept
+   itsabust     Bucky Irving             RB  r13     +33.5    4.8    +38.6  kept
+   itsabust     Quinshon Judkins         RB  r7      +26.5    4.7    +35.8

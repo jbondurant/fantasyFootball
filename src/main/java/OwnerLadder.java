@@ -40,11 +40,31 @@ import PlayerImportAndSetup.Position;
  * top two); DRAFTED - KEEPERS is his own drafting against his seat and keepers.
  * Report-only.
  *
- *     ./gradlew run -Pmain=OwnerLadder [-Ptrials=200] [-Pledger=data/keeper-ledger-10k-2026-08-26.txt]
+ *     ./gradlew run -Pmain=OwnerLadder [-Ptrials=200] [-Ptop=3] [-Pledger=data/keeper-ledger-10k-2026-08-26.txt]
+ *
+ * Also values each keeper ALONE: the top `top` ledger candidates per owner plus
+ * any kept man outside them, kept by himself against the keeperless seat, on
+ * the same yardstick as the rungs, with the ledger's Model A delta alongside.
  */
 public class OwnerLadder {
 
     public record Candidate(String name, String position, int round, double delta, boolean kept) {}
+
+    /** One keeper valued alone against the keeperless seat, on the ladder's yardstick and the ledger's. */
+    public record Valued(Candidate candidate, double ladderDelta, double standardError) {}
+
+    /** The top `top` ledger candidates plus any kept man outside them, ledger order. */
+    static List<Candidate> toValue(List<Candidate> candidates, int top){
+        List<Candidate> sorted = new ArrayList<>(candidates);
+        sorted.sort(Comparator.comparingDouble(Candidate::delta).reversed());
+        List<Candidate> out = new ArrayList<>(sorted.subList(0, Math.min(top, sorted.size())));
+        for(Candidate c : sorted){
+            if(c.kept() && !out.contains(c)){
+                out.add(c);
+            }
+        }
+        return out;
+    }
 
     /** Per manager display name, the ledger's candidates in file order. */
     static Map<String, List<Candidate>> parseLedger(List<String> lines){
@@ -208,6 +228,37 @@ public class OwnerLadder {
             bestPairRung.put(manager, rung(counterfactual, keepersOf, nameByUser, trials).get(manager));
         }
 
+        // 2b. EACH KEEPER ALONE: the top three ledger candidates per owner, plus a
+        // kept man outside that three, each kept by himself against the
+        // keeperless seat (everyone else as declared) - the same yardstick as the
+        // rungs, with the ledger's Model A number beside it.
+        int top = Integer.getInteger("top", 3);
+        Map<String, List<Valued>> valued = new TreeMap<>();
+        for(String manager : declaredOf.keySet()){
+            List<Candidate> candidates = ledger.getOrDefault(manager, List.of());
+            if(candidates.isEmpty()){ continue; }
+            String user = userByName.getOrDefault(manager, manager);
+            List<Keeper> eligible = KeeperChooser.eligibleCandidates(configuration, user);
+            for(Candidate c : toValue(candidates, top)){
+                Keeper match = null;
+                for(Keeper k : eligible){
+                    if((k.player.firstName + " " + k.player.lastName).trim().equalsIgnoreCase(c.name())){ match = k; break; }
+                }
+                if(match == null){
+                    Player p = Player.getPlayerFromNameAndPos(c.name(), Position.valueOf(c.position()));
+                    if(p != null){ match = new Keeper(user, p, c.round()); }
+                }
+                if(match == null){ continue; }
+                DraftPlanner alone = DraftPlanner.forCurrentSeasonAs(configuration, configuration.getMyID(),
+                        List.of(match), new HashSet<>(declaredOf.get(manager)), model, earliness);
+                Map<String, List<String>> keepersOf = new TreeMap<>(declaredOf);
+                keepersOf.put(manager, List.of(match.player.sleeperIDString));
+                double[] v = rung(alone, keepersOf, nameByUser, trials).get(manager);
+                valued.computeIfAbsent(manager, m -> new ArrayList<>())
+                        .add(new Valued(c, v[0] - slotOnly.get(manager)[0], Math.hypot(v[1], slotOnly.get(manager)[1])));
+            }
+        }
+
         // 4. DRAFTED: the real rosters, from the live picks (never the fixture)
         Map<String, Double> points = actual.points();
         Map<Integer, String> managerBySlot = new HashMap<>();
@@ -227,8 +278,23 @@ public class OwnerLadder {
                     .add(DraftExpectation.man(id, points.getOrDefault(id, 0.0), keeper, pick.get("pick_no").getAsInt()));
         }
         Map<String, Double> drafted = new TreeMap<>();
+        // A man on the commissioner exempt list or suspended carries a projection
+        // the feed has cut (Jacobs: 186 to 80 the day before the draft). His
+        // owner's DRAFTED rung is honest for the season the feed expects, but
+        // the reader should see the man behind the number.
+        Map<String, String> butHas = new TreeMap<>();
         for(Map.Entry<String, List<TeamRankings.Man>> e : real.entrySet()){
             drafted.put(e.getKey(), TeamRankings.bestLineup(e.getValue()).starters());
+            List<String> suppressed = new ArrayList<>();
+            for(TeamRankings.Man man : e.getValue()){
+                String status = SleeperProjections.injuryStatusOf(man.id());
+                if("NA".equals(status) || "Sus".equals(status)){
+                    suppressed.add(man.name() + (status.equals("NA") ? ", exempt list" : ", suspended"));
+                }
+            }
+            if(!suppressed.isEmpty()){
+                butHas.put(e.getKey(), "but has " + String.join("; ", suppressed));
+            }
         }
         double seconds = (System.currentTimeMillis() - t0) / 1000.0;
 
@@ -247,15 +313,24 @@ public class OwnerLadder {
             double k = withKeepers.getOrDefault(m, new double[]{0, 0})[0];
             double b = bestPairRung.getOrDefault(m, new double[]{k, 0})[0];
             double d = drafted.getOrDefault(m, 0.0);
-            out.append(String.format("%-12s %4d %8.1f %8.1f %+7.1f %9.1f %+7.1f %8.1f %+8.1f   %s%s%n",
+            out.append(String.format("%-12s %4d %8.1f %8.1f %+7.1f %9.1f %+7.1f %8.1f %+8.1f%s   %s%s%n",
                     m, slotOf.getOrDefault(m, 0), s, k, k - s, b, b - k, d, d - k,
+                    butHas.containsKey(m) ? " (" + butHas.get(m) + ")" : "",
                     bestPairNames.getOrDefault(m, "?"), keptTheirBest.getOrDefault(m, false) ? " (kept)" : ""));
+        }
+        out.append(String.format("%nEACH KEEPER ALONE (top %d by the ledger, plus any kept man outside them): points over the keeperless seat%n", top));
+        out.append(String.format("   %-12s %-24s %-3s %4s %8s %6s %8s%n", "owner", "keeper", "pos", "rnd", "ladder", "+/-", "ledger"));
+        for(String m : managers){
+            for(Valued v : valued.getOrDefault(m, List.of())){
+                out.append(String.format("   %-12s %-24s %-3s r%-3d %+8.1f %6.1f %+8.1f%s%n", m, v.candidate().name(), v.candidate().position(),
+                        v.candidate().round(), v.ladderDelta(), v.standardError(), v.candidate().delta(), v.candidate().kept() ? "  kept" : ""));
+            }
         }
         System.out.print(out);
         Files.createDirectories(Path.of("data"));
         Files.writeString(Path.of("data", "owner-ladder-" + today + ".txt"), out.toString(), StandardCharsets.UTF_8);
         Files.writeString(Path.of("data", "owner-ladder-" + today + ".html"),
-                html(managers, slotOf, slotOnly, withKeepers, bestPairRung, drafted, bestPairNames, keptTheirBest, declaredOf, points, today, trials),
+                html(managers, slotOf, slotOnly, withKeepers, bestPairRung, drafted, bestPairNames, keptTheirBest, declaredOf, points, today, trials, valued, butHas),
                 StandardCharsets.UTF_8);
         System.out.println("\nwritten to data/owner-ladder-" + today + ".txt and .html");
     }
@@ -263,7 +338,8 @@ public class OwnerLadder {
     static String html(List<String> managers, Map<String, Integer> slotOf, Map<String, double[]> slotOnly,
                        Map<String, double[]> withKeepers, Map<String, double[]> bestPairRung, Map<String, Double> drafted,
                        Map<String, String> bestPairNames, Map<String, Boolean> keptTheirBest,
-                       Map<String, List<String>> declaredOf, Map<String, Double> points, String today, int trials){
+                       Map<String, List<String>> declaredOf, Map<String, Double> points, String today, int trials,
+                       Map<String, List<Valued>> valued, Map<String, String> butHas){
         double lo = Double.MAX_VALUE, hi = -Double.MAX_VALUE;
         for(String m : managers){
             for(double v : new double[]{slotOnly.get(m)[0], withKeepers.get(m)[0], bestPairRung.getOrDefault(m, withKeepers.get(m))[0], drafted.getOrDefault(m, 0.0)}){
@@ -291,7 +367,8 @@ public class OwnerLadder {
             h.append("<tr").append(m.equals(me) ? " class='me'" : "").append("><td>").append(TeamRankings.esc(m)).append("</td><td>").append(slotOf.getOrDefault(m, 0))
              .append("</td><td>").append(String.format("%.0f", s)).append("</td><td>").append(String.format("%.0f", k)).append("</td><td class='").append(k - s >= 0 ? "up" : "down").append("'>").append(String.format("%+.0f", k - s))
              .append("</td><td>").append(String.format("%.0f", b)).append("</td><td class='").append(b - k > 0.5 ? "up" : "").append("'>").append(String.format("%+.0f", b - k))
-             .append("</td><td><b>").append(String.format("%.0f", d)).append("</b></td><td class='").append(d - k >= 0 ? "up" : "down").append("'>").append(String.format("%+.0f", d - k)).append("</td></tr>");
+             .append("</td><td><b>").append(String.format("%.0f", d)).append("</b></td><td class='").append(d - k >= 0 ? "up" : "down").append("'>").append(String.format("%+.0f", d - k))
+             .append(butHas.containsKey(m) ? " <span style='color:var(--muted);font-weight:normal'>(" + TeamRankings.esc(butHas.get(m)) + ")</span>" : "").append("</td></tr>");
         }
         h.append("</table><div class='grid'>");
         String[] colors = {"var(--r1)", "var(--r2)", "var(--r3)", "var(--r4)"};
@@ -312,7 +389,21 @@ public class OwnerLadder {
                 double w = Math.max(2, 100 * (vals[i] - floor) / (ceil - floor));
                 h.append("<div>").append(labels[i]).append("</div><div><div class='bar' style='width:").append(String.format("%.1f", w)).append("%;background:").append(colors[i]).append("'></div></div><div>").append(String.format("%.0f", vals[i])).append("</div>");
             }
-            h.append("</div></div>");
+            h.append("</div>");
+            List<Valued> vs = valued.getOrDefault(m, List.of());
+            if(!vs.isEmpty()){
+                double maxDelta = 1;
+                for(Valued v : vs){ maxDelta = Math.max(maxDelta, Math.abs(v.ladderDelta())); }
+                h.append("<div style='margin-top:8px;font-size:12px;color:var(--muted)'>each keeper alone, over the keeperless seat (ladder / ledger)</div><div class='ladder' style='grid-template-columns:150px 1fr 110px'>");
+                for(Valued v : vs){
+                    double w = Math.max(2, 100 * Math.abs(v.ladderDelta()) / maxDelta);
+                    h.append("<div>").append(TeamRankings.esc(v.candidate().name())).append(" <span style='color:var(--muted)'>").append(v.candidate().position()).append(" r").append(v.candidate().round()).append(v.candidate().kept() ? " kept" : "").append("</span></div>")
+                     .append("<div><div class='bar' style='width:").append(String.format("%.1f", w)).append("%;background:").append(v.ladderDelta() >= 0 ? "var(--r2)" : "#b3261e").append("'></div></div>")
+                     .append("<div>").append(String.format("%+.0f / %+.0f", v.ladderDelta(), v.candidate().delta())).append("</div>");
+                }
+                h.append("</div>");
+            }
+            h.append("</div>");
         }
         h.append("</div><div class='sub' style='margin-top:16px'>Rung 3 uses the standalone keeper deltas the 10k ledger measured on 2026-08-26 (best two by delta); for the eight owners who kept exactly that pair it equals rung 2. Rung 4 is the same lineup rule on the real roster, same feed, so the drafting column is his own picks against his seat and keepers.</div></body></html>");
         return h.toString();
