@@ -88,6 +88,10 @@ public class OwnerLadder {
         return out;
     }
 
+    private static String cut(String s, int n){
+        return s == null ? "?" : s.length() <= n ? s : s.substring(0, n - 1) + "~";
+    }
+
     /** The two highest standalone deltas. */
     static List<Candidate> bestPair(List<Candidate> candidates){
         List<Candidate> sorted = new ArrayList<>(candidates);
@@ -316,6 +320,30 @@ public class OwnerLadder {
         }
         double seconds = (System.currentTimeMillis() - t0) / 1000.0;
 
+        // short labels for the two name columns: last names with the keeper round
+        Map<String, String> keptLabel = new TreeMap<>();
+        for(String manager : declaredOf.keySet()){
+            List<String> parts = new ArrayList<>();
+            for(Keeper k : declaredKeepers.getOrDefault(manager, List.of())){
+                parts.add(k.player.lastName + " r" + k.roundCanBeKept);
+            }
+            keptLabel.put(manager, String.join(" + ", parts));
+        }
+        Map<String, String> shouldLabel = new TreeMap<>();
+        for(String manager : declaredOf.keySet()){
+            if(keptTheirBest.getOrDefault(manager, false)){
+                shouldLabel.put(manager, "same");
+                continue;
+            }
+            List<Candidate> best = bestPair(ledger.getOrDefault(manager, List.of()));
+            List<String> parts = new ArrayList<>();
+            for(Candidate c : best){
+                String[] words = c.name().split(" ");
+                parts.add(words[words.length - 1] + " r" + c.round());
+            }
+            shouldLabel.put(manager, parts.isEmpty() ? "?" : String.join(" + ", parts));
+        }
+
         // the table
         String today = LocalDate.now().toString();
         Map<String, Integer> slotOf = new HashMap<>();
@@ -325,16 +353,16 @@ public class OwnerLadder {
         StringBuilder out = new StringBuilder();
         out.append(String.format("OWNER LADDER  %s  (%d simulated drafts per rung, room model at every seat, %.0fs)%n", today, trials, seconds));
         out.append("SLOT = this owner's keepers phantomed, others as declared; KEEPERS = as declared; BEST PAIR = the ledger's two highest-valued keepers for this owner; DRAFTED = the roster held today.\n\n");
-        out.append(String.format("%-12s %4s %8s %8s %7s %9s %7s %8s %7s   %s%n", "owner", "slot", "SLOT", "KEEPERS", "worth", "BEST PAIR", "gain", "DRAFTED", "drafting", "best pair (ledger)"));
+        out.append(String.format("%-12s %4s %7s %8s %-26s %6s %9s %-26s %6s %8s %8s%n", "owner", "slot", "SLOT", "KEEPERS", "kept", "worth", "BEST PAIR", "should have been", "gain", "DRAFTED", "drafting"));
         for(String m : managers){
             double s = slotOnly.getOrDefault(m, new double[]{0, 0})[0];
             double k = withKeepers.getOrDefault(m, new double[]{0, 0})[0];
             double b = bestPairRung.getOrDefault(m, new double[]{k, 0})[0];
             double d = drafted.getOrDefault(m, 0.0);
-            out.append(String.format("%-12s %4d %8.1f %8.1f %+7.1f %9.1f %+7.1f %8.1f %+8.1f%s   %s%s%n",
-                    m, slotOf.getOrDefault(m, 0), s, k, k - s, b, b - k, d, d - k,
-                    butHas.containsKey(m) ? " (" + butHas.get(m) + ")" : "",
-                    bestPairNames.getOrDefault(m, "?"), keptTheirBest.getOrDefault(m, false) ? " (kept)" : ""));
+            out.append(String.format("%-12s %4d %7.1f %8.1f %-26s %+6.1f %9.1f %-26s %+6.1f %8.1f %+8.1f%s%n",
+                    m, slotOf.getOrDefault(m, 0), s, k, cut(keptLabel.getOrDefault(m, "?"), 26), k - s,
+                    b, cut(shouldLabel.getOrDefault(m, "?"), 26), b - k, d, d - k,
+                    butHas.containsKey(m) ? " (" + butHas.get(m) + ")" : ""));
         }
         out.append(String.format("%nEACH KEEPER ALONE (top %d by the ledger, plus any kept man outside them): points over the keeperless seat%n", top));
         out.append(String.format("   %-12s %-24s %-3s %4s %8s %6s %8s%n", "owner", "keeper", "pos", "rnd", "ladder", "+/-", "ledger"));
@@ -348,7 +376,7 @@ public class OwnerLadder {
         Files.createDirectories(Path.of("data"));
         Files.writeString(Path.of("data", "owner-ladder-" + today + ".txt"), out.toString(), StandardCharsets.UTF_8);
         Files.writeString(Path.of("data", "owner-ladder-" + today + ".html"),
-                html(managers, slotOf, slotOnly, withKeepers, bestPairRung, drafted, bestPairNames, keptTheirBest, declaredOf, points, today, trials, valued, butHas),
+                html(managers, slotOf, slotOnly, withKeepers, bestPairRung, drafted, bestPairNames, keptTheirBest, declaredOf, points, today, trials, valued, butHas, keptLabel, shouldLabel),
                 StandardCharsets.UTF_8);
         System.out.println("\nwritten to data/owner-ladder-" + today + ".txt and .html");
     }
@@ -357,7 +385,8 @@ public class OwnerLadder {
                        Map<String, double[]> withKeepers, Map<String, double[]> bestPairRung, Map<String, Double> drafted,
                        Map<String, String> bestPairNames, Map<String, Boolean> keptTheirBest,
                        Map<String, List<String>> declaredOf, Map<String, Double> points, String today, int trials,
-                       Map<String, List<Valued>> valued, Map<String, String> butHas){
+                       Map<String, List<Valued>> valued, Map<String, String> butHas,
+                       Map<String, String> keptLabel, Map<String, String> shouldLabel){
         double lo = Double.MAX_VALUE, hi = -Double.MAX_VALUE;
         for(String m : managers){
             for(double v : new double[]{slotOnly.get(m)[0], withKeepers.get(m)[0], bestPairRung.getOrDefault(m, withKeepers.get(m))[0], drafted.getOrDefault(m, 0.0)}){
@@ -379,12 +408,16 @@ public class OwnerLadder {
          .append("</style></head><body><h1>Owner ladder</h1><div class='sub'>").append(trials).append(" simulated drafts per rung, the fitted room drafting every seat of the pre-draft league; each rung is the mean projected points of the best legal lineup. ")
          .append("<span class='lg' style='background:var(--r1)'></span>SLOT: this owner's keepers phantomed (off the board, no credit), everyone else as declared &nbsp; <span class='lg' style='background:var(--r2)'></span>KEEPERS: as declared &nbsp; <span class='lg' style='background:var(--r3)'></span>BEST PAIR: the 10k ledger's two highest-valued keepers for this owner &nbsp; <span class='lg' style='background:var(--r4)'></span>DRAFTED: the roster held today</div>");
         String me = System.getProperty("me", "justinb314");
-        h.append("<table><tr><th>Owner</th><th>Slot</th><th>Slot only</th><th>+ keepers</th><th>worth</th><th>+ best pair</th><th>gain</th><th>Drafted</th><th>drafting</th></tr>");
+        h.append("<table><tr><th>Owner</th><th>Slot</th><th>Slot only</th><th>+ keepers</th><th style='text-align:left'>kept</th><th>worth</th><th>+ best pair</th><th style='text-align:left'>should have been</th><th>gain</th><th>Drafted</th><th>drafting</th></tr>");
         for(String m : managers){
             double s = slotOnly.get(m)[0], k = withKeepers.get(m)[0], b = bestPairRung.getOrDefault(m, withKeepers.get(m))[0], d = drafted.getOrDefault(m, 0.0);
             h.append("<tr").append(m.equals(me) ? " class='me'" : "").append("><td>").append(TeamRankings.esc(m)).append("</td><td>").append(slotOf.getOrDefault(m, 0))
-             .append("</td><td>").append(String.format("%.0f", s)).append("</td><td>").append(String.format("%.0f", k)).append("</td><td class='").append(k - s >= 0 ? "up" : "down").append("'>").append(String.format("%+.0f", k - s))
-             .append("</td><td>").append(String.format("%.0f", b)).append("</td><td class='").append(b - k > 0.5 ? "up" : "").append("'>").append(String.format("%+.0f", b - k))
+             .append("</td><td>").append(String.format("%.0f", s)).append("</td><td>").append(String.format("%.0f", k))
+             .append("</td><td style='text-align:left;white-space:normal'>").append(TeamRankings.esc(keptLabel.getOrDefault(m, "?")))
+             .append("</td><td class='").append(k - s >= 0 ? "up" : "down").append("'>").append(String.format("%+.0f", k - s))
+             .append("</td><td>").append(String.format("%.0f", b))
+             .append("</td><td style='text-align:left;white-space:normal").append(shouldLabel.getOrDefault(m, "").equals("same") ? ";color:var(--muted)" : "").append("'>").append(TeamRankings.esc(shouldLabel.getOrDefault(m, "?")))
+             .append("</td><td class='").append(b - k > 0.5 ? "up" : "").append("'>").append(String.format("%+.0f", b - k))
              .append("</td><td><b>").append(String.format("%.0f", d)).append("</b></td><td class='").append(d - k >= 0 ? "up" : "down").append("'>").append(String.format("%+.0f", d - k))
              .append(butHas.containsKey(m) ? " <span style='color:var(--muted);font-weight:normal'>(" + TeamRankings.esc(butHas.get(m)) + ")</span>" : "").append("</td></tr>");
         }

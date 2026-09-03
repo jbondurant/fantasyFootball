@@ -1,19 +1,19 @@
-OWNER LADDER  2026-09-03  (400 simulated drafts per rung, room model at every seat, 517s)
+OWNER LADDER  2026-09-03  (400 simulated drafts per rung, room model at every seat, 572s)
 SLOT = this owner's keepers phantomed, others as declared; KEEPERS = as declared; BEST PAIR = the ledger's two highest-valued keepers for this owner; DRAFTED = the roster held today.
 
-owner        slot     SLOT  KEEPERS   worth BEST PAIR    gain  DRAFTED drafting   best pair (ledger)
-JakeSK          1   1798.7   1935.1  +136.4    1937.0    +1.9   1957.2    +22.1   Puka Nacua r13 + Rhamondre Stevenson r10
-BHier           2   1804.2   1817.3   +13.1    1848.0   +30.7   1868.7    +51.4   Christian Watson r10 + Matthew Stafford r10
-Renteez         3   1788.7   1881.1   +92.3    1881.1    +0.0   1830.9    -50.2   Javonte Williams r6 + Ladd McConkey r6 (kept)
-KevinDA         4   1788.0   1908.0  +120.1    1908.0    +0.0   1915.5     +7.4   De'Von Achane r5 + Colston Loveland r10 (kept)
-d0ddi           5   1785.5   1874.3   +88.9    1874.3    +0.0   1868.9     -5.5   Kyren Williams r8 + Sam LaPorta r11 (kept)
-patekxwater     6   1778.9   1875.4   +96.5    1875.4    +0.0   1856.1    -19.2   Nico Collins r8 + Rico Dowdle r13 (kept)
-justinb314      7   1777.8   1821.1   +43.4    1821.1    +0.0   1856.1    +35.0   Bhayshul Tuten r12 + Brock Purdy r13 (kept)
-JFMarino        8   1768.1   1820.9   +52.8    1840.5   +19.6   1766.5    -54.4   Chris Olave r5 + Rome Odunze r6
-jerem9604       9   1769.7   1926.8  +157.1    1926.8    +0.0   1890.3    -36.4 (but has Josh Jacobs, exempt list)   Jonathan Taylor r4 + Brock Bowers r7 (kept)
-Hamrliks       10   1773.3   1895.7  +122.4    1895.7    +0.0   1880.0    -15.8   Chase Brown r14 + Drake Maye r13 (kept)
-tommyrads      11   1767.1   1808.1   +41.0    1817.8    +9.7   1854.1    +46.1   Rashee Rice r5 + Caleb Williams r14
-itsabust       12   1769.3   1902.3  +133.0    1902.3    +0.0   1916.4    +14.1   Jaxon Smith-Njigba r5 + Bucky Irving r13 (kept)
+owner        slot    SLOT  KEEPERS kept                        worth BEST PAIR should have been             gain  DRAFTED drafting
+JakeSK          1  1798.7   1935.1 Kraft r11 + Nacua r13      +136.4    1937.0 Nacua r13 + Stevenson r10    +1.9   1957.2    +22.1
+BHier           2  1804.2   1817.3 Daniels r7 + Pitts r13      +13.1    1848.0 Watson r10 + Stafford r10   +30.7   1868.7    +51.4
+Renteez         3  1788.7   1881.1 McConkey r6 + Williams r5   +92.3    1881.1 same                         +0.0   1830.9    -50.2
+KevinDA         4  1788.0   1908.0 Loveland r10 + Achane r5   +120.1    1908.0 same                         +0.0   1915.5     +7.4
+d0ddi           5  1785.5   1874.3 LaPorta r11 + Williams r8   +88.9    1874.3 same                         +0.0   1868.9     -5.5
+patekxwater     6  1778.9   1875.4 Dowdle r13 + Collins r8     +96.5    1875.4 same                         +0.0   1856.1    -19.2
+justinb314      7  1777.8   1821.1 Tuten r12 + Purdy r13       +43.4    1821.1 same                         +0.0   1856.1    +35.0
+JFMarino        8  1768.1   1820.9 McBride r3 + Olave r5       +52.8    1840.5 Olave r5 + Odunze r6        +19.6   1766.5    -54.4
+jerem9604       9  1769.7   1926.8 Bowers r7 + Taylor r4      +157.1    1926.8 same                         +0.0   1890.3    -36.4 (but has Josh Jacobs, exempt list)
+Hamrliks       10  1773.3   1895.7 Maye r13 + Brown r14       +122.4    1895.7 same                         +0.0   1880.0    -15.8
+tommyrads      11  1767.1   1808.1 Williams r14 + Warren r8    +41.0    1817.8 Rice r5 + Williams r14       +9.7   1854.1    +46.1
+itsabust       12  1769.3   1902.3 Irving r13 + Smith-Njigba~ +133.0    1902.3 same                         +0.0   1916.4    +14.1
 
 EACH KEEPER ALONE (top 3 by the ledger, plus any kept man outside them): points over the keeperless seat
    owner        keeper                   pos  rnd   ladder    +/-   ledger
