@@ -44,7 +44,7 @@ import java.util.TreeMap;
  * {@code data/market-movers-<today>.txt}.
  *
  *     ./gradlew run -Pmain=MarketMovers            # last 7 days of caches
- *     ./gradlew run -Pmain=MarketMovers -Pdays=3 -Ptop=30 -PminMove=2
+ *     ./gradlew run -Pmain=MarketMovers -Pdays=3 -Ptop=30 -PminMove=2 -Ppool=250
  */
 public class MarketMovers {
 
@@ -61,10 +61,15 @@ public class MarketMovers {
         double adpLogRatio(){ return Math.log(to.adp() / from.adp()); }
     }
 
-    /** Sleeper reports players nobody drafts at 999; anything past this is "undrafted". */
-    static final double UNDRAFTED = 500;
+    /**
+     * Sleeper reports players nobody drafts at 999, and the tail of its ADP
+     * list (238-250) is placeholder men - retired or unsigned - whose "ADP"
+     * jumps to 400 from one day to the next. Anything past this is undrafted
+     * and never a mover; men with no team are skipped for the same reason.
+     */
+    static final double UNDRAFTED = 260;
     /** The drafted universe: a player counts if he is inside this at either end. */
-    static final double DRAFTABLE = 200;
+    static final double DRAFTABLE = Double.parseDouble(System.getProperty("pool", "200"));
 
     /* ---------------- pure pieces (tested) ---------------- */
 
@@ -211,6 +216,13 @@ public class MarketMovers {
                     + e.getClass().getSimpleName() + ")";
         }
 
+        Map<String, String> heldBy;
+        try {
+            heldBy = LeagueOwners.today(AAAConfiguration.getInstance());
+        }
+        catch(RuntimeException unavailable){
+            heldBy = Map.of();
+        }
         TreeMap<String, Path> all = cachedDays(season);
         if(all.size() < 2){
             System.out.println("need at least two cached days of sleeperProjections" + season
@@ -238,8 +250,8 @@ public class MarketMovers {
                 continue;
             }
             boolean draftable = from.adp() <= DRAFTABLE || to.adp() <= DRAFTABLE;
-            if(!draftable){
-                continue;
+            if(!draftable || (to.team() == null && from.team() == null)){
+                continue;   // outside the pool, or a placeholder with no team
             }
             if(from.adp() >= UNDRAFTED && to.adp() < UNDRAFTED){ entered.add(to); }
             if(from.adp() < UNDRAFTED && to.adp() >= UNDRAFTED){ left.add(from); }
@@ -265,23 +277,25 @@ public class MarketMovers {
         out.append("Sleeper half-PPR ADP: negative change = rising (drafted earlier). 'step' = the day carrying most of the move; a drift has no single day.\n");
 
         out.append(String.format("%n== PROJECTION MOVERS (league points, |change| >= %.0f) ==%n", minMove));
-        out.append(String.format("%-24s %-3s %-4s %7s %7s %7s   %-14s %s%n",
-                "player", "pos", "team", "from", "to", "change", "step", "Sleeper's own data says"));
+        out.append(String.format("%-24s %-3s %-4s %-12s %7s %7s %7s   %-14s %s%n",
+                "player", "pos", "team", "held by", "from", "to", "change", "step", "Sleeper's own data says"));
         List<Move> byPoints = pointMovers(pointMoves, minMove);
         for(Move m : byPoints.subList(0, Math.min(top, byPoints.size()))){
-            out.append(String.format("%-24s %-3s %-4s %7.1f %7.1f %+7.1f   %-14s %s%n",
+            out.append(String.format("%-24s %-3s %-4s %-12s %7.1f %7.1f %+7.1f   %-14s %s%n",
                     cut(m.to().name(), 24), m.to().position(), m.to().team(),
+                    cut(heldBy.getOrDefault(m.to().id(), "free agent"), 12),
                     m.from().points(), m.to().points(), m.delta(),
                     step(m), flags(m.from(), m.to(), windowStart)));
         }
 
         out.append(String.format("%n== ADP MOVERS (ranked relatively; |change| >= %.0f picks) ==%n", minMove));
-        out.append(String.format("%-24s %-3s %-4s %7s %7s %7s %6s   %-14s %s%n",
-                "player", "pos", "team", "from", "to", "change", "rel", "step", "Sleeper's own data says"));
+        out.append(String.format("%-24s %-3s %-4s %-12s %7s %7s %7s %6s   %-14s %s%n",
+                "player", "pos", "team", "held by", "from", "to", "change", "rel", "step", "Sleeper's own data says"));
         List<Move> ranked = adpMovers(adpMoves, minMove);
         for(Move m : ranked.subList(0, Math.min(top, ranked.size()))){
-            out.append(String.format("%-24s %-3s %-4s %7.1f %7.1f %+7.1f %+5.0f%%   %-14s %s%n",
+            out.append(String.format("%-24s %-3s %-4s %-12s %7.1f %7.1f %+7.1f %+5.0f%%   %-14s %s%n",
                     cut(m.to().name(), 24), m.to().position(), m.to().team(),
+                    cut(heldBy.getOrDefault(m.to().id(), "free agent"), 12),
                     m.from().adp(), m.to().adp(), m.adpDelta(), 100 * (Math.exp(m.adpLogRatio()) - 1),
                     step(m), flags(m.from(), m.to(), windowStart)));
         }
@@ -300,7 +314,8 @@ public class MarketMovers {
         }
         hurt.sort(Comparator.comparingDouble(Row::adp));
         for(Row r : hurt){
-            out.append(String.format("   %-24s %-3s %-4s adp %6.1f  %s%s%n", r.name(), r.position(), r.team(), r.adp(),
+            out.append(String.format("   %-24s %-3s %-4s %-12s adp %6.1f  %s%s%n", r.name(), r.position(), r.team(),
+                    cut(heldBy.getOrDefault(r.id(), "free agent"), 12), r.adp(),
                     r.injuryStatus(), r.injuryPart() == null ? "" : " (" + r.injuryPart() + ")"));
         }
 

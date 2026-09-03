@@ -152,7 +152,7 @@ tasks.register('run', JavaExec) {
      // what every number tagged draft-ready-2026 was measured with.
      'survivalDraws', 'temperature', 'sweep', 'dump', 'legend', 'defTrust', 'noFloor', 'fullRounds', 'noDrift', 'noDepth', 'scarcity', 
      // MarketMovers - window in days, rows per table, minimum move (points / picks).
-     'days', 'top', 'minMove',
+     'days', 'top', 'minMove', 'pool',
      // TeamRankings - which manager's row to highlight.
      'me',
      // LiveCommittee - Model A's wall-clock budget for its engines (default 25s; all of Model A then lands under 30s) and whether the KN arbiter runs on a unanimous vote.
