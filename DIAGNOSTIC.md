@@ -357,10 +357,12 @@ their seats most, Justin +35 (third) from the ninth-best seat-and-keepers, JFMar
 `OwnerLadder` (2026-09-02, report-only) breaks every owner's projected starters into
 four rungs on one yardstick: the seat alone (his keepers phantomed - off the board, no credit, no slot burned - others as declared),
 with his keepers, with the 10k ledger's best pair, and the roster he drafted. Keepers
-were worth +15 (BHier) to +127 (jerem9604: Taylor + Bowers); four owners left value on
-the table by not keeping the ledger's pair (BHier 28 with Watson bumped to round 9 beside
-Stafford - the league's same-round rule, priced by `KeeperPricing` (TRAPS #74); JFMarino 20;
-tommyrads 10; JakeSK 2); drafting against seat-and-keepers ranged from +51 (BHier) to -52 (JFMarino), Justin
+were worth +15 (BHier) to +127 (jerem9604: Taylor + Bowers); five owners left value on
+the table against the best legal pair on this yardstick, searched over every pair of their
+top ledger candidates and kept men, each priced as a pair (TRAPS #74, #75): BHier 36 with
+Watson r10 + Pitts r13 (the pair Justin named), tommyrads 21 with Rice + Warren, JFMarino 20
+with Olave + Odunze, Justin 7 with Tuten + Flowers over Tuten + Purdy - inside two standard
+errors, and the 10k ledger's optimizer had Purdy ahead - JakeSK 2; drafting against seat-and-keepers ranged from +51 (BHier) to -52 (JFMarino), Justin
 +36. The first run priced five owners' keepers below zero because the planner
 defaulted to the nine-round schedule and dropped every keeper kept at round 10 or later;
 the second read "seat alone" as a league where nobody keeps (the kept men return to the
