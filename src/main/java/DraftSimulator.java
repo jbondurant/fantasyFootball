@@ -61,6 +61,7 @@ public class DraftSimulator {
     private final Map<Integer, Slot> slotByPickNumber = new HashMap<>();
     private final List<String> initialBoard;   // ADP order, best first
     private final Map<String, Double> adp;
+    private final Map<String, Position> positionById = new HashMap<>();
     private final Map<String, Double> points;
     private final Map<String, Map<Position, Integer>> initialRosters;
     private final ChoiceModel model;
@@ -124,6 +125,14 @@ public class DraftSimulator {
         this.initialBoard = new ArrayList<>(board);
         this.initialBoard.sort(Comparator.comparingDouble(id -> priced.getOrDefault(id, 999.0)));
         this.adp = priced;
+        // Positions are looked up once here, not per candidate per pick: the
+        // first mustFill resolved them through Player.getPlayerFromSIDV2 inside
+        // the choice loop and turned a 13-minute check into a 4.5-hour one
+        // (HeldManRankTest 104s -> 5565s).
+        for(String id : this.initialBoard){
+            Player player = Player.getPlayerFromSIDV2(id);
+            positionById.put(id, player == null ? null : player.position);
+        }
         this.points = points;
         this.initialRosters = keeperRosters;
         this.model = model;
@@ -722,10 +731,7 @@ public class DraftSimulator {
                         picksLeft++;
                     }
                 }
-                choiceSet = mustFill(choiceSet, board, roster, picksLeft, id -> {
-                    Player player = Player.getPlayerFromSIDV2(id);
-                    return player == null ? null : player.position;
-                });
+                choiceSet = mustFill(choiceSet, board, roster, picksLeft, positionById::get);
                 double[] shape = turnShape.getOrDefault(slot.pickNumber(),
                         new double[]{0, 0, 1.0});
                 long qbHolders = rosters.values().stream()

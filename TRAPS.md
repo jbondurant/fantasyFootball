@@ -404,3 +404,12 @@ real every time.
     arms never do. Pass flags literally, and read identical arms as a harness
     fault before reading them as a result.
 
+69. **A player lookup inside the choice loop.** The first `mustFill` resolved
+    each candidate's position through `Player.getPlayerFromSIDV2` - a regex
+    match and an index check - for up to sixty candidates at every late pick of
+    every simulated draft. The unit suite went from 13 minutes to 4 hours 32
+    (HeldManRankTest 104s to 5565s) and nothing failed, so nothing said why.
+    Positions are now resolved once per simulator. Per-class times are the
+    check's second output; read them, because a green check that took twenty
+    times longer is telling you something.
+
