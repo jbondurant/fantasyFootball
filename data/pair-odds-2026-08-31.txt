@@ -1,0 +1,37 @@
+
+ODDS THE MAN YOU WAIT FOR BEATS THE MAN YOU COULD TAKE NOW
+
+16 seasons, 67968 same-position pairs, drafted men only (ADP <= 200)
+august price against end-of-season points. nothing in between.
+
+POS      PAIRS         c0     c1 gap   c2 depth   held-out accuracy vs 50%
+RB       26904      0.971     -0.809     -0.256   68.3%
+WR       33977      0.884     -0.985     -0.230   69.2%
+TE        2756      0.277     -0.847     -0.057   62.1%
+QB        4331      1.080     -1.085     -0.237   63.8%
+
+========================================================================
+WHAT IT SAYS AT YOUR PICKS
+========================================================================
+
+P(the man at your NEXT pick outscores the man at THIS pick)
+high means waiting is cheap. low means this pick is the one that matters.
+
+TAKE NOW ->          QB       RB       WR       TE   raw, all positions
+   7 -> 18           40%      43%      38%      35%       42%
+  18 -> 31           45%      45%      42%      41%       37%
+  31 -> 42           48%      46%      45%      46%       43%
+  42 -> 55           48%      45%      44%      46%       44%
+  55 -> 66           48%      45%      45%      47%       47%
+  66 -> 79           47%      44%      44%      47%       43%
+  79 -> 90           48%      44%      44%      48%       47%
+  90 -> 103          47%      43%      43%      48%       50%
+ 103 -> 114          47%      43%      43%      48%       48%
+ 114 -> 127          46%      42%      42%      48%       47%
+ 127 -> 162          42%      39%      38%      45%       42%
+ 162 -> 175          45%      40%      41%      48%       48%
+ 175 -> 186          45%      40%      41%      48%      NaN%
+
+The raw column is the unsmoothed rate over every real pair in that pick
+neighbourhood, printed because a curve that cannot jitter also cannot show a
+genuine cliff. Where the two disagree, believe the raw one.

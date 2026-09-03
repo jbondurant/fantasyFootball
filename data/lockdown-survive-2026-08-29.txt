@@ -1,0 +1,26 @@
+
+board run to round 16, 300 trials, 0 picks already gone
+my remaining picks: [7, 18, 31, 42, 55, 66, 79, 90, 103, 114, 127, 162, 175, 186]
+
+PICK     ROUND               Bo Nix        Jaxson Dart       Tyler Shough           Cam Ward
+7        1                     100%               100%               100%               100%
+18       2                     100%               100%               100%               100%   (11 picks since my last)
+31       3                     100%               100%               100%               100%   (13 picks since my last)
+42       4                     100%               100%               100%               100%   (11 picks since my last)
+55       5                     100%               100%               100%               100%   (13 picks since my last)
+66       6                      99%               100%               100%               100%   (11 picks since my last)
+79       7                      98%                99%               100%               100%   (13 picks since my last)
+90       8                      96%                98%               100%               100%   (11 picks since my last)
+103      9                      89%                89%               100%               100%   (13 picks since my last)
+114      10                     74%                73%               100%               100%   (11 picks since my last)
+127      11                     42%                50%                99%               100%   (13 picks since my last)
+162      14                      6%                 8%                95%               100%   (35 picks since my last)
+175      15                      0%                 2%                78%               100%   (13 picks since my last)
+186      16                      0%                 1%                63%                98%   (11 picks since my last)
+
+Read this as the wait-or-take answer for the back half. A target whose
+survival collapses between two of my picks has to be taken at the earlier
+one - and the 127 -> 162 gap is where that bites hardest, because nothing
+of mine happens in between.
+
+NOTE: the choice model is fitted on rounds 1-13, so rounds 14-16 extrapolate.

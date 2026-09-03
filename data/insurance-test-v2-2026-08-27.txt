@@ -1,0 +1,16 @@
+measured replacement ranks (next man up off the wire): {QB=8, RB=35, WR=50, TE=5}
+rounds 1-7 fixed at the starting-nine fill [RB, WR, RB, WR, WR, WR, TE];
+only the two insurance rounds vary. 40 fog draws, 300 rollouts, paired.
+
+   r8 + r9            no fog      no wire  insurance    with wire  insurance
+   QB+RB              1812.0       1543.6       +0.0       1661.4       +0.0   <- best, no wire
+   QB+WR              1812.0       1529.2      -14.4       1648.1      -13.3
+   WR+WR              1811.0       1500.4      -43.2       1628.0      -33.4
+   WR+RB              1811.0       1514.6      -29.0       1651.1      -10.3
+   RB+RB              1811.0       1527.0      -16.6       1644.0      -17.4
+   TE+WR              1811.0       1528.3      -15.4       1653.2       -8.2
+   QB+QB              1812.0       1512.1      -31.5       1632.8      -28.6
+
+'insurance' is relative to the shipped QB+RB tail. The
+no-fog column shows what the exact-projection model saw: nearly
+nothing, which is why it could not choose between these.

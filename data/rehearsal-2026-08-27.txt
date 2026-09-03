@@ -1,0 +1,118 @@
+engine warm in 17.2s (paid once, before the draft)
+
+================ pick 7 (round 1), 6 players gone ================
+RECOMMENDATION (6.7s, 150 rollouts x depth 2):
+
+   POS  player                          value     margin
+   WR   Ja'Marr Chase                  1822.9    <- TAKE
+   RB   Saquon Barkley                 1792.3      -30.7
+   QB   Josh Allen                     1764.0      -59.0
+   TE   Harold Fannin                  1721.2     -101.8
+   -> took Ja'Marr Chase (WR)
+
+================ pick 18 (round 2), 17 players gone ================
+RECOMMENDATION (5.2s, 150 rollouts x depth 2):
+
+   POS  player                          value     margin
+   WR   Drake London                   1825.6    <- TAKE
+   QB   Josh Allen                     1813.0      -12.6
+   RB   Breece Hall                    1810.2      -15.4
+   TE   Harold Fannin                  1772.2      -53.4
+   -> took Drake London (WR)
+
+================ pick 31 (round 3), 30 players gone ================
+RECOMMENDATION (4.3s, 150 rollouts x depth 2):
+
+   POS  player                          value     margin
+   RB   Travis Etienne                 1826.7    <- TAKE
+   QB   Josh Allen                     1826.0       -0.7
+   WR   Mike Evans                     1817.3       -9.4
+   TE   Harold Fannin                  1787.7      -39.0
+
+   NEAR TIE (0.7 apart) - either is defensible; take the scarcer position.
+   -> took Travis Etienne (RB)
+
+================ pick 42 (round 4), 39 players gone ================
+RECOMMENDATION (3.8s, 150 rollouts x depth 2):
+
+   POS  player                          value     margin
+   QB   Josh Allen                     1838.5    <- TAKE
+   WR   Parker Washington              1821.2      -17.3
+   RB   Rhamondre Stevenson            1805.8      -32.6
+   TE   Harold Fannin                  1800.5      -38.0
+   -> took Josh Allen (QB)
+
+================ pick 55 (round 5), 50 players gone ================
+RECOMMENDATION (3.1s, 150 rollouts x depth 2):
+
+   POS  player                          value     margin
+   RB   Jaylen Warren                  1820.8    <- TAKE
+   WR   Jayden Reed                    1819.4       -1.5
+   TE   Harold Fannin                  1813.8       -7.1
+   QB   Dak Prescott                   1801.6      -19.3
+
+   NEAR TIE (1.5 apart) - either is defensible; take the scarcer position.
+   -> took Jaylen Warren (RB)
+
+================ pick 66 (round 6), 59 players gone ================
+RECOMMENDATION (2.5s, 150 rollouts x depth 2):
+
+   POS  player                          value     margin
+   WR   Jayden Reed                    1822.9    <- TAKE
+   RB   J.K. Dobbins                   1817.0       -5.9
+   TE   George Kittle                  1812.8      -10.1
+   QB   Dak Prescott                   1802.6      -20.3
+   -> took Jayden Reed (WR)
+
+================ pick 79 (round 7), 70 players gone ================
+RECOMMENDATION (1.7s, 150 rollouts x depth 2):
+
+   POS  player                          value     margin
+   RB   Jordan Mason                   1821.6    <- TAKE
+   TE   George Kittle                  1820.1       -1.5
+   WR   Jordan Addison                 1819.6       -2.0
+   QB   Trevor Lawrence                1817.0       -4.6
+
+   NEAR TIE (1.5 apart) - either is defensible; take the scarcer position.
+   -> took Jordan Mason (RB)
+
+================ pick 90 (round 8), 79 players gone ================
+RECOMMENDATION (1.1s, 150 rollouts x depth 2):
+
+   POS  player                          value     margin
+   TE   Travis Kelce                   1821.1    <- TAKE
+   QB   Trevor Lawrence                1819.4       -1.7
+   RB   Chris Rodriguez                1819.3       -1.8
+   WR   Jakobi Meyers                  1819.2       -1.9
+
+   NEAR TIE (1.7 apart) - either is defensible; take the scarcer position.
+   -> took Travis Kelce (TE)
+
+================ pick 103 (round 9), 90 players gone ================
+RECOMMENDATION (0.4s, 150 rollouts x depth 2):
+
+   POS  player                          value     margin
+   QB   Trevor Lawrence                1821.1    <- TAKE
+   RB   Chris Rodriguez                1821.1        0.0
+   WR   Jalen Coker                    1821.1        0.0
+   TE   Mark Andrews                   1821.1        0.0
+
+   NEAR TIE (0.0 apart) - either is defensible; take the scarcer position.
+   -> took Trevor Lawrence (QB)
+
+
+rehearsal complete. Final roster:
+   RB   Bhayshul Tuten               158.8
+   QB   Brock Purdy                  363.2
+   WR   Ja'Marr Chase                256.6
+   WR   Drake London                 205.2
+   RB   Travis Etienne               189.7
+   QB   Josh Allen                   415.5
+   RB   Jaylen Warren                152.6
+   WR   Jayden Reed                  162.6
+   RB   Jordan Mason                 143.7
+   TE   Travis Kelce                 136.4
+   QB   Trevor Lawrence              355.4
+
+   best nine: 1821.1   (roster total 2539.7 over 11 players)
+   slowest decision: 6.7s  (budget 15s preferred, 30s cap)

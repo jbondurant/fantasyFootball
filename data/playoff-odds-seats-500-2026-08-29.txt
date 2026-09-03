@@ -1,0 +1,61 @@
+60 completed team-seasons across 5 seasons
+
+SEASON      avg pts     6th (in)    7th (out)    the gap
+2021         1670.3       1685.0       1672.1       12.9
+2022         1603.7       1635.9       1559.5       76.4
+2023         1628.2       1665.4       1608.5       56.9
+2024         1625.3       1760.6       1565.8      194.8
+2025         1594.8       1637.2       1585.0       52.3
+
+top-six by POINTS and top-six by WINS agree on 25 of 30 seats (83%).
+league_average_match is on, so scoring, not the schedule, is what qualifies you.
+
+P(top six) for a team scoring X relative to league average,
+bootstrapped from 200000 drawn leagues (avg season = 1624 pts):
+
+  vs average   P(top 6)  per +10 pts                   
+       -244         0%         0.0%                   
+       -162         0%         0.1%                  #
+        -81         2%         0.0%                   
+        -41        18%        10.7% ###########################################################################################################
+         +0        45%         4.5% #############################################
+        +41        71%         7.4% ##########################################################################
+        +81        92%         3.2% ################################
+       +162       100%         0.0%                   
+       +244       100%         0.0%                   
+
+
+PROJECTED PLAYOFF ODDS  (from data/league-outlook-500-clean.txt)
+draft explains sd 2.4% of a season; finished seasons vary sd 8.6%.
+so 8.3% is in-season noise - waivers, byes, injuries, luck - and every
+team gets an independent draw of it.
+
+MANAGER              best-9   vs average     P(top 6)
+JakeSK               1945.0         +71          71%
+jerem9604            1905.5         +37          61%
+KevinDA              1894.0         +27          58%
+Hamrliks             1889.7         +23          57%
+itsabust             1879.6         +14          54%
+patekxwater          1869.2          +5          52%
+d0ddi                1866.1          +2          51%
+Renteez              1864.7          +1          50%
+BHier                1821.4         -37          39%
+justinb314           1812.9         -44          37%
+tommyrads            1806.7         -49          35%
+JFMarino             1804.5         -51          35%
+
+the draft explains only a fraction of the variance, so even the top seat
+is far from safe and the bottom seat is far from out.
+
+
+what a draft pick buys, at each starting position:
+  vs average   P(top 6) now       with +44           gain
+       -162             0%             1%          +0.6%
+        -81             2%            18%         +16.0%
+         +0            45%            79%         +33.4%
+        +81            92%            98%          +6.1%
+       +162           100%           100%          +0.1%
+
+a point is worth most at the cutoff and nearly nothing in either tail.
+that is the whole argument for ignoring seasons already lost - but note
+how wide the live band is when six of twelve qualify.

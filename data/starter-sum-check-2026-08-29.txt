@@ -1,0 +1,40 @@
+outcome pool: 33 position-tier cells, 1466 player-seasons
+   wire QB  = QB21 -> 18.5 pts/week (same units as the players)
+   wire RB  = RB61 -> 3.1 pts/week (same units as the players)
+   wire WR  = WR81 -> 4.5 pts/week (same units as the players)
+   wire TE  = TE19 -> 6.7 pts/week (same units as the players)
+   wire DEF = DEF13 -> 5.1 pts/week (same units as the players)
+
+
+THE TEST: what is a TENTH man worth on a full nine?
+(the nine is Gibbs, Nacua, Robinson, Chase, Smith-Njigba, St. Brown, Bowers, Allen, McCaffrey)
+
+TENTH MAN                  POS    tier    season totals      starter sum
+(nobody)                   -         -           2445.0           2631.2
+De'Von Achane              RB        0             +2.4           +125.8
+Jeremiyah Love             RB        1             +0.0            +91.6
+Jordan Mason               RB        2             +0.0            +61.3
+A.J. Brown                 WR        0             +0.0           +100.7
+Rashee Rice                WR        1             +0.0            +89.0
+Davante Adams              WR        2             +0.0            +74.0
+Tucker Kraft               TE        0             +0.0            +50.4
+Oronde Gadsden             TE        1             +0.0            +36.4
+Kenyon Sadiq               TE        2             +0.0            +15.0
+Trevor Lawrence            QB        0             +0.0            +20.1
+Baker Mayfield             QB        1             +0.0            +13.3
+Michael Penix              QB        2             +0.0             +0.0
+Detroit Lions              DEF       0             +0.0            +11.5
+San Francisco 49ers        DEF       1             +0.0             +0.0
+New York Jets              DEF       2             +0.0             +0.0
+
+The DEF rows answer a different question from the rest. The nine has no defence,
+so a drafted one FILLS AN EMPTY STARTING SLOT rather than sitting behind
+somebody - and what it adds is only what it beats the wire defence by. If that
+is small, the search has no reason to ever spend a pick there, which is what
+the 0.277 rank correlation would predict.
+
+Under season totals a tenth man is worth exactly nothing unless he outscores
+a starter outright - that is the blindness that made LiveInsurance report
+STARTS = 0% for everyone. Under the starter sum he is worth what he adds in
+the weeks he is up and better than whoever else is, which is the thing a
+bench player actually does.

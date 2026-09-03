@@ -1,0 +1,278 @@
+name,position,sleeper_adp
+Jonathan Taylor,RB,1
+Austin Ekeler,RB,4
+Christian McCaffrey,RB,2
+Derrick Henry,RB,3
+Cooper Kupp,WR,5
+Justin Jefferson,WR,6
+Najee Harris,RB,7
+Dalvin Cook,RB,8
+Ja'Marr Chase,WR,9
+Joe Mixon,RB,10
+Davante Adams,WR,11
+Stefon Diggs,WR,14
+Nick Chubb,RB,16
+Travis Kelce,TE,12
+D'Andre Swift,RB,13
+CeeDee Lamb,WR,15
+Aaron Jones,RB,22
+Javonte Williams,RB,24
+Deebo Samuel,WR,23
+Alvin Kamara,RB,17
+Tyreek Hill,WR,18
+Saquon Barkley,RB,20
+Josh Allen,QB,19
+Mark Andrews,TE,21
+Leonard Fournette,RB,25
+Mike Evans,WR,26
+Keenan Allen,WR,30
+A.J. Brown,WR,27
+Ezekiel Elliott,RB,28
+Tee Higgins,WR,33
+Cam Akers,RB,34
+James Conner,RB,31
+David Montgomery,RB,35
+Patrick Mahomes II,QB,32
+Antonio Gibson,RB,41
+Kyle Pitts,TE,29
+Justin Herbert,QB,36
+Michael Pittman Jr.,WR,44
+Jaylen Waddle,WR,45
+Diontae Johnson,WR,39
+Josh Jacobs,RB,47
+Terry McLaurin,WR,43
+George Kittle,TE,38
+Breece Hall,RB,37
+Elijah Mitchell,RB,54
+Travis Etienne Jr.,RB,40
+DK Metcalf,WR,48
+Darren Waller,TE,42
+DJ Moore,WR,46
+Lamar Jackson,QB,49
+Mike Williams,WR,51
+J.K. Dobbins,RB,50
+Joe Burrow,QB,55
+Damien Harris,RB,67
+AJ Dillon,RB,65
+Kyler Murray,QB,57
+Marquise Brown,WR,58
+Jerry Jeudy,WR,53
+Clyde Edwards-Helaire,RB,61
+Courtland Sutton,WR,52
+Amari Cooper,WR,56
+Brandin Cooks,WR,62
+T.J. Hockenson,TE,64
+Chris Godwin,WR,60
+Dalton Schultz,TE,63
+Jalen Hurts,QB,66
+Allen Robinson II,WR,59
+Miles Sanders,RB,68
+Michael Thomas,WR,71
+Amon-Ra St. Brown,WR,69
+Dak Prescott,QB,76
+Adam Thielen,WR,70
+Gabriel Davis,WR,80
+Darnell Mooney,WR,73
+Russell Wilson,QB,83
+Kareem Hunt,RB,77
+Dallas Goedert,TE,81
+Devin Singletary,RB,89
+JuJu Smith-Schuster,WR,75
+Hunter Renfrow,WR,90
+Tom Brady,QB,86
+Rashaad Penny,RB,92
+Matthew Stafford,QB,99
+Tony Pollard,RB,88
+Elijah Moore,WR,87
+DeAndre Hopkins,WR,79
+Cordarrelle Patterson,RB,84
+Rashod Bateman,WR,78
+DeVonta Smith,WR,85
+Ken Walker III,RB,72
+Chase Edmonds,RB,91
+Dawson Knox,TE,96
+Melvin Gordon III,RB,101
+Aaron Rodgers,QB,100
+Tyler Lockett,WR,94
+Rhamondre Stevenson,RB,106
+Zach Ertz,TE,98
+Brandon Aiyuk,WR,97
+Trey Lance,QB,104
+Robert Woods,WR,103
+Michael Carter,RB,114
+Drake London,WR,74
+Derek Carr,QB,113
+James Robinson,RB,120
+Christian Kirk,WR,105
+James Cook,RB,102
+Mike Gesicki,TE,111
+Russell Gage,WR,112
+Ronald Jones II,RB,117
+Chase Claypool,WR,108
+Alexander Mattison,RB,124
+Kirk Cousins,QB,123
+Allen Lazard,WR,107
+Pat Freiermuth,TE,109
+Treylon Burks,WR,82
+Chris Olave,WR,95
+Darrell Henderson Jr.,RB,137
+Kadarius Toney,WR,115
+Tua Tagovailoa,QB,128
+Buffalo Bills,DST,204
+Isaiah Spiller,RB,118
+Nyheim Hines,RB,131
+Garrett Wilson,WR,93
+Dameon Pierce,RB,119
+Tampa Bay Buccaneers,DST,207
+Tyler Boyd,WR,127
+Marquez Valdes-Scantling,WR,122
+Raheem Mostert,RB,162
+Justin Tucker,K,203
+Jarvis Landry,WR,134
+J.D. McKissic,RB,147
+Rachaad White,RB,132
+Marlon Mack,RB,139
+Kenneth Gainwell,RB,146
+Cole Kmet,TE,125
+Justin Fields,QB,129
+Skyy Moore,WR,110
+DeVante Parker,WR,152
+Tyler Allgeier,RB,135
+Deshaun Watson,QB,136
+Michael Gallup,WR,121
+Albert Okwuegbunam,TE,133
+Christian Watson,WR,116
+Trevor Lawrence,QB,143
+Daniel Carlson,K,211
+Gus Edwards,RB,161
+Indianapolis Colts,DST,218
+Jamaal Williams,RB,168
+Kenny Golladay,WR,140
+Mark Ingram II,RB,160
+Jameson Williams,WR,126
+Irv Smith Jr.,TE,142
+Matt Ryan,QB,148
+Mecole Hardman,WR,154
+Mac Jones,QB,157
+Harrison Butker,K,208
+Rondale Moore,WR,138
+Julio Jones,WR,158
+Dallas Cowboys,DST,206
+San Francisco 49ers,DST,214
+Hunter Henry,TE,130
+Los Angeles Rams,DST,215
+Sony Michel,RB,193
+Matt Gay,K,212
+Ryan Tannehill,QB,177
+Darrel Williams,RB,171
+Noah Fant,TE,151
+George Pickens,WR,145
+Jameis Winston,QB,155
+New Orleans Saints,DST,219
+David Njoku,TE,150
+Jalen Tolbert,WR,159
+Tyler Bass,K,213
+Evan Engram,TE,189
+Robert Tonyan,TE,175
+D'Onta Foreman,RB,184
+New England Patriots,DST,209
+Gerald Everett,TE,167
+Jakobi Meyers,WR,144
+Zach Wilson,QB,172
+Denver Broncos,DST,258
+Evan McPherson,K,205
+DJ Chark Jr.,WR,149
+Carson Wentz,QB,191
+Cameron Brate,TE,181
+Khalil Herbert,RB,156
+Chuba Hubbard,RB,170
+Tyrion Davis-Price,RB,164
+Baker Mayfield,QB,224
+Jahan Dotson,WR,141
+Van Jefferson,WR,174
+Green Bay Packers,DST,216
+Austin Hooper,TE,187
+Jared Goff,QB,197
+Alec Pierce,WR,166
+Nick Folk,K,220
+Younghoe Koo,K,217
+Brian Robinson Jr.,RB,169
+Miami Dolphins,DST,260
+Matt Prater,K,252
+Sammy Watkins,WR,178
+Baltimore Ravens,DST,256
+Tyler Higbee,TE,163
+Los Angeles Chargers,DST,210
+Corey Davis,WR,196
+Robbie Anderson,WR,182
+Rodrigo Blankenship,K,254
+Logan Thomas,TE,199
+Pittsburgh Steelers,DST,257
+Kenyan Drake,RB,227
+Jamison Crowder,WR,180
+Marvin Jones Jr.,WR,201
+Odell Beckham Jr.,WR,173
+Zamir White,RB,179
+Hayden Hurst,TE,165
+Joshua Palmer,WR,188
+Robbie Gould,K,259
+Brandon McManus,K,255
+Trey Sermon,RB,246
+K.J. Osborn,WR,176
+D'Ernest Johnson,RB,233
+Curtis Samuel,WR,194
+Donovan Peoples-Jones,WR,183
+Romeo Doubs,WR,225
+Daniel Jones,QB,186
+Davis Mills,QB,229
+Tennessee Titans,DST,263
+Kyle Rudolph,TE,253
+Hassan Haskins,RB,231
+Matt Breida,RB,228
+Parris Campbell,WR,223
+Jerick McKinnon,RB,261
+William Fuller V,WR,237
+Keaontay Ingram,RB,198
+Samaje Perine,RB,274
+Taysom Hill,QB,241
+Devin Duvernay,WR,235
+Myles Gaskin,RB,250
+Washington Commanders,DST,264
+David Bell,WR,192
+Tyler Badie,RB,226
+Terrace Marshall Jr.,WR,230
+Marcus Mariota,QB,240
+Nico Collins,WR,195
+Jeff Wilson Jr.,RB,262
+Laviska Shenault Jr.,WR,247
+Kendrick Bourne,WR,200
+Boston Scott,RB,270
+A.J. Green,WR,202
+Jimmy Garoppolo,QB,267
+Trey McBride,TE,238
+Brevin Jordan,TE,232
+Isaiah McKenzie,WR,221
+Chris Evans,RB,222
+Justyn Ross,WR,251
+Kenny Pickett,QB,243
+KJ Hamler,WR,239
+Tyquan Thornton,WR,234
+Mitch Trubisky,QB,236
+Dontrell Hilliard,RB,272
+Randall Cobb,WR,242
+Amari Rodgers,WR,276
+John Metchie III,WR,244
+Mo Alie-Cox,TE,245
+Jalen Guyton,WR,280
+Bryan Edwards,WR,249
+Pierre Strong Jr.,RB,268
+James Washington,WR,281
+Nick Westbrook-Ikhine,WR,265
+Velus Jones Jr.,WR,266
+Eno Benjamin,RB,269
+Zay Jones,WR,271
+Byron Pringle,WR,273
+Desmond Ridder,QB,275
+Jelani Woods,TE,277
+Isiah Pacheco,RB,278
+Jonnu Smith,TE,279

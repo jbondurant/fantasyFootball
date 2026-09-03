@@ -282,9 +282,35 @@ public class AAAConfiguration {
     /** Which overall pick my selection in a given round is, snaking. */
     public int pickNumberFor(int round){
         int teams = getLeagueJson().getAsJsonObject("settings").get("num_teams").getAsInt();
-        int slot = getMyDraftSlot();
+        return pickNumber(round, getMyDraftSlot(), teams);
+    }
+
+    /** Overall pick number for any slot in a serpentine draft. */
+    public static int pickNumber(int round, int slot, int teams){
         int slotThisRound = round % 2 == 1 ? slot : teams - slot + 1;
         return (round - 1) * teams + slotThisRound;
+    }
+
+    /**
+     * The overall pick numbers this season's declared keepers occupy. Each
+     * keeper spends its owner's pick in the round it costs; those picks take
+     * nobody off the draftable board.
+     */
+    public List<Integer> keeperOccupiedPickNumbers(){
+        int teams = getLeagueJson().getAsJsonObject("settings").get("num_teams").getAsInt();
+        JsonObject draftOrder = getDraftJson().getAsJsonObject("draft_order");
+        List<Integer> occupied = new ArrayList<>();
+        if(draftOrder == null){
+            return occupied;
+        }
+        for(Keeper keeper : getTodaysKeepers()){
+            JsonElement slot = keeper.humanWhoCanKeep == null
+                    ? null : draftOrder.get(keeper.humanWhoCanKeep);
+            if(slot != null && !slot.isJsonNull()){
+                occupied.add(pickNumber(keeper.roundCanBeKept, slot.getAsInt(), teams));
+            }
+        }
+        return occupied;
     }
 
     private JsonObject draftJson;

@@ -1,0 +1,34 @@
+DRAFT EXPECTATION vs RESULT  2026-09-02  (200 simulated drafts, room model at every seat, 5s; projections: sleeper)
+EXPECTED = mean best-lineup starters a seat with these keepers gets when the fitted room drafts every pick.
+ACTUAL = the roster the manager holds today, same lineup rule, same projections. DIFF = his own picks against his seat.
+
+manager        slot  keepers                 expected    +/-   rk     actual   rk      diff vs league
+BHier             2  Daniels, Pitts            1817.0    3.5   11     1868.7    7     +51.7     +52.5
+tommyrads        11  Warren, Williams          1807.4    3.2   12     1854.1   10     +46.8     +47.5
+justinb314        7  Tuten, Purdy              1820.8    2.9    9     1856.1    9     +35.3     +36.1
+JakeSK            1  Kraft, Nacua              1941.5    3.5    1     1957.2    1     +15.7     +16.5
+itsabust         12  Smith-Njigba, Irving      1904.5    3.0    4     1916.4    2     +11.9     +12.7
+KevinDA           4  Achane, Loveland          1907.5    3.4    3     1915.5    3      +8.0      +8.8
+d0ddi             5  Williams, LaPorta         1877.2    3.2    7     1868.9    6      -8.3      -7.6
+Hamrliks         10  Maye, Brown               1895.5    2.9    5     1880.0    5     -15.5     -14.7
+patekxwater       6  Collins, Dowdle           1875.4    3.0    8     1856.1    8     -19.2     -18.4
+jerem9604         9  Taylor, Bowers            1923.6    3.0    2     1890.3    4     -33.2     -32.5
+Renteez           3  Williams, McConkey        1880.7    3.0    6     1830.9   11     -49.8     -49.0
+JFMarino          8  McBride, Olave            1819.1    3.2   10     1766.5   12     -52.6     -51.9
+
+league mean DIFF -0.8: real managers beat the fitted room by this much on average (they draft on projections the room model only approximates), so read each DIFF against it.
+
+WHY THE MEAN IS NOT ZERO
+   empty lineup slots per roster:  simulated 0.00   actual 0.00
+   bench points per roster:        simulated 739   actual 684
+   simulated empty slots by position (per roster):
+   simulated empty slots by seat (per draft): none
+   men the room takes early whose projection says otherwise (sim mean pick vs overall projection rank; real pick):
+      Jordyn Tyson           WR  sim pick  89.4 (100% of drafts)  projection rank 182  proj  90.5  real pick 104
+      RJ Harvey              RB  sim pick  70.0 (100% of drafts)  projection rank 136  proj 125.6  real pick 63
+      De'Zhaun Stribling     WR  sim pick  96.7 (100% of drafts)  projection rank 160  proj 105.4  real pick 93
+      DJ Moore               WR  sim pick  35.3 (100% of drafts)  projection rank  98  proj 147.5  real pick 33
+      Jacory Croskey-Merritt RB  sim pick  85.3 (100% of drafts)  projection rank 144  proj 118.4  real pick 80
+      Blake Corum            RB  sim pick  78.5 (100% of drafts)  projection rank 132  proj 127.8  real pick 73
+      Chuba Hubbard          RB  sim pick  64.5 (100% of drafts)  projection rank 118  proj 136.9  real pick 65
+      TreVeyon Henderson     RB  sim pick  40.9 (100% of drafts)  projection rank  94  proj 153.5  real pick 53

@@ -9,16 +9,64 @@ and nothing else. Sleeper creates a new league id every August; everything
 else - the draft, last season's draft, the other managers, the scoring
 settings, the season - is read back from the API.
 
+## Draft night
+
+Read `DIAGNOSTIC.md` for the honest state of the models and `DRAFT-READY.md`
+for the at-the-table instructions. The live tool and its three pre-flight checks:
+
+```
+./gradlew run -Pmain=PreFlight -Pkeepers=Tuten,Purdy -q     # right draft, right settings, 14 seats, 24 keepers
+./gradlew run -Pmain=BoardSanity -Pkeepers=Tuten,Purdy -q   # projections and ADP tell the same story
+./gradlew smokeTest                                          # the live APIs still look the way the code expects
+./gradlew run -Pmain=Draft2026 -Pkeepers=Tuten,Purdy -q     # the live tool: board model, then Model A
+```
+
+Every live-path tool warms through `LiveSetup.forTonight()` - never assemble the
+planner, curve, pools and survival table by hand (`SurvivalDependentToolsTest`
+fails if one does). Fallbacks are in `RUNBOOK.md`.
+
 ## Running
 
 ```
+./gradlew run -Pmain=LeagueOutlook        # every seat optimized: rankings, keeper deltas, slot value
+./gradlew run -Pmain=ProjectionSources    # projection feeds: status, and where they disagree
+./gradlew run -Pmain=KeeperPlan           # the keeper decision, whole-draft optimized
+./gradlew run -Pmain=KeeperPlan -Pprojections=borischen   # ...valued on another source's numbers
+./gradlew run -Pmain=DraftPlanner         # Model A: position per round for rounds 1-7 (nine skill slots, no defence)
+./gradlew run -Pmain=DraftPlanner -Ptrials=500 -Prisk=0.5   # ...risk-averse, tighter error bars
 ./gradlew run -Pmain=TradeFinder          # trades worth proposing
-./gradlew run -Pmain=SleeperLiveDraft     # draft-day advice
-./gradlew run -Pmain=KeeperChooser        # which keepers to declare
+./gradlew run -Pmain=SleeperLiveDraft     # older draft-day advice; superseded by Draft2026 above
+./gradlew run -Pmain=KeeperValuation      # which keepers are worth a slot
+./gradlew run -Pmain=KeeperEligibility    # who is keeping whom, and for how long
+./gradlew run -Pmain=WaitOrTake           # take him now, or gamble he lasts a round
+./gradlew run -Pmain=AdpSnapshot          # record today's ADP; run often before the draft
+./gradlew run -Pmain=MarketMovers       # who the market moved on in the last days, and why Sleeper thinks so (-Pdays -Ptop -PminMove)
+./gradlew run -Pmain=TeamRankings       # every roster's best legal lineup scored and ranked, HTML in data/ (-Pprojections -Pme)
+./gradlew run -Pmain=DraftExpectation   # each seat's expected starters (room model drafts every seat from the pre-draft league) vs the roster actually drafted (-Ptrials)
+#   any planner tool also takes -Pprojections=snapshot:<date> (a day from the AdpSnapshot archive) and -PadpSnapshot=<date>;
+#   the unit suite runs on data/fixtures/2026-pre-draft: the league as it stood on draft morning and the full Sleeper feed of draft night
+./gradlew run -Pmain=MockDraftReader -PdraftId=<link>   # archive a shared mock before it vanishes
+./gradlew run -Pmain=KeeperChooser        # the same question by simulation
 ./gradlew run -Pmain=KeeperChooser -Psims=200   # ...with tighter error bars
 ./gradlew run -Pmain=KeeperAudit          # check keeper costs before the draft
 ./gradlew run -Pmain=AAAConfiguration     # what league am I pointed at
 ```
+
+### What a keeper is worth
+
+`KeeperValuation` optimises the nine skill starting slots - QB, RB, RB, WR, WR,
+WR, TE, FLEX, FLEX. The defense is left out on purpose: it comes from a late
+pick every year, it never competes for the picks that decide a season, and the
+whole position spans 19 points from best to twelfth. (That is Model A's
+objective. The board model in `Draft2026` scores the league's real ten-slot
+lineup, defence included - see `DIAGNOSTIC.md` section 5.)
+
+Nine slots means nine picks fill them, so keeping a player frees the round-nine
+pick whatever round he nominally costs. He is worth a keeper slot only if he
+beats what that pick returns. Players are compared to replacement at their own
+position, never to each other: quarterbacks outscore receivers by 150 points a
+season, but QB12 already projects near the top of the position, so a big raw
+projection at quarterback is worth far less than it looks.
 
 ### Keeper costs
 

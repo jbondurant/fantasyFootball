@@ -9,7 +9,8 @@ import java.util.HashMap;
 /**
  * Sleeper's season projections. This is the only remaining feed that publishes
  * projected *stat lines*, so it backs both the raw points map here and the
- * league-scored projections in {@link StatLineProjections}.
+ * league-scored projections produced by {@link #scoreStatLine}, which absorbed
+ * the class this line used to name.
  */
 public class SleeperProjections {
 
@@ -142,6 +143,48 @@ public class SleeperProjections {
         return false;
     }
 
+    /** Sleeper player id -> current NFL team, from today's projections. */
+    public static HashMap<String, String> teamBySleeperID(){
+        HashMap<String, String> out = new HashMap<>();
+        for(JsonElement jsonPlayer : getTodaysProjections()){
+            JsonObject row = jsonPlayer.getAsJsonObject();
+            JsonElement team = row.get("team");
+            JsonElement id = row.get("player_id");
+            if(id != null && !id.isJsonNull() && team != null && !team.isJsonNull()){
+                out.put(id.getAsString(), team.getAsString());
+            }
+        }
+        return out;
+    }
+
+    /** Players within their first maxYears seasons right now (0 = rookies). */
+    public static java.util.HashSet<String> youngPlayers(int maxYears){
+        java.util.HashSet<String> out = new java.util.HashSet<>();
+        int season = Integer.parseInt(getSeason());
+        for(JsonElement jsonPlayer : getTodaysProjections()){
+            JsonObject row = jsonPlayer.getAsJsonObject();
+            JsonElement playerElement = row.get("player");
+            if(playerElement == null || !playerElement.isJsonObject()){
+                continue;
+            }
+            JsonElement metadata = playerElement.getAsJsonObject().get("metadata");
+            if(metadata == null || !metadata.isJsonObject()){
+                continue;
+            }
+            JsonElement rookieYear = metadata.getAsJsonObject().get("rookie_year");
+            if(rookieYear == null || rookieYear.isJsonNull()){
+                continue;
+            }
+            try {
+                if(season - Integer.parseInt(rookieYear.getAsString()) <= maxYears){
+                    out.add(row.get("player_id").getAsString());
+                }
+            } catch (NumberFormatException ignored){
+            }
+        }
+        return out;
+    }
+
     private static HashMap<String, Double> cachedAdp;
 
     /**
@@ -149,7 +192,41 @@ public class SleeperProjections {
      * scoring uses. Lower means drafted earlier. Players nobody is drafting
      * come back as Double.MAX_VALUE so they sort last.
      */
+    /**
+     * ADP frozen on a date, from data/adp-snapshots.csv - the twin of
+     * ProjectionSources' snapshot feed, for the same reason. -DadpSnapshot=<date>.
+     */
+    static HashMap<String, Double> adpSnapshot(java.util.List<String> lines, String date){
+        HashMap<String, Double> adp = new HashMap<>();
+        for(String line : lines){
+            String[] cells = line.split(",");
+            if(cells.length >= 5 && cells[0].equals(date)){
+                try {
+                    adp.put(cells[1], Double.parseDouble(cells[4]));
+                }
+                catch(NumberFormatException malformed){
+                    // skip the row
+                }
+            }
+        }
+        return adp;
+    }
+
     public static synchronized double adpOf(String sleeperID){
+        String pinned = System.getProperty("adpSnapshot");
+        if(cachedAdp == null && pinned != null && !pinned.isBlank()){
+            try {
+                HashMap<String, Double> adp = adpSnapshot(java.nio.file.Files.readAllLines(
+                        AdpSnapshot.CSV, java.nio.charset.StandardCharsets.UTF_8), pinned);
+                if(adp.isEmpty()){
+                    throw new IllegalArgumentException("no ADP snapshot for " + pinned + " in " + AdpSnapshot.CSV);
+                }
+                cachedAdp = adp;
+            }
+            catch(java.io.IOException unreadable){
+                throw new IllegalArgumentException("cannot read " + AdpSnapshot.CSV, unreadable);
+            }
+        }
         if(cachedAdp == null){
             HashMap<String, Double> adp = new HashMap<>();
             for(JsonElement jsonPlayer : getTodaysProjections()){
@@ -166,6 +243,33 @@ public class SleeperProjections {
             cachedAdp = adp;
         }
         return cachedAdp.getOrDefault(sleeperID, Double.MAX_VALUE);
+    }
+
+    private static HashMap<String, String> cachedInjury;
+
+    /**
+     * Sleeper's injury designation for a man - Questionable, Doubtful, Out, IR,
+     * PUP, Sus, NA - from the same response the projections come from. Null
+     * when he carries none. The live tables tag names with it so a full
+     * projection on a hurt man is visible for what it is.
+     */
+    public static synchronized String injuryStatusOf(String sleeperID){
+        if(cachedInjury == null){
+            HashMap<String, String> status = new HashMap<>();
+            for(JsonElement jsonPlayer : getTodaysProjections()){
+                JsonObject record = jsonPlayer.getAsJsonObject();
+                JsonElement player = record.get("player");
+                if(player == null || !player.isJsonObject()){
+                    continue;
+                }
+                JsonElement value = player.getAsJsonObject().get("injury_status");
+                if(value != null && !value.isJsonNull()){
+                    status.put(record.get("player_id").getAsString(), value.getAsString());
+                }
+            }
+            cachedInjury = status;
+        }
+        return cachedInjury.get(sleeperID);
     }
 
     public static void main(String[] args){

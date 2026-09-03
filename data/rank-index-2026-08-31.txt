@@ -1,0 +1,35 @@
+
+HOW FAST DOES SCATTER CHANGE WITH RANK?
+
+the spread of the ratio pool at each rank. if these barely move
+between neighbouring ranks, indexing scatter two or three ranks off is
+not worth fixing.
+
+POS     RANK     MEAN       SD      P10      P90
+RB         2     1.00     0.43     0.38     1.55
+RB         4     0.98     0.42     0.39     1.54
+RB         6     1.01     0.43     0.45     1.54
+RB         8     1.01     0.43     0.45     1.54
+RB        12     1.03     0.42     0.49     1.54
+RB        20     0.99     0.45     0.43     1.59
+RB        30     1.01     0.51     0.34     1.66
+
+WR         2     1.00     0.33     0.48     1.41
+WR         4     1.00     0.33     0.56     1.39
+WR         6     1.01     0.32     0.61     1.38
+WR         8     1.00     0.32     0.56     1.39
+WR        12     1.01     0.33     0.58     1.41
+WR        20     1.01     0.35     0.51     1.42
+WR        30     1.00     0.42     0.45     1.54
+
+TE         2     1.01     0.39     0.51     1.57
+TE         4     1.00     0.40     0.47     1.53
+TE         6     1.01     0.41     0.47     1.53
+TE         8     1.00     0.42     0.47     1.53
+TE        12     0.99     0.44     0.41     1.52
+TE        20     0.97     0.47     0.33     1.52
+
+A ratio pool is what men of that rank RETURNED divided by what
+the rank was centrally worth, so mean near 1.00 is expected and the SD
+is the thing to read. Compare rank 4 against rank 6: that gap is the
+size of the error this fault actually causes.

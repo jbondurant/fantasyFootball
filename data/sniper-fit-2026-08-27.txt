@@ -1,0 +1,26 @@
+train 2022-2024: league within-position reach rate (>=5) 0.40 over 458 picks
+MANAGER                 epsilon
+KevinDA                    0.46
+d0ddi                      0.36
+itsabust                   0.43
+Renteez                    0.33
+justinb314                 0.42
+JFMarino                   0.43
+user not found             0.27
+tommyrads                  0.41
+JakeSK                     0.42
+jerem9604                  0.32
+Hamrliks                   0.41
+patekxwater                0.41
+BHier                      0.47
+   scale 0.00: 2024 reach-shape distance 0.314
+   scale 0.50: 2024 reach-shape distance 0.432
+   scale 0.75: 2024 reach-shape distance 0.490
+   scale 1.00: 2024 reach-shape distance 0.555
+chosen scale 0.00
+
+2025 confirmation:
+   reach-shape distance: plain 0.421, sniper 0.421  (gate A FAIL)
+   survival calibration: plain 0.62%, sniper 0.62%  (gate B PASS)
+
+verdict: REJECT - the single-temperature brain stands

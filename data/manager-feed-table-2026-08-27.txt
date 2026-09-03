@@ -1,0 +1,16 @@
+MANAGER                 sleeper   fp-ecr      ffc     espn    yahoo   best
+KevinDA                    3.79     3.78        -     3.78     3.97   espn
+d0ddi                      3.70     3.88        -     3.77     3.68   yahoo
+itsabust                   3.90     3.91        -     3.77     3.78   espn
+Renteez                    3.70     3.88        -     3.54     3.90   espn
+justinb314                 3.82     3.59        -     3.21     3.73   espn
+JFMarino                   3.85     3.97        -     4.16     3.92   sleeper
+tommyrads                  3.79     3.82        -     3.74     4.04   espn
+JakeSK                     3.98     4.14        -     3.88     4.02   espn
+jerem9604                  3.69     3.94        -     3.58     3.82   espn
+Hamrliks                   3.88     3.91        -     3.76     3.92   espn
+patekxwater                3.91     4.07        -     3.96     4.33   sleeper
+BHier                      4.06     4.16        -     4.05     4.19   espn
+
+cells = mean log2 rank of that manager's picks on that feed
+(lower = they read it); differences under ~0.1 are ties.

@@ -29,6 +29,52 @@ test {
     useJUnitPlatform {
         excludeTags 'smoke'
     }
+    // THE SUITE SEES THE LEAGUE AS IT STOOD BEFORE THE 2026 DRAFT. Sleeper
+    // rewrites league state after a draft (every roster's keepers field went
+    // from two to zero on 2026-09-02) and four tests written against the
+    // pre-draft league failed with no code change behind them. The files in
+    // data/fixtures/2026-pre-draft are served by InOutUtilities.getTodaysWebPage
+    // in place of the day's cache; feeds not in that directory still float.
+    // smokeTest and run never get this property - they are meant to see today.
+    // AND THE FEED: the same directory holds sleeperProjections2026.txt, the full
+    // Sleeper response as fetched on draft night (projections, ADP, injury tags,
+    // every man including defences and the undrafted). The morning after the
+    // draft the re-fetched feed flipped a round-2 coin flip in ModelAScheduleTest
+    // (TRAPS #62). A first attempt pinned the AdpSnapshot CSV archive instead,
+    // which holds the drafted pool only: six fixtures that need a defence or a
+    // man past ADP 300 broke. The raw feed is the pin; the archive is a report.
+    systemProperty 'fixtureDir', "$projectDir/data/fixtures/2026-pre-draft"
+    // TESTS THAT READ DOCUMENTS MUST RE-RUN WHEN THE DOCUMENTS CHANGE.
+    //
+    // DraftReadyCommandsTest checks that every `-Pmain=` DRAFT-READY tells
+    // Justin to type names a class that exists. It passed with a deliberately
+    // planted dead command, because gradle had no idea the test read that file
+    // and declared the task UP-TO-DATE. A check that cannot see its own input
+    // is not a check - the third one of those found in a day, and the only one
+    // I wrote myself.
+    //
+    // src/main/java is already an input through compilation, so the tests that
+    // scan sources re-run on their own; these two are not.
+    inputs.file('DRAFT-READY.md').withPathSensitivity(PathSensitivity.RELATIVE)
+    inputs.file('TRAPS.md').withPathSensitivity(PathSensitivity.RELATIVE)
+    inputs.file('DIAGNOSTIC.md').withPathSensitivity(PathSensitivity.RELATIVE)
+    // RunbookCitationTest reads RUNBOOK.md; DraftReadyCommandsTest reads README.md.
+    // TRAPS #45: a test that reads a file gradle does not know about is UP-TO-DATE
+    // when that file changes, and passes with a planted fault in it.
+    inputs.file('RUNBOOK.md').withPathSensitivity(PathSensitivity.RELATIVE)
+    inputs.file('README.md').withPathSensitivity(PathSensitivity.RELATIVE)
+
+    // ONE JVM PER TEST CLASS.
+    //
+    // RoomTimingTest passes alone and failed in the full suite, twice, for a
+    // reason two hypotheses did not find: some earlier class leaves global
+    // state behind - a system property, a static cache - and a later class
+    // reads it. That is the same fault family as every population error found
+    // today, and it has now cost a leaked nine-round schedule (ModelAScheduleTest)
+    // and an unknown second leak. Rather than diagnose each one as it appears,
+    // give every class a fresh JVM so there is nothing to leak into. Slower;
+    // the suite already takes nine minutes and correctness is worth it.
+    forkEvery = 1
 }
 
 // Smoke tests: hit the live Sleeper and FantasyPros APIs and check the feeds
@@ -72,11 +118,123 @@ tasks.register('run', JavaExec) {
 
     // Gradle hands -D to its own daemon, not to the JVM this forks, so the
     // tuning knobs have to be passed through explicitly as -P.
-    ['sims', 'candidates', 'qbADPChange', 'draftId'].each { knob ->
+    // EVERY KNOB THE CODE READS MUST BE IN THIS LIST, and nothing else may be.
+    // A flag missing here cannot be set from the command line at all - it is a
+    // constant wearing a flag's clothes, which is the -Pdeviate footgun with the
+    // safety catch off. A flag listed here that no source reads is a promise the
+    // repo does not keep: -P<name> is accepted, forwarded, and ignored.
+    // ProseDriftTest checks this list against the sources in both directions;
+    // 'freeWire', 'noLookahead' and 'window' were removed on 2026-08-31 because
+    // nothing had read them for some time, and 'me' and 'sources' were added
+    // because RiskDial and SourceSensitivity read them and could not be steered.
+    ['sims', 'candidates', 'qbADPChange', 'draftId', 'trials', 'risk', 'quantile', 'why', 'projections', 'keepers', 'as', 'search', 'adaptiveTrials', 'inner', 'mlScale', 'inners', 'mcts', 'scenarios', 'buckets', 'draws', 'pos', 'seed', 'budget', 'deltas', 'roster', 'outlook', 'waitTrials', 'scheduleRounds', 'targets', 'pick', 'noFreeWire', 'qbFrom', 'defLast', 'frontShape', 'scarcity', 'deviate', 'riskObjective', 'shape', 'seeds', 'jitter',
+     'noPolicy', 'restarts', 'randomShapes', 'tieBand', 'slateRows',
+     // RiskDial.me - whose roster to read. SourceSensitivity.sources - which
+     // projection feeds to compare.
+     'me', 'sources',
+     // PlanBacktest.holdKeepers - put Justin's two keepers ON the roster and
+     // off the board. The pick schedule always gave up rounds 12 and 13 for
+     // them; without this the roster never received them, so a plan drafting
+     // no quarterback looked illegal when for him it is not. Off by default.
+     'holdKeepers', 'planSample', 'format', 'noKeepers', 'honestWire', 'from', 'to', 'eraBoards', 'bestBall', 'lostBelow', 'round', 'tierBar', 'fragile', 'floor', 'worlds', 'depth', 'lookahead', 'maxTE', 'maxRB', 'maxWR', 'maxQB', 'fromRank',
+     // EraSlate.enabled - strip ALL TWENTY-FOUR league keepers from the
+     // historical board, not just Justin's two, and skip the picks they spend.
+     // PlanBacktest.keeperRanks - value a kept man at his real positional rank
+     // (Purdy QB9) instead of at a count of who has left the board. Implied by
+     // leagueKeepers; separable so the two effects can be measured apart.
+     // Both off by default: every score on record was measured without them.
+     'leagueKeepers', 'keeperRanks',
+     // BoardValue.Selection - the OTHER form of the lineup rule. -PlostBelow
+     // benches a man whose season fell below a fraction of what his rank
+     // returns; -Plambda instead orders the lineup on
+     // expected + lambda * (drawn - expected), which is continuous and has
+     // best ball at lambda 1. Exactly one of the two may be passed.
+     // 'wireWhenAllLost=false' makes a position that loses every man it owns
+     // field its least-bad one instead of streaming the wire; true is shipped
+     // and is what every recorded backtest number was measured with.
+     'lambda', 'wireWhenAllLost',
+     // LiveBoard.warmSurvival - how many simulated drafts the survival table is
+     // built from. It replaces the hard ADP cutoff in expectedRank, which sets
+     // every END TEAM number in the rollout. '0' restores the cutoff, which is
+     // what every number tagged draft-ready-2026 was measured with.
+     'survivalDraws', 'temperature', 'sweep', 'dump', 'legend', 'defTrust', 'noFloor', 'fullRounds', 'noDrift', 'noDepth', 'scarcity', 
+     // MarketMovers - window in days, rows per table, minimum move (points / picks).
+     'days', 'top', 'minMove', 'pool',
+     // TeamRankings - which manager's row to highlight.
+     'me',
+     // LiveCommittee - Model A's wall-clock budget for its engines (default 25s; all of Model A then lands under 30s) and whether the KN arbiter runs on a unanimous vote.
+     'committeeSeconds', 'alwaysArbiter',
+     // InOutUtilities.getTodaysWebPage - serve league-state files from this directory instead of today's cache (the unit tests set it to data/fixtures/2026-pre-draft).
+     'fixtureDir', 'adpSnapshot',
+     // DraftSimulator - 'noNeed=true' lets a simulated roster end with empty starting slots (A/B); 'collapse' is the projection-vs-ADP rank gap that re-slots a man (default 60, 0 off).
+     'noNeed', 'collapse',
+     // DraftSimulator - the learned floor as a prior: a below-floor candidate keeps this share of his probability (0 = hard floor). RoomFidelity 'targets' = seasons to hold out.
+     'floorWeight', 'targets',
+     // TrainingRows - last season to count (default the season before the current one).
+     'trainTo',
+     // DraftExpectation - 'who=<last name>' prints which seats take that man and where.
+     'who',
+     // LeagueActuals.FLAG - grade outcomes under the league's own scoring
+     // instead of Sleeper's pts_half_ppr. Off by default on purpose.
+     'leagueScoredActuals',
+     // ObjectiveAudit - 'plans=false' skips the sixteen-round searches and
+     // leaves only the backtest columns, which is the fast way to inspect one
+     // constant. A "window overrides the shrinkage neighbourhood" knob used to
+     // be listed here; nothing read it - ObjectiveAudit's window is a loop over
+     // {2, 12, 30} - so it was accepted, forwarded and ignored. It is gone.
+     'plans',
+     // PlanBacktest.streamedDefencePerWeek - override the streamed-defence rate
+     // for the WireRateStress sensitivity check. Absent by default.
+     'wireDef',
+     // The season harvest (EraIngest / EraSample / RegimeShift / FormatProxyAudit).
+     // 'rounds' how many rounds the replayed draft runs, 'format' which FFC
+     // board, 'planSample' scores a seeded subset instead of all 415,650 plans,
+     // 'cutoff' and 'targetFrom' set the era split, 'noKeepers' drops the
+     // two-keeper structure, 'feedScored' grades with Sleeper's own number as
+     // the control.
+     'rounds', 'format', 'planSample', 'cutoff', 'targetFrom', 'noKeepers',
+     'feedScored',
+     // The bust/boom study (DetectionLag / BustBoomRates / LineupPromotion).
+     // 'source=nflverse' swaps the outcome feed from Sleeper's thirteen usable
+     // seasons to the sixteen on disk under data/nflverse; 'perWeek' scores a
+     // missed week as a zero instead of dividing availability out; 'maxPick'
+     // moves the drafted-starter cutoff; 'blend' sets the form weight.
+     'source', 'perWeek', 'maxPick', 'blend'].each { knob ->
         if (project.hasProperty(knob)) {
             systemProperty knob, project.property(knob)
         }
     }
+}
+
+// `check` RUNS JAVADOC TOO.
+//
+// javadoc costs two seconds and had been red for months, which is how two
+// {@link}s to deleted classes survived in the source. A check nobody runs is
+// not a check, and the fix for that is not remembering harder - it is hanging
+// it off the one people already run. smokeTest deliberately stays out: it hits
+// the live Sleeper and FantasyPros APIs, so it belongs before a draft rather
+// than before every commit, and DRAFT-READY names it there.
+tasks.named('check').configure {
+    dependsOn tasks.named('javadoc')
+}
+
+// JAVADOC CHECKS REFERENCES, NOT HTML.
+//
+// `./gradlew javadoc` was failing on twenty errors and had clearly been failing
+// for a long time, so nobody ran it and it checked nothing. Eighteen of the
+// twenty were angle brackets in usage lines - "-PdraftId=<id>" read as an HTML
+// tag - and escaping those to &lt;id&gt; across seventeen files made the SOURCE
+// worse to read, which is a bad trade for a rendered page nobody opens.
+//
+// The two that mattered were {@link}s to StatLineProjections and
+// SleeperStatProjections: classes that no longer exist. That is the same
+// prose-drift family this repo has hit ten times - documentation naming
+// something the code does not have - and it is worth a build failing over.
+//
+// So: reference checking on, HTML and missing-@param off. The check that finds
+// stale documentation stays; the one that taxes readable comments goes.
+tasks.withType(Javadoc).configureEach {
+    options.addStringOption('Xdoclint:all,-html,-missing', '-quiet')
 }
 
 tasks.withType(JavaCompile).configureEach {

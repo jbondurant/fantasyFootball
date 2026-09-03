@@ -1,0 +1,24 @@
+
+keeper term scaled by youth: young x1.44, veteran x0.61 (measured)
+
+pick 127 (round 11); my next pick is 162 (35 picks away)
+
+CANDIDATE                POS  AGE    this season   keeper    VALUE  SURVIVES  LOSS IF WAIT   verdict
+Bo Nix                   QB   young         33.0     64.3     97.2       10%          31.5   TAKE NOW (31)
+Jalen Coker              WR   young         58.7     11.2     69.9        0%           8.8   lean take (9)
+Tyler Shough             QB   young          0.2     64.3     64.5       96%           0.1   wait - he keeps
+Cam Ward                 QB   young          0.0     64.3     64.3      100%           0.0   wait - he keeps
+Fernando Mendoza         QB   young          0.0     64.3     64.3       95%           0.1   wait - he keeps
+Tyjae Spears             RB   vet           44.1     13.0     57.1        4%           0.0   wait - he keeps
+Matthew Stafford         QB   vet           29.5     27.5     57.0        2%           0.0   wait - he keeps
+Jared Goff               QB   vet           28.7     27.5     56.2       11%           0.0   wait - he keeps
+
+this season = his projection over the man the wire would give me free (per player).
+keeper = what a stash at this position and round has been worth next season
+(a measured base rate, not a per-player estimate - ~50 positives cannot support one).
+LOSS IF WAIT = P(gone) x (his value - the best left instead).
+
+KNOWN WEAKNESS: a player projecting 0.0 this season still draws the full keeper
+base rate, because that rate was measured on players who had a real role when
+they were drafted. Read a zero in the 'this season' column as UNPROVEN, not safe -
+and it is the reason a per-player keeper estimate is the next thing to build.

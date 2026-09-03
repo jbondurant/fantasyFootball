@@ -1,0 +1,219 @@
+standalone keeper deltas, top 8 per team by VORP prescreen;
+plans searched at 300 rollouts, valued at 10000 on separate seeds
+(** = actually kept; noise ~+/-0.6):
+      ...Nacua valued
+      ...Kraft valued
+      ...Williams valued
+      ...Stevenson valued
+      ...Mason valued
+      ...Hubbard valued
+      ...Mahomes valued
+      ...Samuel valued
+
+JakeSK (slot 1, keeperless seat 1829.1):
+   **Puka Nacua**                     WR  r13   +113.0
+   Rhamondre Stevenson                RB  r10    +13.9
+   **Tucker Kraft**                   TE  r11     +3.9
+   Jordan Mason                       RB  r6      -3.3
+   Chuba Hubbard                      RB  r7     -10.3
+   Patrick Mahomes                    QB  r7     -13.8
+   Jameson Williams                   WR  r3     -17.0
+   Deebo Samuel                       WR  r4     -44.6
+      ...Daniels valued
+      ...Pitts valued
+      ...Watson valued
+      ...Dobbins valued
+      ...Stafford valued
+      ...Downs valued
+      ...Gainwell valued
+      ...Robinson valued
+
+BHier (slot 2, keeperless seat 1818.9):
+   Christian Watson                   WR  r10    +28.5
+   Matthew Stafford                   QB  r10     +9.1
+   J.K. Dobbins                       RB  r9      +7.1
+   **Kyle Pitts**                     TE  r13     +2.1
+   Kenny Gainwell                     RB  r10     -0.1
+   Wan'Dale Robinson                  WR  r12     -0.3
+   Josh Downs                         WR  r8      -2.1
+   **Jayden Daniels**                 QB  r7      -5.2
+      ...Williams valued
+      ...McConkey valued
+      ...Swift valued
+      ...Waddle valued
+      ...Metcalf valued
+      ...Tracy valued
+      ...Otton valued
+      ...Allgeier valued
+
+Renteez (slot 3, keeperless seat 1811.8):
+   **Javonte Williams**               RB  r6     +39.1
+   **Ladd McConkey**                  WR  r6     +36.9
+   D'Andre Swift                      RB  r4     +11.7
+   Jaylen Waddle                      WR  r5      +9.2
+   Tyler Allgeier                     RB  r13     +0.9
+   Cade Otton                         TE  r10     +0.9
+   Tyrone Tracy                       RB  r15     +0.8
+   DK Metcalf                         WR  r3     -35.4
+      ...Achane valued
+      ...Loveland valued
+      ...Pickens valued
+      ...Egbuka valued
+      ...Wilson valued
+      ...Burden valued
+      ...Reed valued
+      ...Prescott valued
+
+KevinDA (slot 4, keeperless seat 1806.1):
+   **De'Von Achane**                  RB  r5     +53.9
+   **Colston Loveland**               TE  r10    +34.1
+   Luther Burden                      WR  r11    +27.8
+   George Pickens                     WR  r4     +25.4
+   Dak Prescott                       QB  r12    +14.2
+   Emeka Egbuka                       WR  r5     +11.0
+   Jayden Reed                        WR  r7      +5.9
+   Garrett Wilson                     WR  r3      -8.8
+      ...Williams valued
+      ...LaPorta valued
+      ...Smith valued
+      ...Hurts valued
+      ...Meyers valued
+      ...Wilson valued
+      ...Rodriguez valued
+      ...Croskey-Merritt valued
+
+d0ddi (slot 5, keeperless seat 1801.5):
+   **Kyren Williams**                 RB  r8     +47.7
+   **Sam LaPorta**                    TE  r11    +17.7
+   DeVonta Smith                      WR  r4      +8.8
+   Chris Rodriguez                    RB  r10     -0.1
+   Michael Wilson                     WR  r10     -0.7
+   Jacory Croskey-Merritt             RB  r10     -0.7
+   Jakobi Meyers                      WR  r6     -12.5
+   Jalen Hurts                        QB  r3     -48.2
+      ...Collins valued
+      ...Dowdle valued
+      ...Henderson valued
+      ...Nix valued
+      ...Coker valued
+      ...Worthy valued
+      ...Strange valued
+      ...Allen valued
+
+patekxwater (slot 6, keeperless seat 1792.9):
+   **Nico Collins**                   WR  r8     +74.3
+   **Rico Dowdle**                    RB  r13     +3.1
+   Brenton Strange                    TE  r10     +0.0
+   Jalen Coker                        WR  r10     +0.0
+   Keenan Allen                       WR  r11     +0.0
+   Bo Nix                             QB  r8      -4.5
+   TreVeyon Henderson                 RB  r3     -36.1
+   Xavier Worthy                      WR  r4     -41.8
+      ...Tuten valued
+      ...Purdy valued
+      ...Flowers valued
+      ...Sutton valued
+      ...Godwin valued
+      ...Kelce valued
+      ...Johnston valued
+      ...Andrews valued
+
+justinb314 (slot 7, keeperless seat 1785.0):
+   **Bhayshul Tuten**                 RB  r12    +16.3
+   **Brock Purdy**                    QB  r13    +10.4
+   Zay Flowers                        WR  r4      +5.6
+   Quentin Johnston                   WR  r10     -0.4
+   Chris Godwin                       WR  r8      -0.9
+   Mark Andrews                       TE  r9      -3.2
+   Courtland Sutton                   WR  r6      -5.7
+   Travis Kelce                       TE  r6     -12.5
+      ...Olave valued
+      ...McBride valued
+      ...Montgomery valued
+      ...Odunze valued
+      ...Herbert valued
+      ...Shakir valued
+      ...Mayfield valued
+      ...Marks valued
+
+JFMarino (slot 8, keeperless seat 1777.8):
+   **Chris Olave**                    WR  r5     +29.5
+   Rome Odunze                        WR  r6     +19.5
+   Justin Herbert                     QB  r13     +0.4
+   David Montgomery                   RB  r3      -0.0
+   Woody Marks                        RB  r15     -1.3
+   **Trey McBride**                   TE  r3      -2.6
+   Khalil Shakir                      WR  r8      -3.7
+   Baker Mayfield                     QB  r7     -27.2
+      ...Taylor valued
+      ...Bowers valued
+      ...Etienne valued
+      ...Skattebo valued
+      ...Washington valued
+      ...Burrow valued
+      ...Monangai valued
+      ...Moore valued
+
+jerem9604 (slot 9, keeperless seat 1779.6):
+   **Jonathan Taylor**                RB  r4     +67.0
+   **Brock Bowers**                   TE  r7     +58.5
+   Cam Skattebo                       RB  r9     +38.8
+   Travis Etienne                     RB  r6     +33.5
+   Parker Washington                  WR  r10    +32.2
+   Kyle Monangai                      RB  r10     +6.1
+   Joe Burrow                         QB  r4      -9.8
+   DJ Moore                           WR  r3     -42.0
+      ...Brown valued
+      ...Maye valued
+      ...Warren valued
+      ...Gadsden valued
+      ...Tucker valued
+      ...Young valued
+      ...Dike valued
+      ...Kupp valued
+
+Hamrliks (slot 10, keeperless seat 1782.6):
+   **Chase Brown**                    RB  r14    +77.5
+   **Drake Maye**                     QB  r13    +35.6
+   Bryce Young                        QB  r10    +21.7
+   Oronde Gadsden                     TE  r10     -1.4
+   Chimere Dike                       WR  r10     -2.3
+   Tre Tucker                         WR  r10     -2.3
+   Jaylen Warren                      RB  r5     -10.4
+   Cooper Kupp                        WR  r6     -81.1
+      ...Warren valued
+      ...Williams valued
+      ...Rice valued
+      ...Thomas valued
+      ...Pollard valued
+      ...Addison valued
+      ...Harvey valued
+      ...Doubs valued
+
+tommyrads (slot 11, keeperless seat 1764.9):
+   Rashee Rice                        WR  r5     +28.6
+   **Caleb Williams**                 QB  r14    +22.4
+   **Tyler Warren**                   TE  r8     +19.3
+   Brian Thomas                       WR  r5      +8.3
+   Romeo Doubs                        WR  r12     -0.0
+   Jordan Addison                     WR  r6     -10.3
+   Tony Pollard                       RB  r4     -38.4
+   RJ Harvey                          RB  r3     -58.5
+      ...Smith-Njigba valued
+      ...Irving valued
+      ...Judkins valued
+      ...McMillan valued
+      ...Adams valued
+      ...Lawrence valued
+      ...Goff valued
+      ...Kittle valued
+
+itsabust (slot 12, keeperless seat 1765.3):
+   **Jaxon Smith-Njigba**             WR  r5     +74.4
+   **Bucky Irving**                   RB  r13    +38.6
+   Quinshon Judkins                   RB  r7     +35.8
+   Trevor Lawrence                    QB  r15    +29.0
+   Jared Goff                         QB  r9     +15.0
+   Tetairoa McMillan                  WR  r4      -2.8
+   Davante Adams                      WR  r3     -25.3
+   George Kittle                      TE  r4     -41.7

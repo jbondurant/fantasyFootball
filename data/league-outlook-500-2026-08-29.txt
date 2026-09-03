@@ -1,0 +1,49 @@
+   evaluated JakeSK                 (slot  1, 2 keepers)
+   evaluated BHier                  (slot  2, 2 keepers)
+   evaluated Renteez                (slot  3, 2 keepers)
+   evaluated KevinDA                (slot  4, 2 keepers)
+   evaluated d0ddi                  (slot  5, 2 keepers)
+   evaluated patekxwater            (slot  6, 2 keepers)
+   evaluated justinb314             (slot  7, 2 keepers)
+   evaluated JFMarino               (slot  8, 2 keepers)
+   evaluated jerem9604              (slot  9, 2 keepers)
+   evaluated Hamrliks               (slot 10, 2 keepers)
+   evaluated tommyrads              (slot 11, 2 keepers)
+   evaluated itsabust               (slot 12, 2 keepers)
+
+the league, every seat optimized (500 rollouts; managers without a
+declaration are valued keeperless and marked *):
+
+   RANK MANAGER          SLOT    best-9 slotless*  keepers   
+                                        (no kprs)    worth   keeper deltas
+   1    JakeSK              1    1945.0    1827.7   +117.3   Kraft r11 +4, Nacua r13 +113
+   2    jerem9604           9    1905.5    1782.4   +123.1   Bowers r7 +59, Taylor r4 +66
+   3    KevinDA             4    1894.0    1805.1    +88.8   Loveland r10 +35, Achane r5 +53
+   4    Hamrliks           10    1889.7    1781.0   +108.7   Maye r13 +28, Brown r14 +70
+   5    itsabust           12    1879.6    1766.2   +113.3   Irving r13 +40, Smith-Njigba r5 +75
+   6    patekxwater         6    1869.2    1793.1    +76.1   Dowdle r13 +1, Collins r8 +73
+   7    d0ddi               5    1866.1    1802.0    +64.2   LaPorta r11 +18, Williams r8 +46
+   8    Renteez             3    1864.7    1812.6    +52.1   McConkey r6 +38, Williams r5 +16
+   9    BHier               2    1821.4    1817.3     +4.1   Daniels r7 +3, Pitts r13 +7
+   10   justinb314          7    1812.9    1812.9     +0.0   Tuten r12 +0, Purdy r13 +0
+   11   tommyrads          11    1806.7    1764.5    +42.2   Williams r14 +23, Warren r8 +18
+   12   JFMarino            8    1804.5    1779.0    +25.4   McBride r3 -3, Olave r5 +27
+
+where each optimized roster's points come from:
+
+   MANAGER               QB    RBx2    WRx3      TE  FLEXx2
+   JakeSK             397.7   491.5   610.6   140.9   304.2
+   jerem9604          413.7   496.0   467.5   202.5   325.8
+   KevinDA            402.5   501.2   486.5   173.4   330.4
+   Hamrliks           378.8   466.1   508.8   138.5   397.4
+   itsabust           414.8   419.9   585.7   138.1   321.2
+   patekxwater        410.9   445.4   572.8   139.8   300.3
+   d0ddi              406.9   454.1   512.0   158.5   334.7
+   Renteez            401.3   473.3   525.0   136.5   328.5
+   BHier              356.3   488.7   508.8   138.6   328.9
+   justinb314         364.1   439.9   553.2   139.5   316.3
+   tommyrads          355.7   454.1   507.2   159.6   330.1
+   JFMarino           412.5   386.8   541.2   186.9   277.1
+
+slot value alone: compare the keeperless column across seats -
+that spread is what serpentine position is worth this year.

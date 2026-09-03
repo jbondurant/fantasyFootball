@@ -1,0 +1,74 @@
+
+WHAT EACH POSITION IS WORTH, GIVEN WHAT I ALREADY HOLD
+
+16 seasons. mean season points by positional rank, marginal against
+the lineup this league starts. no weeks, no injury channel.
+
+holding Purdy (QB9) and Tuten (RB23) from the start.
+
+PICK                RB      WR      TE      QB     DEF   TAKE
+   7 -> 18            9       5       0       0       -   RB
+  18 -> 31           12      18       0       4       -   WR
+  31 -> 42           18      12       0       2       -   RB
+  42 -> 55           17       8       0      -0       -   RB
+  55 -> 66            5      14       0      -0       -   WR
+  66 -> 79           23      13       3       0       -   RB
+  79 -> 90           -6       6       4       5       -   WR
+  90 -> 103           2       6       4       1       -   WR
+ 103 -> 114          -0       2       1      13       -   QB
+ 114 -> 127           2       4      10       2       -   TE
+ 127 -> 162           5       6       3       3       -   WR
+ 162 -> 175           2       0       3       1       -   TE
+ 175 -> 186          -1       0      -1       1       -   QB
+ 186 -> end          12      13      14       8       -   DEF
+
+the shape this produces: RB WR RB RB WR RB WR WR QB TE WR TE QB DEF
+
+Each cell is what taking that position NOW is worth over taking it
+at my next pick, in lineup points, given the men I already hold. A
+second quarterback prices near zero on his own, without being told to.
+
+================================================================
+FIXED SHAPE AGAINST ADAPTIVE
+================================================================
+
+The shape above is what this model does if the board falls exactly
+at ADP. It never does. The model itself is a function of the roster and
+of who is actually left, so it can be asked again at every pick - which
+is the thing a fixed shape, the committed plan included, cannot do.
+
+SEASON      POINTS   WHAT IT TOOK
+2021          1999   RB QB WR WR WR TE WR WR WR RB RB QB RB RB TE DEF
+2022          1846   RB QB RB WR WR TE WR WR WR WR RB QB RB RB TE DEF
+2023          2195   RB QB RB RB RB WR WR WR TE WR WR TE QB WR WR DEF
+2024          1973   RB QB WR RB RB RB TE WR RB WR WR WR WR QB TE DEF
+2025          2235   RB QB RB RB WR TE WR WR WR RB WR TE QB WR WR DEF
+mean          2050
+
+================================================================
+IS IT ANY GOOD?
+================================================================
+
+PHASE 4: every strategy on every season's REAL outcomes
+lineup QB/RB2/WR3/TE/FLEX2/DEF, 18 weeks, best legal lineup each week
+a defence slot the roster cannot fill is STREAMED at 8.7 points a week
+
+STRATEGY                     2021     2022     2023     2024     2025      mean    vs ADP    wins
+starter-sum (1-16)           1870     1947     2010     1985     2133      1989      +305     5/5
+best-nine (Model A)          1553     1731     2060     1749     1802      1779       +95     3/5
+RUNBOOK committed            2121     1861     2188     1907     2173      2050      +366     5/5
+RUNBOOK as written           2149     1817     2175     1845     2179      2033      +349     5/5
+board value                  1839     1935     2012     2105     2015      1981      +297     4/5
+RB-heavy folk rule           2014     1897     2185     1844     2091      2006      +322     5/5
+RUNBOOK front + SS back      2069     1850     2160     1895     2204      2036      +352     5/5
+ModelA front + SS back       1896     1943     2179     1989     1979      1997      +314     4/5
+[not legal] no DEF drafted     2132     1853     2191     1954     2166      2059      +376     5/5
+best available by ADP        1276     1689     1550     1839     2065      1684        +0     0/5
+
+Every strategy drafts from the same board at the same picks, so the only
+difference between two rows is the order of positions. 'best available by ADP'
+is the null hypothesis: never think about position at all.
+
+CAVEAT, and it is not small: the starter-sum sequence came from a model whose
+outcome pool was built from these same seasons. Its distributions saw them, even
+though this scoring does not. Read its row as flattered, and a narrow win as none.

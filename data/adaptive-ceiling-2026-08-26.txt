@@ -1,0 +1,7 @@
+game: my picks [7, 18, 31, 42, 55, 66, 79], keepers [Tuten, Purdy]
+
+oldschool-2 (vorp tails) as inner rollouts grow, 60 trials (paired, shared eval seeds):
+
+   inner          mean    +/-SE   vs inner16
+   16           1814.8      3.0         +0.0   (1879s)
+   48           1813.6      2.9         -1.2   (3797s)

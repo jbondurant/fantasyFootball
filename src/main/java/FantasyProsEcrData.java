@@ -18,7 +18,7 @@ import java.util.List;
  *  - "r2p_pts" (rest-of-season projected points) is gone too. These pages carry
  *    expert consensus *ranks* and nothing else, so they can no longer be used as
  *    a source of projected points. Points come from Sleeper now
- *    ({@link SleeperStatProjections}).
+ *    ({@link SleeperProjections}).
  */
 public class FantasyProsEcrData {
 

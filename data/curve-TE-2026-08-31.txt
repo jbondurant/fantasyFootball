@@ -1,0 +1,30 @@
+
+THE 2026 TE CURVE
+
+RANK  PLAYER                   PROJECTED    DROP BEATS LDR   TIER  
+TE1   Harold Fannin                143.4     5.1        0%      1  
+TE2   George Kittle                138.3     1.9       47%      1  
+TE3   Travis Kelce                 136.4     3.9       45%      1  
+TE4   Mark Andrews                 132.5     1.9       43%      1  
+TE5   Dalton Kincaid               130.6     1.1       41%      1  
+TE6   Brenton Strange              129.5     3.2       44%      1  
+TE7   Isaiah Likely                126.3     1.5       42%      1  
+TE8   Jake Ferguson                124.8     0.3       41%      1  <<< TIER ENDS HERE
+TE9   Hunter Henry                 124.5     2.5        0%      2  
+TE10  T.J. Hockenson               122.0     3.1       48%      2  
+TE11  Dalton Schultz               118.9     5.1       47%      2  
+TE12  Oronde Gadsden               113.8     0.2       43%      2  
+TE13  Chig Okonkwo                 113.6     0.2       41%      2  
+TE14  AJ Barner                    113.4     0.5       43%      2  
+TE15  Juwan Johnson                112.9     3.4       44%      2  
+TE16  Dallas Goedert               109.5     6.6       41%      2  <<< TIER ENDS HERE
+TE17  Pat Freiermuth               102.9     1.1        0%      3  
+TE18  Gunnar Helm                  101.8     2.7       47%      3  
+TE19  Darren Waller                 99.1     3.3       45%      3  
+TE20  Cade Otton                    95.8     8.4       42%      3  <<< TIER ENDS HERE
+
+detected valleys: after TE8 (drop 0.3)  after TE16 (drop 6.6)  after TE20 (drop 8.4)  after TE25 (drop 7.8)  after TE27 (drop 2.1)  after TE31 (drop 0.3)  
+
+DROP is to the next rank on the RAW projections. The detector
+runs isotonic first, so it fires on the step left after noise is
+pooled - which is not always the biggest raw drop, and is the point.

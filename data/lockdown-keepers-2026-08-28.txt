@@ -1,0 +1,30 @@
+Keeper audit for the 2026 draft
+
+matching the rules:	24
+disagreeing:		0
+
+What the rules make these cost:
+   KevinDA        Colston Loveland         round 10
+   KevinDA        De'Von Achane            round 5
+   Renteez        Ladd McConkey            round 6
+   Renteez        Javonte Williams         round 5
+   JFMarino       Trey McBride             round 3
+   JFMarino       Chris Olave              round 5
+   itsabust       Bucky Irving             round 13
+   itsabust       Jaxon Smith-Njigba       round 5
+   JakeSK         Tucker Kraft             round 11
+   JakeSK         Puka Nacua               round 13
+   BHier          Jayden Daniels           round 7
+   BHier          Kyle Pitts               round 13
+   tommyrads      Caleb Williams           round 14
+   tommyrads      Tyler Warren             round 8
+   patekxwater    Rico Dowdle              round 13
+   patekxwater    Nico Collins             round 8
+   jerem9604      Brock Bowers             round 7
+   jerem9604      Jonathan Taylor          round 4
+   d0ddi          Sam LaPorta              round 11
+   d0ddi          Kyren Williams           round 8
+   justinb314     Bhayshul Tuten           round 12
+   justinb314     Brock Purdy              round 13
+   Hamrliks       Drake Maye               round 13
+   Hamrliks       Chase Brown              round 14

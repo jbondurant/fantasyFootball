@@ -1,0 +1,1423 @@
+player,position,injury_date,games_missed,body_part,site,condition
+Aaron Rodgers,QB,2006-11-19,6,Pedal,Foot,Fracture
+Matthew Stafford,QB,2009-10-04,2,Knee,Patella,Dislocation
+Matthew Stafford,QB,2009-11-22,4,Shoulder,A\/C Joint,Separation
+Matthew Stafford,QB,2009-12-06,4,Shoulder,A\/C Joint,Separation
+Matthew Stafford,QB,2010-09-12,5,Shoulder,A\/C Joint,Separation
+Aaron Rodgers,QB,2010-10-10,0,Head,Cranial,Concussion
+Matthew Stafford,QB,2010-11-07,8,Shoulder,A\/C Joint,Separation
+Aaron Rodgers,QB,2010-12-12,1,Head,Cranial,Concussion
+Matthew Stafford,QB,2011-10-23,0,Pedal,Ankle,Sprain\/Pull Unspecified
+Matthew Stafford,QB,2011-10-30,0,Hand,Finger,Fracture
+DeAndre Hopkins,WR,2013-08-17,0,Head,Cranial,Concussion
+Travis Kelce,TE,2013-09-03,14,Knee,Patella,Fracture
+Aaron Rodgers,QB,2013-11-04,7,Shoulder,Clavicle,Fracture
+Keenan Allen,WR,2013-11-17,0,Knee,Unspecified,Strain
+Keenan Allen,WR,2013-12-08,0,Shoulder,A\/C Joint,Sprain
+Odell Beckham Jr.,WR,2014-08-18,8,Thigh,Hamstring,Tear
+Keenan Allen,WR,2014-09-18,0,Inguinal,Groin,Pull
+Mike Evans,WR,2014-09-28,1,Inguinal,Groin,Pull
+Travis Kelce,TE,2014-10-19,0,Chest,Rib,Sprain\/Pull Unspecified
+Odell Beckham Jr.,WR,2014-11-23,0,Back,Vertebral,Bruise
+Keenan Allen,WR,2014-12-14,2,Pedal,Ankle,Sprain\/Pull Unspecified
+Keenan Allen,WR,2014-12-14,2,Shoulder,Clavicle,Fracture
+Aaron Rodgers,QB,2014-12-21,0,Leg,Calf,Tear
+DeAndre Hopkins,WR,2014-12-23,0,Hand,Wrist,Ligament Tear
+Odell Beckham Jr.,WR,2015-06-01,0,Thigh,Hamstring,Sprain\/Pull Unspecified
+Geno Smith,QB,2015-08-11,2,Head,Jaw,Fracture
+Mike Evans,WR,2015-08-24,1,Thigh,Hamstring,Sprain\/Pull Unspecified
+Travis Kelce,TE,2015-08-31,0,Pedal,Ankle,Sprain\/Pull Unspecified
+Davante Adams,WR,2015-09-20,0,Pedal,Ankle,Sprain\/Pull Unspecified
+DeAndre Hopkins,WR,2015-09-20,0,Head,Cranial,Concussion
+Davante Adams,WR,2015-09-28,3,Pedal,Ankle,Sprain
+Darren Waller,TE,2015-10-11,1,Head,Cranial,Concussion
+Odell Beckham Jr.,WR,2015-10-11,0,Thigh,Hamstring,Sprain\/Pull Unspecified
+Keenan Allen,WR,2015-10-18,0,Inguinal,Hip,Sprain
+Marcus Mariota,QB,2015-10-18,2,Knee,MCL,Sprain
+Darren Waller,TE,2015-10-26,9,Thigh,Hamstring,Strain
+Mike Evans,WR,2015-11-01,0,Inguinal,Groin,Pull
+Mike Evans,WR,2015-11-01,0,Abdomen,Muscle,Sprain\/Pull Unspecified
+Keenan Allen,WR,2015-11-01,8,Abdomen,Kidney,Lacerated
+Marcus Mariota,QB,2015-12-20,2,Knee,MCL,Sprain
+Davante Adams,WR,2016-01-10,1,Knee,MCL,Sprain
+Jared Goff,QB,2016-08-28,0,Back,Tailbone,Bruise
+Keenan Allen,WR,2016-09-11,15,Knee,ACL,Tear
+Russell Wilson,QB,2016-09-11,0,Pedal,Ankle (high),Sprain
+Tyler Lockett,WR,2016-09-18,0,Knee,PCL,Tear
+Jacoby Brissett,QB,2016-09-22,0,Hand,Finger,Fracture
+Russell Wilson,QB,2016-09-25,0,Knee,MCL,Sprain
+Stefon Diggs,WR,2016-10-03,1,Inguinal,Groin,Pull
+Davante Adams,WR,2016-10-16,0,Head,Cranial,Concussion
+Odell Beckham Jr.,WR,2016-10-16,0,Inguinal,Hip,Strain
+Geno Smith,QB,2016-10-23,9,Knee,ACL,Tear
+Hunter Henry,TE,2016-10-23,0,Head,Cranial,Concussion
+Hunter Henry,TE,2016-10-30,1,Knee,Unspecified,Strain
+Mike Evans,WR,2016-11-03,0,Head,Cranial,Concussion
+Derrick Henry,RB,2016-11-06,1,Leg,Calf,Strain
+Laquon Treadwell,WR,2016-11-10,1,Thigh,Hamstring,Sprain\/Pull Unspecified
+Stefon Diggs,WR,2016-11-20,1,Knee,Unspecified,Strain
+Odell Beckham Jr.,WR,2016-11-27,0,Hand,Thumb,Sprain
+Matthew Stafford,QB,2016-12-09,0,Hand,Finger,Dislocation
+Aaron Rodgers,QB,2016-12-11,0,Leg,Calf,Strain
+Laquon Treadwell,WR,2016-12-11,3,Pedal,Ankle,Sprain
+Jared Goff,QB,2016-12-15,0,Head,Cranial,Concussion
+Austin Hooper,TE,2016-12-18,2,Knee,MCL,Sprain
+Stefon Diggs,WR,2016-12-21,1,Inguinal,Hip,Sprain
+Tyler Lockett,WR,2016-12-24,4,Leg,Fibula,Fracture
+Tyler Lockett,WR,2016-12-24,4,Leg,Tibia,Fracture
+Marcus Mariota,QB,2016-12-24,1,Leg,Fibula,Fracture
+Travis Kelce,TE,2017-02-28,0,Shoulder,Unspecified,Unspecified
+Curtis Samuel,WR,2017-07-28,2,Thigh,Hamstring,Sprain\/Pull Unspecified
+James Conner,RB,2017-07-30,0,Shoulder,A\/C Joint,Sprain
+Laquon Treadwell,WR,2017-07-31,2,Leg,Quad,Strain
+George Kittle,TE,2017-08-01,0,Thigh,Hamstring,Sprain\/Pull Unspecified
+Sterling Shepard,WR,2017-08-02,1,Pedal,Ankle,Sprain
+David Njoku,TE,2017-08-03,1,Back,Lower Lumbar,Sprain\/Pull Unspecified
+JuJu Smith-Schuster,WR,2017-08-11,0,Head,Cranial,Concussion
+Odell Beckham Jr.,WR,2017-08-21,1,Pedal,Ankle (high),Sprain
+Cooper Kupp,WR,2017-08-22,0,Inguinal,Groin,Pull
+Zay Jones,WR,2017-08-30,0,Shoulder,Labrum,Tear
+Evan Engram,TE,2017-09-18,0,Head,Cranial,Concussion
+Curtis Samuel,WR,2017-09-24,1,Back,Lower Lumbar,Sprain
+Davante Adams,WR,2017-09-28,0,Head,Cranial,Concussion
+Justin Herbert,QB,2017-09-30,5,Shoulder,Clavicle,Fracture
+Marcus Mariota,QB,2017-10-01,1,Thigh,Hamstring,Sprain\/Pull Unspecified
+Travis Kelce,TE,2017-10-08,0,Head,Cranial,Concussion
+Sterling Shepard,WR,2017-10-08,3,Pedal,Ankle,Sprain
+Odell Beckham Jr.,WR,2017-10-08,11,Pedal,Ankle,Fracture
+Stefon Diggs,WR,2017-10-09,2,Inguinal,Groin,Strain
+Aaron Rodgers,QB,2017-10-15,7,Shoulder,Clavicle,Fracture
+JuJu Smith-Schuster,WR,2017-10-22,0,Head,Cranial,Concussion
+Deshaun Watson,QB,2017-11-02,9,Knee,ACL,Tear
+Zay Jones,WR,2017-11-02,1,Knee,Unspecified,Strain
+George Kittle,TE,2017-11-05,1,Pedal,Ankle,Sprain\/Pull Unspecified
+Aaron Jones,RB,2017-11-12,2,Knee,MCL,Sprain
+Curtis Samuel,WR,2017-11-13,6,Pedal,Ankle,Fracture
+JuJu Smith-Schuster,WR,2017-11-16,1,Thigh,Hamstring,Sprain\/Pull Unspecified
+Sterling Shepard,WR,2017-11-18,2,Head,Cranial,Migraine
+Sterling Shepard,WR,2017-12-03,0,Thigh,Hamstring,Sprain\/Pull Unspecified
+Joe Mixon,RB,2017-12-04,2,Head,Cranial,Concussion
+Alvin Kamara,RB,2017-12-07,0,Head,Cranial,Concussion
+Hunter Henry,TE,2017-12-16,2,Abdomen,Kidney,Lacerated
+Davante Adams,WR,2017-12-17,2,Head,Cranial,Concussion
+Austin Ekeler,RB,2017-12-17,0,Hand,Wrist,Fracture
+Aaron Jones,RB,2017-12-23,1,Knee,MCL,Sprain
+Evan Engram,TE,2017-12-24,1,Chest,Rib,Bruise
+Sterling Shepard,WR,2017-12-24,1,Cervical,Neck,Strain
+Joe Mixon,RB,2017-12-24,0,Pedal,Ankle,Sprain\/Pull Unspecified
+DeAndre Hopkins,WR,2017-12-25,1,Leg,Calf,Pull
+Samaje Perine,RB,2017-12-31,0,Pedal,Ankle,Sprain\/Pull Unspecified
+Travis Kelce,TE,2018-01-06,0,Head,Cranial,Concussion
+Jonnu Smith,TE,2018-01-13,0,Knee,MCL,Tear
+Hunter Henry,TE,2018-05-22,17,Knee,ACL,Tear
+Aaron Jones,RB,2018-07-28,0,Thigh,Hamstring,Sprain\/Pull Unspecified
+George Kittle,TE,2018-08-09,0,Shoulder,A\/C Joint,Separation
+Saquon Barkley,RB,2018-08-13,0,Thigh,Hamstring,Sprain\/Pull Unspecified
+Samaje Perine,RB,2018-08-16,4,Pedal,Ankle,Sprain\/Pull Unspecified
+Austin Ekeler,RB,2018-08-19,0,Leg,Calf,Strain
+Evan Engram,TE,2018-08-24,0,Head,Cranial,Concussion
+Aaron Rodgers,QB,2018-09-09,0,Knee,MCL,Sprain
+Marcus Mariota,QB,2018-09-09,1,Arm,Elbow,Sprain
+Joe Mixon,RB,2018-09-13,2,Knee,Unspecified,Tear
+Evan Engram,TE,2018-09-23,3,Knee,MCL,Sprain
+Will Dissly,TE,2018-09-30,12,Knee,Patella,Ligament Tear
+Cooper Kupp,WR,2018-10-07,0,Head,Cranial,Concussion
+Josh Allen,QB,2018-10-14,4,Arm,Elbow,Sprain
+Calvin Ridley,WR,2018-10-14,0,Pedal,Ankle,Bruise
+Cooper Kupp,WR,2018-10-14,2,Knee,MCL,Sprain
+Stefon Diggs,WR,2018-10-28,1,Chest,Rib,Bruise
+Sam Darnold,QB,2018-11-04,3,Pedal,Foot,Sprain
+Cooper Kupp,WR,2018-11-11,6,Knee,ACL,Tear
+Samaje Perine,RB,2018-11-11,2,Leg,Calf,Pull
+Marcus Mariota,QB,2018-11-18,1,Cervical,Neck,Stinger
+Mo Alie-Cox,TE,2018-11-22,3,Leg,Calf,Strain
+Evan Engram,TE,2018-11-25,2,Thigh,Hamstring,Sprain\/Pull Unspecified
+Odell Beckham Jr.,WR,2018-11-25,4,Leg,Quad,Bruise
+Christian Kirk,WR,2018-12-02,4,Pedal,Foot,Fracture
+Jonnu Smith,TE,2018-12-06,3,Knee,MCL,Sprain
+Austin Ekeler,RB,2018-12-09,2,Cervical,Neck,Stinger
+Austin Ekeler,RB,2018-12-09,2,Head,Cranial,Concussion
+Aaron Jones,RB,2018-12-16,2,Knee,MCL,Sprain
+Marcus Mariota,QB,2018-12-22,1,Cervical,Neck,Stinger
+Davante Adams,WR,2018-12-23,1,Knee,Unspecified,Strain
+Aaron Rodgers,QB,2018-12-30,0,Head,Cranial,Concussion
+DeAndre Hopkins,WR,2019-01-05,0,Shoulder,A\/C Joint,Sprain
+Darius Slayton,WR,2019-07-22,2,Thigh,Hamstring,Strain
+Josh Oliver,TE,2019-08-01,6,Thigh,Hamstring,Strain
+D.K. Metcalf,WR,2019-08-03,0,Abdomen,Muscle,Sprain\/Pull Unspecified
+Darren Waller,TE,2019-08-03,0,Shoulder,A\/C Joint,Sprain
+Dalton Schultz,TE,2019-08-12,0,Pedal,Ankle,Sprain
+Keenan Allen,WR,2019-08-15,0,Pedal,Ankle,Sprain\/Pull Unspecified
+D.K. Metcalf,WR,2019-08-18,0,Knee,Unspecified,Strain
+Geno Smith,QB,2019-08-29,0,Knee,Patella,Sprain
+Tyler Conklin,TE,2019-09-06,1,Chest,Rib,Sprain\/Pull Unspecified
+Hunter Henry,TE,2019-09-08,4,Leg,Tibial Plateau,Fracture
+Tyreek Hill,WR,2019-09-08,4,Chest,Sternum,Fracture
+Sterling Shepard,WR,2019-09-08,1,Head,Cranial,Concussion
+Sam Darnold,QB,2019-09-12,3,Cervical,Throat,Mononucleosis
+Dallas Goedert,TE,2019-09-15,1,Leg,Calf,Strain
+David Njoku,TE,2019-09-15,10,Hand,Wrist,Fracture
+Tyler Higbee,TE,2019-09-15,1,Chest,Lung,Bruise
+Devin Singletary,RB,2019-09-15,3,Thigh,Hamstring,Strain
+David Njoku,TE,2019-09-16,3,Head,Cranial,Concussion
+Saquon Barkley,RB,2019-09-22,3,Pedal,Ankle,Sprain
+Davante Adams,WR,2019-09-26,4,Pedal,Toe,Sprain
+Terry McLaurin,WR,2019-09-26,1,Thigh,Hamstring,Sprain\/Pull Unspecified
+Josh Allen,QB,2019-09-29,0,Head,Cranial,Concussion
+T.J. Hockenson,TE,2019-09-29,0,Head,Cranial,Concussion
+Christian Kirk,WR,2019-09-29,3,Pedal,Ankle,Sprain\/Pull Unspecified
+Evan Engram,TE,2019-10-06,1,Knee,MCL,Pull
+Marquise Brown,WR,2019-10-06,2,Pedal,Ankle,Sprain\/Pull Unspecified
+Sterling Shepard,WR,2019-10-06,5,Head,Cranial,Concussion
+Deebo Samuel,WR,2019-10-13,1,Inguinal,Groin,Strain
+Will Dissly,TE,2019-10-13,12,Pedal,Achilles,Tear
+Alvin Kamara,RB,2019-10-15,2,Pedal,Ankle,Sprain\/Pull Unspecified
+Alvin Kamara,RB,2019-10-16,2,Knee,PCL,Sprain
+Marquez Valdes-Scantling,WR,2019-10-16,0,Pedal,Ankle,Sprain\/Pull Unspecified
+Marquez Valdes-Scantling,WR,2019-10-16,0,Knee,Unspecified,Strain
+Patrick Mahomes,QB,2019-10-17,2,Knee,Patella,Dislocation
+Tua Tagovailoa,QB,2019-10-19,1,Pedal,Ankle (high),Sprain
+Keenan Allen,WR,2019-10-24,0,Thigh,Hamstring,Sprain\/Pull Unspecified
+Odell Beckham Jr.,WR,2019-10-27,0,Inguinal,Groin,Sports Hernia
+James Conner,RB,2019-10-28,5,Shoulder,A\/C Joint,Sprain
+George Kittle,TE,2019-10-31,2,Knee,Patella,Sprain
+Matthew Stafford,QB,2019-11-03,8,Back,Tailbone,Fracture
+Evan Engram,TE,2019-11-04,6,Pedal,Foot,Sprain
+Austin Hooper,TE,2019-11-10,3,Knee,MCL,Sprain
+Drew Sample,TE,2019-11-10,7,Pedal,Ankle (high),Sprain
+JuJu Smith-Schuster,WR,2019-11-14,1,Head,Cranial,Concussion
+JuJu Smith-Schuster,WR,2019-11-14,4,Knee,Patella,Sprain
+Tua Tagovailoa,QB,2019-11-16,3,Head,Cranial,Concussion
+Josh Oliver,TE,2019-11-17,6,Back,Tailbone,Fracture
+Mo Alie-Cox,TE,2019-11-17,0,Hand,Thumb,Sprain
+Hunter Renfrow,WR,2019-11-24,3,Chest,Rib,Fracture
+Tony Pollard,RB,2019-11-28,1,Pedal,Ankle,Sprain\/Pull Unspecified
+T.J. Hockenson,TE,2019-11-28,4,Pedal,Ankle,Sprain
+Daniel Jones,QB,2019-12-01,2,Pedal,Ankle (high),Sprain
+Josh Jacobs,RB,2019-12-04,3,Shoulder,Clavicle,Fracture
+Mike Evans,WR,2019-12-08,3,Thigh,Hamstring,Sprain\/Pull Unspecified
+Calvin Ridley,WR,2019-12-08,3,Abdomen,Muscle,Strain
+Noah Fant,TE,2019-12-08,0,Pedal,Foot,Bruise
+Alexander Mattison,RB,2019-12-11,3,Pedal,Ankle,Sprain
+Dak Prescott,QB,2019-12-15,0,Shoulder,Unspecified,Unspecified
+Chris Godwin,WR,2019-12-15,2,Thigh,Hamstring,Strain
+Noah Fant,TE,2019-12-15,0,Shoulder,Unspecified,Unspecified
+Derrick Henry,RB,2019-12-18,1,Thigh,Hamstring,Strain
+Kyler Murray,QB,2019-12-22,0,Thigh,Hamstring,Sprain\/Pull Unspecified
+Terry McLaurin,WR,2019-12-22,1,Head,Cranial,Concussion
+D.J. Moore,WR,2019-12-22,1,Head,Cranial,Concussion
+James Conner,RB,2019-12-22,1,Leg,Quad,Strain
+Deshaun Watson,QB,2019-12-25,0,Back,Lower Lumbar,Sprain
+Mark Andrews,TE,2019-12-26,1,Pedal,Ankle,Sprain\/Pull Unspecified
+Darren Waller,TE,2019-12-30,0,Hand,Thumb,Fracture
+Miles Sanders,RB,2020-01-05,0,Knee,MCL,Sprain
+Tyler Conklin,TE,2020-01-05,0,Knee,Unspecified,Strain
+Travis Kelce,TE,2020-01-08,0,Knee,Unspecified,Strain
+Marquise Brown,WR,2020-02-25,0,Pedal,Lisfranc,Fracture
+Deebo Samuel,WR,2020-06-16,3,Pedal,Foot,Fracture
+DeAndre Hopkins,WR,2020-08-16,0,Thigh,Hamstring,Sprain\/Pull Unspecified
+Josh Oliver,TE,2020-08-16,16,Pedal,Foot,Fracture
+Dallas Goedert,TE,2020-08-19,0,Hand,Thumb,Fracture
+Miles Sanders,RB,2020-08-19,1,Thigh,Hamstring,Strain
+Tyreek Hill,WR,2020-08-20,0,Thigh,Hamstring,Sprain\/Pull Unspecified
+Brandon Aiyuk,WR,2020-08-23,1,Thigh,Hamstring,Strain
+David Montgomery,RB,2020-08-26,0,Inguinal,Groin,Strain
+George Kittle,TE,2020-08-27,0,Thigh,Hamstring,Strain
+Marcus Mariota,QB,2020-08-27,5,Chest,Pectoral,Strain
+Mike Evans,WR,2020-09-09,0,Thigh,Hamstring,Strain
+Justice Hill,RB,2020-09-09,2,Thigh,Glute,Strain
+Courtland Sutton,WR,2020-09-10,1,Shoulder,A\/C Joint,Sprain
+Chris Godwin,WR,2020-09-13,1,Head,Cranial,Concussion
+George Kittle,TE,2020-09-13,2,Knee,MCL,Sprain
+James Conner,RB,2020-09-14,0,Pedal,Ankle,Sprain\/Pull Unspecified
+A.J. Brown,WR,2020-09-16,2,Knee,Unspecified,Bruise
+Michael Pittman Jr.,WR,2020-09-17,0,Pedal,Toe,Sprain
+Christian McCaffrey,RB,2020-09-20,6,Pedal,Ankle (high),Sprain
+Saquon Barkley,RB,2020-09-20,14,Knee,ACL,Tear
+Saquon Barkley,RB,2020-09-20,14,Knee,MCL,Sprain
+Davante Adams,WR,2020-09-20,2,Thigh,Hamstring,Strain
+Courtland Sutton,WR,2020-09-20,14,Knee,ACL,Tear
+Courtland Sutton,WR,2020-09-20,14,Knee,MCL,Tear
+Jerry Jeudy,WR,2020-09-20,0,Chest,Rib,Sprain\/Pull Unspecified
+Dawson Knox,TE,2020-09-20,1,Head,Cranial,Concussion
+Christian Kirk,WR,2020-09-20,1,Inguinal,Groin,Strain
+Sterling Shepard,WR,2020-09-20,4,Pedal,Toe,Turf Toe
+Darren Waller,TE,2020-09-23,0,Knee,Patella,Sprain
+Darren Waller,TE,2020-09-23,0,Knee,Unspecified,Strain
+JuJu Smith-Schuster,WR,2020-09-23,0,Knee,Unspecified,Strain
+Michael Pittman Jr.,WR,2020-09-27,3,Leg,Calf,Strain
+Chris Godwin,WR,2020-09-27,2,Thigh,Hamstring,Strain
+Dallas Goedert,TE,2020-09-27,4,Pedal,Ankle,Fracture
+DeAndre Hopkins,WR,2020-09-30,0,Pedal,Ankle,Sprain\/Pull Unspecified
+Kareem Hunt,RB,2020-09-30,0,Inguinal,Groin,Strain
+Sam Darnold,QB,2020-10-01,2,Shoulder,A\/C Joint,Sprain
+Noah Fant,TE,2020-10-01,1,Pedal,Ankle,Sprain\/Pull Unspecified
+Odell Beckham Jr.,WR,2020-10-01,0,Back,Lower Lumbar,Sprain\/Pull Unspecified
+Mike Evans,WR,2020-10-04,0,Pedal,Ankle,Sprain
+Austin Ekeler,RB,2020-10-04,6,Thigh,Hamstring,Strain
+Nick Chubb,RB,2020-10-04,4,Knee,MCL,Sprain
+Lamar Jackson,QB,2020-10-07,0,Knee,Patella,Sprain
+Marquise Brown,WR,2020-10-07,0,Knee,Patella,Sprain
+Odell Beckham Jr.,WR,2020-10-07,0,Pedal,Toe,Sprain
+Durham Smythe,TE,2020-10-07,1,Knee,Patella,Sprain
+Mark Andrews,TE,2020-10-08,0,Thigh,Glute,Strain
+Joe Mixon,RB,2020-10-08,0,Leg,Shin,Bruise
+K.J. Osborn,WR,2020-10-09,2,Thigh,Hamstring,Strain
+Dak Prescott,QB,2020-10-11,11,Pedal,Ankle,Dislocation
+Dak Prescott,QB,2020-10-11,11,Pedal,Ankle,Fracture
+Baker Mayfield,QB,2020-10-11,0,Chest,Rib,Sprain\/Pull Unspecified
+Mo Alie-Cox,TE,2020-10-11,1,Knee,Unspecified,Strain
+Dawson Knox,TE,2020-10-13,2,Leg,Calf,Strain
+Darius Slayton,WR,2020-10-14,0,Pedal,Foot,Unspecified
+Curtis Samuel,WR,2020-10-14,1,Knee,Patella,Sprain
+Miles Sanders,RB,2020-10-18,2,Knee,Patella,Sprain
+Jonnu Smith,TE,2020-10-18,0,Pedal,Ankle,Sprain\/Pull Unspecified
+Joe Mixon,RB,2020-10-18,10,Pedal,Foot,Sprain
+DeAndre Hopkins,WR,2020-10-21,0,Pedal,Ankle,Sprain\/Pull Unspecified
+Aaron Jones,RB,2020-10-22,2,Leg,Calf,Strain
+Tyler Higbee,TE,2020-10-22,1,Hand,Unspecified,Unspecified
+Tyler Higbee,TE,2020-10-22,1,Hand,Unspecified,Unspecified
+Austin Hooper,TE,2020-10-23,2,Abdomen,Appendix,Ruptured
+Chris Godwin,WR,2020-10-25,1,Hand,Finger,Fracture
+Deebo Samuel,WR,2020-10-25,3,Thigh,Hamstring,Strain
+Odell Beckham Jr.,WR,2020-10-25,13,Knee,ACL,Tear
+Calvin Ridley,WR,2020-10-29,1,Pedal,Foot,Fracture
+Jonathan Taylor,RB,2020-11-01,0,Pedal,Ankle,Sprain\/Pull Unspecified
+Sam Darnold,QB,2020-11-01,2,Shoulder,A\/C Joint,Sprain
+George Kittle,TE,2020-11-01,6,Pedal,Foot,Fracture
+Christian McCaffrey,RB,2020-11-08,4,Shoulder,A\/C Joint,Sprain
+David Montgomery,RB,2020-11-08,1,Head,Cranial,Concussion
+Noah Fant,TE,2020-11-08,0,Pedal,Ankle,Sprain\/Pull Unspecified
+Durham Smythe,TE,2020-11-08,0,Head,Cranial,Concussion
+Jerry Jeudy,WR,2020-11-11,0,Shoulder,Unspecified,Unspecified
+T.J. Hockenson,TE,2020-11-12,0,Pedal,Toe,Sprain
+Matthew Stafford,QB,2020-11-15,0,Hand,Thumb,Torn Ligament
+Davante Adams,WR,2020-11-15,0,Pedal,Ankle,Sprain\/Pull Unspecified
+Darius Slayton,WR,2020-11-15,0,Shoulder,Unspecified,Unspecified
+Tyler Lockett,WR,2020-11-16,0,Knee,Patella,Sprain
+Noah Fant,TE,2020-11-18,0,Chest,Rib,Sprain\/Pull Unspecified
+Kyler Murray,QB,2020-11-19,0,Shoulder,A\/C Joint,Sprain
+D\u0027Andre Swift,RB,2020-11-19,2,Head,Cranial,Concussion
+Joe Burrow,QB,2020-11-22,6,Knee,ACL,Tear
+Joe Burrow,QB,2020-11-22,6,Knee,MCL,Tear
+Joe Burrow,QB,2020-11-22,6,Knee,PCL,Tear
+Joe Burrow,QB,2020-11-22,6,Knee,Meniscus,Tear
+JuJu Smith-Schuster,WR,2020-11-22,0,Pedal,Foot,Unspecified
+Terry McLaurin,WR,2020-11-23,0,Pedal,Ankle (high),Sprain
+Tyler Higbee,TE,2020-11-23,0,Arm,Elbow,Sprain
+Jerry Jeudy,WR,2020-11-25,0,Pedal,Ankle,Sprain\/Pull Unspecified
+Tua Tagovailoa,QB,2020-11-25,1,Hand,Thumb,Sprain
+Marquez Valdes-Scantling,WR,2020-11-26,0,Pedal,Achilles,Pull
+Daniel Jones,QB,2020-11-29,1,Thigh,Hamstring,Strain
+Josh Jacobs,RB,2020-11-29,1,Pedal,Ankle,Sprain
+D.J. Moore,WR,2020-11-29,1,Pedal,Ankle,Sprain
+Kareem Hunt,RB,2020-12-02,0,Thigh,Hamstring,Sprain\/Pull Unspecified
+Jonnu Smith,TE,2020-12-02,1,Knee,Patella,Sprain
+Alexander Mattison,RB,2020-12-05,2,Abdomen,Appendix,Ruptured
+Tee Higgins,WR,2020-12-06,0,Thigh,Hamstring,Strain
+Antonio Gibson,RB,2020-12-07,2,Pedal,Toe,Turf Toe
+Christian McCaffrey,RB,2020-12-09,4,Thigh,Glute,Strain
+DeAndre Hopkins,WR,2020-12-10,0,Cervical,Neck,Unspecified
+DeAndre Hopkins,WR,2020-12-10,0,Back,Lower Lumbar,Sprain\/Pull Unspecified
+Austin Hooper,TE,2020-12-11,1,Cervical,Neck,Unspecified
+Matthew Stafford,QB,2020-12-13,0,Chest,Rib,Sprain\/Pull Unspecified
+Daniel Jones,QB,2020-12-13,1,Pedal,Ankle,Sprain
+Deebo Samuel,WR,2020-12-13,3,Thigh,Hamstring,Strain
+Mike Gesicki,TE,2020-12-13,1,Shoulder,Unspecified,Dislocation
+James Conner,RB,2020-12-13,1,Leg,Quad,Strain
+Daniel Jones,QB,2020-12-16,1,Thigh,Hamstring,Strain
+Evan Engram,TE,2020-12-18,0,Leg,Calf,Pull
+Terry McLaurin,WR,2020-12-20,1,Pedal,Ankle (high),Sprain
+Alexander Mattison,RB,2020-12-20,1,Head,Cranial,Concussion
+Marquise Brown,WR,2020-12-24,0,Knee,Patella,Sprain
+Matthew Stafford,QB,2020-12-26,0,Pedal,Ankle,Sprain\/Pull Unspecified
+Brandon Aiyuk,WR,2020-12-26,1,Pedal,Ankle (high),Sprain
+Jared Goff,QB,2020-12-27,1,Hand,Thumb,Fracture
+Michael Pittman Jr.,WR,2020-12-27,0,Head,Cranial,Concussion
+Dallas Goedert,TE,2020-12-27,1,Leg,Calf,Strain
+Tyreek Hill,WR,2020-12-30,1,Thigh,Hamstring,Strain
+Miles Sanders,RB,2020-12-31,1,Knee,Patella,Sprain
+James Conner,RB,2021-01-01,0,Back,Lower Lumbar,Sprain
+Tee Higgins,WR,2021-01-03,0,Thigh,Hamstring,Strain
+Mike Evans,WR,2021-01-03,0,Knee,Unspecified,Strain
+Darnell Mooney,WR,2021-01-03,1,Pedal,Ankle,Sprain
+Austin Ekeler,RB,2021-01-03,0,Head,Cranial,Concussion
+Stefon Diggs,WR,2021-01-05,0,Abdomen,Muscle,Tear
+Cooper Kupp,WR,2021-01-09,1,Knee,Unspecified,Bruise
+Taysom Hill,TE,2021-01-13,1,Knee,Patella,Sprain
+Lamar Jackson,QB,2021-01-16,0,Head,Cranial,Concussion
+Patrick Mahomes,QB,2021-01-17,0,Head,Cranial,Concussion
+Patrick Mahomes,QB,2021-01-17,0,Pedal,Toe,Turf Toe
+Aaron Jones,RB,2021-01-24,0,Chest,Rib,Sprain\/Pull Unspecified
+James Conner,RB,2021-04-12,0,Pedal,Toe,Turf Toe
+Curtis Samuel,WR,2021-06-02,3,Inguinal,Groin,Strain
+Trevor Lawrence,QB,2021-06-14,0,Thigh,Hamstring,Sprain\/Pull Unspecified
+Jonnu Smith,TE,2021-06-14,0,Thigh,Hamstring,Strain
+Dak Prescott,QB,2021-07-28,0,Shoulder,Unspecified,Unspecified
+Marquise Brown,WR,2021-07-29,0,Thigh,Hamstring,Strain
+DeVonta Smith,WR,2021-07-31,0,Knee,MCL,Sprain
+Matthew Stafford,QB,2021-08-02,0,Hand,Thumb,Sprain
+D\u0027Andre Swift,RB,2021-08-04,0,Inguinal,Groin,Strain
+Darren Waller,TE,2021-08-04,0,Pedal,Ankle,Sprain\/Pull Unspecified
+Justin Jefferson,WR,2021-08-06,0,Shoulder,A\/C Joint,Sprain
+Hunter Henry,TE,2021-08-08,0,Shoulder,Unspecified,Unspecified
+Hunter Long,TE,2021-08-08,0,Knee,ACL,Sprain
+Stefon Diggs,WR,2021-08-09,0,Knee,Patella,Sprain
+Aaron Jones,RB,2021-08-09,0,Thigh,Hamstring,Sprain\/Pull Unspecified
+T.J. Hockenson,TE,2021-08-10,0,Shoulder,A\/C Joint,Sprain
+Rashod Bateman,WR,2021-08-10,5,Inguinal,Groin,Strain
+Dalton Schultz,TE,2021-08-11,0,Pedal,Ankle,Sprain
+Marcus Mariota,QB,2021-08-12,0,Leg,Quad,Strain
+Jordan Love,QB,2021-08-14,0,Shoulder,Unspecified,Unspecified
+Geno Smith,QB,2021-08-14,0,Head,Cranial,Concussion
+Justice Hill,RB,2021-08-14,0,Pedal,Ankle,Sprain\/Pull Unspecified
+Jonnu Smith,TE,2021-08-15,0,Pedal,Ankle,Sprain\/Pull Unspecified
+Travis Etienne,RB,2021-08-16,16,Pedal,Lisfranc,Sprain
+Darnell Washington,TE,2021-08-17,4,Pedal,Foot,Fracture
+D.J. Moore,WR,2021-08-18,0,Back,Tailbone,Bruise
+Justin Fields,QB,2021-08-18,0,Inguinal,Groin,Pull
+Deebo Samuel,WR,2021-08-20,0,Thigh,Glute,Strain
+Tyreek Hill,WR,2021-08-20,0,Thigh,Hamstring,Sprain\/Pull Unspecified
+A.J. Brown,WR,2021-08-23,0,Knee,Unspecified,Strain
+Adam Trautman,TE,2021-08-23,0,Pedal,Ankle,Sprain
+Noah Fant,TE,2021-08-24,0,Knee,Unspecified,Strain
+Brandon Aiyuk,WR,2021-08-27,0,Thigh,Hamstring,Sprain\/Pull Unspecified
+J.K. Dobbins,RB,2021-08-28,19,Knee,ACL,Tear
+J.K. Dobbins,RB,2021-08-28,19,Knee,Meniscus,Trim
+J.K. Dobbins,RB,2021-08-28,19,Knee,LCL,Tear
+J.K. Dobbins,RB,2021-08-28,19,Thigh,Hamstring,Tear
+Evan Engram,TE,2021-08-29,2,Leg,Calf,Strain
+Darius Slayton,WR,2021-08-29,0,Pedal,Ankle,Sprain\/Pull Unspecified
+Rhamondre Stevenson,RB,2021-09-01,0,Hand,Thumb,Dislocation
+Justice Hill,RB,2021-09-02,17,Pedal,Achilles,Tear
+Josh Jacobs,RB,2021-09-06,2,Pedal,Toe,Sprain
+Darnell Mooney,WR,2021-09-08,0,Back,Lower Lumbar,Sprain\/Pull Unspecified
+Austin Ekeler,RB,2021-09-08,0,Thigh,Hamstring,Sprain\/Pull Unspecified
+Jerry Jeudy,WR,2021-09-12,6,Pedal,Ankle (high),Sprain
+Josh Jacobs,RB,2021-09-13,2,Pedal,Ankle,Sprain\/Pull Unspecified
+Marcus Mariota,QB,2021-09-13,5,Leg,Quad,Strain
+Marquise Brown,WR,2021-09-15,0,Pedal,Ankle,Sprain\/Pull Unspecified
+Baker Mayfield,QB,2021-09-19,0,Shoulder,Labrum,Tear
+Nico Collins,WR,2021-09-19,3,Shoulder,Unspecified,Unspecified
+Tee Higgins,WR,2021-09-19,2,Shoulder,Unspecified,Unspecified
+Tua Tagovailoa,QB,2021-09-19,3,Chest,Rib,Fracture
+DeAndre Hopkins,WR,2021-09-22,0,Chest,Rib,Sprain\/Pull Unspecified
+Darnell Mooney,WR,2021-09-22,0,Inguinal,Groin,Strain
+Christian McCaffrey,RB,2021-09-23,5,Thigh,Hamstring,Strain
+A.J. Brown,WR,2021-09-26,1,Thigh,Hamstring,Strain
+George Kittle,TE,2021-09-26,3,Leg,Calf,Strain
+Darius Slayton,WR,2021-09-26,3,Thigh,Hamstring,Strain
+Sterling Shepard,WR,2021-09-26,1,Thigh,Hamstring,Strain
+Marquez Valdes-Scantling,WR,2021-09-26,5,Thigh,Hamstring,Strain
+JuJu Smith-Schuster,WR,2021-09-26,0,Chest,Rib,Bruise
+Tyler Lockett,WR,2021-09-26,0,Inguinal,Hip,Strain
+Lamar Jackson,QB,2021-09-29,0,Back,Lower Lumbar,Sprain\/Pull Unspecified
+Jonathan Taylor,RB,2021-09-29,0,Knee,Unspecified,Strain
+D.K. Metcalf,WR,2021-09-30,0,Pedal,Foot,Unspecified
+Antonio Gibson,RB,2021-09-30,0,Leg,Shin,Bruise
+Joe Mixon,RB,2021-09-30,0,Pedal,Ankle,Sprain\/Pull Unspecified
+Isaac Guerendo,RB,2021-10-02,8,Pedal,Ankle,Ligament Tear
+David Montgomery,RB,2021-10-03,3,Knee,Unspecified,Strain
+Dyami Brown,WR,2021-10-03,1,Knee,Unspecified,Strain
+Tyler Higbee,TE,2021-10-04,0,Pedal,Ankle,Sprain\/Pull Unspecified
+T.J. Hockenson,TE,2021-10-06,0,Knee,Unspecified,Strain
+Russell Wilson,QB,2021-10-07,3,Hand,Finger,Fracture
+Courtland Sutton,WR,2021-10-08,0,Pedal,Ankle,Sprain\/Pull Unspecified
+Daniel Jones,QB,2021-10-10,0,Head,Cranial,Concussion
+Saquon Barkley,RB,2021-10-10,1,Pedal,Ankle,Sprain\/Pull Unspecified
+Travis Kelce,TE,2021-10-10,0,Cervical,Neck,Stinger
+Curtis Samuel,WR,2021-10-10,5,Inguinal,Groin,Strain
+Tyreek Hill,WR,2021-10-10,0,Leg,Quad,Strain
+JuJu Smith-Schuster,WR,2021-10-10,12,Shoulder,Unspecified,Unspecified
+Nick Chubb,RB,2021-10-10,2,Leg,Calf,Strain
+Taysom Hill,TE,2021-10-10,0,Head,Cranial,Concussion
+Justin Jefferson,WR,2021-10-13,0,Pedal,Ankle,Sprain\/Pull Unspecified
+Kareem Hunt,RB,2021-10-13,0,Hand,Wrist,Sprain\/Pull Unspecified
+Kareem Hunt,RB,2021-10-13,0,Knee,Unspecified,Strain
+Terry McLaurin,WR,2021-10-15,0,Thigh,Hamstring,Sprain\/Pull Unspecified
+Dak Prescott,QB,2021-10-17,1,Leg,Calf,Strain
+Baker Mayfield,QB,2021-10-17,1,Shoulder,Labrum,Tear
+Antonio Gibson,RB,2021-10-17,0,Leg,Shin,Bruise
+Kareem Hunt,RB,2021-10-17,5,Leg,Calf,Strain
+Tyreek Hill,WR,2021-10-17,0,Leg,Quad,Strain
+Odell Beckham Jr.,WR,2021-10-17,0,Shoulder,A\/C Joint,Sprain
+Dawson Knox,TE,2021-10-18,2,Hand,Wrist,Fracture
+Nico Collins,WR,2021-10-21,0,Pedal,Foot,Unspecified
+Sterling Shepard,WR,2021-10-21,1,Thigh,Hamstring,Strain
+Darren Waller,TE,2021-10-23,1,Pedal,Ankle,Sprain\/Pull Unspecified
+Josh Jacobs,RB,2021-10-24,0,Chest,Rib,Bruise
+Dyami Brown,WR,2021-10-24,1,Knee,Unspecified,Strain
+Miles Sanders,RB,2021-10-24,3,Pedal,Ankle,Sprain
+Jonnu Smith,TE,2021-10-24,0,Shoulder,Unspecified,Unspecified
+DeAndre Hopkins,WR,2021-10-25,0,Thigh,Hamstring,Sprain\/Pull Unspecified
+Kyler Murray,QB,2021-10-28,3,Pedal,Ankle,Sprain
+DeAndre Hopkins,WR,2021-10-28,3,Thigh,Hamstring,Strain
+Austin Ekeler,RB,2021-10-28,0,Inguinal,Hip,Sprain
+Derrick Henry,RB,2021-10-31,9,Pedal,Foot,Fracture
+Sam Darnold,QB,2021-10-31,0,Head,Cranial,Concussion
+Van Jefferson,WR,2021-10-31,0,Knee,Unspecified,Strain
+Deebo Samuel,WR,2021-11-01,0,Leg,Calf,Strain
+Sterling Shepard,WR,2021-11-01,4,Leg,Quad,Strain
+CeeDee Lamb,WR,2021-11-03,0,Pedal,Ankle,Sprain\/Pull Unspecified
+Tua Tagovailoa,QB,2021-11-03,1,Hand,Finger,Fracture
+Matthew Stafford,QB,2021-11-04,0,Back,Lower Lumbar,Sprain\/Pull Unspecified
+A.J. Brown,WR,2021-11-05,0,Knee,Unspecified,Strain
+Rashod Bateman,WR,2021-11-05,0,Inguinal,Groin,Pull
+Trevor Lawrence,QB,2021-11-07,0,Pedal,Ankle,Sprain\/Pull Unspecified
+Matthew Stafford,QB,2021-11-07,0,Pedal,Ankle,Sprain\/Pull Unspecified
+Sam Darnold,QB,2021-11-07,5,Shoulder,Scapula,Fracture
+Rhamondre Stevenson,RB,2021-11-07,0,Head,Cranial,Concussion
+Jonnu Smith,TE,2021-11-07,1,Shoulder,Unspecified,Unspecified
+Chris Godwin,WR,2021-11-10,0,Pedal,Foot,Unspecified
+Alvin Kamara,RB,2021-11-10,4,Knee,MCL,Sprain
+Najee Harris,RB,2021-11-11,0,Pedal,Foot,Unspecified
+Aaron Rodgers,QB,2021-11-13,0,Pedal,Toe,Fracture
+Jared Goff,QB,2021-11-14,1,Abdomen,Muscle,Strain
+CeeDee Lamb,WR,2021-11-14,0,Arm,Elbow,Bruise
+Baker Mayfield,QB,2021-11-14,0,Knee,Unspecified,Strain
+Dallas Goedert,TE,2021-11-14,0,Head,Cranial,Concussion
+Aaron Jones,RB,2021-11-14,1,Knee,MCL,Sprain
+Deebo Samuel,WR,2021-11-16,0,Leg,Shin,Bruise
+Marquise Brown,WR,2021-11-17,1,Thigh,Glute,Strain
+Taysom Hill,TE,2021-11-17,0,Pedal,Foot,Plantar Fasciitis
+CeeDee Lamb,WR,2021-11-21,1,Head,Cranial,Concussion
+A.J. Brown,WR,2021-11-21,3,Chest,Rib,Sprain\/Pull Unspecified
+Adam Trautman,TE,2021-11-21,3,Knee,MCL,Sprain
+Michael Carter,RB,2021-11-21,3,Pedal,Ankle (high),Sprain
+Justin Fields,QB,2021-11-21,1,Chest,Rib,Fracture
+Hunter Henry,TE,2021-11-24,0,Cervical,Neck,Unspecified
+D\u0027Andre Swift,RB,2021-11-25,1,Shoulder,A\/C Joint,Sprain
+Rhamondre Stevenson,RB,2021-11-25,0,Knee,Unspecified,Strain
+Darren Waller,TE,2021-11-25,5,Knee,Unspecified,Strain
+Nico Collins,WR,2021-11-26,0,Inguinal,Hip,Sprain
+Jalen Hurts,QB,2021-11-28,1,Pedal,Ankle (high),Sprain
+Christian McCaffrey,RB,2021-11-28,5,Pedal,Ankle,Sprain
+Daniel Jones,QB,2021-11-28,6,Cervical,Neck,Pinched Nerve
+Deebo Samuel,WR,2021-11-28,1,Inguinal,Groin,Strain
+Pat Freiermuth,TE,2021-11-28,0,Head,Cranial,Concussion
+Miles Sanders,RB,2021-11-28,0,Pedal,Ankle,Sprain\/Pull Unspecified
+Odell Beckham Jr.,WR,2021-11-28,0,Inguinal,Hip,Bruise
+Taysom Hill,TE,2021-12-02,0,Hand,Finger,Fracture
+Joe Burrow,QB,2021-12-05,0,Hand,Finger,Dislocation
+Tee Higgins,WR,2021-12-05,0,Pedal,Ankle,Sprain\/Pull Unspecified
+T.J. Hockenson,TE,2021-12-05,5,Hand,Thumb,Fracture
+Austin Ekeler,RB,2021-12-05,0,Pedal,Ankle,Bruise
+Miles Sanders,RB,2021-12-05,0,Pedal,Ankle,Sprain\/Pull Unspecified
+Josh Allen,QB,2021-12-12,0,Pedal,Toe,Turf Toe
+Lamar Jackson,QB,2021-12-12,4,Pedal,Ankle,Sprain
+Terry McLaurin,WR,2021-12-12,0,Head,Cranial,Concussion
+D.J. Moore,WR,2021-12-12,0,Thigh,Hamstring,Sprain\/Pull Unspecified
+Kareem Hunt,RB,2021-12-12,1,Pedal,Ankle,Sprain\/Pull Unspecified
+Austin Ekeler,RB,2021-12-12,0,Pedal,Ankle,Sprain\/Pull Unspecified
+James Conner,RB,2021-12-13,0,Pedal,Ankle,Sprain\/Pull Unspecified
+DeAndre Hopkins,WR,2021-12-13,5,Knee,MCL,Tear
+George Kittle,TE,2021-12-15,0,Knee,Unspecified,Strain
+Marquez Valdes-Scantling,WR,2021-12-15,0,Back,Lower Lumbar,Sprain\/Pull Unspecified
+Curtis Samuel,WR,2021-12-16,4,Thigh,Hamstring,Strain
+Mike Evans,WR,2021-12-19,1,Thigh,Hamstring,Strain
+Chris Godwin,WR,2021-12-19,3,Knee,ACL,Tear
+Chris Godwin,WR,2021-12-19,3,Knee,MCL,Sprain
+Pat Freiermuth,TE,2021-12-19,1,Head,Cranial,Concussion
+Sterling Shepard,WR,2021-12-19,3,Pedal,Achilles,Tear
+Joe Mixon,RB,2021-12-19,0,Pedal,Ankle,Sprain\/Pull Unspecified
+James Conner,RB,2021-12-21,2,Pedal,Heel,Bruise
+Antonio Gibson,RB,2021-12-21,0,Pedal,Toe,Sprain
+Miles Sanders,RB,2021-12-26,2,Hand,Metacarpal,Fracture
+A.J. Brown,WR,2021-12-30,0,Leg,Calf,Pull
+Joe Burrow,QB,2022-01-02,1,Knee,Unspecified,Strain
+Kyle Pitts,TE,2022-01-02,0,Thigh,Hamstring,Sprain\/Pull Unspecified
+Will Dissly,TE,2022-01-02,0,Pedal,Heel,Bruise
+Michael Carter,RB,2022-01-02,0,Head,Cranial,Concussion
+Baker Mayfield,QB,2022-01-03,1,Shoulder,Labrum,Tear
+Nick Chubb,RB,2022-01-03,0,Chest,Rib,Sprain\/Pull Unspecified
+Aaron Jones,RB,2022-01-05,1,Knee,Unspecified,Strain
+Tyreek Hill,WR,2022-01-08,0,Pedal,Heel,Bruise
+Matthew Stafford,QB,2022-01-09,0,Pedal,Toe,Sprain
+James Conner,RB,2022-01-09,0,Chest,Rib,Sprain\/Pull Unspecified
+Najee Harris,RB,2022-01-09,0,Arm,Elbow,Sprain
+Marquez Valdes-Scantling,WR,2022-01-09,1,Back,Lower Lumbar,Sprain
+Taysom Hill,TE,2022-01-09,0,Pedal,Lisfranc,Fracture
+Van Jefferson,WR,2022-01-14,0,Shoulder,Unspecified,Unspecified
+Deebo Samuel,WR,2022-01-22,0,Knee,Unspecified,Strain
+Van Jefferson,WR,2022-01-26,0,Knee,Unspecified,Strain
+Tyler Higbee,TE,2022-01-30,1,Knee,MCL,Sprain
+Joe Burrow,QB,2022-02-13,0,Knee,MCL,Sprain
+Odell Beckham Jr.,WR,2022-02-13,0,Knee,ACL,Tear
+Matthew Stafford,QB,2022-03-09,0,Arm,Elbow,Infection
+Skyy Moore,WR,2022-05-08,0,Thigh,Hamstring,Sprain\/Pull Unspecified
+CeeDee Lamb,WR,2022-05-26,0,Thigh,Hamstring,Sprain\/Pull Unspecified
+Kyren Williams,RB,2022-06-01,0,Pedal,Foot,Fracture
+Antonio Gibson,RB,2022-06-08,0,Thigh,Hamstring,Sprain\/Pull Unspecified
+Jerry Jeudy,WR,2022-06-13,0,Inguinal,Groin,Pull
+Christian Watson,WR,2022-06-15,0,Knee,Unspecified,Tear
+Pat Freiermuth,TE,2022-07-28,0,Thigh,Hamstring,Sprain\/Pull Unspecified
+Charlie Kolar,TE,2022-07-28,15,Inguinal,Groin,Sports Hernia
+Taysom Hill,TE,2022-07-29,0,Chest,Rib,Bruise
+Greg Dulcich,TE,2022-07-30,5,Thigh,Hamstring,Strain
+Darren Waller,TE,2022-07-30,0,Thigh,Hamstring,Strain
+Van Jefferson,WR,2022-07-31,6,Knee,Unspecified,Tear
+Matthew Stafford,QB,2022-08-01,0,Arm,Elbow,Sprain
+Najee Harris,RB,2022-08-01,0,Pedal,Lisfranc,Sprain
+Jake Ferguson,TE,2022-08-02,0,Thigh,Hamstring,Sprain\/Pull Unspecified
+Tim Patrick,WR,2022-08-02,17,Knee,ACL,Tear
+Ty Johnson,RB,2022-08-03,0,Thigh,Hamstring,Sprain\/Pull Unspecified
+Trey McBride,TE,2022-08-04,0,Back,Lower Lumbar,Sprain\/Pull Unspecified
+DeVonta Smith,WR,2022-08-04,0,Inguinal,Groin,Pull
+Drew Sample,TE,2022-08-04,0,Knee,ACL,Sprain
+Mike Evans,WR,2022-08-06,0,Thigh,Hamstring,Sprain\/Pull Unspecified
+Kyler Murray,QB,2022-08-09,0,Hand,Wrist,Bruise
+Kenneth Walker III,RB,2022-08-12,1,Inguinal,Groin,Sports Hernia
+Drake London,WR,2022-08-12,0,Knee,Unspecified,Bruise
+Miles Sanders,RB,2022-08-14,0,Thigh,Hamstring,Sprain\/Pull Unspecified
+JuJu Smith-Schuster,WR,2022-08-16,0,Knee,Unspecified,Bruise
+CeeDee Lamb,WR,2022-08-17,0,Pedal,Foot,Unspecified
+Tyquan Thornton,WR,2022-08-19,4,Shoulder,Clavicle,Fracture
+Joshua Palmer,WR,2022-08-20,0,Head,Cranial,Concussion
+Marquez Valdes-Scantling,WR,2022-08-20,0,Head,Cranial,Concussion
+Daniel Bellinger,TE,2022-08-28,0,Head,Cranial,Concussion
+Marquise Brown,WR,2022-08-29,0,Thigh,Hamstring,Sprain\/Pull Unspecified
+Sam Darnold,QB,2022-09-01,9,Pedal,Ankle (high),Sprain
+George Kittle,TE,2022-09-05,2,Inguinal,Groin,Strain
+Kyren Williams,RB,2022-09-08,8,Pedal,Ankle (high),Sprain
+Chris Godwin,WR,2022-09-08,2,Thigh,Hamstring,Sprain\/Pull Unspecified
+Dak Prescott,QB,2022-09-11,5,Hand,Thumb,Fracture
+Tee Higgins,WR,2022-09-11,0,Head,Cranial,Concussion
+D\u0027Andre Swift,RB,2022-09-11,3,Pedal,Ankle,Sprain
+Wan\u0027Dale Robinson,WR,2022-09-11,4,Knee,Patella,Sprain
+Alec Pierce,WR,2022-09-11,1,Head,Cranial,Concussion
+Keenan Allen,WR,2022-09-11,7,Thigh,Hamstring,Strain
+Alvin Kamara,RB,2022-09-11,1,Chest,Rib,Fracture
+Michael Pittman Jr.,WR,2022-09-14,1,Leg,Quad,Strain
+Justin Herbert,QB,2022-09-15,0,Chest,Rib,Fracture
+Christian Watson,WR,2022-09-18,3,Thigh,Hamstring,Sprain\/Pull Unspecified
+Jakobi Meyers,WR,2022-09-18,2,Knee,Unspecified,Strain
+Dalton Schultz,TE,2022-09-18,1,Knee,PCL,Sprain
+Jerry Jeudy,WR,2022-09-18,0,Chest,Rib,Sprain\/Pull Unspecified
+James Conner,RB,2022-09-18,0,Pedal,Ankle,Sprain\/Pull Unspecified
+Hunter Renfrow,WR,2022-09-18,2,Head,Cranial,Concussion
+Taysom Hill,TE,2022-09-18,1,Chest,Rib,Bruise
+Amon-Ra St. Brown,WR,2022-09-25,1,Pedal,Ankle,Sprain\/Pull Unspecified
+Garrett Wilson,WR,2022-09-25,0,Chest,Rib,Bruise
+Tyler Warren,TE,2022-09-25,3,Shoulder,A\/C Joint,Sprain
+D\u0027Andre Swift,RB,2022-09-25,3,Shoulder,A\/C Joint,Sprain
+David Montgomery,RB,2022-09-25,1,Pedal,Ankle,Sprain\/Pull Unspecified
+Sterling Shepard,WR,2022-09-26,14,Knee,ACL,Tear
+Zay Jones,WR,2022-09-28,1,Pedal,Ankle,Sprain\/Pull Unspecified
+Tee Higgins,WR,2022-09-29,0,Pedal,Ankle,Sprain\/Pull Unspecified
+Tua Tagovailoa,QB,2022-09-29,2,Head,Cranial,Concussion
+Jonathan Taylor,RB,2022-10-02,2,Pedal,Ankle,Sprain
+Daniel Jones,QB,2022-10-02,0,Pedal,Ankle,Sprain\/Pull Unspecified
+Javonte Williams,RB,2022-10-02,13,Knee,ACL,Tear
+Javonte Williams,RB,2022-10-02,13,Knee,LCL,Tear
+Kyle Pitts,TE,2022-10-02,1,Thigh,Hamstring,Sprain\/Pull Unspecified
+Rashod Bateman,WR,2022-10-02,10,Pedal,Lisfranc,Sprain
+Justice Hill,RB,2022-10-02,2,Thigh,Hamstring,Sprain\/Pull Unspecified
+Jahan Dotson,WR,2022-10-02,5,Thigh,Hamstring,Strain
+Dawson Knox,TE,2022-10-02,1,Pedal,Foot,Unspecified
+Dawson Knox,TE,2022-10-02,1,Thigh,Hamstring,Sprain\/Pull Unspecified
+Treylon Burks,WR,2022-10-02,4,Pedal,Toe,Turf Toe
+Jonnu Smith,TE,2022-10-02,1,Pedal,Ankle,Sprain\/Pull Unspecified
+Russell Wilson,QB,2022-10-02,0,Shoulder,Unspecified,Unspecified
+Jerome Ford,RB,2022-10-02,4,Pedal,Ankle,Sprain
+Baker Mayfield,QB,2022-10-09,2,Pedal,Ankle (high),Sprain
+Chris Olave,WR,2022-10-09,1,Head,Cranial,Concussion
+Pat Freiermuth,TE,2022-10-09,1,Head,Cranial,Concussion
+James Conner,RB,2022-10-09,3,Chest,Rib,Sprain\/Pull Unspecified
+Darren Waller,TE,2022-10-10,9,Thigh,Hamstring,Strain
+Ja\u0027Marr Chase,WR,2022-10-16,4,Inguinal,Hip,Fracture
+Ja\u0027Marr Chase,WR,2022-10-16,4,Inguinal,Hip,Tear
+Marquise Brown,WR,2022-10-16,5,Pedal,Foot,Fracture
+Adam Trautman,TE,2022-10-16,2,Pedal,Ankle,Sprain\/Pull Unspecified
+Joshua Palmer,WR,2022-10-17,1,Head,Cranial,Concussion
+Russell Wilson,QB,2022-10-17,1,Thigh,Hamstring,Tear
+Dyami Brown,WR,2022-10-19,2,Inguinal,Groin,Strain
+Brian Thomas Jr.,WR,2022-10-22,1,Head,Cranial,Concussion
+Nico Collins,WR,2022-10-23,2,Inguinal,Groin,Pull
+Breece Hall,RB,2022-10-23,10,Knee,ACL,Tear
+Breece Hall,RB,2022-10-23,10,Knee,Meniscus,Trim
+D.K. Metcalf,WR,2022-10-23,0,Knee,Patella,Sprain
+Deebo Samuel,WR,2022-10-23,1,Thigh,Hamstring,Sprain\/Pull Unspecified
+Chuba Hubbard,RB,2022-10-23,2,Pedal,Ankle,Sprain\/Pull Unspecified
+Jauan Jennings,WR,2022-10-23,1,Thigh,Hamstring,Sprain\/Pull Unspecified
+Isiah Pacheco,RB,2022-10-23,0,Shoulder,Labrum,Tear
+David Njoku,TE,2022-10-23,2,Pedal,Ankle (high),Sprain
+Daniel Bellinger,TE,2022-10-23,4,Head,Eye,Blurred Vision
+Mark Andrews,TE,2022-10-27,1,Shoulder,Unspecified,Unspecified
+Kyler Murray,QB,2022-10-30,2,Thigh,Hamstring,Strain
+Christian Watson,WR,2022-10-30,0,Head,Cranial,Concussion
+Cooper Kupp,WR,2022-10-30,0,Pedal,Ankle,Sprain\/Pull Unspecified
+Josh Allen,QB,2022-11-06,0,Arm,Elbow,Tear
+Matthew Stafford,QB,2022-11-06,1,Head,Cranial,Concussion
+Romeo Doubs,WR,2022-11-06,4,Pedal,Ankle (high),Sprain
+Aaron Jones,RB,2022-11-06,0,Pedal,Ankle,Sprain\/Pull Unspecified
+Hunter Renfrow,WR,2022-11-06,5,Abdomen,Muscle,Strain
+Mecole Hardman,WR,2022-11-06,7,Inguinal,Groin,Tear
+Justin Jefferson,WR,2022-11-13,0,Pedal,Toe,Turf Toe
+Jerry Jeudy,WR,2022-11-13,2,Pedal,Ankle,Sprain\/Pull Unspecified
+Cooper Kupp,WR,2022-11-13,8,Pedal,Ankle (high),Sprain
+JuJu Smith-Schuster,WR,2022-11-13,1,Head,Cranial,Concussion
+Dallas Goedert,TE,2022-11-14,5,Shoulder,Unspecified,Unspecified
+Sam LaPorta,TE,2022-11-19,1,Knee,Meniscus,Tear
+Matthew Stafford,QB,2022-11-20,7,Spine,Spinal Cord,Bruise
+Jaylen Warren,RB,2022-11-20,1,Thigh,Hamstring,Sprain\/Pull Unspecified
+Kyle Pitts,TE,2022-11-20,6,Knee,MCL,Tear
+Wan\u0027Dale Robinson,WR,2022-11-20,7,Knee,ACL,Tear
+Justin Fields,QB,2022-11-20,1,Shoulder,A\/C Joint,Separation
+Joe Mixon,RB,2022-11-20,2,Head,Cranial,Concussion
+Greg Dortch,WR,2022-11-21,2,Hand,Thumb,Sprain
+Isaiah Likely,TE,2022-11-25,1,Pedal,Ankle,Sprain\/Pull Unspecified
+Aaron Rodgers,QB,2022-11-27,0,Chest,Rib,Bruise
+Juwan Johnson,TE,2022-11-27,1,Pedal,Ankle,Sprain\/Pull Unspecified
+David Njoku,TE,2022-11-27,1,Knee,Unspecified,Strain
+Darnell Mooney,WR,2022-11-27,5,Pedal,Ankle,Ligament Tear
+Antonio Gibson,RB,2022-11-27,2,Pedal,Foot,Fracture
+Michael Carter,RB,2022-11-27,1,Pedal,Ankle,Sprain\/Pull Unspecified
+Najee Harris,RB,2022-11-28,0,Abdomen,Muscle,Sprain\/Pull Unspecified
+Jakobi Meyers,WR,2022-12-01,1,Head,Cranial,Concussion
+Lamar Jackson,QB,2022-12-04,6,Knee,PCL,Sprain
+Trevor Lawrence,QB,2022-12-04,0,Pedal,Toe,Sprain
+Patrick Mahomes,QB,2022-12-04,0,Pedal,Foot,Bruise
+Kenneth Walker III,RB,2022-12-04,1,Pedal,Ankle,Sprain\/Pull Unspecified
+Nico Collins,WR,2022-12-04,5,Pedal,Foot,Unspecified
+Courtland Sutton,WR,2022-12-04,1,Thigh,Hamstring,Sprain\/Pull Unspecified
+Treylon Burks,WR,2022-12-04,2,Head,Cranial,Concussion
+Marcus Mariota,QB,2022-12-04,4,Knee,Unspecified,Strain
+Saquon Barkley,RB,2022-12-08,0,Cervical,Neck,Stinger
+Tee Higgins,WR,2022-12-08,1,Thigh,Hamstring,Sprain\/Pull Unspecified
+D.J. Moore,WR,2022-12-11,0,Knee,Unspecified,Strain
+Deebo Samuel,WR,2022-12-11,3,Pedal,Ankle,Sprain
+Deebo Samuel,WR,2022-12-11,3,Knee,MCL,Sprain
+Daniel Bellinger,TE,2022-12-11,0,Chest,Rib,Bruise
+Russell Wilson,QB,2022-12-11,1,Head,Cranial,Concussion
+Kyler Murray,QB,2022-12-12,13,Knee,ACL,Tear
+Rhamondre Stevenson,RB,2022-12-12,0,Pedal,Ankle,Sprain\/Pull Unspecified
+Tyler Lockett,WR,2022-12-15,1,Hand,Finger,Fracture
+Jonathan Taylor,RB,2022-12-17,3,Pedal,Ankle (high),Sprain
+Jalen Hurts,QB,2022-12-18,2,Shoulder,S\/C Joint,Separation
+Antonio Gibson,RB,2022-12-24,2,Knee,MCL,Sprain
+Jonnu Smith,TE,2022-12-24,2,Head,Cranial,Concussion
+Greg Dulcich,TE,2022-12-25,2,Thigh,Hamstring,Sprain\/Pull Unspecified
+Tua Tagovailoa,QB,2022-12-25,3,Head,Cranial,Concussion
+Will Dissly,TE,2022-12-25,2,Leg,Fibula,Fracture
+DeAndre Hopkins,WR,2022-12-29,2,Knee,Unspecified,Strain
+Cade Stover,TE,2022-12-31,0,Back,Lower Lumbar,Muscle Spasms
+Justin Herbert,QB,2023-01-01,0,Shoulder,Labrum,Tear
+James Conner,RB,2023-01-01,1,Leg,Shin,Bruise
+Skyy Moore,WR,2023-01-01,1,Hand,Unspecified,Unspecified
+Justin Fields,QB,2023-01-01,1,Inguinal,Hip,Strain
+Pat Freiermuth,TE,2023-01-08,0,Knee,MCL,Sprain
+Russell Wilson,QB,2023-01-08,0,Knee,Unspecified,Strain
+Patrick Mahomes,QB,2023-01-21,0,Pedal,Ankle (high),Sprain
+Tony Pollard,RB,2023-01-22,0,Leg,Fibula,Fracture
+Tony Pollard,RB,2023-01-22,0,Pedal,Ankle (high),Sprain
+Brock Purdy,QB,2023-01-29,0,Arm,Elbow,Tear
+Isiah Pacheco,RB,2023-01-29,0,Hand,Finger,Fracture
+Patrick Mahomes,QB,2023-02-12,0,Pedal,Ankle (high),Sprain
+DeVonta Smith,WR,2023-02-12,0,Pedal,Toe,Sprain
+Ty Johnson,RB,2023-04-25,6,Chest,Pectoral,Tear
+John Metchie,WR,2023-05-01,0,Thigh,Hamstring,Strain
+Aaron Rodgers,QB,2023-05-23,0,Leg,Calf,Strain
+Luke Schoonmaker,TE,2023-05-29,0,Pedal,Foot,Plantar Fasciitis
+Kenneth Walker III,RB,2023-07-26,0,Inguinal,Groin,Pull
+Garrett Wilson,WR,2023-07-26,0,Pedal,Ankle,Sprain\/Pull Unspecified
+Joe Burrow,QB,2023-07-27,0,Leg,Calf,Strain
+Zach Charbonnet,RB,2023-07-27,0,Shoulder,Unspecified,Unspecified
+Tim Patrick,WR,2023-07-31,17,Pedal,Achilles,Tear
+Cooper Kupp,WR,2023-08-01,4,Thigh,Hamstring,Strain
+Rashid Shaheed,WR,2023-08-04,0,Inguinal,Groin,Pull
+Jerome Ford,RB,2023-08-07,0,Thigh,Hamstring,Sprain\/Pull Unspecified
+Jaylen Waddle,WR,2023-08-09,0,Chest,Sternum,Bruise
+George Kittle,TE,2023-08-09,0,Inguinal,Groin,Pull
+Miles Sanders,RB,2023-08-10,0,Inguinal,Groin,Pull
+Kendre Miller,RB,2023-08-13,0,Knee,Patella,Sprain
+Jordan Addison,WR,2023-08-14,0,Head,Cranial,Concussion
+Mike Gesicki,TE,2023-08-14,0,Shoulder,Unspecified,Dislocation
+Taysom Hill,TE,2023-08-15,0,Abdomen,Muscle,Strain
+Jameson Williams,WR,2023-08-16,0,Thigh,Hamstring,Strain
+Treylon Burks,WR,2023-08-16,0,Knee,LCL,Sprain
+Tyquan Thornton,WR,2023-08-17,4,Shoulder,Unspecified,Unspecified
+Jaxon Smith-Njigba,WR,2023-08-19,0,Hand,Wrist,Fracture
+De\u0027Von Achane,RB,2023-08-19,1,Shoulder,A\/C Joint,Sprain
+Terry McLaurin,WR,2023-08-21,0,Pedal,Toe,Turf Toe
+Khalil Shakir,WR,2023-08-22,0,Chest,Rib,Bruise
+Chigoziem Okonkwo,TE,2023-08-22,0,Inguinal,Hip,Bruise
+Jerry Jeudy,WR,2023-08-24,1,Thigh,Hamstring,Strain
+Jordan Mason,RB,2023-08-25,0,Pedal,Foot,Sprain
+Romeo Doubs,WR,2023-08-26,0,Thigh,Hamstring,Sprain\/Pull Unspecified
+Kendre Miller,RB,2023-08-30,2,Thigh,Hamstring,Sprain\/Pull Unspecified
+Christian Watson,WR,2023-08-31,3,Thigh,Hamstring,Strain
+Travis Kelce,TE,2023-09-05,1,Knee,Unspecified,Bruise
+Jakobi Meyers,WR,2023-09-10,1,Head,Cranial,Concussion
+J.K. Dobbins,RB,2023-09-10,16,Pedal,Achilles,Tear
+Aaron Jones,RB,2023-09-10,2,Thigh,Hamstring,Sprain\/Pull Unspecified
+Pat Freiermuth,TE,2023-09-10,0,Chest,Sternum,Bruise
+Greg Dulcich,TE,2023-09-10,4,Thigh,Hamstring,Strain
+Darius Slayton,WR,2023-09-10,0,Hand,Thumb,Torn Ligament
+Austin Ekeler,RB,2023-09-10,3,Pedal,Ankle (high),Sprain
+Aaron Rodgers,QB,2023-09-11,16,Pedal,Achilles,Tear
+Kenneth Gainwell,RB,2023-09-11,1,Chest,Rib,Sprain\/Pull Unspecified
+Saquon Barkley,RB,2023-09-17,3,Pedal,Ankle,Sprain
+Jaylen Waddle,WR,2023-09-17,1,Head,Cranial,Concussion
+David Montgomery,RB,2023-09-17,1,Leg,Thigh,Bruise
+Brandon Aiyuk,WR,2023-09-17,1,Shoulder,Unspecified,Unspecified
+Darnell Mooney,WR,2023-09-17,0,Knee,Unspecified,Bruise
+Odell Beckham Jr.,WR,2023-09-17,2,Pedal,Ankle,Sprain\/Pull Unspecified
+Zay Jones,WR,2023-09-17,2,Knee,PCL,Sprain
+Bryce Young,QB,2023-09-18,1,Pedal,Ankle,Sprain\/Pull Unspecified
+Nick Chubb,RB,2023-09-18,15,Knee,Unspecified,Tear
+Justice Hill,RB,2023-09-20,1,Pedal,Toe,Turf Toe
+Jauan Jennings,WR,2023-09-21,1,Leg,Shin,Bruise
+Drake Maye,QB,2023-09-23,0,Pedal,Ankle,Bruise
+Kenyon Sadiq,TE,2023-09-24,0,Inguinal,Hip,Bruise
+Rashod Bateman,WR,2023-09-24,1,Thigh,Hamstring,Sprain\/Pull Unspecified
+Deshaun Watson,QB,2023-09-24,2,Shoulder,Rotator Cuff,Tear
+Treylon Burks,WR,2023-09-24,3,Knee,Patella,Sprain
+Kareem Hunt,RB,2023-09-24,0,Inguinal,Groin,Sports Hernia
+Jonathan Mingo,WR,2023-09-24,1,Head,Cranial,Concussion
+Amon-Ra St. Brown,WR,2023-09-28,1,Abdomen,Muscle,Sprain\/Pull Unspecified
+Justin Herbert,QB,2023-10-01,0,Hand,Finger,Fracture
+Matthew Stafford,QB,2023-10-01,0,Inguinal,Hip,Strain
+Tee Higgins,WR,2023-10-01,1,Chest,Rib,Fracture
+Javonte Williams,RB,2023-10-01,1,Inguinal,Hip,Strain
+Kyren Williams,RB,2023-10-01,0,Inguinal,Hip,Strain
+Mike Evans,WR,2023-10-01,0,Thigh,Hamstring,Sprain\/Pull Unspecified
+Juwan Johnson,TE,2023-10-01,4,Leg,Calf,Strain
+Pat Freiermuth,TE,2023-10-01,5,Thigh,Hamstring,Strain
+Daniel Bellinger,TE,2023-10-02,0,Knee,Unspecified,Strain
+Dalton Kincaid,TE,2023-10-05,1,Head,Cranial,Concussion
+Roschon Johnson,RB,2023-10-05,2,Head,Cranial,Concussion
+Jahmyr Gibbs,RB,2023-10-06,2,Thigh,Hamstring,Sprain\/Pull Unspecified
+Justin Jefferson,WR,2023-10-08,7,Thigh,Hamstring,Strain
+Daniel Jones,QB,2023-10-08,3,Cervical,Neck,Pinched Nerve
+De\u0027Von Achane,RB,2023-10-08,5,Knee,MCL,Sprain
+Travis Kelce,TE,2023-10-08,0,Pedal,Ankle,Sprain\/Pull Unspecified
+Demario Douglas,WR,2023-10-08,1,Head,Cranial,Concussion
+Nathaniel Dell,WR,2023-10-08,1,Head,Cranial,Concussion
+James Conner,RB,2023-10-08,4,Knee,Unspecified,Strain
+Dawson Knox,TE,2023-10-08,5,Hand,Wrist,Fracture
+Zay Jones,WR,2023-10-08,4,Knee,PCL,Sprain
+JuJu Smith-Schuster,WR,2023-10-08,2,Head,Cranial,Concussion
+Miles Sanders,RB,2023-10-11,1,Shoulder,Unspecified,Unspecified
+Greg Dulcich,TE,2023-10-12,11,Thigh,Hamstring,Strain
+Christian McCaffrey,RB,2023-10-15,0,Chest,Rib,Sprain\/Pull Unspecified
+Trevor Lawrence,QB,2023-10-15,0,Knee,Unspecified,Bruise
+Kyren Williams,RB,2023-10-15,4,Pedal,Ankle (high),Sprain
+David Montgomery,RB,2023-10-15,2,Chest,Rib,Bruise
+Deebo Samuel,WR,2023-10-15,2,Shoulder,Scapula,Fracture
+Justin Fields,QB,2023-10-15,4,Hand,Thumb,Dislocation
+D.K. Metcalf,WR,2023-10-18,1,Chest,Rib,Bruise
+Zach Charbonnet,RB,2023-10-18,1,Thigh,Hamstring,Sprain\/Pull Unspecified
+Saquon Barkley,RB,2023-10-22,0,Arm,Elbow,Sprain
+Christian Watson,WR,2023-10-22,0,Knee,Unspecified,Bruise
+Deshaun Watson,QB,2023-10-22,1,Shoulder,Scapula,Fracture
+Luke Musgrave,TE,2023-10-22,0,Pedal,Ankle,Sprain\/Pull Unspecified
+Jerome Ford,RB,2023-10-22,0,Pedal,Ankle,Sprain\/Pull Unspecified
+Brock Purdy,QB,2023-10-23,0,Head,Cranial,Concussion
+Chase Brown,RB,2023-10-25,4,Thigh,Hamstring,Strain
+Matthew Stafford,QB,2023-10-29,1,Hand,Thumb,Sprain
+Drake London,WR,2023-10-29,1,Inguinal,Groin,Pull
+Michael Wilson,WR,2023-10-29,1,Shoulder,Unspecified,Unspecified
+Kendrick Bourne,WR,2023-10-29,9,Knee,ACL,Tear
+Darren Waller,TE,2023-10-29,5,Thigh,Hamstring,Sprain\/Pull Unspecified
+Joshua Palmer,WR,2023-10-29,6,Knee,Unspecified,Strain
+Curtis Samuel,WR,2023-10-29,1,Pedal,Toe,Sprain
+Kirk Cousins,QB,2023-10-29,9,Pedal,Achilles,Tear
+Emari Demercado,RB,2023-10-29,3,Pedal,Toe,Sprain
+Treylon Burks,WR,2023-11-02,3,Head,Cranial,Concussion
+Daniel Jones,QB,2023-11-05,8,Knee,ACL,Tear
+Josh Downs,WR,2023-11-05,0,Knee,Unspecified,Strain
+Dallas Goedert,TE,2023-11-05,3,Arm,Forearm,Fracture
+Kendre Miller,RB,2023-11-05,7,Pedal,Ankle,Sprain\/Pull Unspecified
+K.J. Osborn,WR,2023-11-05,1,Head,Cranial,Concussion
+Garrett Wilson,WR,2023-11-12,0,Arm,Elbow,Bruise
+George Kittle,TE,2023-11-12,0,Inguinal,Groin,Sports Hernia
+Michael Wilson,WR,2023-11-12,3,Shoulder,Unspecified,Unspecified
+Michael Wilson,WR,2023-11-12,3,Cervical,Neck,Strain
+Keenan Allen,WR,2023-11-12,0,Shoulder,A\/C Joint,Sprain
+Alexander Mattison,RB,2023-11-12,0,Head,Cranial,Concussion
+Jalin Hyatt,WR,2023-11-12,0,Head,Cranial,Concussion
+Antonio Gibson,RB,2023-11-15,1,Pedal,Toe,Sprain
+Joe Burrow,QB,2023-11-16,7,Hand,Wrist,Ligament Tear
+Mark Andrews,TE,2023-11-16,7,Pedal,Ankle,Ligament Tear
+Mark Andrews,TE,2023-11-16,7,Leg,Fibula,Fracture
+Kenneth Walker III,RB,2023-11-19,2,Abdomen,Muscle,Sprain\/Pull Unspecified
+Geno Smith,QB,2023-11-19,0,Arm,Tricep,Strain
+Aaron Jones,RB,2023-11-19,3,Knee,MCL,Sprain
+Cooper Kupp,WR,2023-11-19,0,Pedal,Ankle,Sprain\/Pull Unspecified
+Dontayvion Wicks,WR,2023-11-19,1,Head,Cranial,Concussion
+Darius Slayton,WR,2023-11-19,0,Cervical,Neck,Strain
+Luke Musgrave,TE,2023-11-19,6,Abdomen,Muscle,Strain
+Mecole Hardman,WR,2023-11-20,5,Hand,Thumb,Sprain
+Jonathan Taylor,RB,2023-11-26,3,Hand,Thumb,Torn Ligament
+Chris Olave,WR,2023-11-26,0,Head,Cranial,Concussion
+Rashid Shaheed,WR,2023-11-26,2,Thigh,Hamstring,Sprain\/Pull Unspecified
+Dalton Schultz,TE,2023-11-26,2,Thigh,Hamstring,Strain
+Demario Douglas,WR,2023-11-26,2,Head,Cranial,Concussion
+Brenton Strange,TE,2023-12-01,3,Pedal,Foot,Unspecified
+Puka Nacua,WR,2023-12-03,0,Shoulder,A\/C Joint,Sprain
+Puka Nacua,WR,2023-12-03,0,Chest,Rib,Sprain\/Pull Unspecified
+Derrick Henry,RB,2023-12-03,0,Head,Cranial,Unspecified
+Christian Watson,WR,2023-12-03,5,Thigh,Hamstring,Strain
+Rhamondre Stevenson,RB,2023-12-03,5,Pedal,Ankle (high),Sprain
+Brian Robinson Jr.,RB,2023-12-03,2,Thigh,Hamstring,Sprain\/Pull Unspecified
+Isiah Pacheco,RB,2023-12-03,2,Shoulder,Unspecified,Unspecified
+Nathaniel Dell,WR,2023-12-03,5,Leg,Fibula,Fracture
+Tyler Higbee,TE,2023-12-03,1,Cervical,Neck,Strain
+Emari Demercado,RB,2023-12-03,0,Cervical,Neck,Unspecified
+Trevor Lawrence,QB,2023-12-04,0,Pedal,Ankle (high),Sprain
+Christian Kirk,WR,2023-12-04,5,Inguinal,Groin,Tear
+Taysom Hill,TE,2023-12-05,1,Pedal,Foot,Bruise
+Taysom Hill,TE,2023-12-05,1,Hand,Unspecified,Unspecified
+Geno Smith,QB,2023-12-07,2,Inguinal,Groin,Pull
+Justin Herbert,QB,2023-12-10,4,Hand,Finger,Fracture
+Justin Jefferson,WR,2023-12-10,0,Chest,Sternum,Bruise
+C.J. Stroud,QB,2023-12-10,2,Head,Cranial,Concussion
+Nico Collins,WR,2023-12-10,1,Leg,Calf,Strain
+Chris Olave,WR,2023-12-10,1,Pedal,Ankle,Sprain\/Pull Unspecified
+Josh Jacobs,RB,2023-12-10,4,Leg,Quad,Bruise
+D.J. Moore,WR,2023-12-10,0,Pedal,Ankle,Sprain\/Pull Unspecified
+Alexander Mattison,RB,2023-12-10,1,Pedal,Ankle,Sprain\/Pull Unspecified
+Keenan Allen,WR,2023-12-11,4,Pedal,Heel,Bruise
+Tyreek Hill,WR,2023-12-11,1,Pedal,Ankle,Sprain\/Pull Unspecified
+JuJu Smith-Schuster,WR,2023-12-12,4,Pedal,Ankle,Sprain
+Ja\u0027Marr Chase,WR,2023-12-16,1,Shoulder,A\/C Joint,Sprain
+Michael Pittman Jr.,WR,2023-12-16,1,Head,Cranial,Concussion
+Trevor Lawrence,QB,2023-12-17,0,Head,Cranial,Concussion
+Jayden Reed,WR,2023-12-17,1,Pedal,Toe,Sprain
+Hunter Henry,TE,2023-12-17,3,Knee,MCL,Sprain
+Jauan Jennings,WR,2023-12-17,3,Head,Cranial,Concussion
+Keaton Mitchell,RB,2023-12-17,8,Knee,ACL,Tear
+Keaton Mitchell,RB,2023-12-17,8,Knee,LCL,Sprain
+Keaton Mitchell,RB,2023-12-17,8,Knee,MCL,Sprain
+Marquise Brown,WR,2023-12-17,3,Pedal,Heel,Bruise
+Zay Jones,WR,2023-12-17,2,Thigh,Hamstring,Sprain\/Pull Unspecified
+Skyy Moore,WR,2023-12-17,7,Knee,Unspecified,Strain
+Michael Mayer,TE,2023-12-21,3,Pedal,Toe,Sprain
+Joshua Palmer,WR,2023-12-23,1,Head,Cranial,Concussion
+Trevor Lawrence,QB,2023-12-24,1,Shoulder,A\/C Joint,Sprain
+Jaylen Waddle,WR,2023-12-24,2,Pedal,Ankle (high),Sprain
+Courtland Sutton,WR,2023-12-24,1,Head,Cranial,Concussion
+Jordan Addison,WR,2023-12-24,0,Pedal,Ankle,Sprain\/Pull Unspecified
+T.J. Hockenson,TE,2023-12-24,2,Knee,MCL,Tear
+T.J. Hockenson,TE,2023-12-24,10,Knee,ACL,Tear
+Dontayvion Wicks,WR,2023-12-24,1,Chest,Sternum,Bruise
+Chris Rodriguez,RB,2023-12-24,2,Pedal,Ankle (high),Sprain
+Cole Kmet,TE,2023-12-24,0,Knee,Unspecified,Strain
+Brock Purdy,QB,2023-12-25,0,Cervical,Neck,Stinger
+Isiah Pacheco,RB,2023-12-25,0,Head,Cranial,Concussion
+Darnell Mooney,WR,2023-12-27,2,Head,Cranial,Concussion
+Marvin Mims Jr.,WR,2023-12-28,1,Thigh,Hamstring,Sprain\/Pull Unspecified
+Jameson Williams,WR,2023-12-30,1,Pedal,Ankle,Sprain\/Pull Unspecified
+Christian McCaffrey,RB,2023-12-31,1,Leg,Calf,Strain
+Tee Higgins,WR,2023-12-31,1,Thigh,Hamstring,Sprain\/Pull Unspecified
+DeVonta Smith,WR,2023-12-31,1,Pedal,Ankle,Sprain\/Pull Unspecified
+Alvin Kamara,RB,2023-12-31,1,Pedal,Ankle,Sprain\/Pull Unspecified
+Tua Tagovailoa,QB,2023-12-31,0,Shoulder,Unspecified,Unspecified
+Tyler Higbee,TE,2023-12-31,1,Shoulder,Unspecified,Dislocation
+Jonathan Mingo,WR,2024-01-02,1,Pedal,Foot,Unspecified
+Jalen Hurts,QB,2024-01-07,0,Hand,Finger,Dislocation
+A.J. Brown,WR,2024-01-07,1,Knee,Unspecified,Strain
+Sam LaPorta,TE,2024-01-07,0,Knee,Unspecified,Bruise
+Romeo Doubs,WR,2024-01-07,0,Chest,Sternum,Bruise
+Cole Kmet,TE,2024-01-07,0,Arm,Forearm,Fracture
+Cedric Tillman,WR,2024-01-07,1,Head,Cranial,Concussion
+Noah Fant,TE,2024-01-07,0,Hand,Unspecified,Unspecified
+Jalin Hyatt,WR,2024-01-07,0,Thigh,Hamstring,Sprain\/Pull Unspecified
+Kyren Williams,RB,2024-01-14,0,Hand,Metacarpal,Fracture
+Tyler Higbee,TE,2024-01-14,0,Knee,MCL,Tear
+Zay Flowers,WR,2024-01-28,0,Hand,Unspecified,Lacerated
+Deebo Samuel,WR,2024-02-11,0,Thigh,Hamstring,Sprain\/Pull Unspecified
+Xavier Worthy,WR,2024-05-20,0,Thigh,Hamstring,Sprain\/Pull Unspecified
+Audric Estime,RB,2024-05-23,0,Knee,Unspecified,Tear
+Tucker Kraft,TE,2024-05-24,0,Chest,Pectoral,Tear
+Xavier Legette,WR,2024-05-30,0,Thigh,Hamstring,Sprain\/Pull Unspecified
+Juwan Johnson,TE,2024-06-10,0,Pedal,Foot,Unspecified
+Kendre Miller,RB,2024-07-24,5,Thigh,Hamstring,Sprain\/Pull Unspecified
+Isaac Guerendo,RB,2024-07-24,0,Thigh,Hamstring,Sprain\/Pull Unspecified
+Roman Wilson,WR,2024-07-30,2,Pedal,Ankle,Sprain
+Justin Herbert,QB,2024-07-31,0,Pedal,Foot,Plantar Fasciitis
+DeAndre Hopkins,WR,2024-07-31,0,Knee,MCL,Tear
+Sam LaPorta,TE,2024-08-02,0,Thigh,Hamstring,Sprain\/Pull Unspecified
+Puka Nacua,WR,2024-08-04,0,Knee,Unspecified,Tear
+Christian McCaffrey,RB,2024-08-04,8,Pedal,Achilles,Sprain
+Xavier Legette,WR,2024-08-04,0,Pedal,Foot,Unspecified
+Keenan Allen,WR,2024-08-06,1,Pedal,Heel,Bruise
+Christian Watson,WR,2024-08-07,0,Knee,Unspecified,Bruise
+Josh Downs,WR,2024-08-07,0,Pedal,Ankle (high),Sprain
+MarShawn Lloyd,RB,2024-08-10,1,Thigh,Hamstring,Sprain\/Pull Unspecified
+Marquise Brown,WR,2024-08-10,15,Shoulder,S\/C Joint,Separation
+J.J. McCarthy,QB,2024-08-10,17,Knee,Meniscus,Tear
+Jahmyr Gibbs,RB,2024-08-12,0,Thigh,Hamstring,Sprain\/Pull Unspecified
+Johnny Wilson,WR,2024-08-13,0,Head,Cranial,Concussion
+Jordan Addison,WR,2024-08-14,0,Pedal,Ankle,Sprain
+Christian Kirk,WR,2024-08-14,0,Leg,Calf,Pull
+Tyreek Hill,WR,2024-08-15,0,Hand,Wrist,Ligament Tear
+Rashid Shaheed,WR,2024-08-16,0,Pedal,Toe,Sprain
+Jaylen Warren,RB,2024-08-17,0,Thigh,Hamstring,Strain
+Marquez Valdes-Scantling,WR,2024-08-17,0,Cervical,Neck,Stinger
+Brock Bowers,TE,2024-08-20,0,Pedal,Foot,Unspecified
+Kyle Pitts,TE,2024-08-21,0,Thigh,Hamstring,Sprain\/Pull Unspecified
+Noah Fant,TE,2024-08-21,0,Pedal,Toe,Sprain
+Jacoby Brissett,QB,2024-08-25,0,Shoulder,Unspecified,Unspecified
+Tyler Lockett,WR,2024-09-02,0,Leg,Thigh,Bruise
+Marcus Mariota,QB,2024-09-02,4,Chest,Pectoral,Pull
+Tee Higgins,WR,2024-09-05,2,Thigh,Hamstring,Sprain\/Pull Unspecified
+Jordan Love,QB,2024-09-06,2,Knee,MCL,Sprain
+Josh Jacobs,RB,2024-09-06,0,Back,Lower Lumbar,Sprain\/Pull Unspecified
+Josh Allen,QB,2024-09-08,0,Hand,Unspecified,Unspecified
+Puka Nacua,WR,2024-09-08,5,Knee,PCL,Sprain
+Justin Herbert,QB,2024-09-08,0,Pedal,Ankle (high),Sprain
+Kenneth Walker III,RB,2024-09-08,2,Abdomen,Muscle,Sprain\/Pull Unspecified
+De\u0027Von Achane,RB,2024-09-08,0,Pedal,Ankle (high),Sprain
+Jameson Williams,WR,2024-09-08,0,Pedal,Ankle,Sprain\/Pull Unspecified
+Rome Odunze,WR,2024-09-08,0,Knee,MCL,Sprain
+Jordan Addison,WR,2024-09-08,2,Pedal,Ankle,Sprain\/Pull Unspecified
+Jake Ferguson,TE,2024-09-08,1,Knee,MCL,Sprain
+Dalton Schultz,TE,2024-09-08,0,Pedal,Ankle,Sprain\/Pull Unspecified
+David Njoku,TE,2024-09-08,3,Pedal,Ankle (high),Sprain
+Darius Slayton,WR,2024-09-08,0,Head,Cranial,Concussion
+Audric Estime,RB,2024-09-08,4,Pedal,Ankle,Sprain
+Tua Tagovailoa,QB,2024-09-12,4,Head,Cranial,Concussion
+Amon-Ra St. Brown,WR,2024-09-15,0,Knee,Unspecified,Bruise
+Justin Jefferson,WR,2024-09-15,0,Leg,Quad,Bruise
+George Kittle,TE,2024-09-15,1,Thigh,Hamstring,Sprain\/Pull Unspecified
+Deebo Samuel,WR,2024-09-15,1,Leg,Calf,Strain
+Tyjae Spears,RB,2024-09-15,1,Pedal,Ankle,Sprain\/Pull Unspecified
+Cooper Kupp,WR,2024-09-15,5,Pedal,Ankle (high),Sprain
+Evan Engram,TE,2024-09-15,3,Thigh,Hamstring,Sprain\/Pull Unspecified
+MarShawn Lloyd,RB,2024-09-15,6,Pedal,Ankle,Sprain
+Isiah Pacheco,RB,2024-09-15,7,Leg,Fibula,Fracture
+Tank Bigsby,RB,2024-09-15,0,Shoulder,Unspecified,Unspecified
+Joe Mixon,RB,2024-09-15,3,Pedal,Ankle,Bruise
+Taysom Hill,TE,2024-09-15,0,Chest,Rib,Sprain\/Pull Unspecified
+Joshua Palmer,WR,2024-09-18,1,Arm,Elbow,Sprain
+Sam Darnold,QB,2024-09-22,0,Knee,Unspecified,Bruise
+Trey McBride,TE,2024-09-22,0,Head,Cranial,Concussion
+DeVonta Smith,WR,2024-09-22,1,Head,Cranial,Concussion
+Jaylen Warren,RB,2024-09-22,2,Knee,Unspecified,Strain
+Sam LaPorta,TE,2024-09-22,0,Pedal,Ankle,Sprain\/Pull Unspecified
+Tucker Kraft,TE,2024-09-22,0,Shoulder,Unspecified,Unspecified
+Nathaniel Dell,WR,2024-09-22,1,Chest,Rib,Sprain\/Pull Unspecified
+Darius Slayton,WR,2024-09-22,0,Hand,Thumb,Dislocation
+Najee Harris,RB,2024-09-22,0,Shoulder,A\/C Joint,Sprain
+Van Jefferson,WR,2024-09-22,0,Head,Orbital,Fracture
+Austin Ekeler,RB,2024-09-23,1,Head,Cranial,Concussion
+Malik Nabers,WR,2024-09-26,2,Head,Cranial,Concussion
+Davante Adams,WR,2024-09-26,2,Thigh,Hamstring,Sprain\/Pull Unspecified
+Jalen McMillan,WR,2024-09-27,2,Thigh,Hamstring,Sprain\/Pull Unspecified
+Jonathan Taylor,RB,2024-09-29,3,Pedal,Ankle (high),Sprain
+Rashee Rice,WR,2024-09-29,13,Knee,LCL,Tear
+Travis Etienne,RB,2024-09-29,0,Shoulder,Unspecified,Unspecified
+Christian Watson,WR,2024-09-29,1,Pedal,Ankle,Sprain
+Khalil Shakir,WR,2024-09-29,1,Pedal,Ankle,Sprain\/Pull Unspecified
+Brian Robinson Jr.,RB,2024-09-29,1,Knee,Unspecified,Strain
+Luke Musgrave,TE,2024-09-29,1,Pedal,Ankle,Sprain\/Pull Unspecified
+Johnny Wilson,WR,2024-09-29,0,Head,Cranial,Concussion
+Taysom Hill,TE,2024-09-29,4,Chest,Rib,Fracture
+Devin Singletary,RB,2024-10-02,2,Inguinal,Groin,Pull
+Matthew Stafford,QB,2024-10-06,0,Back,Lower Lumbar,Sprain\/Pull Unspecified
+De\u0027Von Achane,RB,2024-10-06,0,Head,Cranial,Concussion
+Nico Collins,WR,2024-10-06,5,Thigh,Hamstring,Strain
+Aaron Rodgers,QB,2024-10-06,0,Pedal,Ankle,Sprain\/Pull Unspecified
+Josh Downs,WR,2024-10-06,1,Pedal,Toe,Sprain
+Aaron Jones,RB,2024-10-06,0,Inguinal,Hip,Sprain
+David Njoku,TE,2024-10-06,0,Knee,Unspecified,Strain
+Xavier Legette,WR,2024-10-06,0,Shoulder,Unspecified,Unspecified
+James Cook,RB,2024-10-09,1,Pedal,Toe,Sprain
+Rhamondre Stevenson,RB,2024-10-09,1,Pedal,Foot,Unspecified
+Michael Pittman Jr.,WR,2024-10-09,0,Back,Lower Lumbar,Sprain\/Pull Unspecified
+Jakobi Meyers,WR,2024-10-09,2,Pedal,Ankle,Sprain\/Pull Unspecified
+Rachaad White,RB,2024-10-09,1,Pedal,Foot,Unspecified
+Zay Jones,WR,2024-10-09,1,Thigh,Hamstring,Sprain\/Pull Unspecified
+Jordan Mason,RB,2024-10-10,0,Shoulder,A\/C Joint,Sprain
+Jauan Jennings,WR,2024-10-10,2,Inguinal,Hip,Sprain
+Chris Olave,WR,2024-10-13,1,Head,Cranial,Concussion
+Travis Etienne,RB,2024-10-13,2,Thigh,Hamstring,Sprain\/Pull Unspecified
+Mike Evans,WR,2024-10-13,3,Thigh,Hamstring,Strain
+Marvin Harrison Jr.,WR,2024-10-13,0,Head,Cranial,Concussion
+Quentin Johnston,WR,2024-10-13,2,Pedal,Ankle,Sprain\/Pull Unspecified
+Dallas Goedert,TE,2024-10-13,3,Thigh,Hamstring,Sprain\/Pull Unspecified
+Rashid Shaheed,WR,2024-10-13,11,Knee,Meniscus,Tear
+Tyjae Spears,RB,2024-10-13,3,Thigh,Hamstring,Sprain\/Pull Unspecified
+Dontayvion Wicks,WR,2024-10-13,0,Shoulder,Unspecified,Unspecified
+Jerome Ford,RB,2024-10-13,2,Thigh,Hamstring,Sprain\/Pull Unspecified
+Dalton Kincaid,TE,2024-10-16,0,Shoulder,Unspecified,Unspecified
+Treylon Burks,WR,2024-10-16,12,Knee,ACL,Sprain
+Jayden Daniels,QB,2024-10-20,0,Chest,Rib,Sprain\/Pull Unspecified
+D.K. Metcalf,WR,2024-10-20,2,Knee,MCL,Pull
+Deshaun Watson,QB,2024-10-20,10,Pedal,Achilles,Tear
+Brandon Aiyuk,WR,2024-10-20,27,Knee,ACL,Tear
+Curtis Samuel,WR,2024-10-20,0,Shoulder,Unspecified,Unspecified
+JuJu Smith-Schuster,WR,2024-10-20,3,Thigh,Hamstring,Sprain\/Pull Unspecified
+Ja\u0027Lynn Polk,WR,2024-10-20,1,Head,Cranial,Concussion
+Zay Flowers,WR,2024-10-21,0,Pedal,Ankle,Sprain\/Pull Unspecified
+Chris Godwin,WR,2024-10-21,12,Pedal,Ankle,Dislocation
+Skyy Moore,WR,2024-10-24,14,Abdomen,Muscle,Strain
+Tee Higgins,WR,2024-10-25,3,Leg,Quad,Strain
+Drake Maye,QB,2024-10-27,0,Head,Cranial,Concussion
+Jordan Love,QB,2024-10-27,0,Inguinal,Groin,Pull
+Brian Thomas Jr.,WR,2024-10-27,0,Chest,Rib,Sprain\/Pull Unspecified
+Stefon Diggs,WR,2024-10-27,9,Knee,ACL,Tear
+Deebo Samuel,WR,2024-10-27,0,Chest,Rib,Sprain\/Pull Unspecified
+Jordan Mason,RB,2024-10-27,0,Shoulder,A\/C Joint,Sprain
+Christian Kirk,WR,2024-10-27,9,Shoulder,Clavicle,Fracture
+Kendre Miller,RB,2024-10-27,4,Thigh,Hamstring,Sprain\/Pull Unspecified
+Sterling Shepard,WR,2024-10-27,0,Thigh,Hamstring,Sprain\/Pull Unspecified
+Tyrone Tracy Jr.,RB,2024-10-28,0,Head,Cranial,Concussion
+Brian Robinson Jr.,RB,2024-10-30,2,Thigh,Hamstring,Sprain\/Pull Unspecified
+Noah Fant,TE,2024-10-30,3,Inguinal,Groin,Strain
+Jalen McMillan,WR,2024-11-01,2,Thigh,Hamstring,Sprain\/Pull Unspecified
+Trevor Lawrence,QB,2024-11-03,1,Shoulder,A\/C Joint,Sprain
+Dak Prescott,QB,2024-11-03,9,Thigh,Hamstring,Tear
+Caleb Williams,QB,2024-11-03,0,Pedal,Ankle,Sprain\/Pull Unspecified
+CeeDee Lamb,WR,2024-11-03,2,Shoulder,A\/C Joint,Sprain
+Drake London,WR,2024-11-03,0,Inguinal,Hip,Sprain
+A.J. Brown,WR,2024-11-03,0,Knee,Unspecified,Strain
+Chase Brown,RB,2024-11-03,0,Chest,Rib,Bruise
+Chris Olave,WR,2024-11-03,8,Head,Cranial,Concussion
+Isaiah Likely,TE,2024-11-03,1,Thigh,Hamstring,Sprain\/Pull Unspecified
+Tyrone Tracy Jr.,RB,2024-11-03,4,Hand,Wrist,Sprain\/Pull Unspecified
+Keon Coleman,WR,2024-11-03,4,Hand,Wrist,Sprain\/Pull Unspecified
+Darius Slayton,WR,2024-11-03,1,Head,Cranial,Concussion
+Michael Pittman Jr.,WR,2024-11-06,1,Back,Lower Lumbar,Sprain\/Pull Unspecified
+Saquon Barkley,RB,2024-11-10,0,Arm,Unspecified,Unspecified
+Sam LaPorta,TE,2024-11-10,1,Shoulder,A\/C Joint,Sprain
+George Kittle,TE,2024-11-10,1,Thigh,Hamstring,Sprain\/Pull Unspecified
+Dalton Kincaid,TE,2024-11-10,3,Knee,PCL,Sprain
+Aaron Jones,RB,2024-11-10,0,Chest,Rib,Sprain\/Pull Unspecified
+Tank Bigsby,RB,2024-11-10,0,Pedal,Ankle,Sprain\/Pull Unspecified
+Kirk Cousins,QB,2024-11-10,0,Shoulder,Unspecified,Unspecified
+Miles Sanders,RB,2024-11-10,8,Pedal,Ankle,Sprain\/Pull Unspecified
+DeVonta Smith,WR,2024-11-14,2,Thigh,Hamstring,Sprain\/Pull Unspecified
+Brock Purdy,QB,2024-11-17,1,Shoulder,Unspecified,Unspecified
+Tyjae Spears,RB,2024-11-17,2,Head,Cranial,Concussion
+Darnell Mooney,WR,2024-11-17,0,Thigh,Hamstring,Sprain\/Pull Unspecified
+Alexander Mattison,RB,2024-11-17,4,Pedal,Ankle,Sprain\/Pull Unspecified
+Jake Ferguson,TE,2024-11-18,2,Head,Cranial,Concussion
+Cedric Tillman,WR,2024-11-21,6,Head,Cranial,Concussion
+Bo Nix,QB,2024-11-24,0,Back,Vertebral,Fracture
+David Montgomery,RB,2024-11-24,0,Shoulder,Unspecified,Unspecified
+Josh Downs,WR,2024-11-24,2,Shoulder,Unspecified,Unspecified
+Romeo Doubs,WR,2024-11-24,4,Head,Cranial,Concussion
+Brian Robinson Jr.,RB,2024-11-24,1,Pedal,Ankle,Sprain\/Pull Unspecified
+Austin Ekeler,RB,2024-11-24,4,Head,Cranial,Concussion
+Ja\u0027Tavion Sanders,TE,2024-11-24,1,Cervical,Neck,Unspecified
+J.K. Dobbins,RB,2024-11-25,4,Knee,MCL,Sprain
+Emari Demercado,RB,2024-11-27,4,Back,Lower Lumbar,Strain
+Christian McCaffrey,RB,2024-12-01,5,Knee,PCL,Sprain
+Trevor Lawrence,QB,2024-12-01,0,Head,Cranial,Concussion
+Ladd McConkey,WR,2024-12-01,1,Knee,Unspecified,Strain
+Dallas Goedert,TE,2024-12-01,4,Knee,Unspecified,Strain
+Jordan Mason,RB,2024-12-01,4,Pedal,Ankle (high),Sprain
+Rashod Bateman,WR,2024-12-01,0,Knee,Unspecified,Strain
+Taysom Hill,TE,2024-12-01,9,Knee,Unspecified,Strain
+Kenneth Walker III,RB,2024-12-04,2,Leg,Calf,Strain
+D.J. Moore,WR,2024-12-04,0,Leg,Quad,Strain
+George Pickens,WR,2024-12-06,3,Thigh,Hamstring,Strain
+Justin Herbert,QB,2024-12-08,0,Pedal,Ankle,Sprain\/Pull Unspecified
+Bucky Irving,RB,2024-12-08,0,Back,Lower Lumbar,Sprain\/Pull Unspecified
+Jonathon Brooks,RB,2024-12-08,20,Knee,ACL,Tear
+Evan Engram,TE,2024-12-08,4,Shoulder,Labrum,Tear
+Isaac Guerendo,RB,2024-12-08,0,Pedal,Foot,Sprain
+David Njoku,TE,2024-12-11,1,Thigh,Hamstring,Sprain\/Pull Unspecified
+Cade Stover,TE,2024-12-14,2,Abdomen,Appendix,Ruptured
+Patrick Mahomes,QB,2024-12-15,0,Pedal,Ankle,Sprain\/Pull Unspecified
+Geno Smith,QB,2024-12-15,0,Knee,Unspecified,Strain
+Jaylen Waddle,WR,2024-12-15,2,Knee,Unspecified,Strain
+David Montgomery,RB,2024-12-15,3,Knee,MCL,Sprain
+Alec Pierce,WR,2024-12-15,0,Head,Cranial,Concussion
+Cade Otton,TE,2024-12-15,3,Knee,Unspecified,Strain
+Alvin Kamara,RB,2024-12-15,3,Inguinal,Groin,Pull
+Xavier Legette,WR,2024-12-15,1,Inguinal,Groin,Pull
+Braelon Allen,RB,2024-12-15,0,Back,Lower Lumbar,Sprain\/Pull Unspecified
+Trey Benson,RB,2024-12-15,3,Pedal,Ankle,Sprain\/Pull Unspecified
+Jaleel McLaughlin,RB,2024-12-15,1,Leg,Quad,Strain
+Nick Chubb,RB,2024-12-15,3,Pedal,Foot,Fracture
+John Metchie,WR,2024-12-18,1,Shoulder,Unspecified,Unspecified
+Isaac Guerendo,RB,2024-12-18,1,Thigh,Hamstring,Sprain\/Pull Unspecified
+Justice Hill,RB,2024-12-21,1,Head,Cranial,Concussion
+Nathaniel Dell,WR,2024-12-21,18,Knee,ACL,Tear
+Josh Allen,QB,2024-12-22,0,Arm,Elbow,Sprain
+Jalen Hurts,QB,2024-12-22,2,Head,Cranial,Concussion
+Kenneth Walker III,RB,2024-12-22,2,Pedal,Ankle,Sprain
+Drake London,WR,2024-12-22,0,Thigh,Hamstring,Sprain\/Pull Unspecified
+Aaron Rodgers,QB,2024-12-22,0,Knee,MCL,Pull
+David Njoku,TE,2024-12-22,2,Knee,Unspecified,Strain
+James Conner,RB,2024-12-22,0,Knee,Unspecified,Strain
+Dyami Brown,WR,2024-12-22,1,Thigh,Hamstring,Sprain\/Pull Unspecified
+Christian Watson,WR,2024-12-23,1,Knee,Unspecified,Bruise
+Isiah Pacheco,RB,2024-12-25,1,Chest,Rib,Sprain\/Pull Unspecified
+Tua Tagovailoa,QB,2024-12-25,2,Inguinal,Hip,Sprain
+Chase Brown,RB,2024-12-28,1,Pedal,Ankle (high),Sprain
+Hunter Henry,TE,2024-12-28,1,Pedal,Foot,Unspecified
+Joshua Palmer,WR,2024-12-28,2,Pedal,Foot,Unspecified
+Ja\u0027Lynn Polk,WR,2024-12-28,0,Shoulder,Unspecified,Unspecified
+Tyjae Spears,RB,2024-12-29,0,Head,Cranial,Concussion
+Aaron Jones,RB,2024-12-29,0,Leg,Quad,Strain
+James Conner,RB,2024-12-29,1,Knee,Unspecified,Strain
+Kendre Miller,RB,2024-12-29,1,Head,Cranial,Concussion
+Jerome Ford,RB,2024-12-29,0,Pedal,Ankle,Sprain\/Pull Unspecified
+Brock Purdy,QB,2024-12-30,1,Arm,Elbow,Bruise
+Patrick Mahomes,QB,2025-01-01,1,Pedal,Ankle,Sprain\/Pull Unspecified
+Deebo Samuel,WR,2025-01-01,1,Chest,Rib,Sprain\/Pull Unspecified
+Darnell Mooney,WR,2025-01-02,1,Shoulder,Unspecified,Unspecified
+Michael Wilson,WR,2025-01-03,1,Thigh,Hamstring,Sprain\/Pull Unspecified
+Zay Flowers,WR,2025-01-04,0,Knee,LCL,Sprain
+Tee Higgins,WR,2025-01-04,0,Pedal,Ankle,Sprain\/Pull Unspecified
+Jordan Love,QB,2025-01-05,0,Arm,Elbow,Sprain
+Christian Watson,WR,2025-01-05,6,Knee,ACL,Tear
+Blake Corum,RB,2025-01-05,0,Arm,Forearm,Fracture
+John Metchie,WR,2025-01-05,0,Shoulder,Unspecified,Unspecified
+Isaac Guerendo,RB,2025-01-05,0,Knee,MCL,Pull
+Deshaun Watson,QB,2025-01-06,34,Pedal,Achilles,Tear
+Cade Stover,TE,2025-01-11,0,Shoulder,Clavicle,Fracture
+Jayden Reed,WR,2025-01-12,0,Shoulder,Unspecified,Dislocation
+Romeo Doubs,WR,2025-01-12,0,Head,Cranial,Concussion
+Ray Davis,RB,2025-01-12,0,Head,Cranial,Concussion
+Tyler Higbee,TE,2025-01-13,0,Chest,Rib,Sprain\/Pull Unspecified
+Kenneth Gainwell,RB,2025-01-26,0,Head,Cranial,Concussion
+Kyle Pitts,TE,2025-05-12,0,Pedal,Foot,Unspecified
+Luther Burden III,WR,2025-05-21,0,Thigh,Hamstring,Sprain\/Pull Unspecified
+C.J. Stroud,QB,2025-05-30,0,Shoulder,Unspecified,Unspecified
+Michael Pittman Jr.,WR,2025-06-05,0,Knee,Unspecified,Bruise
+Jauan Jennings,WR,2025-06-12,0,Leg,Calf,Strain
+Joe Mixon,RB,2025-06-27,17,Pedal,Foot,Unspecified
+Najee Harris,RB,2025-07-04,0,Head,Eye,Blurred Vision
+Matthew Stafford,QB,2025-07-23,0,Back,Vertebral,Disc Bulge
+Justin Jefferson,WR,2025-07-24,0,Thigh,Hamstring,Strain
+Darnell Mooney,WR,2025-07-24,1,Shoulder,Clavicle,Fracture
+Justin Fields,QB,2025-07-24,0,Pedal,Toe,Dislocation
+Treylon Burks,WR,2025-07-26,8,Shoulder,Clavicle,Fracture
+Terry McLaurin,WR,2025-07-27,0,Pedal,Ankle,Sprain\/Pull Unspecified
+Curtis Samuel,WR,2025-07-27,0,Thigh,Hamstring,Sprain\/Pull Unspecified
+Malik Nabers,WR,2025-07-28,0,Shoulder,Unspecified,Unspecified
+Dalton Kincaid,TE,2025-07-28,0,Knee,Unspecified,Strain
+Treylon Burks,WR,2025-07-28,8,Shoulder,Clavicle,Fracture
+Michael Pittman Jr.,WR,2025-07-29,0,Inguinal,Groin,Pull
+Isaiah Likely,TE,2025-07-29,4,Pedal,Foot,Fracture
+Dontayvion Wicks,WR,2025-07-29,0,Leg,Calf,Pull
+MarShawn Lloyd,RB,2025-07-29,0,Inguinal,Groin,Pull
+Marquise Brown,WR,2025-07-29,0,Pedal,Ankle,Bruise
+Skyy Moore,WR,2025-07-29,0,Thigh,Hamstring,Sprain\/Pull Unspecified
+Jauan Jennings,WR,2025-07-31,0,Leg,Calf,Strain
+Miles Sanders,RB,2025-07-31,0,Knee,Unspecified,Bruise
+Kenneth Walker III,RB,2025-08-01,0,Pedal,Foot,Unspecified
+Khalil Shakir,WR,2025-08-01,0,Pedal,Ankle (high),Sprain
+Isaac Guerendo,RB,2025-08-02,0,Shoulder,Unspecified,Unspecified
+A.J. Brown,WR,2025-08-03,0,Thigh,Hamstring,Sprain\/Pull Unspecified
+Tyreek Hill,WR,2025-08-06,0,Abdomen,Muscle,Sprain\/Pull Unspecified
+Jayden Reed,WR,2025-08-07,0,Pedal,Foot,Unspecified
+Jaydon Blue,RB,2025-08-07,0,Pedal,Heel,Bruise
+Jake Ferguson,TE,2025-08-08,0,Back,Lower Lumbar,Sprain\/Pull Unspecified
+Ja\u0027Lynn Polk,WR,2025-08-08,17,Shoulder,Unspecified,Unspecified
+Tyjae Spears,RB,2025-08-09,4,Pedal,Ankle (high),Sprain
+Rachaad White,RB,2025-08-09,0,Inguinal,Groin,Strain
+Mike Gesicki,TE,2025-08-09,0,Thigh,Hamstring,Sprain\/Pull Unspecified
+Alec Pierce,WR,2025-08-10,0,Inguinal,Groin,Pull
+Alexander Mattison,RB,2025-08-10,17,Cervical,Neck,Unspecified
+Josh Downs,WR,2025-08-14,0,Thigh,Hamstring,Sprain\/Pull Unspecified
+Quentin Johnston,WR,2025-08-16,0,Head,Cranial,Concussion
+MarShawn Lloyd,RB,2025-08-17,17,Thigh,Hamstring,Strain
+Jalen Royals,WR,2025-08-18,3,Knee,Unspecified,Strain
+Jonathan Mingo,WR,2025-08-18,10,Knee,PCL,Sprain
+Jaylen Wright,RB,2025-08-19,2,Leg,Shin,Bruise
+Marvin Mims Jr.,WR,2025-08-27,0,Inguinal,Groin,Pull
+Darren Waller,TE,2025-09-03,3,Inguinal,Hip,Strain
+Christian Kirk,WR,2025-09-03,2,Thigh,Hamstring,Sprain\/Pull Unspecified
+Christian McCaffrey,RB,2025-09-04,0,Leg,Calf,Pull
+Xavier Worthy,WR,2025-09-05,2,Shoulder,Unspecified,Dislocation
+Brock Purdy,QB,2025-09-07,2,Pedal,Toe,Turf Toe
+Drake London,WR,2025-09-07,0,Shoulder,Unspecified,Unspecified
+Brock Bowers,TE,2025-09-07,0,Knee,Unspecified,Strain
+George Kittle,TE,2025-09-07,5,Thigh,Hamstring,Tear
+Jauan Jennings,WR,2025-09-07,0,Shoulder,Unspecified,Unspecified
+Cade Stover,TE,2025-09-07,8,Pedal,Foot,Fracture
+Dallas Goedert,TE,2025-09-10,1,Knee,Unspecified,Strain
+Jayden Daniels,QB,2025-09-11,2,Knee,Unspecified,Strain
+Jayden Reed,WR,2025-09-11,11,Shoulder,Clavicle,Fracture
+Austin Ekeler,RB,2025-09-11,15,Pedal,Achilles,Tear
+Joe Burrow,QB,2025-09-14,9,Pedal,Toe,Turf Toe
+Brian Thomas Jr.,WR,2025-09-14,0,Hand,Wrist,Sprain\/Pull Unspecified
+Aaron Jones,RB,2025-09-14,4,Thigh,Hamstring,Sprain\/Pull Unspecified
+Jauan Jennings,WR,2025-09-14,1,Pedal,Ankle,Sprain\/Pull Unspecified
+J.J. McCarthy,QB,2025-09-14,5,Pedal,Ankle (high),Sprain
+Justin Fields,QB,2025-09-14,1,Head,Cranial,Concussion
+Tucker Kraft,TE,2025-09-18,0,Knee,Unspecified,Strain
+CeeDee Lamb,WR,2025-09-21,3,Pedal,Ankle (high),Sprain
+Colston Loveland,TE,2025-09-21,1,Inguinal,Hip,Sprain
+Mike Evans,WR,2025-09-21,3,Thigh,Hamstring,Sprain\/Pull Unspecified
+Terry McLaurin,WR,2025-09-21,4,Leg,Quad,Strain
+Alec Pierce,WR,2025-09-21,1,Head,Cranial,Concussion
+Michael Mayer,TE,2025-09-21,2,Head,Cranial,Concussion
+James Conner,RB,2025-09-21,14,Pedal,Ankle,Dislocation
+Najee Harris,RB,2025-09-21,14,Pedal,Achilles,Tear
+Dyami Brown,WR,2025-09-21,1,Shoulder,Unspecified,Unspecified
+Ja\u0027Tavion Sanders,TE,2025-09-21,3,Pedal,Ankle (high),Sprain
+Zay Jones,WR,2025-09-21,1,Head,Cranial,Concussion
+Jaylen Warren,RB,2025-09-25,1,Knee,Unspecified,Strain
+Lamar Jackson,QB,2025-09-28,3,Thigh,Hamstring,Sprain\/Pull Unspecified
+Brock Purdy,QB,2025-09-28,6,Pedal,Toe,Turf Toe
+Malik Nabers,WR,2025-09-28,13,Knee,ACL,Tear
+Bucky Irving,RB,2025-09-28,6,Pedal,Foot,Sprain
+Bucky Irving,RB,2025-09-28,6,Shoulder,A\/C Joint,Sprain
+Chuba Hubbard,RB,2025-09-28,2,Leg,Calf,Strain
+Omar Cooper Jr.,WR,2025-09-28,1,Chest,Rib,Sprain\/Pull Unspecified
+Jauan Jennings,WR,2025-09-28,1,Chest,Rib,Sprain\/Pull Unspecified
+Darnell Mooney,WR,2025-09-28,1,Thigh,Hamstring,Sprain\/Pull Unspecified
+Miles Sanders,RB,2025-09-28,13,Pedal,Ankle,Sprain\/Pull Unspecified
+Braelon Allen,RB,2025-09-29,13,Knee,MCL,Sprain
+Tyreek Hill,WR,2025-09-29,14,Knee,Patella,Dislocation
+Brock Bowers,TE,2025-10-01,2,Knee,PCL,Pull
+Deebo Samuel,WR,2025-10-01,2,Pedal,Heel,Bruise
+Kyler Murray,QB,2025-10-05,12,Pedal,Foot,Sprain
+Omarion Hampton,RB,2025-10-05,8,Pedal,Ankle,Fracture
+Quentin Johnston,WR,2025-10-05,1,Thigh,Hamstring,Sprain\/Pull Unspecified
+Brenton Strange,TE,2025-10-05,6,Leg,Quad,Strain
+Darius Slayton,WR,2025-10-05,2,Thigh,Hamstring,Sprain\/Pull Unspecified
+Antonio Gibson,RB,2025-10-05,11,Knee,ACL,Tear
+Dalton Kincaid,TE,2025-10-09,1,Abdomen,Muscle,Sprain\/Pull Unspecified
+Trey Benson,RB,2025-10-09,13,Knee,Meniscus,Tear
+Puka Nacua,WR,2025-10-12,1,Pedal,Ankle,Sprain\/Pull Unspecified
+Garrett Wilson,WR,2025-10-12,2,Knee,Unspecified,Strain
+Emeka Egbuka,WR,2025-10-12,0,Thigh,Hamstring,Sprain\/Pull Unspecified
+Calvin Ridley,WR,2025-10-12,3,Thigh,Hamstring,Sprain\/Pull Unspecified
+Mike Gesicki,TE,2025-10-12,4,Chest,Pectoral,Strain
+David Njoku,TE,2025-10-12,1,Knee,Unspecified,Strain
+Emari Demercado,RB,2025-10-12,1,Pedal,Ankle,Sprain\/Pull Unspecified
+Joshua Palmer,WR,2025-10-13,4,Pedal,Ankle,Sprain\/Pull Unspecified
+Jayden Daniels,QB,2025-10-19,1,Thigh,Hamstring,Sprain\/Pull Unspecified
+A.J. Brown,WR,2025-10-19,1,Thigh,Hamstring,Sprain\/Pull Unspecified
+Bryce Young,QB,2025-10-19,1,Pedal,Ankle (high),Sprain
+Michael Penix Jr.,QB,2025-10-19,1,Knee,Unspecified,Bruise
+Brian Thomas Jr.,WR,2025-10-19,0,Shoulder,Unspecified,Unspecified
+Darren Waller,TE,2025-10-19,5,Chest,Pectoral,Strain
+Cole Kmet,TE,2025-10-19,1,Back,Lower Lumbar,Sprain\/Pull Unspecified
+Kendre Miller,RB,2025-10-19,10,Knee,ACL,Tear
+Drake London,WR,2025-10-25,1,Inguinal,Hip,Sprain
+Shedeur Sanders,QB,2025-10-25,1,Back,Lower Lumbar,Sprain
+Saquon Barkley,RB,2025-10-26,0,Inguinal,Groin,Strain
+Luther Burden III,WR,2025-10-26,1,Head,Cranial,Concussion
+Cameron Skattebo,RB,2025-10-26,10,Leg,Tibia,Fracture
+Rhamondre Stevenson,RB,2025-10-26,3,Pedal,Toe,Turf Toe
+Quinshon Judkins,RB,2025-10-26,0,Shoulder,Unspecified,Unspecified
+Marvin Mims Jr.,WR,2025-10-26,2,Head,Cranial,Concussion
+Daniel Bellinger,TE,2025-10-26,1,Cervical,Neck,Strain
+Terry McLaurin,WR,2025-10-27,3,Leg,Quad,Strain
+Travis Hunter,WR,2025-10-30,10,Knee,LCL,Tear
+Puka Nacua,WR,2025-11-02,0,Chest,Rib,Sprain\/Pull Unspecified
+Jayden Daniels,QB,2025-11-02,3,Arm,Elbow,Dislocation
+C.J. Stroud,QB,2025-11-02,3,Head,Cranial,Concussion
+Tucker Kraft,TE,2025-11-02,9,Knee,ACL,Tear
+Brian Thomas Jr.,WR,2025-11-02,3,Pedal,Ankle,Sprain\/Pull Unspecified
+Matthew Golden,WR,2025-11-02,1,Shoulder,Unspecified,Unspecified
+Aaron Jones,RB,2025-11-02,0,Shoulder,A\/C Joint,Sprain
+Samaje Perine,RB,2025-11-02,2,Pedal,Ankle (high),Sprain
+Tory Horton,WR,2025-11-02,9,Leg,Shin,Bruise
+Cole Kmet,TE,2025-11-02,0,Head,Cranial,Concussion
+Luke McCaffrey,WR,2025-11-02,8,Shoulder,Clavicle,Fracture
+Dyami Brown,WR,2025-11-02,0,Head,Cranial,Concussion
+J.K. Dobbins,RB,2025-11-06,9,Pedal,Foot,Sprain
+Jaxson Dart,QB,2025-11-09,2,Head,Cranial,Concussion
+Garrett Wilson,WR,2025-11-09,7,Knee,MCL,Sprain
+Davante Adams,WR,2025-11-09,0,Abdomen,Muscle,Sprain\/Pull Unspecified
+Sam LaPorta,TE,2025-11-09,7,Back,Vertebral,Bruise
+Dalton Kincaid,TE,2025-11-09,3,Thigh,Hamstring,Sprain\/Pull Unspecified
+Rashod Bateman,WR,2025-11-09,1,Pedal,Ankle (high),Sprain
+Chris Rodriguez,RB,2025-11-09,0,Shoulder,Unspecified,Unspecified
+Zay Jones,WR,2025-11-09,8,Pedal,Achilles,Tear
+Marvin Harrison Jr.,WR,2025-11-12,2,Abdomen,Appendix,Ruptured
+Drake London,WR,2025-11-16,4,Knee,PCL,Sprain
+Aaron Rodgers,QB,2025-11-16,1,Hand,Wrist,Fracture
+Josh Jacobs,RB,2025-11-16,1,Knee,Unspecified,Strain
+Michael Penix Jr.,QB,2025-11-16,7,Knee,ACL,Tear
+Jaylen Warren,RB,2025-11-16,0,Pedal,Ankle,Sprain\/Pull Unspecified
+Bhayshul Tuten,RB,2025-11-16,0,Pedal,Ankle,Sprain\/Pull Unspecified
+Calvin Ridley,WR,2025-11-16,7,Leg,Fibula,Fracture
+Curtis Samuel,WR,2025-11-16,8,Cervical,Neck,Unspecified
+Emari Demercado,RB,2025-11-16,3,Pedal,Ankle (high),Sprain
+Roschon Johnson,RB,2025-11-16,9,Hand,Thumb,Sprain
+Ashton Jeanty,RB,2025-11-23,0,Pedal,Ankle,Sprain\/Pull Unspecified
+Tee Higgins,WR,2025-11-23,1,Head,Cranial,Concussion
+Alvin Kamara,RB,2025-11-23,6,Knee,MCL,Sprain
+Justice Hill,RB,2025-11-23,6,Cervical,Neck,Unspecified
+Michael Mayer,TE,2025-11-23,2,Pedal,Ankle,Sprain\/Pull Unspecified
+Tyler Higbee,TE,2025-11-23,6,Pedal,Ankle,Sprain
+J.J. McCarthy,QB,2025-11-23,1,Head,Cranial,Concussion
+Daniel Jones,QB,2025-11-26,0,Leg,Fibula,Fracture
+Amon-Ra St. Brown,WR,2025-11-27,0,Pedal,Ankle,Sprain\/Pull Unspecified
+Marvin Harrison Jr.,WR,2025-11-30,2,Pedal,Heel,Bruise
+Aaron Jones,RB,2025-11-30,0,Shoulder,Unspecified,Unspecified
+Dylan Sampson,RB,2025-11-30,0,Leg,Calf,Strain
+Greg Dortch,WR,2025-11-30,5,Chest,Pectoral,Bruise
+Rome Odunze,WR,2025-12-03,4,Pedal,Foot,Unspecified
+MarShawn Lloyd,RB,2025-12-03,1,Leg,Calf,Strain
+CeeDee Lamb,WR,2025-12-04,0,Head,Cranial,Concussion
+Pat Bryant,WR,2025-12-04,1,Thigh,Hamstring,Sprain\/Pull Unspecified
+Jayden Daniels,QB,2025-12-07,4,Arm,Elbow,Sprain
+Daniel Jones,QB,2025-12-07,4,Pedal,Achilles,Tear
+De\u0027Von Achane,RB,2025-12-07,0,Chest,Rib,Sprain\/Pull Unspecified
+Tee Higgins,WR,2025-12-07,1,Head,Cranial,Concussion
+Geno Smith,QB,2025-12-07,1,Shoulder,Unspecified,Unspecified
+Keaton Mitchell,RB,2025-12-07,0,Knee,Unspecified,Strain
+Darnell Washington,TE,2025-12-07,0,Head,Cranial,Concussion
+David Njoku,TE,2025-12-07,3,Knee,Unspecified,Strain
+Elijah Arroyo,TE,2025-12-07,4,Knee,Unspecified,Strain
+Mason Taylor,TE,2025-12-07,4,Cervical,Neck,Unspecified
+Cedric Tillman,WR,2025-12-07,0,Head,Cranial,Concussion
+Nick Chubb,RB,2025-12-07,1,Chest,Rib,Sprain\/Pull Unspecified
+Jerome Ford,RB,2025-12-07,4,Shoulder,A\/C Joint,Sprain
+Quentin Johnston,WR,2025-12-12,1,Inguinal,Groin,Pull
+Patrick Mahomes,QB,2025-12-14,3,Knee,ACL,Tear
+Davante Adams,WR,2025-12-14,3,Thigh,Hamstring,Sprain\/Pull Unspecified
+Christian Watson,WR,2025-12-14,0,Chest,Rib,Sprain\/Pull Unspecified
+Luther Burden III,WR,2025-12-14,1,Pedal,Ankle,Sprain\/Pull Unspecified
+Bhayshul Tuten,RB,2025-12-14,2,Hand,Finger,Sprain\/Pull Unspecified
+RJ Harvey,RB,2025-12-14,0,Chest,Rib,Sprain\/Pull Unspecified
+Tyler Lockett,WR,2025-12-14,0,Hand,Wrist,Sprain\/Pull Unspecified
+Jordan Love,QB,2025-12-20,2,Head,Cranial,Concussion
+Josh Allen,QB,2025-12-21,0,Pedal,Foot,Unspecified
+Josh Allen,QB,2025-12-21,0,Pedal,Foot,Fracture
+Lamar Jackson,QB,2025-12-21,1,Back,Tailbone,Bruise
+Rashee Rice,WR,2025-12-21,2,Head,Cranial,Concussion
+Brock Bowers,TE,2025-12-21,2,Knee,Unspecified,Bruise
+Quinshon Judkins,RB,2025-12-21,2,Pedal,Ankle,Dislocation
+TreVeyon Henderson,RB,2025-12-21,0,Head,Cranial,Concussion
+Jacory Croskey-Merritt,RB,2025-12-21,1,Pedal,Ankle,Sprain\/Pull Unspecified
+Jordan Mason,RB,2025-12-21,1,Pedal,Ankle,Sprain\/Pull Unspecified
+Pat Bryant,WR,2025-12-21,1,Head,Cranial,Concussion
+Ryan Flournoy,WR,2025-12-21,1,Knee,Unspecified,Strain
+Tyquan Thornton,WR,2025-12-21,2,Head,Cranial,Concussion
+Mack Hollins,WR,2025-12-21,4,Abdomen,Muscle,Strain
+J.J. McCarthy,QB,2025-12-21,1,Hand,Unspecified,Unspecified
+Marcus Mariota,QB,2025-12-21,2,Hand,Unspecified,Unspecified
+George Kittle,TE,2025-12-22,1,Pedal,Ankle,Sprain
+Javonte Williams,RB,2025-12-25,1,Shoulder,Unspecified,Unspecified
+Aaron Jones,RB,2025-12-25,1,Inguinal,Hip,Strain
+Josh Allen,QB,2025-12-28,0,Pedal,Foot,Unspecified
+Malik Willis,QB,2025-12-28,0,Shoulder,Unspecified,Unspecified
+Geno Smith,QB,2025-12-28,1,Pedal,Ankle (high),Sprain
+Jaylen Waddle,WR,2025-12-28,1,Chest,Rib,Sprain\/Pull Unspecified
+Harold Fannin Jr.,TE,2025-12-28,1,Inguinal,Groin,Strain
+Marvin Harrison Jr.,WR,2025-12-28,1,Pedal,Foot,Sprain
+Wan\u0027Dale Robinson,WR,2025-12-28,1,Chest,Rib,Fracture
+Rashid Shaheed,WR,2025-12-28,0,Head,Cranial,Concussion
+Darnell Washington,TE,2025-12-28,1,Arm,Forearm,Fracture
+Ja\u0027Tavion Sanders,TE,2025-12-28,1,Pedal,Ankle,Fracture
+Brock Purdy,QB,2026-01-03,0,Shoulder,Unspecified,Unspecified
+Cameron Ward,QB,2026-01-04,0,Shoulder,A\/C Joint,Sprain
+Joshua Palmer,WR,2026-01-04,2,Pedal,Ankle,Sprain
+J.J. McCarthy,QB,2026-01-04,0,Hand,Unspecified,Unspecified
+Taysom Hill,TE,2026-01-04,0,Shoulder,Unspecified,Unspecified
+Nico Collins,WR,2026-01-12,1,Head,Cranial,Concussion
+Bo Nix,QB,2026-01-17,0,Pedal,Ankle,Fracture
+Zach Charbonnet,RB,2026-01-17,1,Knee,ACL,Tear
+Pat Bryant,WR,2026-01-17,0,Head,Cranial,Concussion
+Troy Franklin,WR,2026-01-17,1,Thigh,Hamstring,Sprain\/Pull Unspecified
+Colston Loveland,TE,2026-01-18,0,Head,Cranial,Concussion
+Dalton Schultz,TE,2026-01-18,0,Leg,Calf,Strain
+Pat Bryant,WR,2026-01-25,0,Thigh,Hamstring,Sprain\/Pull Unspecified
+Drake Maye,QB,2026-01-28,0,Shoulder,Unspecified,Unspecified
+Isaac Guerendo,RB,2026-04-30,0,Chest,Pectoral,Tear
+Puka Nacua,WR,2026-08-11,0,Inguinal,Groin,Pull
+Rachaad White,RB,2026-08-12,0,Thigh,Hamstring,Sprain\/Pull Unspecified
+Ty Chandler,RB,2026-08-22,17,Knee,ACL,Tear

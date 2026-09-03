@@ -1,0 +1,6 @@
+game: my picks [7, 18, 31, 55, 66, 79, 90], keepers [Tuten, Flowers]
+clairvoyant upper bound 1849.5 +/- 1.1  (400 futures solved exactly over 2520 sequences, 3s)
+best policy lower bound 1830.0 +/- 1.4  (oldschool-2-vorp, 300 trials)
+
+CERTIFIED GAP: 19.5 points (+/- 1.8)
+The clairvoyant bound includes the value of knowing the future; the true optimal policy sits somewhere inside the gap, so the gap OVERSTATES what any algorithm can still collect.

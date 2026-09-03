@@ -1,0 +1,25 @@
+
+HOW MANY QUARTERBACKS TO DRAFT WHEN YOU KEEP ONE
+
+13 seasons, 11 rounds, 20000 plans, keeper structure: QB9 and RB23 held from the start (Tuten + Purdy on the 2026 board), eleven live picks
+
+QBs       PLANS      MEAN      BEST WORST SEA    TOP 1%
+0          1918        40       163      -283       142
+1          5479        39       190      -427       149
+2          6524       -21       131      -336        84
+3          4343      -121        25      -378       -19
+4          1489      -254      -110      -521      -153
+5           247      -387      -278      -763      -285
+
+THE BEST PLAN AT EACH QUARTERBACK COUNT
+   0 QB      163  RWTWRWWWWTD
+   1 QB      190  RRWWRTWWTQD
+   2 QB      131  RWWWRTRWQQD
+   3 QB       25  TWRWRQRWQQD
+   4 QB     -110  RWTWRQWQQQD
+   5 QB     -278  TRWWQQWQQQD
+
+------------------------------------------------------------------------
+the 95% bar on 13 seasons is 118 points.
+drafting NO extra quarterback is worth +0 a season against drafting one:
+   inside the bar - the two are the same decision

@@ -1,0 +1,82 @@
+
+A DRAFT RULE FROM THE MATRIX ALONE
+
+16 seasons, 65855 pairs. preseason rank in, season points out.
+no weeks, no injury channel, no free parameters at the table.
+
+PICK                RB      WR      TE      QB     DEF   TAKE
+   7 -> 18         41%    45%      -      -      -   RB
+  18 -> 31         40%    38%    37%    50%      -   TE
+  31 -> 42         43%    45%      -    39%      -   QB
+  42 -> 55         45%    45%    38%    47%      -   TE
+  55 -> 66         49%    42%    42%    47%      -   WR
+  66 -> 79         49%    45%    50%    43%      -   QB
+  79 -> 90         47%    47%    50%    49%      -   RB
+  90 -> 103        45%    47%    50%    50%      -   RB
+ 103 -> 114        49%    47%    48%    46%      -   WR
+ 114 -> 127        48%    46%    46%    44%      -   WR
+ 127 -> 162        44%    46%    46%    45%      -   RB
+ 162 -> 175        48%    50%    47%    48%      -   RB
+ 175 -> 186        49%    48%    39%    49%      -   WR
+ 186 -> end          -      -      -      -      -   DEF
+
+the shape this produces: RB TE QB TE WR QB RB RB WR WR RB RB WR DEF
+
+================================================================
+IS IT ANY GOOD?
+================================================================
+scored on real outcomes against the plan Justin is drafting with.
+
+
+================================================================
+THE SAME RULE, PRICED IN POINTS
+================================================================
+
+season points the mean man at this rank scored, minus the mean man
+at the rank I would face at my next pick. same two numbers a season.
+
+PICK                RB      WR      TE      QB     DEF   TAKE
+   7 -> 18           39      21       -       -       -   RB
+  18 -> 31           18      24      26       7       -   TE
+  31 -> 42           20      12       -       3       -   RB
+  42 -> 55           13       8      16      23       -   QB
+  55 -> 66            2      16      11      14       -   WR
+  66 -> 79            1      11       2      21       -   QB
+  79 -> 90            7       3       0       7       -   RB
+  90 -> 103          10       8       4       6       -   RB
+ 103 -> 114           1       7       2      13       -   WR
+ 114 -> 127           3       6       3      19       -   WR
+ 127 -> 162           9       4       5       6       -   RB
+ 162 -> 175           4      -1       0       3       -   RB
+ 175 -> 186           1       5       6       5       -   TE
+ 186 -> end           -       -       -       -       -   DEF
+
+the shape this produces: RB TE RB QB WR QB RB RB WR WR RB RB TE DEF
+
+================================================================
+ARE EITHER ANY GOOD?
+================================================================
+
+PHASE 4: every strategy on every season's REAL outcomes
+lineup QB/RB2/WR3/TE/FLEX2/DEF, 18 weeks, best legal lineup each week
+a defence slot the roster cannot fill is STREAMED at 8.7 points a week
+
+STRATEGY                     2021     2022     2023     2024     2025      mean    vs ADP    wins
+starter-sum (1-16)           1753     1932     1733     2056     2025      1900      +458     5/5
+best-nine (Model A)          1376     1542     1867     1733     1615      1627      +185     3/5
+RUNBOOK committed            2035     1654     2191     1960     2148      1998      +556     5/5
+RB-heavy folk rule           1899     1734     2157     1764     1865      1884      +442     5/5
+RUNBOOK front + SS back      2102     1819     1956     1905     2104      1977      +536     5/5
+ModelA front + SS back       1773     1771     1890     1928     1946      1862      +420     5/5
+[not legal] no DEF drafted     2046     1647     2195     2007     2141      2007      +565     5/5
+best available by ADP        1439     1381     1192     1485     1712      1442        +0     0/5
+matrix rule, odds            1951     1878     1762     2056     1818      1893      +451     5/5
+matrix rule, points          1839     1794     1747     1917     1827      1825      +383     5/5
+
+Every strategy drafts from the same board at the same picks, so the only
+difference between two rows is the order of positions. 'best available by ADP'
+is the null hypothesis: never think about position at all.
+
+CAVEAT, and it is not small: the starter-sum sequence came from a model whose
+outcome pool was built from these same seasons. Its distributions saw them, even
+though this scoring does not. Read its row as flattered, and a narrow win as none.

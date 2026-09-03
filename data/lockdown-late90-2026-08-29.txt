@@ -1,0 +1,24 @@
+
+keeper term scaled by youth: young x1.44, veteran x0.61 (measured)
+
+pick 90 (round 8); my next pick is 103 (13 picks away)
+
+CANDIDATE                POS  AGE    this season   keeper    VALUE  SURVIVES  LOSS IF WAIT   verdict
+Kyle Monangai            RB   young         90.1     29.0    119.1        1%          29.3   TAKE NOW (29)
+Blake Corum              RB   young         74.8     29.0    103.8        2%          14.0   TAKE NOW (14)
+Chris Rodriguez          RB   vet           72.0     12.4     84.4       77%           0.7   wait - he keeps
+Matthew Golden           WR   young         63.9     16.1     80.0       25%           0.0   wait - he keeps
+Aaron Jones              RB   vet           67.1     12.4     79.5       45%           0.0   wait - he keeps
+Tyrone Tracy             RB   young         47.8     29.0     76.8       92%           0.0   wait - he keeps
+Jalen Coker              WR   young         58.7     16.1     74.8       85%           0.0   wait - he keeps
+Rachaad White            RB   vet           58.1     12.4     70.5       61%           0.0   wait - he keeps
+
+this season = his projection over the man the wire would give me free (per player).
+keeper = what a stash at this position and round has been worth next season
+(a measured base rate, not a per-player estimate - ~50 positives cannot support one).
+LOSS IF WAIT = P(gone) x (his value - the best left instead).
+
+KNOWN WEAKNESS: a player projecting 0.0 this season still draws the full keeper
+base rate, because that rate was measured on players who had a real role when
+they were drafted. Read a zero in the 'this season' column as UNPROVEN, not safe -
+and it is the reason a per-player keeper estimate is the next thing to build.

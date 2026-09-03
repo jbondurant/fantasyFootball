@@ -1,0 +1,101 @@
+
+FLAGS IN FORCE: deviate=0 scarcity=0.00 frontShape='' qbFrom=0 defLast=false riskObjective=false
+
+WHAT AN UNFILLED SLOT IS WORTH, IN POINTS
+
+REPLACEMENT RANKS                      QB       RB       WR       TE      DEF
+SHIPPED (InsuranceTest)            21:278   61:48    81:66    19:99    13:87 
+best left at my last pick          20:283   60:48    80:66    18:101   11:89 
+starters only (textbook VORP)      12:307   24:154   36:127   12:113   12:88 
+
+rank:points. The quarterback number is four times the running back number and
+that is not a units error - QB21 really does project near 280 in a six-point-TD
+league while RB61 projects near 50. It is what SUPPRESSES quarterback value:
+the marginal is the gap to replacement, and at quarterback the gap is small.
+
+WHAT EACH CONSTANT IS WORTH
+
+CONSTANT        VARIANT                          2021   2022   2023   2024   2025     mean  vs base      +-se   16-round plan
+BASELINE        as committed                     1758   1666   1880   1920   2055     1856       +0         0   RB RB RB WR WR WR TE DEF WR QB QB TE RB RB
+1 REPLACEMENT   best left at my last pick        1758   1666   1880   1920   2055     1856       +0         0   RB RB RB WR WR WR TE DEF WR QB QB TE RB RB
+1 REPLACEMENT   best nobody rosters, DEF counted   1758   1666   1880   1937   2055     1859       +3         3   RB RB RB WR WR WR TE DEF WR QB QB TE RB RB
+1 REPLACEMENT   starters only (textbook VORP)    1759   1794   1688   1766   1846     1771      -85        65   RB RB WR WR WR QB TE DEF TE QB TE RB RB RB   <- PLAN CHANGED
+1 REPLACEMENT   DEF only, 13 -> 11               1758   1666   1880   1937   2055     1859       +3         3   RB RB RB WR WR WR TE DEF WR QB QB TE RB RB
+2 TRUST         no shrinkage at all              1758   1922   2004   1840   2055     1916      +60        59   RB RB RB WR WR WR DEF TE QB QB TE RB TE RB   <- PLAN CHANGED
+2 TRUST         measured slope, w=6              1758   1922   2004   1840   2055     1916      +60        59   RB RB WR WR WR WR DEF TE TE QB QB TE TE RB   <- PLAN CHANGED
+2 TRUST         DEF trust 0.277 -> 0             1758   1666   1880   1937   2055     1859       +3         3   RB RB RB WR WR WR TE DEF WR QB QB TE RB RB
+2 WINDOW        window +-2, shipped trust        1758   1922   2004   1840   2055     1916      +60        59   RB RB WR WR WR WR DEF TE TE QB QB TE TE RB   <- PLAN CHANGED
+2 WINDOW        window +-12, shipped trust       1758   1666   1880   1920   1959     1837      -19        19   RB RB RB WR WR WR TE DEF TE QB QB TE RB RB   <- PLAN CHANGED
+2 WINDOW        window +-30, shipped trust       1819   1666   1960   1933   2016     1879      +23        21   RB RB WR RB WR QB WR WR TE DEF TE QB RB RB   <- PLAN CHANGED
+2 WINDOW        window +-2, matched trust        1758   1922   2004   1840   2055     1916      +60        59   RB RB WR WR WR WR DEF TE TE QB QB TE TE RB   <- PLAN CHANGED
+2 WINDOW        window +-12, matched trust       1758   1922   1880   1840   2055     1891      +35        57   RB RB RB WR WR WR DEF TE QB QB TE RB TE RB   <- PLAN CHANGED
+2 WINDOW        window +-30, matched trust       1758   1922   2004   1840   2055     1916      +60        59   RB RB RB WR WR WR DEF WR TE QB QB TE WR RB   <- PLAN CHANGED
+3 AVAILABILITY  no discount at all               1758   1809   1871   1966   2005     1882      +26        33   RB RB RB WR WR WR TE DEF QB QB RB RB RB RB   <- PLAN CHANGED
+3 AVAILABILITY  position averages only           1558   1809   1939   1937   2005     1850       -7        58   RB RB RB WR WR WR TE DEF QB QB RB RB RB RB   <- PLAN CHANGED
+3 AVAILABILITY  DEF discounted like skill        1758   1666   1880   1937   2055     1859       +3         3   RB RB RB WR WR WR TE DEF WR QB QB TE RB RB
+
+CONSTANT          biggest move      plans changed
+1 REPLACEMENT               85                  1
+2 TRUST                     60                  2
+2 WINDOW                    60                  6
+3 AVAILABILITY              26                  2
+
+Read the vs-base column against its own +-se, not against a remembered rule of
+thumb. The se is PAIRED - the standard error of the season-by-season difference
+from the baseline, which is the right test because every variant is scored on
+the same five seasons and most of the season-to-season spread cancels. It is
+still an n of five: nothing here clears two of its own standard errors, so no
+variant in this table has been shown to be better. A changed PLAN is the finding
+that survives, because the plan is what gets drafted on Tuesday.
+
+WHERE THE TRUST TERM ACTUALLY BITES (shipped configuration)
+
+POS       rank 1-6    rank 7-18   rank 19-40     rank 41+
+QB            -4.2         -0.3         +0.5         +2.6
+RB            -4.8         +1.0         -0.3         +0.4
+WR            -4.0         +1.0         -0.0         +0.1
+TE            -5.5         +0.9         +0.0         +0.3
+DEF           -2.3         +1.0         +0.8            -
+
+Mean points the trust term adds or removes, by rank band. A plus-or-minus-six
+window is nearly flat away from the top of a position, so the whole effect of
+the trust coefficient lands on the first few men at each position - and on
+defences, where thirty-two players make every window a large share of the
+position. Everywhere else the coefficient could be anything at all.
+
+THE GAMES-MISSED MODEL, AND THE SEAM IN IT
+
+POS      in file    outside  sharks mult     fallback       seam   top-24 covered
+QB            39        316        0.897        0.774      16.0%   24 of 24
+RB            85        659        0.927        0.820      13.1%   20 of 24
+WR           122       1243        0.911        0.829       9.9%   22 of 24
+TE            55        594        0.903        0.842       7.3%   21 of 24
+DEF            0         32            -        1.000       0.0%   0 of 24
+
+The seam column is what membership of the CSV is worth. It runs one way: the
+drafted man is in the file and keeps ~92% of his projection, the replacement
+man is not and keeps ~82%, so every skill marginal is inflated against its own
+replacement. Defences are in neither table and keep 100%, which is literally
+true - a defence does not tear an achilles - and is still the largest single
+cross-position asymmetry in the objective.
+
+On the functional form: games played and points per game correlate +0.35 at
+running back and +0.67 at quarterback (OutcomeDistributions), so a man who
+misses games also scores less in the ones he plays, and a linear (17-g)/17
+understates him. That is NOT a licence to bend the curve. The correlation is
+measured on realised seasons, where playing badly CAUSES the benching that
+cuts games played - the arrow runs backwards from what a projected absence
+would need. Leave it linear.
+
+WHAT THE ROUND-8 DEFENCE COSTS, ON OUTCOMES
+
+SHAPE                              2021   2022   2023   2024   2025     mean
+the model's plan (DEF r8)          1779   1845   2087   1755   2055     1904
+...DEF moved to the last pick      1729   1664   2068   1892   2100     1891   -14 +- 53
+RUNBOOK committed (DEF last)       2035   1654   2191   1960   2148     1998   +94 +- 78
+
+The objective prices the best available defence at pick 90 above every skill
+player on the board. PolicyBacktest's own [not legal] row already said a DRAFTED
+defence is worth about nine points a season over a wire one - inside noise, and
+far less than a round-8 pick returns anywhere else. These rows put a number
+on the specific error rather than on the position.

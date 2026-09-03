@@ -1,0 +1,22 @@
+full-rules game: my picks [7, 18, 31, 42, 55, 66, 79, 90, 103], keepers free [Tuten, Purdy]
+
+91 heads at 300 CRN rollouts (65s); top ten:
+   QB@none  TE@r7       1808.3
+   QB@none  TE@r6       1803.1
+   QB@none  TE@r8       1801.1
+   QB@r8    TE@r7       1796.7
+   QB@r2    TE@r7       1796.1
+   QB@r7    TE@r8       1795.2
+   QB@r6    TE@r7       1795.2
+   QB@none  TE@r9       1792.4
+   QB@r8    TE@r6       1792.4
+   QB@r6    TE@r8       1792.3
+
+staged search (incumbent) planning at 300 rollouts...
+
+PLAN                                               mean    +/-SE     vs shipped
+timing QB@none TE@r7 (RB/WR live)                1808.0      0.3           -0.4
+staged [RB, WR, RB, WR, WR, WR, TE, QB, QB]      1808.4      0.2           -0.0
+shipped [RB, WR, RB, WR, WR, WR, TE, QB, RB]     1808.5      0.2           +0.0
+
+search 300 CRN rollouts, eval 10000 fresh-seed rollouts, paired; projections exact per the game spec.

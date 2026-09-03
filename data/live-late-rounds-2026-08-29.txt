@@ -1,0 +1,18 @@
+
+pick 90 (round 8) belongs to ME | 79 gone, my roster: 1QB 3RB 4WR 1TE
+my next pick: 103 (13 picks away)
+
+POS  BEST AVAILABLE                  ADDS   SURVIVES  LOSS IF WAIT   verdict
+TE   Travis Kelce                    61.2       32%          10.5   TAKE NOW (10)
+RB   Kenny Gainwell                  60.0       16%           3.8   lean take (4)
+WR   Jordan Addison                  58.4        6%           0.0   wait - he keeps
+DEF  Houston Texans                  27.3       51%           2.1   wait - he keeps
+QB   Bo Nix                          13.1       93%           0.0   wait - he keeps
+
+ADDS = points your STARTERS gain over the season by rostering him, counting the
+weeks he actually beats whoever else you would have started, with the waiver
+wire filling anything you cannot. It is the same number for a tight end, a
+backup quarterback and a defence, so they can be compared directly.
+
+LOSS IF WAIT = P(gone) x (what he adds minus what the next man at his position
+would add instead). A high ADDS with a high SURVIVES is not urgent.

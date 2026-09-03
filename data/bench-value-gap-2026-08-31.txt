@@ -1,0 +1,30 @@
+
+WHAT THE OBJECTIVE CAN SEE IN A BENCH PICK
+
+starting nine full: RB QB RB WR RB WR WR WR TE
+board as at pick 127 (round 11), 126 men already gone
+
+POS    BEST FREE                MODEL SEES MEASURED r8-9  SAME RANGE?
+RB     Chris Rodriguez                56.3         46.1          yes
+WR     Jalen Coker                    52.9         39.6          yes
+TE     Brenton Strange                51.3         24.8          yes
+QB     Jared Goff                     14.6         87.7           NO
+DEF    Philadelphia Eagles            15.7            -            -
+
+----------------------------------------------------------------------
+MODEL SEES   = WeeklyStarterValue's marginal for adding THIS man to a
+               full starting nine. Injury is its only promotion channel:
+               a starter who plays and disappoints keeps his preseason
+               rank and keeps starting.
+MEASURED r8-9= what this league's real rounds 8-9 picks at that
+               position were worth over the wire. A different measurement,
+               not a target - do not subtract the columns.
+
+The objective bids MORE for a bench receiver than the measured
+figure, not less. Losing the bust and boom channels did not make it
+stingy, because injury alone - drawn from whole observed player-seasons
+- is frequent enough. Ignore the QB row: BenchValue's over-wire is in raw
+points, which flatters a quarterback at six per passing touchdown.
+
+What survives for draft night is the ORDERING, which both agree on:
+at round 11 a back or receiver is worth three times a defence.

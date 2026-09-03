@@ -1,0 +1,50 @@
+
+HOW OFTEN DOES THE LATER MAN BEAT THE EARLIER ONE?
+smoothed: every query pools pairs within +/-8 ranks, so adjacent rows cannot
+leapfrog each other on five seasons of sampling noise. Twelve-wide buckets
+did exactly that - a round-10 back could read 10% between a round-9 at 8%
+and a round-11 at 13%, which is chunking, not football.
+
+
+RB   vs EARLY RANK                RB6 (r3)              RB18 (r8)
+     later man           wins margin value      wins margin value
+     RB24 (r10)           20%     65  13.0       37%     74  27.1
+     RB30 (r13)           19%     58  10.8       36%     71  25.5
+     RB36 (r15)           16%     56   9.1       34%     67  22.6
+     RB42 (r18)           13%     56   7.0       26%     64  16.6
+     RB48 (r20)           11%     58   6.2       25%     59  14.4
+     RB54 (r23)            8%     50   4.3       20%     54  11.0
+     RB60 (r25)            9%     52   4.5       20%     56  11.2
+     RB66 (r28)            6%     50   3.2       14%     54   7.6
+     RB72 (r30)            4%     50   2.1       11%     44   5.0
+
+WR   vs EARLY RANK                WR6 (r3)              WR18 (r8)
+     later man           wins margin value      wins margin value
+     WR24 (r10)           32%     59  18.7       43%     61  26.5
+     WR30 (r13)           27%     55  14.9       38%     57  21.8
+     WR36 (r15)           24%     51  12.1       35%     51  17.9
+     WR42 (r18)           21%     49  10.4       32%     49  15.5
+     WR48 (r20)           18%     51   9.1       27%     47  12.9
+     WR54 (r23)           13%     47   6.3       19%     44   8.5
+     WR60 (r25)           11%     38   4.2       15%     35   5.2
+     WR66 (r28)            9%     38   3.6       13%     36   4.6
+     WR72 (r30)            9%     43   4.1       14%     39   5.4
+
+TE   vs EARLY RANK                TE6 (r3)              TE18 (r8)
+     later man           wins margin value      wins margin value
+     TE24 (r10)           27%     36   9.9       38%     43  16.3
+     TE30 (r13)           20%     36   7.1       32%     44  14.3
+     TE36 (r15)           18%     36   6.5       31%     42  13.0
+     TE42 (r18)           13%     35   4.6       23%     38   8.9
+     TE48 (r20)           10%     23   2.3       18%     26   4.6
+     TE54 (r23)            7%     23   1.6       12%     29   3.4
+     TE60 (r25)            6%      7   0.4        7%     16   1.1
+     TE66 (r28)             -      -     -         -      -     -
+     TE72 (r30)             -      -     -         -      -     -
+
+wins = share of pairs where the later man outscored the earlier one that
+season; margin = by how much when he did; value = the two multiplied, which is
+what the later pick is worth over the man ahead of him.
+
+Read DOWN a column: it should fall smoothly, and now does. Any row that
+jumps against its neighbours is still noise, not a discovery.

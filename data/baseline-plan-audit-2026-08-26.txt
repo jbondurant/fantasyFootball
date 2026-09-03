@@ -1,0 +1,19 @@
+keeperless baseline plans (the ledger's V(base) branch), staged search at 150 rollouts:
+
+   MANAGER                PLAN                                QB rd     mean
+   KevinDA                RQRWWWWTW                             [2]   1805.9
+   d0ddi                  RQRWWWTWW                             [2]   1803.6
+   itsabust               QRWRWWWTW                             [1]   1762.4
+   Renteez                RRQWWWWTW                             [3]   1814.2
+   justinb314             RQRWWWWTW                             [2]   1786.4
+   JFMarino               RQRWWWWTW                             [2]   1778.2
+   tommyrads              RQRWWRWTW                             [2]   1765.3
+   JakeSK                 RQRWWWWTW                             [2]   1829.3
+   jerem9604              RQRWWWWTW                             [2]   1778.5
+   Hamrliks               RRQWWRWWT                             [3]   1784.2
+   patekxwater            RQRWWWWTW                             [2]   1792.7
+   BHier                  RQRWWWWTW                             [2]   1816.4
+
+QB in rounds 7-9 everywhere = the slide reached the shelf and
+the ledger's baselines were planned sanely; an early QB round is the
+valley trap, live inside the keeper numbers.

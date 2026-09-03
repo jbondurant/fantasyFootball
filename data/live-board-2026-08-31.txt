@@ -1,0 +1,41 @@
+24 men are already kept league-wide and cannot be drafted
+defence scatter from 32 ranks of sleeper actuals
+
+engine warm - paid ONCE, not per pick
+press enter to re-read the board and answer; q to quit
+
+(the draft is on pick 1, which is not mine - pricing my next, pick 7)
+
+THE BOARD AS IT IS
+
+pick 7, round 1, 0 men gone. my roster (2): RB QB
+the rules allow here: [RB, WR, TE, DEF]
+still needed for a legal lineup: {QB=0, RB=1, WR=3, TE=1, DEF=1}
+THE PLAN says: RB
+
+0 men actually gone; the 6 picks before mine simulated 200 times
+POS   LIKELIEST THERE            RANK   ODDS ADDS NOW VS WAIT     END  SWING     NEXT CLIFF
+RB    James Cook                    4    37%    238.5    47.1    2204    12% after RB8 CROSSED 
+WR    CeeDee Lamb                   3    43%    223.6    18.4    2176    12% after WR5 CROSSED 
+TE    Harold Fannin                 1   100%     45.2     0.0    2109    13%      after TE8 
+QB    Josh Allen                      -          -          -   REFUSED: a second QB is only ever a next-year keeper stash (RUNBOOK.md:191), and round 1 is before round 10
+DEF   Los Angeles Rams              1   100%     19.9     0.0    2083    12%     after DEF4 
+
+   the model takes: RB
+
+NEXT CLIFF is the one that decides this. A position's value does not
+slide, it steps: the raw rank curve falls off at a few places and is
+flat between them. CROSSED means my next pick lands on the far side of
+the next step, which is the only version of 'expensive to wait' that
+means anything. A smooth odds curve cannot show this - it is monotone
+by construction and was measured flattening the real cliff by five
+points - which is why the odds are an ingredient here and not the answer.
+
+ADDS NOW is what he adds to the season your STARTERS score, over the
+man the wire would give you. VS WAIT is that minus what the best of his
+position would add at pick 18 - so it is the cost of waiting, and it is
+what to rank on. A position the rules refuse is never priced at all.
+
+(answered in 1.0s)
+
+[enter] refresh  |  q quit > done - good luck.

@@ -1,0 +1,33 @@
+2026 late-round stash targets - ranked by projected points x measured
+position hit rate x youth bonus, among players who survive nine rounds
+in at least 60% of simulations (300 trials).
+
+   PLAYER                   POS      proj  survives  young    score
+   Bo Nix                   QB        348       83%    yes    228.1
+   Jaxson Dart              QB        341       65%    yes    223.4
+   Tyler Shough             QB        315      100%    yes    206.6
+   Cam Ward                 QB        266      100%    yes    174.4
+   Fernando Mendoza         QB        250      100%    yes    164.1
+   Patrick Mahomes          QB        345       69%           141.3
+   Matthew Stafford         QB        344       65%           141.1
+   Jared Goff               QB        343       98%           140.8
+   Jordan Love              QB        333      100%           136.3
+   Kyler Murray             QB        327       97%           134.1
+   Baker Mayfield           QB        327       99%           134.0
+   Sam Darnold              QB        315      100%           129.0
+   Malik Willis             QB        304      100%           124.7
+   C.J. Stroud              QB        292      100%           119.6
+   Bryce Young              QB        276      100%           113.0
+   Daniel Jones             QB        262      100%           107.2
+   Aaron Rodgers            QB        213      100%            87.3
+   Oronde Gadsden           TE        114       96%    yes     34.6
+   AJ Barner                TE        113      100%    yes     34.5
+   Gunnar Helm              TE        102      100%    yes     30.9
+   Denzel Boston            WR        108       80%    yes     26.0
+   Tyrone Tracy             RB        101       77%    yes     25.8
+   Malik Washington         WR        107       96%    yes     25.8
+   Jalen McMillan           WR        105       99%    yes     25.3
+
+The base rates say this list should be QB-heavy, and that is
+not a bug: nine of the ten best late stashes in league history were
+quarterbacks, because the room will not draft them.

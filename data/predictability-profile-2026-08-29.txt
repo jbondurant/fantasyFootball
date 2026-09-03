@@ -1,0 +1,41 @@
+
+WHAT PREDICTS, WHAT DOES NOT, AND HOW FAILURE LOOKS
+(ratio = actual / what that draft slot historically returned)
+
+POS  TIER         n  predicts     bias   spread     bust     boom   how to account for it
+RB   1-12        60     0.037     0.99     0.35       8%       7%   board is blind here - take the cheapest
+RB   13-24       60     0.335     1.00     0.46      17%       7%   downside-skewed - price the floor
+RB   25-36       60    -0.020     1.02     0.49      15%      18%   board is blind here - take the cheapest
+RB   37-48       60     0.162     0.94     0.66      30%      18%   downside-skewed - price the floor
+RB   49-60       60     0.120     1.03     0.67      28%      25%   board is blind here - take the cheapest
+RB   61-72       57     0.200     1.01     0.94      37%      28%   noisy but fair - shrink toward the mean
+RB   73-84       43    -0.029     1.00     0.85      37%      30%   board is blind here - take the cheapest
+WR   1-12        60     0.357     0.99     0.33       8%       7%   trust the board
+WR   13-24       60     0.151     1.00     0.35       8%       3%   downside-skewed - price the floor
+WR   25-36       60     0.246     1.00     0.45      17%      12%   trust the board
+WR   37-48       60     0.200     1.04     0.46      15%      15%   trust the board
+WR   49-60       60     0.153     0.97     0.45      15%      10%   trust the board
+WR   61-72       60    -0.090     1.03     0.59      17%      23%   board is blind here - take the cheapest
+WR   73-84       60     0.009     1.00     0.70      30%      30%   board is blind here - take the cheapest
+WR   85-96       46    -0.169     0.93     0.67      30%      15%   board is blind here - take the cheapest
+TE   1-12        60     0.319     1.01     0.35       5%      12%   upside-skewed - do not average it away
+TE   13-24       60     0.189     0.99     0.49      17%      10%   downside-skewed - price the floor
+TE   25-36       55     0.201     1.00     0.60      24%      20%   noisy but fair - shrink toward the mean
+QB   1-12        60     0.394     0.99     0.32      10%       0%   downside-skewed - price the floor
+QB   13-24       60     0.089     1.03     0.42       8%      12%   board is blind here - take the cheapest
+QB   25-36       50     0.240     0.96     0.60      24%      20%   noisy but fair - shrink toward the mean
+DEF  1-12        60     0.126     1.00     0.23       0%       0%   board is blind here - take the cheapest
+DEF  13-24       59     0.127     1.01     0.25       2%       3%   board is blind here - take the cheapest
+
+predicts = rank correlation with the outcome INSIDE that tier - whether the
+board can tell these twelve men apart at all. A position can look predictable
+overall and be noise within every tier, which only means the tiers are ordered
+right.
+
+bias = mean ratio. Above 1.0 the tier beats its billing and shrinkage toward
+the positional mean is the wrong move - the CENTRE needs moving, not the spread.
+
+bust / boom = share returning under half or over one and a half times billing.
+When bust far exceeds boom the pick is a floor and its downside should be
+priced; when boom exceeds bust it is a lottery ticket and averaging hides the
+only reason to take it.

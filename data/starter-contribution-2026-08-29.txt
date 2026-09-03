@@ -1,0 +1,100 @@
+
+measured over 5 seasons: a drafted starter misses RB 3.1, WR 2.9, TE 3.0 games
+that is the 1.0x world below; the others scale it.
+
+EXPECTED CONTRIBUTION TO WEEKLY STARTING LINEUPS
+(marginal points a pick at 79 adds over leaving the slot to the wire)
+
+INJURY WORLD           TE         WR         RB   take
+0x  none             28.0       75.2       73.2   WR
+0.5x                 31.5       78.4       85.4   RB
+1.0x                 34.2       85.0       89.5   RB
+1.5x                 38.6       88.3       98.8   RB
+2.0x                 45.8       94.8      103.1   RB
+3.0x                 59.6      105.0      114.7   RB
+
+
+DOES THE TIGHT END EVER WIN? (both dials at once)
+cells are TE minus the best of WR/RB - positive means take the tight end
+
+INJURY \ BUST      0.0x      0.5x      1.0x      1.5x      2.0x
+0.0x              -36.3     -45.6     -47.2     -60.8     -72.7
+0.5x              -42.9     -52.2     -53.9     -60.3     -73.3
+1.0x              -38.9     -48.2     -55.3     -58.7     -74.6
+1.5x              -43.6     -52.9     -60.2     -61.7     -75.2
+2.0x              -38.8     -48.0     -57.3     -62.2     -75.0
+3.0x              -36.6     -45.9     -55.1     -60.4     -74.1
+
+bust 0.0x = every player returns exactly what his draft slot promised;
+1.0x = what they really did; 2.0x = deviations doubled.
+
+the tight end wins in NONE of the 30 worlds tried.
+
+
+DOES IT WIN LATER? (TE minus the best of WR/RB, by pick)
+the plateau says a tight end barely gets worse with the rounds while a
+receiver falls off, so the gap should close as the pick moves back
+
+PICK           no failure         measured  TE / best alt  seasons
+79                  -36.3            -55.3     31.7 / 68.1       5/5
+90                  -34.1            -22.0     34.9 / 68.9       5/5
+103                 -30.7            -11.3     35.9 / 66.6       5/5
+114                 -24.4            -11.5     32.3 / 56.7       5/5
+127                 -16.9            -10.5     25.9 / 42.8       5/5
+140                 -20.3            -66.8     23.4 / 43.7       5/5
+151                 -19.1            -57.5     24.2 / 43.3       5/5
+162                  -5.0            +16.3     15.5 / 20.5       5/5
+175                  -8.9            -60.2     15.8 / 24.8       5/5
+
+
+SAME QUESTION, WITH PER-PLAYER DISTRIBUTIONS
+games played and points-against-expectation drawn from what players at that
+position and tier actually did, rather than every man getting the average
+
+PICK         scalar model    sampled model  TE / best alt
+79                  -55.3            -49.0     47.6 / 96.5
+90                  -22.0            -46.6     50.4 / 97.0
+103                 -11.3            -31.9     51.4 / 83.3
+114                 -11.5            -24.5     49.0 / 73.5
+127                 -10.5             -9.0     44.6 / 53.6
+140                 -66.8             -7.9     42.9 / 50.8
+151                 -57.5             -4.8     43.5 / 48.3
+162                 +16.3             -8.9     36.1 / 45.0
+175                 -60.2            -26.1     36.3 / 62.4
+
+Sampling changes the magnitudes and steadies the tail. The scalar model swung
+from -66.8 to +16.3 and back across three adjacent picks, which was one
+realized season showing through; drawing from a tier's distribution smooths
+that into a monotone curve. Both marginals rise, because dispersion creates
+starts - and the alternative rises more, because a receiver has a flex slot
+waiting and a tight end does not.
+
+Read this as WHICH position for one pick, not WHEN to take the tight end.
+The roster here is fixed at the six early picks plus one candidate, so it
+never asks what happens after you have taken four receivers and the flex is
+full. TightEndTiming's swap is the sequential question and answers 'when';
+this answers 'what is this one pick worth'. They agree that 79 is too early
+and disagree about how much better 90 is - under sampling, 90 is barely an
+improvement on 79, and the gap only really closes past 127.
+
+YOUR TWO WORLDS, AND WHERE THEY LAND
+
+The idealised corner - nobody hurt, nobody busting - is the top left cell,
+and it reads -36.3. So even with failure switched off entirely the tight
+end loses, and the intuition does not survive contact with this lineup.
+
+At the measured world - 1.0x injuries, 1.0x busts - the gap is -55.3.
+Both dials push the same way, which is why the second did not rescue it: a
+bust starter is a slot a bench man takes without anyone getting hurt, so it
+is the same mechanism arriving by a different road.
+
+What stops the tight end even at the corner is the FLEX. The intuition assumes
+the extra receiver is a bench player. He is not: two flex slots mean a fourth
+receiver or third back starts every week regardless, so he is a starter bought
+at pick 79, and his marginal never falls to the wire the way a tight end's
+does.
+
+The pick sweep above is the part that moves: the gap closes steadily as the
+pick moves back, because a tight end barely gets worse with the rounds while
+a receiver falls off a cliff. That is the plateau, and it is real - it just
+does not reach zero before the ADP data thins out.

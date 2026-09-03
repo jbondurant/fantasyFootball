@@ -1,0 +1,108 @@
+
+2025 (draft 20250823): feed, capture gap in days, coverage, mean rank, mean log2, top1, top3
+   ffc-api                    ?      75%      19.6      3.89      4%      8%
+   sleeper-dated            11d      99%      20.0      3.94      4%      8%
+   halfppr-Sleeper          11d      99%      20.0      3.94      4%      8%
+   sleeper-stored             ?     100%      27.2      3.97      4%      8%
+   sleeper-dated             0d      99%      20.5      3.99      3%      6%
+   ppr-RTSports              4d      98%      21.5      4.00      3%      6%
+   ppr-CBS                   4d      89%      21.9      4.04      4%      6%
+   ppr-ESPN                  4d      87%      22.7      4.07      3%      7%
+   halfppr-AVG              11d      99%      23.2      4.09      4%      8%
+   ppr-Sleeper               4d      99%      22.7      4.10      2%      6%
+   std-RTSports             11d      99%      24.1      4.11      4%      6%
+   halfppr-RTSports         11d      99%      24.1      4.11      4%      6%
+   std-AVG                  11d      99%      23.7      4.12      3%      6%
+   ppr-Fantrax               4d      99%      25.1      4.15      3%      7%
+   ppr-AVG                   4d      99%      24.6      4.17      3%      6%
+   sleeper-dated            22d      99%      25.2      4.18      2%      7%
+   halfppr-Yahoo            11d      88%      25.5      4.19      4%      6%
+   fp-ecr                    9d      99%      25.2      4.22      3%      6%
+   std-Sleeper              11d      99%      26.2      4.22      2%      7%
+   fp-ecr                   22d      99%      28.5      4.29      3%      5%
+   ppr-NFL                   4d      99%      33.3      4.45      2%      6%
+
+2024 (draft 20240901): feed, capture gap in days, coverage, mean rank, mean log2, top1, top3
+   ffc-api                    ?      83%      21.2      4.07      2%      4%
+   sleeper-DEFAULTS          1d      99%      21.5      4.11      3%      4%
+   sleeper-dated             3d      99%      21.6      4.11      3%      4%
+   std-Sleeper               4d      99%      21.6      4.11      3%      4%
+   sleeper-stored             ?     100%      23.1      4.13      3%      4%
+   ppr-RTSports              0d      97%      23.1      4.16      2%      5%
+   ppr-ESPN                  0d      85%      22.1      4.17      1%      4%
+   std-AVG                   4d      99%      23.1      4.17      3%      4%
+   ppr-Sleeper               0d      98%      22.4      4.18      3%      3%
+   sleeper-dated            29d      98%      22.6      4.18      2%      4%
+   halfppr-Sleeper          29d      98%      22.6      4.18      2%      4%
+   ppr-AVG                   0d      99%      24.2      4.24      1%      4%
+   fp-ecr                    2d      99%      24.1      4.26      2%      4%
+   halfppr-AVG              29d      99%      24.8      4.27      2%      4%
+   std-RTSports              4d      99%      25.7      4.28      2%      4%
+   halfppr-Yahoo            29d      85%      25.3      4.29      2%      3%
+   halfppr-RTSports         29d      99%      26.4      4.30      2%      5%
+   fp-ecr                   30d      99%      26.7      4.33      2%      4%
+   ppr-NFL                   0d      99%      29.7      4.42      2%      4%
+
+2023 (draft 20230905): feed, capture gap in days, coverage, mean rank, mean log2, top1, top3
+   sleeper-stored             ?     100%      21.2      3.92      1%      5%
+   sleeper-DEFAULTS          4d      95%      18.8      3.93      1%      3%
+   ffc-api                    ?      84%      19.2      3.95      3%      4%
+   sleeper-dated             6d      97%      19.4      3.97      1%      3%
+   sleeper-dated             4d      97%      19.6      3.97      1%      4%
+   halfppr-Sleeper           4d      97%      19.6      3.97      1%      4%
+   ppr-Sleeper               1d      97%      20.5      4.04      1%      5%
+   ppr-ESPN                  1d      86%      22.1      4.05      1%      5%
+   fp-ecr                    1d      97%      21.9      4.05      1%      5%
+   ppr-RTSports              1d      97%      22.3      4.09      1%      5%
+   halfppr-AVG               4d      97%      22.8      4.15      1%      3%
+   ppr-AVG                   1d      97%      23.4      4.16      1%      5%
+   halfppr-RTSports          4d      97%      24.0      4.20      1%      4%
+   halfppr-Yahoo             4d      86%      24.0      4.21      2%      4%
+   fp-ecr                   35d      97%      27.1      4.25      2%      3%
+   ppr-NFL                   1d      94%      29.1      4.40      3%      5%
+
+2022 (draft 20220904): feed, capture gap in days, coverage, mean rank, mean log2, top1, top3
+   ffc-api                    ?      62%      11.8      3.19      3%      7%
+   halfppr-Sleeper           9d      94%      12.1      3.28      3%      7%
+   sleeper-dated             9d      94%      12.1      3.28      3%      7%
+   sleeper-DEFAULTS          3d      93%      12.7      3.32      4%      6%
+   sleeper-stored             ?     100%      36.8      3.44      4%      6%
+   std-Sleeper               1d      94%      14.6      3.47      3%      6%
+   ppr-Sleeper               9d      93%      14.4      3.49      3%      6%
+   ppr-ESPN                  9d      86%      15.5      3.56      1%      6%
+   std-AVG                   1d      95%      16.7      3.58      2%      7%
+   sleeper-dated            29d      93%      17.5      3.59      3%      6%
+   fp-ecr                    2d      96%      17.4      3.60      2%      5%
+   ppr-RTSports              9d      95%      16.8      3.62      2%      5%
+   halfppr-AVG               9d      95%      16.3      3.63      2%      5%
+   ppr-AVG                   9d      95%      17.9      3.67      2%      7%
+   std-RTSports              1d      95%      18.1      3.69      2%      7%
+   fp-ecr                   29d      96%      23.5      3.77      2%      5%
+   halfppr-Yahoo             9d      89%      20.0      3.83      2%      4%
+
+2021 (draft 20210905): feed, capture gap in days, coverage, mean rank, mean log2, top1, top3
+   ppr-FFC                   1d      86%       9.6      2.52     15%     32%
+   sleeper-stored             ?     100%      17.9      2.55     13%     31%
+   halfppr-Sleeper           2d      94%       9.1      2.60     12%     28%
+   sleeper-dated             2d      94%       9.1      2.60     12%     28%
+   halfppr-FFC               2d      88%      10.1      2.61     15%     30%
+   ppr-MFL                   1d      84%       9.7      2.70     11%     28%
+   ffc-api                    ?      91%      10.9      2.70     14%     30%
+   std-MFL                   4d      78%      10.2      2.76     11%     24%
+   halfppr-AVG               2d      95%      11.5      2.77     13%     26%
+   std-FFC                   4d      88%      11.8      2.77     13%     29%
+   ppr-RTSports              1d      94%      12.1      2.79     12%     28%
+   ppr-ESPN                  1d      89%      11.5      2.79     11%     28%
+   ppr-AVG                   1d      95%      11.5      2.81     12%     26%
+   ppr-Fantrax               1d      95%      14.5      2.85     12%     29%
+   ppr-Sleeper               1d      94%      10.8      2.85      9%     24%
+   std-Sleeper               4d      94%      11.8      2.89      9%     24%
+   halfppr-Fantrax           2d      95%      14.7      2.91     12%     26%
+   std-AVG                   4d      95%      13.7      2.97     11%     25%
+   std-Fantrax               4d      95%      16.3      3.06     12%     25%
+   halfppr-Yahoo             2d      89%      15.0      3.10     10%     26%
+   fp-ecr                   34d      96%      20.6      3.33      8%     19%
+
+mean log2(rank of the chosen player among the feed's still-
+available players) is the headline: lower = the room is reading this
+sheet. top1/top3 = share of picks that were the feed's next-best.

@@ -1,0 +1,28 @@
+1845 player-seasons joined from dated ECR
+
+
+DIAGNOSTIC: does rank_std move with the miss at all?
+SEASON          n    correlation   with |actual - expected|
+2022          232         -0.142
+2023          238         -0.072
+2024          240         -0.168
+2025          240         -0.083
+
+
+THE GATE: out of sample, does it beat knowing the tier?
+fit on 2022, 2023; judged once on 2024, 2025
+
+fitted on training:
+   alone        miss = 47.1 + -0.14 x rank_std
+   on top of tier  residual = -0.0 + -0.02 x (rank_std - tier mean)
+
+PREDICTOR OF THE MISS          mean error
+tier average (baseline)              29.4
+rank_std alone                       31.1
+tier PLUS rank_std                   29.4
+
+held-out players: 480
+
+added to the tier, rank_std improves it by 0.01 points of predicted miss.
+DROP IT. Knowing the tier is as good, and a feature that adds nothing out
+of sample is worse than none, because it would be trusted anyway.

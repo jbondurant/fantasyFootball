@@ -1,0 +1,29 @@
+
+WHAT EACH STRATEGY DOES FROM ROUND 8 ON
+
+STRATEGY                 rounds 1-7                   rounds 8-16
+starter-sum (1-16)       RB WR WR WR WR WR RB         WR QB TE TE WR RB DEF
+best-nine (Model A)      RB WR RB WR WR WR TE         QB QB QB QB QB QB DEF
+RUNBOOK committed        RB RB RB WR WR WR WR         TE WR QB TE QB RB DEF
+RB-heavy folk rule       RB RB RB WR WR WR TE         QB WR RB WR TE QB DEF
+RUNBOOK front + SS back  RB RB RB WR WR WR WR         WR QB TE TE WR RB DEF
+ModelA front + SS back   RB WR RB WR WR WR TE         WR QB TE TE WR RB DEF
+best available by ADP    (whatever ADP says)          (whatever ADP says)
+
+
+AND WHAT THE BACK HALF ACTUALLY DELIVERED
+(points scored in weeks those players genuinely started, lineup by preseason rank)
+
+STRATEGY                     season   from r8-16      share starts r8-16
+starter-sum (1-16)             1886          677        36%           69
+best-nine (Model A)            1613          429        27%           34
+RUNBOOK committed              1984          684        34%           66
+RB-heavy folk rule             1870          650        35%           65
+RUNBOOK front + SS back        1963          664        34%           66
+ModelA front + SS back         1848          664        36%           67
+best available by ADP          1442          278        19%           34
+
+The back half is nine of fourteen picks. If its share of the season is small,
+then the rounds everybody argues about are the rounds that matter least - and
+the tight end and defence questions are being asked in the cheapest part of
+the draft.

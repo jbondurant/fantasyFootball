@@ -1,0 +1,215 @@
+> Task :compileJava UP-TO-DATE
+> Task :processResources NO-SOURCE
+> Task :classes UP-TO-DATE
+> Task :compileTestJava UP-TO-DATE
+> Task :processTestResources NO-SOURCE
+> Task :testClasses UP-TO-DATE
+
+> Task :smokeTest
+
+AvailabilityModelTest > everyPositionIsStillFieldableDeepIntoTheDraft() PASSED
+
+AvailabilityModelTest > theBoardGetsWorseTheLongerYouWait() PASSED
+
+AvailabilityModelTest > aBetterPlayerIsLessLikelyToLast() PASSED
+
+AvailabilityModelTest > replacementStaysNearTheFixedRankRatherThanRunningAway() PASSED
+
+AvailabilityModelTest > repeatedDrawsWithTheSameSeedAgree() PASSED
+
+AvailabilityModelTest > waitingIsNeverWorthMoreThanHavingHim() PASSED
+
+AvailabilityModelTest > survivalFallsAsTheDraftGoesOn() PASSED
+
+DraftBacktestSmokeTest > survivalNumbersStayCalibratedOnTheHeldOutSeason() STANDARD_OUT
+    weighted calibration error 0.53%
+
+DraftBacktestSmokeTest > survivalNumbersStayCalibratedOnTheHeldOutSeason() PASSED
+
+DraftBacktestSmokeTest > theLeagueBiasLayerBeatsRawAdpOnTheHeldOutSeason() STANDARD_OUT
+    top-5: adp 42.9%, +league bias 50.6%
+
+DraftBacktestSmokeTest > theLeagueBiasLayerBeatsRawAdpOnTheHeldOutSeason() PASSED
+
+DraftPlannerSmokeTest > theNoKeeperPlanCoversEveryLivePickWithSaneValues() PASSED
+
+DraftSimulatorSmokeTest > simulatedSurvivalStaysAtLeastAsCalibratedAsTheGaussian() STANDARD_OUT
+    weighted calibration: simulated 0.67%, gaussian 2.51%
+
+DraftSimulatorSmokeTest > simulatedSurvivalStaysAtLeastAsCalibratedAsTheGaussian() PASSED
+
+DraftSimulatorSmokeTest > simulatedManagersKeepTheirRealQuarterbackTiming() STANDARD_OUT
+    QB timing MAE: simulated 1.91, league-mean 3.19
+
+DraftSimulatorSmokeTest > simulatedManagersKeepTheirRealQuarterbackTiming() PASSED
+
+DraftSimulatorSmokeTest > aSimulatedDraftFillsEveryLiveSlotFromTheBoard() PASSED
+
+KeeperAuditSmokeTest > theAuditRunsAgainstThisSeasonsBoard() STANDARD_OUT
+    2026 board: 24 match the rules, 0 do not
+
+KeeperAuditSmokeTest > theAuditRunsAgainstThisSeasonsBoard() PASSED
+
+KeeperAuditSmokeTest > theAuditCanReadKeeperRoundsOffACompletedBoard() PASSED
+
+KeeperBaselineSmokeTest > theKeeperlessBaselineGivesUpTheSeatsOwnKeepersHoweverTheyArrived() PASSED
+
+KeeperBaselineSmokeTest > onlyAKeeperPricedInsideTheNineRoundGameCostsALivePick() STANDARD_OUT
+
+       MANAGER          SLOT  KEEPERS    IN-GAME    PICKS   ROSTER
+       JakeSK              1        2          0        9       11
+       BHier               2        2          1        8       10
+       Renteez             3        2          2        7        9
+       KevinDA             4        2          1        8       10
+       d0ddi               5        2          1        8       10
+       patekxwater         6        2          1        8       10
+       justinb314          7        4          2        7       11
+       JFMarino            8        2          2        7        9
+       jerem9604           9        2          2        7        9
+       Hamrliks           10        2          0        9       11
+       tommyrads          11        2          1        8       10
+       itsabust           12        2          1        8       10
+
+KeeperBaselineSmokeTest > onlyAKeeperPricedInsideTheNineRoundGameCostsALivePick() PASSED
+
+KeeperBaselineSmokeTest > noSeatPricesItsKeepersAtExactlyZero() PASSED
+
+KeeperChooserSmokeTest > twoKeepersNeverShareARound() PASSED
+
+KeeperChooserSmokeTest > aKeeperIsNeverAlsoDraftedBySomeoneElse() PASSED
+
+KeeperChooserSmokeTest > candidatesAreOnlyPlayersTheRulesAllow() STANDARD_OUT
+    eligible keepers on my roster: 14 of 16 rostered
+
+KeeperChooserSmokeTest > candidatesAreOnlyPlayersTheRulesAllow() PASSED
+
+KeeperChooserSmokeTest > simulatedDraftsDoNotAccumulateRosters() PASSED
+
+KeeperChooserSmokeTest > theChooserRanksPairsAndPrefersValue() STANDARD_OUT
+    best of 6 pairs: Bhayshul Tuten (r12) + Brock Purdy (r13)
+
+KeeperChooserSmokeTest > theChooserRanksPairsAndPrefersValue() PASSED
+
+KeeperChooserSmokeTest > aFirstRoundPickCannotBeKept() PASSED
+
+KeeperChooserSmokeTest > keepersCostTheirOwnerAPickRatherThanBeingFree() PASSED
+
+KeeperChooserSmokeTest > aSimulatedTeamCanFieldEveryStartingSlot() PASSED
+
+KeeperChooserSmokeTest > scoringCountsTheLineupRatherThanTheWholeRoster() STANDARD_OUT
+    lineup 1784 vs whole roster 2361
+
+KeeperChooserSmokeTest > scoringCountsTheLineupRatherThanTheWholeRoster() PASSED
+
+KeeperHistorySmokeTest > thePricingRulesReproduceSixSeasonsOfKeeperCosts() STANDARD_OUT
+    keeper costs reproduced: 79/84
+       Jerry Jeudy: league charged round 7, rules give 8
+       Jayden Daniels: league charged round 8, rules give 7
+       Joe Burrow: league charged round 11, rules give 12
+       Joe Burrow: league charged round 13, rules give 12
+       Josh Jacobs: league charged round 4, rules give 5
+
+KeeperHistorySmokeTest > thePricingRulesReproduceSixSeasonsOfKeeperCosts() PASSED
+
+LeagueSmokeTest > everyRosterIsAccountedFor() PASSED
+
+LeagueSmokeTest > myUserResolvesAndIsInTheLeague() PASSED
+
+LeagueSmokeTest > everyRosteredPlayerHasAProjection() STANDARD_OUT
+    rostered players with no projection: []
+
+LeagueSmokeTest > everyRosteredPlayerHasAProjection() PASSED
+
+LeagueSmokeTest > thereIsOnlyOneScoringPathAndEverythingAgreesWithIt() PASSED
+
+LeagueSmokeTest > nobodyIsKeepingAPlayerTheRulesDoNotAllow() PASSED
+
+LeagueSmokeTest > sleeperStillProjectsTheStatsTheScoringNeeds() PASSED
+
+LeagueSmokeTest > theLeagueScoresTwoPointConversions() PASSED
+
+LeagueSmokeTest > theConfiguredLeagueIsThisSeason() PASSED
+
+LeagueSmokeTest > theLeagueLooksLikeTheLeague() PASSED
+
+LeagueSmokeTest > whateverKeepersHaveBeenDeclaredPriceCleanly() STANDARD_OUT
+    keepers declared so far: 24
+      KevinDA	Colston Loveland	round 10
+      KevinDA	De'Von Achane	round 5
+      Renteez	Ladd McConkey	round 6
+      Renteez	Javonte Williams	round 5
+      JFMarino	Trey McBride	round 3
+      JFMarino	Chris Olave	round 5
+      itsabust	Bucky Irving	round 13
+      itsabust	Jaxon Smith-Njigba	round 5
+      JakeSK	Tucker Kraft	round 11
+      JakeSK	Puka Nacua	round 13
+      BHier	Jayden Daniels	round 7
+      BHier	Kyle Pitts	round 13
+      tommyrads	Caleb Williams	round 14
+      tommyrads	Tyler Warren	round 8
+      patekxwater	Rico Dowdle	round 13
+      patekxwater	Nico Collins	round 8
+      jerem9604	Brock Bowers	round 7
+      jerem9604	Jonathan Taylor	round 4
+      d0ddi	Sam LaPorta	round 11
+      d0ddi	Kyren Williams	round 8
+      justinb314	Bhayshul Tuten	round 12
+      justinb314	Brock Purdy	round 13
+      Hamrliks	Drake Maye	round 13
+      Hamrliks	Chase Brown	round 14
+
+LeagueSmokeTest > whateverKeepersHaveBeenDeclaredPriceCleanly() PASSED
+
+LeagueSmokeTest > fantasyProsRankingsStillMatchUpToSleeperPlayers() STANDARD_OUT
+    FantasyProsrankings matched: 898/941
+
+LeagueSmokeTest > fantasyProsRankingsStillMatchUpToSleeperPlayers() PASSED
+
+LeagueSmokeTest > everyRosteredPlayerInTheLeagueResolves() PASSED
+
+LeagueSmokeTest > lastSeasonsDraftIsCompleteEnoughToPriceKeepers() PASSED
+
+LeagueSmokeTest > aStartingQuarterbackOutscoresABackupRunningBack() PASSED
+
+LeagueSmokeTest > theWholeTradeFinderPipelineProducesScoredRosters() PASSED
+
+LeagueSmokeTest > theHistoryGoesBackFarEnoughToPriceConsecutiveKeepers() PASSED
+
+ManagerProfilesSmokeTest > theFittedLeagueBiasMatchesTheKnownDraftHistory() PASSED
+
+ManagerProfilesSmokeTest > fittingThroughAnEarlierSeasonUsesLessHistory() PASSED
+
+MockDraftSmokeTest > theBoardStillHasSomebodyToRecommend() STANDARD_OUT
+    Bo Nix	Patrick Mahomes	Matthew Stafford		347		344		344
+    Kenny Gainwell	Chris Rodriguez	Aaron Jones		128		125		120
+    Jordan Addison	Matthew Golden	Jakobi Meyers		141		141		137
+    Travis Kelce	Mark Andrews	Brenton Strange		136		132		129
+    Houston Texans	Seattle Seahawks	Philadelphia Eagles
+
+MockDraftSmokeTest > theBoardStillHasSomebodyToRecommend() PASSED
+
+MockDraftSmokeTest > everyPickResolvesToAPlayer() PASSED
+
+MockDraftSmokeTest > ourRoundMathAgreesWithSleepers() STANDARD_OUT
+    79 selections plus 24 keepers; sleeper's last selection is round 8, we are on round 8
+
+MockDraftSmokeTest > ourRoundMathAgreesWithSleepers() PASSED
+
+MockDraftSmokeTest > everyPickIsStampedWithTheRoundItsPickNumberImplies() PASSED
+
+MockDraftSmokeTest > myPicksAreAttributedToMe() STANDARD_OUT
+    picks attributed to me: 9 (sleeper says 9)
+
+MockDraftSmokeTest > myPicksAreAttributedToMe() PASSED
+
+MockDraftSmokeTest > theDraftExistsAndSaysHowBigItIs() STANDARD_OUT
+    draft 1399162846528454656: 12 teams, 16 rounds, status paused
+
+MockDraftSmokeTest > theDraftExistsAndSaysHowBigItIs() PASSED
+
+MockDraftSmokeTest > draftedPlayersLeaveTheAvailablePool() PASSED
+
+BUILD SUCCESSFUL in 1m 11s
+3 actionable tasks: 1 executed, 2 up-to-date
+Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.7.1/userguide/configuration_cache_enabling.html

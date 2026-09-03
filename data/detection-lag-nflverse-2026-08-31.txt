@@ -1,0 +1,49 @@
+
+DETECTION LAG
+
+seasons          16 (2010 2011 2012 2013 2014 2015 2016 2017 2018 2019 2020 2021 2022 2023 2024 2025)
+population       drafted starters, ADP <= 108 (rounds 1-9 of 12)
+rate             points per GAME PLAYED (availability divided out)
+target           rest-of-season rate, weeks k+1..W, needs 3+ games
+
+WEEK k      n   RMSE pre   RMSE std     edge   w* std  RMSE mix
+1        1582       3.38       7.40    -4.02     0.10      3.30
+2        1605       3.48       5.68    -2.20     0.17      3.35
+3        1605       3.56       5.07    -1.51     0.23      3.38
+4        1599       3.62       4.71    -1.09     0.28      3.40
+5        1591       3.68       4.50    -0.82     0.32      3.42
+6        1570       3.81       4.27    -0.46     0.38      3.49
+7        1551       3.87       4.21    -0.34     0.41      3.52
+8        1529       3.98       4.21    -0.23     0.44      3.61
+9        1506       4.05       4.20    -0.15     0.46      3.68
+10       1491       4.23       4.30    -0.06     0.48      3.86
+11       1455       4.35       4.28    +0.07     0.52      3.93
+12       1398       4.47       4.30    +0.17     0.56      4.02
+13       1318       4.77       4.52    +0.25     0.60      4.32
+14       1157       4.98       4.84    +0.14     0.56      4.63
+
+CROSSOVER
+   season-to-date first beats preseason at week 11
+   the blend first leans more than half on the season at week 11
+   bootstrap over seasons: median 11, 95% interval [9, 14]
+   (2000 resamples of the 16 seasons; a draw that never crossed is recorded as 15)
+
+BY POSITION (crossover week, own bootstrap)
+POS      cross    95% low   95% high
+QB          13          8         15
+RB           9          6         11
+WR          11          9         15
+TE          13          8         15
+
+WHAT THE LAG IS WORTH
+WEEK k     weeks left mix beats pre by per season
+1                  17           0.08           
+2                  16           0.13           
+3                  15           0.18           
+4                  14           0.22           
+5                  13           0.26           
+6                  12           0.32           
+7                  11           0.35           
+8                  10           0.37           
+9                   9           0.37           
+10                  8           0.38           

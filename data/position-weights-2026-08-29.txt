@@ -1,0 +1,16 @@
+
+FITTING FOUR NUMBERS ON 2021+2022+2023, JUDGED ONCE ON 2024+2025
+receivers pinned at 1.00 as the reference; the plan is never consulted
+
+start   RB 1.00  TE 1.00  QB 1.00  DEF 1.00   train 1893
+pass 1  RB 1.30  TE 1.00  QB 1.00  DEF 0.60   train 2009
+pass 2  RB 1.30  TE 1.00  QB 1.00  DEF 0.60   train 2009
+
+                                       TEST
+unweighted model                       1813
+fitted weights                         1730
+RUNBOOK committed (the prior)          2054
+
+The fit did not survive the holdout.
+
+what it learned: RB 1.30  TE 1.00  QB 1.00  DEF 0.60

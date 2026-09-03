@@ -1,0 +1,163 @@
+./gradlew run -Pmain=EraSlate -q
+the twenty-four declared keepers, their positional ADP rank on the 2026 board,
+the picks they spend, and the men each rank lands on in every backtested season.
+
+
+league keeper slate: 24 men off the board by positional ADP rank (2 mine), 24 picks spent
+
+KEEPER                   POS    RANK  ROUND  OWNER
+Drake Maye               QB      QB2     13  725953800816373760
+Jayden Daniels           QB      QB6      7  853719913725030400
+Brock Purdy              QB      QB9     13  604136387620438016  (MINE)
+Caleb Williams           QB     QB11     14  606234521821577216
+Jonathan Taylor          RB      RB3      4  725379562434830336
+De'Von Achane            RB      RB7      5  452603383455412224
+Chase Brown              RB      RB8     14  725953800816373760
+Kyren Williams           RB     RB13      8  459267987174584320
+Javonte Williams         RB     RB17      5  603709077557669888
+Bucky Irving             RB     RB21     13  464471023782195200
+Bhayshul Tuten           RB     RB24     12  604136387620438016  (MINE)
+Rico Dowdle              RB     RB31     13  740473448551366656
+Puka Nacua               WR      WR1     13  724919475115225088
+Jaxon Smith-Njigba       WR      WR3      5  464471023782195200
+Nico Collins             WR     WR11      8  740473448551366656
+Chris Olave              WR     WR12      5  604377190016016384
+Ladd McConkey            WR     WR22      6  603709077557669888
+Trey McBride             TE      TE1      3  604377190016016384
+Brock Bowers             TE      TE2      7  725379562434830336
+Colston Loveland         TE      TE3     10  452603383455412224
+Tyler Warren             TE      TE4      8  606234521821577216
+Kyle Pitts               TE      TE6     13  853719913725030400
+Tucker Kraft             TE      TE7     11  724919475115225088
+Sam LaPorta              TE     TE10     11  459267987174584320
+
+picks these keepers spend, which select nobody:
+   [32, 40, 51, 52, 56, 60, 70, 74, 81, 86, 91, 92, 117, 121, 125, 138, 145, 146, 150, 151, 154, 156, 158, 159]
+
+and what that structure lands on, season by season:
+
+2021  24 of 24 slots filled from a 373-man board
+      RB3  Derrick Henry            
+      RB7  Aaron Jones              
+      WR1  Davante Adams            
+      RB8  Jonathan Taylor          
+      TE1  Travis Kelce             
+      WR3  Stefon Diggs             
+      RB13 Joe Mixon                
+      TE2  Darren Waller            
+      TE3  George Kittle            
+      QB2  Josh Allen               
+      WR11 Allen Robinson           
+      RB17 Josh Jacobs              
+      WR12 CeeDee Lamb              
+      TE4  Kyle Pitts               
+      RB21 Darrell Henderson        
+      WR22 Diontae Johnson          
+      TE6  T.J. Hockenson           
+      QB6  Russell Wilson           
+      RB24 Raheem Mostert           (MINE)
+      QB9  Tom Brady                (MINE)
+      TE7  Logan Thomas             
+      RB31 Leonard Fournette        
+      QB11 Jalen Hurts              
+      TE10 Dallas Goedert           
+2022  24 of 24 slots filled from a 237-man board
+      RB3  Austin Ekeler            
+      WR1  Cooper Kupp              
+      WR3  Ja'Marr Chase            
+      RB7  Joe Mixon                
+      RB8  D'Andre Swift            
+      TE1  Travis Kelce             
+      RB13 Leonard Fournette        
+      TE2  Mark Andrews             
+      WR11 A.J. Brown               
+      WR12 Keenan Allen             
+      TE3  Kyle Pitts               
+      QB2  Patrick Mahomes          
+      TE4  George Kittle            
+      RB17 Travis Etienne           
+      RB21 Elijah Mitchell          
+      RB24 J.K. Dobbins             (MINE)
+      QB6  Joe Burrow               
+      WR22 Jerry Jeudy              
+      TE6  Dalton Schultz           
+      TE7  T.J. Hockenson           
+      QB9  Russell Wilson           (MINE)
+      RB31 Devin Singletary         
+      QB11 Aaron Rodgers            
+      TE10 Zach Ertz                
+2023  24 of 24 slots filled from a 269-man board
+      WR1  Justin Jefferson         
+      TE1  Travis Kelce             
+      WR3  Tyreek Hill              
+      RB3  Bijan Robinson           
+      RB7  Tony Pollard             
+      RB8  Josh Jacobs              
+      QB2  Josh Allen               
+      WR11 Jaylen Waddle            
+      WR12 Chris Olave              
+      TE2  Mark Andrews             
+      RB13 Joe Mixon                
+      RB17 Dameon Pierce            
+      QB6  Justin Herbert           
+      TE3  T.J. Hockenson           
+      TE4  George Kittle            
+      RB21 Alexander Mattison       
+      WR22 Terry McLaurin           
+      RB24 Javonte Williams         (MINE)
+      TE6  Dallas Goedert           
+      TE7  Kyle Pitts               
+      RB31 David Montgomery         
+      QB9  Dak Prescott             (MINE)
+      TE10 David Njoku              
+      QB11 Tua Tagovailoa           
+2024  24 of 24 slots filled from a 288-man board
+      WR1  CeeDee Lamb              
+      WR3  Justin Jefferson         
+      RB3  Bijan Robinson           
+      RB7  Kyren Williams           
+      RB8  Travis Etienne           
+      WR11 Drake London             
+      WR12 Chris Olave              
+      TE1  Sam LaPorta              
+      TE2  Travis Kelce             
+      QB2  Jalen Hurts              
+      RB13 Rachaad White            
+      WR22 DJ Moore                 
+      RB17 Alvin Kamara             
+      TE3  Mark Andrews             
+      TE4  Trey McBride             
+      QB6  Anthony Richardson       
+      RB21 David Montgomery         
+      TE6  George Kittle            
+      TE7  Kyle Pitts               
+      RB24 Najee Harris             (MINE)
+      QB9  Dak Prescott             (MINE)
+      TE10 David Njoku              
+      RB31 Jonathon Brooks          
+      QB11 Brock Purdy              
+2025  24 of 24 slots filled from a 299-man board
+      WR1  Ja'Marr Chase            
+      RB3  Jahmyr Gibbs             
+      WR3  CeeDee Lamb              
+      RB7  Josh Jacobs              
+      RB8  De'Von Achane            
+      TE1  Brock Bowers             
+      QB2  Josh Allen               
+      WR11 Ladd McConkey            
+      TE2  Trey McBride             
+      RB13 James Cook               
+      WR12 Tyreek Hill              
+      TE3  George Kittle            
+      RB17 Kenneth Walker           
+      QB6  Patrick Mahomes          
+      RB21 RJ Harvey                
+      TE4  Sam LaPorta              
+      WR22 DJ Moore                 
+      RB24 Isiah Pacheco            (MINE)
+      TE6  T.J. Hockenson           
+      TE7  Mark Andrews             
+      QB9  Dak Prescott             (MINE)
+      RB31 Travis Etienne           
+      TE10 Tyler Warren             
+      QB11 Brock Purdy              

@@ -1,0 +1,49 @@
+348 picks in rounds 8-16 with a following season to judge them by.
+keeper term scaled by 0.88 - the share of this league's keepers whose
+drafter is the one keeping him (KeeperOrigin); the rest came by trade.
+
+what a pick in each round is worth in its own year (the keeper price):
+   r8 52   r9 36   r10 42   r11 32   r12 25   r13 42   r14 28   r15 43   r16 12   
+
+POS  ROUNDS       n this season  keeper next       TOTAL   +/-2se
+QB   8-9          7        98.5          3.4       101.9     43.5
+QB   10-12       14        49.9         44.7        94.6     40.6
+QB   13-16       25        38.2         29.5        67.7     30.6
+RB   8-9         27        47.2         20.2        67.4     30.0
+RB   10-12       40        42.6         21.1        63.7     21.2
+RB   13-16       37        40.4         25.6        66.0     23.8
+WR   8-9         48        40.9         11.2        52.1     18.2
+WR   10-12       54        30.4          7.8        38.2     13.0
+WR   13-16       53        27.5         13.0        40.5     15.4
+TE   8-9         11        27.3          0.5        27.8     21.1
+TE   10-12       11        15.8          1.4        17.2      9.7
+TE   13-16       21        13.3          1.9        15.2     11.9
+
+the fifteen best picks this league ever made in rounds 8-16, on this model:
+   PLAYER                   POS ROUND SEASON   this yr    keeper    TOTAL
+   De'Von Achane            RB  r8    2023       125.4     134.7    260.1
+   Jalen Hurts              QB  r14   2021        95.1     141.3    236.4
+   Raheem Mostert           RB  r13   2022        92.8     141.3    234.1
+   Justin Herbert           QB  r11   2021       177.7      56.2    233.8
+   James Conner             RB  r8    2021       166.7      55.8    222.5
+   Joe Burrow               QB  r13   2021       106.1     114.2    220.4
+   Chuba Hubbard            RB  r15   2023       111.2     107.5    218.7
+   Puka Nacua               WR  r15   2023       177.7      40.7    218.4
+   Amon-Ra St. Brown        WR  r14   2021       109.8     101.8    211.6
+   Kenneth Walker           RB  r10   2022       129.0      79.7    208.7
+   Rico Dowdle              RB  r10   2024       123.7      84.3    208.0
+   Jaylen Waddle            WR  r8    2021       119.3      86.7    206.0
+   Tom Brady                QB  r10   2021       165.6      38.6    204.3
+   Raheem Mostert           RB  r11   2023       203.4       0.0    203.4
+   Nico Collins             WR  r10   2023       153.1      49.5    202.6
+
+averaged over every pick in the range, this season is worth 36.3 and the
+keeper option 15.6 - so 30% of a rounds 8-16 pick's value is next year.
+Most of it is still THIS season: the keeper term is real but secondary,
+and it is worth more to this seat than to others only because this seat's
+keeper pair is the league's weakest.
+
+raw points flatter QB here - this league pays 6 per passing touchdown, so a
+quarterback outscores a receiver before any skill is involved. and a second
+QB cannot start behind Purdy. read the QB rows as a keeper argument, not a
+lineup one.

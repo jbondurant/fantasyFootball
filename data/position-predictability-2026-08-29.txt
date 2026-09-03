@@ -1,0 +1,17 @@
+
+HOW WELL DOES A PRESEASON RANK PREDICT THE SEASON?
+(spearman between draft-board rank and actual points, within position)
+
+SEASON         QB       RB       WR       TE      DEF
+2021        0.773    0.728    0.701    0.610    0.527
+2022        0.463    0.598    0.616    0.382    0.119
+2023        0.378    0.533    0.664    0.468    0.461
+2024        0.571    0.600    0.643    0.517    0.047
+2025        0.466    0.701    0.573    0.568    0.232
+
+mean        0.530    0.632    0.639    0.509    0.277
+n             185      422      519      202      138
+
+defence 0.277 against 0.578 for the skill positions.
+The folk claim holds: a preseason defence ranking says markedly less about
+the season than a ranking at any other position.

@@ -1,0 +1,21 @@
+
+starting from 2 keepers: Tuten, Purdy
+roster then built by taking the best back or receiver each pick, never a tight end,
+so every row asks what a tight end would have been worth INSTEAD, right there.
+
+PICK   ROUND  ROSTER SO FAR         best TE      best RB      best WR   worth taking TE?
+7      1      1QB 1RB                  33.3        114.3         94.1   no - depth wins by 81
+18     2      1QB 2RB                  33.3        118.1         82.1   no - depth wins by 85
+31     3      1QB 3RB                  32.9         54.5         93.7   no - depth wins by 61
+42     4      1QB 3RB 1WR              32.9         49.5         53.7   no - depth wins by 21
+55     5      1QB 3RB 2WR              33.8         52.9         45.9   no - depth wins by 19
+66     6      1QB 4RB 2WR              36.0         35.0         42.3   no - depth wins by 6
+79     7      1QB 4RB 3WR              33.4         35.2         28.9   no - depth wins by 2
+90     8      1QB 5RB 3WR              29.4         25.0         23.7   YES - by 4
+103    9      1QB 6RB 3WR               8.8         22.9         14.1   no - depth wins by 14
+114    10     1QB 7RB 3WR              35.6          9.0          9.9   YES - by 26
+127    11     1QB 7RB 4WR              12.2          9.7          9.9   YES - by 2
+
+Read the crossover, not the levels. While depth wins, a tight end is the worse
+use of the pick; from the row where the tight end wins onward, the empty slot
+has become the most valuable thing left to fill.

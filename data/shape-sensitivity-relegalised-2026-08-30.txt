@@ -1,0 +1,330 @@
+
+SHAPE SENSITIVITY - plateau or spike around the committed plan
+scored by PlanBacktest on 5 real seasons, best legal lineup each week
+
+committed  RB RB RB WR WR WR WR TE WR QB TE QB RB DEF
+               2021    2022    2023    2024    2025     mean    worst
+               2035    1654    2191    1960    2148     1998     1654
+
+crude per-season error of that mean: 95. THE TIE BAND IS +/- 125, which is
+not that number: it is the measured 80%-power detection threshold for this design
+(94 points is bare significance, 125 is what it can catch four times in five).
+a shape inside the band has NOT been distinguished from the committed plan by
+this evidence. 'paired' below is the sharper test: the same-board per-season
+difference, whose error bar is much smaller. 'chg' is how many of the fourteen
+drafted men actually changed - a perturbation that changes nobody is a no-op,
+not a plateau.
+
+THE KEEPERS ARE NOT IN THIS BACKTEST. PlanBacktest scores the fourteen DRAFTED
+men only, so every shape here has to supply its own starting quarterback and
+its own second back. Justin does not: Purdy (QB) and Tuten (RB) are kept at
+rounds 13 and 12. Any result below that turns on needing a QB early is measuring
+a hole his real roster does not have, and should be discounted accordingly.
+
+
+0. THE RIVALS - the same comparison PlanBacktest prints, with the paired error
+   bar it does not. 'beats' is how many of the five seasons each actually won.
+
+   STRATEGY                       mean    worst   vs plan  paired se   beats
+   starter-sum (1-16)             1900     1733       -98        131     2/5
+   best-nine (Model A)            1627     1376      -371        100     0/5
+   RUNBOOK committed              1998     1654        +0          0     0/5
+   RB-heavy folk rule             1884     1734      -114         63     1/5
+   RUNBOOK front + SS back        1977     1819       -20         67     2/5
+   ModelA front + SS back         1862     1771      -136         78     1/5
+   [not legal] no DEF drafted     2007     1647        +9         10     3/5   ILLEGAL
+
+   A gap smaller than about twice its paired se has not been demonstrated.
+
+
+1. SINGLE-SLOT GRID - each slot, each position, five-season mean
+
+ROUND  PICK       QB      RB      WR      TE     DEF   worst cost   verdict
+1      7       1928    1998=   1957    1915    1895           102   FREE - the worst legal swap is inside the band
+2      18      1985    1998=   1952    1909    1938            89   FREE - the worst legal swap is inside the band
+3      31      2014    1998=   1953    1918    1984            80   FREE - the worst legal swap is inside the band
+4      42      1973    1966    1998=   1967    1998            32   FREE - the worst legal swap is inside the band
+5      55      1957    1947    1998=   1973    1981            51   FREE - the worst legal swap is inside the band
+6      66      2001    1928    1998=   1967    2001            69   FREE - the worst legal swap is inside the band
+7      79      1979    2006    1998=   1937    1967            61   FREE - the worst legal swap is inside the band
+8      90      1973    1973    1973    1998=   2009            25   FREE - the worst legal swap is inside the band
+9      103     2003    1965    1998=   1996    1976            32   FREE - the worst legal swap is inside the band
+10     114     1998=   1897    1889    1902    1883           115   FREE - the worst legal swap is inside the band
+11     127     1997    2006    2001    1998=   1977            21   FREE - the worst legal swap is inside the band
+14     162     1998=   1980    1985    1977    1966            32   FREE - the worst legal swap is inside the band
+15     175     2001    1998=   2024    2004    1987            11   FREE - the worst legal swap is inside the band
+16     186     2007!   2007!   2007!   2007!   1998=            0   FORCED - every alternative is illegal
+
+= committed  ! drafts no defence, so illegal: shown, never counted
+'worst cost' is what the WORST legal position in that slot costs against the plan.
+A slot is only CONSTRAINED if even the worst thing you could do there is detectable.
+
+of 52 legal single-slot changes, 52 tie the committed plan and 0 are clearly worse or better.
+12 of them score ABOVE the committed plan:
+   RB RB RB WR WR WR WR TE WR QB TE QB WR DEF
+               2048    1721    2210    1971    2170     2024     1721   vs committed    +26  paired se    11  beats plan 5/5  chg  1.0
+   RB RB QB WR WR WR WR TE WR QB TE QB RB DEF
+               2111    1765    2112    1999    2085     2014     1765   vs committed    +17  paired se    38  beats plan 3/5  chg  1.0
+   RB RB RB WR WR WR WR DEF WR QB TE QB RB DEF
+               2010    1823    2156    1847    2209     2009     1823   vs committed    +11  paired se    48  beats plan 2/5  chg  2.2
+   RB RB RB WR WR WR WR TE WR QB RB QB RB DEF
+               2056    1693    2175    1982    2125     2006     1693   vs committed     +9  paired se    12  beats plan 3/5  chg  1.0
+   RB RB RB WR WR WR RB TE WR QB TE QB RB DEF
+               1988    1773    2069    1981    2217     2006     1773   vs committed     +8  paired se    43  beats plan 3/5  chg  1.0
+   RB RB RB WR WR WR WR TE WR QB TE QB TE DEF
+               2035    1655    2218    1976    2135     2004     1655   vs committed     +6  paired se     7  beats plan 3/5  chg  1.0
+   RB RB RB WR WR WR WR TE QB QB TE QB RB DEF
+               2060    1693    2147    1999    2117     2003     1693   vs committed     +5  paired se    18  beats plan 3/5  chg  1.0
+   RB RB RB WR WR WR WR TE WR QB TE QB QB DEF
+               2035    1708    2191    1952    2118     2001     1708   vs committed     +3  paired se    14  beats plan 1/5  chg  1.0
+   RB RB RB WR WR QB WR TE WR QB TE QB RB DEF
+               2144    1734    2112    2004    2010     2001     1734   vs committed     +3  paired se    48  beats plan 3/5  chg  1.2
+   RB RB RB WR WR WR WR TE WR QB WR QB RB DEF
+               2054    1614    2201    1960    2174     2001     1614   vs committed     +3  paired se    12  beats plan 3/5  chg  1.0
+   RB RB RB WR WR DEF WR TE WR QB TE QB RB DEF
+               2003    1850    2069    1887    2193     2001     1850   vs committed     +3  paired se    56  beats plan 2/5  chg  2.8
+   RB RB RB DEF WR WR WR TE WR QB TE QB RB DEF
+               2093    1847    2064    1839    2147     1998     1839   vs committed     +0  paired se    60  beats plan 2/5  chg  4.2
+
+
+2. COST CURVES - moving one man to every other round
+
+   TIGHT END (committed: round 8, second TE round 11)
+   ROUND  PICK       mean    worst   vs plan paired se   shape
+   1      7          1888     1783      -110        74   TE RB RB RB WR WR WR WR WR QB TE QB RB DEF  tie
+   2      18         1872     1656      -126        56   RB TE RB RB WR WR WR WR WR QB TE QB RB DEF
+   3      31         1901     1631       -96        51   RB RB TE RB WR WR WR WR WR QB TE QB RB DEF  tie
+   4      42         1955     1670       -42        32   RB RB RB TE WR WR WR WR WR QB TE QB RB DEF  tie
+   5      55         1961     1690       -37        22   RB RB RB WR TE WR WR WR WR QB TE QB RB DEF  tie
+   6      66         1947     1812       -51        55   RB RB RB WR WR TE WR WR WR QB TE QB RB DEF  tie
+   7      79         1883     1644      -115        48   RB RB RB WR WR WR TE WR WR QB TE QB RB DEF  tie
+   8      90         1998     1654        +0         0   RB RB RB WR WR WR WR TE WR QB TE QB RB DEF  <- committed
+   9      103        1978     1752       -20        40   RB RB RB WR WR WR WR WR TE QB TE QB RB DEF  tie
+   10     114        1998     1809        +0        44   RB RB RB WR WR WR WR WR QB TE TE QB RB DEF  tie
+   11     127        1998     1809        +0        44   RB RB RB WR WR WR WR WR QB TE TE QB RB DEF  tie
+   14     162        1979     1744       -19        30   RB RB RB WR WR WR WR WR QB TE QB TE RB DEF  tie
+   15     175        1958     1697       -40        26   RB RB RB WR WR WR WR WR QB TE QB RB TE DEF  tie
+   16     186        1970     1758       -27        37   RB RB RB WR WR WR WR WR QB TE QB RB DEF TE  tie
+
+   DEFENCE (committed: round 16, the last pick)
+   ROUND  PICK       mean    worst   vs plan paired se   shape
+   1      7          1783     1672      -214        64   DEF RB RB RB WR WR WR WR TE WR QB TE QB RB
+   2      18         1816     1672      -182        73   RB DEF RB RB WR WR WR WR TE WR QB TE QB RB
+   3      31         1856     1740      -142        67   RB RB DEF RB WR WR WR WR TE WR QB TE QB RB
+   4      42         1880     1755      -118        55   RB RB RB DEF WR WR WR WR TE WR QB TE QB RB  tie
+   5      55         1858     1703      -139        55   RB RB RB WR DEF WR WR WR TE WR QB TE QB RB
+   6      66         1885     1754      -113        59   RB RB RB WR WR DEF WR WR TE WR QB TE QB RB  tie
+   7      79         1845     1619      -153        80   RB RB RB WR WR WR DEF WR TE WR QB TE QB RB
+   8      90         1906     1745       -91        49   RB RB RB WR WR WR WR DEF TE WR QB TE QB RB  tie
+   9      103        1925     1717       -73        48   RB RB RB WR WR WR WR TE DEF WR QB TE QB RB  tie
+   10     114        1956     1717       -42        36   RB RB RB WR WR WR WR TE WR DEF QB TE QB RB  tie
+   11     127        1975     1666       -23        14   RB RB RB WR WR WR WR TE WR QB DEF TE QB RB  tie
+   14     162        1995     1696        -3        12   RB RB RB WR WR WR WR TE WR QB TE DEF QB RB  tie
+   15     175        1998     1652        +0         3   RB RB RB WR WR WR WR TE WR QB TE QB DEF RB  tie
+   16     186        1998     1654        +0         0   RB RB RB WR WR WR WR TE WR QB TE QB RB DEF  <- committed
+
+   SECOND QUARTERBACK (committed: round 14; the first is round 10)
+   ROUND  PICK       mean    worst   vs plan paired se   shape
+   1      7          1889     1768      -109       111   QB RB RB RB WR WR WR WR TE WR QB TE RB DEF  tie
+   2      18         1948     1794       -50       108   RB QB RB RB WR WR WR WR TE WR QB TE RB DEF  tie
+   3      31         1990     1849        -8       101   RB RB QB RB WR WR WR WR TE WR QB TE RB DEF  tie
+   4      42         1968     1817       -30        64   RB RB RB QB WR WR WR WR TE WR QB TE RB DEF  tie
+   5      55         1962     1741       -36        54   RB RB RB WR QB WR WR WR TE WR QB TE RB DEF  tie
+   6      66         2005     1833        +7        68   RB RB RB WR WR QB WR WR TE WR QB TE RB DEF  tie
+   7      79         1983     1847       -14        61   RB RB RB WR WR WR QB WR TE WR QB TE RB DEF  tie
+   8      90         1955     1739       -43        55   RB RB RB WR WR WR WR QB TE WR QB TE RB DEF  tie
+   9      103        2008     1680       +10        34   RB RB RB WR WR WR WR TE QB WR QB TE RB DEF  tie
+   10     114        2017     1723       +19        15   RB RB RB WR WR WR WR TE WR QB QB TE RB DEF  tie
+   11     127        2017     1723       +19        15   RB RB RB WR WR WR WR TE WR QB QB TE RB DEF  tie
+   14     162        1998     1654        +0         0   RB RB RB WR WR WR WR TE WR QB TE QB RB DEF  <- committed
+   15     175        2006     1696        +8        15   RB RB RB WR WR WR WR TE WR QB TE RB QB DEF  tie
+   16     186        2039     1740       +42        27   RB RB RB WR WR WR WR TE WR QB TE RB DEF QB  tie
+
+   ...and what dropping each one entirely is worth (the man replaced by the
+   best of the other positions in his slot):
+
+   second TE (round 11)       best replacement scores   2006  (   +9, paired se   12)
+   second QB (round 14)       best replacement scores   1985  (  -12, paired se   10)
+   starting TE (round 8)      best replacement scores   2009  (  +11, paired se   48)
+
+
+3. ADJACENT SWAPS - exchange rounds i and i+1
+
+   SWAP               mean    worst   vs plan paired se   chg   shape
+   r1  <-> r2               -   same position, no-op
+   r2  <-> r3               -   same position, no-op
+   r3  <-> r4            1935     1671       -63        62   2.0   RB RB WR RB WR WR WR TE WR QB TE QB RB DEF  tie
+   r4  <-> r5               -   same position, no-op
+   r5  <-> r6               -   same position, no-op
+   r6  <-> r7               -   same position, no-op
+   r7  <-> r8            1883     1644      -115        48   1.8   RB RB RB WR WR WR TE WR WR QB TE QB RB DEF  tie
+   r8  <-> r9            1978     1752       -20        40   2.0   RB RB RB WR WR WR WR WR TE QB TE QB RB DEF  tie
+   r9  <-> r10           2008     1745       +10        34   2.2   RB RB RB WR WR WR WR TE QB WR TE QB RB DEF  tie
+   r10 <-> r11           1962     1740       -36        43   1.6   RB RB RB WR WR WR WR TE WR TE QB QB RB DEF  tie
+   r11 <-> r14           2017     1723       +19        15   2.4   RB RB RB WR WR WR WR TE WR QB QB TE RB DEF  tie
+   r14 <-> r15           2006     1696        +8        15   2.0   RB RB RB WR WR WR WR TE WR QB TE RB QB DEF  tie
+   r15 <-> r16           1998     1652        +0         3   1.0   RB RB RB WR WR WR WR TE WR QB TE QB DEF RB  tie
+
+   8 of 8 real adjacent swaps tie the committed plan.
+
+
+4. TWO-SLOT SWEEP - exhaustive, every shape within two changes
+
+   1268 legal two-slot changes: 1056 tie (83.3%), 133 score above the plan, 0 above by more than the band.
+   family spread: mean 1928, sd 57, range 1650 - 2048. The committed plan sits at the 89.5th percentile.
+   0 beat the committed plan in ALL 5 seasons (0.00% - chance alone would give 3.13%).
+   top eight:
+       2048  worst   1850     +51 (paired se   51)  beats 3/5  RB RB QB WR WR WR WR TE WR QB TE QB WR DEF
+       2045  worst   1829     +47 (paired se   50)  beats 3/5  RB RB QB WR WR WR WR TE WR QB TE WR RB DEF
+       2040  worst   1786     +43 (paired se   27)  beats 3/5  RB RB RB WR WR WR WR TE QB QB TE QB WR DEF
+       2039  worst   1797     +41 (paired se   39)  beats 3/5  RB RB QB WR WR WR WR TE WR QB TE TE RB DEF
+       2038  worst   1888     +40 (paired se   56)  beats 2/5  RB RB RB WR WR WR WR DEF WR QB TE QB RB TE
+       2037  worst   1827     +40 (paired se   48)  beats 3/5  RB RB RB WR WR WR RB TE WR QB TE QB WR DEF
+       2037  worst   1802     +39 (paired se   55)  beats 3/5  RB RB RB WR WR QB WR TE WR QB TE QB WR DEF
+       2037  worst   1798     +39 (paired se   63)  beats 3/5  RB RB RB WR WR QB WR TE WR QB TE WR RB DEF
+
+
+5. SAME BUDGET, DIFFERENT ORDER - 4000 random reshuffles of 4 RB / 5 WR / 2 QB / 2 TE / 1 DEF
+
+   3998 legal distinct reshuffles: 958 tie (24.0%), 29 score above the plan, 0 above by more than the band.
+   family spread: mean 1813, sd 81, range 1562 - 2043. The committed plan sits at the 99.3th percentile.
+   0 beat the committed plan in ALL 5 seasons (0.00% - chance alone would give 3.13%).
+   top eight:
+       2043  worst   1920     +45 (paired se   81)  beats 2/5  WR RB RB WR WR QB RB RB TE TE WR DEF WR QB
+       2043  worst   1894     +45 (paired se  133)  beats 2/5  RB QB RB RB WR WR RB TE TE WR WR DEF WR QB
+       2040  worst   1871     +43 (paired se   71)  beats 3/5  RB RB RB TE WR QB WR TE QB DEF WR WR WR RB
+       2026  worst   1930     +28 (paired se   92)  beats 3/5  RB RB TE WR WR DEF RB RB TE QB WR WR WR QB
+       2023  worst   1798     +26 (paired se   97)  beats 4/5  RB QB RB WR DEF WR WR RB TE QB RB WR TE WR
+       2022  worst   1894     +24 (paired se   80)  beats 2/5  RB RB TE DEF WR WR RB WR WR QB RB WR QB TE
+       2020  worst   1921     +22 (paired se   91)  beats 3/5  WR RB RB WR TE DEF WR TE RB QB RB WR WR QB
+       2020  worst   1959     +22 (paired se   89)  beats 2/5  WR RB QB WR WR TE RB RB QB TE WR RB WR DEF
+
+
+6. THE BUDGET LANDSCAPE - all 560 QB/RB/WR/TE splits of the thirteen non-defence
+   picks, 4 random orders each, defence last
+
+   best twelve budgets, by the best order sampled for each:
+   QB  RB  WR  TE      best    worst   that order
+   2   3   6   2       2015     1910   RB RB QB RB WR TE WR WR WR QB TE WR WR DEF
+   2   5   5   1       1992     1817   WR RB QB RB WR WR WR TE WR QB RB RB RB DEF
+   1   5   6   1       1985     1844   RB QB RB RB WR WR RB WR TE RB WR WR WR DEF
+   2   4   6   1       1971     1865   RB WR QB RB WR QB RB WR WR RB WR WR TE DEF
+   1   4   4   4       1958     1827   RB RB QB TE WR TE WR RB RB TE WR WR TE DEF
+   2   3   7   1       1956     1830   WR WR QB WR WR WR RB TE RB WR RB WR QB DEF
+   2   2   5   4       1956     1695   RB RB TE TE TE WR QB WR TE QB WR WR WR DEF
+   1   4   7   1       1955     1805   RB WR TE RB WR QB RB WR WR WR RB WR WR DEF
+   1   2   7   3       1950     1730   TE WR RB WR WR QB RB TE WR WR WR TE WR DEF
+   1   5   4   3       1936     1714   WR RB RB RB QB TE WR TE TE RB WR WR RB DEF
+   3   2   4   4       1925     1690   WR RB QB QB TE TE RB TE TE WR WR QB WR DEF
+   1   6   5   1       1914     1656   RB RB RB RB WR RB WR TE WR QB RB WR WR DEF
+
+   27 of 560 budgets reach within the tie band on at least one sampled order.
+   committed budget is QB 2 / RB 4 / WR 5 / TE 2.
+
+   336 legal sampled budget-landscape shapes: 34 tie (10.1%), 1 score above the plan, 0 above by more than the band.
+   family spread: mean 1731, sd 131, range 1168 - 2015. The committed plan sits at the 99.7th percentile.
+   0 beat the committed plan in ALL 5 seasons (0.00% - chance alone would give 3.13%).
+   top eight:
+       2015  worst   1910     +17 (paired se  118)  beats 2/5  RB RB QB RB WR TE WR WR WR QB TE WR WR DEF
+       1992  worst   1817      -5 (paired se  104)  beats 3/5  WR RB QB RB WR WR WR TE WR QB RB RB RB DEF
+       1985  worst   1844     -13 (paired se  126)  beats 3/5  RB QB RB RB WR WR RB WR TE RB WR WR WR DEF
+       1971  worst   1865     -27 (paired se  120)  beats 2/5  RB WR QB RB WR QB RB WR WR RB WR WR TE DEF
+       1958  worst   1827     -40 (paired se   73)  beats 2/5  RB RB QB TE WR TE WR RB RB TE WR WR TE DEF
+       1956  worst   1830     -41 (paired se  130)  beats 2/5  WR WR QB WR WR WR RB TE RB WR RB WR QB DEF
+       1956  worst   1695     -42 (paired se   60)  beats 4/5  RB RB TE TE TE WR QB WR TE QB WR WR WR DEF
+       1955  worst   1805     -43 (paired se  118)  beats 2/5  RB WR TE RB WR QB RB WR WR WR RB WR WR DEF
+
+
+6b. PLANS A HUMAN WOULD ACTUALLY WRITE - 4000 sampled uniformly
+    (>=1 QB, >=2 RB, >=3 WR, >=1 TE, exactly one DEF, DEF in round 10 or later)
+    drawn from 84 position budgets
+
+   4000 legal distinct plausible plans: 411 tie (10.3%), 6 score above the plan, 0 above by more than the band.
+   family spread: mean 1730, sd 126, range 1153 - 2050. The committed plan sits at the 99.9th percentile.
+   0 beat the committed plan in ALL 5 seasons (0.00% - chance alone would give 3.13%).
+   top eight:
+       2050  worst   1952     +53 (paired se   86)  beats 3/5  RB RB QB TE WR WR RB TE QB TE WR WR WR DEF
+       2023  worst   1932     +25 (paired se  100)  beats 2/5  RB RB RB WR WR QB RB WR TE WR RB WR WR DEF
+       2019  worst   1825     +21 (paired se  116)  beats 4/5  RB RB QB RB WR WR RB RB TE RB WR WR WR DEF
+       2007  worst   1763     +10 (paired se  149)  beats 3/5  WR WR QB RB WR QB RB TE RB RB DEF WR WR WR
+       2006  worst   1850      +9 (paired se   90)  beats 2/5  RB QB RB WR WR QB RB TE QB RB WR WR WR DEF
+       2000  worst   1697      +2 (paired se  144)  beats 3/5  RB RB QB RB WR QB RB WR TE WR WR DEF RB TE
+       1994  worst   1945      -3 (paired se  108)  beats 2/5  RB WR RB WR WR QB RB QB RB DEF TE WR RB TE
+       1993  worst   1830      -5 (paired se   91)  beats 2/5  RB WR WR WR WR QB WR TE WR RB DEF WR WR WR
+
+
+7. VERDICT
+
+   FAMILY                                          legal    tie tie rate plan's %ile
+   single-slot changes (exhaustive)                   52     52   100.0%      76.9
+   adjacent swaps (exhaustive)                         8      8   100.0%      50.0
+   two-slot changes (exhaustive)                    1268   1056    83.3%      89.5
+   reshuffles of the committed budget (sampled)     3998    958    24.0%      99.3
+   all budgets (sampled)                             336     34    10.1%      99.7
+   plans a human would write (sampled)              4000    411    10.3%      99.9
+
+   'plan's %ile' is where the committed plan's 1998 falls inside each family.
+   A shape that were genuinely a peak would sit near 100 everywhere.
+
+ACROSS EVERY DISTINCT LEGAL SHAPE SCORED HERE (9688 of them):
+   2537 tie the committed plan's 1998 within +/- 125.
+   7151 are clearly worse, 0 clearly better.
+   (this pooled denominator is NOT a uniform sample of shape space - the sweeps
+   above deliberately crowd around the committed plan. Read the per-family
+   percentages, not this count, as the frequency of a tie.)
+
+WHAT THE TIE SET HAS IN COMMON - every shape scored here - a biased, plan-crowded sample (2537 shapes):
+
+   POS    count avg count range first taken in round (avg, range)
+   QB          2.02     1 - 4      r6.6    r1 - r16   (drafted at all in 2537 of 2537)
+   RB          3.86     2 - 8      r1.6    r1 - r10   (drafted at all in 2537 of 2537)
+   WR          4.87     3 - 9      r3.2    r1 - r11   (drafted at all in 2537 of 2537)
+   TE          2.06     1 - 6      r6.7    r1 - r16   (drafted at all in 2537 of 2537)
+   DEF         1.19     1 - 3      r11.1   r1 - r16   (drafted at all in 2537 of 2537)
+
+   round 1 is RB or WR ...............  90.1%
+   at least two RB in rounds 1-3 .....  67.2%
+   defence is the very last pick .....  50.0%
+   RB+WR among the first six picks ...  4.68 of 6 on average
+
+WHAT THE TIE SET HAS IN COMMON - plans a human would write - the unbiased sample (411 shapes):
+
+   POS    count avg count range first taken in round (avg, range)
+   QB          1.69     1 - 4      r4.7    r1 - r16   (drafted at all in 411 of 411)
+   RB          3.80     2 - 8      r2.0    r1 - r10   (drafted at all in 411 of 411)
+   WR          5.42     3 - 9      r2.5    r1 - r11   (drafted at all in 411 of 411)
+   TE          2.09     1 - 6      r6.2    r1 - r16   (drafted at all in 411 of 411)
+   DEF         1.00     1 - 1      r13.0   r10 - r16   (drafted at all in 411 of 411)
+
+   round 1 is RB or WR ...............  91.7%
+   at least two RB in rounds 1-3 .....  38.4%
+   defence is the very last pick .....  17.5%
+   RB+WR among the first six picks ...  4.29 of 6 on average
+
+SHAPES SCORING CLEARLY ABOVE THE COMMITTED PLAN
+   none.
+
+SHAPES WITH A HIGHER FLOOR THAN THE COMMITTED PLAN
+   the plan's worst season is 1654 (2022). These tie or beat it on the mean AND
+   never fall that far. One season is what actually gets played.
+
+                2021    2022    2023    2024    2025    mean   worst paired se  beats    chg   shape
+                1970    2005    1976    1977    2118    2009    1970       93    2/5    6.8   RB RB QB WR WR WR RB WR WR DEF QB RB TE TE
+                2067    1988    1976    1959    2109    2020    1959       89    2/5    9.8   WR RB QB WR WR TE RB RB QB TE WR RB WR DEF
+                2029    1952    1962    2071    2238    2050    1952       86    3/5    7.8   RB RB QB TE WR WR RB TE QB TE WR WR WR DEF
+                1945    2014    1972    2074    1968    1994    1945      108    2/5    7.6   RB WR RB WR WR QB RB QB RB DEF TE WR RB TE
+                2044    1973    1978    1964    1939    1980    1939       97    3/5    8.0   WR QB RB WR WR TE RB RB RB QB TE WR WR DEF
+                2073    1940    2078    2011    1937    2008    1937       85    3/5    8.8   RB RB WR DEF WR WR QB TE TE QB RB WR WR RB
+                2009    1955    1937    1957    2005    1972    1937       93    1/5    7.6   RB RB RB TE WR DEF QB QB WR WR TE WR WR RB
+                2169    1989    1932    1955    2068    2023    1932      100    2/5    8.0   RB RB RB WR WR QB RB WR TE WR RB WR WR DEF
+                1942    1941    2065    2117    1932    1999    1932       95    2/5    8.8   RB QB RB TE WR WR RB DEF RB TE WR WR WR QB
+                2003    1957    1930    1985    2255    2026    1930       92    3/5    9.0   RB RB TE WR WR DEF RB RB TE QB WR WR WR QB
+                2012    1949    1929    1925    2164    1996    1925       89    2/5    7.0   RB RB RB TE WR WR RB WR QB QB DEF TE WR WR
+                2194    1921    1979    2009    1997    2020    1921       91    3/5    7.8   WR RB RB WR TE DEF WR TE RB QB RB WR WR QB
+                2218    1939    2034    1920    2104    2043    1920       81    2/5    8.8   WR RB RB WR WR QB RB RB TE TE WR DEF WR QB
+                1913    2080    1981    2047    2015    2007    1913      115    2/5    9.0   RB WR QB WR RB TE RB TE RB QB WR WR WR DEF
+                2013    1916    2085    1911    2203    2025    1911       64    2/5    2.8   RB RB RB WR WR DEF WR TE WR QB TE QB RB TE
+
+   Read 'paired se' before believing any of these. A shape whose gain over the
+   plan is smaller than its own paired error bar has not raised the floor; it has
+   drawn a different set of players and landed a better 2022.

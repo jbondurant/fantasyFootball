@@ -1,0 +1,54 @@
+
+WHAT EACH RULE TAKES, ROUND BY ROUND
+
+ROUND   PICK       THE PLAN   MODEL       how often the model agreed with itself
+1       7          RB         WR          3 of 5   WRx3 RBx2
+2       18         RB         TE          3 of 5   TEx3 RBx1 WRx1
+3       31         RB         WR          3 of 5   WRx3 RBx1 TEx1
+4       42         WR         WR          3 of 5   WRx3 RBx1 TEx1   <- agree
+5       55         WR         WR          5 of 5   WRx5   <- agree
+6       66         WR         WR          5 of 5   WRx5   <- agree
+7       79         WR         RB          3 of 5   RBx3 WRx2
+8       90         TE         RB          3 of 5   RBx3 WRx2
+9       103        WR         RB          3 of 5   RBx3 WRx2
+10      114        QB         QB          2 of 5   QBx2 RBx1 WRx1 TEx1   <- agree
+11      127        WR         WR          2 of 5   WRx2 QBx1 RBx1 TEx1   <- agree
+12      kept       TUTEN RB   TUTEN RB    held by both - costs this round, not a pick
+13      kept       PURDY QB   PURDY QB    held by both - costs this round, not a pick
+14      162        RB         WR          2 of 5   WRx2 QBx1 TEx1 DEFx1
+15      175        RB         RB          2 of 5   RBx2 TEx2 DEFx1   <- agree
+16      186        DEF        DEF         3 of 5   DEFx3 QBx1 RBx1   <- agree
+
+
+WHO THE MODEL ACTUALLY TOOK, BY SEASON
+
+ROUND   PICK   the men, one per board
+1       7      2021 WR Adams, 2022 WR Chase, 2023 RB Robinson, 2024 WR St. Brown, 2025 RB McCaffrey
+2       18     2021 WR Ridley, 2022 TE Andrews, 2023 RB Harris, 2024 TE LaPorta, 2025 TE Bowers
+3       31     2021 WR Robinson, 2022 WR Allen, 2023 TE Hockenson, 2024 RB White, 2025 WR Hill
+4       42     2021 TE Pitts, 2022 WR Sutton, 2023 WR Cooper, 2024 RB Mixon, 2025 WR McLaurin
+5       55     2021 WR Aiyuk, 2022 WR Jeudy, 2023 WR McLaurin, 2024 WR Higgins, 2025 WR Smith
+6       66     2021 WR Beckham, 2022 WR Thomas, 2023 WR Jeudy, 2024 WR Allen, 2025 WR Waddle
+7       79     2021 RB Fournette, 2022 RB Singletary, 2023 WR Pittman, 2024 RB Chubb, 2025 WR Egbuka
+8       90     2021 RB Conner, 2022 WR Aiyuk, 2023 WR Smith-Njigba, 2024 RB Robinson, 2025 RB Charbonnet
+9       103    2021 RB Michel, 2022 RB Henderson, 2023 WR Flowers, 2024 WR Coleman, 2025 RB Bigsby
+10      114    2021 QB Mayfield, 2022 RB Mattison, 2023 TE Kincaid, 2024 WR Williams, 2025 QB Maye
+11      127    2021 TE Ertz, 2022 RB Mostert, 2023 QB Jones, 2024 WR Meyers, 2025 WR Allen
+14      162    2021 DEF Rams, 2022 TE Hill, 2023 WR Mooney, 2024 QB Wilson, 2025 WR Palmer
+15      175    2021 RB Johnson, 2022 DEF Bills, 2023 RB Jackson, 2024 TE Otton, 2025 TE Likely
+16      186    2021 RB Mitchell, 2022 QB Jones, 2023 DEF 49ers, 2024 DEF 49ers, 2025 DEF Broncos
+
+================================================================
+WHO THE MODEL ACTUALLY TOOK IN ROUND 2
+================================================================
+
+SEASON   THE MAN                  POS   his rank at that position
+2021     Calvin Ridley            WR    WR5
+2022     Mark Andrews             TE    TE2
+2023     Najee Harris             RB    RB9
+2024     Sam LaPorta              TE    TE1
+2025     Brock Bowers             TE    TE1
+
+A round where the model splits three ways is the model saying the
+round is free, not the model being confused. Read the spread, not the
+mode - five boards cannot support a confident mode on their own.

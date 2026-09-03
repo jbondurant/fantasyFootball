@@ -88,18 +88,36 @@ public class SleeperLeague{
         return cachedScoreList;
     }
 
+    /**
+     * My best startable lineup after a draft: QB, RB, RB, WR, WR, WR, TE,
+     * FLEX, FLEX, DEF.
+     *
+     * This used to add up all sixteen drafted players. A bench that never
+     * starts scored the same as the lineup, so the simulator was rewarding
+     * depth over a starter, and treating a second elite quarterback in a
+     * one-quarterback league as though he doubled your season. Every roster
+     * comparison in the trade finder already scored the lineup; the draft
+     * simulation was the odd one out.
+     */
     public static double scoreSleeperDraft(SleeperLeague sleeperLeague, boolean isFun){
         ArrayList<Score> scoreList = getScoreList();
-        double totalScore = 0;
         for(User user : sleeperLeague.sleeperDraftInfo.usersInfo) {
             if (user.userID.equals(myID())) {
-                Roster roster = user.roster;
-                for(Player player : roster.draftedPlayers){
-                    double playerScore = Player.scorePlayer(scoreList, player);
-                    totalScore += playerScore;
-                }
+                return scoreBestStartingLineup(user, scoreList);
             }
         }
-        return totalScore;
+        return 0.0;
+    }
+
+    /** The same, for any manager. */
+    public static double scoreBestStartingLineup(User user, ArrayList<Score> scoreList){
+        ArrayList<Score> scored = new ArrayList<>();
+        for(Player player : user.roster.draftedPlayers){
+            if(player == null){
+                continue;
+            }
+            scored.add(new Score(Player.scorePlayer(scoreList, player), player));
+        }
+        return new ScoredRoster(user.userID, scored).scoreBestROSStartingLineup();
     }
 }

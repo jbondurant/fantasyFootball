@@ -1,0 +1,62 @@
+policy tournament: 7 live picks + keepers pinned late, composition 1QB/2RB/3WR/1TE/2FLEX
+game: my picks [7, 18, 31, 42, 55, 66, 79], keepers [Tuten, Purdy]
+
+742 feasible committed sequences; searching all of them at 150 CRN rollouts each...
+exhaustive winner [RB, RB, RB, WR, WR, WR, TE], search mean 1813.7 (834s)
+staged-frontier winner [RB, RB, RB, WR, WR, WR, TE]
+dp-composition [RB, RB, RB, WR, WR, WR, TE], CE 1246.9 vs enumerated max CE 1246.9 (EXACT, as proved)
+bnb screen: evaluated 44 of 742 sequences, found the true optimum: true, regret 0.0
+sa [RB, RB, RB, WR, WR, WR, TE], nrpa [RB, RB, RB, WR, WR, WR, TE]
+timing-committed winner QB@none TE@r7 over 7 heads, search mean 1820.4
+learned strategies trained (1030s); cem [RB, RB, RB, WR, WR, WR, TE], evolution [RB, RB, RB, WR, WR, WR, TE]
+   evaluated random-feasible                            1714.5  (800 trials, 5s)
+   evaluated adp-follower                               1802.8  (800 trials, 5s)
+   evaluated greedy-raw                                 1820.0  (800 trials, 5s)
+   evaluated greedy-vorp                                1818.5  (800 trials, 5s)
+   evaluated shipped-plan RWRWWWT                       1809.2  (800 trials, 5s)
+   evaluated staged-frontier RRRWWWT                    1812.9  (800 trials, 5s)
+   evaluated exhaustive-committed RRRWWWT               1812.9  (800 trials, 5s)
+   evaluated timing-committed QB@none TE@r7             1818.9  (800 trials, 5s)
+   evaluated ml-fittedq                                 1819.7  (800 trials, 5s)
+   evaluated ml-imitation (of oldschool-2-vorp)         1820.3  (800 trials, 5s)
+   evaluated ml-reinforce                               1819.2  (800 trials, 5s)
+   evaluated ml-cem RRRWWWT                             1812.9  (800 trials, 5s)
+   evaluated ml-evolution RRRWWWT                       1812.9  (800 trials, 5s)
+   evaluated dp-composition RRRWWWT                     1812.9  (800 trials, 5s)
+   evaluated sa RRRWWWT                                 1812.9  (800 trials, 5s)
+   evaluated nrpa RRRWWWT                               1812.9  (800 trials, 5s)
+   evaluated mcts (budget 192, vorp tails)              1819.6  (150 trials, 661s)
+   evaluated oldschool-1 (random tails)                 1818.5  (150 trials, 147s)
+   evaluated oldschool-2 (random tails)                 1819.3  (150 trials, 364s)
+   evaluated oldschool-3 (random tails)                 1819.9  (150 trials, 928s)
+   evaluated oldschool-1 (vorp tails)                   1820.2  (150 trials, 150s)
+   evaluated oldschool-2 (vorp tails)                   1820.8  (150 trials, 391s)
+   evaluated adaptive-greedy (d1, raw tails)            1820.2  (150 trials, 148s)
+
+POLICY                                             MEAN  +/-SE      vs exhaustive
+oldschool-2 (vorp tails)                         1820.8    1.9        7.2 +/- 1.1
+ml-imitation (of oldschool-2-vorp)               1820.3    0.8        7.5 +/- 0.5
+adaptive-greedy (d1, raw tails)                  1820.2    1.9        6.6 +/- 1.1
+oldschool-1 (vorp tails)                         1820.2    2.0        6.5 +/- 1.1
+greedy-raw                                       1820.0    0.8        7.2 +/- 0.5
+oldschool-3 (random tails)                       1819.9    2.0        6.3 +/- 0.9
+ml-fittedq                                       1819.7    0.8        6.9 +/- 0.5
+mcts (budget 192, vorp tails)                    1819.6    2.0        5.9 +/- 1.0
+oldschool-2 (random tails)                       1819.3    2.0        5.6 +/- 0.9
+ml-reinforce                                     1819.2    0.8        6.4 +/- 0.5
+timing-committed QB@none TE@r7                   1818.9    0.8        6.0 +/- 0.5
+oldschool-1 (random tails)                       1818.5    2.1        4.9 +/- 0.9
+greedy-vorp                                      1818.5    0.8        5.6 +/- 0.5
+staged-frontier RRRWWWT                          1812.9    0.9        0.0 +/- 0.0
+exhaustive-committed RRRWWWT                     1812.9    0.9        0.0 +/- 0.0
+ml-cem RRRWWWT                                   1812.9    0.9        0.0 +/- 0.0
+ml-evolution RRRWWWT                             1812.9    0.9        0.0 +/- 0.0
+dp-composition RRRWWWT                           1812.9    0.9        0.0 +/- 0.0
+sa RRRWWWT                                       1812.9    0.9        0.0 +/- 0.0
+nrpa RRRWWWT                                     1812.9    0.9        0.0 +/- 0.0
+shipped-plan RWRWWWT                             1809.2    0.7       -3.7 +/- 0.7
+adp-follower                                     1802.8    1.1      -10.1 +/- 0.7
+random-feasible                                  1714.5    2.0      -98.4 +/- 2.1
+
+search 150 rollouts (seeds disjoint from eval), eval 800 trials (adaptive 150, inner 16); all policies share the eval streams, so the vs-exhaustive column is a paired difference.
+

@@ -1,0 +1,444 @@
+# Every way a draft model here has been wrong
+
+Written 2026-08-31. Justin: "find a way of creating a model that doesn't fail
+into our basic nonsensical traps." This is the catalogue. Each entry is a real
+mistake this repo made, not a hypothetical, and each one should end up as a
+failing-first test rather than as a paragraph somebody is supposed to remember.
+
+The rule for the model that comes next: **these must be structurally
+impossible, not merely avoided.** A model that could draft three quarterbacks
+but happens not to is not fixed.
+
+## A. Roster arithmetic
+
+1. **Three quarterbacks.** The roster starts ONE. Justin keeps Purdy. Any model
+   that drafts two has bought a third quarterback for a one-quarterback lineup.
+2. **Two quarterbacks inside the first ten rounds.** Even two total is only
+   defensible as a next-year keeper stash, late. `RankDraft` did this by pricing
+   the wait in raw points; `BoardValue`'s first bench attempt did it by pricing a
+   backup at 88 points at every pick.
+3. **Keepers cost picks, at named rounds.** Tuten costs round 12, Purdy round 13.
+   That is why there are 14 live picks and a 35-pick gap between 127 and 162. A
+   model that assumes 16 picks, or that spreads the keeper cost evenly, is
+   drafting a different league.
+4. **Keepers are ON the roster and OFF the board.** Nobody drafts a man you
+   already own, and the lineup slot he fills is filled. Until 2026-08-31 the
+   backtest charged the two rounds and never delivered the two men.
+5. **The roster is sixteen: ten starters, six bench.** Fourteen picks plus two
+   keepers fills it exactly. There is no spare spot.
+6. **A streamed player occupies one of those sixteen.** Picking a defence off
+   waivers means DROPPING somebody. Crediting a streamed defence on top of a full
+   roster hands the strategy a player nobody has - it inflated streaming by four
+   points a season until Justin caught it.
+7. **A roster with no tight end - or no quarterback - is not legal.**
+   `ShapeSensitivity.legal()` tested only for a defence and waved through rosters
+   that field nobody at TE, then scored the empty slot at zero.
+
+## B. Scoring the outcome
+
+8. **This league pays 6 for a passing touchdown, not 4.** Projections used the
+   league's own settings while outcomes were graded from Sleeper's standard
+   `pts_half_ppr`, understating every starting quarterback by 55-66 points a
+   season.
+9. **Two more rules differ**: fumbles (-1 here, 0 there) and the `pts_allow_14_20`
+   defence band (+4.7 a season to every defence).
+10. **The feed changed its own rules mid-history.** `pts_half_ppr` charged -1 per
+    fumble in 2021, none from 2023, split in 2022. A season total is not a stable
+    unit across a harvest. Score from RAW COMPONENTS, always.
+11. **A dead default paid 0.4 for a passing touchdown.** Dead code is read as a
+    statement of what the defaults are.
+
+## C. Hindsight
+
+12. **Filling a lineup by realised points.** Sort by EXPECTED, score on REALISED.
+    Getting this wrong reversed several published findings.
+13. **The waiver-wire rate was set by hindsight** - the pool was chosen by
+    preseason rank, then sorted by REALISED rate and the best quarter averaged.
+    A comment directly above it claimed the opposite. It inflated streaming by
+    ~1.1 points a week and reversed the defence conclusion.
+14. **An earlier wire took the MAX over undrafted players**, which is the same
+    fault louder.
+
+## D. Inference
+
+15. **The season is the unit of independent randomness.** Slot and opponent
+    variation are exhausted: infinitely many of both moves the standard error
+    from 44.0 to 43.4. 480 draws are not 480 observations.
+16. **The bar is real and large.** 125 points at five seasons, ~95 at sixteen.
+    Every gap smaller than that is a tie, including gaps we spent days ranking.
+17. **Selection optimism is +126** for a 14-slot shape fitted on four seasons and
+    met by a fifth.
+18. **Argmax of a noisy field.** Nothing in the smoother bake-off cleared its own
+    bar; picking the lowest number would have been selection, not measurement.
+    Choose from the middle of a flat basin.
+19. **Bounded per-decision estimands resolve; unbounded point totals do not.**
+    A bench marginal in points: +5.4 ± 3.9, t = 1.4. A win rate on the same
+    seasons: t = 7.69. Prefer a question with a bounded answer.
+20. **A rank correlation is not a regression slope.** Spearman was shipped for
+    weeks as a shrinkage coefficient, which needs points.
+21. **A parameter that cannot be identified should not be tuned.** The trust
+    coefficient's bar covered both 0.578 and 1.0.
+
+## E. Cross-position comparison
+
+22. **Raw points are not comparable across positions.** A quarterback's rank
+    curve is steeper in absolute points because he scores more. Pricing the wait
+    in raw points cost `RankDraft` 68 points and over-bought quarterbacks. Use a
+    MARGINAL against a filled lineup, which needs no replacement level chosen by
+    hand.
+23. **Positions do not drain at the same rate.** Assuming a uniform decay
+    - `(next - pick) / 5` - threw away the only signal the model had and drafted
+    `TE TE QB QB`.
+24. **A within-position matrix knows nothing about what a position is worth**,
+    nor about what is already on the roster.
+
+## F. Model discipline
+
+25. **A default that means "never deviate" reproduces the committed plan and
+    looks perfect.** `-Pdeviate` defaulted to 1e9.
+26. **Model A is a rounds 1-7 model.** Two keepers plus seven picks fills the
+    starting nine, after which its objective is indifferent and prints
+    whatever. Scoring it as a 14-round strategy measures nothing.
+27. **Prose drift.** Three times in three days a comment described a mechanism
+    the code did not implement - most damagingly a comment that specifically
+    denied the hindsight sitting twelve lines below it. Comments on an objective
+    are load-bearing: they are what gets quoted when someone asks what the model
+    believes.
+28. **A mean-based lineup makes every bench man worth exactly zero**, because an
+    average cannot beat a better average. Pool the neighbourhood as a
+    DISTRIBUTION instead; the spread is the only part that pays a bench pick.
+
+## G. The live path
+
+Added 2026-09-01, from the adversarial pass over Model A and `DraftNight` -
+the half of `Draft2026` that had never had one. `ModelAAudit` is the tool;
+`ScheduleDriftTest` is the pin.
+
+29. **A pick of a man the board does not carry consumes no slot.**
+    `DraftSimulator.stateAfter` increments the schedule INSIDE its
+    `board.contains` guard. That is right for a keeper - the loop above has
+    already eaten his keeper slot - and wrong for a kicker, a man past the ADP
+    cut, or an id we do not know. From that pick on, every seat is priced one
+    early and every player is attributed to the wrong manager, which is how
+    both live tools build Justin's roster. Not changed the night before a
+    draft; DETECTED, and both tools print it.
+30. **A pick NUMBER is not a pick COUNT.** The detector for 29 first shipped as
+    `slot.pickNumber() != taken.size() + 1`. A keeper slot is a pick number
+    that consumes no pick, and this league has twenty-four of them with the
+    earliest at pick 32, so on a perfectly clean 168-pick replay that test
+    fires at 137 of 169 refreshes, starting in round 3, and tells Justin all
+    night to distrust a tool that is working. Count LIVE slots.
+31. **`slotOf` and `branchWith` must mean the same slot.** `slotOf` scans
+    forward past keeper slots and does not write the index back, so a state
+    resting on a keeper slot reported one pick and branched into another -
+    the man credited to the keeper's owner, costing no live pick, leaving one
+    extra real pick before the brancher's next turn. `WaitCheck`, Model A's own
+    wait-or-take table, branches straight off a state from `stateAfter`.
+32. **A round test standing in for a roster test is exact only on one roster.**
+    Model A goes indifferent when the starting NINE IS FULL, not when the round
+    turns 8. Measured: playing Model A's own plan the spread is 2.75 at round 7
+    and exactly 0.00 from round 8, so the boundary is right to the round - but
+    on a roster that still owes a tight end at round 8, which is the shape the
+    RUNBOOK itself recommends, the objective still discriminates and
+    `Draft2026` has already gone silent.
+33. **Four engines are not four opinions.** `LiveCommittee`'s `hindsight` and
+    its `lookahead` at depth 1 are the SAME estimator - one-position
+    `HeadPolicy`, `simulateFrom`, `bestNine` - differing only in seed offset and
+    sample size. They agreed 9 of 9 on the live board. The comment above them
+    says hindsight solves each scenario exactly with no tail policy, which is
+    prose drift (F27), and the duplicate carries two of the four votes.
+34. **A plurality with no tie rule is a tie rule.** `vote` tallies into an
+    `EnumMap` and scans with a strict `>`, so a 2-2 split goes to whichever
+    position is DECLARED first - QB before RB before WR before TE - and prints
+    as "2 of 4 engines say RB" with nothing to say it was a coin flip. It
+    happened at round 3 on the real board, in the rounds that matter, and in
+    the direction the keeper slate has already gutted.
+
+## H. The night before the draft
+
+Added 2026-09-01, later the same day, from two more adversarial passes and from
+following the measurements where they went. Several of these are faults in code
+written that morning to fix the ones above - the catalogue is not a record of
+old sins.
+
+35. **A silent estimator is worse than a loud one.** `PolicyTournament` buckets
+    the board into maps keyed by SKILL positions and indexes them with the
+    player's own position, so the first DEFENCE threw. Defences joined the board
+    when DEF entered `PairwiseOdds.CAP`, and `Draft2026` forces
+    `scheduleRounds=16`, so they are always there: the Kim-Nelson arbiter had
+    NEVER RUN in the tool Justin uses, and the catch reported it as an ordinary
+    fallback. Its own comment claimed "45-64 rollouts, 1.2s worst case" - a
+    number measured while it was dead. The real cost is 8.4s. A `catch` that
+    prints only `getMessage()` cannot locate a NullPointerException; name the
+    frame.
+36. **The legend must name the column the code ranks on.** The footer under the
+    table said VS WAIT "is what to rank on". The sort has always ranked on END
+    TEAM. They disagree in practice, so a reader following the printed
+    instruction takes a different player than the tool recommends. Ten instances
+    of prose drift in this project and this was the first in text the user
+    reads.
+37. **A greedy tail with no legality constraint prices an impossible roster.**
+    `rolloutRoster` was pure marginal capped by `MOST`, so it often finished
+    with NO DEFENCE and was then charged the streaming penalty - which made
+    taking a defence NOW look like the only way to ever have one. A defence in
+    round 7 or 8 in five of six drafts. Reserve seats for unfilled named
+    starting slots, derived from the lineup, never typed.
+38. **A rank must index the list its curve was built from.** `projectionRanks`
+    ranked the whole pool while `thisYear` builds the curve from the DRAFTABLE
+    pool, so every held man was priced against twenty-four players who are not
+    in it - Chase 29 points under his own projection. The fix is not to add the
+    keepers back: putting them in the sorted list shifts everyone below them
+    instead (Penix, 51 points). Slot them in by counting how many draftable men
+    beat them.
+39. **A refused pick must still occupy its seat.** TRAPS A1 again, still open
+    after being named: a man the rules declined went into a print list and never
+    onto the roster, so a ceiling of two was counted against one and `full()`
+    read fifteen on a roster of sixteen. `MOST` was the only thing standing
+    between that and a third quarterback. Record him - and NOT through `draft()`,
+    which must keep refusing, or no model can be stopped from PLANNING an
+    illegal roster.
+40. **One failed cycle must not end the night.** `Draft2026` had no guard
+    between freezing the picks snapshot and thawing it, and the engine that
+    could throw - the board model, the one read first and the only one speaking
+    after round 7 - was the one NOT wrapped, while the second opinion was. One
+    refused read from Sleeper and he re-pays the whole warm against a sixty
+    second clock.
+41. **A harness that does not warm what the tool warms certifies nothing.**
+    `LivePathStress` never called `warmSurvival`, so every rollout it exercised
+    fell back to the estimator the survival table had retired. "70 picks priced,
+    0 throws, defence at round 10" was true of a configuration nobody runs, and
+    it went into DRAFT-READY as verification of one that does. Print which rule
+    was measured.
+42. **A model validated only against its own simulations is not validated.**
+    Every measurement of the survival table - 2.69 to 0.08 - scored it against
+    more draws from the model it is built from, which cannot separate a right
+    table from one reproducing its own generator. On the league's REAL 2024 and
+    2025 drafts the same table scores 1.19 against the cutoff's 3.35: the change
+    holds, and the 0.85-to-1.19 gap is the misspecification the simulated tests
+    are structurally unable to see. The same test then REVERSED a judgement
+    made hours earlier on simulated evidence alone - the room-observed term in
+    `drain`, kept on the argument that a simulation cannot exercise
+    misspecification, and dropped when a real draft could.
+
+## I. Checks that are not checking
+
+Added 2026-09-01. Four in one day, which makes it a category rather than an
+accident. None of these is a bug in the model; each is a piece of verification
+that looked green while verifying nothing, which is worse than having none,
+because it stops anybody looking.
+
+43. **A suite nobody runs.** `./gradlew smokeTest` - the live-API check the
+    build file has always said to run before a draft - was red for hours while
+    `./gradlew test` stayed green and I ran only that. Green on the suite you
+    happen to run is not green. The fix is not remembering: `check` now runs
+    what is cheap, and DRAFT-READY names the one that is not.
+44. **A build red long enough to become scenery.** `./gradlew javadoc` had
+    failed for months on eighteen cosmetic HTML complaints, and hiding among
+    them were two `{@link}`s to classes that no longer exist. Turn off the
+    check that costs readability, keep the one that finds stale documentation,
+    and hang it off `check` so it cannot rot again.
+45. **A test that cannot see its own input.** `DraftReadyCommandsTest` reads
+    DRAFT-READY.md. Gradle did not know that, so the task was UP-TO-DATE and
+    the test never ran - it passed with a deliberately planted dead command in
+    the file. Declare the documents as task inputs. A check that cannot observe
+    the thing it checks is decoration.
+46. **A plant that does not land looks exactly like a vacuous test.** Testing
+    whether `TableLegendTest` bites, I planted a forbidden string, saw the test
+    pass, and nearly recorded it as vacuous. The plant had not applied - my
+    replacement text did not match the source. It bites. VERIFY THE PLANT
+    LANDED before believing what its absence tells you, or the test-the-test
+    habit produces false findings of its own.
+
+## J. The wrong population
+
+Added 2026-09-01, evening. Justin named the class - "look for other such
+oversights" - after the first one, and every genuine fault found afterwards was
+an instance of it: a statistic computed over one set of men and applied to
+another. Distinguish it from a SCALE error, which never reaches a tree model at
+all (a tree splits on thresholds; monotone rescaling changes nothing). Scale
+errors were chased for an hour and found to be nothing. Population errors were
+real every time.
+
+47. **Replacement level taken from the choice set.** The scarcity feature's
+    baseline was the median of a position WITHIN the top sixty by ADP - three
+    or four tight ends, so about TE2. It computed "better than TE2", which the
+    cliff feature already says, and did nothing. A null result where theory
+    predicts a signal is evidence of a logical failure, not evidence about
+    football.
+48. **Replacement level with the keepers still in it.** Rebuilt from the full
+    points map, which contains the twenty-four kept men - seven tight ends this
+    year - so the TE12 it found could not be drafted by anyone. Take it from the
+    board that actually exists.
+49. **A baseline that moves.** Passing the CURRENT board recomputed replacement
+    every pick, so it drifted down as the pool emptied and inflated late
+    surplus - worse than no feature (13.6 vs 12.4). Replacement is a property of
+    the pool you started with. Fix it at draft start.
+50. **Keepers counted as draft decisions.** RoomFidelity built the "real"
+    positional timing from every pick, keepers included, while the simulation
+    never drafts one. Corrected, RB went from 5.0 to 8.0 and QB from 15.6 to
+    12.4 - the position called solid was the worst of the skill three, and the
+    one called worst was not. The measurement was contaminated in a way that
+    reversed the conclusion.
+51. **A keeper's round as evidence of when a room drafts.** floors() counted
+    McBride's round-3 keeper slot as a tight end being drafted in round 3. The
+    commissioner assigned that round; nobody chose him there.
+52. **Bench rates from the wrong round band.** benchGuidance advises round 8+
+    from rates measured on rounds 8-9, and fires through round 16 where the
+    true rates are 40-95% lower. Same ordering, wrong magnitudes on screen.
+53. **A retracted justification left in shipped code.** The defence curve
+    stayed flattened for hours after the 0.019 spearman behind it was
+    withdrawn - measured on ADP order and applied to a projection curve. The
+    claim was retracted in conversation; the code kept running. Retract in a
+    commit or it did not happen.
+54. **Comparing the best cell against the best cell.** BoostLab reports its
+    best tree configuration, which changes between runs, so on/off comparisons
+    of a feature were made across different models. Compare the SHIPPED cell.
+55. **No noise floor before comparing variants.** Every room-model tune was
+    read as signal at 0.1 to 1.0 points. The seed-to-seed spread of the same
+    measurement is 0.8 to 1.8. Not one tune was distinguishable from dice. The
+    floor should be the first tool built, not the last.
+56. **A test that restores the wrong value.** ModelAScheduleTest captured "the
+    previous value" on every call; the second call stored "9" and @AfterEach
+    restored 9 into the JVM for every class after it, and a nine-round board
+    carries no defences. Capture once. Or fork a JVM per class and have nothing
+    to leak into - which is what the build does now.
+57. **A number written before its measurement ran.** I typed "spearman -0.32
+    over nine managers" into DIAGNOSTIC.md and a commit message while the tool
+    that would produce it was still in the same shell command, then ran it: 0.01
+    over ten. Same conclusion, fabricated figure, in the document whose whole
+    subject is numbers being wrong. Write the number AFTER the tool prints it,
+    or write "pending" - never a plausible placeholder.
+58. **A line-number citation and an edit above it, seconds apart.** RosterRules
+    prints "RUNBOOK.md:191" on screen when it refuses a second quarterback. I
+    wrote a test to pin that citation and, in the same command, edited RUNBOOK's
+    fallback ladder above line 191 - moving the rule to 206 and making the code's
+    citation stale before the test could run. Line numbers in code are references
+    that nothing updates. Re-check them after ANY edit to the cited file, or
+    cite an anchor rather than a number.
+59. **The gate's sample size quoted as the model's.** "435 rows" appeared in
+    DIAGNOSTIC.md, the agent definition and a memory file as the size of the
+    shipped room-model fit. It was BoostLab's 2024 gate set - 2021-2023, rounds
+    1-13, actually 423. The shipped fit is 857 (2021-2025, rounds 1-16;
+    `TrainingRows`). The conclusion drawn from it was measured on the right fit
+    and stands; the number under it was the wrong population's. Even the
+    document about population errors had one.
+60. **A schedule built once and never re-read.** The seat order comes from
+    Sleeper's draft_order at warm and AAAConfiguration caches that JSON for the
+    life of the process. A pick trade during the draft changes who owns a seat on
+    Sleeper and nothing in the tool; minePicks walks the stale schedule and the
+    slot-count drift detector, which only counts, cannot see an owner swap. The
+    feed sends picked_by on every pick and fetchPicks parsed it and threw it away.
+    Compare it to the schedule every cycle, say how many picks were compared, and
+    tell him to restart. Found by asking "what could still bite tonight that no
+    measurement covers".
+61. **A snapshot with two halves and a second freeze path that fills one.**
+    freeze() captured picks and their owners together; freezeWith(), used by
+    every offline harness, captured picks only. The owner half fell through to a
+    live network fetch inside tools meant to run offline and compared real owners
+    against simulated pick numbers. Same fault as the warm-up divergence: one
+    thing assembled two ways. Caught reviewing my own commit within the minute;
+    a harness run would have shown it as a mismatch warning on a clean board.
+
+62. **A test that pinned a coin flip.** `ModelAScheduleTest` demanded that the
+    nine-round and sixteen-round plans agree exactly in rounds 1-7. Under the
+    evening projections (re-fetched 20:10 for the draft) the two schedules
+    landed on opposite sides of the round-2 RB/WR choice - the nine-round plan's
+    own gap between them was 0.8 points against a two-standard-error tie of 4.2.
+    That is the same coin flip Justin faced live at pick 18. The suite went red
+    after the draft on a fact the model had been saying all along: round 2 is
+    a tie. Fixed by asserting agreement only where the nine-round plan has a
+    clear preference (gap beyond two standard errors) and printing the coin
+    flips. A shape test that ignores the margins is asserting the seed.
+
+63. **A scheduled job that cannot read the files it schedules.** The daily
+    `AdpSnapshot` was installed as a launchd agent and smoke-kicked: zsh could not
+    open its own script under `~/Documents`. Not a path error - a launchd-spawned
+    `ls` lists the file, a launchd-spawned `head` gets "Operation not permitted".
+    macOS protects Documents from background agents, and no dialog appears for
+    one. Caught only because the job was kicked once by hand after installing;
+    a job installed and trusted would have failed silently at 09:30 every day.
+    Never install a schedule without running it once from the scheduler itself.
+
+64. **A timing instrument that measured a different question every day.**
+    `CycleTiming` froze whatever the live draft held. Before the draft that was
+    a pick-1 board (the "25s" in DRAFT-READY); after it, a finished draft with
+    Model A silent (11s, measured 2026-09-02 and nearly written up as the
+    committee's speed). The real pick-7 board on draft night cost 42s. Now it
+    freezes the first six picks of the real 2026 draft - one board, one
+    question, reproducible. An instrument whose input drifts is not measuring.
+
+65. **A suite that read the live league, the morning after the league changed.**
+    Four tests written against the pre-draft league (two keepers per roster,
+    no pick made) failed on 2026-09-02 with no code change behind them: Sleeper
+    had emptied every roster's keepers field overnight and the planner derived
+    "kept" from it. Three hours of a check went to a league with no keepers.
+    The suite now reads the league's state from `data/fixtures/2026-pre-draft`
+    (`-DfixtureDir`, set only for unit tests); feeds still float. A test that
+    reads the world is a test of the world, and the world does not hold still.
+
+66. **A floor that says when a defence CAN go, and nothing that says one MUST.**
+    The learned floor kept simulated defences out of the early rounds; no rule
+    made a roster end legal. Across 200 simulated 2026 drafts the room left a
+    defence slot empty in 12% of rosters and a quarterback in 2% - the league,
+    never - and an empty slot scores zero, so every seat's expectation sat ~10
+    points under what the league drafts. `DraftSimulator.mustFill` now confines
+    a seat with no more picks than empty slots to those positions. Neutral on the
+    held-out seasons (RoomFidelity within 0.2 of baseline at every position).
+
+67. **A "collapse" rule that was really a disagreement rule.** First version:
+    any man whose projection rank sat 60 places below his ADP rank was re-slotted
+    to the price of his projection. It fixed Jacobs and made QB timing on the
+    held-out seasons 2.5 points worse - beyond the noise floor - because that
+    disagreement is systematic (the feed underrates rookies, the league pays six
+    for passing touchdowns) and the positional terms already carry it. Rewritten
+    as `RecentCollapse`: a drop of 30% or more inside the last two weeks in the
+    projection archive, which is news in time, not opinion. Fires on Jacobs alone
+    today; inert on history because the archive begins 2026-08-25. Fidelity
+    unchanged. A rule is named by what it detects, not by the case that motivated it.
+
+68. **An A/B whose two arms agree to the decimal is one arm.** The off-arm passed
+    its flags through an unquoted zsh variable; zsh does not word-split, so
+    `-DnoNeed=true -Dcollapse=0` arrived as ONE property named noNeed with the
+    value "true -Dcollapse=0" - false to Boolean.getBoolean - and both arms ran
+    with the rules on. Caught because the outputs matched exactly, which real
+    arms never do. Pass flags literally, and read identical arms as a harness
+    fault before reading them as a result.
+
+69. **A player lookup inside the choice loop.** The first `mustFill` resolved
+    each candidate's position through `Player.getPlayerFromSIDV2` - a regex
+    match and an index check - for up to sixty candidates at every late pick of
+    every simulated draft. The unit suite went from 13 minutes to 4 hours 32
+    (HeldManRankTest 104s to 5565s) and nothing failed, so nothing said why.
+    Positions are now resolved once per simulator. Per-class times are the
+    check's second output; read them, because a green check that took twenty
+    times longer is telling you something.
+
+70. **A kill loop that matched its own shell.** `ps | grep RoomFidelity` inside a
+    script whose own command line contains the word RoomFidelity finds the shell
+    running it; `kill -9` on that list ends the script before its first real
+    line and the task reports exit 1 with an empty log. Twice in one evening,
+    once as `pgrep -f DraftExpectation`. Match the java process, not the word:
+    `awk '$2 ~ /(^|\/)java$/ && /RoomFidelity/'`.
+
+71. **Three settings that agreed to the decimal because the lever was not
+    connected.** The floor-as-prior was measured at weights 0, 0.05 and 0.2 on
+    three held-out seasons and every number matched exactly, which I read as
+    "the model already gives an early defence no probability". The historical
+    fidelity board had no defences on it at all - `DraftSimulator.forSeason`
+    kept skill positions only, the nine-round game's rule - so the simulated
+    room could not draft one on any past season and `RoomFidelity` had never
+    printed a DEF row. With defences on the sixteen-round board the arms differ
+    (DEF gap 23.8 / 22.4 / 21.2). Identical arms are a harness question first
+    (TRAPS #68); when the harness is clean, the next question is whether the
+    thing being varied can reach the thing being measured.
+
+72. **A report pinned in place of a feed.** To hold the suite on one board I
+    pointed it at the AdpSnapshot archive - the CSV rows the daily job writes.
+    Six fixtures broke: "the board must carry defences", "the fixture needs a
+    projected man past ADP 300", a null sleeper id. The archive is a REPORT of
+    the drafted pool (ADP 250 and under, skill positions in the ADP file); the
+    feed is every man Sleeper knows, defences and the undrafted included, and
+    the fixtures were written against the feed. The pin is now the raw
+    draft-night response, served through the same fixture directory as the
+    league snapshot. A report derived from a feed is not the feed.
+

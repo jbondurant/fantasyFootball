@@ -1,0 +1,36 @@
+MARKET MOVERS  2026-09-01 -> 2026-09-02  (2 cached days; 235 drafted players compared; league scoring (as the model scores))
+Sleeper half-PPR ADP: negative change = rising (drafted earlier). 'step' = the day carrying most of the move; a drift has no single day.
+
+== PROJECTION MOVERS (league points, |change| >= 2) ==
+player                   pos team held by         from      to  change   step           Sleeper's own data says
+
+== ADP MOVERS (ranked relatively; |change| >= 2 picks) ==
+player                   pos team held by         from      to  change    rel   step           Sleeper's own data says
+Kayshon Boutte           WR  HOU  Renteez        199.1   178.3   -20.8   -10%   step 09-02 100% 
+Zachariah Branch         WR  ATL  free agent     213.9   231.3   +17.4    +8%   step 09-02 100% 
+Jordyn Tyson             WR  NO   JFMarino       104.7   108.7    +4.0    +4%   step 09-02 100% ir Hamstring
+Rhamondre Stevenson      RB  NE   justinb314      73.7    71.1    -2.6    -4%   step 09-02 100% 
+Oronde Gadsden           TE  LAC  Renteez        166.5   171.8    +5.3    +3%   step 09-02 100% news 09-01
+Tyjae Spears             RB  TEN  BHier          170.8   167.4    -3.4    -2%   step 09-02 100% 
+Jaydon Blue              RB  PHI  free agent     229.0   233.6    +4.6    +2%   step 09-02 100% 
+Jakobi Meyers            WR  JAX  justinb314     129.0   131.5    +2.5    +2%   step 09-02 100% questionable Hand; news 09-02
+Alvin Kamara             RB  NO   Hamrliks       156.7   159.7    +3.0    +2%   step 09-02 100% questionable Knee; news 09-02
+Tyrone Tracy             RB  NYG  Hamrliks       148.9   151.7    +2.8    +2%   step 09-02 100% questionable Neck; news 09-01
+Kenyon Sadiq             TE  NYJ  tommyrads      190.3   193.8    +3.5    +2%   step 09-02 100% questionable Abdomen
+Tyler Allgeier           RB  ARI  d0ddi          132.7   130.5    -2.2    -2%   step 09-02 100% 
+Baker Mayfield           QB  TB   free agent     153.3   155.8    +2.5    +2%   step 09-02 100% news 09-01
+Ray Davis                RB  BUF  JFMarino       207.9   205.2    -2.7    -1%   step 09-02 100% 
+Ryan Flournoy            WR  DAL  BHier          234.6   231.7    -2.9    -1%   step 09-02 100% news 09-02
+
+== IN / OUT OF THE DRAFTED POOL ==
+   now drafted:  Kyle Dixon               WR  NE   adp 243.0
+   now undrafted: Kole Wilson              WR  CLE  was adp 238.0
+
+== INJURY DESIGNATIONS TODAY (drafted pool, anything beyond Questionable) ==
+   Josh Jacobs              RB  GB   jerem9604    adp   35.3  NA (Groin)
+   Jordyn Tyson             WR  NO   JFMarino     adp  108.7  IR (Hamstring)
+   Zach Charbonnet          RB  SEA  itsabust     adp  142.1  PUP (Knee - ACL)
+   Isiah Pacheco            RB  DET  Hamrliks     adp  174.8  IR (Back)
+   Tank Dell                WR  HOU  tommyrads    adp  195.3  IR (Knee - ACL + MCL)
+   Jayden Higgins           WR  HOU  free agent   adp  215.6  IR (Knee - ACL)
+   James Conner             RB  ARI  free agent   adp  228.6  IR (Foot)

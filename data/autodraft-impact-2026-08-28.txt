@@ -1,0 +1,21 @@
+JFMarino autodrafting vs human, 600 trials each.
+Survival to my picks [7, 18, 31, 42, 55, 66, 79, 90, 103]:
+
+   PLAYER                   POS     proj    human    drone    change
+   Josh Allen               QB       415      90%      50%     -166 pts
+   Ashton Jeanty            RB       211      20%       1%      -41 pts
+   George Pickens           WR       206      27%      39%      +25 pts
+   Drake London             WR       205      30%      38%      +17 pts
+   Rashee Rice              WR       185      71%      80%      +17 pts
+   Jeremiyah Love           RB       188      65%      72%      +13 pts
+   Malik Nabers             WR       194      71%      77%      +13 pts
+   Breece Hall              RB       193      82%      89%      +13 pts
+   Josh Jacobs              RB       186      73%      78%       +9 pts
+   DeVonta Smith            WR       189      87%      91%       +7 pts
+   Omarion Hampton          RB       219       6%       3%       -7 pts
+   Tetairoa McMillan        WR       185      92%      95%       +6 pts
+
+A drone is deterministic, so if he is autodrafting the
+players he would take become certainties rather than risks - which
+is information the live tool can use once two or three of his picks
+match ADP exactly.

@@ -1,0 +1,24 @@
+
+A WHOLE DRAFT, MODEL PICKING, 2026 BOARD
+
+24 men kept league-wide and off the board
+
+ROUND  PICK   THE MODEL TAKES            POS  check
+1      7      Derrick Henry              RB   
+2      18     Omarion Hampton            RB   
+3      31     Travis Etienne             RB   
+4      42     Mike Evans                 WR   
+5      55     Brian Thomas               WR   
+6      66     Jayden Reed                WR   
+7      79     Alec Pierce                WR   
+8      90     Matthew Golden             WR   
+9      103    Mark Andrews               TE   
+10     114    Jared Goff                 QB   
+11     127    Jalen Coker                WR   
+14     162    Jalen McMillan             WR   
+15     175    Omar Cooper                WR   
+16     186    Kansas City Chiefs         DEF  
+
+FINAL ROSTER
+   {QB=2, RB=4, WR=8, TE=1, DEF=1}  (16 men, keepers included)
+   legal lineup? yes

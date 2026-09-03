@@ -1,0 +1,42 @@
+
+WHAT EACH KIND OF PICK IS WORTH, ROUNDS 8-16
+scale: points above what that ROSTER SPOT yields for free.
+a defence is measured against STREAMING one, a bench man against
+the WAIVER WIRE. the spot is the scarce thing, so the spot is the
+denominator.
+
+   streaming a defence pays 8.7 a week, 149 a season.
+   the best preseason defences returned 135.8 a season.
+   so drafting the best defence beats streaming by -13.
+
+ROUND      BACKUP SKILL   STARTING DEF        VERDICT
+8-9               +44.0          -12.9   take the skill man
+10-12             +32.8          -12.9   take the skill man
+13-16             +31.2          -12.9   take the skill man
+
+   and the defence column is generous twice over.
+   it credits you the BEST preseason band, but preseason
+   ordering picked the better half in only 3 seasons of 5,
+   and the bands run 135.8 / 129.5 - not even monotonic. the
+   honest expectation is the pooled mean, -16.
+
+============================================================
+   THE RULE THIS PRODUCES
+============================================================
+   a starting DEFENCE is worth roughly -13 whenever you take
+   him, so he is a LAST-ROUND pick - not because he is cheap late,
+   but because he is no better early.
+
+   a BACKUP skill man is worth +44.0 in rounds 8-9 and +31.2
+   in 13-16, so the early bench picks are the ones that pay.
+
+   a starting TIGHT END cannot be settled here. he fills an empty
+   slot, so he is worth his projection over the tight end you would
+   get at your last pick - a live number, which LiveLateRounds already
+   computes on the real board.
+
+   USE THIS TO CHECK THAT TOOL, not to replace it. on draft night
+   its ADDS column should put the best defence near or below zero and
+   a rounds 8-9 backup well above it. if it prices a defence ahead of
+   depth in round 8, it disagrees with five seasons of outcomes and
+   the outcomes should win.

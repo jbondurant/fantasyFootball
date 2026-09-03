@@ -1,0 +1,13 @@
+fog draws 40, 300 rollouts per candidate, paired on the
+same truths - each row is that strategy's MEAN value under fog,
+decisions made on projections only:
+
+   QB@none TE@r7        1508.1    +0.0 vs QB@none TE@r7
+   QB@none TE@r8        1520.2   +12.1 vs QB@none TE@r7
+   QB@r2 TE@r7          1511.5    +3.5 vs QB@none TE@r7
+   QB@r6 TE@r7          1536.8   +28.8 vs QB@none TE@r7
+   QB@r8 TE@r7          1547.1   +39.1 vs QB@none TE@r7
+   QB@r8 TE@r9          1553.3   +45.3 vs QB@none TE@r7   <- best under fog
+
+A small spread means the timing decision is fog-proof: the
+same plan is right whether or not the projections come true.

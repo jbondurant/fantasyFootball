@@ -258,11 +258,23 @@ public class KeeperChooser {
     /**
      * A starting lineup first, then depth, shuffled so the simulation explores
      * orderings rather than always drafting the same shape.
+     *
+     * The defense is appended near the end rather than shuffled in, because
+     * that is what the league does - the average first defense goes in round
+     * 15, and none has ever been kept. It has to be in the plan at all:
+     * nonPermutedPositions only emits QB/RB/WR/TE, so leaving it to that helper
+     * meant the simulated team never drafted a defense, started nobody in the
+     * DEF slot, and scored a permanent zero there. Keeping a defense then
+     * looked like the best move on the board, which is how this was found.
      */
     private static ArrayList<Position> draftPlan(List<Keeper> keepers, int picks){
         ArrayList<Position> needed = HumanStrategy.nonPermutedPositions(1, 2, 3, 1);
+        boolean needDefense = true;
         for(Keeper keeper : keepers){
             needed.remove(keeper.player.position);
+            if(keeper.player.position.equals(Position.DEF)){
+                needDefense = false;
+            }
         }
         java.util.Collections.shuffle(needed);
 
@@ -273,6 +285,10 @@ public class KeeperChooser {
         plan.addAll(depth);
         while(plan.size() > picks){
             plan.remove(plan.size() - 1);
+        }
+        if(needDefense && !plan.isEmpty()){
+            // Late, where this league actually takes one.
+            plan.set(Math.max(plan.size() - 2, 0), Position.DEF);
         }
         return plan;
     }

@@ -1,0 +1,57 @@
+
+WHAT THE MISSING CHANNEL IS WORTH, ON REAL ROSTERS
+
+seasons          5 (2021 2022 2023 2024 2025)
+weeks            1-14 (fantasy regular season)
+form blend       0.45 on points-per-game to date, 0.55 on preseason
+                 (DetectionLag's measured w* around weeks 8-12)
+
+POINTS PER TEAM PER SEASON, weeks 1-14, same real rosters
+SEASON     preseason        form      actual     perfect    form - pre  actual - pre
+2021          1311.7      1335.7      1550.4      1714.7         +24.0        +238.7
+2022          1292.4      1287.7      1488.5      1672.5          -4.7        +196.1
+2023          1265.3      1310.8      1502.6      1668.4         +45.5        +237.3
+2024          1296.8      1289.9      1509.8      1694.0          -6.9        +213.0
+2025          1237.3      1260.2      1478.1      1664.8         +22.9        +240.9
+MEAN          1280.7      1296.9      1505.9      1682.9         +16.2        +225.2
+
+THE SAME THING WITH THE INJURY CHANNEL ALREADY ON
+(a man who did not play is benched by both rules - WeeklyStarterValue's !up()
+ draw already does this, so this is the honest apples-to-apples)
+
+SEASON     preseason+up        form+up    form - pre
+2021             1534.9         1550.5         +15.6
+2022             1481.3         1478.5          -2.8
+2023             1470.0         1492.9         +22.9
+2024             1499.8         1502.5          +2.7
+2025             1458.1         1462.4          +4.3
+MEAN             1488.8         1497.4          +8.5
+
+WHAT EACH PIECE OF KNOWLEDGE IS WORTH, points per team per season
+   form over preseason, no injury channel    +16.2  95% [-0.0, +32.4]
+   form over preseason, injury channel ON     +8.5  95% [+0.8, +16.3]   <- the prize
+   the injury channel by itself             +208.1
+   a real human over preseason+up            +17.0  95% [+9.9, +25.0]   <- what a manager adds
+   hindsight over a real human              +177.0  95% [+168.6, +185.2]   <- unreachable by anyone
+   (2000 resamples of the 5 seasons; the 95% bar for a plan-level claim is 125)
+
+SWEEPING THE BLEND WEIGHT (injury channel on)
+weight on form     0.00     0.15     0.30     0.45     0.60     0.80     1.00
+gain vs pre        +0.0    +12.7    +14.3     +8.5     +1.7     -3.7     -7.3
+   weight 0.00 reproduces preseason exactly - the control that proves
+   the sweep is measuring the blend and not a coding difference.
+
+WHERE A STARTED MAN CAME FROM (skill slots only)
+SEASON     rounds 1-4   rounds 5-9   rounds 10+    undrafted
+2021             35%         32%         19%         14%
+2022             36%         33%         19%         12%
+2023             36%         33%         19%         12%
+2024             36%         32%         23%         10%
+2025             33%         33%         19%         15%
+
+UNDRAFTED SHARE OF SKILL STARTS, BY WEEK
+week          1    2    3    4    5    6    7    8    9   10   11   12   13   14
+share        1%   5%   7%   9%  13%  14%  16%  14%  17%  15%  16%  16%  14%  18%
+pts/start   6.2  8.4  8.1  9.9  9.3  8.1  9.5 11.0 10.4  9.3  8.8 11.0  9.4  9.5
+pts/start early 13.3 13.9 13.4 14.1 14.9 13.4 14.0 15.1 13.4 13.7 14.3 13.6 13.2 13.5
+

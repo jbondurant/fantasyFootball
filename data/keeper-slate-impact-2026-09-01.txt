@@ -1,0 +1,86 @@
+./gradlew run -Pmain=KeeperSlateImpact -q
+run 2026-09-01 against commit 5ee99cd, on a detached worktree so no other
+agent could rewrite BoardValue between the arms. the SHIPPED column
+reproduces the tagged figures exactly: the plan at 2007 and BoardValue at 1935.
+
+
+TWENTY-FOUR KEEPERS, NOT TWO
+
+league keeper slate: 24 men off the board by positional ADP rank (2 mine), 24 picks spent
+5 seasons, real outcomes, the same scorer throughout. The 95% bar is 125
+points at five seasons; anything inside it is a tie and is called one.
+
+==============================================================================
+1. EVERY STRATEGY, BOTH BOARDS
+==============================================================================
+
+STRATEGY                       SHIPPED    realrank   24-KEEPER    shift paired se    worst
+starter-sum (1-16)                1976        1976        1848     -128        99     1613
+best-nine (Model A)               1752        1752        1621     -131        50     1471
+RUNBOOK committed                 2029        2029        1833     -196        63     1766
+RUNBOOK as written                2007        2007        1840     -167        78     1759
+board value                       1968        1968        1812     -156        71     1607
+RB-heavy folk rule                1978        1978        1842     -136        53     1744
+RUNBOOK front + SS back           2007        2007        1837     -170        61     1697
+ModelA front + SS back            1956        1956        1841     -115        45     1743
+[not legal] no DEF drafted        2039        2039        1843     -196        63     1812
+best available by ADP             1579        1579        1524      -55       126     1327
+board value (adaptive)            1935        1952        1783     -152        82     1558
+
+SHIFT is the 24-keeper mean minus the shipped one, and its standard error is
+PAIRED - every strategy meets the same five boards, so the difference is a
+paired quantity and deserves a paired bar rather than two means eyeballed.
+
+==============================================================================
+2. IS THE SHIFT UNIFORM? (a uniform one is not a finding)
+==============================================================================
+
+   hurt most   RUNBOOK committed             -196
+   hurt least  best available by ADP          -55
+   spread of the shift                         141  (OVER the 125 bar)
+
+A shift that landed on every strategy equally would move the y-axis and
+nothing else. This one does not: the spread above is the part that is real.
+
+==============================================================================
+3. THE ORDERING, WHICH IS THE ONLY THING THAT MATTERS
+==============================================================================
+
+     2 KEEPERS                      24 KEEPERS                     MOVED
+1    [not legal] no DEF drafted 2039 starter-sum (1-16) 1848        +5
+2    RUNBOOK committed 2029         [not legal] no DEF drafted 1843 -1
+3    RUNBOOK as written 2007        RB-heavy folk rule 1842        +2
+4    RUNBOOK front + SS back 2007   ModelA front + SS back 1841    +4
+5    RB-heavy folk rule 1978        RUNBOOK as written 1840        -2
+6    starter-sum (1-16) 1976        RUNBOOK front + SS back 1837   -2
+7    board value 1968               RUNBOOK committed 1833         -5
+8    ModelA front + SS back 1956    board value 1812               -1
+9    board value (adaptive) 1935    board value (adaptive) 1783    +0
+10   best-nine (Model A) 1752       best-nine (Model A) 1621       +0
+11   best available by ADP 1579     best available by ADP 1524     +0
+
+==============================================================================
+4. HOW FAR APART IS THE FIELD, ONCE THE STRAWMEN ARE OUT
+==============================================================================
+
+                             2 keepers 24 keepers
+   best serious plan              2029       1848
+   worst serious plan             1935       1783
+   width of that field              95         65
+
+   the bar is 125. a field narrower than the bar is one this design
+   cannot rank at all.
+
+==============================================================================
+5. THE PLAN AGAINST THE BOARD MODEL, PAIRED
+==============================================================================
+
+   RUNBOOK as written     vs board value (adaptive) on 2 keepers (shipped)         +72  se   51  tie
+   RUNBOOK as written     vs board value (adaptive) on 2 keepers, real ranks       +55  se   64  tie
+   RUNBOOK as written     vs board value (adaptive) on 24 keepers (the league)     +57  se   87  tie
+   RUNBOOK committed      vs board value (adaptive) on 2 keepers (shipped)         +95  se   45  tie
+   RUNBOOK committed      vs board value (adaptive) on 2 keepers, real ranks       +77  se   60  tie
+   RUNBOOK committed      vs board value (adaptive) on 24 keepers (the league)     +50  se   89  tie
+
+If a realistic keeper slate separated these two, that would be tonight's
+most useful result. Read the verdict column, not the sign.
