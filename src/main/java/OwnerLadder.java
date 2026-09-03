@@ -27,8 +27,8 @@ import PlayerImportAndSetup.Position;
  * when the fitted room drafts every seat of the pre-draft league (as
  * DraftExpectation), 200 simulated drafts per rung:
  *
- *   1. SLOT      this owner keeps nobody, everyone else as declared - the
- *                seat alone, the ledger's keeperless seat
+ *   1. SLOT      this owner's keepers phantomed (off the board, no credit, no
+ *                slot burned), everyone else as declared - the seat alone
  *   2. KEEPERS   the 24 keepers as declared
  *   3. BEST PAIR this owner keeps the two men the 10k ledger valued highest
  *                (data/keeper-ledger-10k-2026-08-26.txt, standalone deltas),
@@ -168,18 +168,32 @@ public class OwnerLadder {
                 List.of(), Set.of(), model, earliness);
         Map<String, double[]> withKeepers = rung(actual, declaredOf, nameByUser, trials);
 
-        // 1. SLOT: this owner keeps nobody, everyone else keeps as declared - the
-        // ledger's keeperless seat. (A league where NOBODY keeps is a different
-        // question: the 24 kept men go back on the board and every seat drafts
-        // from a richer pool, which read as most keepers being worth less than
-        // nothing on the first run.)
+        // 1. SLOT: this owner's keepers are PHANTOMED - off the board, no lineup
+        // credit, no slot burned - and everyone else keeps as declared. That is
+        // the seat given the league's keeper structure and nothing else.
+        // Two earlier readings were wrong: a league where NOBODY keeps (the 24
+        // kept men return and every seat drafts from a richer pool), and "this
+        // owner keeps nobody" with his own two men back on the board - which let
+        // an owner who kept stars redraft them from his seat, so the column
+        // peaked at jerem9604's slot 9 (Taylor, Bowers back) and Hamrliks' 10
+        // (Chase Brown back) and fell 24 points at tommyrads' 11, whose returned
+        // men were worth little. Those bumps were the counterfactual, not noise.
+        // -PneutralSeat=true drafts the seat with the LEAGUE-AVERAGE quarterback
+        // habit instead of the owner's learned one (the room model carries a
+        // per-manager QB-earliness term: tommyrads -2.9 rounds, Justin +3.5).
+        // With the owner's habit in, the column measures seat AND owner; with it
+        // out, the seat. Tight-end and running-back habits stay as learned.
+        boolean neutralSeat = Boolean.getBoolean("neutralSeat");
         Map<String, double[]> slotOnly = new TreeMap<>();
         for(String manager : declaredOf.keySet()){
-            DraftPlanner keeperless = DraftPlanner.forCurrentSeasonAs(configuration, configuration.getMyID(),
-                    List.of(), new HashSet<>(declaredOf.get(manager)), model, earliness);
+            String user = userByName.getOrDefault(manager, manager);
+            Map<String, Double> seatEarliness = new HashMap<>(earliness);
+            if(neutralSeat){ seatEarliness.remove(user); }
+            DraftPlanner phantomed = DraftPlanner.forCurrentSeasonAs(configuration, user,
+                    List.of(), Set.of(), true, model, seatEarliness);
             Map<String, List<String>> keepersOf = new TreeMap<>(declaredOf);
             keepersOf.remove(manager);
-            slotOnly.put(manager, rung(keeperless, keepersOf, nameByUser, trials).get(manager));
+            slotOnly.put(manager, rung(phantomed, keepersOf, nameByUser, trials).get(manager));
         }
 
         // 3. BEST PAIR per owner, from the ledger
@@ -249,8 +263,12 @@ public class OwnerLadder {
                     if(p != null){ match = new Keeper(user, p, c.round()); }
                 }
                 if(match == null){ continue; }
-                DraftPlanner alone = DraftPlanner.forCurrentSeasonAs(configuration, configuration.getMyID(),
-                        List.of(match), new HashSet<>(declaredOf.get(manager)), model, earliness);
+                // keep this one man; the owner's OTHER declared keepers stay phantomed, not
+                // returned to the board, so the delta is against the same seat as rung 1
+                Set<String> others = new HashSet<>(declaredOf.get(manager));
+                others.remove(match.player.sleeperIDString);
+                DraftPlanner alone = DraftPlanner.forCurrentSeasonAs(configuration, user,
+                        List.of(match), others, true, model, earliness);
                 Map<String, List<String>> keepersOf = new TreeMap<>(declaredOf);
                 keepersOf.put(manager, List.of(match.player.sleeperIDString));
                 double[] v = rung(alone, keepersOf, nameByUser, trials).get(manager);
@@ -306,7 +324,7 @@ public class OwnerLadder {
         managers.sort(Comparator.comparingInt(m -> slotOf.getOrDefault(m, 99)));
         StringBuilder out = new StringBuilder();
         out.append(String.format("OWNER LADDER  %s  (%d simulated drafts per rung, room model at every seat, %.0fs)%n", today, trials, seconds));
-        out.append("SLOT = this owner keeps nobody (others as declared); KEEPERS = as declared; BEST PAIR = the ledger's two highest-valued keepers for this owner; DRAFTED = the roster held today.\n\n");
+        out.append("SLOT = this owner's keepers phantomed, others as declared; KEEPERS = as declared; BEST PAIR = the ledger's two highest-valued keepers for this owner; DRAFTED = the roster held today.\n\n");
         out.append(String.format("%-12s %4s %8s %8s %7s %9s %7s %8s %7s   %s%n", "owner", "slot", "SLOT", "KEEPERS", "worth", "BEST PAIR", "gain", "DRAFTED", "drafting", "best pair (ledger)"));
         for(String m : managers){
             double s = slotOnly.getOrDefault(m, new double[]{0, 0})[0];
@@ -359,7 +377,7 @@ public class OwnerLadder {
          .append(".ladder{display:grid;grid-template-columns:110px 1fr 70px;gap:4px 10px;align-items:center;font-size:13px}.bar{height:10px;border-radius:5px}")
          .append(".lg{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:middle}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:760px){.grid{grid-template-columns:1fr}}")
          .append("</style></head><body><h1>Owner ladder</h1><div class='sub'>").append(trials).append(" simulated drafts per rung, the fitted room drafting every seat of the pre-draft league; each rung is the mean projected points of the best legal lineup. ")
-         .append("<span class='lg' style='background:var(--r1)'></span>SLOT: this owner keeps nobody, everyone else as declared &nbsp; <span class='lg' style='background:var(--r2)'></span>KEEPERS: as declared &nbsp; <span class='lg' style='background:var(--r3)'></span>BEST PAIR: the 10k ledger's two highest-valued keepers for this owner &nbsp; <span class='lg' style='background:var(--r4)'></span>DRAFTED: the roster held today</div>");
+         .append("<span class='lg' style='background:var(--r1)'></span>SLOT: this owner's keepers phantomed (off the board, no credit), everyone else as declared &nbsp; <span class='lg' style='background:var(--r2)'></span>KEEPERS: as declared &nbsp; <span class='lg' style='background:var(--r3)'></span>BEST PAIR: the 10k ledger's two highest-valued keepers for this owner &nbsp; <span class='lg' style='background:var(--r4)'></span>DRAFTED: the roster held today</div>");
         String me = System.getProperty("me", "justinb314");
         h.append("<table><tr><th>Owner</th><th>Slot</th><th>Slot only</th><th>+ keepers</th><th>worth</th><th>+ best pair</th><th>gain</th><th>Drafted</th><th>drafting</th></tr>");
         for(String m : managers){

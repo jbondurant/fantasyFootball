@@ -442,3 +442,15 @@ real every time.
     draft-night response, served through the same fixture directory as the
     league snapshot. A report derived from a feed is not the feed.
 
+73. **A counterfactual that hands the owner his own stars back.** "Seat alone"
+    was built as "this owner keeps nobody, everyone else as declared" - and his
+    two men went back on the board, where he was the seat best placed to
+    redraft them. jerem9604's slot 9 read a peak (Taylor and Bowers available
+    to him), Hamrliks' 10 a lift (Chase Brown), tommyrads' 11 a 24-point hole
+    (Warren and Caleb Williams returned, worth little). Justin read the column
+    and asked whether the bumps were noise or the room's dispersion; they were
+    neither. The planner already had the right primitive - phantomOwnKeepers:
+    off the board, no credit, no slot burned - and the column smooths once it is
+    used. A per-owner counterfactual must not vary in what it puts back on the
+    board, or the column measures the owners' rosters and not their seats.
+
