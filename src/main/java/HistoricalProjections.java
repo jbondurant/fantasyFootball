@@ -18,9 +18,32 @@ import java.util.Set;
  */
 public class HistoricalProjections {
 
-    /** True once a season's draft-night feed has been frozen under the cached-forever name. */
+    /** The committed copy of a season's draft-night feed, so the freeze survives a new machine. */
+    static java.io.File committedFreeze(String season){
+        return new java.io.File("data/fixtures/" + season + "-pre-draft", "sleeperProjections" + season + ".txt");
+    }
+
+    /**
+     * True once a season's draft-night feed has been frozen - either under the
+     * cached-forever name in the project root, or as the committed fixture copy,
+     * which is restored to the root on first use.
+     */
     public static boolean frozen(String season){
-        return new java.io.File("sleeperProjectionsFinal" + season + ".txt").isFile();
+        java.io.File root = new java.io.File("sleeperProjectionsFinal" + season + ".txt");
+        if(root.isFile()){
+            return true;
+        }
+        java.io.File committed = committedFreeze(season);
+        if(committed.isFile()){
+            try {
+                java.nio.file.Files.copy(committed.toPath(), root.toPath());
+                return true;
+            }
+            catch(java.io.IOException cannotRestore){
+                return false;
+            }
+        }
+        return false;
     }
 
     public static JsonArray forSeason(AAAConfiguration configuration, String season){
