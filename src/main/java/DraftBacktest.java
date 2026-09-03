@@ -45,8 +45,15 @@ public class DraftBacktest {
 
         Season(AAAConfiguration configuration, String label){
             this.label = label;
-            List<String> seasons = configuration.getPreviousSeasons();
-            this.picks = configuration.getPreviousDraftPicks().get(seasons.indexOf(label));
+            if(label.equals(configuration.getSeason())){
+                // the current season, after its draft: the league's own draft picks
+                this.picks = com.google.gson.JsonParser.parseString(
+                        configuration.getTodaysDraftPicks()).getAsJsonArray();
+            }
+            else {
+                List<String> seasons = configuration.getPreviousSeasons();
+                this.picks = configuration.getPreviousDraftPicks().get(seasons.indexOf(label));
+            }
             this.adp = HistoricalProjections.adpBySleeperID(configuration, label);
             this.rawPoints = HistoricalProjections.rawPointsBySleeperID(configuration, label);
             for(JsonElement pickElement : picks){

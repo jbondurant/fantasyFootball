@@ -83,6 +83,16 @@ And the live-feed check the build file has always asked for before a draft:
 
     ./gradlew smokeTest
 
+**The verdict lines (added 2026-09-02).** Under the board model's table one line
+now says what it decided: `>>> VERDICT: RB - SEPARATED from WR by 24.1 (+/- 6.4,
+paired 2 s.e.)`, or `>>> VERDICT: TIE - QB / WR / DEF inside the noise ...; the men
+decide, not the position`. When Model A finishes (rounds 1-7) a second line says
+whether it agrees: `>>> MODEL A AGREES: RB (every engine; lookahead-2 +8.1 over WR)`,
+`>>> MODEL A LEANS WR inside the board model's tie ... - either is defensible`, or
+`>>> SPLIT: board model RB (+10.2 END TEAM over WR), Model A WR (every engine; +5.3
+skill-nine over RB) - the written rule ranks on the board model`. Pick 18 of the
+2026 draft would have read SPLIT; nothing on screen said so at the time.
+
 Optional, two minutes: `./gradlew run -Pmain=MarketMovers -q` prints who the market moved on in the last week (projection and Sleeper ADP, the day it happened, what Sleeper's own injury/news data says). The 2026-09-01 report is `data/market-movers-2026-09-01.txt`; the researched causes are `data/market-movers-2026-09-01-causes.md`. The one that matters: Josh Jacobs is on the commissioner exempt list (Sleeper projects him at 80 points now; his ADP still says 35), MarShawn Lloyd starts for Green Bay.
 
 (`./gradlew check` now runs the unit suite AND javadoc's reference check, so

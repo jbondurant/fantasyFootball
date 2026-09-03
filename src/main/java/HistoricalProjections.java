@@ -18,12 +18,24 @@ import java.util.Set;
  */
 public class HistoricalProjections {
 
+    /** True once a season's draft-night feed has been frozen under the cached-forever name. */
+    public static boolean frozen(String season){
+        return new java.io.File("sleeperProjectionsFinal" + season + ".txt").isFile();
+    }
+
     public static JsonArray forSeason(AAAConfiguration configuration, String season){
         int asked = Integer.parseInt(season);
         int current = Integer.parseInt(configuration.getSeason());
-        if(asked >= current){
+        // THE CURRENT SEASON IS HISTORY ONCE ITS DRAFT-NIGHT FEED IS FROZEN.
+        // After the 2026 draft the draft-night Sleeper feed was copied to
+        // sleeperProjectionsFinal2026.txt (and data/fixtures/2026-pre-draft), so
+        // 2026 can be a fidelity target and, next year, a training season
+        // without depending on what Sleeper serves for 2026 later in the season.
+        // Without that file the old rule holds: the current season is not history.
+        if(asked > current || (asked == current && !frozen(season))){
             throw new IllegalArgumentException("season " + season + " is not history; "
-                    + "use SleeperProjections for the current season");
+                    + "use SleeperProjections for the current season (or freeze its draft-night"
+                    + " feed as sleeperProjectionsFinal" + season + ".txt once the draft is done)");
         }
         String url = "https://api.sleeper.app/projections/nfl/" + season
                 + "?season_type=regular&position[]=DEF&position[]=QB&position[]=RB&position[]=TE&position[]=WR"

@@ -15,7 +15,8 @@ public class TrainingRows {
     public static void main(String[] args) throws Exception {
         System.setProperty("scheduleRounds", "16");
         AAAConfiguration configuration = AAAConfiguration.getInstance();
-        int last = Integer.parseInt(configuration.getSeason()) - 1;
+        // -PtrainTo=2026 counts the current season too, once its draft-night feed is frozen
+        int last = Integer.getInteger("trainTo", Integer.parseInt(configuration.getSeason()) - 1);
         Map<String, Double> qb = SelectionModel.qbEarliness(configuration, last);
         List<SelectionModel.Observation> shipped = SelectionModel.loadObservations(
                 configuration, 2021, last, qb,

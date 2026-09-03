@@ -49,7 +49,48 @@ public class ProjectionSources {
     }
 
     /** The planner's feed resolver, blends included. */
+    /**
+     * A feed frozen on a date: the Sleeper rows AdpSnapshot archived that day in
+     * data/projection-snapshots.csv. "snapshot:2026-09-01" is the draft-night
+     * board. The unit suite runs on it (build.gradle), so a test written
+     * against a board cannot flip when the feed moves - ModelAScheduleTest did,
+     * the morning after the draft, on a round-2 coin flip (TRAPS #62).
+     */
+    static Map<String, Double> snapshot(List<String> lines, String date, String feed){
+        Map<String, Double> points = new LinkedHashMap<>();
+        for(String line : lines){
+            String[] cells = line.split(",");
+            if(cells.length >= 4 && cells[0].equals(date) && cells[1].equals(feed)){
+                try {
+                    points.put(cells[2], Double.parseDouble(cells[3]));
+                }
+                catch(NumberFormatException malformed){
+                    // one bad row must not blank the feed
+                }
+            }
+        }
+        return points;
+    }
+
+    static Map<String, Double> snapshotPoints(String date){
+        try {
+            Map<String, Double> points = snapshot(java.nio.file.Files.readAllLines(
+                    AdpSnapshot.PROJECTIONS_CSV, java.nio.charset.StandardCharsets.UTF_8), date, "sleeper");
+            if(points.isEmpty()){
+                throw new IllegalArgumentException("no sleeper projection snapshot for " + date
+                        + " in " + AdpSnapshot.PROJECTIONS_CSV);
+            }
+            return points;
+        }
+        catch(java.io.IOException unreadable){
+            throw new IllegalArgumentException("cannot read " + AdpSnapshot.PROJECTIONS_CSV, unreadable);
+        }
+    }
+
     public static Map<String, Double> resolve(String source){
+        if(source != null && source.startsWith("snapshot:")){
+            return snapshotPoints(source.substring(9).trim());
+        }
         if(source != null && source.startsWith("blend:")){
             List<Map<String, Double>> feeds = new ArrayList<>();
             for(String part : source.substring(6).split(",")){

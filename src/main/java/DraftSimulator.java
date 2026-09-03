@@ -238,6 +238,44 @@ public class DraftSimulator {
         return floors;
     }
 
+    /**
+     * The floor as a PRIOR, not a wall. -PfloorWeight=w (0 = the hard floor,
+     * the shipped behaviour through the 2026 draft). With w > 0 a candidate
+     * whose position has never gone this early in this league keeps w of his
+     * choice probability instead of none. The hard floor was a description of
+     * five seasons: "never before round 10" for defences became "rounds 6 and
+     * 9" on the sixth. A weight lets the room do rare things rarely.
+     */
+    static double floorWeight(){
+        return Double.parseDouble(System.getProperty("floorWeight", "0"));
+    }
+
+    static double[] softenFloor(double[] probabilities, List<String> choiceSet, int round,
+                                Map<Position, Integer> floors,
+                                java.util.function.Function<String, Position> positionOf,
+                                double weight){
+        if(floors.isEmpty() || weight >= 1){
+            return probabilities;
+        }
+        double[] out = probabilities.clone();
+        double total = 0;
+        for(int i = 0; i < out.length; i++){
+            Position position = positionOf.apply(choiceSet.get(i));
+            Integer floor = position == null ? null : floors.get(position);
+            if(floor != null && round < floor){
+                out[i] *= weight;
+            }
+            total += out[i];
+        }
+        if(total <= 0){
+            return probabilities;
+        }
+        for(int i = 0; i < out.length; i++){
+            out[i] /= total;
+        }
+        return out;
+    }
+
     /** Drop candidates whose position has never gone this early in this league. */
     /** The lineup every roster must be able to fill by the end of the draft - BoardValue.lineup's fixed slots. */
     static final Map<Position, Integer> REQUIRED = Map.of(
@@ -346,14 +384,23 @@ public class DraftSimulator {
     }
 
     static List<String> notBeforeThisLeagueEverHas(List<String> choiceSet, int round){
+        return notBeforeThisLeagueEverHas(choiceSet, round, id -> {
+            Player player = Player.getPlayerFromSIDV2(id);
+            return player == null ? null : player.position;
+        });
+    }
+
+    /** The same, with positions supplied - the per-pick path uses the simulator's cached map (TRAPS #69). */
+    static List<String> notBeforeThisLeagueEverHas(List<String> choiceSet, int round,
+                                                   java.util.function.Function<String, Position> positionOf){
         Map<Position, Integer> earliest = floors();
         if(earliest.isEmpty()){
             return choiceSet;
         }
         List<String> allowed = new ArrayList<>();
         for(String id : choiceSet){
-            Player player = Player.getPlayerFromSIDV2(id);
-            Integer floor = player == null ? null : earliest.get(player.position);
+            Position position = positionOf.apply(id);
+            Integer floor = position == null ? null : earliest.get(position);
             if(floor == null || round >= floor){
                 allowed.add(id);
             }
@@ -438,9 +485,18 @@ public class DraftSimulator {
         }
 
         List<String> board = new ArrayList<>();
+        // DEFENCES BELONG ON A SIXTEEN-ROUND BOARD. This filter kept the
+        // historical board to skill positions, which is the nine-round game's
+        // rule - so on every held-out season the simulated room could not draft
+        // a defence, RoomFidelity never printed a DEF row, and the learned
+        // floor's effect on history was unmeasurable (three floor settings
+        // agreed to the decimal because none of them had a defence to move).
+        // The live 2026 board has always carried them. Same rule here now.
+        boolean sixteenRounds = DraftPlanner.scheduleRounds() > SelectionModel.GAME_ROUNDS;
         for(Map.Entry<String, Double> entry : season.adp.entrySet()){
             Player player = Player.getPlayerFromSIDV2(entry.getKey());
-            if(player == null || !StartingLineup.isSkillPosition(player.position)){
+            if(player == null || !(StartingLineup.isSkillPosition(player.position)
+                    || (sixteenRounds && player.position == Position.DEF))){
                 continue;
             }
             if(entry.getValue() > SelectionModel.ADP_LIMIT || season.keptIDs.contains(entry.getKey())){
@@ -653,32 +709,7 @@ public class DraftSimulator {
                 state.scheduleIndex++;
                 continue;
             }
-            List<String> choiceSet = notBeforeThisLeagueEverHas(
-                    new ArrayList<>(state.board.subList(0, Math.min(state.board.size(),
-                            SelectionModel.CHOICE_SET))), slot.round());
-            double[] shape = turnShape.getOrDefault(slot.pickNumber(),
-                    new double[]{0, 0, 1.0});
-            long qbHolders = state.rosters.values().stream()
-                    .filter(counts -> counts.getOrDefault(Position.QB, 0) > 0).count();
-            Map<Position, Integer> roster = state.rosters.computeIfAbsent(
-                    slot.manager(), u -> new EnumMap<>(Position.class));
-            double[] probabilities = managerModels.getOrDefault(slot.manager(), model)
-                    .choiceProbabilities(SelectionModel.featuresWithBoard(initialBoard,
-                            choiceSet, adp, points,
-                            new SelectionModel.Context(roster,
-                                    qbEarliness.getOrDefault(slot.manager(), 0.0),
-                                    state.recentPicks, slot.pickNumber(),
-                                    shape[0] > 0, shape[1] > 0, shape[2],
-                                    qbHolders / teams,
-                                    extras.teEarliness().getOrDefault(slot.manager(), 0.0),
-                                    extras.rbEarliness().getOrDefault(slot.manager(), 0.0),
-                                    state.stackTeams.getOrDefault(slot.manager(), Set.of()),
-                                    extras.teamOf(), extras.rookies(),
-                                    extras.adpSpreadCentered(),
-                                    extras.formerPlayersByManager()
-                                            .getOrDefault(slot.manager(), Set.of()),
-                                    extras.young())));
-            String chosen = choiceSet.get(sample(probabilities, random));
+            String chosen = roomChoice(state, slot, random);
             applyPick(state, slot, chosen);
             state.lastTaken = chosen;
             state.scheduleIndex++;
@@ -720,43 +751,66 @@ public class DraftSimulator {
                         state);
             }
             else {
-                List<String> choiceSet = notBeforeThisLeagueEverHas(
-                        new ArrayList<>(board.subList(0,
-                                Math.min(board.size(), SelectionModel.CHOICE_SET))),
-                        slot.round());
-                int picksLeft = 0;
-                for(int i = state.scheduleIndex; i < schedule.size(); i++){
-                    Slot later = schedule.get(i);
-                    if(!later.keeperSlot() && later.manager().equals(slot.manager())){
-                        picksLeft++;
-                    }
-                }
-                choiceSet = mustFill(choiceSet, board, roster, picksLeft, positionById::get);
-                double[] shape = turnShape.getOrDefault(slot.pickNumber(),
-                        new double[]{0, 0, 1.0});
-                long qbHolders = rosters.values().stream()
-                        .filter(counts -> counts.getOrDefault(Position.QB, 0) > 0).count();
-                double[] probabilities = managerModels.getOrDefault(slot.manager(), model)
-                        .choiceProbabilities(SelectionModel.featuresWithBoard(initialBoard,
-                        choiceSet, adp, points, new SelectionModel.Context(
-                                roster,
-                                qbEarliness.getOrDefault(slot.manager(), 0.0), recentPicks,
-                                slot.pickNumber(), shape[0] > 0, shape[1] > 0, shape[2],
-                                qbHolders / teams,
-                                extras.teEarliness().getOrDefault(slot.manager(), 0.0),
-                                extras.rbEarliness().getOrDefault(slot.manager(), 0.0),
-                                stackTeams.getOrDefault(slot.manager(), Set.of()),
-                                extras.teamOf(), extras.rookies(),
-                                extras.adpSpreadCentered(),
-                                extras.formerPlayersByManager()
-                                        .getOrDefault(slot.manager(), Set.of()),
-                                extras.young())));
-                chosen = choiceSet.get(sample(probabilities, random));
+                chosen = roomChoice(state, slot, random);
             }
             applyPick(state, slot, chosen);
             state.scheduleIndex++;
         }
         return state;
+    }
+
+    /**
+     * THE ROOM'S CHOICE AT ONE SLOT - the single path every simulation uses.
+     * simulateFrom and simulateOneFrom each carried a copy of this; on
+     * 2026-09-02 the must-fill rule, the floor-as-prior and the cached position
+     * lookup were added to one copy and not the other, so the survival table
+     * and the stepping tools would have simulated a different room from the
+     * rollouts. One method, both callers.
+     */
+    private String roomChoice(SimState state, Slot slot, Random random){
+        List<String> board = state.board;
+        Map<String, Map<Position, Integer>> rosters = state.rosters;
+        Map<String, Set<String>> stackTeams = state.stackTeams;
+        List<Position> recentPicks = state.recentPicks;
+        Map<Position, Integer> roster = rosters.computeIfAbsent(
+                slot.manager(), u -> new EnumMap<>(Position.class));
+        double floorWeight = floorWeight();
+        List<String> window = new ArrayList<>(board.subList(0,
+                Math.min(board.size(), SelectionModel.CHOICE_SET)));
+        List<String> choiceSet = floorWeight > 0 ? window
+                : notBeforeThisLeagueEverHas(window, slot.round(), positionById::get);
+        int picksLeft = 0;
+        for(int i = state.scheduleIndex; i < schedule.size(); i++){
+            Slot later = schedule.get(i);
+            if(!later.keeperSlot() && later.manager().equals(slot.manager())){
+                picksLeft++;
+            }
+        }
+        choiceSet = mustFill(choiceSet, board, roster, picksLeft, positionById::get);
+        double[] shape = turnShape.getOrDefault(slot.pickNumber(),
+                new double[]{0, 0, 1.0});
+        long qbHolders = rosters.values().stream()
+                .filter(counts -> counts.getOrDefault(Position.QB, 0) > 0).count();
+        double[] probabilities = managerModels.getOrDefault(slot.manager(), model)
+                .choiceProbabilities(SelectionModel.featuresWithBoard(initialBoard,
+                choiceSet, adp, points, new SelectionModel.Context(
+                        roster,
+                        qbEarliness.getOrDefault(slot.manager(), 0.0), recentPicks,
+                        slot.pickNumber(), shape[0] > 0, shape[1] > 0, shape[2],
+                        qbHolders / teams,
+                        extras.teEarliness().getOrDefault(slot.manager(), 0.0),
+                        extras.rbEarliness().getOrDefault(slot.manager(), 0.0),
+                        stackTeams.getOrDefault(slot.manager(), Set.of()),
+                        extras.teamOf(), extras.rookies(),
+                        extras.adpSpreadCentered(),
+                        extras.formerPlayersByManager()
+                                .getOrDefault(slot.manager(), Set.of()),
+                        extras.young())));
+        if(floorWeight > 0){
+            probabilities = softenFloor(probabilities, choiceSet, slot.round(), floors(),
+                    positionById::get, floorWeight);
+        }
+        return choiceSet.get(sample(probabilities, random));
     }
 
     // My policy picks feed the run window too - a deliberate early QB

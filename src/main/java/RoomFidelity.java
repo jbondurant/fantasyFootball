@@ -61,7 +61,7 @@ public class RoomFidelity {
                 + "nothing changes between rows but the dice.%n%n", seeds);
         real.printf("%-5s %8s %8s %8s %10s%n", "POS", "mean", "min", "max", "spread");
         for(Position position : new Position[]{Position.RB, Position.WR,
-                Position.TE, Position.QB}){
+                    Position.TE, Position.QB, Position.DEF}){
             List<Double> values = byPosition.get(position);
             if(values == null || values.isEmpty()){
                 continue;
@@ -99,7 +99,9 @@ public class RoomFidelity {
 
         Map<Position, double[]> gapTotals = new EnumMap<>(Position.class);
         int seasons = 0;
-        for(String target : new String[]{"2024", "2025"}){
+        // -Ptargets=2024,2025,2026 - 2026 needs its draft-night feed frozen (HistoricalProjections).
+        for(String target : System.getProperty("targets", "2024,2025").split(",")){
+            target = target.trim();
             int trainTo = Integer.parseInt(target) - 1;
             Map<String, Double> qbEarliness =
                     SelectionModel.qbEarliness(configuration, trainTo);

@@ -118,8 +118,14 @@ public class Draft2026 {
                 // arrives while it is being read - rather than sixteen seconds of
                 // nothing against a sixty second clock.
                 System.out.printf("%n--- THE BOARD MODEL (knows the 24 keepers) ---%n");
+                LiveCommittee.lastVote = null;
+                LiveBoard.lastVerdict = null;
                 LiveBoard.answer(configuration, planner, simulator, draftID, curve, pools,
                         order, men, kept);
+                String verdict = VerdictLine.board(LiveBoard.lastVerdict);
+                if(!verdict.isEmpty()){
+                    System.out.printf("%n>>> %s%n", verdict);
+                }
                 System.out.printf("%n(board model in %.1fs - Model A follows)%n",
                         (System.nanoTime() - began) / 1e9);
                 if(round <= 7){
@@ -127,6 +133,10 @@ public class Draft2026 {
                     try {
                         DraftNight.answer(configuration, planner, timing, simulator, points,
                                 benchBaseRate, draftID, rollouts, scenarios, waitRollouts);
+                        String together = VerdictLine.together(LiveBoard.lastVerdict, LiveCommittee.lastVote);
+                        if(!together.isEmpty()){
+                            System.out.printf("%n>>> %s%n", together);
+                        }
                     }
                     catch(Exception failed){
                         System.out.printf("   Model A failed this cycle: %s%n"

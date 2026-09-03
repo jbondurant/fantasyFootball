@@ -43,6 +43,8 @@ fails if one does). Fallbacks are in `RUNBOOK.md`.
 ./gradlew run -Pmain=MarketMovers       # who the market moved on in the last days, and why Sleeper thinks so (-Pdays -Ptop -PminMove)
 ./gradlew run -Pmain=TeamRankings       # every roster's best legal lineup scored and ranked, HTML in data/ (-Pprojections -Pme)
 ./gradlew run -Pmain=DraftExpectation   # each seat's expected starters (room model drafts every seat from the pre-draft league) vs the roster actually drafted (-Ptrials)
+#   any planner tool also takes -Pprojections=snapshot:<date> (a day from the AdpSnapshot archive) and -PadpSnapshot=<date>;
+#   the unit suite runs on data/fixtures/2026-pre-draft: the league as it stood on draft morning and the full Sleeper feed of draft night
 ./gradlew run -Pmain=MockDraftReader -PdraftId=<link>   # archive a shared mock before it vanishes
 ./gradlew run -Pmain=KeeperChooser        # the same question by simulation
 ./gradlew run -Pmain=KeeperChooser -Psims=200   # ...with tighter error bars

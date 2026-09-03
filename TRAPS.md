@@ -413,3 +413,32 @@ real every time.
     check's second output; read them, because a green check that took twenty
     times longer is telling you something.
 
+70. **A kill loop that matched its own shell.** `ps | grep RoomFidelity` inside a
+    script whose own command line contains the word RoomFidelity finds the shell
+    running it; `kill -9` on that list ends the script before its first real
+    line and the task reports exit 1 with an empty log. Twice in one evening,
+    once as `pgrep -f DraftExpectation`. Match the java process, not the word:
+    `awk '$2 ~ /(^|\/)java$/ && /RoomFidelity/'`.
+
+71. **Three settings that agreed to the decimal because the lever was not
+    connected.** The floor-as-prior was measured at weights 0, 0.05 and 0.2 on
+    three held-out seasons and every number matched exactly, which I read as
+    "the model already gives an early defence no probability". The historical
+    fidelity board had no defences on it at all - `DraftSimulator.forSeason`
+    kept skill positions only, the nine-round game's rule - so the simulated
+    room could not draft one on any past season and `RoomFidelity` had never
+    printed a DEF row. With defences on the sixteen-round board the arms differ
+    (DEF gap 23.8 / 22.4 / 21.2). Identical arms are a harness question first
+    (TRAPS #68); when the harness is clean, the next question is whether the
+    thing being varied can reach the thing being measured.
+
+72. **A report pinned in place of a feed.** To hold the suite on one board I
+    pointed it at the AdpSnapshot archive - the CSV rows the daily job writes.
+    Six fixtures broke: "the board must carry defences", "the fixture needs a
+    projected man past ADP 300", a null sleeper id. The archive is a REPORT of
+    the drafted pool (ADP 250 and under, skill positions in the ADP file); the
+    feed is every man Sleeper knows, defences and the undrafted included, and
+    the fixtures were written against the feed. The pin is now the raw
+    draft-night response, served through the same fixture directory as the
+    league snapshot. A report derived from a feed is not the feed.
+

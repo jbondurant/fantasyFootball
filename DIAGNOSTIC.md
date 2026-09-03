@@ -356,15 +356,40 @@ their seats most, Justin +35 (third) from the ninth-best seat-and-keepers, JFMar
 
 ## Fix list after the 2026 draft (ranked by value for the effort)
 
-1. **One verdict line at the top of every pick**: SEPARATED (position, margin),
+1. **DONE 2026-09-02 - One verdict line at the top of every pick** (`VerdictLine`, printed by `Draft2026` under each table; `VerdictLineTest` pins the pick-18 SPLIT wording). Original: SEPARATED (position, margin),
    TIE (the men available), or SPLIT (board model vs Model A, both margins). Four
    of Justin's questions on draft night were about reading the screen, not the
    model. Chip filed.
-2. **Soften the learned floor and add 2026 to the training set.** The room took
+2. **DONE 2026-09-02, with a finding - Soften the learned floor and add 2026 to the training set.**
+   *2026 in the training set:* the draft-night Sleeper feed is frozen as
+   `sleeperProjectionsFinal2026.txt` (also under `data/fixtures/2026-pre-draft/`), the
+   current season counts as history once that file exists, and `loadObservations`
+   reads the league's own completed draft: `TrainingRows -PtrainTo=2026` reports
+   1020 selections against 857. *2026 as a held-out target* (`RoomFidelity
+   -Ptargets=2026`, shipped fit on 2021-2025, no fixture): worst-band gaps RB 3,
+   WR 9, TE 11, **QB 31** - the 2026 room took 57% of its quarterbacks in rounds
+   14-16 (history: 13-30%) while the model spread them over rounds 8-13. That is the
+   season's real lesson for the room model, and the training set now carries it.
+   *The floor as a prior:* implemented (`-PfloorWeight`, `softenFloor`) and first
+   measured as "identical to the decimal at every weight" - an artefact: the
+   historical fidelity board carried no defences (skill positions only, the
+   nine-round rule), so on past seasons the simulated room could not draft one and
+   the floor had nothing to move (TRAPS #71). With defences on the sixteen-round
+   historical board, `RoomFidelity` gains a DEF row and the three arms differ: mean
+   DEF worst-band gap over 2024-2026 is 23.8 with the hard floor, 22.4 at weight
+   0.5, 21.2 with no floor - the gain is all 2026, where the real room took
+   defences in rounds 6 and 9 and only a loosened floor can produce any - while QB
+   worsens 17.4 -> 17.8 -> 18.4 and TE 10.8 -> 12.4 -> 11.1. Within one to two
+   points of the noise floor either way, so the hard floor stays the default and
+   the principled fix is 2026 in the training set, which moves the defence floor
+   to round 6 on its own. The DEF row also shows a limit no floor touches: the
+   room takes defences in rounds 10-13 far more than the league does (2025: 28%
+   of simulated defences against 0% real; 2026: 53% against 25%). Knob kept,
+   default 0. Original: The room took
    defences in rounds 6 and 9 after 0 of 58 before round 10; a hard "never
    earlier than ever" floor should be a prior with weight, not a wall. Rerun
    `TrainingRows` and `RoomFidelity -Pseeds=5` with 2026 in.
-3. **HALF DONE 2026-09-02 - Make the suite hermetic and fast.** League STATE is now pinned: `data/fixtures/2026-pre-draft` is served to unit tests in place of the day's cache (TRAPS #65). Feeds still float and the two slowest classes are untouched. `ModelAScheduleTest` read the day's live
+3. **DONE 2026-09-02 - Make the suite hermetic and fast.** The feed is pinned too: the full draft-night Sleeper response sits in the fixture directory as `sleeperProjections2026.txt` and is served to every unit test (a first attempt pinned the AdpSnapshot CSV archive, which holds the drafted pool only - six fixtures needing a defence or an undrafted man broke; `snapshot:<date>` and `-PadpSnapshot` remain as opt-in tools); the check runs in 13 minutes after the per-candidate lookup was removed (TRAPS #69). Earlier state: League STATE is now pinned: `data/fixtures/2026-pre-draft` is served to unit tests in place of the day's cache (TRAPS #65). Feeds still float and the two slowest classes are untouched. `ModelAScheduleTest` read the day's live
    feed and flipped when the feed moved; pin tests to a committed snapshot
    (`data/projection-snapshots.csv` already exists - add a `snapshot:<date>`
    source to `ProjectionSources`). Then shorten the two slowest classes (chip

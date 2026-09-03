@@ -207,6 +207,7 @@ public class LiveCommittee {
                     + "%n     rounds 10+   -Pmain=LiveLateRounds (keeper option: a"
                     + " round-R stash is keepable at R)%n",
                     votes.get("lookahead-2").values().iterator().next());
+            lastVote = null;   // no opinion: nothing for the verdict line to compare
             return consensus;
         }
 
@@ -261,6 +262,7 @@ public class LiveCommittee {
         // spends ~10s proving what the vote said, so it is skipped unless
         // asked for - the budget above is what that pays for.
         boolean unanimous = leaders.size() == 1 && most == votes.size();
+        lastVote = voteRecord(consensus, unanimous, votes.get("lookahead-2"));
         if(unanimous && !Boolean.getBoolean("alwaysArbiter")){
             System.out.printf("%n   (unanimous - KN arbiter skipped, it settles splits;"
                     + " -PalwaysArbiter=true runs it anyway)%n");
@@ -295,6 +297,43 @@ public class LiveCommittee {
             System.out.println("   (engines also split, consistent with the above)");
         }
         return consensus;
+    }
+
+    /** The last cycle's committee decision, for the verdict line Draft2026 prints. Single-threaded by design. */
+    static VerdictLine.Vote lastVote;
+
+    /** Lookahead-2's top two means, for the size of Model A's own preference. */
+    static VerdictLine.Vote voteRecord(Position consensus, boolean unanimous, Map<Position, Double> means){
+        Position best = null;
+        Position second = null;
+        double bestMean = -Double.MAX_VALUE;
+        double secondMean = -Double.MAX_VALUE;
+        if(means != null){
+            for(Map.Entry<Position, Double> e : means.entrySet()){
+                if(e.getValue() == null){ continue; }
+                if(e.getValue() > bestMean){
+                    second = best; secondMean = bestMean;
+                    best = e.getKey(); bestMean = e.getValue();
+                }
+                else if(e.getValue() > secondMean){
+                    second = e.getKey(); secondMean = e.getValue();
+                }
+            }
+        }
+        // the committee's consensus may differ from lookahead-2's own leader; report the consensus
+        // with lookahead-2's margin between the consensus and its best rival
+        if(means != null && consensus != null && means.get(consensus) != null){
+            double own = means.get(consensus);
+            Position rival = null;
+            double rivalMean = -Double.MAX_VALUE;
+            for(Map.Entry<Position, Double> e : means.entrySet()){
+                if(e.getKey() != consensus && e.getValue() != null && e.getValue() > rivalMean){
+                    rival = e.getKey(); rivalMean = e.getValue();
+                }
+            }
+            return new VerdictLine.Vote(consensus, unanimous, own, rival == null ? own : rivalMean, rival);
+        }
+        return new VerdictLine.Vote(consensus, unanimous, bestMean, secondMean, second);
     }
 
     /** Runs the KN procedure once from the live state, returning the policy

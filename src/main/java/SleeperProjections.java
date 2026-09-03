@@ -192,7 +192,41 @@ public class SleeperProjections {
      * scoring uses. Lower means drafted earlier. Players nobody is drafting
      * come back as Double.MAX_VALUE so they sort last.
      */
+    /**
+     * ADP frozen on a date, from data/adp-snapshots.csv - the twin of
+     * ProjectionSources' snapshot feed, for the same reason. -DadpSnapshot=<date>.
+     */
+    static HashMap<String, Double> adpSnapshot(java.util.List<String> lines, String date){
+        HashMap<String, Double> adp = new HashMap<>();
+        for(String line : lines){
+            String[] cells = line.split(",");
+            if(cells.length >= 5 && cells[0].equals(date)){
+                try {
+                    adp.put(cells[1], Double.parseDouble(cells[4]));
+                }
+                catch(NumberFormatException malformed){
+                    // skip the row
+                }
+            }
+        }
+        return adp;
+    }
+
     public static synchronized double adpOf(String sleeperID){
+        String pinned = System.getProperty("adpSnapshot");
+        if(cachedAdp == null && pinned != null && !pinned.isBlank()){
+            try {
+                HashMap<String, Double> adp = adpSnapshot(java.nio.file.Files.readAllLines(
+                        AdpSnapshot.CSV, java.nio.charset.StandardCharsets.UTF_8), pinned);
+                if(adp.isEmpty()){
+                    throw new IllegalArgumentException("no ADP snapshot for " + pinned + " in " + AdpSnapshot.CSV);
+                }
+                cachedAdp = adp;
+            }
+            catch(java.io.IOException unreadable){
+                throw new IllegalArgumentException("cannot read " + AdpSnapshot.CSV, unreadable);
+            }
+        }
         if(cachedAdp == null){
             HashMap<String, Double> adp = new HashMap<>();
             for(JsonElement jsonPlayer : getTodaysProjections()){

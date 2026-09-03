@@ -2,6 +2,7 @@ import PlayerImportAndSetup.Position;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -515,6 +516,21 @@ public class SelectionModel implements ChoiceModel {
             }
             observations.addAll(seasonObservations(configuration, drafts.get(i), season,
                     qbEarliness, teEarliness, rbEarliness, leagueScoredValue, maxRound));
+        }
+        // THE CURRENT SEASON JOINS THE TRAINING SET ONCE ITS DRAFT IS DONE AND ITS
+        // FEED FROZEN. The chain above is previous leagues only, so 2026 would
+        // have waited for the 2027 league to exist. With lastSeason at or past
+        // the current year and sleeperProjectionsFinal<year>.txt in place, the
+        // league's own completed draft is read like any other season. Under the
+        // unit suite's pre-draft fixture that draft holds keepers only, which
+        // contribute no selections - the suite's model is unchanged.
+        String current = configuration.getSeason();
+        int currentYear = Integer.parseInt(current);
+        if(currentYear >= firstSeason && currentYear <= lastSeason
+                && HistoricalProjections.frozen(current)){
+            observations.addAll(seasonObservations(configuration,
+                    JsonParser.parseString(configuration.getTodaysDraftPicks()).getAsJsonArray(),
+                    current, qbEarliness, teEarliness, rbEarliness, leagueScoredValue, maxRound));
         }
         return observations;
     }

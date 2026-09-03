@@ -554,6 +554,10 @@ public class LiveBoard {
                             ranked.get(i), gap[0], gap[1]));
                 }
             }
+            double[] runnerUpGap = ranked.size() > 1 && seasonsOf.get(ranked.get(1)) != null
+                    ? margin(leader, seasonsOf.get(ranked.get(1))) : new double[]{0, 0};
+            lastVerdict = new VerdictLine.Board(ranked.get(0), List.copyOf(tied), runnerUpGap[0],
+                    runnerUpGap[1], ranked.size() > 1 ? ranked.get(1) : null);
             StringBuilder text = new StringBuilder();
             if(tied.isEmpty()){
                 text.append(String.format("   %s is SEPARATED from every other"
@@ -1226,6 +1230,9 @@ public class LiveBoard {
             default: return " [" + status + "]";
         }
     }
+
+    /** The last cycle's decision, for the verdict line Draft2026 prints under the table. Single-threaded by design. */
+    static VerdictLine.Board lastVerdict;
 
     static boolean legendShown;
 
