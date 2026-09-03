@@ -625,6 +625,17 @@ public class DraftPlanner {
                 }
             }
             if(round >= 1 && round <= scheduleRounds()){
+                if(taken.contains(round)){
+                    // Two keepers of one manager at one round: the league bumps one
+                    // a round dearer (KeeperPricing), and the board never shows a
+                    // collision. A caller pricing keepers one at a time can hand
+                    // this planner a pair that does - the second man then burns no
+                    // slot and the pair is under-priced. Say so; do not guess which
+                    // man moves.
+                    System.out.printf("   *** two keepers of %s at round %d - the second burns no slot;"
+                            + " price the set with KeeperChooser.priceHypothetical first%n",
+                            keeper.humanWhoCanKeep, round);
+                }
                 occupied.add(AAAConfiguration.pickNumber(round, slot.getAsInt(), teams));
                 taken.add(round);
             }

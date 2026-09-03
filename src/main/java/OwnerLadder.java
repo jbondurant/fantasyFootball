@@ -88,6 +88,17 @@ public class OwnerLadder {
         return out;
     }
 
+    /** "Kraft r11 +11 · Nacua r13 +109": last name, round he costs, points alone over the seat. */
+    static String pairLabel(List<String[]> namesAndRounds, Map<String, Double> deltaByName){
+        List<String> parts = new ArrayList<>();
+        for(String[] nr : namesAndRounds){
+            String[] words = nr[0].split(" ");
+            Double delta = deltaByName.get(nr[0]);
+            parts.add(words[words.length - 1] + " r" + nr[1] + (delta == null ? "" : String.format(" %+.0f", delta)));
+        }
+        return String.join(" · ", parts);
+    }
+
     private static String cut(String s, int n){
         return s == null ? "?" : s.length() <= n ? s : s.substring(0, n - 1) + "~";
     }
@@ -204,6 +215,7 @@ public class OwnerLadder {
         Map<String, List<Candidate>> ledger = parseLedger(Files.readAllLines(ledgerPath, StandardCharsets.UTF_8));
         Map<String, double[]> bestPairRung = new TreeMap<>();
         Map<String, String> bestPairNames = new TreeMap<>();
+        Map<String, List<Keeper>> bestPairKeepers = new TreeMap<>();
         Map<String, Boolean> keptTheirBest = new TreeMap<>();
         for(String manager : declaredOf.keySet()){
             List<Candidate> candidates = ledger.getOrDefault(manager, List.of());
@@ -217,19 +229,37 @@ public class OwnerLadder {
                 continue;
             }
             String user = userByName.getOrDefault(manager, manager);
-            List<Keeper> replacement = new ArrayList<>();
+            // Resolve the two men, then price them AS A PAIR: two keepers cannot
+            // both cost the same round, so the league bumps one a round dearer
+            // (the later-ADP man, unless the other is there by escalation) -
+            // KeeperPricing's rule, applied by priceHypothetical. Priced one at
+            // a time, Watson r10 + Stafford r10 would have burned one slot.
+            List<String> ids = new ArrayList<>();
+            List<Keeper> eligible = KeeperChooser.eligibleCandidates(configuration, user);
             for(Candidate c : best){
-                Keeper match = null;
-                for(Keeper eligible : KeeperChooser.eligibleCandidates(configuration, user)){
-                    String full = (eligible.player.firstName + " " + eligible.player.lastName).trim();
-                    if(full.equalsIgnoreCase(c.name())){ match = eligible; break; }
+                String id = null;
+                for(Keeper k : eligible){
+                    if((k.player.firstName + " " + k.player.lastName).trim().equalsIgnoreCase(c.name())){ id = k.player.sleeperIDString; break; }
                 }
-                if(match == null){
+                if(id == null){
                     Player p = Player.getPlayerFromNameAndPos(c.name(), Position.valueOf(c.position()));
-                    if(p != null){ match = new Keeper(user, p, c.round()); }
+                    if(p != null){ id = p.sleeperIDString; }
                 }
-                if(match != null){ replacement.add(match); }
+                if(id != null){ ids.add(id); }
             }
+            List<Keeper> replacement = ids.size() == 2 ? KeeperChooser.priceHypothetical(configuration, user, ids) : null;
+            if(replacement == null){
+                replacement = new ArrayList<>();
+                for(Candidate c : best){
+                    for(Keeper k : eligible){
+                        if((k.player.firstName + " " + k.player.lastName).trim().equalsIgnoreCase(c.name())){ replacement.add(k); }
+                    }
+                }
+                if(replacement.size() == 2){
+                    System.out.printf("   (%s: the league would not allow %s as a pair - priced one at a time)%n", manager, bestPairNames.get(manager));
+                }
+            }
+            bestPairKeepers.put(manager, replacement);
             if(replacement.size() < 2){
                 System.out.printf("   (%s: could not resolve the ledger's best pair %s - rung 3 left as declared)%n",
                         manager, bestPairNames.get(manager));
@@ -320,28 +350,29 @@ public class OwnerLadder {
         }
         double seconds = (System.currentTimeMillis() - t0) / 1000.0;
 
-        // short labels for the two name columns: last names with the keeper round
+        // the two name columns: each man with the round he costs (as declared, or as
+        // the pair prices after the same-round bump) and his points alone over the seat
         Map<String, String> keptLabel = new TreeMap<>();
-        for(String manager : declaredOf.keySet()){
-            List<String> parts = new ArrayList<>();
-            for(Keeper k : declaredKeepers.getOrDefault(manager, List.of())){
-                parts.add(k.player.lastName + " r" + k.roundCanBeKept);
-            }
-            keptLabel.put(manager, String.join(" + ", parts));
-        }
         Map<String, String> shouldLabel = new TreeMap<>();
         for(String manager : declaredOf.keySet()){
+            Map<String, Double> deltaByName = new HashMap<>();
+            for(Valued v : valued.getOrDefault(manager, List.of())){
+                deltaByName.put(v.candidate().name(), v.ladderDelta());
+            }
+            List<String[]> kept = new ArrayList<>();
+            for(Keeper k : declaredKeepers.getOrDefault(manager, List.of())){
+                kept.add(new String[]{(k.player.firstName + " " + k.player.lastName).trim(), String.valueOf(k.roundCanBeKept)});
+            }
+            keptLabel.put(manager, pairLabel(kept, deltaByName));
             if(keptTheirBest.getOrDefault(manager, false)){
                 shouldLabel.put(manager, "same");
                 continue;
             }
-            List<Candidate> best = bestPair(ledger.getOrDefault(manager, List.of()));
-            List<String> parts = new ArrayList<>();
-            for(Candidate c : best){
-                String[] words = c.name().split(" ");
-                parts.add(words[words.length - 1] + " r" + c.round());
+            List<String[]> should = new ArrayList<>();
+            for(Keeper k : bestPairKeepers.getOrDefault(manager, List.of())){
+                should.add(new String[]{(k.player.firstName + " " + k.player.lastName).trim(), String.valueOf(k.roundCanBeKept)});
             }
-            shouldLabel.put(manager, parts.isEmpty() ? "?" : String.join(" + ", parts));
+            shouldLabel.put(manager, should.isEmpty() ? "?" : pairLabel(should, deltaByName));
         }
 
         // the table
@@ -353,15 +384,15 @@ public class OwnerLadder {
         StringBuilder out = new StringBuilder();
         out.append(String.format("OWNER LADDER  %s  (%d simulated drafts per rung, room model at every seat, %.0fs)%n", today, trials, seconds));
         out.append("SLOT = this owner's keepers phantomed, others as declared; KEEPERS = as declared; BEST PAIR = the ledger's two highest-valued keepers for this owner; DRAFTED = the roster held today.\n\n");
-        out.append(String.format("%-12s %4s %7s %8s %-26s %6s %9s %-26s %6s %8s %8s%n", "owner", "slot", "SLOT", "KEEPERS", "kept", "worth", "BEST PAIR", "should have been", "gain", "DRAFTED", "drafting"));
+        out.append(String.format("%-12s %4s %7s %8s %-34s %6s %9s %-34s %6s %8s %8s%n", "owner", "slot", "SLOT", "KEEPERS", "kept (points alone)", "worth", "BEST PAIR", "should have been", "gain", "DRAFTED", "drafting"));
         for(String m : managers){
             double s = slotOnly.getOrDefault(m, new double[]{0, 0})[0];
             double k = withKeepers.getOrDefault(m, new double[]{0, 0})[0];
             double b = bestPairRung.getOrDefault(m, new double[]{k, 0})[0];
             double d = drafted.getOrDefault(m, 0.0);
-            out.append(String.format("%-12s %4d %7.1f %8.1f %-26s %+6.1f %9.1f %-26s %+6.1f %8.1f %+8.1f%s%n",
-                    m, slotOf.getOrDefault(m, 0), s, k, cut(keptLabel.getOrDefault(m, "?"), 26), k - s,
-                    b, cut(shouldLabel.getOrDefault(m, "?"), 26), b - k, d, d - k,
+            out.append(String.format("%-12s %4d %7.1f %8.1f %-34s %+6.1f %9.1f %-34s %+6.1f %8.1f %+8.1f%s%n",
+                    m, slotOf.getOrDefault(m, 0), s, k, cut(keptLabel.getOrDefault(m, "?"), 34), k - s,
+                    b, cut(shouldLabel.getOrDefault(m, "?"), 34), b - k, d, d - k,
                     butHas.containsKey(m) ? " (" + butHas.get(m) + ")" : ""));
         }
         out.append(String.format("%nEACH KEEPER ALONE (top %d by the ledger, plus any kept man outside them): points over the keeperless seat%n", top));
@@ -408,7 +439,7 @@ public class OwnerLadder {
          .append("</style></head><body><h1>Owner ladder</h1><div class='sub'>").append(trials).append(" simulated drafts per rung, the fitted room drafting every seat of the pre-draft league; each rung is the mean projected points of the best legal lineup. ")
          .append("<span class='lg' style='background:var(--r1)'></span>SLOT: this owner's keepers phantomed (off the board, no credit), everyone else as declared &nbsp; <span class='lg' style='background:var(--r2)'></span>KEEPERS: as declared &nbsp; <span class='lg' style='background:var(--r3)'></span>BEST PAIR: the 10k ledger's two highest-valued keepers for this owner &nbsp; <span class='lg' style='background:var(--r4)'></span>DRAFTED: the roster held today</div>");
         String me = System.getProperty("me", "justinb314");
-        h.append("<table><tr><th>Owner</th><th>Slot</th><th>Slot only</th><th>+ keepers</th><th style='text-align:left'>kept</th><th>worth</th><th>+ best pair</th><th style='text-align:left'>should have been</th><th>gain</th><th>Drafted</th><th>drafting</th></tr>");
+        h.append("<table><tr><th>Owner</th><th>Slot</th><th>Slot only</th><th>+ keepers</th><th style='text-align:left'>kept (points alone)</th><th>worth</th><th>+ best pair</th><th style='text-align:left'>should have been</th><th>gain</th><th>Drafted</th><th>drafting</th></tr>");
         for(String m : managers){
             double s = slotOnly.get(m)[0], k = withKeepers.get(m)[0], b = bestPairRung.getOrDefault(m, withKeepers.get(m))[0], d = drafted.getOrDefault(m, 0.0);
             h.append("<tr").append(m.equals(me) ? " class='me'" : "").append("><td>").append(TeamRankings.esc(m)).append("</td><td>").append(slotOf.getOrDefault(m, 0))

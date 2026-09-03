@@ -62,4 +62,13 @@ public class OwnerLadderTest {
                 new OwnerLadder.Candidate("Flowers", "WR", 5, 5.6, false));
         assertEquals(3, OwnerLadder.toValue(mine, 3).size(), "both kept men are already inside the three");
     }
+
+    @Test
+    public void theNameColumnsCarryRoundAndPointsAlone(){
+        java.util.Map<String, Double> deltas = java.util.Map.of("Tucker Kraft", 10.5, "Puka Nacua", 109.2);
+        String label = OwnerLadder.pairLabel(List.of(new String[]{"Tucker Kraft", "11"}, new String[]{"Puka Nacua", "13"}), deltas);
+        assertEquals("Kraft r11 +11 · Nacua r13 +109", label);
+        assertEquals("Stafford r9", OwnerLadder.pairLabel(List.<String[]>of(new String[]{"Matthew Stafford", "9"}), java.util.Map.<String, Double>of()),
+                "a man without a valued delta shows round only");
+    }
 }

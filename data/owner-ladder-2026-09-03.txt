@@ -1,19 +1,19 @@
-OWNER LADDER  2026-09-03  (400 simulated drafts per rung, room model at every seat, 572s)
+OWNER LADDER  2026-09-03  (400 simulated drafts per rung, room model at every seat, 745s)
 SLOT = this owner's keepers phantomed, others as declared; KEEPERS = as declared; BEST PAIR = the ledger's two highest-valued keepers for this owner; DRAFTED = the roster held today.
 
-owner        slot    SLOT  KEEPERS kept                        worth BEST PAIR should have been             gain  DRAFTED drafting
-JakeSK          1  1798.7   1935.1 Kraft r11 + Nacua r13      +136.4    1937.0 Nacua r13 + Stevenson r10    +1.9   1957.2    +22.1
-BHier           2  1804.2   1817.3 Daniels r7 + Pitts r13      +13.1    1848.0 Watson r10 + Stafford r10   +30.7   1868.7    +51.4
-Renteez         3  1788.7   1881.1 McConkey r6 + Williams r5   +92.3    1881.1 same                         +0.0   1830.9    -50.2
-KevinDA         4  1788.0   1908.0 Loveland r10 + Achane r5   +120.1    1908.0 same                         +0.0   1915.5     +7.4
-d0ddi           5  1785.5   1874.3 LaPorta r11 + Williams r8   +88.9    1874.3 same                         +0.0   1868.9     -5.5
-patekxwater     6  1778.9   1875.4 Dowdle r13 + Collins r8     +96.5    1875.4 same                         +0.0   1856.1    -19.2
-justinb314      7  1777.8   1821.1 Tuten r12 + Purdy r13       +43.4    1821.1 same                         +0.0   1856.1    +35.0
-JFMarino        8  1768.1   1820.9 McBride r3 + Olave r5       +52.8    1840.5 Olave r5 + Odunze r6        +19.6   1766.5    -54.4
-jerem9604       9  1769.7   1926.8 Bowers r7 + Taylor r4      +157.1    1926.8 same                         +0.0   1890.3    -36.4 (but has Josh Jacobs, exempt list)
-Hamrliks       10  1773.3   1895.7 Maye r13 + Brown r14       +122.4    1895.7 same                         +0.0   1880.0    -15.8
-tommyrads      11  1767.1   1808.1 Williams r14 + Warren r8    +41.0    1817.8 Rice r5 + Williams r14       +9.7   1854.1    +46.1
-itsabust       12  1769.3   1902.3 Irving r13 + Smith-Njigba~ +133.0    1902.3 same                         +0.0   1916.4    +14.1
+owner        slot    SLOT  KEEPERS kept (points alone)                 worth BEST PAIR should have been                     gain  DRAFTED drafting
+JakeSK          1  1798.7   1935.1 Kraft r11 +26 · Nacua r13 +130     +136.4    1937.0 Nacua r13 +130 · Stevenson r10 +40   +1.9   1957.2    +22.1
+BHier           2  1804.2   1817.3 Daniels r7 +12 · Pitts r13 +15      +13.1    1844.8 Watson r9 +44 · Stafford r10 +2     +27.5   1868.7    +51.4
+Renteez         3  1788.7   1881.1 McConkey r6 +72 · Williams r5 +77   +92.3    1881.1 same                                 +0.0   1830.9    -50.2
+KevinDA         4  1788.0   1908.0 Loveland r10 +60 · Achane r5 +109  +120.1    1908.0 same                                 +0.0   1915.5     +7.4
+d0ddi           5  1785.5   1874.3 LaPorta r11 +36 · Williams r8 +71   +88.9    1874.3 same                                 +0.0   1868.9     -5.5
+patekxwater     6  1778.9   1875.4 Dowdle r13 +25 · Collins r8 +96     +96.5    1875.4 same                                 +0.0   1856.1    -19.2
+justinb314      7  1777.8   1821.1 Tuten r12 +33 · Purdy r13 +8        +43.4    1821.1 same                                 +0.0   1856.1    +35.0
+JFMarino        8  1768.1   1820.9 McBride r3 +63 · Olave r5 +69       +52.8    1840.5 Olave r5 +69 · Odunze r6 +51        +19.6   1766.5    -54.4
+jerem9604       9  1769.7   1926.8 Bowers r7 +88 · Taylor r4 +136     +157.1    1926.8 same                                 +0.0   1890.3    -36.4 (but has Josh Jacobs, exempt list)
+Hamrliks       10  1773.3   1895.7 Maye r13 +40 · Brown r14 +98       +122.4    1895.7 same                                 +0.0   1880.0    -15.8
+tommyrads      11  1767.1   1808.1 Williams r14 +14 · Warren r8 +34    +41.0    1817.8 Rice r5 +51 · Williams r14 +14       +9.7   1854.1    +46.1
+itsabust       12  1769.3   1902.3 Irving r13 +59 · Smith-Njigba r5 ~ +133.0    1902.3 same                                 +0.0   1916.4    +14.1
 
 EACH KEEPER ALONE (top 3 by the ledger, plus any kept man outside them): points over the keeperless seat
    owner        keeper                   pos  rnd   ladder    +/-   ledger
