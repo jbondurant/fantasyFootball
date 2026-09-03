@@ -354,6 +354,17 @@ is -0.8, no simulated roster ends short, and held-out fidelity is unchanged with
 their seats most, Justin +35 (third) from the ninth-best seat-and-keepers, JFMarino
 -53 and Renteez -50 least; jerem9604 had the second-best seat and drafted 33 below it.
 
+`OwnerLadder` (2026-09-02, report-only) breaks every owner's projected starters into
+four rungs on one yardstick: the seat alone (he keeps nobody, others as declared),
+with his keepers, with the 10k ledger's best pair, and the roster he drafted. Keepers
+were worth +15 (BHier) to +127 (jerem9604: Taylor + Bowers); four owners left value on
+the table by not keeping the ledger's pair (BHier 29, JFMarino 21, tommyrads 11, JakeSK
+0); drafting against seat-and-keepers ranged from +51 (BHier) to -52 (JFMarino), Justin
++36. The first run priced five owners' keepers below zero because the planner
+defaulted to the nine-round schedule and dropped every keeper kept at round 10 or later;
+the second read "seat alone" as a league where nobody keeps, which is a different
+question (the kept men return to the board). Both are fixed in the tool's comments.
+
 ## Fix list after the 2026 draft (ranked by value for the effort)
 
 1. **DONE 2026-09-02 - One verdict line at the top of every pick** (`VerdictLine`, printed by `Draft2026` under each table; `VerdictLineTest` pins the pick-18 SPLIT wording). Original: SEPARATED (position, margin),

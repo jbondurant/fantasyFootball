@@ -172,6 +172,8 @@ tasks.register('run', JavaExec) {
      'floorWeight', 'targets',
      // TrainingRows - last season to count (default the season before the current one).
      'trainTo',
+     // OwnerLadder - path of the keeper ledger whose standalone deltas name each owner's best pair.
+     'ledger',
      // DraftExpectation - 'who=<last name>' prints which seats take that man and where.
      'who',
      // LeagueActuals.FLAG - grade outcomes under the league's own scoring
