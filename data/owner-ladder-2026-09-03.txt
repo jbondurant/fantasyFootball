@@ -1,4 +1,4 @@
-OWNER LADDER  2026-09-03  (400 simulated drafts per rung, room model at every seat, 745s)
+OWNER LADDER  2026-09-03  (400 simulated drafts per rung, room model at every seat, 731s)
 SLOT = this owner's keepers phantomed, others as declared; KEEPERS = as declared; BEST PAIR = the ledger's two highest-valued keepers for this owner; DRAFTED = the roster held today.
 
 owner        slot    SLOT  KEEPERS kept (points alone)                 worth BEST PAIR should have been                     gain  DRAFTED drafting
