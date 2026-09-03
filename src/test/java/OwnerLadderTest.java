@@ -71,4 +71,17 @@ public class OwnerLadderTest {
         assertEquals("Stafford r9", OwnerLadder.pairLabel(List.<String[]>of(new String[]{"Matthew Stafford", "9"}), java.util.Map.<String, Double>of()),
                 "a man without a valued delta shows round only");
     }
+
+    @Test
+    public void everyUnorderedPairOfThePoolIsSearched(){
+        List<OwnerLadder.Candidate> pool = List.of(
+                new OwnerLadder.Candidate("Watson", "WR", 10, 28.5, false),
+                new OwnerLadder.Candidate("Stafford", "QB", 10, 9.1, false),
+                new OwnerLadder.Candidate("Pitts", "TE", 13, 2.1, true),
+                new OwnerLadder.Candidate("Daniels", "QB", 7, -5.2, true));
+        List<List<OwnerLadder.Candidate>> pairs = OwnerLadder.pairs(pool);
+        assertEquals(6, pairs.size(), "4 choose 2");
+        assertTrue(pairs.stream().anyMatch(p -> p.get(0).name().equals("Watson") && p.get(1).name().equals("Pitts")),
+                "Watson + Pitts is a candidate pair, not only the two highest standalone deltas");
+    }
 }

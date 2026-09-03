@@ -30,9 +30,10 @@ import PlayerImportAndSetup.Position;
  *   1. SLOT      this owner's keepers phantomed (off the board, no credit, no
  *                slot burned), everyone else as declared - the seat alone
  *   2. KEEPERS   the 24 keepers as declared
- *   3. BEST PAIR this owner keeps the two men the 10k ledger valued highest
- *                (data/keeper-ledger-10k-2026-08-26.txt, standalone deltas),
- *                everyone else as declared
+ *   3. BEST PAIR the pair that maximises this yardstick among the owner's top
+ *                ledger candidates (data/keeper-ledger-10k-2026-08-26.txt) and
+ *                his kept men, each pair priced as a pair under the league's
+ *                same-round rule; everyone else as declared
  *   4. DRAFTED   the roster he actually holds, same lineup rule, same feed
  *
  * Deltas: KEEPERS - SLOT is what his keepers were worth; BEST PAIR - KEEPERS is
@@ -40,7 +41,7 @@ import PlayerImportAndSetup.Position;
  * top two); DRAFTED - KEEPERS is his own drafting against his seat and keepers.
  * Report-only.
  *
- *     ./gradlew run -Pmain=OwnerLadder [-Ptrials=200] [-Ptop=3] [-Pledger=data/keeper-ledger-10k-2026-08-26.txt]
+ *     ./gradlew run -Pmain=OwnerLadder [-Ptrials=200] [-PpairPool=5] [-Ptop=5] [-Pledger=data/keeper-ledger-10k-2026-08-26.txt]
  *
  * Also values each keeper ALONE: the top `top` ledger candidates per owner plus
  * any kept man outside them, kept by himself against the keeperless seat, on
@@ -52,6 +53,17 @@ public class OwnerLadder {
 
     /** One keeper valued alone against the keeperless seat, on the ladder's yardstick and the ledger's. */
     public record Valued(Candidate candidate, double ladderDelta, double standardError) {}
+
+    /** Every unordered pair drawn from the pool. */
+    static List<List<Candidate>> pairs(List<Candidate> pool){
+        List<List<Candidate>> out = new ArrayList<>();
+        for(int i = 0; i < pool.size(); i++){
+            for(int j = i + 1; j < pool.size(); j++){
+                out.add(List.of(pool.get(i), pool.get(j)));
+            }
+        }
+        return out;
+    }
 
     /** The top `top` ledger candidates plus any kept man outside them, ledger order. */
     static List<Candidate> toValue(List<Candidate> candidates, int top){
@@ -211,76 +223,85 @@ public class OwnerLadder {
             slotOnly.put(manager, rung(phantomed, keepersOf, nameByUser, trials).get(manager));
         }
 
-        // 3. BEST PAIR per owner, from the ledger
+        // 3. BEST PAIR per owner: the pair that maximises the ladder's own yardstick
+        // among the owner's top `pairPool` ledger candidates and his kept men, each
+        // pair priced AS A PAIR (KeeperPricing: two keepers cannot share a round;
+        // the later-ADP man goes a round dearer unless the other is there by
+        // escalation). The first version took the ledger's two highest STANDALONE
+        // deltas - Watson r10 + Stafford r10 for BHier - but standalone values do
+        // not add: Stafford beside Watson is worth +2, Pitts (kept) +15 with no
+        // collision. Justin asked; the pair is now searched, not assumed.
+        int pairPool = Integer.getInteger("pairPool", 5);
         Map<String, List<Candidate>> ledger = parseLedger(Files.readAllLines(ledgerPath, StandardCharsets.UTF_8));
         Map<String, double[]> bestPairRung = new TreeMap<>();
         Map<String, String> bestPairNames = new TreeMap<>();
         Map<String, List<Keeper>> bestPairKeepers = new TreeMap<>();
         Map<String, Boolean> keptTheirBest = new TreeMap<>();
+        Map<String, Integer> pairsSearched = new TreeMap<>();
         for(String manager : declaredOf.keySet()){
             List<Candidate> candidates = ledger.getOrDefault(manager, List.of());
             if(candidates.isEmpty()){ continue; }
-            List<Candidate> best = bestPair(candidates);
-            boolean same = best.stream().allMatch(Candidate::kept);
-            keptTheirBest.put(manager, same);
-            bestPairNames.put(manager, best.get(0).name() + " r" + best.get(0).round() + " + " + best.get(1).name() + " r" + best.get(1).round());
-            if(same){
-                bestPairRung.put(manager, withKeepers.get(manager));
-                continue;
-            }
             String user = userByName.getOrDefault(manager, manager);
-            // Resolve the two men, then price them AS A PAIR: two keepers cannot
-            // both cost the same round, so the league bumps one a round dearer
-            // (the later-ADP man, unless the other is there by escalation) -
-            // KeeperPricing's rule, applied by priceHypothetical. Priced one at
-            // a time, Watson r10 + Stafford r10 would have burned one slot.
-            List<String> ids = new ArrayList<>();
             List<Keeper> eligible = KeeperChooser.eligibleCandidates(configuration, user);
-            for(Candidate c : best){
-                String id = null;
-                for(Keeper k : eligible){
-                    if((k.player.firstName + " " + k.player.lastName).trim().equalsIgnoreCase(c.name())){ id = k.player.sleeperIDString; break; }
-                }
-                if(id == null){
-                    Player p = Player.getPlayerFromNameAndPos(c.name(), Position.valueOf(c.position()));
-                    if(p != null){ id = p.sleeperIDString; }
-                }
-                if(id != null){ ids.add(id); }
-            }
-            List<Keeper> replacement = ids.size() == 2 ? KeeperChooser.priceHypothetical(configuration, user, ids) : null;
-            if(replacement == null){
-                replacement = new ArrayList<>();
-                for(Candidate c : best){
-                    for(Keeper k : eligible){
-                        if((k.player.firstName + " " + k.player.lastName).trim().equalsIgnoreCase(c.name())){ replacement.add(k); }
+            Map<String, String> idByName = new HashMap<>();
+            for(Keeper k : eligible){ idByName.put((k.player.firstName + " " + k.player.lastName).trim().toLowerCase(), k.player.sleeperIDString); }
+            List<Candidate> pool = toValue(candidates, pairPool);
+            double best = -Double.MAX_VALUE;
+            double[] bestValue = null;
+            List<Keeper> bestKeepers = null;
+            List<Candidate> bestPair = null;
+            int searched = 0;
+            Set<String> declaredIDs = new HashSet<>(declaredOf.get(manager));
+            for(List<Candidate> pair : pairs(pool)){
+                List<String> ids = new ArrayList<>();
+                for(Candidate c : pair){
+                    String id = idByName.get(c.name().toLowerCase());
+                    if(id == null){
+                        Player p = Player.getPlayerFromNameAndPos(c.name(), Position.valueOf(c.position()));
+                        if(p != null){ id = p.sleeperIDString; }
                     }
+                    if(id != null){ ids.add(id); }
                 }
-                if(replacement.size() == 2){
-                    System.out.printf("   (%s: the league would not allow %s as a pair - priced one at a time)%n", manager, bestPairNames.get(manager));
+                if(ids.size() < 2){ continue; }
+                List<Keeper> priced = KeeperChooser.priceHypothetical(configuration, user, ids);
+                if(priced == null || priced.size() != 2){ continue; }   // the league would not allow it
+                double[] value;
+                if(new HashSet<>(ids).equals(declaredIDs)){
+                    value = withKeepers.get(manager);   // the declared pair: rung 2 already measured it
+                }
+                else {
+                    DraftPlanner counterfactual = DraftPlanner.forCurrentSeasonAs(configuration, configuration.getMyID(),
+                            priced, declaredIDs, model, earliness);
+                    Map<String, List<String>> keepersOf = new TreeMap<>(declaredOf);
+                    keepersOf.put(manager, ids);
+                    value = rung(counterfactual, keepersOf, nameByUser, trials).get(manager);
+                }
+                searched++;
+                if(value[0] > best){
+                    best = value[0]; bestValue = value; bestKeepers = priced; bestPair = pair;
                 }
             }
-            bestPairKeepers.put(manager, replacement);
-            if(replacement.size() < 2){
-                System.out.printf("   (%s: could not resolve the ledger's best pair %s - rung 3 left as declared)%n",
-                        manager, bestPairNames.get(manager));
+            pairsSearched.put(manager, searched);
+            if(bestKeepers == null){
                 bestPairRung.put(manager, withKeepers.get(manager));
+                keptTheirBest.put(manager, true);
+                bestPairNames.put(manager, "?");
                 continue;
             }
-            Set<String> exclude = new HashSet<>(declaredOf.get(manager));
-            DraftPlanner counterfactual = DraftPlanner.forCurrentSeasonAs(configuration, configuration.getMyID(),
-                    replacement, exclude, model, earliness);
-            Map<String, List<String>> keepersOf = new TreeMap<>(declaredOf);
-            List<String> mine = new ArrayList<>();
-            for(Keeper k : replacement){ mine.add(k.player.sleeperIDString); }
-            keepersOf.put(manager, mine);
-            bestPairRung.put(manager, rung(counterfactual, keepersOf, nameByUser, trials).get(manager));
+            Set<String> bestIDs = new HashSet<>();
+            for(Keeper k : bestKeepers){ bestIDs.add(k.player.sleeperIDString); }
+            keptTheirBest.put(manager, bestIDs.equals(declaredIDs));
+            bestPairRung.put(manager, bestValue);
+            bestPairKeepers.put(manager, bestKeepers);
+            bestPairNames.put(manager, bestKeepers.get(0).player.lastName + " r" + bestKeepers.get(0).roundCanBeKept
+                    + " + " + bestKeepers.get(1).player.lastName + " r" + bestKeepers.get(1).roundCanBeKept);
         }
 
         // 2b. EACH KEEPER ALONE: the top three ledger candidates per owner, plus a
         // kept man outside that three, each kept by himself against the
         // keeperless seat (everyone else as declared) - the same yardstick as the
         // rungs, with the ledger's Model A number beside it.
-        int top = Integer.getInteger("top", 3);
+        int top = Integer.getInteger("top", Math.max(3, pairPool));
         Map<String, List<Valued>> valued = new TreeMap<>();
         for(String manager : declaredOf.keySet()){
             List<Candidate> candidates = ledger.getOrDefault(manager, List.of());
@@ -383,7 +404,7 @@ public class OwnerLadder {
         managers.sort(Comparator.comparingInt(m -> slotOf.getOrDefault(m, 99)));
         StringBuilder out = new StringBuilder();
         out.append(String.format("OWNER LADDER  %s  (%d simulated drafts per rung, room model at every seat, %.0fs)%n", today, trials, seconds));
-        out.append("SLOT = this owner's keepers phantomed, others as declared; KEEPERS = as declared; BEST PAIR = the ledger's two highest-valued keepers for this owner; DRAFTED = the roster held today.\n\n");
+        out.append(String.format("SLOT = this owner's keepers phantomed, others as declared; KEEPERS = as declared; BEST PAIR = the best legal pair on this yardstick among his top %d ledger candidates and kept men (each pair priced as a pair); DRAFTED = the roster held today.%n%n", pairPool));
         out.append(String.format("%-12s %4s %7s %8s %-40s %6s %9s %-40s %6s %8s %8s%n", "owner", "slot", "SLOT", "KEEPERS", "kept (points alone)", "worth", "BEST PAIR", "should have been", "gain", "DRAFTED", "drafting"));
         for(String m : managers){
             double s = slotOnly.getOrDefault(m, new double[]{0, 0})[0];
@@ -437,7 +458,7 @@ public class OwnerLadder {
          .append(".ladder{display:grid;grid-template-columns:110px 1fr 70px;gap:4px 10px;align-items:center;font-size:13px}.bar{height:10px;border-radius:5px}")
          .append(".lg{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:middle}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:760px){.grid{grid-template-columns:1fr}}")
          .append("</style></head><body><h1>Owner ladder</h1><div class='sub'>").append(trials).append(" simulated drafts per rung, the fitted room drafting every seat of the pre-draft league; each rung is the mean projected points of the best legal lineup. ")
-         .append("<span class='lg' style='background:var(--r1)'></span>SLOT: this owner's keepers phantomed (off the board, no credit), everyone else as declared &nbsp; <span class='lg' style='background:var(--r2)'></span>KEEPERS: as declared &nbsp; <span class='lg' style='background:var(--r3)'></span>BEST PAIR: the 10k ledger's two highest-valued keepers for this owner &nbsp; <span class='lg' style='background:var(--r4)'></span>DRAFTED: the roster held today</div>");
+         .append("<span class='lg' style='background:var(--r1)'></span>SLOT: this owner's keepers phantomed (off the board, no credit), everyone else as declared &nbsp; <span class='lg' style='background:var(--r2)'></span>KEEPERS: as declared &nbsp; <span class='lg' style='background:var(--r3)'></span>BEST PAIR: the best legal pair on this yardstick among the owner's top ledger candidates and kept men &nbsp; <span class='lg' style='background:var(--r4)'></span>DRAFTED: the roster held today</div>");
         String me = System.getProperty("me", "justinb314");
         h.append("<table><tr><th>Owner</th><th>Slot</th><th>Slot only</th><th>+ keepers</th><th style='text-align:left'>kept (points alone)</th><th>worth</th><th>+ best pair</th><th style='text-align:left'>should have been</th><th>gain</th><th>Drafted</th><th>drafting</th></tr>");
         for(String m : managers){

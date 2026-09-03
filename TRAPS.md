@@ -464,3 +464,12 @@ real every time.
     table alone. Pairs are priced as pairs, and the planner now says so out
     loud when two keepers of one manager arrive at the same round.
 
+75. **The two highest standalone values are not the best pair.** "Best pair"
+    took the ledger's two largest one-man deltas. Standalone values do not add:
+    beside Watson, Stafford is worth +2 on the ladder's yardstick while Pitts -
+    the man BHier actually kept - is worth +15 and costs round 13 with no
+    same-round collision. Justin read the table and asked whether Watson and
+    Pitts was the pair. Rung 3 now searches every legal pair among the owner's
+    top ledger candidates and his kept men, each priced as a pair, and takes
+    the best. A pair is a joint object; rank pairs, not men.
+

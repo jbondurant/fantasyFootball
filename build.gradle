@@ -176,6 +176,8 @@ tasks.register('run', JavaExec) {
      'ledger',
      // OwnerLadder - 'neutralSeat=true' drafts each seat with the league-average QB habit instead of the owner's learned one.
      'neutralSeat',
+     // OwnerLadder - 'pairPool' = how many top ledger candidates (plus kept men) the best-pair search draws from.
+     'pairPool',
      // DraftExpectation - 'who=<last name>' prints which seats take that man and where.
      'who',
      // LeagueActuals.FLAG - grade outcomes under the league's own scoring
