@@ -47,8 +47,8 @@ public class PlanBacktest {
     // Keyed on the scoring in force, not held as one number. The rate is
     // computed FROM the outcome pool, so it is denominated in whatever units
     // that pool is scored in, and it moves with the pool's key as well as its
-    // scoring - 8.5 a week under pts_half_ppr on the projection-keyed pool that
-    // ships, 8.7 on the ADP-keyed one. A single cached value would let a tool that scores
+    // scoring - 8.8 a week on the projection-keyed, league-scored pool that
+    // ships. A single cached value would let a tool that scores
     // both ways price the wire in one unit and the rosters in the other, which
     // is the units bug that once printed 0.0 for defences.
     private static final Map<Boolean, Double> streamedDefence = new HashMap<>();
@@ -168,11 +168,48 @@ public class PlanBacktest {
             return new Board(season, ids, positionOf, replacement, rankOf);
         }
 
-        /** Each man's tier on this board, from his source rank (TRAPS #80). */
+        /**
+         * The ranks that match the outcome pool's own key, which is the only
+         * rank a cell may be looked up by.
+         *
+         * `rankOf` is ADP source rank. Once the pool was re-keyed onto
+         * projection rank (TRAPS #82) a board that answered with ADP ranks was
+         * naming cells by one order and filling them from another - TRAPS #83.
+         * When the pool is projection-keyed this ranks the board's men by that
+         * season's league-scored projections instead.
+         */
+        public Map<String, Integer> poolRanks(){
+            if(!OutcomeDistributions.poolKey().equals("projection")){
+                return rankOf;
+            }
+            Map<String, Double> projected;
+            try {
+                projected = HistoricalProjections.leaguePointsBySleeperID(
+                        AAAConfiguration.getInstance(), season);
+            }
+            catch(RuntimeException noFeed){
+                return rankOf;   // a synthetic board, or a season with no frozen feed
+            }
+            Map<Position, List<String>> byPosition = new EnumMap<>(Position.class);
+            for(String id : ids){
+                byPosition.computeIfAbsent(positionOf.get(id), u -> new ArrayList<>()).add(id);
+            }
+            Map<String, Integer> ranks = new HashMap<>();
+            for(List<String> group : byPosition.values()){
+                group.sort(Comparator.comparingDouble(id -> -projected.getOrDefault(id, 0.0)));
+                for(int i = 0; i < group.size(); i++){
+                    ranks.put(group.get(i), i);
+                }
+            }
+            return ranks;
+        }
+
+        /** Each man's tier on this board, in the pool's own rank order (TRAPS #80, #83). */
         public Map<String, Integer> tiersOf(){
+            Map<String, Integer> ranks = poolRanks();
             Map<String, Integer> tierOf = new HashMap<>();
             for(String id : ids){
-                tierOf.put(id, rankOf.getOrDefault(id, 0) / WeeklyStarterValue.TIER);
+                tierOf.put(id, ranks.getOrDefault(id, 0) / WeeklyStarterValue.TIER);
             }
             return tierOf;
         }

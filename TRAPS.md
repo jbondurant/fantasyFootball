@@ -544,7 +544,8 @@ real every time.
     n 60 to 58, TE 13-24 60 to 58, TE 25-36 55 to 49, QB 60 to 59); the defence
     wire moved more - holding the best undrafted defence 6.44 to 6.98 a week,
     streaming on form 7.69 to 7.73, so the streaming-over-holding ratio fell
-    from 1.19 to 1.11 and the hindsight premium from 1.06 to 1.02 a week
+    from 1.19 to 1.11 and the hindsight premium from 1.06 to 1.02 a week (both
+    moved again under #84's regrade, to 1.11 and 0.98)
     (`data/outcome-distributions-2026-09-04.txt`,
     `data/wire-rate-stress-2026-09-04.txt`). PlanBacktest's strategy table did
     not move at all (`data/plan-backtest-2026-09-04.txt` against 2026-08-29):
@@ -590,11 +591,14 @@ real every time.
     matters and it agrees: the greedy policy that DRAFTS off this valuation,
     scored on real outcomes leave-one-season-out, gains 84 points a season on
     the projection-keyed pool (1851 against 1767) and is ahead in all five
-    seasons separately (both arms in
-    `data/policy-backtest-poolkey-2026-09-04.txt`) - and its rosters stop
-    hoarding backs at the end and start taking a tight end and a defence. Read
-    that gain with #83 beside it: the boards in both arms still tier by ADP
-    rank, so the winning arm is a pool and a board that disagree. Switching the key also widens the
+    seasons separately - and its rosters stop hoarding backs at the end and
+    start taking a tight end and a defence. That first measurement had the
+    boards still tiering by ADP rank (#83); with the boards moved onto the same
+    order it was 226 points, 1767 to 1993. Both of those were graded in the
+    feed's points. In the shipped configuration - boards agreeing, outcomes in
+    the league's own points (#84) - it is 172 points a season, 1789 to 1961,
+    ahead in all five. Both arms in
+    `data/policy-backtest-poolkey-2026-09-04.txt`. Switching the key also widens the
     pool from 1466 player-seasons to 2896, because ranking by projection covers
     everyone projected rather than only the men on a draft board: the deep
     tiers the live board actually assigns finally have their own data instead
@@ -618,5 +622,46 @@ real every time.
     still a fair paired comparison, since both arms carry the same board, and
     the projection pool won while carrying the mismatch; but the consistent
     configuration has not been measured and the 84 points should not be quoted
-    as if it had. Open. A change that makes two things agree has to be checked
-    against everything else that reads either of them.
+    as if it had. FIXED the same day: `Board.poolRanks()` answers in whichever
+    order the pool is keyed on - ADP source ranks under `-PpoolKey=adp`, that
+    season's league-scored projection ranks under the default - and `tiersOf`
+    and `expectedFromRank(board, pool)` both read it. Measured, and it was not
+    small: the greedy policy goes from 1851 a season with the boards mismatched
+    to 1993 with them agreeing, another 142 points, and it stops trailing the
+    committed RUNBOOK plan by 147 to sit 4 behind it. So #82's real size was
+    226 points, not 84, and most of what was missing was this. (All three of
+    those figures are in the feed's points, measured before #84 flipped the
+    grading; the shipped pair reads 1789 against 1961.)
+    A change that makes two things agree has to be checked against everything
+    else that reads either of them.
+
+    And it cost a full check 17 minutes to two and three quarter hours before
+    anyone noticed, because `poolRanks` asks `HistoricalProjections` for a
+    season's projections every time a board is asked for a tier, and that read
+    and parsed 2.5MB of JSON on every call. Exactly #69 - an expensive lookup
+    moved inside a loop - committed by the person who had written #69 down that
+    morning. The feed is now parsed once a season. A green check whose duration
+    jumped by an order of magnitude is a failing check that happens to pass.
+
+84. **Grading a plan in points the league does not pay.** Every graded outcome
+    in this repo came from the feed's `pts_half_ppr`, which pays 4 for a passing
+    touchdown, charges nothing for a fumble after 2022, and pays a defence
+    nothing for holding a team to 14-20. This league pays 6, charges 1, and pays
+    1. Projections were already recomputed under the league's own settings, so
+    for two seasons of work a plan was CHOSEN on 6-point quarterbacks and SCORED
+    on 4-point ones, and everything downstream - when to take a quarterback, what
+    a defence is worth - inherited the lean. `LeagueActuals` fixed it in August
+    and shipped it switched off, which was right while other tables were
+    half-built in the old unit and became a lie about the league once they were
+    not. `ScoringImpactReport` existed to measure the flip and had never been
+    run; run, it says the correction is worth 30-45 points a season on the level,
+    changes no strategy's rank, and leaves the best round for a quarterback at 3
+    - but it is worth 56 points to an early quarterback against 35 to a late one,
+    exactly the direction the mis-scoring predicted. Flipped on by Justin's call
+    2026-09-04, before the season's own weeks could start arriving in the old
+    unit. What moved with it: the honest defence wire 7.73 to 8.03 a week, the
+    held wire 6.98 to 7.21 (the ratio barely moves, since both sides are
+    re-graded together), the defence bands 135.8/127.2 to 140.3/131.9, and the
+    ADP-versus-projection verdict from 6.2 to 6.5 points in favour of
+    projections. An opt-in correction that everyone agrees is correct is a
+    decision deferred, not a decision made; it needs a date.

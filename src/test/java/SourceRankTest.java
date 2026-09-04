@@ -46,4 +46,26 @@ public class SourceRankTest {
         PlanBacktest.Board board = new PlanBacktest.Board("t", List.of("a", "b"), positionOf, List.of(), Map.of("a", 3, "b", 13));
         assertEquals(Map.of("a", 0, "b", 1), board.tiersOf(), "b is the 14th back in the source, tier 1, though only second on the board");
     }
+
+    /**
+     * A board answers tier questions in the POOL's rank order, not its own
+     * (TRAPS #83). With the pool keyed by ADP the two are the same; the
+     * projection path needs a real season's feed, so it is exercised by the
+     * tools rather than here.
+     */
+    @Test
+    public void underTheAdpKeyTheBoardTiersByItsOwnSourceRanks(){
+        String was = System.getProperty("poolKey");
+        System.setProperty("poolKey", "adp");
+        try {
+            Map<String, Position> positionOf = Map.of("a", Position.RB, "b", Position.RB);
+            PlanBacktest.Board board = new PlanBacktest.Board("t", List.of("a", "b"), positionOf,
+                    List.of(), Map.of("a", 3, "b", 13));
+            assertEquals(Map.of("a", 3, "b", 13), board.poolRanks(), "the ADP key answers with the source ranks");
+            assertEquals(Map.of("a", 0, "b", 1), board.tiersOf());
+        }
+        finally {
+            if(was == null){ System.clearProperty("poolKey"); } else { System.setProperty("poolKey", was); }
+        }
+    }
 }

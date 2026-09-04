@@ -261,7 +261,7 @@ public class Keepers16 {
         out.append(String.format("ALONE = that one man kept by himself against the seat (his real round); the top %d by ALONE plus the declared men form the pair pool. BEST PAIR = the best legal pair in that pool, each priced as a pair.%n", pairPool));
         out.append("Every +/- is the standard error of the trial-by-trial difference (the worlds share seeds; the shared draws diverge after the first round a keeper changes, so pairing helps late keepers most). ALONE values do not add: two men kept together free two picks that compete for the same bench.\n");
         out.append("BEST PAIR is the largest of the searched pairs' means, so its edge over the kept pair carries selection bias on top of its +/-; two pairs inside one +/- of each other are a tie.\n");
-        out.append("The defence wire is the streamed level (WireRateStress: 7.73 a week streamed over 6.98 held). Two keepers priced at one round: the ruleset moves the LOWER-ADP man a round dearer (KeeperPricing); the one case on record, 2025 Jeudy over Daniels, went the other way.\n\n");
+        out.append("The defence wire is the streamed level (WireRateStress: 8.03 a week streamed over 7.21 held). Two keepers priced at one round: the ruleset moves the LOWER-ADP man a round dearer (KeeperPricing); the one case on record, 2025 Jeudy over Daniels, went the other way.\n\n");
         Map<String, Map<String, Object>> report = new LinkedHashMap<>();
         for(String manager : managers){
             long m0 = System.currentTimeMillis();

@@ -59,14 +59,15 @@ class ScoringFidelityTest {
         String before = System.getProperty(LeagueActuals.FLAG);
         try {
             System.clearProperty(LeagueActuals.FLAG);
-            assertFalse(LeagueActuals.enabled(),
-                    "absent must mean the existing pts_half_ppr grading");
+            assertTrue(LeagueActuals.enabled(),
+                    "absent must mean the league's own scoring (flipped 2026-09-04)");
             System.setProperty(LeagueActuals.FLAG, "true");
             assertTrue(LeagueActuals.enabled(),
                     "-PleagueScoredActuals=true does not reach LeagueActuals.enabled();"
                             + " every dispatcher below it is then a no-op");
             System.setProperty(LeagueActuals.FLAG, "false");
-            assertFalse(LeagueActuals.enabled());
+            assertFalse(LeagueActuals.enabled(),
+                    "-PleagueScoredActuals=false must still restore the feed's grading");
         }
         finally {
             if(before == null){
@@ -78,11 +79,11 @@ class ScoringFidelityTest {
         }
     }
 
-    /** Off by default on purpose: other tables are half-built in the old unit. */
+    /** On by default since 2026-09-04: the league pays 6 for a passing touchdown. */
     @Test
-    void theCorrectedGradingIsOptIn(){
-        assertFalse(LeagueActuals.enabled(),
-                "leagueScoredActuals must default to the existing pts_half_ppr grading");
+    void theCorrectedGradingIsTheDefault(){
+        assertTrue(LeagueActuals.enabled(),
+                "leagueScoredActuals must default to the league's own scoring");
     }
 
     // =====================================================================

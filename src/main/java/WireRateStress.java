@@ -17,8 +17,8 @@ import java.util.Map;
 /**
  * Is the pool's price for a streamed defence an honest one?
  *
- * (It reads 8.5 a week on the projection-keyed pool that ships, 8.7 on the
- * ADP-keyed one; the question below is the same either way.)
+ * (It reads about 8.8 a week on the projection-keyed, league-scored pool that
+ * ships; the question below is the same whatever the level.)
  *
  * The number is load-bearing. PlanBacktest.streamedDefencePerWeek() asks
  * WeeklyStarterValue.wireRates() for it, LateRoundValue turns it into "a

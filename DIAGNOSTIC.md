@@ -400,11 +400,14 @@ and `ObjectiveStability` measures what is left (worst seed-to-seed spread of a m
 week-level noise had put that at fifty). `BustBoomValue` follows the same draw so it is
 still the objective at zero rates, and the hindsight test's two-quarterback fixture now
 makes the backup's winning weeks through the season draw. The defence
-wire is the streamed level (WireRateStress: 7.73 a week over 6.98 held), so a kept defence
+wire is the streamed level (WireRateStress: 8.03 a week over 7.21 held), so a kept defence
 is worth its edge over a manager who works the wire, not over one who never touches it.
+Outcomes are graded in the LEAGUE's own points since 2026-09-04 - 6 for a passing
+touchdown, 1 charged for a fumble, 1 paid for holding a team to 14-20 - where every table
+in this repo used to grade in the feed's (TRAPS #84).
 What it says (`data/keepers16-2026-09-04.txt` + `.html`, 200 drafts a world, 480 outcome
-scenarios): keepers are worth +11 (BHier) to +144 (JakeSK) against the seat, Justin's
-Tuten + Purdy +67, and those two ARE the best pair his roster offered - the nine-round
+scenarios, outcomes in the league's own points): keepers are worth +11 (BHier) to +145
+(JakeSK) against the seat, Justin's Tuten + Purdy +67, and those two ARE the best pair his roster offered - the nine-round
 ledger had preferred Flowers. Eight of the twelve kept the best pair available to them.
 The four who did not: BHier +51 by swapping Daniels for Watson beside Pitts - the pair
 Justin named himself from the season-total ladder - JakeSK +14 (Stevenson for Kraft),
@@ -420,12 +423,11 @@ over five seasons, sixty seasons a cell, and it is keyed by PROJECTION rank, whi
 `RankKeyChoice` measured as the better key: leave-one-season-out, a projection-keyed band
 predicts a man's realised season 6.2 +/- 0.8 points better than an ADP-keyed one, in every
 season separately (TRAPS #82, `data/rank-key-choice-2026-09-04.txt`), and the policy that
-drafts off the valuation gains 84 points a season on real outcomes, ahead in all five
-(both arms in `data/policy-backtest-poolkey-2026-09-04.txt`; that policy still trails the
-committed RUNBOOK plan by 147 a season either way, which is the same file's own bottom
-line). The historical boards it drafts from still tier men by ADP rank while the pool is
-keyed by projection, so the 84 is measured with the pool and the board disagreeing - the
-consistent configuration is not yet run (TRAPS #83). That also removes the name join, since the
+drafts off the valuation gains 172 points a season on real outcomes, 1789 to 1961, ahead
+in all five (both arms in `data/policy-backtest-poolkey-2026-09-04.txt`). The first run of
+that comparison read 84 because the historical boards still tiered by ADP rank while the
+pool had moved to projection rank; the boards now answer in the pool's own order (TRAPS
+#83), which in the feed's points was worth another 142 on top of 84. That also removes the name join, since the
 projection feed and the weekly actuals are both by player id - so TRAPS #80's rank
 compression, fixed the same day for the ADP path and every board that reads it, does not
 arise on the pool's own path at all. The same switch widens the pool from 1466 seasons to

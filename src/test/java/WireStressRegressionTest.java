@@ -23,8 +23,8 @@ public class WireStressRegressionTest {
         List<String> lines = Files.readAllLines(Path.of("data", "wire-rate-stress-2026-09-04.txt"));
         double stream = rate(lines, "stream on form, react after week 2");
         double hold = rate(lines, "hold best undrafted by ADP, all season");
-        assertEquals(7.73, stream, 1e-9);
-        assertEquals(6.98, hold, 1e-9);
+        assertEquals(8.03, stream, 1e-9);
+        assertEquals(7.21, hold, 1e-9);
         assertEquals(stream / hold, WeeklyStarterValue.DEF_STREAM_OVER_HOLD, 1e-12,
                 "forCurrentBoard scales the held-13th defence projection by this ratio");
     }

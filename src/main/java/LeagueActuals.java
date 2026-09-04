@@ -41,11 +41,25 @@ import java.util.Set;
  */
 public class LeagueActuals {
 
-    /** -PleagueScoredActuals=true. Absent means the old pts_half_ppr grading. */
+    /** -PleagueScoredActuals=false restores the feed's own pts_half_ppr grading. */
     public static final String FLAG = "leagueScoredActuals";
 
+    /**
+     * ON since 2026-09-04, by Justin's decision.
+     *
+     * It was opt-in while other tables were half-built in the old unit, which
+     * was the right default then and a lie about the league by the end: every
+     * graded outcome in the repo paid 4 for a passing touchdown while his
+     * league pays 6, so plans chosen on 6-point quarterbacks were scored on
+     * 4-point ones. `ScoringImpactReport` measured what flipping does before it
+     * was flipped: worth 30-45 points a season on the level, no strategy
+     * changes rank, and the best round to take a quarterback stays 3. It is
+     * worth 56 points to an early quarterback against 35 to a late one, which
+     * is the direction the mis-scoring predicted. The moment to move was before
+     * the season's own weeks start arriving in the tables.
+     */
     public static boolean enabled(){
-        return Boolean.getBoolean(FLAG);
+        return !"false".equalsIgnoreCase(System.getProperty(FLAG, "true"));
     }
 
     // ------------------------------------------------------------------

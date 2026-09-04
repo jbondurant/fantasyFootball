@@ -46,12 +46,15 @@ public class LateRoundValue {
      * DefenceVersusDepth: realised season points by PRESEASON defence band, the
      * mean row of data/defence-versus-depth-2026-09-04.txt (DEF1-3 and DEF10-12).
      * BandRegressionTest reads them back out of that file rather than trusting
-     * these lines. The worst band was 129.5 before defences were banded by the
-     * source's ADP order (TRAPS #80); the best band did not move.
+     * these lines. They have moved twice today: 135.8 / 129.5 before defences
+     * were banded by the source's ADP order (TRAPS #80), 135.8 / 127.2 after,
+     * and 140.3 / 131.9 once outcomes were graded in the league's own points
+     * (TRAPS #84) - which pays a defence for holding a team to 14-20 where the
+     * feed does not.
      */
     static final String DEF_BANDS = "defence-versus-depth-2026-09-04.txt";
-    static final double DEF_BEST_BAND = 135.8;
-    static final double DEF_WORST_BAND = 127.2;
+    static final double DEF_BEST_BAND = 140.3;
+    static final double DEF_WORST_BAND = 131.9;
     static final int DEF_BAND_WINS = 3;         // of five seasons
     static final int WEEKS = 17;
 

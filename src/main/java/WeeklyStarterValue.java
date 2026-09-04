@@ -116,24 +116,30 @@ public class WeeklyStarterValue implements RosterValue {
      * a streamed one. HindsightRegressionTest reads the rate back out of the
      * WireRateStress file rather than trusting this line.
      *
-     * 2026-09-04: 7.73, from data/wire-rate-stress-2026-09-04.txt, once every
-     * loader ranked defences by the source's order (TRAPS #80) - the 2021
-     * Washington Football Team had been failing the name join at rank 3 and
-     * pulling every defence below it up a place.
+     * 2026-09-04: 8.03, from data/wire-rate-stress-2026-09-04.txt. Two moves
+     * that day: every loader began ranking defences by the source's order
+     * (TRAPS #80 - the 2021 Washington Football Team had been failing the name
+     * join at rank 3 and pulling every defence below it up a place), which took
+     * it 7.69 to 7.73; then outcomes began being graded in the league's own
+     * points rather than the feed's, which took it to 8.03. A defence is paid
+     * for holding a team to 14-20 in this league and not in the feed.
      */
     static final Map<Position, Double> HONEST_WIRE =
-            Map.of(Position.DEF, 7.73);
+            Map.of(Position.DEF, 8.03);
 
     /**
-     * Streaming over holding, for defences: 7.73 a week ("stream on form, react
-     * after week 2") over 6.98 ("hold best undrafted by ADP, all season") in
-     * data/wire-rate-stress-2026-09-04.txt, both hindsight-free (the 2026-08-31
-     * file read 7.69 over 6.44 with defences ranked after the name join; TRAPS
-     * #80). Applied to the held-13th projection by forCurrentBoard so the
-     * projected board's defence wire is the streamed level in its own units.
+     * Streaming over holding, for defences: 8.03 a week ("stream on form, react
+     * after week 2") over 7.21 ("hold best undrafted by ADP, all season") in
+     * data/wire-rate-stress-2026-09-04.txt, both hindsight-free and both in the
+     * league's own points (the 2026-08-31 file read 7.69 over 6.44 with
+     * defences ranked after the name join and graded in the feed's points;
+     * TRAPS #80, #84). The RATIO is what is used and it barely moves - 1.107
+     * then, 1.114 now - because both sides are re-graded together. Applied to
+     * the held-13th projection by forCurrentBoard so the projected board's
+     * defence wire is the streamed level in its own units.
      * WireStressRegressionTest reads the two rows back out of the file.
      */
-    static final double DEF_STREAM_OVER_HOLD = 7.73 / 6.98;
+    static final double DEF_STREAM_OVER_HOLD = 8.03 / 7.21;
 
     private final int scenarios;
     private final Map<String, Draw[]> byPlayer = new HashMap<>();
@@ -359,8 +365,8 @@ public class WeeklyStarterValue implements RosterValue {
             double held = projections.getOrDefault(ids.get(index), 0.0) / 17.0;
             // The defence wire is STREAMED, not held. The 13th projected defence
             // held all season is what a manager who never touches the wire gets;
-            // WireRateStress measured a manager streaming on form at 7.73 a week
-            // against 6.98 for holding the best undrafted defence, both hindsight-
+            // WireRateStress measured a manager streaming on form at 8.03 a week
+            // against 7.21 for holding the best undrafted defence, both hindsight-
             // free. The ratio carries that edge into projection units, so a kept
             // defence is measured against the wire a real manager works.
             wire.put(entry.getKey(), entry.getKey() == Position.DEF ? held * DEF_STREAM_OVER_HOLD : held);
@@ -447,7 +453,8 @@ public class WeeklyStarterValue implements RosterValue {
      */
     public static Map<String, Double> expectedFromRank(PlanBacktest.Board board,
             Map<String, List<OutcomeDistributions.Season>> pool){
-        return expectedFromRank(board.ids(), board.positionOf(), board.rankOf(), pool);
+        // the pool's own rank order, not the board's ADP order (TRAPS #83)
+        return expectedFromRank(board.ids(), board.positionOf(), board.poolRanks(), pool);
     }
 
     /** Ranked by list position - for a board where every man is present. */

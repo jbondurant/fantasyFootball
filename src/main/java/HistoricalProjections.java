@@ -46,7 +46,27 @@ public class HistoricalProjections {
         return false;
     }
 
-    public static JsonArray forSeason(AAAConfiguration configuration, String season){
+    /**
+     * Parsed feeds, by season. A finished season's file never changes, and
+     * reading plus parsing 2.5MB of JSON is not something to do inside a loop:
+     * `PlanBacktest.Board.poolRanks` asks for a season's projections every time
+     * a board is asked for a tier, which took a full check from 17 minutes to
+     * two and three quarter hours before this cache existed (TRAPS #69, again).
+     */
+    private static final Map<String, JsonArray> FEEDS = new HashMap<>();
+    private static final Map<String, Map<String, Double>> LEAGUE_POINTS = new HashMap<>();
+
+    public static synchronized JsonArray forSeason(AAAConfiguration configuration, String season){
+        JsonArray cached = FEEDS.get(season);
+        if(cached != null){
+            return cached;
+        }
+        JsonArray parsed = parseSeason(configuration, season);
+        FEEDS.put(season, parsed);
+        return parsed;
+    }
+
+    private static JsonArray parseSeason(AAAConfiguration configuration, String season){
         int asked = Integer.parseInt(season);
         int current = Integer.parseInt(configuration.getSeason());
         // THE CURRENT SEASON IS HISTORY ONCE ITS DRAFT-NIGHT FEED IS FROZEN.
@@ -73,8 +93,18 @@ public class HistoricalProjections {
      * actually looking at in their draft room, unlike the raw 4-pt feed.
      * Assumes the league's scoring has been stable across the chain.
      */
-    public static Map<String, Double> leaguePointsBySleeperID(AAAConfiguration configuration,
-                                                              String season){
+    public static synchronized Map<String, Double> leaguePointsBySleeperID(AAAConfiguration configuration,
+                                                                           String season){
+        Map<String, Double> cached = LEAGUE_POINTS.get(season);
+        if(cached != null){
+            return cached;
+        }
+        Map<String, Double> scored = scoreSeason(configuration, season);
+        LEAGUE_POINTS.put(season, scored);
+        return scored;
+    }
+
+    private static Map<String, Double> scoreSeason(AAAConfiguration configuration, String season){
         LeagueScoringSettings scoring =
                 SleeperLeague.getSeriousLeague().league.leagueScoringSettings;
         Map<String, Double> out = new HashMap<>();

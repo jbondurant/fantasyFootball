@@ -1,7 +1,7 @@
 
 ============ IS THE STREAMED-DEFENCE RATE HONEST? ============
 
-SHIPPED  WeeklyStarterValue.wireRates(DEF) = 8.48 a week (144 a season)
+SHIPPED  WeeklyStarterValue.wireRates(DEF) = 8.74 a week (149 a season)
          this is what PlanBacktest and LateRoundValue use.
 
 HOW MANY DEFENCES THIS LEAGUE ACTUALLY DRAFTS
@@ -11,33 +11,33 @@ HOW MANY DEFENCES THIS LEAGUE ACTUALLY DRAFTS
 
 5 seasons joined: [2021, 2022, 2023, 2024, 2025]
 
-REIMPLEMENTED here from the ADP band: 8.75 a week (shipped, pool keyed by projection: 8.48)
+REIMPLEMENTED here from the ADP band: 9.01 a week (shipped, pool keyed by projection: 8.74)
    matches - this tool is measuring the same thing
 
 ESTIMATOR                            pts/wk   season   uses the future?
 ------------------------------------------------------------------------------
-band mean (never touch the wire)       6.43      109   no
-SHIPPED pooled top quartile            8.75      149   YES - ranks by realised
-top quartile within each season        8.94      152   YES - ranks by realised
-hold best undrafted by ADP, all season     6.98      119   no
-stream on form, react after week 1     7.60      129   no
-stream on form, react after week 2     7.73      131   no
-stream on form, react after week 3     7.63      130   no
-stream on form, react after week 4     7.50      128   no
-stream on form, react after week 6     7.78      132   no
-ORACLE best undrafted each week       19.03      324   YES - the ceiling
+band mean (never touch the wire)       6.68      113   no
+SHIPPED pooled top quartile            9.01      153   YES - ranks by realised
+top quartile within each season        9.19      156   YES - ranks by realised
+hold best undrafted by ADP, all season     7.21      123   no
+stream on form, react after week 1     7.90      134   no
+stream on form, react after week 2     8.03      137   no
+stream on form, react after week 3     7.93      135   no
+stream on form, react after week 4     7.77      132   no
+stream on form, react after week 6     8.02      136   no
+ORACLE best undrafted each week       19.26      327   YES - the ceiling
 ------------------------------------------------------------------------------
 
 SEASON BY SEASON, points a week
 
 SEASON      preseason   form L=2   form L=4     oracle
-2021             8.06       8.22       8.00      19.78
-2022             7.94       9.28       9.28      19.33
-2023             8.00       6.72       6.83      18.83
-2024             6.22       7.89       7.44      18.00
-2025             4.67       6.56       5.94      19.22
-mean             6.98       7.73       7.50      19.03
-std err          0.67       0.50       0.56       0.30
+2021             8.17       8.78       8.44      20.00
+2022             8.17       9.50       9.44      19.61
+2023             8.39       7.11       7.22      18.94
+2024             6.56       8.06       7.67      18.39
+2025             4.78       6.72       6.06      19.33
+mean             7.21       8.03       7.77      19.26
+std err          0.69       0.51       0.57       0.28
 
 ==================================================================
    DRAFTED AGAINST STREAMED, ONE DENOMINATOR
@@ -47,16 +47,16 @@ std err          0.67       0.50       0.56       0.30
    does with one.
 
 SEASON      DEF1-3 held DEF1-12 held     form L=2 L=2 - DEF1-3   n held
-2021              134.7        132.5        148.0        +13.3       11
-2022              144.7        121.8        167.0        +22.3       12
-2023              147.3        145.6        121.0        -26.3       12
-2024              108.7        122.3        142.0        +33.3       12
-2025              143.7        120.7        118.0        -25.7       12
-mean              135.8        128.6        139.2         +3.4    5 szn
-std err             7.1          4.8          9.1
+2021              139.0        136.8        158.0        +19.0       11
+2022              150.3        127.3        171.0        +20.7       12
+2023              152.7        150.4        128.0        -24.7       12
+2024              112.0        127.3        145.0        +33.0       12
+2025              147.7        124.8        121.0        -26.7       12
+mean              140.3        133.3        144.6         +4.3    5 szn
+std err             7.5          4.7          9.2
 
-   a DRAFTED top-band defence is worth -3 a season against an honest
-   stream, +10 against a stream you never touch. The shipped rate says
+   a DRAFTED top-band defence is worth -4 a season against an honest
+   stream, +11 against a stream you never touch. The shipped rate says
    -22. Read the error bars before believing any of the three.
 
 ==================================================================
@@ -66,11 +66,11 @@ std err             7.1          4.8          9.1
    preseason band's season, 135.8, minus 17 weeks of streaming.
 
    STREAMING RATE USED                    a season drafted DEF
-   SHIPPED top quartile                      148.8      -13.0
-   hold best undrafted by ADP                118.6      +17.2
-   stream on form, L=2                       131.5       +4.3
-   stream on form, L=4                       127.5       +8.3
-   band mean                                 109.3      +26.5
+   SHIPPED top quartile                      153.1      -17.3
+   hold best undrafted by ADP                122.6      +13.2
+   stream on form, L=2                       136.6       -0.8
+   stream on form, L=4                       132.0       +3.8
+   band mean                                 113.5      +22.3
 
    The last column is LateRoundValue's headline number: how much a
    DRAFTED defence beats a streamed one by, over a season. Negative

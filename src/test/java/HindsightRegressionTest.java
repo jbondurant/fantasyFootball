@@ -340,16 +340,20 @@ class HindsightRegressionTest {
 
     /**
      * The gap between the two is the finding, so it is asserted rather than
-     * described. 8.75 hindsight against 7.73 honest is 1.02 a week - about 17
-     * points a season, which is what reversed the defence conclusion (1.06
-     * before the source-order ranks of TRAPS #80).
+     * described. 9.01 hindsight against 8.03 honest is 0.98 a week - about 17
+     * points a season, which is what reversed the defence conclusion. It has
+     * moved twice as the measurement improved and never changed sign: 1.06
+     * before defences were ranked in the source's order (TRAPS #80), 1.02
+     * after, 0.98 once outcomes were graded in the league's own points
+     * (TRAPS #84). Both sides are re-measured together each time, which is
+     * why the gap barely moves while its two halves move by a third of a point.
      */
     @Test
     void theHindsightPremiumIsTheOnePointOneAWeekThatReversedTheDefenceCall(){
         double shipped = measuredShippedRatePerWeek();
         double honest = WeeklyStarterValue.HONEST_WIRE.get(Position.DEF);
 
-        assertEquals(1.02, shipped - honest, 0.02,
+        assertEquals(0.98, shipped - honest, 0.02,
                 "the measured hindsight premium has moved; if that is real, the"
                         + " defence conclusion in MODEL.md needs rereading");
         assertTrue(shipped > honest, "hindsight cannot be worth less than honesty");
