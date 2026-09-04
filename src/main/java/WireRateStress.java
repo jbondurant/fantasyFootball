@@ -126,11 +126,20 @@ public class WireRateStress {
         }
         pooled.sort(Comparator.reverseOrder());
         double reimplemented = topQuartile(pooled);
-        System.out.printf("REIMPLEMENTED here from the same band: %.2f a week"
-                + " (shipped %.2f)%n", reimplemented, shipped);
+        // This tool bands defences by ADP. The shipped pool bands them by
+        // whichever key OutcomeDistributions is keyed on, and since 2026-09-04
+        // that is PROJECTION rank (TRAPS #82) - a different band of men, so the
+        // two are only expected to agree on the ADP-keyed pool.
+        System.out.printf("REIMPLEMENTED here from the ADP band: %.2f a week"
+                + " (shipped, pool keyed by %s: %.2f)%n", reimplemented,
+                OutcomeDistributions.poolKey(), shipped);
+        boolean sameKey = OutcomeDistributions.poolKey().equals("adp");
         System.out.printf("   %s%n%n", Math.abs(reimplemented - shipped) < 0.5
                 ? "matches - this tool is measuring the same thing"
-                : "DOES NOT MATCH - the join differs, treat what follows with care");
+                : sameKey
+                        ? "DOES NOT MATCH - the join differs, treat what follows with care"
+                        : "differs BY DESIGN - the shipped pool bands by projection, this tool by ADP;"
+                                + " every estimator row below is ADP-banded and unaffected");
 
         System.out.printf("%-34s %8s %8s   %s%n", "ESTIMATOR", "pts/wk", "season",
                 "uses the future?");

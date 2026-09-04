@@ -1,7 +1,7 @@
 
 ============ IS THE STREAMED-DEFENCE RATE HONEST? ============
 
-SHIPPED  WeeklyStarterValue.wireRates(DEF) = 8.75 a week (149 a season)
+SHIPPED  WeeklyStarterValue.wireRates(DEF) = 8.48 a week (144 a season)
          this is what PlanBacktest and LateRoundValue use.
 
 HOW MANY DEFENCES THIS LEAGUE ACTUALLY DRAFTS
@@ -11,7 +11,7 @@ HOW MANY DEFENCES THIS LEAGUE ACTUALLY DRAFTS
 
 5 seasons joined: [2021, 2022, 2023, 2024, 2025]
 
-REIMPLEMENTED here from the same band: 8.75 a week (shipped 8.75)
+REIMPLEMENTED here from the ADP band: 8.75 a week (shipped, pool keyed by projection: 8.48)
    matches - this tool is measuring the same thing
 
 ESTIMATOR                            pts/wk   season   uses the future?

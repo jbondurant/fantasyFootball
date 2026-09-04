@@ -185,6 +185,11 @@ tasks.register('run', JavaExec) {
      'render',
      // ObjectiveStability - 'seeds' how many seeds of the weekly objective to compare.
      'seeds',
+     // RankKeyChoice - 'depth' how far down each position to judge; 'band' the tier width.
+     'depth', 'band',
+     // OutcomeDistributions - 'poolKey=adp' keys outcome cells by FantasyPros ADP rank
+     // instead of the measured-better projection rank (RankKeyChoice).
+     'poolKey',
      // DraftExpectation - 'who=<last name>' prints which seats take that man and where.
      'who',
      // LeagueActuals.FLAG - grade outcomes under the league's own scoring

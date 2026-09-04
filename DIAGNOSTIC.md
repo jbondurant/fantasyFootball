@@ -403,20 +403,29 @@ makes the backup's winning weeks through the season draw. The defence
 wire is the streamed level (WireRateStress: 7.73 a week over 6.98 held), so a kept defence
 is worth its edge over a manager who works the wire, not over one who never touches it.
 What it says (`data/keepers16-2026-09-04.txt` + `.html`, 200 drafts a world, 480 outcome
-scenarios): keepers are worth +11 (BHier) to +150 (itsabust) against the seat, Justin's
-Tuten + Purdy +76. Eight of the twelve kept the best pair their own roster offered. The
-four who did not: BHier +58 by swapping Daniels for Watson beside Pitts - the pair Justin
-named himself from the season-total ladder - JFMarino +21 (Odunze for McBride), JakeSK +15
-(Stevenson for Kraft), tommyrads +8 (Rice for Caleb Williams), and KevinDA's +1 is a tie.
-The paired errors are 3-4 points, so a gap under about 8 is not a finding. Known limits:
+scenarios): keepers are worth +11 (BHier) to +144 (JakeSK) against the seat, Justin's
+Tuten + Purdy +67, and those two ARE the best pair his roster offered - the nine-round
+ledger had preferred Flowers. Eight of the twelve kept the best pair available to them.
+The four who did not: BHier +51 by swapping Daniels for Watson beside Pitts - the pair
+Justin named himself from the season-total ladder - JakeSK +14 (Stevenson for Kraft),
+tommyrads +13 (Rice for Caleb Williams) and JFMarino +12 (Odunze for McBride). The paired
+errors are 3-4 points and the yardstick's own seed floor is 6.8, so a gap under about 8 is
+not a finding. Known limits:
 Sleeper's defence projections are a stub (sacks, interceptions, recoveries,
 blocks - no points-allowed bands), so defence-versus-defence margins sit about a quarter
 low; the same-round bump moves the lower-ADP man a round dearer in `KeeperPricing` and the
 league's own direction is unconfirmed - the ruleset says the lower-ADP man, the one case
 on record went the other way (open question for Justin); a pooled tier is twelve wide
-over five seasons, sixty seasons a cell, ranked by the source's order (TRAPS #80, fixed
-2026-09-04: the pool, the historical boards, the defence-wire loader and the
-predictability tools all rank every playable row, joined or not).
+over five seasons, sixty seasons a cell, and it is keyed by PROJECTION rank, which
+`RankKeyChoice` measured as the better key: leave-one-season-out, a projection-keyed band
+predicts a man's realised season 6.2 +/- 0.8 points better than an ADP-keyed one, in every
+season separately (TRAPS #82, `data/rank-key-choice-2026-09-04.txt`), and the policy that
+drafts off the valuation gains 84 points a season on real outcomes, ahead in all five
+(`data/policy-backtest-2026-09-04.txt`). That also removes the name join, since the
+projection feed and the weekly actuals are both by player id - so TRAPS #80's rank
+compression, fixed the same day for the ADP path and every board that reads it, does not
+arise on the pool's own path at all. The same switch widens the pool from 1466 seasons to
+2896 and moves every replacement level; `-PpoolKey=adp` restores the old one.
 
 ## Fix list after the 2026 draft (ranked by value for the effort)
 

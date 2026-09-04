@@ -1,9 +1,10 @@
 
-PHASE 4: every strategy on every season's REAL outcomes
-lineup QB/RB2/WR3/TE/FLEX2/DEF, 18 weeks, best legal lineup each week
-a defence slot the roster cannot fill is STREAMED at 8.5 points a week
+PER-SEASON POLICY, LEAVE-ONE-OUT POOL
+drafts on each season's own board using distributions from the OTHER four
+seasons, then is scored on what really happened
 
 STRATEGY                     2021     2022     2023     2024     2025      mean    vs ADP    wins
+starter-sum POLICY           1811     1839     1873     1993     1737      1851      +409     5/5
 starter-sum (1-16)           1752     1932     1732     2055     2024      1899      +457     5/5
 best-nine (Model A)          1376     1542     1867     1732     1614      1626      +184     3/5
 RUNBOOK committed            2035     1654     2191     1960     2147      1997      +556     5/5
@@ -15,10 +16,11 @@ ModelA front + SS back       1772     1771     1890     1927     1946      1861 
 [not legal] no DEF drafted     2041     1642     2190     2002     2136      2002      +561     5/5
 best available by ADP        1439     1381     1192     1485     1712      1442        +0     0/5
 
-Every strategy drafts from the same board at the same picks, so the only
-difference between two rows is the order of positions. 'best available by ADP'
-is the null hypothesis: never think about position at all.
+what the policy chose, season by season:
+   2021: WR QB WR RB RB WR WR WR WR TE RB DEF QB RB
+   2022: RB QB RB WR WR RB RB WR WR TE QB RB RB RB
+   2023: RB RB QB WR WR RB WR RB WR WR TE QB RB RB
+   2024: RB QB RB WR WR RB RB WR TE WR QB DEF RB RB
+   2025: QB RB RB WR RB RB WR WR WR WR TE QB RB RB
 
-CAVEAT, and it is not small: the starter-sum sequence came from a model whose
-outcome pool was built from these same seasons. Its distributions saw them, even
-though this scoring does not. Read its row as flattered, and a narrow win as none.
+against the committed plan: -147 points a season, policy ahead in 2 of 5.

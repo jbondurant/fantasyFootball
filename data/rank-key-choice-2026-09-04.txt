@@ -1,0 +1,55 @@
+WHICH PRESEASON ORDER KEYS A MAN'S OUTCOMES  2026-09-04
+5 seasons: [2021, 2022, 2023, 2024, 2025]. One feed (Sleeper's preseason projections for a finished season),
+so ADP and projection rank the SAME men and differ only in the key. Outcomes are
+league-scored. Judged over the first 48 men of each position, in bands of 12.
+
+HOW WELL EACH ORDER TRACKS THE FINISHED SEASON (spearman, within position)
+POS    SEASON     FP ADP  SLP ADP     PROJ   better
+QB     2021        0.776    0.670    0.861   PROJ
+QB     2022        0.463    0.467    0.785   PROJ
+QB     2023        0.378    0.465    0.547   PROJ
+QB     2024        0.571    0.585    0.723   PROJ
+QB     2025        0.466    0.494    0.553   PROJ
+RB     2021        0.549    0.545    0.639   PROJ
+RB     2022        0.623    0.627    0.776   PROJ
+RB     2023        0.367    0.388    0.658   PROJ
+RB     2024        0.552    0.559    0.706   PROJ
+RB     2025        0.717    0.722    0.684   FP ADP
+WR     2021        0.359    0.360    0.437   PROJ
+WR     2022        0.463    0.478    0.702   PROJ
+WR     2023        0.642    0.653    0.703   PROJ
+WR     2024        0.245    0.270    0.516   PROJ
+WR     2025        0.336    0.340    0.292   FP ADP
+TE     2021        0.530    0.550    0.673   PROJ
+TE     2022        0.382    0.511    0.710   PROJ
+TE     2023        0.468    0.515    0.582   PROJ
+TE     2024        0.513    0.490    0.657   PROJ
+TE     2025        0.568    0.542    0.572   tie
+DEF    2021        0.517    0.483    0.453   FP ADP
+DEF    2022        0.090    0.356    0.410   PROJ
+DEF    2023        0.448    0.412    0.389   FP ADP
+DEF    2024        0.008   -0.151    0.101   PROJ
+DEF    2025        0.232    0.220    0.355   PROJ
+
+PREDICTING A MAN'S SEASON FROM HIS BAND'S OTHER-SEASON MEAN (leave one season out)
+The ADP column is the FantasyPros board the outcome pool is built from.
+POS         n    ADP err   PROJ err   ADP - PROJ
+QB        184       76.3       65.2    +11.2 +/- 3.0  PROJ predicts better
+RB        270       57.6       49.3     +8.3 +/- 1.9  PROJ predicts better
+WR        260       50.5       43.5     +7.0 +/- 1.4  PROJ predicts better
+TE        190       36.5       34.6     +1.9 +/- 1.1  tie
+DEF       138       25.2       25.3     -0.1 +/- 0.9  tie
+
+SEASON        n    ADP err   PROJ err   ADP - PROJ
+2021        228       48.8       45.5     +3.3 +/- 2.0
+2022        191       46.7       38.8     +7.9 +/- 2.2
+2023        202       55.2       46.5     +8.7 +/- 2.0
+2024        208       52.6       44.9     +7.7 +/- 1.7
+2025        213       51.6       47.7     +3.9 +/- 1.6
+ALL      1042       51.0       44.8     +6.2 +/- 0.8
+
+A POSITIVE gap means the projection-keyed band predicted the man's season
+better than the ADP-keyed band. The error bar is over men, who share seasons,
+so read a gap under two of them as nothing.
+
+VERDICT: key the cells by PROJECTION rank

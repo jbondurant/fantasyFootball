@@ -555,12 +555,11 @@ real every time.
     `BandRegressionTest`, as the wire rate already was. The change also exposed
     a second population fault one layer up (below).
 
-    Two things this did NOT reach, said plainly rather than left implied. The
-    LIVE board tiers men by Sleeper projection rank over everyone projected,
-    not by ADP source rank, so the current board and the historical pool still
-    key their cells differently; and the era/nflverse ingest (`EraBoards`,
+    One thing this did NOT reach: the era/nflverse ingest (`EraBoards`,
     `DetectionLag`, `LateHalf`, and `BoardValue` reading them) still ranks
-    after its own join.
+    after its own join. The other leftover - the live board tiering by
+    projection rank while the pool keyed its cells by ADP rank - was settled by
+    measurement instead of by patching one to match the other (#82).
 
 81. **The same seasons on both sides.** WireRateStress's drafted-against-
     streamed table required a season's top twelve defences to be twelve joined
@@ -571,4 +570,35 @@ real every time.
     seasons". The table now averages what joined, prints how many, and takes
     every mean over the seasons present on both sides. A guard that drops a row
     from one column of a comparison has to drop it from the other.
-\n
+
+82. **Which order is the right key is a question with an answer.** The live
+    board assigned today's men to outcome cells by projected points; the pool
+    keyed those cells by draft position. Two orders, and the instinct was to
+    pick one and make the other match. `RankKeyChoice` asks instead which key
+    PREDICTS: leave one season out, take the mean realised season of the men
+    who shared a man's rank band in the other four, and see which band mean
+    lands closer. Both orders come from one feed, so they rank the same men and
+    differ only in the key. Projections win by 6.2 +/- 0.8 points of mean
+    absolute error against the FantasyPros board the pool was built from,
+    positive in all five seasons separately and worth 7 to 11 points at
+    quarterback, back and receiver; tight ends and defences are a tie. So the
+    live board was right and the pool was wrong, and the pool now keys by
+    projection - which also deletes the name join, because the projection feed
+    and the weekly actuals are both by player id. The keeper answer did not
+    move: Tuten and Purdy stay the best pair, every man keeps his order, and
+    the levels shift about ten points. The downstream check is the one that
+    matters and it agrees: the greedy policy that DRAFTS off this valuation,
+    scored on real outcomes leave-one-season-out, gains 84 points a season on
+    the projection-keyed pool (1851 against 1767) and is ahead in all five
+    seasons separately - and its rosters stop hoarding backs at the end and
+    start taking a tight end and a defence. Switching the key also widens the
+    pool from 1466 player-seasons to 2896, because ranking by projection covers
+    everyone projected rather than only the men on a draft board: the deep
+    tiers the live board actually assigns finally have their own data instead
+    of falling back a tier, and every replacement level moves with them
+    (quarterback wire 15.9 to 12.9 a week). That widening rides along with the
+    key and is not separately measured; the policy backtest judges the pair of
+    them together. `-PpoolKey=adp` keeps the old pool for comparison. The first A/B of the two printed identical tables, because
+    OutcomeDistributions' own report built its season list instead of calling
+    `all()` - the lever was not connected to the measurement, which is #68
+    again.
