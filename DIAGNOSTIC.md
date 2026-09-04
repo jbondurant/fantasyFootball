@@ -396,7 +396,7 @@ fifty points between seeds - the weekly gaussian noise did nothing to the mean (
 lineup is chosen on expectation, so the score is linear in points given who is up) and
 everything to that bias, so it is gone, the season and availability draws are stratified,
 and `ObjectiveStability` measures what is left (worst seed-to-seed spread of a marginal
-7.7 points at 480 scenarios, the default, `data/objective-stability-2026-09-04.txt`; the
+6.8 points at 480 scenarios, the default, `data/objective-stability-2026-09-04.txt`; the
 week-level noise had put that at fifty). `BustBoomValue` follows the same draw so it is
 still the objective at zero rates, and the hindsight test's two-quarterback fixture now
 makes the backup's winning weeks through the season draw. The defence
@@ -421,7 +421,11 @@ over five seasons, sixty seasons a cell, and it is keyed by PROJECTION rank, whi
 predicts a man's realised season 6.2 +/- 0.8 points better than an ADP-keyed one, in every
 season separately (TRAPS #82, `data/rank-key-choice-2026-09-04.txt`), and the policy that
 drafts off the valuation gains 84 points a season on real outcomes, ahead in all five
-(`data/policy-backtest-2026-09-04.txt`). That also removes the name join, since the
+(both arms in `data/policy-backtest-poolkey-2026-09-04.txt`; that policy still trails the
+committed RUNBOOK plan by 147 a season either way, which is the same file's own bottom
+line). The historical boards it drafts from still tier men by ADP rank while the pool is
+keyed by projection, so the 84 is measured with the pool and the board disagreeing - the
+consistent configuration is not yet run (TRAPS #83). That also removes the name join, since the
 projection feed and the weekly actuals are both by player id - so TRAPS #80's rank
 compression, fixed the same day for the ADP path and every board that reads it, does not
 arise on the pool's own path at all. The same switch widens the pool from 1466 seasons to

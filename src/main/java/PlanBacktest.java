@@ -46,8 +46,9 @@ public class PlanBacktest {
      */
     // Keyed on the scoring in force, not held as one number. The rate is
     // computed FROM the outcome pool, so it is denominated in whatever units
-    // that pool is scored in - 8.7 a week under pts_half_ppr, 9.0 under the
-    // league's own rules. A single cached value would let a tool that scores
+    // that pool is scored in, and it moves with the pool's key as well as its
+    // scoring - 8.5 a week under pts_half_ppr on the projection-keyed pool that
+    // ships, 8.7 on the ADP-keyed one. A single cached value would let a tool that scores
     // both ways price the wire in one unit and the rosters in the other, which
     // is the units bug that once printed 0.0 for defences.
     private static final Map<Boolean, Double> streamedDefence = new HashMap<>();

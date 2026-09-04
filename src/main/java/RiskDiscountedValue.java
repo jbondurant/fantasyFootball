@@ -34,8 +34,11 @@ import java.util.Map;
  * everything else is.
  *
  * Games missed comes from the Draft Sharks export where the player is in it,
- * and from the position's measured average where he is not - RB 3.1, WR 2.9,
- * TE 3.0 games, from 2021-2025 (OutcomeDistributions).
+ * and from the position's measured average where he is not - QB 3.7, RB 2.7,
+ * WR 2.5, TE 2.6 games over 2021-2025, printed by {@link #positionGamesMissed}
+ * out of the outcome pool. Those averages MOVE WITH THE POOL KEY (they read
+ * RB 3.1 / WR 2.9 / TE 3.0 while the pool was keyed by ADP rank), so read them
+ * off the method rather than off this line.
  */
 public class RiskDiscountedValue implements RosterValue {
 

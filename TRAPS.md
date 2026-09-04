@@ -590,8 +590,11 @@ real every time.
     matters and it agrees: the greedy policy that DRAFTS off this valuation,
     scored on real outcomes leave-one-season-out, gains 84 points a season on
     the projection-keyed pool (1851 against 1767) and is ahead in all five
-    seasons separately - and its rosters stop hoarding backs at the end and
-    start taking a tight end and a defence. Switching the key also widens the
+    seasons separately (both arms in
+    `data/policy-backtest-poolkey-2026-09-04.txt`) - and its rosters stop
+    hoarding backs at the end and start taking a tight end and a defence. Read
+    that gain with #83 beside it: the boards in both arms still tier by ADP
+    rank, so the winning arm is a pool and a board that disagree. Switching the key also widens the
     pool from 1466 player-seasons to 2896, because ranking by projection covers
     everyone projected rather than only the men on a draft board: the deep
     tiers the live board actually assigns finally have their own data instead
@@ -602,3 +605,18 @@ real every time.
     OutcomeDistributions' own report built its season list instead of calling
     `all()` - the lever was not connected to the measurement, which is #68
     again.
+
+83. **Fixing one half of a disagreement makes a new one.** #82 moved the
+    outcome pool onto projection ranks because that key predicts better, and
+    the LIVE board already tiered that way, so the live path came out
+    consistent. The HISTORICAL boards did not: `PlanBacktest.Board.tiersOf()`
+    returns the ADP source ranks #80 had just given it, so every backtest that
+    draws from the pool - `PolicyBacktest`, `PowerBacktest`, `PositionWeights` -
+    now keys its cells one way and its men the other. That is the state #80
+    itself calls worse than both wrong together, recreated one layer up by the
+    fix for #82, in the same commit that quotes the rule. The A/B behind #82 is
+    still a fair paired comparison, since both arms carry the same board, and
+    the projection pool won while carrying the mismatch; but the consistent
+    configuration has not been measured and the 84 points should not be quoted
+    as if it had. Open. A change that makes two things agree has to be checked
+    against everything else that reads either of them.
