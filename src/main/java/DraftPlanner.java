@@ -559,6 +559,27 @@ public class DraftPlanner {
                                                   boolean mockRoomSlots,
                                                   ChoiceModel model,
                                                   Map<String, Double> earliness){
+        return forCurrentSeasonAs(configuration, perspective, extraKeepers, excludeKeeperIDs,
+                phantomOwnKeepers, mockRoomSlots, Set.of(), model, earliness);
+    }
+
+    /**
+     * The same, with an explicit set of men to PHANTOM: off the board, no lineup
+     * credit, no slot burned - whoever their owner is. This is the counterfactual
+     * a keeper ladder needs (TRAPS #73): to value one man kept ALONE, keep him and
+     * phantom the owner's other declared keepers. EXCLUDING them instead would put
+     * them back on the board where their own owner is the seat best placed to
+     * redraft them; phantomOwnKeepers would phantom the man being valued too.
+     */
+    public static DraftPlanner forCurrentSeasonAs(AAAConfiguration configuration,
+                                                  String perspective,
+                                                  List<Keeper> extraKeepers,
+                                                  Set<String> excludeKeeperIDs,
+                                                  boolean phantomOwnKeepers,
+                                                  boolean mockRoomSlots,
+                                                  Set<String> phantomIDs,
+                                                  ChoiceModel model,
+                                                  Map<String, Double> earliness){
         // -Pprojections=<name> swaps MY value feed to a bridged external
         // source (see ProjectionBridge); opponents keep behaving off the
         // consensus market either way, which the information-set test showed
@@ -577,14 +598,21 @@ public class DraftPlanner {
         List<Keeper> keepers = new ArrayList<>(configuration.getTodaysKeepers());
         // Exclusions strip DECLARED keepers only; explicit extras always land,
         // so a ledger can re-evaluate a kept player as its own hypothetical.
+        // An extra REPLACES a declared entry for the same man: the caller priced
+        // him for this world (alone, or as one of a searched pair), and keeping
+        // the declared copy instead charged the declared round and let a pair
+        // partner priced onto that round share the slot (TRAPS #78).
         keepers.removeIf(keeper -> excludeKeeperIDs.contains(keeper.player.sleeperIDString));
         for(Keeper extra : extraKeepers){
-            boolean alreadyPresent = keepers.stream().anyMatch(declared ->
+            keepers.removeIf(declared ->
                     declared.player.sleeperIDString.equals(extra.player.sleeperIDString));
-            if(!alreadyPresent){
-                keepers.add(extra);
-            }
+            keepers.add(extra);
         }
+
+        // keepers inside the schedule claim their rounds first; a mock relocation
+        // (a round-13 man walked down onto a nine-round board) takes what is left,
+        // so a legal declared pair cannot collide through list order
+        keepers.sort(Comparator.comparing((Keeper keeper) -> keeper.roundCanBeKept > scheduleRounds()));
 
         JsonObject draftOrder = configuration.getDraftJson().getAsJsonObject("draft_order");
         int teams = configuration.getLeagueJson().getAsJsonObject("settings")
@@ -600,7 +628,8 @@ public class DraftPlanner {
         List<String> myKeeperIDs = new ArrayList<>();
         Map<String, Set<Integer>> roundsTaken = new HashMap<>();
         for(Keeper keeper : keepers){
-            boolean phantomed = phantomOwnKeepers && me.equals(keeper.humanWhoCanKeep);
+            boolean phantomed = phantomIDs.contains(keeper.player.sleeperIDString)
+                    || (phantomOwnKeepers && me.equals(keeper.humanWhoCanKeep));
             keptIDs.add(keeper.player.sleeperIDString);
             if(phantomed){
                 continue;   // off the board, but no lineup credit, no slot burned
@@ -629,12 +658,12 @@ public class DraftPlanner {
                     // Two keepers of one manager at one round: the league bumps one
                     // a round dearer (KeeperPricing), and the board never shows a
                     // collision. A caller pricing keepers one at a time can hand
-                    // this planner a pair that does - the second man then burns no
-                    // slot and the pair is under-priced. Say so; do not guess which
-                    // man moves.
-                    System.out.printf("   *** two keepers of %s at round %d - the second burns no slot;"
-                            + " price the set with KeeperChooser.priceHypothetical first%n",
-                            keeper.humanWhoCanKeep, round);
+                    // this planner a pair that does - the second man would burn no
+                    // slot and the pair would be under-priced by a whole live pick
+                    // (TRAPS #78). Refuse rather than guess which man moves.
+                    throw new IllegalStateException(String.format(
+                            "two keepers of %s at round %d - price the set with"
+                            + " KeeperChooser.priceHypothetical first", keeper.humanWhoCanKeep, round));
                 }
                 occupied.add(AAAConfiguration.pickNumber(round, slot.getAsInt(), teams));
                 taken.add(round);
@@ -682,6 +711,12 @@ public class DraftPlanner {
         DraftSimulator.Extras base = DraftSimulator.currentSeasonExtras(configuration);
         Map<String, Set<String>> keeperStacks = new HashMap<>();
         for(Keeper keeper : keepers){
+            // a phantomed man is not held: he must not mark his team as a stack
+            // team for the owner the counterfactual is stripping him from
+            if(phantomIDs.contains(keeper.player.sleeperIDString)
+                    || (phantomOwnKeepers && me.equals(keeper.humanWhoCanKeep))){
+                continue;
+            }
             String team = base.teamOf().get(keeper.player.sleeperIDString);
             if(keeper.player.position.equals(Position.QB) && team != null
                     && keeper.humanWhoCanKeep != null){
@@ -698,21 +733,35 @@ public class DraftPlanner {
         return new DraftPlanner(simulator, me, myKeeperIDs, points);
     }
 
-    /** Justin's locked-but-not-yet-entered keepers, from -Pkeepers=A,B. */
+    /**
+     * Justin's locked-but-not-yet-entered keepers, from -Pkeepers=A,B - priced AS
+     * A SET (KeeperChooser.priceHypothetical), so two men whose own rounds
+     * coincide arrive with the league's bump applied instead of colliding on
+     * the board (TRAPS #78).
+     */
     public static List<Keeper> keepersFromProperty(AAAConfiguration configuration){
-        List<Keeper> myKeepers = new ArrayList<>();
         String keeperNames = System.getProperty("keepers", "");
-        if(!keeperNames.isEmpty()){
-            for(String name : keeperNames.split(",")){
-                for(Keeper candidate : KeeperChooser.eligibleCandidates(configuration,
-                        configuration.getMyID())){
-                    if(candidate.player.lastName.equalsIgnoreCase(name.trim())){
-                        myKeepers.add(candidate);
-                    }
+        if(keeperNames.isEmpty()){
+            return new ArrayList<>();
+        }
+        List<String> ids = new ArrayList<>();
+        for(String name : keeperNames.split(",")){
+            for(Keeper candidate : KeeperChooser.eligibleCandidates(configuration,
+                    configuration.getMyID())){
+                if(candidate.player.lastName.equalsIgnoreCase(name.trim())){
+                    ids.add(candidate.player.sleeperIDString);
                 }
             }
         }
-        return myKeepers;
+        if(ids.isEmpty()){
+            return new ArrayList<>();
+        }
+        List<Keeper> priced = KeeperChooser.priceHypothetical(configuration, configuration.getMyID(), ids);
+        if(priced == null){
+            throw new IllegalStateException("-Pkeepers=" + keeperNames
+                    + " is not a pair the rules will price (KeeperPricing rejected it)");
+        }
+        return new ArrayList<>(priced);
     }
 
     public void print(Plan plan, double lambda, double q){

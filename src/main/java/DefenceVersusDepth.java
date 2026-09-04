@@ -48,18 +48,21 @@ public class DefenceVersusDepth {
         int seasons = 0;
         List<double[]> perSeason = new ArrayList<>();
         for(PlanBacktest.Board board : boards){
-            List<String> defences = new ArrayList<>();
-            for(String id : board.ids()){
-                if(board.positionOf().get(id) == Position.DEF){
-                    defences.add(id);           // board.ids() is ADP order
-                }
-            }
+            // banded by the SOURCE's defence order (TRAPS #80): a defence that
+            // failed the name join holds its rank instead of promoting the next
             double[] band = new double[4];
             int[] counted = new int[4];
-            for(int rank = 0; rank < Math.min(12, defences.size()); rank++){
+            for(String id : board.ids()){
+                if(board.positionOf().get(id) != Position.DEF){
+                    continue;
+                }
+                int rank = board.rankOf().getOrDefault(id, Integer.MAX_VALUE);
+                if(rank >= 12){
+                    continue;
+                }
                 double total = 0;
                 for(Map<String, Double> week : board.weekly()){
-                    total += week.getOrDefault(defences.get(rank), 0.0);
+                    total += week.getOrDefault(id, 0.0);
                 }
                 band[rank / 3] += total;
                 counted[rank / 3]++;

@@ -62,7 +62,7 @@ public class PlanBacktest {
      * backtest can be rerun at the honest rate instead of the number being
      * argued about; it is absent by default and the default path is untouched.
      *
-     *   ./gradlew run -Pmain=PlanBacktest -PwireDef=7.69
+     *   ./gradlew run -Pmain=PlanBacktest -PwireDef=7.73
      */
     static synchronized double streamedDefencePerWeek(){
         String override = System.getProperty("wireDef");
@@ -137,8 +137,45 @@ public class PlanBacktest {
         STRATEGIES.put("best available by ADP", null);
     }
 
+    /**
+     * A historical board: the men in ADP order, their positions, the weekly
+     * actuals, and each man's SOURCE positional rank - his place among every
+     * playable row of the ADP file at his position, joined or not. A synthetic
+     * board built with the four-argument constructor ranks by list position,
+     * which is the same thing when every man is present.
+     */
     public record Board(String season, List<String> ids, Map<String, Position> positionOf,
-                 List<Map<String, Double>> weekly){}
+                 List<Map<String, Double>> weekly, Map<String, Integer> rankOf){
+
+        public Board(String season, List<String> ids, Map<String, Position> positionOf,
+                     List<Map<String, Double>> weekly){
+            this(season, ids, positionOf, weekly, indexRanks(ids, positionOf));
+        }
+
+        /** Rank by list position within each position - every man present, no gaps. */
+        public static Map<String, Integer> indexRanks(List<String> ids, Map<String, Position> positionOf){
+            Map<String, Integer> rankOf = new HashMap<>();
+            Map<Position, Integer> next = new EnumMap<>(Position.class);
+            for(String id : ids){
+                rankOf.put(id, next.merge(positionOf.get(id), 1, Integer::sum) - 1);
+            }
+            return rankOf;
+        }
+
+        /** The same board, same men and same ranks, scored by a different weekly feed. */
+        public Board withWeekly(List<Map<String, Double>> replacement){
+            return new Board(season, ids, positionOf, replacement, rankOf);
+        }
+
+        /** Each man's tier on this board, from his source rank (TRAPS #80). */
+        public Map<String, Integer> tiersOf(){
+            Map<String, Integer> tierOf = new HashMap<>();
+            for(String id : ids){
+                tierOf.put(id, rankOf.getOrDefault(id, 0) / WeeklyStarterValue.TIER);
+            }
+            return tierOf;
+        }
+    }
 
     public static void main(String[] args) throws Exception {
         List<Board> boards = new ArrayList<>();
@@ -229,7 +266,7 @@ public class PlanBacktest {
         if(nameCol < 0 || posCol < 0 || adpCol < 0){
             return null;
         }
-        record Row(String id, Position position, double adp){}
+        record Row(String id, Position position, double adp){}   // id null when the name did not join
         List<Row> rows = new ArrayList<>();
         for(String line : lines.subList(1, lines.size())){
             String[] cells = line.split(",");
@@ -251,24 +288,28 @@ public class PlanBacktest {
                 }
             }
             String id = idByName.get(TightEndTiming.normalise(cells[nameCol]));
-            if(id != null){
-                rows.add(new Row(id, position, Double.parseDouble(cells[adpCol])));
-            }
+            rows.add(new Row(id, position, Double.parseDouble(cells[adpCol])));
         }
         rows.sort(Comparator.comparingDouble(Row::adp));
+        // source ranks: every playable row advances its position's counter, so
+        // a man whose name did not join still holds his place (TRAPS #80)
         List<String> ids = new ArrayList<>();
         Map<String, Position> positionOf = new HashMap<>();
+        Map<String, Integer> rankOf = new HashMap<>();
+        Map<Position, Integer> next = new EnumMap<>(Position.class);
         for(Row row : rows){
-            if(!positionOf.containsKey(row.id())){
+            int rank = next.merge(row.position(), 1, Integer::sum) - 1;
+            if(row.id() != null && !positionOf.containsKey(row.id())){
                 ids.add(row.id());
                 positionOf.put(row.id(), row.position());
+                rankOf.put(row.id(), rank);
             }
         }
         List<Map<String, Double>> weekly = new ArrayList<>();
         for(int week = 1; week <= WeeklyActuals.WEEKS; week++){
             weekly.add(LeagueActuals.weeklyPoints(season, week));
         }
-        return new Board(season, ids, positionOf, weekly);
+        return new Board(season, ids, positionOf, weekly, rankOf);
     }
 
     public static double score(Board board, String sequence){
@@ -377,10 +418,16 @@ public class PlanBacktest {
      *
      * Counted over the WHOLE board rather than over who is still on it, because
      * the curve is "what the nth best back at this position returns" and the men
-     * above him being kept does not promote him. Somebody not on the board reads
-     * one past the deepest man of his position, the same convention the pools use.
+     * above him being kept does not promote him. It is the SOURCE's order where
+     * the board carries one (TRAPS #80): a man whose name failed the join holds
+     * his place too. Somebody not on the board reads one past the deepest man of
+     * his position, the same convention the pools use.
      */
     public static int rankOn(Board board, String him){
+        Integer source = board.rankOf().get(him);
+        if(source != null){
+            return source + 1;   // the source's order, 1-based (TRAPS #80)
+        }
         Position position = board.positionOf().get(him);
         int rank = 0;
         for(String id : board.ids()){

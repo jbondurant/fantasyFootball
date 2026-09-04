@@ -1,5 +1,6 @@
 import PlayerImportAndSetup.Position;
 
+import java.util.Collections;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -125,22 +126,28 @@ public class BustBoomValue implements RosterValue {
             double mine = expected.getOrDefault(id, 0.0);
 
             Draw[] draws = new Draw[scenarios];
+            // the same stratified, noise-free draw as WeeklyStarterValue, consuming
+            // `random` in the same order, so at zero rates this IS the shipped
+            // objective (BustBoomValueTest pins that)
+            List<OutcomeDistributions.Season> order =
+                    seasons == null ? List.of() : new ArrayList<>(seasons);
+            Collections.shuffle(order, random);
+            List<Integer> strata = new ArrayList<>();
+            for(int s = 0; s < scenarios; s++){ strata.add(s); }
+            Collections.shuffle(strata, random);
             for(int s = 0; s < scenarios; s++){
-                if(seasons == null || seasons.isEmpty() || tierMean <= 0){
+                if(order.isEmpty() || tierMean <= 0){
                     draws[s] = new Draw(false, 0, 0, 0, 0,
                             coins.nextDouble(), coins.nextDouble());
                     continue;
                 }
-                OutcomeDistributions.Season drawn =
-                        seasons.get(random.nextInt(seasons.size()));
+                OutcomeDistributions.Season drawn = order.get(s % order.size());
                 double ratio = drawn.meanWhenPlaying() * drawn.games() / tierMean;
                 int games = Math.max(1, drawn.games());
                 double rate = mine * ratio / games;
-                double spread = drawn.sdWhenPlaying()
-                        / Math.max(1e-6, drawn.meanWhenPlaying()) * rate;
-                boolean up = random.nextDouble() < games / 18.0;
-                double noise = random.nextGaussian();
-                draws[s] = new Draw(up, mine / 17.0, rate, spread, noise,
+                double u = (strata.get(s) + random.nextDouble()) / scenarios;
+                boolean up = u < games / 18.0;
+                draws[s] = new Draw(up, mine / 17.0, rate, 0, 0,
                         coins.nextDouble(), coins.nextDouble());
             }
             byPlayer.put(id, draws);
@@ -287,7 +294,10 @@ public class BustBoomValue implements RosterValue {
             int rank = replacement.getOrDefault(entry.getKey(),
                     entry.getKey() == Position.DEF ? 13 : 24);
             int index = Math.min(Math.max(0, rank - 1), ids.size() - 1);
-            wire.put(entry.getKey(), projections.getOrDefault(ids.get(index), 0.0) / 17.0);
+            double held = projections.getOrDefault(ids.get(index), 0.0) / 17.0;
+            // the same streamed defence wire as WeeklyStarterValue.forCurrentBoard
+            wire.put(entry.getKey(), entry.getKey() == Position.DEF
+                    ? held * WeeklyStarterValue.DEF_STREAM_OVER_HOLD : held);
         }
         return new BustBoomValue(positionOf, tierOf, pool, wire, projections,
                 scenarios, seed);

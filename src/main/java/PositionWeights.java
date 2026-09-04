@@ -127,15 +127,10 @@ public class PositionWeights {
                         Map<String, List<OutcomeDistributions.Season>> pool,
                         Map<Position, Double> weights, int scenarios){
         Map<String, Position> positionOf = new HashMap<>(board.positionOf());
-        Map<String, Integer> tierOf = new HashMap<>();
-        Map<Position, Integer> next = new EnumMap<>(Position.class);
-        for(String id : board.ids()){
-            tierOf.put(id, (next.merge(positionOf.get(id), 1, Integer::sum) - 1)
-                    / WeeklyStarterValue.TIER);
-        }
+        Map<String, Integer> tierOf = board.tiersOf();   // source ranks (TRAPS #80)
         WeeklyStarterValue value = new WeeklyStarterValue(positionOf, tierOf, pool,
                 PolicyBacktest.wireFrom(pool),
-                WeeklyStarterValue.expectedFromRank(board.ids(), positionOf, pool),
+                WeeklyStarterValue.expectedFromRank(board, pool),
                 scenarios, 424_242L);
 
         Set<String> gone = new HashSet<>();

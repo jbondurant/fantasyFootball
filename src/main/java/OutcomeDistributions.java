@@ -34,6 +34,9 @@ public class OutcomeDistributions {
 
     static final int TIER = 12;
 
+    /** Per season, how many source rows joined and which top-36 men did not (filled by load). */
+    public static final Map<String, String> joinReport = new java.util.TreeMap<>();
+
     /** Every joined season, for anything that needs the outcome pool. */
     public static Map<String, List<Season>> all() throws Exception {
         Map<String, List<Season>> bySeason = new java.util.LinkedHashMap<>();
@@ -68,6 +71,10 @@ public class OutcomeDistributions {
             return;
         }
         System.out.printf("%d seasons joined: %s%n", bySeason.size(), bySeason.keySet());
+        System.out.println("\nTHE JOIN (ranks are the source's, 1-based; a man with no scoring id keeps his place)");
+        for(String report : joinReport.values()){
+            System.out.println("   " + report);
+        }
 
         System.out.println("\n\nAVAILABILITY AND SCORING, SEPARATED");
         System.out.printf("%-4s %-8s %6s %9s %9s %11s %11s%n", "POS", "TIER", "n",
@@ -193,6 +200,8 @@ public class OutcomeDistributions {
 
         Map<Position, Integer> nextRank = new EnumMap<>(Position.class);
         List<Season> out = new ArrayList<>();
+        List<String> unmatched = new ArrayList<>();
+        int playable = 0, joined = 0;
         for(String[] cells : rows){
             String label = cells[posCol].trim();
             Position position;
@@ -207,11 +216,22 @@ public class OutcomeDistributions {
                     continue;              // kickers; this league starts none
                 }
             }
+            // The rank is the row's place in the SOURCE's positional order,
+            // advanced before the name join: an unmatched man keeps his rank
+            // instead of pulling everyone below him up a place, so a cell holds
+            // the seasons of the tier it is applied to. PlanBacktest.board,
+            // WireRateStress and the predictability tools rank the same way
+            // (TRAPS #80).
+            int rank = nextRank.merge(position, 1, Integer::sum) - 1;
+            playable++;
             String id = idByName.get(TightEndTiming.normalise(cells[nameCol]));
             if(id == null){
+                if(rank < 3 * TIER){
+                    unmatched.add(cells[nameCol].trim() + " (" + position + (rank + 1) + ")");
+                }
                 continue;
             }
-            int rank = nextRank.merge(position, 1, Integer::sum) - 1;
+            joined++;
 
             List<Double> scored = new ArrayList<>();
             int games = 0;
@@ -230,6 +250,15 @@ public class OutcomeDistributions {
             out.add(new Season(cells[nameCol].trim(), position, rank, games, m,
                     Math.sqrt(variance), totals.getOrDefault(id, 0.0)));
         }
+        // "not in the pool" is two things: a name the id index does not carry, and
+        // a man who joined but recorded no game. The index is built from the
+        // season's scoring rows, so a player who never scored is a name miss here
+        // too - Aaron Rodgers 2023, four snaps and out, reads as unmatched.
+        joinReport.put(season, String.format(
+                "%s: %d of %d playable rows in the pool (%d joined a scoring id, %d of those recorded no game);"
+                        + " rows with no scoring id inside the top 36 of a position: %s",
+                season, out.size(), playable, joined, joined - out.size(),
+                unmatched.isEmpty() ? "none" : String.join(", ", unmatched)));
         return out;
     }
 }

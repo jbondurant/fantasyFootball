@@ -1,0 +1,19 @@
+OBJECTIVE STABILITY  2026-09-04  (480 scenarios, 3 seeds, roster of 13 projected men the rules let justinb314 keep)
+Each column is one seed of WeeklyStarterValue; MARGINAL = roster with the man minus roster without him.
+
+roster total                   1758.9   1765.0   1761.4   spread   6.0
+Bhayshul Tuten RB              +108.7   +111.4   +110.3   spread   2.7
+Zay Flowers WR                  +95.7    +97.9    +96.3   spread   2.2
+Brock Purdy QB                  +92.1    +92.2    +91.1   spread   1.1
+Rachaad White RB                +68.4    +66.2    +65.2   spread   3.2
+Courtland Sutton WR             +55.2    +57.1    +57.4   spread   2.2
+Chris Godwin WR                 +48.7    +50.6    +51.0   spread   2.3
+Quentin Johnston WR             +43.9    +45.9    +49.6   spread   5.6
+Travis Kelce TE                 +42.7    +47.5    +44.8   spread   4.8
+Mark Andrews TE                 +40.9    +41.9    +41.8   spread   1.1
+Rashid Shaheed WR               +27.5    +26.9    +28.0   spread   1.1
+Adonai Mitchell WR               +8.2     +7.9     +7.4   spread   0.9
+Houston Texans DEF               +2.0     +1.1     +0.8   spread   1.3
+Seattle Seahawks DEF             +0.4     +0.4     +0.3   spread   0.2
+
+worst seed-to-seed spread of a marginal: 5.6 points - two men closer than this are not separated by the yardstick

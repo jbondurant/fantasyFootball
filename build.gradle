@@ -178,6 +178,13 @@ tasks.register('run', JavaExec) {
      'neutralSeat',
      // OwnerLadder - 'pairPool' = how many top ledger candidates (plus kept men) the best-pair search draws from.
      'pairPool',
+     // Keepers16 - 'scenarios' drawn seasons behind the weekly objective; 'shard=i/N' takes every Nth owner
+     // (parallel JVMs); 'out' redirects the text report (default data/keepers16-<date>.txt).
+     'scenarios', 'shard', 'out', 'owners',
+     // Keepers16 - 'render=<report.txt>' writes the HTML beside an existing report without simulating.
+     'render',
+     // ObjectiveStability - 'seeds' how many seeds of the weekly objective to compare.
+     'seeds',
      // DraftExpectation - 'who=<last name>' prints which seats take that man and where.
      'who',
      // LeagueActuals.FLAG - grade outcomes under the league's own scoring

@@ -220,15 +220,16 @@ public class PositionPredictability {
                 }
             }
             String id = idByName.get(TightEndTiming.normalise(cells[nameCol]));
-            if(id != null){
-                rows.add(new Row(id, position, Double.parseDouble(cells[adpCol])));
-            }
+            rows.add(new Row(id, position, Double.parseDouble(cells[adpCol])));   // id null: did not join
         }
         rows.sort(Comparator.comparingDouble(Row::adp));
         Map<Position, Integer> nextRank = new EnumMap<>(Position.class);
         List<Seen> out = new ArrayList<>();
         for(Row row : rows){
-            int rank = nextRank.merge(row.position(), 1, Integer::sum) - 1;
+            int rank = nextRank.merge(row.position(), 1, Integer::sum) - 1;   // source rank (TRAPS #80)
+            if(row.id() == null){
+                continue;
+            }
             out.add(new Seen(row.position(), rank, actual.getOrDefault(row.id(), 0.0)));
         }
         return out;

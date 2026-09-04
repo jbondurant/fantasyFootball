@@ -8,6 +8,8 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -222,6 +224,7 @@ public class WireRateStress {
                 + "   does with one.%n%n");
         Map<String, Double> topThree = new LinkedHashMap<>();
         Map<String, Double> allTwelve = new LinkedHashMap<>();
+        Map<String, Integer> heldCount = new LinkedHashMap<>();
         for(Map.Entry<String, List<DefSeason>> entry : bySeason.entrySet()){
             List<DefSeason> taken = new ArrayList<>();
             for(DefSeason def : entry.getValue()){
@@ -230,38 +233,51 @@ public class WireRateStress {
                 }
             }
             taken.sort(Comparator.comparingInt(DefSeason::rank));
-            if(taken.size() < 12){
+            // Ranks are the SOURCE's (TRAPS #80), so a season whose top twelve
+            // contains a defence that never joined has fewer than twelve here -
+            // 2021's Washington Football Team, at rank index 3. Requiring a dense
+            // twelve dropped that whole season from these two columns while the
+            // streamed column kept it, and the mean line then subtracted a
+            // four-season average from a five-season one. Average what joined and
+            // print how many, rather than dropping the season.
+            if(taken.size() < 3){
                 continue;
             }
+            heldCount.put(entry.getKey(), taken.size());
             topThree.put(entry.getKey(), taken.subList(0, 3).stream()
                     .mapToDouble(DefSeason::total).average().orElse(0));
             allTwelve.put(entry.getKey(), taken.stream()
                     .mapToDouble(DefSeason::total).average().orElse(0));
         }
-        System.out.printf("%-10s %12s %12s %12s %12s%n", "SEASON", "DEF1-3 held",
-                "DEF1-12 held", "form L=2", "L=2 - DEF1-3");
+        System.out.printf("%-10s %12s %12s %12s %12s %8s%n", "SEASON", "DEF1-3 held",
+                "DEF1-12 held", "form L=2", "L=2 - DEF1-3", "n held");
+        // every mean below is over THESE seasons, on both sides
+        Set<String> compared = new LinkedHashSet<>(topThree.keySet());
+        compared.retainAll(form.get(2).keySet());
         for(String season : bySeason.keySet()){
-            if(!topThree.containsKey(season) || !form.get(2).containsKey(season)){
+            if(!compared.contains(season)){
                 continue;
             }
             double streamed = form.get(2).get(season) * 18;
-            System.out.printf("%-10s %12.1f %12.1f %12.1f %+12.1f%n", season,
+            System.out.printf("%-10s %12.1f %12.1f %12.1f %+12.1f %8d%n", season,
                     topThree.get(season), allTwelve.get(season), streamed,
-                    streamed - topThree.get(season));
+                    streamed - topThree.get(season), heldCount.get(season));
         }
-        double streamedMean = mean(form.get(2)) * 18;
-        System.out.printf("%-10s %12.1f %12.1f %12.1f %+12.1f%n", "mean",
-                mean(topThree), mean(allTwelve), streamedMean,
-                streamedMean - mean(topThree));
+        Map<String, Double> streamedOver = over(form.get(2), compared);
+        double streamedMean = mean(streamedOver) * 18;
+        System.out.printf("%-10s %12.1f %12.1f %12.1f %+12.1f %8s%n", "mean",
+                mean(over(topThree, compared)), mean(over(allTwelve, compared)), streamedMean,
+                streamedMean - mean(over(topThree, compared)), compared.size() + " szn");
         System.out.printf("%-10s %12.1f %12.1f %12.1f%n", "std err",
-                stdErr(topThree), stdErr(allTwelve), stdErr(form.get(2)) * 18);
+                stdErr(over(topThree, compared)), stdErr(over(allTwelve, compared)),
+                stdErr(streamedOver) * 18);
         System.out.printf("%n   a DRAFTED top-band defence is worth %+.0f a season against"
                 + " an honest%n   stream, %+.0f against a stream you never touch. The"
                 + " shipped rate says%n   %+.0f. Read the error bars before believing"
                 + " any of the three.%n",
-                mean(topThree) - streamedMean,
-                mean(topThree) - mean(preseason) * 18,
-                mean(topThree) - reimplemented * 18);
+                mean(over(topThree, compared)) - streamedMean,
+                mean(over(topThree, compared)) - mean(over(preseason, compared)) * 18,
+                mean(over(topThree, compared)) - reimplemented * 18);
 
         // What it does to the decision that rests on it.
         System.out.printf("%n%s%n   WHAT THIS DOES TO THE DEFENCE ADVICE%n%s%n",
@@ -411,6 +427,17 @@ public class WireRateStress {
         return bySeason;
     }
 
+    /** The same map restricted to `seasons` - so both sides of a difference are the same population. */
+    static Map<String, Double> over(Map<String, Double> values, Set<String> seasons){
+        Map<String, Double> out = new LinkedHashMap<>();
+        for(Map.Entry<String, Double> entry : values.entrySet()){
+            if(seasons.contains(entry.getKey())){
+                out.put(entry.getKey(), entry.getValue());
+            }
+        }
+        return out;
+    }
+
     static List<DefSeason> loadOne(File adpFile, String season) throws Exception {
         Map<String, Double> totals = new HashMap<>(LeagueActuals.seasonPoints(season));
         totals.putAll(LeagueActuals.seasonDefencePoints(season));
@@ -458,6 +485,8 @@ public class WireRateStress {
             if(!label.equals("DST") && !label.equals("DEF")){
                 continue;
             }
+            // every defence row advances the rank, joined or not (TRAPS #80)
+            int thisRank = rank++;
             String id = idByName.get(TightEndTiming.normalise(cells[nameCol]));
             if(id == null){
                 continue;
@@ -466,7 +495,7 @@ public class WireRateStress {
             for(int week = 0; week < WEEKS; week++){
                 series[week] = weekly.get(week).get(id);
             }
-            out.add(new DefSeason(season, id, cells[nameCol].trim(), rank++, series));
+            out.add(new DefSeason(season, id, cells[nameCol].trim(), thisRank, series));
         }
         return out;
     }

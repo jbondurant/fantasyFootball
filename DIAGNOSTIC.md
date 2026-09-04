@@ -372,6 +372,52 @@ fell 24 points at tommyrads' 11 - bumps Justin spotted and which were the counte
 not noise (TRAPS #73). The seat is now measured with the owner's keepers phantomed, the
 planner's own primitive for that question.
 
+`Keepers16` (2026-09-04, report-only; `data/keepers16-<date>.txt` + `.html`) is the keeper
+question asked on the SIXTEEN-round game instead of the nine-round one: the old keeper
+finder (`KeeperChooser`, the 10k ledger) priced a round-12 or -13 keeper as if he sat at
+round 8 or 9 and knew nothing of defences, injuries, or a bench. Same simulation as
+OwnerLadder (`OwnerLadder.rungTrials`, the fitted room at every seat, trial t seeded the
+same in every world), scored by one shared `WeeklyStarterValue`: seventeen weeks of the
+best legal ten - defence included - chosen on preseason expectation and scored on a drawn
+outcome, where an outcome is a whole observed player-season from the man's position:tier
+cell (its games and its scoring together, applied as a ratio to his projection), so a
+keeper's injury risk and boom-or-bust both come from the seasons men of his tier have
+actually had. Worlds per owner: SEAT (his declared keepers phantomed), ALONE for every man
+the rules let him keep at his real round (the other declared men phantomed), BEST PAIR by
+search over the top men by ALONE value plus the declared men, each pair priced as a pair
+with the same-round bump. Every +/- is the standard error of the trial-by-trial
+difference. What the first two runs got wrong, and the fixes (TRAPS #76-#80): the alone
+world phantomed the man being valued (a free pick inside every number); the declared
+copy of a keeper overrode his priced copy, so a searched pair could share a round and
+score seventeen men; the errors were unpaired; the pair pool could omit the declared
+pair; a phantomed quarterback still fed the room's stacking feature; and the yardstick
+itself carried a per-man sampling bias frozen across trials that moved one man's value by
+fifty points between seeds - the weekly gaussian noise did nothing to the mean (the
+lineup is chosen on expectation, so the score is linear in points given who is up) and
+everything to that bias, so it is gone, the season and availability draws are stratified,
+and `ObjectiveStability` measures what is left (worst seed-to-seed spread of a marginal
+7.7 points at 480 scenarios, the default, `data/objective-stability-2026-09-04.txt`; the
+week-level noise had put that at fifty). `BustBoomValue` follows the same draw so it is
+still the objective at zero rates, and the hindsight test's two-quarterback fixture now
+makes the backup's winning weeks through the season draw. The defence
+wire is the streamed level (WireRateStress: 7.73 a week over 6.98 held), so a kept defence
+is worth its edge over a manager who works the wire, not over one who never touches it.
+What it says (`data/keepers16-2026-09-04.txt` + `.html`, 200 drafts a world, 480 outcome
+scenarios): keepers are worth +11 (BHier) to +150 (itsabust) against the seat, Justin's
+Tuten + Purdy +76. Eight of the twelve kept the best pair their own roster offered. The
+four who did not: BHier +58 by swapping Daniels for Watson beside Pitts - the pair Justin
+named himself from the season-total ladder - JFMarino +21 (Odunze for McBride), JakeSK +15
+(Stevenson for Kraft), tommyrads +8 (Rice for Caleb Williams), and KevinDA's +1 is a tie.
+The paired errors are 3-4 points, so a gap under about 8 is not a finding. Known limits:
+Sleeper's defence projections are a stub (sacks, interceptions, recoveries,
+blocks - no points-allowed bands), so defence-versus-defence margins sit about a quarter
+low; the same-round bump moves the lower-ADP man a round dearer in `KeeperPricing` and the
+league's own direction is unconfirmed - the ruleset says the lower-ADP man, the one case
+on record went the other way (open question for Justin); a pooled tier is twelve wide
+over five seasons, sixty seasons a cell, ranked by the source's order (TRAPS #80, fixed
+2026-09-04: the pool, the historical boards, the defence-wire loader and the
+predictability tools all rank every playable row, joined or not).
+
 ## Fix list after the 2026 draft (ranked by value for the effort)
 
 1. **DONE 2026-09-02 - One verdict line at the top of every pick** (`VerdictLine`, printed by `Draft2026` under each table; `VerdictLineTest` pins the pick-18 SPLIT wording). Original: SEPARATED (position, margin),

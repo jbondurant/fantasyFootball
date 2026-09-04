@@ -115,20 +115,49 @@ public class OwnerLadder {
         return s == null ? "?" : s.length() <= n ? s : s.substring(0, n - 1) + "~";
     }
 
-    /** The two highest standalone deltas. */
-    static List<Candidate> bestPair(List<Candidate> candidates){
-        List<Candidate> sorted = new ArrayList<>(candidates);
-        sorted.sort(Comparator.comparingDouble(Candidate::delta).reversed());
-        return sorted.subList(0, Math.min(2, sorted.size()));
-    }
-
     /* ---------------- one rung ---------------- */
 
     /** Mean starters per manager (display name) over `trials` simulated drafts of this planner's world. */
     static Map<String, double[]> rung(DraftPlanner planner, Map<String, List<String>> keepersOf,
                                       Map<String, String> nameByUser, int trials){
-        DraftSimulator simulator = planner.simulator();
         Map<String, Double> points = planner.points();
+        return rung(planner, keepersOf, nameByUser, trials, men -> {
+            List<TeamRankings.Man> lineup = new ArrayList<>();
+            for(String id : men){ lineup.add(DraftExpectation.man(id, points.getOrDefault(id, 0.0), false, 0)); }
+            return TeamRankings.bestLineup(lineup).starters();
+        });
+    }
+
+    /**
+     * The same simulation under any roster scorer - the seam Keepers16 uses to
+     * swap the season-total lineup for the weekly starter objective. The scorer
+     * receives every sleeper id on the roster (keepers first, then the drafted
+     * men in pick order) and returns one number for the season.
+     */
+    static Map<String, double[]> rung(DraftPlanner planner, Map<String, List<String>> keepersOf,
+                                      Map<String, String> nameByUser, int trials,
+                                      java.util.function.ToDoubleFunction<List<String>> scorer){
+        Map<String, double[]> out = new TreeMap<>();
+        for(Map.Entry<String, double[]> e : rungTrials(planner, keepersOf, nameByUser, trials, scorer).entrySet()){
+            List<Double> values = new ArrayList<>();
+            for(double v : e.getValue()){ values.add(v); }
+            out.put(e.getKey(), DraftExpectation.meanAndError(values));
+        }
+        return out;
+    }
+
+    /**
+     * The per-trial roster values behind rung(): trial t of every world is
+     * seeded the same way, so two worlds' vectors are PAIRED and a difference
+     * between them is measured trial by trial (its error is the spread of the
+     * differences, not the hypotenuse of two unpaired errors). Every scored
+     * roster must hold exactly one man per round of the schedule: a keeper
+     * counted twice, or a pair sharing a round, shows up here as a wrong size.
+     */
+    static Map<String, double[]> rungTrials(DraftPlanner planner, Map<String, List<String>> keepersOf,
+                                            Map<String, String> nameByUser, int trials,
+                                            java.util.function.ToDoubleFunction<List<String>> scorer){
+        DraftSimulator simulator = planner.simulator();
         IntFunction<String> managerAt = pick -> {
             DraftSimulator.Slot slot = simulator.slotAt(pick);
             return slot == null ? null : nameByUser.getOrDefault(slot.manager(), slot.manager());
@@ -141,19 +170,20 @@ public class OwnerLadder {
             Set<String> managers = new HashSet<>(rosters.keySet());
             managers.addAll(keepersOf.keySet());
             for(String manager : managers){
-                List<TeamRankings.Man> men = new ArrayList<>();
-                for(String id : keepersOf.getOrDefault(manager, List.of())){
-                    men.add(DraftExpectation.man(id, points.getOrDefault(id, 0.0), true, 0));
+                List<String> men = new ArrayList<>(keepersOf.getOrDefault(manager, List.of()));
+                men.addAll(rosters.getOrDefault(manager, List.of()));
+                if(new HashSet<>(men).size() != DraftPlanner.scheduleRounds()){
+                    throw new IllegalStateException(String.format(
+                            "%s holds %d distinct men in trial %d of a %d-round world (keepers %s)",
+                            manager, new HashSet<>(men).size(), trial, DraftPlanner.scheduleRounds(),
+                            keepersOf.getOrDefault(manager, List.of())));
                 }
-                for(String id : rosters.getOrDefault(manager, List.of())){
-                    men.add(DraftExpectation.man(id, points.getOrDefault(id, 0.0), false, state.takenAt.get(id)));
-                }
-                totals.computeIfAbsent(manager, k -> new ArrayList<>()).add(TeamRankings.bestLineup(men).starters());
+                totals.computeIfAbsent(manager, k -> new ArrayList<>()).add(scorer.applyAsDouble(men));
             }
         }
         Map<String, double[]> out = new TreeMap<>();
         for(Map.Entry<String, List<Double>> e : totals.entrySet()){
-            out.put(e.getKey(), DraftExpectation.meanAndError(e.getValue()));
+            out.put(e.getKey(), e.getValue().stream().mapToDouble(Double::doubleValue).toArray());
         }
         return out;
     }
@@ -211,6 +241,8 @@ public class OwnerLadder {
         // With the owner's habit in, the column measures seat AND owner; with it
         // out, the seat. Tight-end and running-back habits stay as learned.
         boolean neutralSeat = Boolean.getBoolean("neutralSeat");
+        // every seat is an owner, keepers declared or not
+        for(String name : nameByUser.values()){ declaredOf.putIfAbsent(name, new ArrayList<>()); }
         Map<String, double[]> slotOnly = new TreeMap<>();
         for(String manager : declaredOf.keySet()){
             String user = userByName.getOrDefault(manager, manager);
@@ -270,8 +302,11 @@ public class OwnerLadder {
                     value = withKeepers.get(manager);   // the declared pair: rung 2 already measured it
                 }
                 else {
+                    // keep the pair; PHANTOM the owner's other declared men (not back on the board - TRAPS #73)
+                    Set<String> phantom = new HashSet<>(declaredIDs);
+                    phantom.removeAll(ids);
                     DraftPlanner counterfactual = DraftPlanner.forCurrentSeasonAs(configuration, configuration.getMyID(),
-                            priced, declaredIDs, model, earliness);
+                            priced, Set.of(), false, false, phantom, model, earliness);
                     Map<String, List<String>> keepersOf = new TreeMap<>(declaredOf);
                     keepersOf.put(manager, ids);
                     value = rung(counterfactual, keepersOf, nameByUser, trials).get(manager);
@@ -318,12 +353,12 @@ public class OwnerLadder {
                     if(p != null){ match = new Keeper(user, p, c.round()); }
                 }
                 if(match == null){ continue; }
-                // keep this one man; the owner's OTHER declared keepers stay phantomed, not
+                // keep this one man; the owner's OTHER declared keepers are PHANTOMED, not
                 // returned to the board, so the delta is against the same seat as rung 1
                 Set<String> others = new HashSet<>(declaredOf.get(manager));
                 others.remove(match.player.sleeperIDString);
-                DraftPlanner alone = DraftPlanner.forCurrentSeasonAs(configuration, user,
-                        List.of(match), others, true, model, earliness);
+                DraftPlanner alone = DraftPlanner.forCurrentSeasonAs(configuration, configuration.getMyID(),
+                        List.of(match), Set.of(), false, false, others, model, earliness);
                 Map<String, List<String>> keepersOf = new TreeMap<>(declaredOf);
                 keepersOf.put(manager, List.of(match.player.sleeperIDString));
                 double[] v = rung(alone, keepersOf, nameByUser, trials).get(manager);

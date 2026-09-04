@@ -4995,7 +4995,11 @@ changes.** What changes is that streaming is no longer free upside, and the
 -12.9 must not be quoted again.
 
 Full output: `data/wire-rate-stress-2026-08-31.txt`,
-`data/bust-boom-sweep-2026-08-31.txt`.
+`data/bust-boom-sweep-2026-08-31.txt`. Regenerated 2026-09-04 as
+`data/wire-rate-stress-2026-09-04.txt` once every loader ranked defences by the
+source's order (TRAPS #80): stream on form 7.73 a week (was 7.69), hold the best
+undrafted 6.98 (was 6.44 - the 2021 Washington Football Team had failed the name
+join at rank 3), shipped hindsight quartile 8.75 unchanged.
 
 ## The bust/boom channel, measured three ways (2026-08-31)
 

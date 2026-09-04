@@ -33,19 +33,6 @@ public class OwnerLadderTest {
     }
 
     @Test
-    public void theBestPairIsTheTwoHighestDeltas(){
-        List<OwnerLadder.Candidate> c = List.of(
-                new OwnerLadder.Candidate("Watson", "WR", 10, 28.5, false),
-                new OwnerLadder.Candidate("Stafford", "QB", 10, 9.1, false),
-                new OwnerLadder.Candidate("Pitts", "TE", 13, 2.1, true),
-                new OwnerLadder.Candidate("Daniels", "QB", 7, -5.2, true));
-        List<OwnerLadder.Candidate> best = OwnerLadder.bestPair(c);
-        assertEquals("Watson", best.get(0).name());
-        assertEquals("Stafford", best.get(1).name());
-        assertFalse(best.stream().allMatch(OwnerLadder.Candidate::kept), "BHier did not keep his best pair");
-    }
-
-    @Test
     public void theValuedListIsTheTopThreePlusAnyKeptManOutsideThem(){
         List<OwnerLadder.Candidate> c = List.of(
                 new OwnerLadder.Candidate("Watson", "WR", 10, 28.5, false),

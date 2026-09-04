@@ -457,8 +457,10 @@ real every time.
 74. **A pair priced one man at a time.** The ladder's "best pair" took the
     ledger's two highest standalone deltas and handed them to the planner as
     two keepers - Watson r10 and Stafford r10 for BHier. The league does not
-    allow two keepers at one round: the later-ADP man goes a round dearer
-    (KeeperPricing, applied by KeeperChooser.priceHypothetical). Priced
+    allow two keepers at one round: the ruleset moves the LOWER-ADP man - the
+    more valuable of the two - a round dearer (KeeperPricing, applied by
+    KeeperChooser.priceHypothetical; the one case on record, 2025 Jeudy and
+    Daniels, went the other way and is carried as a known exception). Priced
     separately the pair shared one slot, the second man burned nothing, and
     the gain read 30.7 instead of 27.5. Justin remembered the rule from the
     table alone. Pairs are priced as pairs, and the planner now says so out
@@ -473,3 +475,100 @@ real every time.
     top ledger candidates and his kept men, each priced as a pair, and takes
     the best. A pair is a joint object; rank pairs, not men.
 
+76. **Phantom the others, not the man being valued.** The first sixteen-round
+    keeper ladder valued each man "alone" by keeping him and asking the planner
+    to phantom the owner's keepers - and the flag phantoms ALL of that owner's
+    keepers, the candidate included. His credit still arrived through the
+    scored roster, so the number was not zero; it was the man plus a free
+    round-12 pick, because a phantomed man burns no slot. Tuten read +75 with
+    a spare pick inside it. The planner now takes an explicit set of men to
+    phantom (`forCurrentSeasonAs(..., phantomIDs, ...)`), the candidate is kept
+    at his priced round, and the season-total ladder's alone and pair worlds
+    use the same primitive - they had been EXCLUDING the other declared men,
+    which puts them back on a board where their own owner is the seat best
+    placed to redraft them (#73 again, one rung down).
+
+77. **A silent pipeline is not a hang.** A one-owner probe printed nothing for
+    ten minutes and was killed as too slow; the objective was then profiled at
+    0.2 ms a roster and the search for the missing nine minutes began. There
+    were none: stdout went through `grep -v | head`, and grep block-buffers
+    when its output is a pipe, so every line sat in a buffer until the kill
+    took them with it. Written straight to a file the same run finished in 57
+    seconds. Before profiling a program that prints nothing, check that it
+    could have printed anything.
+
+
+
+78. **The declared copy of a keeper beat the priced copy.** A ladder prices a
+    man for the world it is building - alone at his own round, or as one of a
+    searched pair with the same-round bump applied - and hands him to the
+    planner as an extra keeper. The planner skipped any extra whose man was
+    already declared, so a declared man kept his DECLARED round in every
+    counterfactual: Renteez's Javonte Williams was charged the bumped round 5
+    while the report printed round 6, and when a pair partner had been priced
+    onto the declared round the two shared one slot, the second burned nothing,
+    and the owner drafted fifteen live men plus two keepers - seventeen against
+    sixteen everywhere else. A collision now throws instead of printing; extras
+    replace declared entries; and every scored roster is counted.
+
+79. **A fixed random sample is a bias, not noise.** Each man's outcome scenarios
+    were drawn once at construction from his position:tier cell, independently
+    per man, and reused in every trial. The trial-to-trial error saw none of
+    that: the man being valued sits in the ALONE arm only, so the sampling
+    error of his own sixty draws was a constant offset the +/- could not
+    contain, unchanged on rerun because the seed was fixed. Draws are now a
+    shuffled copy of the cell walked in order, so the sample mean is the cell
+    mean. Two more in the same lines: the weekly spread divided by
+    `max(1e-6, meanWhenPlaying)`, which is a hundred-thousand-point week for a
+    season that scored below zero (the algebra needs no division: sd x
+    projection / tier season); and the week was floored at zero, which lifts
+    the high-variance positions above their own mean - defences most - while
+    the constant wire they compete against gets no lift.
+
+80. **A rank counter that skipped the unmatched.** Pool tiers came from a
+    counter advanced only after a historical name joined to a Sleeper id, so
+    every unmatched man above a player pulled him up a place and a cell was
+    computed over better seasons than the tier it is applied to. Fixing the
+    pool alone was tried and reverted within the hour: PlanBacktest, the
+    predictability tools and WireRateStress built their boards from the
+    matched men too, and a pool ranked one way against boards ranked the other
+    is worse than both ranked wrong together. Fixed properly the same day by
+    ranking every playable source row everywhere - the pool (which now prints
+    who failed the join), the historical board (which carries each man's
+    source rank; `PlanBacktest.Board.rankOf`, `tiersOf`, and
+    `expectedFromRank(board, pool)` read it), the defence-wire loader and the
+    two predictability tools. Who had been dropping out inside the first three
+    tiers: Aaron Rodgers 2023 (QB11), the Washington Football Team 2021 (DEF3),
+    J.J. McCarthy 2024 (QB21), Gabriel Davis 2022 (WR25), Joe Mixon 2025 (RB31).
+    Measured effect: skill cells moved by at most 0.3 points a game (RB 25-36
+    n 60 to 58, TE 13-24 60 to 58, TE 25-36 55 to 49, QB 60 to 59); the defence
+    wire moved more - holding the best undrafted defence 6.44 to 6.98 a week,
+    streaming on form 7.69 to 7.73, so the streaming-over-holding ratio fell
+    from 1.19 to 1.11 and the hindsight premium from 1.06 to 1.02 a week
+    (`data/outcome-distributions-2026-09-04.txt`,
+    `data/wire-rate-stress-2026-09-04.txt`). PlanBacktest's strategy table did
+    not move at all (`data/plan-backtest-2026-09-04.txt` against 2026-08-29):
+    it scores fixed sequences on real outcomes and takes only the streamed
+    defence's price from the pool, 8.7 to 8.8 a week. Defence bands moved:
+    DEF10-12 129.5 to 127.2 a season, so `LateRoundValue.DEF_WORST_BAND` was a
+    week-old number and is now read back out of the report by
+    `BandRegressionTest`, as the wire rate already was. The change also exposed
+    a second population fault one layer up (below).
+
+    Two things this did NOT reach, said plainly rather than left implied. The
+    LIVE board tiers men by Sleeper projection rank over everyone projected,
+    not by ADP source rank, so the current board and the historical pool still
+    key their cells differently; and the era/nflverse ingest (`EraBoards`,
+    `DetectionLag`, `LateHalf`, and `BoardValue` reading them) still ranks
+    after its own join.
+
+81. **The same seasons on both sides.** WireRateStress's drafted-against-
+    streamed table required a season's top twelve defences to be twelve joined
+    men. Under source ranks 2021 has eleven - the Washington Football Team
+    never joined, at rank 4 - so that season silently left the two held columns
+    while the streamed column kept it, and the mean line subtracted a
+    four-season average from a five-season one under a header reading "same
+    seasons". The table now averages what joined, prints how many, and takes
+    every mean over the seasons present on both sides. A guard that drops a row
+    from one column of a comparison has to drop it from the other.
+\n
