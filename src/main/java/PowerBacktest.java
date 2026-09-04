@@ -156,8 +156,7 @@ public class PowerBacktest {
         for(int week = 1; week <= WeeklyActuals.WEEKS; week++){
             weekly.add(grader.pointsBySleeperID(board.season(), week));
         }
-        return new PlanBacktest.Board(board.season(), board.ids(), board.positionOf(),
-                weekly);
+        return board.withWeekly(weekly);   // same men, same source ranks
     }
 
     /** One evaluation: a season, a seat, and an opponent world. */
@@ -620,14 +619,8 @@ public class PowerBacktest {
                 // it is being scored on.
                 Map<String, List<OutcomeDistributions.Season>> pool =
                         PolicyBacktest.poolWithout(bySeason, season);
-                Map<String, Integer> tierOf = new HashMap<>();
-                Map<Position, Integer> next = new EnumMap<>(Position.class);
-                for(String id : board.ids()){
-                    tierOf.put(id, (next.merge(board.positionOf().get(id), 1, Integer::sum) - 1)
-                            / WeeklyStarterValue.TIER);
-                }
-                Map<String, Double> expected = WeeklyStarterValue.expectedFromRank(
-                        board.ids(), board.positionOf(), pool);
+                Map<String, Integer> tierOf = board.tiersOf();   // source ranks (TRAPS #80)
+                Map<String, Double> expected = WeeklyStarterValue.expectedFromRank(board, pool);
                 value = new WeeklyStarterValue(board.positionOf(), tierOf, pool,
                         PolicyBacktest.wireFrom(pool), expected, SCENARIOS, 424_242L);
             }

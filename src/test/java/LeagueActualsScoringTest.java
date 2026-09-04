@@ -148,10 +148,11 @@ class LeagueActualsScoringTest {
     }
 
     @Test
-    void theCorrectedPathIsOffUnlessAskedFor(){
-        // The operational constraint, asserted rather than trusted: other work
-        // is running against the old measure and must not be moved under it.
-        Assertions.assertFalse(LeagueActuals.enabled(),
-                "leagueScoredActuals must default to the existing pts_half_ppr grading");
+    void theCorrectedPathIsOnUnlessTurnedOff(){
+        // Flipped 2026-09-04 (Justin's call, ScoringImpactReport measured first).
+        // The constraint is now the other way: everything grades in the league's
+        // own points, and the old feed measure is what has to be asked for.
+        Assertions.assertTrue(LeagueActuals.enabled(),
+                "leagueScoredActuals must default to the league's own scoring");
     }
 }

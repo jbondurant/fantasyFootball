@@ -1,0 +1,40 @@
+pool keyed by projection
+5 seasons joined: [2021, 2022, 2023, 2024, 2025]
+
+THE JOIN (ranks are the source's, 1-based; a man with no scoring id keeps his place)
+   2021: 621 of 672 projected men played a game; ranked by projection, joined by id, no name join
+   2022: 621 of 661 projected men played a game; ranked by projection, joined by id, no name join
+   2023: 560 of 633 projected men played a game; ranked by projection, joined by id, no name join
+   2024: 556 of 632 projected men played a game; ranked by projection, joined by id, no name join
+   2025: 538 of 580 projected men played a game; ranked by projection, joined by id, no name join
+
+
+AVAILABILITY AND SCORING, SEPARATED
+POS  TIER          n     games  sd games    pts/game sd pts/game
+RB   1-12         60      15.0       2.9        15.1         8.1
+RB   13-24        60      14.1       3.3        11.5         6.4
+RB   25-36        59      13.8       3.5         9.6         6.1
+WR   1-12         60      14.5       3.5        13.6         7.7
+WR   13-24        60      14.6       2.9        12.0         6.9
+WR   25-36        60      14.4       3.7         9.8         6.4
+TE   1-12         60      14.1       2.9         9.3         6.1
+TE   13-24        60      14.6       2.9         6.5         5.0
+TE   25-36        60      14.6       3.2         4.7         4.1
+QB   1-12         60      14.7       3.3        22.7         9.7
+QB   13-24        60      14.1       3.7        18.0         8.8
+QB   25-36        60      11.1       3.8        13.9         8.2
+
+
+THE ASSUMPTION: are availability and scoring independent?
+correlation between games played and points per game, within a position
+
+POS           n  correlation   verdict
+RB          743        0.367   NOT INDEPENDENT - the available also score more
+WR         1050        0.375   NOT INDEPENDENT - the available also score more
+TE          573        0.254   NOT INDEPENDENT - the available also score more
+QB          370        0.712   NOT INDEPENDENT - the available also score more
+
+A positive correlation means missing games and scoring badly travel together,
+so drawing them independently - as StarterContribution does - understates how
+often a roster is short AND weak in the same week, which is exactly when a
+bench man is worth something.

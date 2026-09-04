@@ -1,0 +1,213 @@
+KEEPERS ON THE SIXTEEN-ROUND GAME  2026-09-04  (200 simulated drafts per world, 480 outcome scenarios, weekly starter objective with a defence and a bench)
+Values are seventeen-week starter points. SEAT = the owner's keepers phantomed (off the board, no credit, no slot burned), others as declared.
+ALONE = that one man kept by himself against the seat (his real round); the top 5 by ALONE plus the declared men form the pair pool. BEST PAIR = the best legal pair in that pool, each priced as a pair.
+Every +/- is the standard error of the trial-by-trial difference (the worlds share seeds; the shared draws diverge after the first round a keeper changes, so pairing helps late keepers most). ALONE values do not add: two men kept together free two picks that compete for the same bench.
+BEST PAIR is the largest of the searched pairs' means, so its edge over the kept pair carries selection bias on top of its +/-; two pairs inside one +/- of each other are a tie.
+The defence wire is the streamed level (WireRateStress: 8.03 a week streamed over 7.21 held). Two keepers priced at one round: the ruleset moves the LOWER-ADP man a round dearer (KeeperPricing); the one case on record, 2025 Jeudy over Daniels, went the other way.
+BHier        seat  1980.2   kept Daniels r7 · Pitts r13          1991.5 ( +11.2 +/-  3.1)   best pair Watson r10 · Pitts r13          2042.0 ( +50.6 +/-  3.3)   15 pairs searched, 307s
+      Christian Watson         WR  r10     +42.0  +/-  3.3
+      Kyle Pitts               TE  r13     +23.5  +/-  2.8  kept
+      J.K. Dobbins             RB  r9      +14.8  +/-  3.5
+      Wan'Dale Robinson        WR  r12     +13.0  +/-  2.8
+      Kenny Gainwell           RB  r10     +11.0  +/-  3.0
+      Josh Downs               WR  r8       +4.0  +/-  2.9
+      Matthew Stafford         QB  r10      +3.9  +/-  3.3
+      Buffalo Bills            DEF r15      +2.9  +/-  1.9
+      Hunter Henry             TE  r10      +2.5  +/-  2.8
+      Dalton Schultz           TE  r10      -4.1  +/-  2.9
+      Devaughn Vele            WR  r10      -7.8  +/-  2.9
+      Stefon Diggs             WR  r6      -14.1  +/-  3.2
+      Jayden Daniels           QB  r7      -15.8  +/-  3.3  kept
+      Kimani Vidal             RB  r10     -17.9  +/-  2.9
+      Ty Johnson               RB  r10     -18.1  +/-  2.9
+      Jerry Jeudy              WR  r6      -28.4  +/-  3.3
+      Aaron Jones              RB  r4      -37.6  +/-  3.7
+      James Conner             RB  r3      -85.1  +/-  4.2
+
+Hamrliks     seat  1948.5   kept Maye r13 · Brown r14            2080.1 (+131.6 +/-  3.3)   best pair Brown r14 · Maye r13            2080.1 (  +0.0 +/-  0.0)   10 pairs searched, 207s
+      not valued (no projection): Joe Mixon r4
+      Chase Brown              RB  r14     +96.0  +/-  2.9  kept
+      Drake Maye               QB  r13     +39.1  +/-  2.8  kept
+      Jaylen Warren            RB  r5       +0.3  +/-  3.7
+      Tre Tucker               WR  r10      -5.8  +/-  2.8
+      Oronde Gadsden           TE  r10      -5.9  +/-  3.2
+      Tampa Bay Buccaneers     DEF r10      -9.5  +/-  2.4
+      Chimere Dike             WR  r10     -20.8  +/-  3.0
+      Darnell Mooney           WR  r10     -20.8  +/-  3.0
+      John Metchie             WR  r10     -20.8  +/-  3.0
+      Dameon Pierce            RB  r10     -24.2  +/-  3.4
+      Tyrod Taylor             QB  r10     -25.3  +/-  3.6
+      Brandon Aiyuk            WR  r7      -29.6  +/-  3.1
+      Bryce Young              QB  r10     -33.0  +/-  3.7
+      Cooper Kupp              WR  r6      -38.2  +/-  3.6
+
+JFMarino     seat  1936.2   kept McBride r3 · Olave r5           1994.0 ( +57.8 +/-  4.0)   best pair Olave r5 · Odunze r6            2006.1 ( +12.1 +/-  3.6)   10 pairs searched, 234s
+      Chris Olave              WR  r5      +48.4  +/-  3.3  kept
+      Rome Odunze              WR  r6      +36.2  +/-  3.3
+      Trey McBride             TE  r3      +15.0  +/-  4.4  kept
+      David Montgomery         RB  r3      +12.5  +/-  4.3
+      Justin Herbert           QB  r13     +10.2  +/-  3.4
+      Khalil Shakir            WR  r8       +5.6  +/-  3.1
+      Philadelphia Eagles      DEF r14      +0.9  +/-  2.5
+      Xavier Legette           WR  r12      -5.8  +/-  2.8
+      Los Angeles Chargers     DEF r10      -8.1  +/-  2.4
+      Woody Marks              RB  r15      -9.6  +/-  3.4
+      Noah Fant                TE  r10     -17.7  +/-  3.1
+      Braelon Allen            RB  r10     -19.9  +/-  3.3
+      Baker Mayfield           QB  r7      -20.3  +/-  3.7
+      Jeremy McNichols         RB  r10     -20.7  +/-  3.3
+      Brian Robinson           RB  r8      -28.7  +/-  3.6
+
+JakeSK       seat  1980.2   kept Kraft r11 · Nacua r13           2124.7 (+144.5 +/-  2.9)   best pair Nacua r13 · Stevenson r10       2138.9 ( +14.3 +/-  3.0)   10 pairs searched, 243s
+      not valued (no projection): Jayden Higgins r9
+      Puka Nacua               WR  r13    +133.1  +/-  2.2  kept
+      Rhamondre Stevenson      RB  r10     +32.1  +/-  3.0
+      Tucker Kraft             TE  r11     +17.6  +/-  2.5  kept
+      Jordan Mason             RB  r6       +5.9  +/-  3.0
+      Chuba Hubbard            RB  r7       +2.4  +/-  2.9
+      Pittsburgh Steelers      DEF r14      -2.9  +/-  1.9
+      Troy Franklin            WR  r16      -4.7  +/-  2.2
+      Ryan Flournoy            WR  r10      -8.6  +/-  2.7
+      Patrick Mahomes          QB  r7       -9.0  +/-  2.7
+      AJ Barner                TE  r10     -12.7  +/-  2.6
+      Kareem Hunt              RB  r13     -15.7  +/-  2.9
+      Jameson Williams         WR  r3      -20.0  +/-  3.6
+      Theo Johnson             TE  r10     -22.2  +/-  2.7
+      Deebo Samuel             WR  r4      -28.6  +/-  3.5
+      Travis Hunter            WR  r5      -53.3  +/-  3.6
+
+KevinDA      seat  1961.5   kept Loveland r10 · Achane r5        2081.4 (+119.9 +/-  3.4)   best pair Achane r5 · Loveland r10        2081.4 (  +0.0 +/-  0.0)   10 pairs searched, 247s
+      De'Von Achane            RB  r5      +71.6  +/-  3.5  kept
+      Colston Loveland         TE  r10     +50.7  +/-  3.1  kept
+      Luther Burden            WR  r11     +43.5  +/-  3.4
+      George Pickens           WR  r4      +35.0  +/-  4.0
+      Dak Prescott             QB  r12     +27.6  +/-  3.2
+      Jayden Reed              WR  r7      +24.4  +/-  3.4
+      Emeka Egbuka             WR  r5      +24.0  +/-  3.8
+      Alec Pierce              WR  r10     +23.6  +/-  3.1
+      Harold Fannin            TE  r10     +21.6  +/-  3.1
+      Blake Corum              RB  r10      +7.4  +/-  2.9
+      Garrett Wilson           WR  r3       -5.6  +/-  3.8
+      Chicago Bears            DEF r10      -7.4  +/-  2.4
+      Jaylen Wright            RB  r13      -9.3  +/-  3.0
+      Darren Waller            TE  r10     -14.9  +/-  3.1
+      Darius Slayton           WR  r10     -15.7  +/-  3.1
+
+Renteez      seat  1957.8   kept McConkey r6 · Williams r5       2046.4 ( +88.6 +/-  3.8)   best pair Williams r5 · McConkey r6       2046.4 (  +0.0 +/-  0.0)   10 pairs searched, 238s
+      not valued (no projection): Trey Benson r11, Adam Thielen r10
+      Javonte Williams         RB  r6      +52.5  +/-  3.7  kept
+      Ladd McConkey            WR  r6      +41.7  +/-  3.8  kept
+      D'Andre Swift            RB  r4      +26.5  +/-  3.7
+      Jaylen Waddle            WR  r5      +15.4  +/-  4.0
+      Tyrone Tracy             RB  r15      +3.4  +/-  2.9
+      Kansas City Chiefs       DEF r10      -7.5  +/-  2.2
+      Jacksonville Jaguars     DEF r10      -9.7  +/-  2.1
+      Tyler Allgeier           RB  r13     -10.4  +/-  3.1
+      Marquise Brown           WR  r11     -14.7  +/-  2.9
+      Cade Otton               TE  r10     -15.3  +/-  2.9
+      Ben Sinnott              TE  r10     -19.6  +/-  3.0
+      Colby Parkinson          TE  r10     -19.6  +/-  3.0
+      DK Metcalf               WR  r3      -26.3  +/-  4.4
+
+d0ddi        seat  1952.4   kept LaPorta r11 · Williams r8       2053.2 (+100.8 +/-  3.3)   best pair Williams r8 · LaPorta r11       2053.2 (  +0.0 +/-  0.0)   10 pairs searched, 274s
+      Kyren Williams           RB  r8      +61.7  +/-  3.2  kept
+      Sam LaPorta              TE  r11     +39.1  +/-  2.7  kept
+      DeVonta Smith            WR  r4      +20.9  +/-  3.9
+      Jordan Love              QB  r15     +16.1  +/-  3.5
+      Michael Wilson           WR  r10     +15.2  +/-  3.3
+      Chris Rodriguez          RB  r10      +9.1  +/-  3.0
+      Jake Ferguson            TE  r13      +7.9  +/-  2.9
+      Jacory Croskey-Merritt   RB  r10      +4.4  +/-  3.2
+      Isaiah Likely            TE  r10      +0.1  +/-  3.0
+      Jakobi Meyers            WR  r6       -4.8  +/-  3.4
+      Detroit Lions            DEF r10      -8.9  +/-  2.3
+      Emanuel Wilson           RB  r10     -26.7  +/-  3.1
+      Devin Neal               RB  r10     -26.7  +/-  3.1
+      Jauan Jennings           WR  r7      -28.0  +/-  3.2
+      Zach Charbonnet          RB  r8      -33.6  +/-  3.3
+      Jalen Hurts              QB  r3      -52.1  +/-  4.4
+
+itsabust     seat  1947.5   kept Irving r13 · Smith-Njigba r5    2091.2 (+143.7 +/-  3.7)   best pair Smith-Njigba r5 · Irving r13    2091.2 (  +0.0 +/-  0.0)   10 pairs searched, 244s
+      Jaxon Smith-Njigba       WR  r5      +88.4  +/-  3.5  kept
+      Bucky Irving             RB  r13     +52.8  +/-  3.0  kept
+      Quinshon Judkins         RB  r7      +33.9  +/-  3.7
+      Trevor Lawrence          QB  r15     +18.2  +/-  3.5
+      Tetairoa McMillan        WR  r4      +11.8  +/-  3.8
+      Jared Goff               QB  r9      +11.2  +/-  3.0
+      Tyjae Spears             RB  r12      -7.5  +/-  3.3
+      Davante Adams            WR  r3       -8.3  +/-  3.8
+      Elic Ayomanor            WR  r12     -10.9  +/-  3.0
+      Juwan Johnson            TE  r10     -15.8  +/-  3.0
+      New England Patriots     DEF r10     -17.8  +/-  2.6
+      Mack Hollins             WR  r10     -22.0  +/-  3.2
+      Kendrick Bourne          WR  r10     -22.0  +/-  3.2
+      George Kittle            TE  r4      -22.1  +/-  3.6
+      Raheim Sanders           RB  r10     -28.8  +/-  3.3
+
+jerem9604    seat  1943.3   kept Bowers r7 · Taylor r4           2084.2 (+140.9 +/-  4.0)   best pair Taylor r4 · Bowers r7           2084.2 (  +0.0 +/-  0.0)   10 pairs searched, 271s
+      Jonathan Taylor          RB  r4      +80.0  +/-  4.2  kept
+      Brock Bowers             TE  r7      +65.4  +/-  3.4  kept
+      Cam Skattebo             RB  r9      +44.8  +/-  3.8
+      Parker Washington        WR  r10     +43.5  +/-  3.7
+      Travis Etienne           RB  r6      +40.6  +/-  3.7
+      Kyle Monangai            RB  r10     +17.4  +/-  3.4
+      Dalton Kincaid           TE  r11     +15.6  +/-  3.3
+      Jaxson Dart              QB  r10      +6.2  +/-  3.2
+      Michael Pittman          WR  r7       +4.3  +/-  3.4
+      Denver Broncos           DEF r14      -0.6  +/-  2.6
+      Dylan Sampson            RB  r13      -8.5  +/-  3.0
+      Kyle Williams            WR  r11     -10.8  +/-  2.8
+      Taysom Hill              TE  r10     -19.2  +/-  3.4
+      Devin Singletary         RB  r10     -22.5  +/-  3.2
+      DJ Moore                 WR  r3      -23.3  +/-  3.9
+      Joe Burrow               QB  r4      -32.5  +/-  4.1
+
+justinb314   seat  1943.4   kept Tuten r12 · Purdy r13           2010.0 ( +66.6 +/-  3.6)   best pair Tuten r12 · Purdy r13           2010.0 (  +0.0 +/-  0.0)   10 pairs searched, 189s
+      not valued (no projection): Ricky Pearsall r13
+      Bhayshul Tuten           RB  r12     +50.1  +/-  2.5  kept
+      Brock Purdy              QB  r13     +27.2  +/-  3.3  kept
+      Zay Flowers              WR  r4      +14.2  +/-  3.8
+      Quentin Johnston         WR  r10     +13.1  +/-  2.9
+      Seattle Seahawks         DEF r16      +7.0  +/-  2.2
+      Houston Texans           DEF r15      +5.7  +/-  2.4
+      Courtland Sutton         WR  r6       +4.7  +/-  3.1
+      Chris Godwin             WR  r8       +3.7  +/-  3.0
+      Mark Andrews             TE  r9       +2.3  +/-  3.0
+      Rachaad White            RB  r10      +1.6  +/-  2.8
+      Rashid Shaheed           WR  r9       -2.9  +/-  2.8
+      Travis Kelce             TE  r6       -6.1  +/-  3.4
+      Adonai Mitchell          WR  r10     -15.5  +/-  3.1
+
+patekxwater  seat  1948.2   kept Dowdle r13 · Collins r8         2064.9 (+116.6 +/-  3.4)   best pair Collins r8 · Dowdle r13         2064.9 (  +0.0 +/-  0.0)   10 pairs searched, 245s
+      Nico Collins             WR  r8      +85.5  +/-  3.3  kept
+      Rico Dowdle              RB  r13     +33.6  +/-  3.1  kept
+      Jalen Coker              WR  r10     +16.0  +/-  2.9
+      Brenton Strange          TE  r10      +4.3  +/-  2.9
+      Bo Nix                   QB  r8       -0.7  +/-  3.6
+      Keenan Allen             WR  r11      -5.0  +/-  2.9
+      Miami Dolphins           DEF r10     -11.1  +/-  2.4
+      Tez Johnson              WR  r10     -17.3  +/-  2.9
+      Zach Ertz                TE  r10     -19.0  +/-  3.0
+      TreVeyon Henderson       RB  r3      -19.3  +/-  4.1
+      Jacoby Brissett          QB  r10     -21.5  +/-  4.4
+      Michael Carter           RB  r10     -25.6  +/-  3.6
+      Xavier Worthy            WR  r4      -25.8  +/-  4.1
+      Isiah Pacheco            RB  r4      -70.4  +/-  4.5
+
+tommyrads    seat  1945.7   kept Williams r14 · Warren r8        1988.0 ( +42.2 +/-  3.3)   best pair Rice r5 · Warren r8             2000.9 ( +12.9 +/-  4.2)   10 pairs searched, 244s
+      not valued (no projection): Nick Chubb r9
+      Rashee Rice              WR  r5      +29.4  +/-  3.7
+      Tyler Warren             TE  r8      +24.2  +/-  3.4  kept
+      Romeo Doubs              WR  r12     +14.1  +/-  2.9
+      Brian Thomas             WR  r5      +13.1  +/-  3.4
+      Caleb Williams           QB  r14     +11.7  +/-  3.1  kept
+      Jordan Addison           WR  r6       -4.2  +/-  3.5
+      Dallas Goedert           TE  r15      -6.1  +/-  2.7
+      Kayshon Boutte           WR  r10      -9.1  +/-  3.1
+      Christian Kirk           WR  r11      -9.7  +/-  2.9
+      Dyami Brown              WR  r14     -10.0  +/-  2.7
+      Green Bay Packers        DEF r10     -13.0  +/-  2.6
+      Tony Pollard             RB  r4      -19.0  +/-  3.9
+      C.J. Stroud              QB  r13     -30.3  +/-  3.4
+      RJ Harvey                RB  r3      -36.3  +/-  3.9
+

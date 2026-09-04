@@ -34,40 +34,136 @@ public class OutcomeDistributions {
 
     static final int TIER = 12;
 
+    /** Per season, how many source rows joined and which top-36 men did not (filled by load). */
+    public static final Map<String, String> joinReport = new java.util.TreeMap<>();
+
     /** Every joined season, for anything that needs the outcome pool. */
+    /**
+     * Which preseason order keys a man's cell. Measured by {@link RankKeyChoice}
+     * on five seasons, leave-one-season-out: the projection-keyed band predicts a
+     * man's realised season 6.2 +/- 0.8 points better than the ADP-keyed one, in
+     * every season separately, and by 7-11 points at QB, RB and WR. Tight ends
+     * and defences are a tie. "adp" keeps the old FantasyPros-ranked pool for
+     * comparison (-PpoolKey=adp).
+     *
+     * Keying on projections also removes the name join: the Sleeper feed and the
+     * weekly actuals are both by player id, so no man is dropped for spelling and
+     * no rank is compressed by a miss (TRAPS #80 does not arise on this path).
+     */
+    static String poolKey(){
+        return System.getProperty("poolKey", "projection");
+    }
+
+    private static final Map<String, Map<String, List<Season>>> CACHE = new HashMap<>();
+
     public static Map<String, List<Season>> all() throws Exception {
+        String key = poolKey();
+        Map<String, List<Season>> cached = CACHE.get(key);
+        if(cached != null){
+            return cached;
+        }
         Map<String, List<Season>> bySeason = new java.util.LinkedHashMap<>();
-        for(File file : new File("data").listFiles()){
-            String name = file.getName();
-            if(!name.matches("fp-adp-halfppr-\\d{4}-\\d{8}\\.csv")){
-                continue;
-            }
-            List<Season> seasons = load(file, name.split("-")[3]);
-            if(seasons.size() > 80){
-                bySeason.put(name.split("-")[3], seasons);
+        if(key.equals("projection")){
+            AAAConfiguration configuration = AAAConfiguration.getInstance();
+            int current = Integer.parseInt(configuration.getSeason());
+            for(int year = current - 5; year < current; year++){
+                List<Season> seasons = byProjection(configuration, String.valueOf(year));
+                if(seasons.size() > 80){
+                    bySeason.put(String.valueOf(year), seasons);
+                }
             }
         }
+        else {
+            for(File file : new File("data").listFiles()){
+                String name = file.getName();
+                if(!name.matches("fp-adp-halfppr-\\d{4}-\\d{8}\\.csv")){
+                    continue;
+                }
+                List<Season> seasons = load(file, name.split("-")[3]);
+                if(seasons.size() > 80){
+                    bySeason.put(name.split("-")[3], seasons);
+                }
+            }
+        }
+        CACHE.put(key, bySeason);
         return bySeason;
     }
 
-    public static void main(String[] args) throws Exception {
-        Map<String, List<Season>> bySeason = new java.util.LinkedHashMap<>();
-        for(File file : new File("data").listFiles()){
-            String name = file.getName();
-            if(!name.matches("fp-adp-halfppr-\\d{4}-\\d{8}\\.csv")){
+    /**
+     * A season's outcomes ranked by what the projections said, joined by player
+     * id rather than by name.
+     *
+     * The rank is over every man the feed projects at his position, advanced
+     * before the played check, so a man who never took a snap still holds his
+     * place and nobody below him is promoted (the same rule as {@link #load}).
+     */
+    public static List<Season> byProjection(AAAConfiguration configuration, String season)
+            throws Exception {
+        Map<String, Double> projected = HistoricalProjections.leaguePointsBySleeperID(configuration, season);
+        Map<String, Double> totals = new HashMap<>(LeagueActuals.seasonPoints(season));
+        totals.putAll(LeagueActuals.seasonDefencePoints(season));
+        List<Map<String, Double>> weeklyPoints = new ArrayList<>();
+        List<Set<String>> weeklyPlayed = new ArrayList<>();
+        for(int week = 1; week <= WeeklyActuals.WEEKS; week++){
+            weeklyPoints.add(LeagueActuals.weeklyPoints(season, week));
+            weeklyPlayed.add(WeeklyActuals.playedBySleeperID(season, week));
+        }
+        record Row(String id, String name, Position position, double projection){}
+        List<Row> rows = new ArrayList<>();
+        for(Map.Entry<String, Double> entry : projected.entrySet()){
+            if(entry.getValue() == null || entry.getValue() <= 0){
                 continue;
             }
-            String season = name.split("-")[3];
-            List<Season> seasons = load(file, season);
-            if(seasons.size() > 80){
-                bySeason.put(season, seasons);
+            Player player = Player.getPlayerFromSIDV2(entry.getKey());
+            if(player == null || player.position == null || player.position == Position.OTHER){
+                continue;
             }
+            rows.add(new Row(entry.getKey(), player.firstName + " " + player.lastName,
+                    player.position, entry.getValue()));
         }
+        rows.sort(Comparator.comparingDouble((Row row) -> -row.projection()));
+        Map<Position, Integer> nextRank = new EnumMap<>(Position.class);
+        List<Season> out = new ArrayList<>();
+        for(Row row : rows){
+            int rank = nextRank.merge(row.position(), 1, Integer::sum) - 1;
+            List<Double> scored = new ArrayList<>();
+            int games = 0;
+            for(int week = 0; week < WeeklyActuals.WEEKS; week++){
+                if(weeklyPlayed.get(week).contains(row.id())){
+                    games++;
+                    scored.add(weeklyPoints.get(week).getOrDefault(row.id(), 0.0));
+                }
+            }
+            if(games == 0){
+                continue;
+            }
+            double m = scored.stream().mapToDouble(Double::doubleValue).average().orElse(0);
+            double variance = scored.stream().mapToDouble(v -> (v - m) * (v - m)).sum()
+                    / Math.max(1, scored.size() - 1);
+            out.add(new Season(row.name(), row.position(), rank, games, m,
+                    Math.sqrt(variance), totals.getOrDefault(row.id(), 0.0)));
+        }
+        joinReport.put(season, String.format(
+                "%s: %d of %d projected men played a game; ranked by projection, joined by id, no name join",
+                season, out.size(), rows.size()));
+        return out;
+    }
+
+    public static void main(String[] args) throws Exception {
+        // through all(), so -PpoolKey reaches this report; building the list here
+        // instead left the two arms identical and looked like "the key does not
+        // matter" when the lever simply was not connected
+        Map<String, List<Season>> bySeason = all();
+        System.out.printf("pool keyed by %s%n", poolKey());
         if(bySeason.isEmpty()){
             System.out.println("no seasons joined");
             return;
         }
         System.out.printf("%d seasons joined: %s%n", bySeason.size(), bySeason.keySet());
+        System.out.println("\nTHE JOIN (ranks are the source's, 1-based; a man with no scoring id keeps his place)");
+        for(String report : joinReport.values()){
+            System.out.println("   " + report);
+        }
 
         System.out.println("\n\nAVAILABILITY AND SCORING, SEPARATED");
         System.out.printf("%-4s %-8s %6s %9s %9s %11s %11s%n", "POS", "TIER", "n",
@@ -193,6 +289,8 @@ public class OutcomeDistributions {
 
         Map<Position, Integer> nextRank = new EnumMap<>(Position.class);
         List<Season> out = new ArrayList<>();
+        List<String> unmatched = new ArrayList<>();
+        int playable = 0, joined = 0;
         for(String[] cells : rows){
             String label = cells[posCol].trim();
             Position position;
@@ -207,11 +305,22 @@ public class OutcomeDistributions {
                     continue;              // kickers; this league starts none
                 }
             }
+            // The rank is the row's place in the SOURCE's positional order,
+            // advanced before the name join: an unmatched man keeps his rank
+            // instead of pulling everyone below him up a place, so a cell holds
+            // the seasons of the tier it is applied to. PlanBacktest.board,
+            // WireRateStress and the predictability tools rank the same way
+            // (TRAPS #80).
+            int rank = nextRank.merge(position, 1, Integer::sum) - 1;
+            playable++;
             String id = idByName.get(TightEndTiming.normalise(cells[nameCol]));
             if(id == null){
+                if(rank < 3 * TIER){
+                    unmatched.add(cells[nameCol].trim() + " (" + position + (rank + 1) + ")");
+                }
                 continue;
             }
-            int rank = nextRank.merge(position, 1, Integer::sum) - 1;
+            joined++;
 
             List<Double> scored = new ArrayList<>();
             int games = 0;
@@ -230,6 +339,15 @@ public class OutcomeDistributions {
             out.add(new Season(cells[nameCol].trim(), position, rank, games, m,
                     Math.sqrt(variance), totals.getOrDefault(id, 0.0)));
         }
+        // "not in the pool" is two things: a name the id index does not carry, and
+        // a man who joined but recorded no game. The index is built from the
+        // season's scoring rows, so a player who never scored is a name miss here
+        // too - Aaron Rodgers 2023, four snaps and out, reads as unmatched.
+        joinReport.put(season, String.format(
+                "%s: %d of %d playable rows in the pool (%d joined a scoring id, %d of those recorded no game);"
+                        + " rows with no scoring id inside the top 36 of a position: %s",
+                season, out.size(), playable, joined, joined - out.size(),
+                unmatched.isEmpty() ? "none" : String.join(", ", unmatched)));
         return out;
     }
 }

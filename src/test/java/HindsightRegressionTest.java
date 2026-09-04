@@ -169,7 +169,8 @@ class HindsightRegressionTest {
      *
      * A fill that sorted on points would take max(starter, backup) instead, and
      * the second assertion proves that is a real difference on this fixture:
-     * there are scenarios where the backup outscored the starter.
+     * there are scenarios where the backup outscored the starter (through the
+     * season draw - his drawn season a boom, the starter's a bust).
      */
     @Test
     void aBackupQuarterbackNeverStartsOnAWeekHeHappenedToWin(){
@@ -244,7 +245,7 @@ class HindsightRegressionTest {
      * the estimator that sorts on the finished season beats the manager who held
      * the best defence by ADP all year.
      *
-     * That is the measured comparison - 8.75 against 6.44 a week over five real
+     * That is the measured comparison - 8.75 against 6.98 a week over five real
      * seasons - reproduced here as a property rather than as two numbers.
      */
     @Test
@@ -313,13 +314,14 @@ class HindsightRegressionTest {
     /**
      * THE UNITS CHECK, and the reason this file exists.
      *
-     * WireRateStress measured the honest rate at 7.69 a week over 18 real weeks.
-     * The constant must BE that rate. The estimator table in the tool's output
-     * prints a "season" column as rate x 17, so 7.69 a week appears there as
-     * 130.7 - and a constant written 130.7 / 18.0 divides a seventeen-week total
-     * by an eighteen-week denominator and lands at 7.26. That is 0.43 a week,
-     * about 8 points a season, in the number that decides whether a drafted
-     * defence beats a streamed one.
+     * WireRateStress measured the honest rate at 7.73 a week over 18 real weeks
+     * (7.69 before every loader ranked defences by the source's order, TRAPS
+     * #80). The constant must BE that rate. The estimator table in the tool's
+     * output prints a "season" column as rate x 17, so the rate appears there as
+     * 131 - and a constant written 131 / 18.0 divides a seventeen-week total by
+     * an eighteen-week denominator and lands at 7.3. That is 0.4 a week, about
+     * 8 points a season, in the number that decides whether a drafted defence
+     * beats a streamed one.
      *
      * The figure is not typed here: it is read out of the committed output of
      * the tool that measured it, so the constant and the measurement cannot
@@ -338,15 +340,20 @@ class HindsightRegressionTest {
 
     /**
      * The gap between the two is the finding, so it is asserted rather than
-     * described. 8.75 hindsight against 7.69 honest is 1.06 a week - about 19
-     * points a season, which is what reversed the defence conclusion.
+     * described. 9.01 hindsight against 8.03 honest is 0.98 a week - about 17
+     * points a season, which is what reversed the defence conclusion. It has
+     * moved twice as the measurement improved and never changed sign: 1.06
+     * before defences were ranked in the source's order (TRAPS #80), 1.02
+     * after, 0.98 once outcomes were graded in the league's own points
+     * (TRAPS #84). Both sides are re-measured together each time, which is
+     * why the gap barely moves while its two halves move by a third of a point.
      */
     @Test
     void theHindsightPremiumIsTheOnePointOneAWeekThatReversedTheDefenceCall(){
         double shipped = measuredShippedRatePerWeek();
         double honest = WeeklyStarterValue.HONEST_WIRE.get(Position.DEF);
 
-        assertEquals(1.06, shipped - honest, 0.02,
+        assertEquals(0.98, shipped - honest, 0.02,
                 "the measured hindsight premium has moved; if that is real, the"
                         + " defence conclusion in MODEL.md needs rereading");
         assertTrue(shipped > honest, "hindsight cannot be worth less than honesty");
@@ -397,9 +404,9 @@ class HindsightRegressionTest {
     // fixtures
     // =====================================================================
 
-    static final String WIRE_STRESS = "wire-rate-stress-2026-08-31.txt";
+    static final String WIRE_STRESS = "wire-rate-stress-2026-09-04.txt";
 
-    /** "stream on form, react after week 2   7.69   131" -> 7.69. */
+    /** "stream on form, react after week 2   7.73   131" -> 7.73. */
     private static double measuredHonestRatePerWeek(){
         return rateFrom("stream on form, react after week 2");
     }
@@ -469,7 +476,12 @@ class HindsightRegressionTest {
         Map<String, List<OutcomeDistributions.Season>> pool = Map.of("QB:0", cell);
         Map<Position, Double> wire = new EnumMap<>(Position.class);
         wire.put(Position.QB, 1.0);
-        Map<String, Double> expected = Map.of("starter", 340.0, "backup", 170.0);
+        // 200 against 170, not 340 against 170: a week is scored at the drawn
+        // season's rate with no noise around it, so the backup can only outscore
+        // the starter when his drawn season beats the starter's by more than
+        // their projection gap - possible at 200/170 (about a quarter of the
+        // pairs of this cell), impossible at 2:1
+        Map<String, Double> expected = Map.of("starter", 200.0, "backup", 170.0);
         return new WeeklyStarterValue(positionOf, tierOf, pool, wire, expected,
                 scenarios, seed);
     }

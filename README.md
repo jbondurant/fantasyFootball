@@ -43,6 +43,10 @@ fails if one does). Fallbacks are in `RUNBOOK.md`.
 ./gradlew run -Pmain=MarketMovers       # who the market moved on in the last days, and why Sleeper thinks so (-Pdays -Ptop -PminMove)
 ./gradlew run -Pmain=TeamRankings       # every roster's best legal lineup scored and ranked, HTML in data/ (-Pprojections -Pme)
 ./gradlew run -Pmain=DraftExpectation   # each seat's expected starters (room model drafts every seat from the pre-draft league) vs the roster actually drafted (-Ptrials)
+./gradlew run -Pmain=OwnerLadder        # every owner: seat alone, + keepers as declared, + the 10k ledger's best pair, and the roster drafted - HTML in data/ (-Ptrials -Pledger)
+./gradlew run -Pmain=Keepers16          # every owner's keepers on the SIXTEEN-round weekly objective (injuries, boom/bust, defences): seat, each man alone at his real round, the best pair by search (-Ptrials -Pscenarios -PpairPool -Powners -Pshard=i/N -Pout; -Prender=<report.txt> re-renders the HTML)
+./gradlew run -Pmain=RankKeyChoice       # ADP or projections: which preseason order should key a man's outcome cell (leave-one-season-out, one feed) (-Pdepth -Pband)
+./gradlew run -Pmain=ObjectiveStability   # how much of a man's Keepers16 value is the yardstick's own sampling: marginals under several seeds, worst spread (-Pscenarios -Pseeds)
 #   any planner tool also takes -Pprojections=snapshot:<date> (a day from the AdpSnapshot archive) and -PadpSnapshot=<date>;
 #   the unit suite runs on data/fixtures/2026-pre-draft: the league as it stood on draft morning and the full Sleeper feed of draft night
 ./gradlew run -Pmain=MockDraftReader -PdraftId=<link>   # archive a shared mock before it vanishes

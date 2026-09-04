@@ -442,3 +442,226 @@ real every time.
     draft-night response, served through the same fixture directory as the
     league snapshot. A report derived from a feed is not the feed.
 
+73. **A counterfactual that hands the owner his own stars back.** "Seat alone"
+    was built as "this owner keeps nobody, everyone else as declared" - and his
+    two men went back on the board, where he was the seat best placed to
+    redraft them. jerem9604's slot 9 read a peak (Taylor and Bowers available
+    to him), Hamrliks' 10 a lift (Chase Brown), tommyrads' 11 a 24-point hole
+    (Warren and Caleb Williams returned, worth little). Justin read the column
+    and asked whether the bumps were noise or the room's dispersion; they were
+    neither. The planner already had the right primitive - phantomOwnKeepers:
+    off the board, no credit, no slot burned - and the column smooths once it is
+    used. A per-owner counterfactual must not vary in what it puts back on the
+    board, or the column measures the owners' rosters and not their seats.
+
+74. **A pair priced one man at a time.** The ladder's "best pair" took the
+    ledger's two highest standalone deltas and handed them to the planner as
+    two keepers - Watson r10 and Stafford r10 for BHier. The league does not
+    allow two keepers at one round: the ruleset moves the LOWER-ADP man - the
+    more valuable of the two - a round dearer (KeeperPricing, applied by
+    KeeperChooser.priceHypothetical; the one case on record, 2025 Jeudy and
+    Daniels, went the other way and is carried as a known exception). Priced
+    separately the pair shared one slot, the second man burned nothing, and
+    the gain read 30.7 instead of 27.5. Justin remembered the rule from the
+    table alone. Pairs are priced as pairs, and the planner now says so out
+    loud when two keepers of one manager arrive at the same round.
+
+75. **The two highest standalone values are not the best pair.** "Best pair"
+    took the ledger's two largest one-man deltas. Standalone values do not add:
+    beside Watson, Stafford is worth +2 on the ladder's yardstick while Pitts -
+    the man BHier actually kept - is worth +15 and costs round 13 with no
+    same-round collision. Justin read the table and asked whether Watson and
+    Pitts was the pair. Rung 3 now searches every legal pair among the owner's
+    top ledger candidates and his kept men, each priced as a pair, and takes
+    the best. A pair is a joint object; rank pairs, not men.
+
+76. **Phantom the others, not the man being valued.** The first sixteen-round
+    keeper ladder valued each man "alone" by keeping him and asking the planner
+    to phantom the owner's keepers - and the flag phantoms ALL of that owner's
+    keepers, the candidate included. His credit still arrived through the
+    scored roster, so the number was not zero; it was the man plus a free
+    round-12 pick, because a phantomed man burns no slot. Tuten read +75 with
+    a spare pick inside it. The planner now takes an explicit set of men to
+    phantom (`forCurrentSeasonAs(..., phantomIDs, ...)`), the candidate is kept
+    at his priced round, and the season-total ladder's alone and pair worlds
+    use the same primitive - they had been EXCLUDING the other declared men,
+    which puts them back on a board where their own owner is the seat best
+    placed to redraft them (#73 again, one rung down).
+
+77. **A silent pipeline is not a hang.** A one-owner probe printed nothing for
+    ten minutes and was killed as too slow; the objective was then profiled at
+    0.2 ms a roster and the search for the missing nine minutes began. There
+    were none: stdout went through `grep -v | head`, and grep block-buffers
+    when its output is a pipe, so every line sat in a buffer until the kill
+    took them with it. Written straight to a file the same run finished in 57
+    seconds. Before profiling a program that prints nothing, check that it
+    could have printed anything.
+
+
+
+78. **The declared copy of a keeper beat the priced copy.** A ladder prices a
+    man for the world it is building - alone at his own round, or as one of a
+    searched pair with the same-round bump applied - and hands him to the
+    planner as an extra keeper. The planner skipped any extra whose man was
+    already declared, so a declared man kept his DECLARED round in every
+    counterfactual: Renteez's Javonte Williams was charged the bumped round 5
+    while the report printed round 6, and when a pair partner had been priced
+    onto the declared round the two shared one slot, the second burned nothing,
+    and the owner drafted fifteen live men plus two keepers - seventeen against
+    sixteen everywhere else. A collision now throws instead of printing; extras
+    replace declared entries; and every scored roster is counted.
+
+79. **A fixed random sample is a bias, not noise.** Each man's outcome scenarios
+    were drawn once at construction from his position:tier cell, independently
+    per man, and reused in every trial. The trial-to-trial error saw none of
+    that: the man being valued sits in the ALONE arm only, so the sampling
+    error of his own sixty draws was a constant offset the +/- could not
+    contain, unchanged on rerun because the seed was fixed. Draws are now a
+    shuffled copy of the cell walked in order, so the sample mean is the cell
+    mean. Two more in the same lines: the weekly spread divided by
+    `max(1e-6, meanWhenPlaying)`, which is a hundred-thousand-point week for a
+    season that scored below zero (the algebra needs no division: sd x
+    projection / tier season); and the week was floored at zero, which lifts
+    the high-variance positions above their own mean - defences most - while
+    the constant wire they compete against gets no lift.
+
+80. **A rank counter that skipped the unmatched.** Pool tiers came from a
+    counter advanced only after a historical name joined to a Sleeper id, so
+    every unmatched man above a player pulled him up a place and a cell was
+    computed over better seasons than the tier it is applied to. Fixing the
+    pool alone was tried and reverted within the hour: PlanBacktest, the
+    predictability tools and WireRateStress built their boards from the
+    matched men too, and a pool ranked one way against boards ranked the other
+    is worse than both ranked wrong together. Fixed properly the same day by
+    ranking every playable source row everywhere - the pool (which now prints
+    who failed the join), the historical board (which carries each man's
+    source rank; `PlanBacktest.Board.rankOf`, `tiersOf`, and
+    `expectedFromRank(board, pool)` read it), the defence-wire loader and the
+    two predictability tools. Who had been dropping out inside the first three
+    tiers: Aaron Rodgers 2023 (QB11), the Washington Football Team 2021 (DEF3),
+    J.J. McCarthy 2024 (QB21), Gabriel Davis 2022 (WR25), Joe Mixon 2025 (RB31).
+    Measured effect: skill cells moved by at most 0.3 points a game (RB 25-36
+    n 60 to 58, TE 13-24 60 to 58, TE 25-36 55 to 49, QB 60 to 59); the defence
+    wire moved more - holding the best undrafted defence 6.44 to 6.98 a week,
+    streaming on form 7.69 to 7.73, so the streaming-over-holding ratio fell
+    from 1.19 to 1.11 and the hindsight premium from 1.06 to 1.02 a week (both
+    moved again under #84's regrade, to 1.11 and 0.98)
+    (`data/outcome-distributions-2026-09-04.txt`,
+    `data/wire-rate-stress-2026-09-04.txt`). PlanBacktest's strategy table did
+    not move at all (`data/plan-backtest-2026-09-04.txt` against 2026-08-29):
+    it scores fixed sequences on real outcomes and takes only the streamed
+    defence's price from the pool, 8.7 to 8.8 a week. Defence bands moved:
+    DEF10-12 129.5 to 127.2 a season, so `LateRoundValue.DEF_WORST_BAND` was a
+    week-old number and is now read back out of the report by
+    `BandRegressionTest`, as the wire rate already was. The change also exposed
+    a second population fault one layer up (below).
+
+    One thing this did NOT reach: the era/nflverse ingest (`EraBoards`,
+    `DetectionLag`, `LateHalf`, and `BoardValue` reading them) still ranks
+    after its own join. The other leftover - the live board tiering by
+    projection rank while the pool keyed its cells by ADP rank - was settled by
+    measurement instead of by patching one to match the other (#82).
+
+81. **The same seasons on both sides.** WireRateStress's drafted-against-
+    streamed table required a season's top twelve defences to be twelve joined
+    men. Under source ranks 2021 has eleven - the Washington Football Team
+    never joined, at rank 4 - so that season silently left the two held columns
+    while the streamed column kept it, and the mean line subtracted a
+    four-season average from a five-season one under a header reading "same
+    seasons". The table now averages what joined, prints how many, and takes
+    every mean over the seasons present on both sides. A guard that drops a row
+    from one column of a comparison has to drop it from the other.
+
+82. **Which order is the right key is a question with an answer.** The live
+    board assigned today's men to outcome cells by projected points; the pool
+    keyed those cells by draft position. Two orders, and the instinct was to
+    pick one and make the other match. `RankKeyChoice` asks instead which key
+    PREDICTS: leave one season out, take the mean realised season of the men
+    who shared a man's rank band in the other four, and see which band mean
+    lands closer. Both orders come from one feed, so they rank the same men and
+    differ only in the key. Projections win by 6.2 +/- 0.8 points of mean
+    absolute error against the FantasyPros board the pool was built from,
+    positive in all five seasons separately and worth 7 to 11 points at
+    quarterback, back and receiver; tight ends and defences are a tie. So the
+    live board was right and the pool was wrong, and the pool now keys by
+    projection - which also deletes the name join, because the projection feed
+    and the weekly actuals are both by player id. The keeper answer did not
+    move: Tuten and Purdy stay the best pair, every man keeps his order, and
+    the levels shift about ten points. The downstream check is the one that
+    matters and it agrees: the greedy policy that DRAFTS off this valuation,
+    scored on real outcomes leave-one-season-out, gains 84 points a season on
+    the projection-keyed pool (1851 against 1767) and is ahead in all five
+    seasons separately - and its rosters stop hoarding backs at the end and
+    start taking a tight end and a defence. That first measurement had the
+    boards still tiering by ADP rank (#83); with the boards moved onto the same
+    order it was 226 points, 1767 to 1993. Both of those were graded in the
+    feed's points. In the shipped configuration - boards agreeing, outcomes in
+    the league's own points (#84) - it is 172 points a season, 1789 to 1961,
+    ahead in all five. Both arms in
+    `data/policy-backtest-poolkey-2026-09-04.txt`. Switching the key also widens the
+    pool from 1466 player-seasons to 2896, because ranking by projection covers
+    everyone projected rather than only the men on a draft board: the deep
+    tiers the live board actually assigns finally have their own data instead
+    of falling back a tier, and every replacement level moves with them
+    (quarterback wire 15.9 to 12.9 a week). That widening rides along with the
+    key and is not separately measured; the policy backtest judges the pair of
+    them together. `-PpoolKey=adp` keeps the old pool for comparison. The first A/B of the two printed identical tables, because
+    OutcomeDistributions' own report built its season list instead of calling
+    `all()` - the lever was not connected to the measurement, which is #68
+    again.
+
+83. **Fixing one half of a disagreement makes a new one.** #82 moved the
+    outcome pool onto projection ranks because that key predicts better, and
+    the LIVE board already tiered that way, so the live path came out
+    consistent. The HISTORICAL boards did not: `PlanBacktest.Board.tiersOf()`
+    returns the ADP source ranks #80 had just given it, so every backtest that
+    draws from the pool - `PolicyBacktest`, `PowerBacktest`, `PositionWeights` -
+    now keys its cells one way and its men the other. That is the state #80
+    itself calls worse than both wrong together, recreated one layer up by the
+    fix for #82, in the same commit that quotes the rule. The A/B behind #82 is
+    still a fair paired comparison, since both arms carry the same board, and
+    the projection pool won while carrying the mismatch; but the consistent
+    configuration has not been measured and the 84 points should not be quoted
+    as if it had. FIXED the same day: `Board.poolRanks()` answers in whichever
+    order the pool is keyed on - ADP source ranks under `-PpoolKey=adp`, that
+    season's league-scored projection ranks under the default - and `tiersOf`
+    and `expectedFromRank(board, pool)` both read it. Measured, and it was not
+    small: the greedy policy goes from 1851 a season with the boards mismatched
+    to 1993 with them agreeing, another 142 points, and it stops trailing the
+    committed RUNBOOK plan by 147 to sit 4 behind it. So #82's real size was
+    226 points, not 84, and most of what was missing was this. (All three of
+    those figures are in the feed's points, measured before #84 flipped the
+    grading; the shipped pair reads 1789 against 1961.)
+    A change that makes two things agree has to be checked against everything
+    else that reads either of them.
+
+    And it cost a full check 17 minutes to two and three quarter hours before
+    anyone noticed, because `poolRanks` asks `HistoricalProjections` for a
+    season's projections every time a board is asked for a tier, and that read
+    and parsed 2.5MB of JSON on every call. Exactly #69 - an expensive lookup
+    moved inside a loop - committed by the person who had written #69 down that
+    morning. The feed is now parsed once a season. A green check whose duration
+    jumped by an order of magnitude is a failing check that happens to pass.
+
+84. **Grading a plan in points the league does not pay.** Every graded outcome
+    in this repo came from the feed's `pts_half_ppr`, which pays 4 for a passing
+    touchdown, charges nothing for a fumble after 2022, and pays a defence
+    nothing for holding a team to 14-20. This league pays 6, charges 1, and pays
+    1. Projections were already recomputed under the league's own settings, so
+    for two seasons of work a plan was CHOSEN on 6-point quarterbacks and SCORED
+    on 4-point ones, and everything downstream - when to take a quarterback, what
+    a defence is worth - inherited the lean. `LeagueActuals` fixed it in August
+    and shipped it switched off, which was right while other tables were
+    half-built in the old unit and became a lie about the league once they were
+    not. `ScoringImpactReport` existed to measure the flip and had never been
+    run; run, it says the correction is worth 30-45 points a season on the level,
+    changes no strategy's rank, and leaves the best round for a quarterback at 3
+    - but it is worth 56 points to an early quarterback against 35 to a late one,
+    exactly the direction the mis-scoring predicted. Flipped on by Justin's call
+    2026-09-04, before the season's own weeks could start arriving in the old
+    unit. What moved with it: the honest defence wire 7.73 to 8.03 a week, the
+    held wire 6.98 to 7.21 (the ratio barely moves, since both sides are
+    re-graded together), the defence bands 135.8/127.2 to 140.3/131.9, and the
+    ADP-versus-projection verdict from 6.2 to 6.5 points in favour of
+    projections. An opt-in correction that everyone agrees is correct is a
+    decision deferred, not a decision made; it needs a date.

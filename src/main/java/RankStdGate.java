@@ -288,11 +288,11 @@ public class RankStdGate {
             catch(IllegalArgumentException notSkill){
                 continue;
             }
+            int rank = nextRank.merge(position, 1, Integer::sum) - 1;   // source rank (TRAPS #80)
             String id = idByName.get(TightEndTiming.normalise(name.getAsString()));
             if(id == null){
                 continue;
             }
-            int rank = nextRank.merge(position, 1, Integer::sum) - 1;
             try {
                 out.add(new Seen(season, position, rank,
                         Double.parseDouble(std.getAsString()),

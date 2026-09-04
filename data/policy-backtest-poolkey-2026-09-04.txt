@@ -1,0 +1,66 @@
+POLICY BACKTEST, THE POOL KEY A/B  2026-09-04
+Same tool, same seasons, same leave-one-season-out pool, outcomes graded in the
+LEAGUE's own points (TRAPS #84). Only OutcomeDistributions' cell key differs - and
+with it the rank the BOARD names its cells by, which must be the same order or the
+two disagree (TRAPS #83).
+
+Measured before the scoring flip, in the feed's points, the same two arms read
+1767 and 1993; and the configuration in between - pool keyed by projection while
+the boards still tiered by ADP - read 1851. That middle one was TRAPS #83 and is
+no longer reachable.
+
+=== -PpoolKey=adp (pool and boards both ADP-ranked) ===
+
+PER-SEASON POLICY, LEAVE-ONE-OUT POOL
+drafts on each season's own board using distributions from the OTHER four
+seasons, then is scored on what really happened
+
+STRATEGY                     2021     2022     2023     2024     2025      mean    vs ADP    wins
+starter-sum POLICY           1891     1828     1864     1699     1660      1789      +326     4/5
+starter-sum (1-16)           1825     1973     1761     2081     2070      1942      +479     5/5
+best-nine (Model A)          1425     1586     1914     1774     1660      1672      +209     3/5
+RUNBOOK committed            2066     1676     2246     1978     2200      2033      +570     5/5
+RUNBOOK as written           2080     1567     2238     1944     2177      2001      +538     5/5
+board value                  1905     1726     2005     1853     2057      1909      +447     5/5
+RB-heavy folk rule           1950     1778     2196     1792     1872      1918      +455     5/5
+RUNBOOK front + SS back      2177     1859     1983     1928     2146      2019      +556     5/5
+ModelA front + SS back       1846     1814     1916     1948     1990      1903      +440     5/5
+[not legal] no DEF drafted     2077     1669     2249     2026     2193      2043      +580     5/5
+best available by ADP        1528     1399     1198     1478     1712      1463        +0     0/5
+
+what the policy chose, season by season:
+   2021: RB WR QB WR WR WR WR WR QB RB RB RB RB RB
+   2022: RB RB QB RB WR WR WR WR QB RB RB RB RB RB
+   2023: RB RB RB QB WR WR RB RB WR QB RB RB RB RB
+   2024: QB RB RB RB WR QB WR RB RB RB RB RB RB RB
+   2025: QB RB RB WR WR TE WR WR WR RB QB RB RB RB
+
+against the committed plan: -245 points a season, policy ahead in 1 of 5.
+
+=== -PpoolKey=projection (pool and boards both projection-ranked; shipped) ===
+
+PER-SEASON POLICY, LEAVE-ONE-OUT POOL
+drafts on each season's own board using distributions from the OTHER four
+seasons, then is scored on what really happened
+
+STRATEGY                     2021     2022     2023     2024     2025      mean    vs ADP    wins
+starter-sum POLICY           1962     1947     1987     2131     1777      1961      +498     5/5
+starter-sum (1-16)           1825     1973     1761     2081     2069      1942      +479     5/5
+best-nine (Model A)          1424     1585     1914     1774     1660      1671      +209     3/5
+RUNBOOK committed            2065     1676     2245     1977     2200      2033      +570     5/5
+RUNBOOK as written           2080     1567     2237     1943     2176      2001      +538     5/5
+board value                  1904     1726     2005     1853     2056      1909      +446     5/5
+RB-heavy folk rule           1949     1778     2196     1791     1871      1917      +454     5/5
+RUNBOOK front + SS back      2176     1859     1983     1927     2145      2018      +555     5/5
+ModelA front + SS back       1845     1813     1916     1948     1989      1902      +440     5/5
+[not legal] no DEF drafted     2072     1664     2244     2021     2189      2038      +575     5/5
+best available by ADP        1528     1399     1198     1478     1712      1463        +0     0/5
+
+what the policy chose, season by season:
+   2021: QB WR RB RB RB WR WR WR WR RB QB DEF WR RB
+   2022: QB RB WR RB WR WR RB RB TE WR QB RB WR RB
+   2023: QB WR RB RB WR WR WR QB WR TE TE RB RB WR
+   2024: QB RB RB WR WR WR RB TE TE WR RB DEF TE WR
+   2025: QB RB RB WR RB RB RB WR WR TE RB QB RB RB
+
+against the committed plan: -72 points a season, policy ahead in 2 of 5.

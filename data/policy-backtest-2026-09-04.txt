@@ -1,0 +1,26 @@
+
+PER-SEASON POLICY, LEAVE-ONE-OUT POOL
+drafts on each season's own board using distributions from the OTHER four
+seasons, then is scored on what really happened
+
+STRATEGY                     2021     2022     2023     2024     2025      mean    vs ADP    wins
+starter-sum POLICY           1811     1839     1873     1993     1737      1851      +409     5/5
+starter-sum (1-16)           1752     1932     1732     2055     2024      1899      +457     5/5
+best-nine (Model A)          1376     1542     1867     1732     1614      1626      +184     3/5
+RUNBOOK committed            2035     1654     2191     1960     2147      1997      +556     5/5
+RUNBOOK as written           2049     1553     2186     1931     2127      1969      +527     5/5
+board value                  1876     1717     1953     1840     2007      1879      +437     5/5
+RB-heavy folk rule           1899     1734     2156     1763     1865      1883      +442     5/5
+RUNBOOK front + SS back      2102     1819     1956     1905     2104      1977      +535     5/5
+ModelA front + SS back       1772     1771     1890     1927     1946      1861      +419     5/5
+[not legal] no DEF drafted     2041     1642     2190     2002     2136      2002      +561     5/5
+best available by ADP        1439     1381     1192     1485     1712      1442        +0     0/5
+
+what the policy chose, season by season:
+   2021: WR QB WR RB RB WR WR WR WR TE RB DEF QB RB
+   2022: RB QB RB WR WR RB RB WR WR TE QB RB RB RB
+   2023: RB RB QB WR WR RB WR RB WR WR TE QB RB RB
+   2024: RB QB RB WR WR RB RB WR TE WR QB DEF RB RB
+   2025: QB RB RB WR RB RB WR WR WR WR TE QB RB RB
+
+against the committed plan: -147 points a season, policy ahead in 2 of 5.

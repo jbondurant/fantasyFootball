@@ -354,6 +354,85 @@ is -0.8, no simulated roster ends short, and held-out fidelity is unchanged with
 their seats most, Justin +35 (third) from the ninth-best seat-and-keepers, JFMarino
 -53 and Renteez -50 least; jerem9604 had the second-best seat and drafted 33 below it.
 
+`OwnerLadder` (2026-09-02, report-only) breaks every owner's projected starters into
+four rungs on one yardstick: the seat alone (his keepers phantomed - off the board, no credit, no slot burned - others as declared),
+with his keepers, with the 10k ledger's best pair, and the roster he drafted. Keepers
+were worth +15 (BHier) to +127 (jerem9604: Taylor + Bowers); five owners left value on
+the table against the best legal pair on this yardstick, searched over every pair of their
+top ledger candidates and kept men, each priced as a pair (TRAPS #74, #75): BHier 36 with
+Watson r10 + Pitts r13 (the pair Justin named), tommyrads 21 with Rice + Warren, JFMarino 20
+with Olave + Odunze, Justin 7 with Tuten + Flowers over Tuten + Purdy - inside two standard
+errors, and the 10k ledger's optimizer had Purdy ahead - JakeSK 2; drafting against seat-and-keepers ranged from +51 (BHier) to -52 (JFMarino), Justin
++36. The first run priced five owners' keepers below zero because the planner
+defaulted to the nine-round schedule and dropped every keeper kept at round 10 or later;
+the second read "seat alone" as a league where nobody keeps (the kept men return to the
+board); the third let the owner keep nobody with his own two men back on the board, so an
+owner who kept stars could redraft them and the column peaked at jerem9604's slot 9 and
+fell 24 points at tommyrads' 11 - bumps Justin spotted and which were the counterfactual,
+not noise (TRAPS #73). The seat is now measured with the owner's keepers phantomed, the
+planner's own primitive for that question.
+
+`Keepers16` (2026-09-04, report-only; `data/keepers16-<date>.txt` + `.html`) is the keeper
+question asked on the SIXTEEN-round game instead of the nine-round one: the old keeper
+finder (`KeeperChooser`, the 10k ledger) priced a round-12 or -13 keeper as if he sat at
+round 8 or 9 and knew nothing of defences, injuries, or a bench. Same simulation as
+OwnerLadder (`OwnerLadder.rungTrials`, the fitted room at every seat, trial t seeded the
+same in every world), scored by one shared `WeeklyStarterValue`: seventeen weeks of the
+best legal ten - defence included - chosen on preseason expectation and scored on a drawn
+outcome, where an outcome is a whole observed player-season from the man's position:tier
+cell (its games and its scoring together, applied as a ratio to his projection), so a
+keeper's injury risk and boom-or-bust both come from the seasons men of his tier have
+actually had. Worlds per owner: SEAT (his declared keepers phantomed), ALONE for every man
+the rules let him keep at his real round (the other declared men phantomed), BEST PAIR by
+search over the top men by ALONE value plus the declared men, each pair priced as a pair
+with the same-round bump. Every +/- is the standard error of the trial-by-trial
+difference. What the first two runs got wrong, and the fixes (TRAPS #76-#80): the alone
+world phantomed the man being valued (a free pick inside every number); the declared
+copy of a keeper overrode his priced copy, so a searched pair could share a round and
+score seventeen men; the errors were unpaired; the pair pool could omit the declared
+pair; a phantomed quarterback still fed the room's stacking feature; and the yardstick
+itself carried a per-man sampling bias frozen across trials that moved one man's value by
+fifty points between seeds - the weekly gaussian noise did nothing to the mean (the
+lineup is chosen on expectation, so the score is linear in points given who is up) and
+everything to that bias, so it is gone, the season and availability draws are stratified,
+and `ObjectiveStability` measures what is left (worst seed-to-seed spread of a marginal
+6.8 points at 480 scenarios, the default, `data/objective-stability-2026-09-04.txt`; the
+week-level noise had put that at fifty). `BustBoomValue` follows the same draw so it is
+still the objective at zero rates, and the hindsight test's two-quarterback fixture now
+makes the backup's winning weeks through the season draw. The defence
+wire is the streamed level (WireRateStress: 8.03 a week over 7.21 held), so a kept defence
+is worth its edge over a manager who works the wire, not over one who never touches it.
+Outcomes are graded in the LEAGUE's own points since 2026-09-04 - 6 for a passing
+touchdown, 1 charged for a fumble, 1 paid for holding a team to 14-20 - where every table
+in this repo used to grade in the feed's (TRAPS #84).
+What it says (`data/keepers16-2026-09-04.txt` + `.html`, 200 drafts a world, 480 outcome
+scenarios, outcomes in the league's own points): keepers are worth +11 (BHier) to +145
+(JakeSK) against the seat, Justin's Tuten + Purdy +67, and those two ARE the best pair his roster offered - the nine-round
+ledger had preferred Flowers. Eight of the twelve kept the best pair available to them.
+The four who did not: BHier +51 by swapping Daniels for Watson beside Pitts - the pair
+Justin named himself from the season-total ladder - JakeSK +14 (Stevenson for Kraft),
+tommyrads +13 (Rice for Caleb Williams) and JFMarino +12 (Odunze for McBride). The paired
+errors are 3-4 points and the yardstick's own seed floor is 6.8, so a gap under about 8 is
+not a finding. Known limits:
+Sleeper's defence projections are a stub (sacks, interceptions, recoveries,
+blocks - no points-allowed bands), so defence-versus-defence margins sit about a quarter
+low; the same-round bump moves the lower-ADP man a round dearer in `KeeperPricing` and the
+league's own direction is unconfirmed - the ruleset says the lower-ADP man, the one case
+on record went the other way (open question for Justin); a pooled tier is twelve wide
+over five seasons, sixty seasons a cell, and it is keyed by PROJECTION rank, which
+`RankKeyChoice` measured as the better key: leave-one-season-out, a projection-keyed band
+predicts a man's realised season 6.2 +/- 0.8 points better than an ADP-keyed one, in every
+season separately (TRAPS #82, `data/rank-key-choice-2026-09-04.txt`), and the policy that
+drafts off the valuation gains 172 points a season on real outcomes, 1789 to 1961, ahead
+in all five (both arms in `data/policy-backtest-poolkey-2026-09-04.txt`). The first run of
+that comparison read 84 because the historical boards still tiered by ADP rank while the
+pool had moved to projection rank; the boards now answer in the pool's own order (TRAPS
+#83), which in the feed's points was worth another 142 on top of 84. That also removes the name join, since the
+projection feed and the weekly actuals are both by player id - so TRAPS #80's rank
+compression, fixed the same day for the ADP path and every board that reads it, does not
+arise on the pool's own path at all. The same switch widens the pool from 1466 seasons to
+2896 and moves every replacement level; `-PpoolKey=adp` restores the old one.
+
 ## Fix list after the 2026 draft (ranked by value for the effort)
 
 1. **DONE 2026-09-02 - One verdict line at the top of every pick** (`VerdictLine`, printed by `Draft2026` under each table; `VerdictLineTest` pins the pick-18 SPLIT wording). Original: SEPARATED (position, margin),

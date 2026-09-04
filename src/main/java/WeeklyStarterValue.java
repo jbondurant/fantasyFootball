@@ -3,6 +3,7 @@ import PlayerImportAndSetup.Position;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
@@ -109,14 +110,36 @@ public class WeeklyStarterValue implements RosterValue {
      * first written 130.7 / 18.0, which is 7.26 and is wrong: 130.7 is the
      * SEVENTEEN-week figure WireRateStress prints in its "season" column
      * (rate x 17), so dividing it by 18 applies the conversion twice. The
-     * measured rate is 7.69 a week - 138.4 over the eighteen real weeks of the
+     * measured rate was 7.69 a week - 138.4 over the eighteen real weeks of the
      * tool's own one-denominator table - and the 0.43 in between is about eight
      * points a season in the number that decides whether a drafted defence beats
-     * a streamed one. HindsightRegressionTest reads 7.69 back out of
-     * data/wire-rate-stress-2026-08-31.txt rather than trusting this line.
+     * a streamed one. HindsightRegressionTest reads the rate back out of the
+     * WireRateStress file rather than trusting this line.
+     *
+     * 2026-09-04: 8.03, from data/wire-rate-stress-2026-09-04.txt. Two moves
+     * that day: every loader began ranking defences by the source's order
+     * (TRAPS #80 - the 2021 Washington Football Team had been failing the name
+     * join at rank 3 and pulling every defence below it up a place), which took
+     * it 7.69 to 7.73; then outcomes began being graded in the league's own
+     * points rather than the feed's, which took it to 8.03. A defence is paid
+     * for holding a team to 14-20 in this league and not in the feed.
      */
     static final Map<Position, Double> HONEST_WIRE =
-            Map.of(Position.DEF, 138.4 / 18.0);
+            Map.of(Position.DEF, 8.03);
+
+    /**
+     * Streaming over holding, for defences: 8.03 a week ("stream on form, react
+     * after week 2") over 7.21 ("hold best undrafted by ADP, all season") in
+     * data/wire-rate-stress-2026-09-04.txt, both hindsight-free and both in the
+     * league's own points (the 2026-08-31 file read 7.69 over 6.44 with
+     * defences ranked after the name join and graded in the feed's points;
+     * TRAPS #80, #84). The RATIO is what is used and it barely moves - 1.107
+     * then, 1.114 now - because both sides are re-graded together. Applied to
+     * the held-13th projection by forCurrentBoard so the projected board's
+     * defence wire is the streamed level in its own units.
+     * WireStressRegressionTest reads the two rows back out of the file.
+     */
+    static final double DEF_STREAM_OVER_HOLD = 8.03 / 7.21;
 
     private final int scenarios;
     private final Map<String, Draw[]> byPlayer = new HashMap<>();
@@ -167,8 +190,24 @@ public class WeeklyStarterValue implements RosterValue {
             double mine = expected.getOrDefault(id, 0.0);
 
             Draw[] draws = new Draw[scenarios];
+            // STRATIFIED: a shuffled copy of the cell, walked in order, so every
+            // season is used equally often and this man's sample mean ratio is
+            // the cell's mean, not a random sample of it. Drawn independently
+            // per man, the sample carried a bias of a few percent that was the
+            // same in every trial and invisible to the trial-to-trial error
+            // (TRAPS #79).
+            List<OutcomeDistributions.Season> order =
+                    seasons == null ? List.of() : new ArrayList<>(seasons);
+            Collections.shuffle(order, random);
+            // the availability draw is stratified the same way: one uniform per
+            // stratum of [0,1), strata in shuffled order, so the share of weeks
+            // this man is up is his drawn seasons' share to within 1/scenarios
+            // rather than a binomial sample of it
+            List<Integer> strata = new ArrayList<>();
+            for(int s = 0; s < scenarios; s++){ strata.add(s); }
+            Collections.shuffle(strata, random);
             for(int s = 0; s < scenarios; s++){
-                if(seasons == null || seasons.isEmpty() || tierMean <= 0){
+                if(order.isEmpty() || tierMean <= 0){
                     draws[s] = new Draw(false, 0, 0);
                     continue;
                 }
@@ -176,16 +215,22 @@ public class WeeklyStarterValue implements RosterValue {
                 // so the measured availability-scoring correlation survives -
                 // but applied as a RATIO to HIS projection instead of replacing
                 // it with somebody else's numbers
-                OutcomeDistributions.Season drawn =
-                        seasons.get(random.nextInt(seasons.size()));
+                OutcomeDistributions.Season drawn = order.get(s % order.size());
                 double ratio = drawn.meanWhenPlaying() * drawn.games() / tierMean;
                 int games = Math.max(1, drawn.games());
                 double rate = mine * ratio / games;
-                double spread = drawn.sdWhenPlaying()
-                        / Math.max(1e-6, drawn.meanWhenPlaying()) * rate;
-                boolean up = random.nextDouble() < games / 18.0;
-                double points = Math.max(0, rate + random.nextGaussian() * spread);
-                draws[s] = new Draw(up, mine / 17.0, up ? points : 0);
+                double u = (strata.get(s) + random.nextDouble()) / scenarios;
+                boolean up = u < games / 18.0;
+                // The week is scored at the drawn season's RATE, with no weekly
+                // noise around it. The lineup is chosen on preseason expectation,
+                // so given who is up the score is linear in the points and a
+                // zero-mean weekly term changes no expectation - it only added a
+                // per-man sample error, frozen at construction and repeated in
+                // every trial, that moved one man's value by fifty points between
+                // seeds (TRAPS #79). Boom and bust live in the SEASON draw: a
+                // whole observed season's ratio and games, applied to his
+                // projection. (The earlier floor at zero is gone with the noise.)
+                draws[s] = new Draw(up, mine / 17.0, up ? rate : 0);
             }
             byPlayer.put(id, draws);
         }
@@ -317,7 +362,14 @@ public class WeeklyStarterValue implements RosterValue {
             int rank = replacement.getOrDefault(entry.getKey(),
                     entry.getKey() == Position.DEF ? 13 : 24);
             int index = Math.min(Math.max(0, rank - 1), ids.size() - 1);
-            wire.put(entry.getKey(), projections.getOrDefault(ids.get(index), 0.0) / 17.0);
+            double held = projections.getOrDefault(ids.get(index), 0.0) / 17.0;
+            // The defence wire is STREAMED, not held. The 13th projected defence
+            // held all season is what a manager who never touches the wire gets;
+            // WireRateStress measured a manager streaming on form at 8.03 a week
+            // against 7.21 for holding the best undrafted defence, both hindsight-
+            // free. The ratio carries that edge into projection units, so a kept
+            // defence is measured against the wire a real manager works.
+            wire.put(entry.getKey(), entry.getKey() == Position.DEF ? held * DEF_STREAM_OVER_HOLD : held);
         }
         return new WeeklyStarterValue(positionOf, tierOf, pool, wire, projections,
                 scenarios, seed);
@@ -370,7 +422,7 @@ public class WeeklyStarterValue implements RosterValue {
             // defends. But these rates are REALISED - meanWhenPlaying x games
             // - and sorting them and keeping the best quarter picks the men who
             // turned out well. Nobody can do that before the week. Measured by
-            // WireRateStress: 8.75 a week here against 7.69 for a policy that
+            // WireRateStress: 8.75 a week here against 7.73 for a policy that
             // streams on form and reacts after two weeks, and the difference
             // reverses the defence conclusion.
             //
@@ -399,8 +451,23 @@ public class WeeklyStarterValue implements RosterValue {
      * first, which is exactly the information Model A has and this model was
      * throwing away.
      */
+    public static Map<String, Double> expectedFromRank(PlanBacktest.Board board,
+            Map<String, List<OutcomeDistributions.Season>> pool){
+        // the pool's own rank order, not the board's ADP order (TRAPS #83)
+        return expectedFromRank(board.ids(), board.positionOf(), board.poolRanks(), pool);
+    }
+
+    /** Ranked by list position - for a board where every man is present. */
     public static Map<String, Double> expectedFromRank(List<String> board,
             Map<String, Position> positionOf,
+            Map<String, List<OutcomeDistributions.Season>> pool){
+        return expectedFromRank(board, positionOf, PlanBacktest.Board.indexRanks(board, positionOf), pool);
+    }
+
+    /** Each man's expected season from the pool's seasons around HIS rank (source rank when the board carries one). */
+    public static Map<String, Double> expectedFromRank(List<String> board,
+            Map<String, Position> positionOf,
+            Map<String, Integer> rankOf,
             Map<String, List<OutcomeDistributions.Season>> pool){
         // proper sum/count per rank - an earlier version averaged as
         // (existing + new) / 2, which is not a mean and over-weights whatever
@@ -420,10 +487,9 @@ public class WeeklyStarterValue implements RosterValue {
             }
         }
         Map<String, Double> expected = new HashMap<>();
-        Map<Position, Integer> next = new EnumMap<>(Position.class);
         for(String id : board){
             Position position = positionOf.get(id);
-            int rank = next.merge(position, 1, Integer::sum) - 1;
+            int rank = rankOf.getOrDefault(id, 0);
             double[] sum = sums.get(position);
             int[] seen = counts.get(position);
             if(sum == null || rank >= depth){
