@@ -190,6 +190,11 @@ tasks.register('run', JavaExec) {
      // OutcomeDistributions - 'poolKey=adp' keys outcome cells by FantasyPros ADP rank
      // instead of the measured-better projection rank (RankKeyChoice).
      'poolKey',
+     // In-season tools - 'week' overrides Sleeper's own idea of the NFL week (LeagueWeek);
+     // 'calibrate' runs StartSit's flip-curve measurement instead of setting a lineup.
+     // There is deliberately no bar knob: the odds beside a bench call are read out of
+     // the committed flip curve, not chosen.
+     'week', 'calibrate',
      // DraftExpectation - 'who=<last name>' prints which seats take that man and where.
      'who',
      // LeagueActuals.FLAG - grade outcomes under the league's own scoring

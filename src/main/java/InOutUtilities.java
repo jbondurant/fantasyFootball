@@ -184,13 +184,39 @@ public class InOutUtilities {
         String filePath = "./" + filepathStart + ".txt";
         File f = new File(filePath);
         if(!f.exists() || f.isDirectory()) {
-            writeContentToFile(WebUrlUtility.urlToString(webURL), filePath);
+            String fetched = WebUrlUtility.urlToString(webURL);
+            // NEVER FREEZE AN EMPTY PAYLOAD. "Kept forever" and "asked too early"
+            // are a bad pair: on 2026-09-04, five days before the season,
+            // /v1/stats/nfl/regular/2026/1 returned "{}" and the 2026 DEF stats
+            // endpoint returned "[]". Cached, those would have been the answer
+            // for the rest of the season - every defence scoring zero, every
+            // week-1 actual missing - with nothing to notice it but the numbers
+            // being wrong. A week that has not happened is not data; it is a
+            // question asked too early, and it must fail loudly.
+            if(emptyPayload(fetched)){
+                throw new IllegalStateException(webURL + " returned an empty payload ("
+                        + fetched.trim() + ") and getCachedForever would keep it forever."
+                        + " Nothing was written. If this is a week or a season that has not"
+                        + " happened yet, ask again when it has; if it is genuinely empty"
+                        + " forever, cache it under a name that says so.");
+            }
+            writeContentToFile(fetched, filePath);
         }
         try {
             return Files.readString(Path.of(filePath));
         } catch (IOException e) {
             throw new RuntimeException("could not read cached " + filePath, e);
         }
+    }
+
+    /** "", "{}", "[]" or "null" - a response carrying no rows. */
+    static boolean emptyPayload(String body){
+        if(body == null){
+            return true;
+        }
+        String trimmed = body.trim();
+        return trimmed.isEmpty() || trimmed.equals("{}") || trimmed.equals("[]")
+                || trimmed.equals("null");
     }
 
     public static void downloadTodaysWebPage(String webURL, String filepathStart){

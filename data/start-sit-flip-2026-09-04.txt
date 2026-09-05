@@ -1,0 +1,23 @@
+WHEN IS A LINEUP CALL A CALL?  2026-09-04
+90 week-feeds over 5 seasons. Same-position pairs of men who BOTH played and were
+both inside the depth this league actually rosters ({QB=21, RB=61, WR=81, TE=19, DEF=13}), binned by the gap the
+projections gave them: how often did the LOWER one win?
+0.50 is a coin flip and the projection told you nothing. 25889 tied pairs are excluded -
+a tie is not a win for either reading, and counting it as one is what made the first
+run of this curve read 0.166 in its tightest bin against 0.364 in the next.
+
+PROJ GAP            pairs  lower won
+0-1                 85619     0.475
+1-2                 73518     0.429
+2-3                 63905     0.390
+3-4                 55991     0.344
+4-5                 48071     0.306
+5-7                 74665     0.256
+7-9                 47242     0.199
+9-12                33980     0.140
+12-16               12157     0.093
+16-25                1353     0.071
+
+below 45% flips, a gap of 1 points or more is a real call
+below 40% flips, a gap of 2 points or more is a real call
+below 35% flips, a gap of 3 points or more is a real call

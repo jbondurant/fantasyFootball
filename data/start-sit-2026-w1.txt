@@ -1,0 +1,26 @@
+START/SIT  2026-09-04  season 2026 week 1  (justinb314)
+Projections are league-scored (6-pt passing TD) and read through the live, day-cached path.
+A man with no row in the week's feed is NOT PLAYING - bye, inactive, or unpublished - which is
+a different thing from projected low.
+The odds beside a bench call are MEASURED, from data/start-sit-flip-2026-09-04.txt: over five seasons, how often the
+man projected that much lower actually outscored the other. 50% is a coin flip.
+
+MAN                      POS       PROJ   VERDICT
+Brock Purdy              QB        22.2   START
+Bo Nix                   QB        21.2   bench, 1.1 behind QB - he outscores that starter 43% of the time
+Derrick Henry            RB        15.1   START
+Cam Skattebo             RB        12.4   START
+Malik Nabers             WR        11.2   START
+Rhamondre Stevenson      RB        10.9   START
+Mike Evans               WR        10.8   START
+Bhayshul Tuten           RB        10.4   START
+Josh Downs               WR        10.2   START
+Jordan Addison           WR         9.5   bench, 0.7 behind WR - he outscores that starter 48% of the time
+Harold Fannin            TE         9.3   START
+Khalil Shakir            WR         9.1   bench, 1.1 behind WR - he outscores that starter 43% of the time
+Jakobi Meyers            WR         8.5   bench, 1.7 behind WR - he outscores that starter 43% of the time
+Chris Rodriguez          RB         7.8   bench, 2.6 behind RB - he outscores that starter 39% of the time
+Baltimore Ravens         DEF        7.6   START
+Tre' Harris              WR         4.8   bench, 5.4 behind WR - he outscores that starter 26% of the time
+
+projected starters: 120.3 (10 of ten slots filled)

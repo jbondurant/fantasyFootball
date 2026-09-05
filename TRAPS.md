@@ -665,3 +665,31 @@ real every time.
     ADP-versus-projection verdict from 6.2 to 6.5 points in favour of
     projections. An opt-in correction that everyone agrees is correct is a
     decision deferred, not a decision made; it needs a date.
+
+85. **"Kept forever" and "asked too early" are a bad pair.** Every in-season
+    tool needs this week's projections and last week's results, and the repo had
+    one cache for both: `getCachedForever`, written for a finished season that
+    can never change. Pointed at a live week it freezes Thursday's projection
+    into December. Worse, pointed at a week that has not happened it freezes
+    NOTHING and calls it data: on 2026-09-04, five days before kickoff,
+    /v1/stats/nfl/regular/2026/1 returned `{}` and the 2026 defence stats
+    endpoint returned `[]`. Either would have been the answer for the whole
+    season - every defence scoring zero, every week-1 result missing - with no
+    symptom but wrong numbers. Nothing had run yet, so nothing was poisoned.
+    `getCachedForever` now refuses to write an empty payload and throws instead,
+    and `LeagueWeek` reads a finished week and a live week through deliberately
+    different cache names so neither can be served through the other's policy.
+
+86. **Ask the question somebody actually faces.** A lineup call needed a bar:
+    how far apart must two men be projected before the difference is a decision
+    rather than a coin flip? Measured over five seasons, the first curve came
+    back backwards - a gap under one point flipped 17% of the time against 36%
+    for a gap of two, so the tightest calls looked like the most certain ones.
+    Two faults, both about population. It paired every man the feed projects, so
+    almost every pair was the ninetieth receiver against the ninety-first, two
+    men who both scored nothing; and a 0-0 tie was counted as the projection
+    being right. Restricted to the depth this league actually rosters (its own
+    draft history: QB 21, RB 61, WR 81, TE 19) and with ties excluded, the curve
+    is monotonic and starts where it should: 0.475 under a point, 0.43 at one to
+    two, 0.26 at five to seven, 0.09 past twelve. The tool now prints that
+    measured probability beside each bench call instead of a bar somebody chose.
