@@ -228,8 +228,9 @@ public class StartSit {
                 double best = closestStarter(man, mine, starters);
                 verdict = best == Double.MAX_VALUE || curve.isEmpty()
                         ? "bench"
-                        : String.format("bench, %.1f behind %s - he outscores that starter %.0f%% of the time",
-                                best, man.position(), 100 * flipRate(curve, best));
+                        : String.format("bench, %.1f behind the nearest starter he could replace"
+                                + " - he outscores him %.0f%% of the time",
+                                best, 100 * flipRate(curve, best));
             }
             out.append(String.format("%-24s %-4s %9s   %s%n", man.name(), man.position(),
                     man.playing() ? String.format("%.1f", man.projected()) : "-", verdict));
@@ -242,11 +243,56 @@ public class StartSit {
         System.out.println("written to " + target);
     }
 
-    /** The smallest gap between this benched man and a starter he could replace. */
-    private static double closestStarter(Man man, List<Man> roster, List<String> starters){
+    /** This man as a lineup slot, carrying the position the report already knows. */
+    private static TeamRankings.Man slot(Man man){
+        return new TeamRankings.Man(man.id(), man.name(), man.position().name(), "",
+                man.projected(), false, 0, "");
+    }
+
+    /** Backs, receivers and tight ends can all take a FLEX slot. */
+    static boolean flexEligible(Position position){
+        return position == Position.RB || position == Position.WR || position == Position.TE;
+    }
+
+    /**
+     * The gap between this benched man and the WEAKEST STARTER HE COULD ACTUALLY
+     * REPLACE - the one whose slot survives the swap.
+     *
+     * Two wrong answers came before this one. Comparing him only with starters
+     * at his own position ignored the two FLEX slots, so a benched receiver was
+     * measured against a receiver when he was really competing with a back.
+     * Comparing him with every flex-eligible starter then over-corrected: it
+     * matched Addison against Fannin, the only tight end, whose slot Addison
+     * cannot fill at all. Legality is not a property of two men, it is a
+     * property of the lineup that results - so the test is to make the swap and
+     * ask whether ten legal slots still fill, using the same
+     * TeamRankings.bestLineup that built the lineup in the first place.
+     */
+    static double closestStarter(Man man, List<Man> roster, List<String> starters){
+        // built from the position THIS tool already determined, not re-derived
+        // from the player index: going through DraftExpectation.man gave every
+        // man position "?" for any id the index does not carry, so nothing could
+        // be placed and every swap read as illegal
+        List<TeamRankings.Man> startingNow = new ArrayList<>();
+        for(Man other : roster){
+            if(starters.contains(other.id())){
+                startingNow.add(slot(other));
+            }
+        }
+        int slots = startingNow.size();
         double best = Double.MAX_VALUE;
         for(Man other : roster){
-            if(starters.contains(other.id()) && other.position() == man.position()){
+            if(!starters.contains(other.id())){
+                continue;
+            }
+            List<TeamRankings.Man> swapped = new ArrayList<>();
+            for(TeamRankings.Man starter : startingNow){
+                if(!starter.id().equals(other.id())){
+                    swapped.add(starter);
+                }
+            }
+            swapped.add(slot(man));
+            if(TeamRankings.bestLineup(swapped).starting().size() == slots){
                 best = Math.min(best, other.projected() - man.projected());
             }
         }

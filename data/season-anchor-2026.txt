@@ -8,6 +8,10 @@ Was that a good trade?
 
 THE TEST, pre-registered:
   preseason rank by projected best-ten STARTERS: 9 of 12
+  BUT THAT RANK IS A TIE: ranks 8-10 are within 5 points of each other
+  (patekxwater 1856.1, justinb314 1856.1, tommyrads 1854.1), so which of them he is called is arbitrary and a one-place
+  error moves the threshold one place. Read a finish of 7th as inside the
+  anchor's own noise rather than as a clean pass.
   the bench PAID      if he finishes 6th or better by points actually scored
   the bench PAID NOTHING if he finishes 9th or worse
   anything between is a NULL RESULT and will be reported as one

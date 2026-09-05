@@ -72,4 +72,48 @@ public class StartSitTest {
         }
         assertEquals(curve.get(0).flipRate(), StartSit.flipRate(curve, 0.5), 1e-9);
     }
+
+    /**
+     * The lineup plays two FLEX slots, so a benched receiver competes with a
+     * starting back as well as a starting receiver. Measuring him against his
+     * own position only compared him with the wrong man, or with nobody.
+     */
+    @Test
+    public void aBenchedFlexManIsMeasuredAgainstTheStarterHeCouldActuallyReplace(){
+        // A REAL ten-slot lineup: QB, 2RB, 3WR, TE, 2FLEX, DEF. The constraint only
+        // exists when the slots do - with two starters there is no tight-end slot to
+        // leave unfilled, which is why the first version of this test passed on a
+        // lineup too small to express the rule it was checking.
+        List<StartSit.Man> roster = new java.util.ArrayList<>(List.of(
+                new StartSit.Man("qb", "QB", Position.QB, 22.0, true),
+                new StartSit.Man("rb1", "RB1", Position.RB, 15.1, true),
+                new StartSit.Man("rb2", "RB2", Position.RB, 12.4, true),
+                new StartSit.Man("wr1", "WR1", Position.WR, 11.2, true),
+                new StartSit.Man("wr2", "WR2", Position.WR, 10.8, true),
+                new StartSit.Man("wr3", "WR3", Position.WR, 10.2, true),
+                new StartSit.Man("te", "Only TE", Position.TE, 9.3, true),
+                new StartSit.Man("flexRb", "Flex RB", Position.RB, 10.4, true),
+                new StartSit.Man("flexRb2", "Flex RB2", Position.RB, 10.9, true),
+                new StartSit.Man("def", "DEF", Position.DEF, 7.6, true)));
+        List<String> starters = List.of("qb", "rb1", "rb2", "wr1", "wr2", "wr3", "te", "flexRb", "flexRb2", "def");
+        StartSit.Man benchedWr = new StartSit.Man("wr9", "Bench WR", Position.WR, 9.5, true);
+        roster.add(benchedWr);
+
+        double gap = StartSit.closestStarter(benchedWr, roster, starters);
+        assertEquals(0.7, gap, 1e-9,
+                "the nearest starter he can legally replace is WR3 at 10.2 - not the lone TE at 9.3,"
+                        + " whose slot would then go unfilled");
+
+        // and a back on the bench reaches a receiver's slot through FLEX
+        StartSit.Man benchedRb = new StartSit.Man("rb9", "Bench RB", Position.RB, 10.3, true);
+        roster.add(benchedRb);
+        assertEquals(0.1, StartSit.closestStarter(benchedRb, roster,
+                List.of("qb", "rb1", "rb2", "wr1", "wr2", "wr3", "te", "flexRb", "flexRb2", "def")), 1e-9,
+                "he takes the weakest flex-eligible starter he can legally displace, RB 10.4");
+
+        assertFalse(StartSit.flexEligible(Position.QB));
+        assertFalse(StartSit.flexEligible(Position.DEF));
+        assertTrue(StartSit.flexEligible(Position.RB) && StartSit.flexEligible(Position.WR)
+                && StartSit.flexEligible(Position.TE));
+    }
 }

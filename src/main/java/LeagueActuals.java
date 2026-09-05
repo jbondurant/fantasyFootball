@@ -108,7 +108,6 @@ public class LeagueActuals {
      */
     public static Map<String, Double> leagueWeeklyPoints(String season, int week){
         LeagueScoringSettings scoring = leagueScoring();
-        Set<String> defences = defenceIDs(season);
         JsonObject rows = JsonParser.parseString(WeeklyActuals.raw(season, week))
                 .getAsJsonObject();
         Map<String, Double> points = new HashMap<>();
@@ -126,7 +125,7 @@ public class LeagueActuals {
                 continue;
             }
             points.put(entry.getKey(),
-                    score(stats, defences.contains(entry.getKey()), scoring));
+                    score(stats, isDefence(entry.getKey()), scoring));
         }
         return points;
     }
@@ -216,6 +215,27 @@ public class LeagueActuals {
     }
 
     private static final Map<String, Set<String>> defenceIDCache = new HashMap<>();
+
+    /**
+     * A defence, by the same test {@link Player#getPlayerFromSIDV2} routes on:
+     * Sleeper gives a team defence its team abbreviation (BAL, SEA) and every
+     * skill player a number.
+     *
+     * The weekly path used to ask the SEASON stats endpoint which ids were
+     * defences, which is a static fact fetched from a feed that does not exist
+     * until games are played: on 2026-09-05 it answered [] and, cached forever,
+     * would have been the answer all year. Worse, once games start it answers
+     * partially and that would freeze instead. The id itself already carries
+     * the fact.
+     *
+     * "Not a number" is NOT enough, which testing said and guessing would not
+     * have: a week's stats also carry TEAM_SEA-style rows, 28 of them in 2024
+     * week 5, and those are team lines rather than defences. A defence id is
+     * the bare two- or three-letter abbreviation.
+     */
+    public static boolean isDefence(String sleeperID){
+        return sleeperID != null && sleeperID.matches("[A-Z]{2,3}");
+    }
 
     /** The 32 team-defence ids for a season, e.g. DEN. */
     public static synchronized Set<String> defenceIDs(String season){

@@ -731,3 +731,36 @@ real every time.
     tool now prints a STANDING and says plainly that it is not the verdict.
     Writing a test down in advance is worth nothing if it is read continuously
     until it says something pleasant.
+
+90. **A static fact fetched from a feed that has not happened.** The weekly
+    league-scoring path asked the SEASON stats endpoint which player ids were
+    defences - a fact that never changes, from a feed that does not exist until
+    games are played. Before kickoff it answered `[]`, so #85's guard fired and
+    every in-season tool would have thrown from week 2 on; after kickoff it
+    answers partially and `getCachedForever` would have frozen that instead. The
+    id already carries the fact: Sleeper names a defence by its team. "Not a
+    number" is NOT the test, which testing said and reading would not have - a
+    week's stats also carry TEAM_SEA rows, 28 of them in 2024 week 5, and those
+    are team lines. A bare two- or three-letter abbreviation is, and it agrees
+    with the old feed-derived set on 6,766 ids across five seasons.
+
+91. **A row is not a projection.** StartSit promised to tell a bye from a bench
+    call, on the rule that a man absent from the week's feed is not playing.
+    Sleeper publishes a row for everyone it knows - 9,419 for 2026 week 1 -
+    mostly carrying draft ranks and nothing else, and league-scoring those gave
+    8,554 men a tidy 0.0. So nobody was ever absent, the promised distinction
+    silently did not exist, and a man on bye would have been started with a
+    straight face. Only the 866 rows with an actual `pts_half_ppr` are men who
+    are playing. Week 1 hid it completely, because every man on the roster had a
+    real projection.
+
+92. **Legality is a property of the lineup, not of two men.** "Which starter is
+    this benched man really competing with" took three tries. Same position only
+    ignored the two FLEX slots, so a benched receiver was measured against a
+    receiver when he was really competing with a back. Any flex-eligible starter
+    over-corrected, matching him against the only tight end, whose slot he
+    cannot fill. The rule is not a relation between the two men at all: make the
+    swap, rebuild the lineup, and see whether ten slots still fill - which the
+    tool that built the lineup already does. The first test of the fixed version
+    passed on a two-man lineup, where no slot is required and therefore nothing
+    was being tested; a rule about slots needs a fixture with slots.

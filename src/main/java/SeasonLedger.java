@@ -58,6 +58,9 @@ public class SeasonLedger {
 
     static final String HEADER = "week,manager,scored,best_possible,from_bench,promoted";
 
+    /** Projected-starter totals this close are one rank, not two. */
+    static final double TIE_POINTS = 5.0;
+
     /** A row per finished week per manager, in a stable order, ready to append. */
     static List<String> rowsFor(List<Row> rows){
         List<String> lines = new ArrayList<>();
@@ -291,6 +294,21 @@ public class SeasonLedger {
             tens.put(entry.getKey(), ten);
         }
         int myRank = rankOf(starterTotal, me);
+        // HOW SOLID IS THAT RANK? The test is "three places better than his
+        // projected rank", so it is worth exactly as much as the rank is. On
+        // this board 8th and 9th are the same number to a decimal and 10th is
+        // two points below, which the first anchor recorded as a bare "9th of
+        // 12" and would have carried all season as if it were a fact.
+        List<Map.Entry<String, Double>> ladder = new ArrayList<>(starterTotal.entrySet());
+        ladder.sort(Map.Entry.<String, Double>comparingByValue().reversed());
+        double mine = starterTotal.get(me);
+        int tiedFrom = myRank, tiedTo = myRank;
+        for(int i = 0; i < ladder.size(); i++){
+            if(Math.abs(ladder.get(i).getValue() - mine) <= TIE_POINTS){
+                tiedFrom = Math.min(tiedFrom, i + 1);
+                tiedTo = Math.max(tiedTo, i + 1);
+            }
+        }
         StringBuilder out = new StringBuilder();
         out.append(String.format("SEASON ANCHOR %s - frozen %s, before a single game%n", season, LocalDate.now()));
         out.append("This file is never rewritten. It exists so the bench question is settled by a test\n");
@@ -301,6 +319,17 @@ public class SeasonLedger {
         out.append("Was that a good trade?\n\n");
         out.append("THE TEST, pre-registered:\n");
         out.append(String.format("  preseason rank by projected best-ten STARTERS: %d of %d%n", myRank, rosters.size()));
+        if(tiedFrom != tiedTo){
+            out.append(String.format("  BUT THAT RANK IS A TIE: ranks %d-%d are within %.0f points of each other%n",
+                    tiedFrom, tiedTo, TIE_POINTS));
+            out.append(String.format("  (%s), so which of them he is called is arbitrary and a one-place%n",
+                    ladder.subList(tiedFrom - 1, tiedTo).stream()
+                            .map(e -> String.format("%s %.1f", e.getKey(), e.getValue()))
+                            .collect(java.util.stream.Collectors.joining(", "))));
+            out.append(String.format("  error moves the threshold one place. Read a finish of %d%s as inside the%n",
+                    myRank - 3 + (tiedTo - myRank), suffix(myRank - 3 + (tiedTo - myRank))));
+            out.append("  anchor's own noise rather than as a clean pass.\n");
+        }
         out.append(String.format("  the bench PAID      if he finishes %d%s or better by points actually scored%n",
                 myRank - 3, suffix(myRank - 3)));
         out.append(String.format("  the bench PAID NOTHING if he finishes %d%s or worse%n", myRank, suffix(myRank)));

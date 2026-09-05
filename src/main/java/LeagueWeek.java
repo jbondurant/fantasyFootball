@@ -80,7 +80,14 @@ public class LeagueWeek {
                 continue;
             }
             JsonObject stats = entry.getValue().getAsJsonObject();
-            if(stats.size() == 0){
+            // A ROW IS NOT A PROJECTION. Sleeper publishes a row for everyone it
+            // knows - 9,419 of them for 2026 week 1 - carrying draft ranks and
+            // little else, and league-scoring those gives 8,554 men a tidy 0.0.
+            // Absent then means nothing and "not playing" could never be
+            // detected, so a bye man would be started with a straight face.
+            // Only 866 rows carry an actual points projection; those are the men
+            // who are playing.
+            if(!stats.has("pts_half_ppr") || stats.get("pts_half_ppr").isJsonNull()){
                 continue;
             }
             points.put(entry.getKey(), SleeperProjections.scoreStatLine(stats, scoring));
