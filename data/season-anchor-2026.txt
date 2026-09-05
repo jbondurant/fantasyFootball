@@ -1,0 +1,46 @@
+SEASON ANCHOR 2026 - frozen 2026-09-05, before a single game
+This file is never rewritten. It exists so the bench question is settled by a test
+written BEFORE the results, not by a story told after them.
+
+THE QUESTION. The objective this model drafts on scores a bench at exactly zero.
+justinb314 drafted the deepest bench in the league and the 9th-best starting ten.
+Was that a good trade?
+
+THE TEST, pre-registered:
+  preseason rank by projected best-ten STARTERS: 9 of 12
+  the bench PAID      if he finishes 6th or better by points actually scored
+  the bench PAID NOTHING if he finishes 9th or worse
+  anything between is a NULL RESULT and will be reported as one
+
+THE MECHANISM, recorded alongside so the headline cannot be luck wearing a theory:
+  the share of his scored points from men OUTSIDE the frozen ten below. A bench that
+  pays does it by being promoted - into a bye, an injury, a collapse. A good rank with
+  a low share is a hot roster, not a vindicated bench.
+
+PRESEASON PROJECTED STARTERS, every manager:
+   1. JakeSK           1957.2
+   2. itsabust         1916.4
+   3. KevinDA          1915.5
+   4. jerem9604        1890.3
+   5. Hamrliks         1880.0
+   6. d0ddi            1868.9
+   7. BHier            1868.7
+   8. patekxwater      1856.1
+   9. justinb314       1856.1   <- him
+  10. tommyrads        1854.1
+  11. Renteez          1830.9
+  12. JFMarino         1766.5
+
+THE FROZEN TEN per manager (ids), the men a bench is measured against:
+TEN,BHier,11566,9509,5892,10229,11631,10222,7553,HOU,8408,1466
+TEN,Hamrliks,11564,9224,12527,6794,12526,4037,5012,PIT,13286,8228
+TEN,JFMarino,4984,7594,4199,6786,8144,2133,8130,SEA,12533,11610
+TEN,JakeSK,6770,9221,13287,9493,7526,13279,9484,LAR,11646,11586
+TEN,KevinDA,5849,4034,9226,8146,8167,8142,12517,JAX,8155,8126
+TEN,Renteez,4881,7588,7543,7564,11635,5927,10236,PHI,12493,9504
+TEN,d0ddi,3294,8150,12529,7547,9997,6801,10859,LAC,12519,11583
+TEN,itsabust,7523,12512,11584,9488,5859,8112,4217,MIN,8148,6806
+TEN,jerem9604,6904,6813,4866,8137,4983,5045,11604,NE,11624,7567
+TEN,justinb314,8183,3198,12481,11632,2216,9756,12506,BAL,12490,7611
+TEN,patekxwater,12508,8138,6790,7569,7525,9487,7002,CHI,11628,7021
+TEN,tommyrads,11560,8151,12507,12514,11620,5846,12518,DEN,5967,12501

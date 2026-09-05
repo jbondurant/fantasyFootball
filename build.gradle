@@ -195,6 +195,11 @@ tasks.register('run', JavaExec) {
      // There is deliberately no bar knob: the odds beside a bench call are read out of
      // the committed flip curve, not chosen.
      'week', 'calibrate',
+     // DefenceThisWeek - 'lag' is the weeks before the pick switches from preseason rank to
+     // form; 2 is the value WireRateStress measured at 8.03 a week and anything else is
+     // no longer the measured policy. SeasonLedger - 'anchor' freezes the pre-registered
+     // bench test and refuses to overwrite it.
+     'lag', 'anchor',
      // DraftExpectation - 'who=<last name>' prints which seats take that man and where.
      'who',
      // LeagueActuals.FLAG - grade outcomes under the league's own scoring

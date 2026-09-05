@@ -1,0 +1,21 @@
+DEFENCE FOR WEEK 1  2026-09-05  season 2026  (justinb314)
+The measured policy (WireRateStress: stream on form, react after week 2 - 8.03 a week
+against 7.21 for holding the best undrafted defence, both hindsight-free).
+0 finished week(s), fewer than the lag, so the pick is the best FREE defence by preseason ADP -
+the only ranking that exists yet. This is what the backtest does in these weeks too.
+
+DEFENCE               ADP     FORM   GAMES   WHO HOLDS HIM
+Rams                 97.1        -       0   JakeSK
+Texans              107.6        -       0   BHier
+Seahawks            115.1        -       0   JFMarino
+Broncos             121.5        -       0   tommyrads
+Eagles              130.7        -       0   Renteez
+Ravens              132.4        -       0   YOU
+Patriots            134.8        -       0   jerem9604
+Vikings             155.8        -       0   itsabust
+Jaguars             157.6        -       0   KevinDA
+Chargers            158.9        -       0   d0ddi
+Steelers            171.1        -       0   Hamrliks
+Lions               174.7        -       0   free
+
+START Ravens - you already hold the best defence available to you by preseason rank.

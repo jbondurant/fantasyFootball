@@ -693,3 +693,18 @@ real every time.
     is monotonic and starts where it should: 0.475 under a point, 0.43 at one to
     two, 0.26 at five to seven, 0.09 past twelve. The tool now prints that
     measured probability beside each bench call instead of a bar somebody chose.
+
+87. **A policy is only measured for the manager it was measured on.** The live
+    defence tool reproduces WireRateStress's streaming rule, which picks the
+    best UNDRAFTED defence - because the manager that backtest models never
+    drafts one. Applied literally to a manager who did, on the real 2026 week-1
+    board where every defence better than his was rostered, "the best free
+    defence" was the Lions at ADP 174.7 and the tool advised dropping his own
+    Ravens at 132.4 to start them. The rule was faithfully implemented and the
+    advice was nonsense: the streaming edge comes from switching ON FORM later,
+    not from trading down in week 1. His own defence belongs in the choice set,
+    and the report now says out loud that the measured 8.03 covers a pure
+    streamer and not him. Reproducing a policy exactly is necessary for its
+    number to apply and not sufficient for its ADVICE to; check what population
+    the policy was measured over before handing its output to somebody outside
+    it. Caught by running the tool, not by reading the design.
