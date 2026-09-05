@@ -803,3 +803,83 @@ real every time.
     it rather than to fit the weak proxy and call it a model: the daily
     projection snapshot now runs all season instead of stopping at the draft, so
     next year this is answerable and this year it accumulates.
+
+95. **`cat >` onto a file nobody looked at first.** A trade tool was written from
+    scratch and saved as `TradeFinder.java` - which already existed, was tested
+    by three suites, and had been enumerating single, double and triple swaps
+    across every rival for a long time, filing them by how much they help the
+    other side. The overwrite destroyed it and the only reason it was noticed is
+    that `TradeEnumerationTest`, `TradeFilterTest` and `LeagueSmokeTest` stopped
+    compiling four seconds into the next check. Restored from git; the new work,
+    which is genuinely different, is now `TradeMarket`. Two lessons and the
+    second is the sharper one. Look at the target before writing to it - the
+    project's own rule, ignored here. And a name is a claim about what already
+    exists: choosing `TradeFinder` for a trade finder was a guess that no trade
+    finder was there, in a repo of two hundred classes. Three tests caught it in
+    four seconds, which is the system working; nothing about the writing caught
+    it, which is the part that needed to.
+
+96. **A chain of improvements, each smaller than the ruler.** "Can I just keep
+    trading and keep improving?" is a fair question with a definite answer, and
+    the first version of the search answered it wrongly by being too willing.
+    Taking the best mutually-good trade over and over, it ran twenty deep and
+    claimed +134 - but the gains fell to +0.4, +0.9, +1.5 while the objective's
+    own seed-to-seed spread is 6.8, and at step 17 it traded BACK for the man
+    step 1 had given away. That is not a roster improving, it is a walk inside
+    the yardstick, and the tell was there in the output all along: a monotone
+    running total made of steps below the noise. With the floor applied the
+    chain stops at 6 trades and +95, which is 4.7x the best single trade - so
+    one-step searching really does leave value behind, and the answer to the
+    question is still no. The structure guarantees it: every trade must improve
+    BOTH rosters on one objective, so the league's total only rises and is
+    bounded by the best allocation of a fixed set of players. Local maxima were
+    never the problem. The floor was. Any iterated search needs a stopping rule
+    from the measurement, not from the sign of the step.
+
+97. **A keeper priced against the wrong board.** Justin's objection to the trade
+    engine was right and the fix for it was wrong twice. A trade moves next
+    year's keepers as surely as this year's lineup, so a roster is worth its
+    season PLUS the best two keeper surpluses on it - and a surplus is what a man
+    is worth beyond the pick you spend to keep him. Priced against the WHOLE
+    board that made every quarterback a franchise keeper: Purdy read +272 and Nix
+    +208, crowding Tuten's real +58 out of the best two entirely, so the toggle
+    changed nothing and the "with keepers" and "season" columns printed identical
+    numbers down the page - #68's signature, and it was there to be read. The
+    cause is this league's own quirk: it pays 6 for a passing touchdown while
+    drafting against an ADP calibrated for 4, so a quarterback's projection
+    towers over a board sorted by draft position, and the board ran backwards -
+    the man at pick 175 "projecting" 314.9 against 225.5 at pick 18. What a
+    keeper saves is a pick, and what a pick buys is the best man AT HIS POSITION
+    still on the board. Priced that way the quarterback surplus falls to +31,
+    Tuten leads at +58, and the toggle does what it was for: "Tuten for Josh
+    Allen", the best trade on the board without keepers, vanishes from it
+    entirely with them, because 20 points of season is not 58 points of keeper.
+
+98. **Two sides, two objectives - and the fire sale that follows if you forget
+    the first one.** Justin: "generally people don't give away their keepers, and
+    don't see much added value in receiving keepers." That is a different
+    objective across the table, not a detail, and pricing both rosters the same
+    way is wrong in both directions: a rival who does not count keeper value will
+    sell one cheaply, and cannot be paid in one. Each side is now priced by its
+    own lights.
+    Which immediately produced the opposite error. With keeper value counted on
+    his side alone, the whole board became keeper-buying and the SEASON column
+    went negative: the best offer asked him to give up Derrick Henry for Chase
+    Brown, seventeen points worse in 2026, in week 1, while his stated plan is to
+    win 2026 and sell only moderately and only if the season is already gone.
+    That is the fire sale he ruled out, produced by a model doing exactly what it
+    was told. His own earlier instruction was the fix and it had not been
+    enforced: a trade must stand up WITHOUT the keeper value too. It is now a
+    filter rather than a column - 33 of 120 mutually-good offers fail it - and
+    `-PsellMode=true` lifts it for a season that is actually lost. A correct
+    valuation aimed at the wrong objective is still the wrong advice.
+
+99. **A killed test worker leaves the results poisoned, not just missing.**
+    Killing stray Gradle processes mid-run left `build/test-results` in a state
+    where every later `check` died in three seconds with a bare
+    `java.io.EOFException` and every task UP-TO-DATE - no test named, no failure
+    reported, nothing to read. It looks exactly like a catastrophic regression
+    and is entirely an artefact. `rm -rf build/test-results build/reports/tests`
+    and it passes again. Worth knowing because the instinct on a three-second
+    red build is to go looking at the code that was just written, and the code
+    was fine.

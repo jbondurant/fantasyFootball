@@ -47,6 +47,7 @@ fails if one does). Fallbacks are in `RUNBOOK.md`.
 ./gradlew run -Pmain=Keepers16          # every owner's keepers on the SIXTEEN-round weekly objective (injuries, boom/bust, defences): seat, each man alone at his real round, the best pair by search (-Ptrials -Pscenarios -PpairPool -Powners -Pshard=i/N -Pout; -Prender=<report.txt> re-renders the HTML)
 ./gradlew run -Pmain=StartSit            # IN SEASON: the lineup to set this week, with the calls that are inside the measured coin-flip band named as such (-Pweek -Pme; -Pcalibrate measures the odds)
 ./gradlew run -Pmain=TuesdaySwap         # IN SEASON: every (add, drop) pair on the weekly-starter objective; DO NOTHING is the default answer (-Pcandidates -PswapFloor -Pscenarios)
+./gradlew run -Pmain=TradeMarket         # IN SEASON: every size-balanced swap with all eleven rivals, only those BOTH sides gain from, plus what your surplus is actually worth (-Pdepth -Ppool -Ptop)
 # see FAAB-PLAN.md for how a projected bid would be built, and why the demand half needs new data
 ./gradlew run -Pmain=FaabBid             # IN SEASON: what to bid, from this league's own 1448 settled contests (-Pfit to harvest; then -Pvalue=<points> -Pbudget)
 ./gradlew run -Pmain=DefenceThisWeek     # IN SEASON: which defence to start, running the policy WireRateStress actually measured (-Pweek -Plag -Pme)

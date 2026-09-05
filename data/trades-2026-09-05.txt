@@ -1,0 +1,65 @@
+TRADE MARKET  2026-09-05  (justinb314)
+Every size-balanced swap with all eleven rivals, both rosters priced on the same
+weekly-starter objective (120 drawn seasons). Only trades BOTH sides gain from are listed:
+an offer the other manager loses on is an offer he declines.
+THE TWO SIDES ARE PRICED DIFFERENTLY, on purpose. YOUR value is the season PLUS the best two
+keeper surpluses on your roster (a surplus being what a man is worth beyond the pick you spend to
+keep him, measured at HIS OWN position). HIS value is the season alone, because in this league
+people do not give away their keepers and see little in receiving one. Two consequences worth
+knowing: buying a cheap keeper off somebody is EASIER than a symmetric model would say, and
+paying anybody IN keepers buys you nothing. -Pkeepers=false prices you the same way he is.
+
+5339 swaps searched, 120 good for both sides, 87 of those also good for 2026.
+A trade must stand up WITHOUT the keeper value as well - the plan is to win 2026, and
+keeper value is a tiebreak on a deal that already helps now, not a reason to get worse.
+33 offers were dropped for failing that. -PsellMode=true to see them.
+
+YOU GIVE                           YOU GET                                 you      him   season   WITH / VERDICT
+Derrick Henry + Mike Evans         Chase Brown + Justin Jefferson        +91.7     +0.3     +5.3   Hamrliks  (asking for a man worth keeping)
+Malik Nabers + Cam Skattebo        Jalen Hurts + Jonathan Taylor         +30.4     +1.5     +9.4   jerem9604  (asking for a man worth keeping)
+Derrick Henry + Mike Evans         Saquon Barkley + Brock Bowers         +28.4     +4.5     +7.4   jerem9604  (asking for a man worth keeping)
+Derrick Henry + Malik Nabers       Saquon Barkley + Brock Bowers         +21.2     +6.0     +0.2   jerem9604  (asking for a man worth keeping)
+Rhamondre Stevenson                Josh Allen                            +18.3    +10.6    +18.3   JFMarino
+Derrick Henry + Mike Evans         Christian McCaffrey + Garrett Wilson    +11.9     +0.4    +11.9   KevinDA
+Mike Evans + Cam Skattebo          Jeremiyah Love + Jaylen Waddle        +11.2     +2.4     +3.1   JakeSK  (asking for a man worth keeping)
+Khalil Shakir                      Travis Kelce                           +8.8     +4.8     +8.8   BHier
+Jakobi Meyers                      Travis Kelce                           +7.7    +11.5     +7.7   BHier
+Josh Downs                         Travis Kelce                           +6.8     +5.0     +6.8   BHier
+Jakobi Meyers                      Kyle Pitts                             +6.7    +12.7     +6.7   BHier
+Brock Purdy + Derrick Henry        Josh Allen + Trey McBride              +6.1     +7.5     +6.1   JFMarino
+
+WHAT YOUR SURPLUS IS WORTH - how many rivals could offer the same thing:
+  QB   you hold 2, start 1;  5 of 11 rivals also carry a spare -> ordinary supply
+  RB   you hold 5, start 2;  11 of 11 rivals also carry a spare -> INVENTORY, not a chip - the market is flooded
+  WR   you hold 7, start 3;  11 of 11 rivals also carry a spare -> INVENTORY, not a chip - the market is flooded
+  TE   you hold 1, start 1;  7 of 11 rivals also carry a spare -> nothing to sell
+  DEF  you hold 1, start 1;  0 of 11 rivals also carry a spare -> nothing to sell
+
+(The chain below is not filtered for 2026 - it is the ceiling of what the board
+offers, not a plan. Read the table above for what to actually send.)
+
+TRADING POWER - trade after trade, each re-searched on the board the last one left.
+Only trades worth more than 6.8 to you are taken: that is the objective's own
+seed-to-seed spread, so anything smaller is the yardstick moving and not the roster.
+
+   1. Derrick Henry + Mike Evans         for Chase Brown + Justin Jefferson       +91.7  (him   +0.3)  running   +91.7
+   2. Malik Nabers + Rhamondre Stevenson for Josh Allen + Trey McBride            +21.5  (him   +9.9)  running  +113.2
+   3. Brock Purdy + Harold Fannin        for Jaxson Dart + Parker Washington      +25.3  (him   +6.7)  running  +138.5
+   4. Jordan Addison + Josh Downs        for Jaylen Warren + Chris Godwin         +12.7  (him   +0.7)  running  +151.2
+
+  4 trades, +151.2 to you, +17.6 handed to the men opposite to make them take it.
+  IT RAN OUT after 4, short of the 8 asked for: nothing left clears the floor.
+  The first trade alone was +91.7, so the chain is worth 1.6x a single one -
+  which is what one-step searching leaves behind.
+
+  AND THE ANSWER TO 'CAN I JUST KEEP TRADING?' - no. Ignoring the floor entirely,
+  the chain runs 8 trades and +183.5, but everything past the 4 above is smaller than the
+  yardstick's own noise, and it starts churning: it reacquires men it gave away earlier.
+  Every trade has to improve BOTH rosters, so the league's total value only rises and is
+  bounded by the best possible allocation of a fixed set of players. It must stop, and it
+  does. Local maxima are NOT the problem here; the floor is.
+
+WHAT THIS CANNOT TELL YOU. Sleeper records only COMPLETED trades - 51 across five
+seasons of this league, and not one refusal - so there is no way to fit what a manager
+will ACCEPT. 'His gain' is the honest stand-in: a trade that clearly helps him is one he
+is likelier to take. Judge the offer by that column and by what you know about him.
