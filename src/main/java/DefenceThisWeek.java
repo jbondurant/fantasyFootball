@@ -160,13 +160,15 @@ public class DefenceThisWeek {
 
         StringBuilder out = new StringBuilder();
         out.append(String.format("DEFENCE FOR WEEK %d  %s  season %s  (%s)%n", week, LocalDate.now(), season, me));
-        out.append(String.format("The measured policy (WireRateStress: stream on form, react after week %d - 8.03 a week%n"
-                + "against 7.21 for holding the best undrafted defence, both hindsight-free).%n", lag));
+        out.append(String.format("The policy WireRateStress measured: stream on form, react after week %d.%s%n", lag,
+                lag == 2 ? " At this lag it scored 8.03 a week\nagainst 7.21 for holding the best undrafted defence, both hindsight-free."
+                        : "\n*** -Plag=" + lag + " IS NOT THE MEASURED POLICY - the 8.03 a week belongs to lag 2. See\n"
+                                + "*** data/wire-rate-stress-2026-09-04.txt for what this lag actually scored."));
         out.append(finished < lag
-                ? String.format("%d finished week(s), fewer than the lag, so the pick is the best FREE defence by preseason ADP -%n"
-                        + "the only ranking that exists yet. This is what the backtest does in these weeks too.%n%n", finished)
-                : String.format("%d finished week(s): the pick is the best FREE defence by points per game over those weeks.%n"
-                        + "Nothing in this choice can see week %d.%n%n", finished, week));
+                ? String.format("%n%d finished week(s), fewer than the lag, so the pick is by preseason ADP - the only ranking%n"
+                        + "that exists yet - over the defences you can START: the free ones AND your own.%n%n", finished)
+                : String.format("%n%d finished week(s): the pick is by points per game over those weeks, again over the free%n"
+                        + "defences AND your own. Nothing in this choice can see week %d.%n%n", finished, week));
         out.append(String.format("%-16s %8s %8s %7s   %s%n", "DEFENCE", "ADP", "FORM", "GAMES", "WHO HOLDS HIM"));
         List<Defence> shown = new ArrayList<>(pool);
         shown.sort(finished < lag
@@ -184,6 +186,7 @@ public class DefenceThisWeek {
         }
         else if(held == null){
             out.append(String.format("You hold no defence. The policy says claim and start %s.%n", policy.name()));
+            out.append("(With no defence of your own the choice set IS the free men, so this is the backtested rule exactly.)\n");
         }
         else if(policy.id().equals(held.id())){
             out.append(String.format("START %s - you already hold the best defence available to you%s.%n", held.name(),

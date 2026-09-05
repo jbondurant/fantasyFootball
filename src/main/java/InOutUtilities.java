@@ -181,6 +181,24 @@ public class InOutUtilities {
      * season's projections, a completed draft. Fetched once, kept forever.
      */
     public static String getCachedForever(String webURL, String filepathStart){
+        return getCachedForever(webURL, filepathStart, false);
+    }
+
+    /**
+     * The same, for a resource whose EMPTY answer is a real answer.
+     *
+     * Week 18 of a finished season genuinely has no transactions, and Sleeper
+     * will say so forever. Refusing to cache that turned a normal quiet week
+     * into a fatal error for LeagueTransactions on any machine without the
+     * files already on disk. The guard is right for a stats or projection feed,
+     * where empty means "not yet"; it is wrong here, where empty means "none".
+     * The caller has to say which it is, because nothing in the response can.
+     */
+    public static String getCachedForeverAllowingEmpty(String webURL, String filepathStart){
+        return getCachedForever(webURL, filepathStart, true);
+    }
+
+    private static String getCachedForever(String webURL, String filepathStart, boolean mayBeEmpty){
         String filePath = "./" + filepathStart + ".txt";
         File f = new File(filePath);
         if(!f.exists() || f.isDirectory()) {
@@ -193,12 +211,13 @@ public class InOutUtilities {
             // week-1 actual missing - with nothing to notice it but the numbers
             // being wrong. A week that has not happened is not data; it is a
             // question asked too early, and it must fail loudly.
-            if(emptyPayload(fetched)){
+            if(!mayBeEmpty && emptyPayload(fetched)){
                 throw new IllegalStateException(webURL + " returned an empty payload ("
                         + fetched.trim() + ") and getCachedForever would keep it forever."
                         + " Nothing was written. If this is a week or a season that has not"
-                        + " happened yet, ask again when it has; if it is genuinely empty"
-                        + " forever, cache it under a name that says so.");
+                        + " happened yet, ask again when it has; if its empty answer is a"
+                        + " real answer - a quiet week of transactions, say - call"
+                        + " getCachedForeverAllowingEmpty instead and say so.");
             }
             writeContentToFile(fetched, filePath);
         }

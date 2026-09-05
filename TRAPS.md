@@ -708,3 +708,26 @@ real every time.
     number to apply and not sufficient for its ADVICE to; check what population
     the policy was measured over before handing its output to somebody outside
     it. Caught by running the tool, not by reading the design.
+
+88. **A guard that cannot tell "not yet" from "none".** #85 stopped
+    `getCachedForever` freezing an empty payload, because the 2026 week-1 stats
+    endpoint answered `{}` before kickoff and that would have been the season's
+    data. Correct for a stats or projection feed, where empty means the question
+    was asked too early - and wrong for a week of transactions, where empty
+    means a quiet week and week 18 of every finished season will say so forever.
+    The guard turned a normal empty week into a fatal error for
+    `LeagueTransactions` on any machine without the files already on disk: a
+    fix for one caller breaking another, in the same class, four commits later.
+    Nothing in the response distinguishes the two, so the CALLER declares it -
+    `getCachedForeverAllowingEmpty` - and the strict default stays where the
+    real failure was.
+
+89. **A verdict that changes every Tuesday is a verdict somebody shopped for.**
+    The bench test was pre-registered precisely so its answer could not be
+    chosen after the fact, and then the ledger rendered one of its three final
+    readings after every append - so a good week 1 would have printed "THE BENCH
+    PAID" off a single Sunday, and a bad week 3 would have unprinted it. The
+    test is about where he FINISHES; before the regular season is complete the
+    tool now prints a STANDING and says plainly that it is not the verdict.
+    Writing a test down in advance is worth nothing if it is read continuously
+    until it says something pleasant.

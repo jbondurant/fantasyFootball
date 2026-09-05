@@ -1,8 +1,10 @@
 DEFENCE FOR WEEK 1  2026-09-05  season 2026  (justinb314)
-The measured policy (WireRateStress: stream on form, react after week 2 - 8.03 a week
-against 7.21 for holding the best undrafted defence, both hindsight-free).
-0 finished week(s), fewer than the lag, so the pick is the best FREE defence by preseason ADP -
-the only ranking that exists yet. This is what the backtest does in these weeks too.
+The policy WireRateStress measured: stream on form, react after week 4.
+*** -Plag=4 IS NOT THE MEASURED POLICY - the 8.03 a week belongs to lag 2. See
+*** data/wire-rate-stress-2026-09-04.txt for what this lag actually scored.
+
+0 finished week(s), fewer than the lag, so the pick is by preseason ADP - the only ranking
+that exists yet - over the defences you can START: the free ones AND your own.
 
 DEFENCE               ADP     FORM   GAMES   WHO HOLDS HIM
 Rams                 97.1        -       0   JakeSK

@@ -47,4 +47,21 @@ public class SeasonLedgerTest {
         assertEquals(3, SeasonLedger.rankOf(totals, "a"));
         assertEquals(-1, SeasonLedger.rankOf(totals, "nobody"));
     }
+
+    /**
+     * The pre-registration is about where he FINISHES. Rendered after one Sunday
+     * it would announce a verdict off a single week, which is the opposite of
+     * what writing the test down first was for.
+     */
+    @Test
+    public void noFinalVerdictBeforeTheSeasonIsFinished(){
+        String midSeason = SeasonLedger.verdict(9, 2, 0.30, 3, 14);
+        assertTrue(midSeason.startsWith("STANDING after 3 of 14 weeks (NOT the verdict)"), midSeason);
+        assertFalse(midSeason.contains("THE BENCH PAID"), "a three-week lead is not a finding");
+        assertTrue(midSeason.contains("will not be read until week 14"));
+
+        String finished = SeasonLedger.verdict(9, 2, 0.30, 14, 14);
+        assertTrue(finished.startsWith("THE BENCH PAID"), finished);
+        assertEquals(SeasonLedger.verdict(9, 2, 0.30), finished, "once complete it is the plain reading");
+    }
 }

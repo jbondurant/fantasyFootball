@@ -99,6 +99,26 @@ public class SeasonLedger {
         return -1;
     }
 
+    /**
+     * The pre-registered reading - but only once there is a season to read.
+     *
+     * The test is about where he FINISHES. Rendered after week 1 it would
+     * announce "THE BENCH PAID" off one Sunday, which is the reverse of what
+     * pre-registering was for: the point is that the answer cannot be shopped
+     * for, and a verdict that changes every Tuesday is exactly a shopped one.
+     */
+    static String verdict(int preseasonRank, int actualRank, double benchShare,
+                          int weeksRecorded, int regularSeasonWeeks){
+        if(weeksRecorded < regularSeasonWeeks){
+            return String.format("STANDING after %d of %d weeks (NOT the verdict): %d%s by points scored"
+                    + " against %d%s projected, %.0f%% of his points from outside the frozen ten."
+                    + " The pre-registered test is about where he FINISHES and will not be read until"
+                    + " week %d is in.", weeksRecorded, regularSeasonWeeks, actualRank, suffix(actualRank),
+                    preseasonRank, suffix(preseasonRank), 100 * benchShare, regularSeasonWeeks);
+        }
+        return verdict(preseasonRank, actualRank, benchShare);
+    }
+
     /** The pre-registered reading. Better by 3+ places is the bench paying; 9th or worse is not. */
     static String verdict(int preseasonRank, int actualRank, double benchShare){
         if(actualRank <= preseasonRank - 3){
@@ -145,7 +165,7 @@ public class SeasonLedger {
         }
 
         Map<String, List<String>> preseasonTen = frozenTen(anchorPath);
-        Map<String, String> ownerOf = LeagueOwners.today(configuration);
+        Map<Integer, String> managerOf = managerByRoster(configuration);
         List<String> existing = Files.exists(ledgerPath) ? Files.readAllLines(ledgerPath) : new ArrayList<>();
         Set<Integer> already = weeksRecorded(existing);
         List<Row> fresh = new ArrayList<>();
@@ -155,18 +175,21 @@ public class SeasonLedger {
                 continue;
             }
             Map<String, Double> actual = LeagueWeek.actual(season, week);
-            Map<String, List<String>> started = startedBy(configuration, week, ownerOf);
-            Map<String, List<String>> rosters = new TreeMap<>();
-            for(Map.Entry<String, String> entry : ownerOf.entrySet()){
-                rosters.computeIfAbsent(entry.getValue(), u -> new ArrayList<>()).add(entry.getKey());
-            }
-            for(Map.Entry<String, List<String>> entry : rosters.entrySet()){
-                String manager = entry.getKey();
-                List<String> lineup = started.getOrDefault(manager, List.of());
+            // the WEEK's own rosters and lineups, not today's: the matchups feed
+            // carries both, so best_possible is a fact about week w rather than
+            // about the day this tool happened to be run
+            for(LineupPromotion.RosterWeek row : LineupPromotion.week(configuration.getLeagueID(), week)){
+                String manager = managerOf.get(row.rosterID());
+                if(manager == null){
+                    continue;
+                }
                 double scored = 0, fromBench = 0;
                 int promoted = 0;
                 List<String> frozen = preseasonTen.getOrDefault(manager, List.of());
-                for(String id : lineup){
+                for(String id : row.started()){
+                    if(id == null || id.isBlank() || id.equals("0")){
+                        continue;   // an empty lineup slot, not a man
+                    }
                     double points = actual.getOrDefault(id, 0.0);
                     scored += points;
                     if(!frozen.contains(id)){
@@ -175,7 +198,7 @@ public class SeasonLedger {
                     }
                 }
                 List<TeamRankings.Man> all = new ArrayList<>();
-                for(String id : entry.getValue()){
+                for(String id : row.roster()){
                     all.add(DraftExpectation.man(id, actual.getOrDefault(id, 0.0), false, 0));
                 }
                 fresh.add(new Row(week, manager, scored, TeamRankings.bestLineup(all).starters(),
@@ -214,31 +237,33 @@ public class SeasonLedger {
         return ten;
     }
 
-    /** Who each manager actually started that week, from Sleeper's own matchups. */
-    static Map<String, List<String>> startedBy(AAAConfiguration configuration, int week,
-                                               Map<String, String> ownerOf){
-        Map<String, List<String>> started = new TreeMap<>();
-        JsonArray rows = JsonParser.parseString(
-                LineupPromotion.matchupsRaw(configuration.getLeagueID(), week)).getAsJsonArray();
-        for(JsonElement element : rows){
-            JsonObject row = element.getAsJsonObject();
-            if(!row.has("starters") || row.get("starters").isJsonNull()){
+    /**
+     * Manager display name for each roster_id.
+     *
+     * THE JOIN IS roster_id, not "whoever owns the first starter today". A
+     * matchup row carries its roster_id and the rosters array carries
+     * roster_id with owner_id, so the exact join is sitting in the feed. The
+     * first version looked up the current owner of the first man in the lineup,
+     * which is wrong the moment anybody drops him: a week-3 lineup would be
+     * attributed by who holds that player in December, or dropped entirely if
+     * nobody does. A roster_id never changes hands.
+     */
+    static Map<Integer, String> managerByRoster(AAAConfiguration configuration){
+        Map<String, String> nameByUser = configuration.getUserIDToDisplayName();
+        Map<Integer, String> byRoster = new TreeMap<>();
+        for(JsonElement element : JsonParser.parseString(
+                configuration.getTodaysRosterWebPageSerious()).getAsJsonArray()){
+            JsonObject roster = element.getAsJsonObject();
+            if(!roster.has("roster_id") || roster.get("roster_id").isJsonNull()){
                 continue;
             }
-            List<String> ids = new ArrayList<>();
-            String manager = null;
-            for(JsonElement starter : row.getAsJsonArray("starters")){
-                String id = starter.getAsString();
-                ids.add(id);
-                if(manager == null){
-                    manager = ownerOf.get(id);
-                }
-            }
-            if(manager != null){
-                started.put(manager, ids);
+            String owner = roster.has("owner_id") && !roster.get("owner_id").isJsonNull()
+                    ? roster.get("owner_id").getAsString() : null;
+            if(owner != null){
+                byRoster.put(roster.get("roster_id").getAsInt(), nameByUser.getOrDefault(owner, owner));
             }
         }
-        return started;
+        return byRoster;
     }
 
     private static String anchor(AAAConfiguration configuration, String season) throws Exception {
@@ -312,11 +337,13 @@ public class SeasonLedger {
         }
         Map<String, Double> scored = new TreeMap<>();
         Map<String, Double> bench = new TreeMap<>();
+        Set<Integer> weeks = new HashSet<>();
         for(String line : Files.readAllLines(ledgerPath)){
             if(line.isBlank() || line.startsWith("#") || line.startsWith("week,")){
                 continue;
             }
             String[] parts = line.split(",");
+            weeks.add(Integer.parseInt(parts[0].trim()));
             scored.merge(parts[1], Double.parseDouble(parts[2]), Double::sum);
             bench.merge(parts[1], Double.parseDouble(parts[4]), Double::sum);
         }
@@ -328,7 +355,11 @@ public class SeasonLedger {
         }
         int actualRank = rankOf(scored, me);
         double share = scored.get(me) == 0 ? 0 : bench.get(me) / scored.get(me);
-        System.out.printf("%n%s%n", verdict(preseasonRank, actualRank, share));
+        // the regular season is what the test was written about: this league's
+        // playoffs start week 15, so weeks 1-14 are the population
+        int regularSeason = configuration.getLeagueJson().getAsJsonObject("settings")
+                .get("playoff_week_start").getAsInt() - 1;
+        System.out.printf("%n%s%n", verdict(preseasonRank, actualRank, share, weeks.size(), regularSeason));
         System.out.printf("(%.0f points scored, %.0f of them from outside the frozen ten)%n",
                 scored.get(me), bench.get(me));
     }
