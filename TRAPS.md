@@ -782,3 +782,24 @@ real every time.
     the bid that maximises P(win) x (what he is worth TO YOU - the bid). A
     negative result that removes a feature is worth more than a fitted one that
     invents it.
+
+94. **The right mechanism, and no history that can show it.** #93 found that
+    nothing observable about a player predicts what he costs on waivers, and
+    Justin supplied the mechanism it was missing: what moves a man is an EVENT -
+    the starter in front of him injured or traded, the man himself traded, a
+    piece of news - not his level. That is almost certainly right, and it is
+    why the level correlates at -0.04. Its observable trace is a projection that
+    JUMPS, and the jump does flip the sign: +0.08 against -0.06 for the level.
+    Still weak, and the expensive claims say why. Isaac Guerendo cost 75 with a
+    projection of 1.0 the week before and 1.0 the week of; Ford cost 76 on 5.5
+    to 5.7. Beside them Pacheco (2.8 to 7.2), Estime (2.3 to 6.9) and Taylor
+    (5.4 to 11.2) show exactly the jump the theory predicts.
+    The difference is not the theory, it is the data. Sleeper serves ONE settled
+    projection per past week with no vintage, so for a finished season it is not
+    what the market saw on waiver Tuesday; and the weekly feed carries stats
+    only - no team, no injury status, no position - so who was hurt and who had
+    been traded is not reconstructible at all. A mechanism can be right and
+    unmeasurable on the record available, and the answer then is to INSTRUMENT
+    it rather than to fit the weak proxy and call it a model: the daily
+    projection snapshot now runs all season instead of stopping at the draft, so
+    next year this is answerable and this year it accumulates.
