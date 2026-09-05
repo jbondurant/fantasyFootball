@@ -764,3 +764,21 @@ real every time.
     tool that built the lineup already does. The first test of the fixed version
     passed on a two-man lineup, where no slot is required and therefore nothing
     was being tested; a rule about slots needs a fixture with slots.
+
+93. **The model the data refused to support.** The FAAB bid model was designed
+    to price a player: band contests by something observable before bidding,
+    fit P(win | bid) inside each band, best-respond. The data says no. Over
+    1,448 settled contests from this league's own five seasons, the clearing
+    price correlates with the man's projection for that week at -0.04, with
+    what he scored the week before at -0.04 (-0.08 among contested claims), and
+    with what he went on to score - which is hindsight and still the best of
+    them - at +0.14. The only strong correlate is how many rivals bid (+0.50),
+    which is exactly what cannot be known before bidding. Adonai Mitchell cost
+    53 on an 8.2 projection. This league does not price players; it prices
+    moments, and any banding by player quality would have been a signal
+    invented to fill a slot in a design. What survives is real and enough: the
+    unconditional price distribution (53% of claims clear at nothing; contested
+    ones run a median of 3 and a 90th of 13), the win curve read off it, and
+    the bid that maximises P(win) x (what he is worth TO YOU - the bid). A
+    negative result that removes a feature is worth more than a fitted one that
+    invents it.

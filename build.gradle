@@ -200,6 +200,10 @@ tasks.register('run', JavaExec) {
      // no longer the measured policy. SeasonLedger - 'anchor' freezes the pre-registered
      // bench test and refuses to overwrite it.
      'lag', 'anchor',
+     // TuesdaySwap - 'candidates' free agents per position to search; 'swapFloor' the gain a
+     // pair must clear before it is named at all. FaabBid - 'fit' harvests this league's own
+     // contest history; 'value' is what the man is worth to the roster; 'budget' the FAAB left.
+     'candidates', 'swapFloor', 'fit', 'value', 'budget',
      // DraftExpectation - 'who=<last name>' prints which seats take that man and where.
      'who',
      // LeagueActuals.FLAG - grade outcomes under the league's own scoring

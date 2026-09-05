@@ -1,0 +1,21 @@
+TUESDAY SWAP  2026-09-05  season 2026, waivers for week 1  (justinb314)
+120 free agents searched against all 16 roster spots = 1920 pairs, on the weekly-starter
+objective (240 drawn seasons), which prices a bench man by how often he would actually start.
+Gains are in the objective's seventeen-week units; about 14 of those weeks are left, so
+scale by 0.82 for what a move is worth from here.
+Nothing under 6.8 points is named: that is the yardstick's own seed-to-seed spread
+(ObjectiveStability), so a smaller gain is the measurement moving and not the roster.
+
+ADD                    POS  -> drop                             17wk from here
+Dalton Schultz         TE   -> drop Baltimore Ravens            +3.8      +3.1
+Dalton Schultz         TE   -> drop Tre' Harris                 +3.5      +2.8
+Tyler Shough           QB   -> drop Baltimore Ravens            +3.3      +2.7
+Baker Mayfield         QB   -> drop Baltimore Ravens            +3.0      +2.5
+Tyler Shough           QB   -> drop Tre' Harris                 +2.2      +1.8
+Sam Darnold            QB   -> drop Baltimore Ravens            +2.2      +1.8
+Baker Mayfield         QB   -> drop Tre' Harris                 +1.9      +1.6
+Gunnar Helm            TE   -> drop Baltimore Ravens            +1.8      +1.5
+
+DO NOTHING. The best pair on the board is worth +3.8 (3.1 from here), inside the
+floor, so it is not a move - it is noise with a transaction attached. Waiting is free and
+buys another week of evidence.
