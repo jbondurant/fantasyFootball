@@ -213,7 +213,8 @@ tasks.register('run', JavaExec) {
      // reads back 0 whatever is passed (BoardValue.LOOKAHEAD documents it).
      // 'opticsBar' - how many picks of draft position count as visibly grabbing
      // the earlier one, for the board that looks for perception/value gaps.
-     'chainDepth', 'chainPool', 'batnaPool', 'opticsBar', 'pool', 'tradeFloor', 'keepers', 'sellMode',
+     // TradeStability - 'top' how many of the board's best trades to re-value.
+     'chainDepth', 'chainPool', 'batnaPool', 'opticsBar', 'pool', 'tradeFloor', 'keepers', 'sellMode', 'top', 'errorSeeds',
      // LeagueConsole shares -Pme/-Pscenarios/-Ppool/-Pkeepers/-Pcandidates/-PswapFloor.
      // 'wireScenarios' is its own: the wire search runs at the scenario count
      // ObjectiveStability measured the noise floor over (480), independently of

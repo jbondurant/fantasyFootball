@@ -1217,3 +1217,38 @@ real every time.
     optimistic it was is itself the result. And it is what flipped the KevinDA
     recommendation from send to do-not-send, which no amount of reasoning about
     the likely size of the effect would have produced.
+
+112. **Half the board was noise, printed to two decimal places.** The trades
+    table applied no floor at all - it kept anything above +0.05 - so a trade
+    worth a fifth of the objective's wobble sat in the same column as one worth
+    twice it, indistinguishable. `TradeStability` re-values the SAME trades under
+    several seeds (re-searching would confound valuation noise with search
+    noise) and the answer is that **60 of 102 trades go negative on at least one
+    seed**. The model cannot tell them from zero.
+
+    The single 6.8 floor was never the right instrument either. It came from
+    `ObjectiveStability`, which measured a roster MARGINAL - one man in or out -
+    at 480 drawn seasons. A trade moves two men in opposite directions at 240,
+    and nothing had checked that the two quantities have the same error. They do
+    not: measured spreads across sixty real trades ran from **0.4 to 18.0**.
+    There is no one number that fits them, which is why every trade now carries
+    its own bar rather than being judged against a borrowed constant.
+
+    *And the first measurement was on the wrong population.* Built without
+    `mutual()`, it measured the top of the raw board - trades worth +241 because
+    the other manager was handing over Gibbs and Nacua for Tre' Harris. Nobody
+    accepts those, and spread plausibly scales with magnitude, so their noise
+    says nothing about a +7.4 offer. The same error as #79, #81 and #101, made
+    inside the tool built to catch that class of error.
+
+113. **Correcting against an instrument I had just retired.** Having measured
+    that the 6.8 floor did not apply to trades, I immediately judged the session's
+    headline recommendation against it anyway - reporting that Josh Downs for
+    Travis Kelce "falls below the floor on two of three seeds" and telling Justin
+    to treat his own gain as neutral.
+
+    Against its OWN error bar the trade reads +5.4 to +7.4 and never goes
+    negative: a real gain of about +6.4 ± 1. The recommendation was sound and I
+    talked it down using the very constant I had spent the hour showing was the
+    wrong one. Retiring an instrument means not reaching for it in the next
+    paragraph.

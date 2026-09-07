@@ -507,10 +507,29 @@ public class LeagueConsole {
                     chainDepth, chainPool, tradeFloor));
         }
 
+        // EACH TRADE'S OWN ERROR BAR, because one global floor was the wrong
+        // instrument. TradeStability measured the seed-to-seed spread of a
+        // mutually-good trade gain: median 5.1, max 18.0, min 0.4. That is not a
+        // constant, it is a per-trade property - and the 6.8 everything was being
+        // judged against came from a roster MARGINAL at 480 scenarios, a
+        // different quantity at a different scenario count.
+        //
+        // The trade recommended all session reads +7.4 on the seed this page
+        // ships and +5.4 on another. Printing the first without the second is
+        // how a number inside the noise gets sent as a recommendation.
+        int errorSeeds = Integer.getInteger("errorSeeds", 3);
+        long[] otherSeeds = {7L, 99L, 2026L, 31_337L};
+        List<WeeklyStarterValue> shakes = new ArrayList<>();
+        for(int i = 0; i < errorSeeds - 1; i++){
+            shakes.add(WeeklyStarterValue.forCurrentBoard(configuration, points, scenarios,
+                    otherSeeds[i % otherSeeds.length]));
+        }
+
         StringBuilder tradesJson = new StringBuilder("[");
         int written = 0;
         int losesToElsewhere = 0;
         int fairTrades = 0;
+        int insideItsOwnNoise = 0;
         for(TradeMarket.Trade trade : mutuallyGood){
             // A GAIN THAT ROUNDS TO NOTHING IS NOT INFORMATION. The filter keeps
             // anything strictly positive, which at two decimal places can print
@@ -561,6 +580,19 @@ public class LeagueConsole {
             // and does not visibly grab the earlier pick.
             boolean fair = trade.myGain() > 0 && himSimple > 0 && !himHole && !hole
                     && optics.gap() <= TradeMarket.OPTICS_GRAB;
+            // re-value THIS trade under the other seeds; the search is not
+            // repeated, so this is the valuation's own wobble and not a
+            // different board
+            double low = trade.myGain(), high = trade.myGain();
+            for(WeeklyStarterValue shake : shakes){
+                double again = shake.of(after) - shake.of(rosters.get(me));
+                low = Math.min(low, again);
+                high = Math.max(high, again);
+            }
+            boolean noise = low <= 0;
+            if(noise){
+                insideItsOwnNoise++;
+            }
             double hisRate = tradesPerYear.getOrDefault(trade.withManager(), 0.0);
             int[] record = tradeRecord.getOrDefault(trade.withManager(), new int[]{0, 0});
             double hisBest = elsewhere.getOrDefault(trade.withManager(), 0.0);
@@ -572,7 +604,8 @@ public class LeagueConsole {
                             + "\"reads\":%s,\"men\":%d,\"reach\":%s,\"chain\":%s,"
                             + "\"himSimple\":%s,\"himSeason\":%s,\"himHole\":%b,"
                             + "\"hisBest\":%s,\"hisBestNaive\":%s,\"hisEdge\":%s,\"hisPartner\":%s,"
-                            + "\"askPrice\":%s,\"overAsk\":%s,\"fair\":%b,\"hisRate\":%s,\"hisTrades\":%d,\"hisSeasons\":%d}",
+                            + "\"askPrice\":%s,\"overAsk\":%s,\"fair\":%b,\"hisRate\":%s,\"hisTrades\":%d,\"hisSeasons\":%d,"
+                            + "\"low\":%s,\"high\":%s,\"noise\":%b}",
                     quote(label(trade.give(), nameOf)), quote(label(trade.get(), nameOf)),
                     quote(trade.withManager()), num(trade.myGain()), num(trade.theirGain()),
                     num(thisSeason), num(hisKeeper), TradeMarket.asksForAKeeper(hisKeeper),
@@ -583,7 +616,7 @@ public class LeagueConsole {
                     num(himSimple), num(himSeason), himHole, num(hisBest), num(hisBestNaive), num(hisEdge),
                     quote(market.partner().getOrDefault(trade.withManager(), "nobody")),
                     num(askPrice), num(trade.theirGain() - askPrice), fair,
-                    num(hisRate), record[0], record[1]));
+                    num(hisRate), record[0], record[1], num(low), num(high), noise));
             if(fair){
                 fairTrades++;
             }
@@ -713,13 +746,13 @@ public class LeagueConsole {
                         + "\"scenarios\":%d,\"keepers\":%b,\"lineupTotal\":%s,\"slots\":%d,"
                         + "\"lineup\":%s,\"trades\":%s,\"supply\":%s,\"faab\":%s,"
                         + "\"faabAll\":%d,\"faabContested\":%d,\"faabFree\":%s,\"costs\":[1,1.5,2,3],"
-                        + "\"budget\":%d,\"wire\":%s,\"swapFloor\":%s,\"wireScenarios\":%d,\"lookahead\":%d,\"chainDepth\":%d,\"chainPool\":%d,\"pool\":%d,\"batnaPool\":%d,\"losesToElsewhere\":%d,\"keepers2027\":%s,\"fairTrades\":%d,\"mirage\":%s,\"opticsBar\":%s,\"winAll\":%s,\"winContested\":%s}",
+                        + "\"budget\":%d,\"wire\":%s,\"swapFloor\":%s,\"wireScenarios\":%d,\"lookahead\":%d,\"chainDepth\":%d,\"chainPool\":%d,\"pool\":%d,\"batnaPool\":%d,\"losesToElsewhere\":%d,\"insideItsOwnNoise\":%d,\"errorSeeds\":%d,\"keepers2027\":%s,\"fairTrades\":%d,\"mirage\":%s,\"opticsBar\":%s,\"winAll\":%s,\"winContested\":%s}",
                 quote(season), week, quote(me), quote(LocalDate.now().toString()),
                 scenarios, withKeepers, num(lineup.starters()), lineup.starting().size(),
                 lineupJson, tradesJson, supplyJson, faabGrid(allBand, costs),
                 allPrices.size(), contestedPrices.size(),
                 num(allPrices.isEmpty() ? 0 : allPrices.stream().filter(p -> p == 0).count() * 100.0 / allPrices.size()),
-                budgetLeft, wireJson, num(swapFloor), wireScenarios, lookahead, chainDepth, chainPool, pool, batnaPool, losesToElsewhere, keepersJson, fairTrades, mirageJson, num(looksGoodBar), winLadder(allBand), winLadder(contestedBand));
+                budgetLeft, wireJson, num(swapFloor), wireScenarios, lookahead, chainDepth, chainPool, pool, batnaPool, losesToElsewhere, insideItsOwnNoise, errorSeeds, keepersJson, fairTrades, mirageJson, num(looksGoodBar), winLadder(allBand), winLadder(contestedBand));
 
         Path target = Path.of("data", "console-" + season + "-w" + week + ".html");
         Files.writeString(target, page(json), StandardCharsets.UTF_8);
@@ -925,7 +958,8 @@ function trades(){ const only26 = document.getElementById("f26").value==="1";
     + "<th class=sub2>simple</th><th class=sub2>full</th><th class=sub2>2026</th><th class=sub2>vs elsewhere</th><th class=sub2>vs selling them</th></tr>";
   rows.slice(0,SHOWN).forEach((r,i)=>{ t += `<tr class="${r.chain&&r.chain.length>1?"clickable":""}" data-ch="${i}"><td class=l>${r.give}${r.chain&&r.chain.length>1?' <span class=caret>&#9656;</span>':""}</td><td class=l>${r.get}</td>`
     + `<td class="${r.hole?"":sign(r.simple)} first">${r.hole?'<span class=tag>slot</span>':f1(r.simple)}</td>`
-    + `<td class=${sign(r.you)}><b>${f1(r.you)}</b></td>`
+    + `<td class="${r.noise?"":sign(r.you)}" title="across ${D.errorSeeds} seeds: ${f1(r.low)} to ${f1(r.high)}">`
+    + `<b>${f1(r.you)}</b>${r.noise?' <span class=tag>noise</span>':` <span class=sub>&plusmn;${((r.high-r.low)/2).toFixed(1)}</span>`}</td>`
     + `<td class=${sign(r.season)}>${f1(r.season)}</td>`
     + `<td class="${r.himHole?"":sign(r.himSimple)} first">${r.himHole?'<span class=tag>slot</span>':f1(r.himSimple)}</td>`
     + `<td class=${sign(r.him)}><b>${f1(r.him)}</b></td>`
@@ -952,6 +986,7 @@ function trades(){ const only26 = document.getElementById("f26").value==="1";
   document.getElementById("trade-note").innerHTML =
     `${Math.min(rows.length, SHOWN)} of ${rows.length} matching offers shown (${D.trades.length} searched), one, two and three men each way, all good for <b>both</b> sides &mdash; an offer the other manager loses on is one he declines.<br><br>`
     + `<b>The same three numbers for both managers</b>, so a trade can be argued in whichever terms the man opposite actually uses. <b>SIMPLE</b> is what the best legal ten projects and nothing else &mdash; the number to put in a message, because anybody can check it. <b>FULL</b> prices a bench by how often it is promoted and draws whole historical seasons for injury and boom-or-bust; on his side it is also <i>loss-averse on keepers</i>. <b>2026</b> is this season alone, no keeper value either way. When simple and full disagree, that gap IS the argument: a trade worth +8.8 full and +0.0 simple is one where all the value is bench and injury risk, and no starters-only manager will ever see it. Where a trade <b>empties a slot</b> for either side the simple number is withheld and tagged rather than shown &mdash; sending away an only defence costs the whole slot, which reads as &minus;95 and means &ldquo;you would pick one up&rdquo;.<br><br>`
+    + `<b>Your full gain carries its own error bar.</b> Each trade is re-valued under ${D.errorSeeds} seeds of the same objective &mdash; the search is not repeated, so this is the valuation's own wobble and not a different board &mdash; and the range is on hover. A trade whose gain goes negative on any seed is tagged <b>noise</b>: the model cannot tell it from zero, whatever the headline says. <b>${D.insideItsOwnNoise} of ${D.trades.length} are in that state.</b> This replaced a single 6.8-point floor, which was the wrong instrument: that number was measured on a roster MARGINAL at 480 drawn seasons, and a trade is a different quantity at a different count &mdash; measured spreads across sixty real trades ran from 0.4 to 18.0, so no one floor fits them.<br><br>`
     + `<b>HE TRADES</b> is completed deals per season from this league's own log, and it is the column to read first. Everything else here models how a rival VALUES an offer; this is the only one that asks whether he does deals at all, and it is probably the larger term. Nothing on the board is worth more than a manager's willingness to open the message: the two biggest gains below go to somebody who has completed one trade in three seasons, while the most active traders sit lower down the table with offers that would actually be taken.<br><br>`
     + `<b>${D.fairTrades} of the ${D.trades.length} offers help him on the number he can check himself, empty nobody's lineup, and do not visibly grab the earlier pick &mdash; and that filter is ON by default.</b> This is a keeper league: the same eleven managers every season, so being somebody people want to deal with is an asset that compounds into next year rather than a nicety. A trade he thanks you for is worth more than a slightly better one he resents.<br><br>`
     + `<b>${D.losesToElsewhere} of the ${D.trades.length} offers lose to something he can already get from somebody else.</b> <b>VS ELSEWHERE</b> is the column that says so, and it is the one that decides whether an offer gets taken. His gain is not persuasive on its own: what matters is what it beats. Each rival's best mutually-good trade with somebody who is not you is computed the same way, and this is his gain from your offer minus that. <b>And that alternative is limited by everyone else's alternatives</b>: his best trade needs the manager across from HIM to prefer it to his own options. So the rivals are PAIRED OFF &mdash; each pair striking the deal with the most joint surplus to divide, best pairs forming first &mdash; and his fallback is what he gets from the partner he would actually end up with, not the best partner he can name. Hover a number to see that alongside the naive maximum, which credits him with deals the other man would decline. <b>A negative number means he has something better waiting and will not need you.</b> Two limits, both making the column optimistic: the search is size-balanced, so it cannot see the uneven deals where a manager sends two men for one and refills off the wire &mdash; anyone who can build those has better alternatives than this shows &mdash; and it runs at a pool of ${D.batnaPool}. So a thin edge here is not an edge.<br><br>`

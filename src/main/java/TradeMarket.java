@@ -1090,7 +1090,7 @@ public class TradeMarket {
         return steps;
     }
 
-    private static String label(List<String> ids, Map<String, String> nameOf){
+    static String label(List<String> ids, Map<String, String> nameOf){
         List<String> names = new ArrayList<>();
         for(String id : ids){
             names.add(nameOf.getOrDefault(id, id));
