@@ -427,6 +427,10 @@ public class LeagueConsole {
             }
             everySwap.addAll(TradeMarket.between(me, entry.getKey(), rosters.get(me), entry.getValue(),
                     mySide, theirSide, pool));
+            // and the uneven shapes, which is where consolidation lives: he holds
+            // seven receivers and five backs at positions every rival has spare
+            everySwap.addAll(TradeMarket.unbalanced(me, entry.getKey(), rosters.get(me),
+                    entry.getValue(), mySide, theirSide, pool, points));
         }
         List<TradeMarket.Trade> mutuallyGood = TradeMarket.mutual(everySwap);
         double myBase = seasonOnly.applyAsDouble(rosters.get(me));
@@ -446,7 +450,7 @@ public class LeagueConsole {
         // much the recursion moved things is the interesting part and asserting
         // it would be worth nothing.
         int batnaPool = Integer.getInteger("batnaPool", 4);
-        List<TradeMarket.Alternative> rivalBoard = TradeMarket.alternatives(me, rosters, theirSide, batnaPool);
+        List<TradeMarket.Alternative> rivalBoard = TradeMarket.alternatives(me, rosters, theirSide, batnaPool, points);
         TradeMarket.Market market = TradeMarket.match(rivalBoard, rosters.keySet(), me);
         // what each of his men fetches on his own, so an ask for two of them can
         // be set against what selling those two separately would bring him

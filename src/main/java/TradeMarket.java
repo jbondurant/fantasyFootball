@@ -166,7 +166,7 @@ public class TradeMarket {
      * expensive half of the outside-option calculation, done once.
      */
     static List<Alternative> alternatives(String me, Map<String, List<String>> rosters,
-                                          Side rivalValue, int pool){
+                                          Side rivalValue, int pool, Map<String, Double> points){
         List<String> rivals = new ArrayList<>();
         for(String manager : rosters.keySet()){
             if(!manager.equals(me)){
@@ -177,8 +177,16 @@ public class TradeMarket {
         for(int i = 0; i < rivals.size(); i++){
             for(int j = i + 1; j < rivals.size(); j++){
                 String one = rivals.get(i), two = rivals.get(j);
-                for(Trade trade : mutual(between(one, two, rosters.get(one), rosters.get(two),
-                        rivalValue, rivalValue, pool))){
+                // BALANCED AND UNEVEN BOTH. A rival who can send two men for one
+                // has better alternatives than a balanced-only search credits
+                // him with, and every one of those is a thing Justin's offer has
+                // to beat. Leaving them out flattered his own board in exactly
+                // the column that decides whether an offer gets taken.
+                List<Trade> board = new ArrayList<>(between(one, two, rosters.get(one),
+                        rosters.get(two), rivalValue, rivalValue, pool));
+                board.addAll(unbalanced(one, two, rosters.get(one), rosters.get(two),
+                        rivalValue, rivalValue, pool, points));
+                for(Trade trade : mutual(board)){
                     found.add(new Alternative(one, two, trade.give(), trade.get(),
                             trade.myGain(), trade.theirGain()));
                 }
@@ -224,8 +232,8 @@ public class TradeMarket {
      * groping for and could not express.
      */
     static Map<String, Double> outsideOption(String me, Map<String, List<String>> rosters,
-                                             Side rivalValue, int pool){
-        return match(alternatives(me, rosters, rivalValue, pool), rosters.keySet(), me).fallback();
+                                             Side rivalValue, int pool, Map<String, Double> points){
+        return match(alternatives(me, rosters, rivalValue, pool, points), rosters.keySet(), me).fallback();
     }
 
     /**
@@ -413,6 +421,89 @@ public class TradeMarket {
         return trades;
     }
 
+    /**
+     * TWO FOR ONE, AND ONE FOR TWO - with the roster arithmetic paid for.
+     *
+     * The balanced search cannot see the shape Justin most needs. He holds seven
+     * receivers and five backs at positions where every rival has a spare, so
+     * the trade that helps him is consolidation: send two men nobody starts,
+     * receive one who starts. `between` only ever offers same-size swaps, so
+     * that deal was not on the board at all.
+     *
+     * It also fixes an optimism. Every rival's outside option was computed over
+     * balanced swaps only, and a manager who can build uneven deals has better
+     * alternatives than that credits him with - so leaving these out made
+     * Justin's own offers look better than they are, in the column that decides
+     * whether they get taken.
+     *
+     * THE SIDE RECEIVING MORE MEN MUST DROP ONE, because rosters are full at
+     * sixteen. That is not a detail to wave through: it is the same "empties a
+     * slot" accounting the waiver board needed, and skipping it would price a
+     * seventeen-man roster nobody is allowed to hold. He drops his lowest
+     * projected man - a cheap rule, chosen over searching the drop because that
+     * would cost sixteen objective runs per candidate trade, and stated here
+     * rather than buried: a manager who would drop somebody smarter than his
+     * worst man does better than this says.
+     *
+     * The side SENDING more men simply ends a man short, which the objective
+     * already handles - an unfilled slot is refilled from the wire, and a
+     * fifteen-man roster is legal.
+     */
+    static List<Trade> unbalanced(String me, String them, List<String> mine, List<String> theirs,
+                                  Side myValue, Side theirValue, int pool,
+                                  Map<String, Double> points){
+        List<String> myTop = mine.subList(0, Math.min(pool, mine.size()));
+        List<String> theirTop = theirs.subList(0, Math.min(pool, theirs.size()));
+        List<Trade> trades = new ArrayList<>();
+
+        // I send two, receive one: I end at fifteen, he ends at seventeen and cuts
+        for(List<String> give : combinations(myTop, 2)){
+            for(String get : theirTop){
+                List<String> in = List.of(get);
+                String cut = worstOther(theirs, give, points);
+                if(cut == null){
+                    continue;
+                }
+                List<String> hisOut = new ArrayList<>(in);
+                hisOut.add(cut);
+                trades.add(new Trade(them, give, in,
+                        myValue.gain(mine, give, in), theirValue.gain(theirs, hisOut, give)));
+            }
+        }
+        // I receive two, send one: I end at seventeen and cut, he ends at fifteen
+        for(String give : myTop){
+            for(List<String> get : combinations(theirTop, 2)){
+                List<String> out = List.of(give);
+                String cut = worstOther(mine, get, points);
+                if(cut == null){
+                    continue;
+                }
+                List<String> myOut = new ArrayList<>(out);
+                myOut.add(cut);
+                trades.add(new Trade(them, myOut, get,
+                        myValue.gain(mine, myOut, get), theirValue.gain(theirs, get, out)));
+            }
+        }
+        return trades;
+    }
+
+    /** The lowest-projected man on a roster who is not part of the deal. */
+    static String worstOther(List<String> roster, List<String> exclude, Map<String, Double> points){
+        String worst = null;
+        double lowest = Double.MAX_VALUE;
+        for(String id : roster){
+            if(exclude.contains(id)){
+                continue;
+            }
+            double projected = points.getOrDefault(id, 0.0);
+            if(projected < lowest){
+                lowest = projected;
+                worst = id;
+            }
+        }
+        return worst;
+    }
+
     /** Every unordered choice of `size` men from `from`. */
     static List<List<String>> combinations(List<String> from, int size){
         List<List<String>> out = new ArrayList<>();
@@ -570,6 +661,8 @@ public class TradeMarket {
                 continue;
             }
             all.addAll(between(me, entry.getKey(), rosters.get(me), entry.getValue(), mySide, theirSide, pool));
+            all.addAll(unbalanced(me, entry.getKey(), rosters.get(me), entry.getValue(),
+                    mySide, theirSide, pool, points));
         }
         List<Trade> mutuallyGood = mutual(all);
         java.util.function.ToDoubleFunction<Trade> seasonGain = trade ->

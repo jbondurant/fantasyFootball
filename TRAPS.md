@@ -1184,3 +1184,36 @@ real every time.
     lopsided deals were accepted would learn a boundary that says yes to
     everything. They comfortably support twelve per-manager rates. Ask the data
     a question at the granularity it can answer.
+
+110. **Two independent signals, and I ranked on one.** The trade-rate measurement
+    (#109) was right that a manager who never trades will not take your best
+    offer, and I immediately over-read it: the draft messages went to KevinDA
+    because he trades 3.60 times a season, without checking what he could get
+    instead. With uneven deals priced into the outside option, his edge on both
+    offers is NEGATIVE - his fallback is +5.3 and he was being offered +0.2.
+    He would decline, correctly.
+
+    "Does he trade" and "does he have somewhere better to go" are independent,
+    and an offer needs both. BHier is the case that makes it obvious: his best
+    deal anywhere is +35.3, and what he can ACTUALLY get once the manager who
+    would give him that has somebody better lined up is +2.0. He looks rich and
+    is poor. Every offer to him clears his real alternative by an order of
+    magnitude, and he trades 3.25 times a season. That is the trade to send, and
+    ranking on either signal alone would have missed it - trade rate alone picks
+    KevinDA, edge alone picks managers who never answer.
+
+    The habit: when a new measurement reorders a board, check whether it has
+    displaced a signal rather than joined it.
+
+111. **The gap I built to close moved little, and was still worth closing.**
+    Uneven trades - two men for one, with the roster arithmetic paid for -
+    produced 5 new shapes out of 102, moved fair trades from 19 to 20, and
+    barely shifted the rivals' fallbacks. On the numbers it was a small change.
+
+    It was still the right build, for a reason that has nothing to do with the
+    size of the effect: the balanced-only search was known to flatter Justin's
+    board in the column that decides whether an offer gets taken, and a number
+    you know is optimistic is not one to keep quoting. The measurement of how
+    optimistic it was is itself the result. And it is what flipped the KevinDA
+    recommendation from send to do-not-send, which no amount of reasoning about
+    the likely size of the effect would have produced.

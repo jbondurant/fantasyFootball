@@ -358,4 +358,73 @@ public class TradeMarketTest {
                 "a man who only ever appears inside a bundle has no isolated price, and"
                         + " must not be given one");
     }
+
+    /**
+     * A two-for-one leaves one roster at seventeen, and nobody may hold
+     * seventeen. WHOEVER RECEIVES MORE MEN THAN HE SENDS must have his forced
+     * cut priced into his own gain, or the board offers deals that cannot be
+     * executed.
+     *
+     * The invariant is about who RECEIVES, not about how many a side sends: a
+     * manager sending two men in a two-for-one also has an `out` of size two,
+     * and that one is not a cut at all. Getting that backwards is how a test
+     * about the forced cut ends up asserting something false about the side that
+     * never had to make one.
+     */
+    @Test
+    public void theSideReceivingMoreMenPaysForTheCut(){
+        List<String> mine = List.of("a", "b", "c");
+        List<String> theirs = List.of("x", "y", "z");
+        Map<String, Double> points = Map.of("a", 10.0, "b", 9.0, "c", 1.0,
+                "x", 20.0, "y", 8.0, "z", 2.0);
+
+        // watch what each side is asked to give up, against what it receives
+        List<List<String>> theirOut = new java.util.ArrayList<>();
+        List<List<String>> theirIn = new java.util.ArrayList<>();
+        List<List<String>> myOut = new java.util.ArrayList<>();
+        List<List<String>> myIn = new java.util.ArrayList<>();
+        TradeMarket.Side mySide = (before, out, in) -> { myOut.add(out); myIn.add(in); return 1; };
+        TradeMarket.Side theirSide = (before, out, in) -> { theirOut.add(out); theirIn.add(in); return 1; };
+
+        List<TradeMarket.Trade> trades = TradeMarket.unbalanced("me", "them", mine, theirs,
+                mySide, theirSide, 3, points);
+        assertFalse(trades.isEmpty(), "there are uneven shapes available here");
+
+        int hisCuts = 0;
+        for(int i = 0; i < theirIn.size(); i++){
+            if(theirIn.get(i).size() > 1){                 // he received two, so he must cut
+                assertEquals(2, theirOut.get(i).size(),
+                        "receiving two men costs one out plus a cut");
+                assertTrue(theirOut.get(i).contains("z"),
+                        "his cut must be his worst man (z at 2.0), not somebody arbitrary: "
+                                + theirOut.get(i));
+                hisCuts++;
+            }
+        }
+        assertTrue(hisCuts > 0, "no trade sent him two men, so his cut was never priced");
+
+        int myCuts = 0;
+        for(int i = 0; i < myIn.size(); i++){
+            if(myIn.get(i).size() > 1){                    // and the same rule applies to me
+                assertEquals(2, myOut.get(i).size());
+                assertTrue(myOut.get(i).contains("c"),
+                        "my cut must be MY worst man (c at 1.0): " + myOut.get(i));
+                myCuts++;
+            }
+        }
+        assertTrue(myCuts > 0, "no trade sent me two men, so my own cut was never priced");
+    }
+
+    /** The man being traded away is never also the man cut to make room. */
+    @Test
+    public void theCutIsNeverSomebodyAlreadyInTheDeal(){
+        Map<String, Double> points = Map.of("keep", 50.0, "worst", 1.0, "mid", 10.0);
+        assertEquals("worst", TradeMarket.worstOther(
+                List.of("keep", "worst", "mid"), List.of("keep"), points));
+        assertEquals("mid", TradeMarket.worstOther(
+                List.of("keep", "worst", "mid"), List.of("worst"), points),
+                "excluding the worst man leaves the next worst, not nobody");
+        assertNull(TradeMarket.worstOther(List.of("only"), List.of("only"), points),
+                "a roster with nobody left to cut yields no trade rather than a bad one");
+    }
 }
