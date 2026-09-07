@@ -1252,3 +1252,34 @@ real every time.
     talked it down using the very constant I had spent the hour showing was the
     wrong one. Retiring an instrument means not reaching for it in the next
     paragraph.
+
+114. **The screen he would act from was three quarters unreadable.** The trades
+    tab defaults to the offers a rival would thank you for - built deliberately
+    as the trustworthy view, the one to act from without checking anything else.
+    Fifteen of its twenty rows had gains the model could not tell from zero.
+
+    The error bars from #112 existed by then; the default view simply did not
+    consult them. That is the worse shape of the two: a board with no floor at
+    all is obviously untrustworthy, while a board labelled trustworthy and
+    filtered on four other criteria invites exactly the reliance it cannot
+    carry. Surviving its own error bar is now the first condition, and the view
+    went from twenty rows to five.
+
+    Reordering was the whole fix - the bar was computed twenty lines below the
+    test that needed it. Worth noticing how cheap the defect was to make: a
+    quantity added later, and the earlier decision never revisited to ask
+    whether it should now depend on it.
+
+115. **A hardcoded 480, in the test that exists to prevent hardcoded populations.**
+    `theWireIsJudgedAgainstItsOwnNoiseFloor` asserted the wire runs at 480 drawn
+    seasons because that is what ObjectiveStability measured the floor over - and
+    wrote `480` as a literal. Regenerate that report at another count and the
+    test keeps passing while the floor silently stops applying, which is the
+    exact failure it was written to catch, one level up.
+
+    It now parses the count out of the report's own header and compares. The
+    population error (#79, #81, #101, #112) has landed four times, three of them
+    mine in a single session, and each time the fix was to make the number come
+    from the thing that measured it rather than from memory. A constant typed
+    beside the code that uses it is a claim about a measurement, and claims get
+    tested here.

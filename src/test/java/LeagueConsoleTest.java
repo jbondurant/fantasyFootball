@@ -306,8 +306,26 @@ public class LeagueConsoleTest {
         Matcher stated = Pattern.compile("\"swapFloor\":([\\d.]+),\"wireScenarios\":(\\d+)").matcher(page);
         assertTrue(stated.find(), "the page must state the floor it applied and what it computed against");
         double floor = Double.parseDouble(stated.group(1));
-        assertEquals(480, Integer.parseInt(stated.group(2)),
-                "the wire search must run at the scenario count ObjectiveStability measured the floor over");
+        // READ THE COUNT OFF THE REPORT THAT MEASURED IT, never type it here.
+        // Comparing a statistic to a yardstick from a different population is
+        // this repo's most repeated mistake - #79, #81, #101 and #112 are all
+        // the same error - and a hardcoded 480 is that mistake waiting to
+        // happen: regenerate ObjectiveStability at another count and this test
+        // keeps passing while the floor silently stops applying.
+        Path measured;
+        try(var files = Files.list(Path.of("data"))){
+            measured = files.filter(p -> p.getFileName().toString()
+                            .matches("objective-stability-\\d{4}-\\d{2}-\\d{2}\\.txt"))
+                    .max(Comparator.comparing(p -> p.getFileName().toString())).orElse(null);
+        }
+        assertNotNull(measured, "the floor's own measurement must be committed beside the code");
+        Matcher header = Pattern.compile("\\((\\d+) scenarios,").matcher(
+                Files.readString(measured));
+        assertTrue(header.find(), "the stability report must say what it measured over");
+        assertEquals(Integer.parseInt(header.group(1)), Integer.parseInt(stated.group(2)),
+                "the wire search runs at " + stated.group(2) + " drawn seasons but the floor it"
+                        + " is judged against was measured over " + header.group(1)
+                        + "; that is one population's number against another's yardstick");
 
         Matcher row = Pattern.compile("\"worth\":(-?[\\d.]+),\"drop\":\"[^\"]*\",\"bid\":\\d+,"
                 + "\"win\":[\\d.]+,\"noise\":(true|false),\"hole\":(true|false),"
@@ -629,6 +647,43 @@ public class LeagueConsoleTest {
         assertTrue(rows > 0, "the keeper view shipped no men, which would make this vacuous");
         assertTrue(kept.size() <= 2,
                 "the league allows two keepers; the page marks " + kept.size() + ": " + kept);
+    }
+
+    /**
+     * The default view must not recommend a number the model cannot read.
+     *
+     * Fifteen of the twenty offers it showed had gains that went negative on
+     * another seed. A view built to be the trustworthy one, three quarters
+     * unreadable, is worse than no default at all - it is the screen he acts
+     * from.
+     */
+    @Test
+    public void nothingInTheDefaultViewIsInsideItsOwnNoise() throws Exception {
+        Path console = newestConsole();
+        assumeBuilt(console);
+        String page = Files.readString(console);
+        Matcher row = Pattern.compile("\"fair\":(true|false),\"hisRate\":-?[\\d.]+,"
+                + "\"hisTrades\":\\d+,\"hisSeasons\":\\d+,\"low\":(-?[\\d.]+),"
+                + "\"high\":(-?[\\d.]+),\"noise\":(true|false)").matcher(page);
+        int fair = 0, seen = 0;
+        while(row.find()){
+            boolean isFair = Boolean.parseBoolean(row.group(1));
+            double low = Double.parseDouble(row.group(2));
+            double high = Double.parseDouble(row.group(3));
+            assertTrue(high >= low - 1e-9, "a trade's range must not be inverted");
+            assertEquals(low <= 0, Boolean.parseBoolean(row.group(4)),
+                    "the noise tag must be exactly whether the gain crosses zero");
+            if(isFair){
+                assertTrue(low > 0,
+                        "a trade in the default view has a gain of " + low + " on some seed;"
+                                + " the model cannot tell it from zero and it must not be"
+                                + " recommended");
+                fair++;
+            }
+            seen++;
+        }
+        assertTrue(seen > 0, "no trade shipped an error bar, which would make this vacuous");
+        assertTrue(fair > 0, "the default view is empty, so this proves nothing about it");
     }
 
     /** The perception-gap board carries "give" keys too, and is not the trades table. */
