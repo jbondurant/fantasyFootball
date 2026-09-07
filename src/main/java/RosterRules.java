@@ -79,7 +79,13 @@ public final class RosterRules {
      * A quarterback and a defence have exactly one door into the lineup each.
      * Nothing about a second one can ever be started while the first is
      * healthy, so his only value is as a NEXT-YEAR KEEPER STASH - Justin's own
-     * rule, RUNBOOK.md:209, "take a young QB when the keeper case is the point,
+     * rule, cited BY HEADING and not by line number: the runbook is a living
+     * document and gets edited above whatever line this points at. It said
+     * a line number until an in-season section was prepended on 2026-09-07 and
+     * every number in the file moved by 108. A heading survives that; a line
+     * number is a citation with an expiry date nobody can see.
+     *
+     * RUNBOOK.md "Rounds 8-16 - one model, both halves of the value", "take a young QB when the keeper case is the point,
      * not the lineup". One stash is a plan; two is a wasted spot on a sixteen-man
      * roster. Hence 1.
      *
@@ -91,7 +97,7 @@ public final class RosterRules {
     static final int STASH_PER_UNFLEXABLE_POSITION = 1;
 
     /**
-     * The round a stash is allowed to be taken, RUNBOOK.md:209: "Rounds 10-12
+     * The round a stash is allowed to be taken, RUNBOOK.md "Rounds 8-16 - one model, both halves of the value": "Rounds 10-12
      * is the band where the QB keeper term peaks."
      *
      * A second quarterback before this is not a stash, it is a model that has
@@ -544,7 +550,8 @@ public final class RosterRules {
             if(!flexEligible(position) && count(position) >= startersAt(position)
                     && round < EARLIEST_STASH_ROUND){
                 return "a second " + position + " is only ever a next-year keeper"
-                        + " stash (RUNBOOK.md:209), and round " + round
+                        + " stash (RUNBOOK.md, Rounds 8-16 - one model, both halves of the value),"
+                        + " and round " + round
                         + " is before round " + EARLIEST_STASH_ROUND;
             }
             Roster after = new Roster(append(new Man(position.name().toLowerCase(),

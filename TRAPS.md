@@ -1336,3 +1336,36 @@ real every time.
     left the suite green or nearly so. The lesson that generalises: a tolerance
     must be the theoretical bound PLUS room, and a skip is not a pass - a test
     that has never executed is not evidence of anything.
+
+119. **A line number is a citation with an expiry date nobody can see.**
+    `RosterRules` prints "RUNBOOK.md:209" on Justin's screen when it refuses a
+    second quarterback. Prepending an in-season section to the runbook moved
+    every line by 108, and 209 became a heading about round 7 and tight ends.
+    `RunbookCitationTest` caught it - and its own docstring had predicted it:
+    *"RUNBOOK.md is a living document that gets edited above that line."*
+    Knowing the failure mode well enough to write a test for it did not stop the
+    citation being written as a line number in the first place.
+
+    Renumbering would have fixed today and nothing else, so citations are
+    HEADINGS now. A heading survives an edit above it, and when a section is
+    deleted the test says so instead of pointing at whatever slid into its place.
+
+    *And the ban found two more.* Adding "no source may cite RUNBOOK.md by line
+    number" turned up `RoundTable` and `PlanBacktest`, both citing :77, both
+    already pointing at the wrong section before today - stale since whenever the
+    runbook was last edited above line 77, and unnoticed because the existing
+    test only ever read `RosterRules`. A lint scoped to one file is a lint that
+    certifies one file.
+
+120. **Stale test results can report a green suite over a failed compile.**
+    A run reported `tests=6, 0 failures` while `compileTestJava` had failed:
+    gradle served the previous run's XML out of `build/test-results`, and the
+    parse read it happily. The truth only appeared after `rm -rf
+    build/test-results`.
+
+    That is the fourth shape this session of the same thing - a verification that
+    did not happen but produced a confident result. The others: a wrapper's exit
+    code masking a failed build (#102, #107), a compile check backgrounded so its
+    output was never read, and a test skipping 100% of the time while counting as
+    passed (#118). Clearing the results directory before every run is now part of
+    the command, not something to remember.
