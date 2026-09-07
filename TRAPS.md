@@ -1369,3 +1369,21 @@ real every time.
     output was never read, and a test skipping 100% of the time while counting as
     passed (#118). Clearing the results directory before every run is now part of
     the command, not something to remember.
+
+121. **The page could be broken and green.** `LeagueConsoleTest` proves every
+    number the console ships is the number the model computes - the whole design
+    claim. It cannot prove the page RENDERS. Rename a field in the Java emitter
+    and forget the script and the affected cells read "undefined", or the script
+    throws on the first row and EVERY TAB COMES UP BLANK, while all 660 tests
+    still pass, because the data is still correct.
+
+    Same shape as the two-week-old cache and the test that never ran: confident
+    output from something that did not happen. `ConsoleRendersTest` is the cheap
+    half of the guard - every `D.foo` and `r.foo` the script reads must be a key
+    the data ships, and no shipped array may be empty. It cannot prove the page
+    draws; it catches the mistake that would most plausibly stop it.
+
+    *And I mutation-tested it,* which is the part worth keeping. Renaming
+    `hisRate` in the shipped page made it fail; restoring made it pass. Four
+    tests written today turned out to be vacuous and I found out hours later
+    each time - a guard that has never been seen to fail is not known to work.
