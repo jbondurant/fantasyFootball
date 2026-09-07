@@ -1,4 +1,5 @@
-TUESDAY SWAP  2026-09-06  season 2026, waivers for week 1  (justinb314)
+data: projections 2026-09-07, player metadata 2026-09-07
+TUESDAY SWAP  2026-09-07  season 2026, waivers for week 1  (justinb314)
 180 free agents searched against all 16 roster spots = 2880 pairs, on the weekly-starter
 objective (480 drawn seasons), which prices a bench man by how often he would actually start.
 Gains are in the objective's seventeen-week units; about 14 of those weeks are left, so
@@ -7,33 +8,33 @@ Nothing under 6.8 points is named: that is the yardstick's own seed-to-seed spre
 (ObjectiveStability), so a smaller gain is the measurement moving and not the roster.
 
 ADD                    POS  -> drop                             17wk from here
-Dalton Schultz         TE   -> drop Baltimore Ravens            +6.8      +5.6
-Dalton Schultz         TE   -> drop Tre' Harris                 +4.8      +3.9
-Oronde Gadsden         TE   -> drop Baltimore Ravens            +3.9      +3.2
-Sam Darnold            QB   -> drop Baltimore Ravens            +2.7      +2.2
-AJ Barner              TE   -> drop Baltimore Ravens            +2.7      +2.2
-Dalton Schultz         TE   -> drop Chris Rodriguez             +2.7      +2.2
-Baker Mayfield         QB   -> drop Baltimore Ravens            +2.7      +2.2
-Tyrone Tracy           RB   -> drop Baltimore Ravens            +1.8      +1.5
+Dalton Schultz         TE   -> drop Baltimore Ravens            +4.8      +4.0
+Dalton Schultz         TE   -> drop Tre' Harris                 +4.1      +3.4
+Tyler Shough           QB   -> drop Baltimore Ravens            +3.6      +3.0
+Oronde Gadsden         TE   -> drop Baltimore Ravens            +3.3      +2.7
+Baker Mayfield         QB   -> drop Baltimore Ravens            +2.9      +2.4
+Oronde Gadsden         TE   -> drop Tre' Harris                 +2.8      +2.3
+Sam Darnold            QB   -> drop Baltimore Ravens            +2.5      +2.0
+Tyler Shough           QB   -> drop Tre' Harris                 +2.3      +1.9
 
 EVERY DROP FOR DALTON SCHULTZ - the same claim against each man you hold:
-   drop Baltimore Ravens            +6.8   <- empties a slot; the whole plan (then add Detroit Lions, drop Tre' Harris) is +4.8
-   drop Tre' Harris                 +4.8
-   drop Chris Rodriguez             +2.7
-   drop Khalil Shakir               +0.7
-   drop Josh Downs                  +0.7
-   drop Jakobi Meyers               -1.3
-   drop Jordan Addison              -3.6
-   drop Bo Nix                      -7.0
-   drop Brock Purdy                -19.2
-   drop Rhamondre Stevenson        -21.0
-   drop Bhayshul Tuten             -23.6
-   drop Harold Fannin              -25.1
-   drop Mike Evans                 -42.0
-   drop Cam Skattebo               -44.7
-   drop Malik Nabers               -50.2
-   drop Derrick Henry              -92.3
+   drop Baltimore Ravens            +4.8   <- empties a slot; the whole plan (then add Detroit Lions, drop Tre' Harris) is +4.1
+   drop Tre' Harris                 +4.1
+   drop Chris Rodriguez             +1.2
+   drop Khalil Shakir               -0.9
+   drop Jakobi Meyers               -1.5
+   drop Josh Downs                  -3.4
+   drop Bo Nix                      -6.6
+   drop Jordan Addison              -7.7
+   drop Brock Purdy                -22.3
+   drop Rhamondre Stevenson        -24.7
+   drop Bhayshul Tuten             -26.7
+   drop Harold Fannin              -28.7
+   drop Cam Skattebo               -42.9
+   drop Mike Evans                 -49.4
+   drop Malik Nabers               -53.0
+   drop Derrick Henry              -92.4
 
-DO NOTHING. The best pair on the board is worth +6.8 (5.6 from here), inside the
+DO NOTHING. The best pair on the board is worth +4.8 (4.0 from here), inside the
 floor, so it is not a move - it is noise with a transaction attached. Waiting is free and
 buys another week of evidence.

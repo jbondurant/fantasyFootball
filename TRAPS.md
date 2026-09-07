@@ -1283,3 +1283,56 @@ real every time.
     from the thing that measured it rather than from memory. A constant typed
     beside the code that uses it is a claim about a measurement, and claims get
     tested here.
+
+116. **The tool was confidently silent about the only thing that could cost points.**
+    On the morning of week 1 the console reported the lineup ten-for-ten optimal.
+    Four of those ten carried a Questionable tag, one an ACL knee. `StartSit`
+    reads projections and had never looked at `injury_status` -
+    `SleeperProjections.injuryStatusOf` existed the whole time and nothing asked
+    it. "Optimal" meant optimal ON THE PROJECTIONS, and the page did not say so.
+
+    The number that decides a start is a break-even, not an opinion: a doubtful
+    man beats a healthy replacement only while P(active) x his projection exceeds
+    the replacement's, so the bar is one over the other - and it is HIGHEST when
+    the bench is close. Nabers at 11.2 with Addison at 9.5 behind him needs 85%.
+    The page prints the bar and stops, because the actual probability arrives in
+    the inactive report ninety minutes before kickoff and this is not that.
+
+    *And the first version promised one bench man to four starters.* Addison was
+    offered independently to each - four plans that are really one, the same
+    defect as the waiver board naming the only defence as the drop in every row,
+    which had already been found and fixed once. Replacements are exclusive now,
+    and "nobody healthy left" is stated: four doubtful, two available, so if
+    three sit one is being started hurt whatever the arithmetic says.
+
+117. **Fetched once, in a season that moves every week.** `getPlayerMetaData`
+    downloaded the fifteen-megabyte player file only `if(!f.exists())`. Not
+    day-cached, not deliberately immutable - never refreshed. On 2026-09-07 it
+    was dated August 24th and would have stayed there to January. Every name,
+    position and team in the repo came from that snapshot.
+
+    It was not cosmetic. Refreshing it moved the board from 102 trades to 83,
+    the offers losing to a rival's alternatives from 70 to 44, and the wire from
+    4 men to 6 - so a whole session of analysis had run on a two-week-old league.
+    Worse, I resolved player ids through that file WHILE investigating its
+    staleness, mis-attributed an ACL to the wrong player, and then "corrected" a
+    right answer into a wrong one. Stale data does not announce itself; it
+    answers confidently.
+
+118. **Four ways to not test a thing, in one test.** `thePagesLadderIsTheTerminalReportsLadder`
+    claims the console and the terminal report cannot disagree, because they are
+    the same search. It took four fixes before it once ran:
+
+      1. its regex matched the LINEUP array, not the wire - zero rows, silent skip
+      2. fixed, it then failed three times on artifact staleness, never on a
+         real disagreement - two files built hours apart across a feed refresh
+      3. the data-snapshot guard added to fix that compared "data: projections..."
+         against "projections...", so it skipped 100% of the time - a guard that
+         always fires is a deleted test that still counts in the total
+      4. and then it failed at exactly 0.05 on a difference of exactly 0.05,
+         decided by the last bit of a double
+
+    Four defects in the test, none in the code under test, and every one of them
+    left the suite green or nearly so. The lesson that generalises: a tolerance
+    must be the theoretical bound PLUS room, and a skip is not a pass - a test
+    that has never executed is not evidence of anything.

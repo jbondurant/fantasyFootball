@@ -110,9 +110,32 @@ public class PlayerRawData {
         return Position.OTHER;
     }
 
+    /**
+     * How stale the player metadata may get before it is refetched.
+     *
+     * IT USED TO BE FOREVER. The condition was `if the file does not exist`, so
+     * this fifteen-megabyte file was downloaded once and never again - on
+     * 2026-09-07, week one, it was dated August 24th and would have stayed there
+     * all season. Every name, position and team in the repo came from that
+     * snapshot, which means a player who changed teams after the draft, or a man
+     * added to a roster since, was either wrong or invisible: the waiver search
+     * looks men up through here, so it cannot claim anybody it has never heard
+     * of.
+     *
+     * It is not day-cached like the small feeds because fifteen megabytes a day
+     * for data that changes weekly is a poor trade. A week is the compromise,
+     * and unlike "never" it is a number that can be argued with.
+     */
+    static final int STALE_AFTER_DAYS = Integer.getInteger("playerMetaDays", 7);
+
     public static ArrayList<Player> getPlayerMetaData() throws IOException {
         File f = new File("./sleeperDataPlayerAPI.json");
-        if(!f.exists() || f.isDirectory()) {
+        boolean missing = !f.exists() || f.isDirectory();
+        boolean stale = !missing && f.lastModified()
+                < System.currentTimeMillis() - STALE_AFTER_DAYS * 24L * 60 * 60 * 1000;
+        if(missing || stale){
+            System.out.println(missing ? "player metadata missing, downloading"
+                    : "player metadata is more than " + STALE_AFTER_DAYS + " days old, refreshing");
             downloadRawPlayerMetaData();
         }
         return cleanRawPlayerMetaData();

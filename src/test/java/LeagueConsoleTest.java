@@ -225,9 +225,15 @@ public class LeagueConsoleTest {
 
         double summed = 0;
         int starters = 0;
+        // NOT ANCHORED ON THE END OF THE OBJECT. It used to close with \}, so
+        // adding injury fields to the lineup row made it match nothing and the
+        // test failed with "0 starters" - the vacuous-match symptom, which is at
+        // least loud. A regex that must be edited every time a field is added is
+        // a test that breaks for the wrong reason; this one reads the fields it
+        // needs and ignores the rest.
         Matcher man = Pattern.compile(
                 "\\{\"name\":\"[^\"]*\",\"pos\":\"[^\"]*\",\"proj\":([\\d.]+),\"playing\":(true|false),"
-                        + "\"start\":(true|false),\"gap\":[\\d.]+,\"odds\":[\\d.]+\\}").matcher(page);
+                        + "\"start\":(true|false),").matcher(page);
         while(man.find()){
             if(man.group(3).equals("true")){
                 summed += Double.parseDouble(man.group(1));
@@ -410,8 +416,27 @@ public class LeagueConsoleTest {
         // as a model disagreement when it is a clock difference. So: compare
         // only when both name the same best add, and say plainly which it is
         // when they do not.
+        // SKIP WHEN THEY WERE BUILT FROM DIFFERENT DATA, not when they merely
+        // disagree. This comparison has failed three times, every one because
+        // the two artifacts straddled a feed refresh - the projections file is
+        // refetched daily and the player metadata expires weekly - and never
+        // once because the search disagreed with itself. Comparing numbers
+        // across two snapshots of the world is not a test of anything.
+        String reportText = Files.readString(report);
+        Matcher reportStamp = Pattern.compile("data: ([^\\n]*)").matcher(reportText);
+        Matcher pageStamp = Pattern.compile("\"dataStamp\":\"([^\"]*)\"").matcher(page);
+        assertTrue(reportStamp.find() & pageStamp.find(),
+                "both artifacts must carry the snapshot they were built from, or this"
+                        + " comparison is comparing two versions of the world");
+        {
+            org.junit.jupiter.api.Assumptions.assumeTrue(
+                    reportStamp.group(1).trim().equals(pageStamp.group(1).trim()),
+                    "the console and the swap report were built from different data ("
+                            + pageStamp.group(1) + " vs " + reportStamp.group(1)
+                            + "); regenerate both to compare them");
+        }
         Matcher named = Pattern.compile("EVERY DROP FOR ([^\\n]*?) - the same claim").matcher(
-                Files.readString(report));
+                reportText);
         assertTrue(named.find(), "the report must name the add its ladder is for");
         // ANCHORED ON THE WIRE ROW'S OWN SHAPE. Lineup entries also carry
         // name/pos/proj, and they are emitted first, so an unanchored match
@@ -447,7 +472,13 @@ public class LeagueConsoleTest {
         // twice. Comparing them as strings called that a model disagreement and
         // sent me looking for a bug in a search that was working perfectly.
         for(int step = 0; step < printed.size(); step++){
-            assertEquals(printedGains.get(step), shippedGains.get(step), 0.05,
+            // 0.055, not 0.05. The report rounds to one decimal, so the largest
+            // honest difference is half its last digit - exactly 0.05 - and
+            // asserting AT that bound makes the test a coin flip on floating
+            // point representation. Skattebo came in at -42.9 against -42.95 and
+            // failed on the last bit of a double. A tolerance has to be the
+            // theoretical bound PLUS room, or it fails on agreement.
+            assertEquals(printedGains.get(step), shippedGains.get(step), 0.055,
                     "the two artifacts disagree about " + printed.get(step)
                             + " by more than the report's own rounding");
         }
@@ -684,6 +715,56 @@ public class LeagueConsoleTest {
         }
         assertTrue(seen > 0, "no trade shipped an error bar, which would make this vacuous");
         assertTrue(fair > 0, "the default view is empty, so this proves nothing about it");
+    }
+
+    /**
+     * One bench man cannot cover four starters.
+     *
+     * On the morning of week 1 four starters carried a Questionable tag and the
+     * first version of this offered Jordan Addison as the replacement for every
+     * one of them - four plans that are really one, the same defect as the
+     * waiver board naming the only defence as the drop in every row. A page that
+     * says a bench man is available twice has told Justin he is covered when he
+     * is not.
+     */
+    @Test
+    public void noBenchManIsPromisedToTwoStarters() throws Exception {
+        Path console = newestConsole();
+        assumeBuilt(console);
+        String page = Files.readString(console);
+        Matcher row = Pattern.compile("\"name\":\"([^\"]*)\",\"pos\":\"[^\"]*\",\"proj\":-?[\\d.]+,"
+                + "\"playing\":(?:true|false),\"start\":(true|false),\"gap\":-?[\\d.]+,"
+                + "\"odds\":-?[\\d.]+,\"status\":(null|\"[^\"]*\"),\"instead\":(null|\"[^\"]*\"),"
+                + "\"breakEven\":(-?[\\d.]+)").matcher(page);
+        List<String> promised = new ArrayList<>();
+        int seen = 0, doubtful = 0;
+        while(row.find()){
+            boolean starting = Boolean.parseBoolean(row.group(2));
+            boolean tagged = !row.group(3).equals("null");
+            String instead = row.group(4);
+            double breakEven = Double.parseDouble(row.group(5));
+            if(!instead.equals("null")){
+                assertTrue(starting && tagged,
+                        row.group(1) + " is offered a replacement but is not a doubtful starter");
+                assertTrue(breakEven > 0,
+                        "a named replacement must come with the bar he has to clear");
+                assertFalse(promised.contains(instead),
+                        instead + " is offered as the replacement for two different starters;"
+                                + " he can only take one slot");
+                promised.add(instead);
+            }
+            else {
+                assertEquals(0.0, breakEven, 1e-9,
+                        "no replacement means no break-even to print");
+            }
+            if(starting && tagged){
+                doubtful++;
+            }
+            seen++;
+        }
+        assertTrue(seen > 0, "the lineup shipped no rows, which would make this vacuous");
+        org.junit.jupiter.api.Assumptions.assumeTrue(doubtful > 0,
+                "nobody is hurt this week, so exclusivity has nothing to prove");
     }
 
     /** The perception-gap board carries "give" keys too, and is not the trades table. */

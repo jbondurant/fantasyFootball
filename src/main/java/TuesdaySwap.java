@@ -202,6 +202,7 @@ public class TuesdaySwap {
         int weeksLeft = Math.max(1, 15 - week);   // the regular season runs to week 14
 
         StringBuilder out = new StringBuilder();
+        out.append(DataStamp.line()).append("\n");
         out.append(String.format("TUESDAY SWAP  %s  season %s, waivers for week %d  (%s)%n",
                 LocalDate.now(), season, week, me));
         out.append(String.format("%d free agents searched against all %d roster spots = %d pairs, on the weekly-starter%n",

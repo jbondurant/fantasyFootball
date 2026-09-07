@@ -87,6 +87,39 @@ public class LeagueConsole {
         return out.append("]").toString();
     }
 
+    /** Anything other than no tag at all is a doubt worth pricing. */
+    static boolean doubtful(String status){
+        return status != null && !status.isBlank() && !status.equalsIgnoreCase("ok");
+    }
+
+    /**
+     * The best man on the bench who carries no injury tag and could legally take
+     * this slot - same position, or any flex-eligible one when the slot is flex.
+     *
+     * "Healthy" here means UNTAGGED. A questionable replacement for a
+     * questionable starter is not a decision, it is the same coin twice, and
+     * offering it as an answer would be worse than saying nothing.
+     */
+    static StartSit.Man healthiestBench(StartSit.Man starter, List<StartSit.Man> roster,
+                                        List<String> starters, java.util.Set<String> taken){
+        StartSit.Man best = null;
+        for(StartSit.Man man : roster){
+            if(starters.contains(man.id()) || taken.contains(man.id()) || !man.playing()
+                    || doubtful(SleeperProjections.injuryStatusOf(man.id()))){
+                continue;
+            }
+            boolean sameSlot = man.position() == starter.position();
+            boolean flexable = FLEX.contains(starter.position()) && FLEX.contains(man.position());
+            if((sameSlot || flexable) && (best == null || man.projected() > best.projected())){
+                best = man;
+            }
+        }
+        return best;
+    }
+
+    static final java.util.Set<Position> FLEX =
+            java.util.Set.of(Position.RB, Position.WR, Position.TE);
+
     /** Enough of a JSON writer for numbers, strings and arrays of records. */
     static String quote(String s){
         StringBuilder out = new StringBuilder("\"");
@@ -189,16 +222,71 @@ public class LeagueConsole {
         List<String> starters = new ArrayList<>();
         for(TeamRankings.Man man : lineup.starting()){ starters.add(man.id()); }
 
+        // WHO IS HURT, AND WHAT IT WOULD TAKE TO BENCH HIM.
+        //
+        // On the morning of week 1 this page said the lineup was ten for ten
+        // optimal while two of those ten carried a Questionable tag, one of them
+        // a knee with an ACL note. StartSit reads projections and never looked at
+        // injury_status, so the tool was confidently silent about the only thing
+        // that could cost points that day. `SleeperProjections.injuryStatusOf`
+        // had existed the whole time; nothing asked it.
+        //
+        // The number that decides it is a break-even, not an opinion: starting a
+        // doubtful man beats starting a healthy replacement only while
+        //
+        //     P(he is active) * his projection  >  the replacement's projection
+        //
+        // so the bar is replacement / starter, and it is HIGH exactly when the
+        // bench is close. A healthy 9.5 behind a questionable 11.2 needs 85%
+        // certainty before the questionable man is the right start. What this
+        // cannot know is his actual chance of playing - that arrives in the
+        // inactive report ninety minutes before kickoff - so it prints the bar
+        // and leaves the judgement where the information is.
+        // ONE BENCH MAN CANNOT REPLACE FOUR STARTERS. The first version offered
+        // Jordan Addison to every doubtful starter independently, which reads as
+        // four plans and is one - the same defect as the waiver board naming the
+        // only defence as the drop in every row. Replacements are assigned
+        // EXCLUSIVELY, best starter first, and a starter with nobody left gets
+        // none and says so: if enough of them sit, one is being started hurt
+        // whatever the arithmetic says, and that is worth knowing before kickoff
+        // rather than at one o'clock.
+        Map<String, String> replacementFor = new HashMap<>();
+        Map<String, Double> replacementProjection = new HashMap<>();
+        List<StartSit.Man> doubtfulStarters = new ArrayList<>();
+        for(StartSit.Man man : mine){
+            if(starters.contains(man.id()) && doubtful(SleeperProjections.injuryStatusOf(man.id()))
+                    && man.projected() > 0){
+                doubtfulStarters.add(man);
+            }
+        }
+        doubtfulStarters.sort(Comparator.comparingDouble(StartSit.Man::projected).reversed());
+        java.util.Set<String> taken = new java.util.HashSet<>();
+        for(StartSit.Man man : doubtfulStarters){
+            StartSit.Man best = healthiestBench(man, mine, starters, taken);
+            if(best != null){
+                taken.add(best.id());
+                replacementFor.put(man.id(), best.name());
+                replacementProjection.put(man.id(), best.projected());
+            }
+        }
+
         StringBuilder lineupJson = new StringBuilder("[");
         for(int i = 0; i < mine.size(); i++){
             StartSit.Man man = mine.get(i);
             boolean starting = starters.contains(man.id());
             double gap = starting || !man.playing() ? 0 : StartSit.closestStarter(man, mine, starters);
             double odds = starting || !man.playing() || curve.isEmpty() ? 0 : StartSit.flipRate(curve, gap);
+            String status = SleeperProjections.injuryStatusOf(man.id());
+            String replacement = replacementFor.get(man.id());
+            double breakEven = replacement == null ? 0
+                    : replacementProjection.get(man.id()) / man.projected();
             lineupJson.append(i == 0 ? "" : ",").append(String.format(
-                    "{\"name\":%s,\"pos\":%s,\"proj\":%s,\"playing\":%b,\"start\":%b,\"gap\":%s,\"odds\":%s}",
+                    "{\"name\":%s,\"pos\":%s,\"proj\":%s,\"playing\":%b,\"start\":%b,"
+                            + "\"gap\":%s,\"odds\":%s,\"status\":%s,\"instead\":%s,\"breakEven\":%s}",
                     quote(man.name()), quote(man.position() == null ? "?" : man.position().name()),
-                    num(man.projected()), man.playing(), starting, num(gap), num(odds)));
+                    num(man.projected()), man.playing(), starting, num(gap), num(odds),
+                    status == null || status.isBlank() ? "null" : quote(status),
+                    replacement == null ? "null" : quote(replacement), num(breakEven)));
         }
         lineupJson.append("]");
 
@@ -761,13 +849,13 @@ public class LeagueConsole {
                         + "\"scenarios\":%d,\"keepers\":%b,\"lineupTotal\":%s,\"slots\":%d,"
                         + "\"lineup\":%s,\"trades\":%s,\"supply\":%s,\"faab\":%s,"
                         + "\"faabAll\":%d,\"faabContested\":%d,\"faabFree\":%s,\"costs\":[1,1.5,2,3],"
-                        + "\"budget\":%d,\"wire\":%s,\"swapFloor\":%s,\"wireScenarios\":%d,\"lookahead\":%d,\"chainDepth\":%d,\"chainPool\":%d,\"pool\":%d,\"batnaPool\":%d,\"losesToElsewhere\":%d,\"insideItsOwnNoise\":%d,\"errorSeeds\":%d,\"keepers2027\":%s,\"fairTrades\":%d,\"mirage\":%s,\"opticsBar\":%s,\"winAll\":%s,\"winContested\":%s}",
+                        + "\"budget\":%d,\"wire\":%s,\"swapFloor\":%s,\"wireScenarios\":%d,\"lookahead\":%d,\"chainDepth\":%d,\"chainPool\":%d,\"pool\":%d,\"batnaPool\":%d,\"dataStamp\":%s,\"losesToElsewhere\":%d,\"insideItsOwnNoise\":%d,\"errorSeeds\":%d,\"keepers2027\":%s,\"fairTrades\":%d,\"mirage\":%s,\"opticsBar\":%s,\"winAll\":%s,\"winContested\":%s}",
                 quote(season), week, quote(me), quote(LocalDate.now().toString()),
                 scenarios, withKeepers, num(lineup.starters()), lineup.starting().size(),
                 lineupJson, tradesJson, supplyJson, faabGrid(allBand, costs),
                 allPrices.size(), contestedPrices.size(),
                 num(allPrices.isEmpty() ? 0 : allPrices.stream().filter(p -> p == 0).count() * 100.0 / allPrices.size()),
-                budgetLeft, wireJson, num(swapFloor), wireScenarios, lookahead, chainDepth, chainPool, pool, batnaPool, losesToElsewhere, insideItsOwnNoise, errorSeeds, keepersJson, fairTrades, mirageJson, num(looksGoodBar), winLadder(allBand), winLadder(contestedBand));
+                budgetLeft, wireJson, num(swapFloor), wireScenarios, lookahead, chainDepth, chainPool, pool, batnaPool, quote(DataStamp.stamp()), losesToElsewhere, insideItsOwnNoise, errorSeeds, keepersJson, fairTrades, mirageJson, num(looksGoodBar), winLadder(allBand), winLadder(contestedBand));
 
         Path target = Path.of("data", "console-" + season + "-w" + week + ".html");
         Files.writeString(target, page(json), StandardCharsets.UTF_8);
@@ -844,6 +932,7 @@ td.first,th.side+th.side,th.sub2:nth-child(4){border-left:1px solid var(--line)}
 <div class="sub" id="sub"></div>
 <nav id="tabs"></nav>
 <section id="s-lineup" class="on"><div class="scroll"><table id="t-lineup"></table></div>
+  <p class="note" id="doubt-note"></p>
   <p class="note">A man with no row in this week's projection feed is <b>not playing</b> &mdash; bye, inactive, or unpublished &mdash; which is a different statement from projected low. The odds beside a bench call are measured over five seasons: how often the man projected that much lower actually outscored the starter he could replace. 50% is a coin flip.</p></section>
 <section id="s-wire">
   <div class="card"><div class="row">
@@ -897,13 +986,22 @@ TABS.forEach(([id,name],i)=>{ const b=document.createElement("button"); b.textCo
   b.setAttribute("aria-selected", i===0); b.onclick=()=>{ TABS.forEach(([j])=>document.getElementById(j).classList.remove("on"));
   document.getElementById(id).classList.add("on"); [...nav.children].forEach(c=>c.setAttribute("aria-selected",c===b)); }; nav.appendChild(b); });
 
-let h = "<tr><th class=l>Man</th><th class=l>Pos</th><th>Proj</th><th class=l>Verdict</th></tr>";
+let h = "<tr><th class=l>Man</th><th class=l>Pos</th><th>Proj</th><th class=l>Status</th><th class=l>Verdict</th></tr>";
 D.lineup.forEach(m=>{ const cls = !m.playing ? "out" : m.start ? "start" : "";
   const verdict = !m.playing ? "NOT PLAYING" : m.start ? "START"
     : "bench \\u00b7 " + m.gap.toFixed(1) + " behind, beats him " + Math.round(m.odds*100) + "% of the time";
-  h += `<tr class="${cls}"><td class=l>${m.name}</td><td class=l>${m.pos}</td><td>${m.playing?m.proj.toFixed(1):"\\u2014"}</td><td class=l>${verdict}</td></tr>`; });
-h += `<tr><td class=l colspan=2><b>Projected starters</b></td><td><b>${D.lineupTotal.toFixed(1)}</b></td><td class=l>${D.slots} of ten slots</td></tr>`;
+  const doubt = m.status
+    ? `<span class="tag neg">${m.status}</span>${m.instead?` <span class=sub>bench for ${m.instead} unless he is ${Math.round(m.breakEven*100)}% to play</span>`:m.start?' <span class=sub>nobody healthy left to replace him</span>':""}`
+    : "";
+  h += `<tr class="${cls}"><td class=l>${m.name}</td><td class=l>${m.pos}</td><td>${m.playing?m.proj.toFixed(1):"\\u2014"}</td><td class=l>${doubt}</td><td class=l>${verdict}</td></tr>`; });
+h += `<tr><td class=l colspan=2><b>Projected starters</b></td><td><b>${D.lineupTotal.toFixed(1)}</b></td><td class=l></td><td class=l>${D.slots} of ten slots</td></tr>`;
 document.getElementById("t-lineup").innerHTML = h;
+const doubts = D.lineup.filter(m=>m.start && m.status && m.instead);
+document.getElementById("doubt-note").innerHTML = doubts.length
+  ? `<b>${doubts.length} of your starters carry an injury tag.</b> Starting a doubtful man beats a healthy replacement only while <i>his chance of playing &times; his projection</i> exceeds the replacement's projection, so the bar is simply one over the other &mdash; and it is HIGHEST when your bench is close behind. `
+    + doubts.map(m=>`<b>${m.name}</b> (${m.status}) needs to be <b>${Math.round(m.breakEven*100)}%</b> to play before he beats ${m.instead}`).join("; ")
+    + `. Replacements are <b>exclusive</b> &mdash; one bench man cannot cover four starters, so each is assigned once, best starter first, and a starter with nobody left says so. What this cannot know is the actual chance: that arrives in the inactive report about ninety minutes before kickoff, which is when this decision is made and not before. Only <b>untagged</b> bench men are offered as replacements &mdash; a questionable man for a questionable man is the same coin twice.`
+  : `No starter carries an injury tag.`;
 
 document.getElementById("faabLeft").textContent = "$" + D.budget;
 document.getElementById("faabSub").textContent = "$" + (100 - D.budget) + " of $100 already spent";
