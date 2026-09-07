@@ -654,8 +654,11 @@ public class LeagueConsoleTest {
         Matcher board = Pattern.compile("\"keepers2027\":\\[(.*?)\\],\"fairTrades\"").matcher(page);
         assertTrue(board.find(), "the page must ship the keeper view");
 
+        // reads the fields it needs and ignores the rest: anchoring on the whole
+        // object made this match nothing the moment `margin` and `refusal` were
+        // added, and it failed as "shipped no men" rather than as a broken regex
         Matcher row = Pattern.compile("\\{\"name\":\"([^\"]*)\",\"pos\":\"[^\"]*\","
-                + "\"round\":(null|\\d+),\"surplus\":(null|-?[\\d.]+),\"keep\":(true|false)\\}")
+                + "\"round\":(null|\\d+),\"surplus\":(null|-?[\\d.]+),.*?\"keep\":(true|false)")
                 .matcher(board.group(1));
         List<String> kept = new ArrayList<>();
         double previous = Double.MAX_VALUE;
@@ -765,6 +768,97 @@ public class LeagueConsoleTest {
         assertTrue(seen > 0, "the lineup shipped no rows, which would make this vacuous");
         org.junit.jupiter.api.Assumptions.assumeTrue(doubtful > 0,
                 "nobody is hurt this week, so exclusivity has nothing to prove");
+    }
+
+    /**
+     * A trade that IMPROVES a thin position must not be flagged as thinning it.
+     *
+     * The first version of the check looked only at who left, so sending one
+     * receiver and receiving two read as thinning the receivers. A rule that
+     * fires on the trade it exists to encourage gets ignored, and then it
+     * protects nothing.
+     */
+    @Test
+    public void aTradeThatAddsToAThinPositionIsNotFlagged() throws Exception {
+        Path console = newestConsole();
+        assumeBuilt(console);
+        String page = Files.readString(console);
+        Matcher row = Pattern.compile("\"give\":\"([^\"]*)\",\"get\":\"([^\"]*)\".*?"
+                + "\"thins\":(null|\"[^\"]*\")").matcher(page);
+        int flagged = 0, seen = 0;
+        while(row.find()){
+            String thins = row.group(3);
+            if(!thins.equals("null")){
+                // the flagged position must actually lose bodies on this trade
+                String position = thins.replaceAll("^\"(\\w+).*", "$1");
+                long out = row.group(1).split("\\+").length;
+                long in = row.group(2).split("\\+").length;
+                assertTrue(out >= in || position.isEmpty(),
+                        "flagged as thinning " + position + " but it sends " + out
+                                + " and receives " + in + ": " + row.group(1) + " -> " + row.group(2));
+                flagged++;
+            }
+            seen++;
+        }
+        assertTrue(seen > 0, "no trades parsed, so this proves nothing");
+        org.junit.jupiter.api.Assumptions.assumeTrue(flagged > 0,
+                "nothing is flagged as thinning this week, so there is nothing to check");
+    }
+
+    /**
+     * SEND, ASK and NO must mean what the page says they mean.
+     *
+     * The board used to gate on every test at once and showed one trade out of
+     * eighty-five - it required the man opposite to be correct about everything,
+     * which is a strange model for somebody who completes under one deal a
+     * season. Justin: "i think it might be a tad too strict in terms of not
+     * allowing other teams to make mistakes." Tiers replaced the gate, and the
+     * tiers have to hold or they are just a softer way of being wrong.
+     */
+    @Test
+    public void everyTierMeansWhatThePageSaysItMeans() throws Exception {
+        Path console = newestConsole();
+        assumeBuilt(console);
+        String page = Files.readString(console);
+        Matcher row = Pattern.compile(
+                "\"you\":(-?[\\d.]+),\"him\":(-?[\\d.]+),.*?\"himSimple\":(-?[\\d.]+),"
+                        + "\"himSeason\":-?[\\d.]+,\"himHole\":(true|false).*?"
+                        + "\"low\":(-?[\\d.]+),\"high\":-?[\\d.]+,\"noise\":(true|false),"
+                        + "\"thins\":(null|\"[^\"]*\"),\"tier\":\"(send|ask|no)\"").matcher(page);
+        int send = 0, ask = 0, seen = 0;
+        while(row.find()){
+            double you = Double.parseDouble(row.group(1));
+            double himSimple = Double.parseDouble(row.group(3));
+            boolean himHole = Boolean.parseBoolean(row.group(4));
+            double low = Double.parseDouble(row.group(5));
+            boolean noise = Boolean.parseBoolean(row.group(6));
+            boolean thins = !row.group(7).equals("null");
+            String tier = row.group(8);
+            seen++;
+
+            if(!tier.equals("no")){
+                assertTrue(you > 0, "a trade offered at all must gain for Justin: " + you);
+                assertFalse(thins, "an offered trade must not thin a position he cannot cover");
+                assertFalse(himHole,
+                        "an offered trade must not gut the OTHER manager's lineup either -"
+                                + " that is not a mistake he makes, it is one he notices");
+            }
+            if(tier.equals("send")){
+                assertFalse(noise, "a SEND must survive its own error bar");
+                assertTrue(low > 0, "and be positive on every seed: " + low);
+                assertTrue(himSimple > 0,
+                        "a SEND must leave him better on the number he can check himself,"
+                                + " or it is not one to have offered: " + himSimple);
+                send++;
+            }
+            if(tier.equals("ask")){
+                ask++;
+            }
+        }
+        assertTrue(seen > 0, "no trades parsed, so this proves nothing");
+        assertTrue(send + ask > 0,
+                "every trade was rejected. The tiers exist because gating on everything at"
+                        + " once produced a board of one; an empty board is the same failure.");
     }
 
     /** The perception-gap board carries "give" keys too, and is not the trades table. */

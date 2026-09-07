@@ -51,7 +51,16 @@ public class FaabBidTest {
     @Test
     public void theWinCurveAndTheBidThatFollowsFromIt(){
         FaabBid.Band band = new FaabBid.Band("t", 0, Double.MAX_VALUE, List.of(0, 0, 2, 4, 10));
-        assertEquals(0.0, band.winChance(0), 1e-9, "a zero bid never beats a zero clearing price");
+        // THIS LINE USED TO ASSERT THE BUG. It read "a zero bid never beats a zero
+        // clearing price" and expected 0.0 - true of the comparison the code made
+        // and false about waivers, where a tie goes to priority. Justin found it
+        // from the other end on 2026-09-07, with a $0 claim in that he expected
+        // to win: "the odds of no one else wanting a backup tight end ... seem
+        // higher than 27%". A test can hold a defect in place for as long as
+        // nobody reads it against the world.
+        assertEquals(0.2, band.winChance(0), 1e-9,
+                "a zero bid ties the two zero clearances out of five prices, and takes"
+                        + " half of them: 0.5 * 2 / 5");
         assertEquals(0.4, band.winChance(1), 1e-9, "it beats the two zeroes");
         assertEquals(1.0, band.winChance(11), 1e-9);
         // worth 20: bidding 5 wins 60% for a net of 9; bidding 11 wins all of it for 9 too

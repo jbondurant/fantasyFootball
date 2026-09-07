@@ -115,9 +115,19 @@ be alive.
 
 ## Once a week, or when something looks wrong
 
+    ./gradlew run -Pmain=ProjectionDrift   # do the season projections still move?
     ./gradlew run -Pmain=TradePartners     # who actually trades, from the log
     ./gradlew run -Pmain=TradeStability    # are the board's numbers bigger than its noise
     ./gradlew check                        # 654 tests; read the LOG, not the exit code
+
+**Run `ProjectionDrift` once real games are played.** Keeper surplus, every trade
+valuation and every free agent's worth come from the SEASON projection feed. That
+feed demonstrably moves - thirty of 585 players changed between 24 August and 7
+September, Josh Jacobs by 105.9 - but it went silent for the five days before
+week 1. If it is still silent AFTER games have been played, it is frozen at
+preseason values and every in-season number here is answering a question about
+August. That is the moment to blend actuals in, and the tool exists so the moment
+gets noticed instead of assumed away.
 
 `check` takes about half an hour. Read `check-wire.log` for `BUILD SUCCESSFUL`
 and the test count - a shell wrapper's exit status can be the echo's rather than

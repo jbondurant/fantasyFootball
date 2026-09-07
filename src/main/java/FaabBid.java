@@ -69,12 +69,38 @@ public class FaabBid {
                        List<Integer> clearingBids) {
 
         /** The chance a bid of `bid` beats this band's clearing price. */
+        /**
+         * A TIE IS NOT A LOSS.
+         *
+         * This counted `bid > price` and nothing else, so a bid of zero beat no
+         * price at all and the model reported that a $0 claim never wins. The
+         * committed history says otherwise in the same file: 772 of 1448 claims
+         * in this league CLEARED AT NOTHING. A zero bid does not lose to those -
+         * it ties them, and Sleeper breaks a tie on waiver priority.
+         *
+         * Justin caught it from the other end on 2026-09-07, with a $0 claim in
+         * for Schultz: "that will likely succeed in a couple of hours." The model
+         * said 0%. The truth is that half this league's claims are settled at
+         * zero and the tiebreak decides them.
+         *
+         * So: every price strictly below the bid is beaten outright, and every
+         * price EQUAL to it is a coin the waiver order tosses. `tieShare` is that
+         * coin - the chance of winning a tie from a given waiver position, which
+         * is not 50% for anybody in particular and is 1/(number tied) only if
+         * every rival also bid. Absent a model of who else claims, half is the
+         * honest placeholder and it is stated rather than hidden.
+         */
         double winChance(int bid){
+            return winChance(bid, 0.5);
+        }
+
+        double winChance(int bid, double tieShare){
             if(clearingBids.isEmpty()){
                 return 0;
             }
             long beaten = clearingBids.stream().filter(price -> bid > price).count();
-            return (double) beaten / clearingBids.size();
+            long tied = clearingBids.stream().filter(price -> bid == price).count();
+            return (beaten + tieShare * tied) / clearingBids.size();
         }
 
         int quantile(double q){

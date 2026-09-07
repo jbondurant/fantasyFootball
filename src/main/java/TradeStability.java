@@ -100,6 +100,41 @@ public class TradeStability {
             roster.sort(Comparator.comparingDouble((String id) -> -points.getOrDefault(id, 0.0)));
         }
 
+        // WHO IS WORTH KEEPING, so a row that sends one can say so. This tool
+        // does not price keepers into its numbers - deliberately, since they add
+        // no noise - which is exactly why the table needs to name them: a reader
+        // scanning for the biggest gain would otherwise be handed a trade that
+        // costs next season.
+        Map<String, Double> keeperSurplus = new java.util.TreeMap<>();
+        try {
+            Map<String, Integer> keeperRound = new HashMap<>();
+            for(String manager : rosters.keySet()){
+                String user = configuration.getUserIDToDisplayName().entrySet().stream()
+                        .filter(e -> e.getValue().equals(manager)).map(Map.Entry::getKey)
+                        .findFirst().orElse(manager);
+                try {
+                    for(Keeper keeper : KeeperChooser.eligibleCandidates(configuration, user)){
+                        keeperRound.put(keeper.player.sleeperIDString, keeper.roundCanBeKept);
+                    }
+                }
+                catch(RuntimeException notPriceable){
+                    // no keeper column for that manager; stated, not fatal
+                }
+            }
+            Map<Position, java.util.TreeMap<Double, Double>> bestByAdp =
+                    TradeMarket.bestStillAvailable(points, positionOf);
+            for(String id : keeperRound.keySet()){
+                double surplus = TradeMarket.keeperPoints(keeperRound, points, bestByAdp,
+                        positionOf, configuration, id);
+                if(surplus > 0){
+                    keeperSurplus.put(nameOf.getOrDefault(id, id), surplus);
+                }
+            }
+        }
+        catch(RuntimeException noKeepers){
+            System.out.println("keeper surplus unavailable; rows will not be marked");
+        }
+
         // the board under the first seed, which is the board the page shows
         WeeklyStarterValue first = WeeklyStarterValue.forCurrentBoard(
                 configuration, points, scenarios, seedValues[0]);
@@ -159,13 +194,20 @@ public class TradeStability {
         StringBuilder out = new StringBuilder();
         out.append(String.format("TRADE STABILITY  %s  (%d scenarios, %d seeds, top %d trades)%n%n",
                 LocalDate.now(), scenarios, seeds, chosen.size()));
+        out.append("THIS MEASURES NOISE, NOT DESIRABILITY. It values both sides season-only and symmetric,\n");
+        out.append("because spread is what it is after, and keeper value is deterministic - it shifts a mean\n");
+        out.append("and adds no wobble. So the trades below are NOT recommendations: a row can look strong\n");
+        out.append("here and give away a man worth fifty points as a keeper next March. Rows that send one\n");
+        out.append("are marked. The board that recommends is the console, which prices keepers on both sides.\n\n");
         out.append("The trades board applies no noise floor - it keeps anything above +0.05. This asks\n");
         out.append("whether the numbers it prints survive re-drawing the seasons underneath them. Each\n");
         out.append("column is one seed; the SAME trades are re-valued, never re-searched, and only\n");
         out.append("MUTUALLY GOOD trades are measured - the ones that could actually be recommended.\n\n");
         out.append(String.format("%-46s %s   %7s  %s%n", "TRADE", "YOUR GAIN BY SEED", "SPREAD", "VERDICT"));
         for(Line line : lines){
-            out.append(String.format("%-46s", trim(line.give() + " -> " + line.get(), 46)));
+            String keeper = keeperWarning(line.give(), keeperSurplus, nameOf);
+            out.append(String.format("%-46s", trim(line.give() + " -> " + line.get()
+                    + (keeper.isEmpty() ? "" : keeper), 46)));
             for(double v : line.mine()){
                 out.append(String.format(" %+7.1f", v));
             }
@@ -183,6 +225,17 @@ public class TradeStability {
         Files.writeString(target, out.toString(), StandardCharsets.UTF_8);
         System.out.print(out);
         System.out.println("written to " + target);
+    }
+
+    /** Names a man in the outgoing side who is worth keeping, or empty. */
+    static String keeperWarning(String give, Map<String, Double> surplusByName,
+                                Map<String, String> nameOf){
+        for(Map.Entry<String, Double> entry : surplusByName.entrySet()){
+            if(entry.getValue() > 25 && give.contains(entry.getKey())){
+                return "  [KEEPER]";
+            }
+        }
+        return "";
     }
 
     private static String trim(String text, int width){

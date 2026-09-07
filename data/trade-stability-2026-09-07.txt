@@ -1,4 +1,10 @@
-TRADE STABILITY  2026-09-07  (240 scenarios, 3 seeds, top 60 trades)
+TRADE STABILITY  2026-09-07  (240 scenarios, 3 seeds, top 12 trades)
+
+THIS MEASURES NOISE, NOT DESIRABILITY. It values both sides season-only and symmetric,
+because spread is what it is after, and keeper value is deterministic - it shifts a mean
+and adds no wobble. So the trades below are NOT recommendations: a row can look strong
+here and give away a man worth fifty points as a keeper next March. Rows that send one
+are marked. The board that recommends is the console, which prices keepers on both sides.
 
 The trades board applies no noise floor - it keeps anything above +0.05. This asks
 whether the numbers it prints survive re-drawing the seasons underneath them. Each
@@ -6,68 +12,20 @@ column is one seed; the SAME trades are re-valued, never re-searched, and only
 MUTUALLY GOOD trades are measured - the ones that could actually be recommended.
 
 TRADE                                          YOUR GAIN BY SEED    SPREAD  VERDICT
-Brock Purdy + Malik Nabers + Mike Evans -> Jo…   +35.4   +25.6   +34.9      9.8  clears 6.8 on every seed
-Brock Purdy + Malik Nabers + Cam Skattebo -> …   +30.7   +22.8   +36.3     13.5  clears 6.8 on every seed
-Brock Purdy + Malik Nabers + Mike Evans -> La…   +27.5   +24.7   +22.8      4.8  clears 6.8 on every seed
-Malik Nabers + Mike Evans + Cam Skattebo -> J…   +25.5   +15.6   +20.9      9.9  clears 6.8 on every seed
-Bhayshul Tuten -> Josh Allen                     +24.8   +23.1   +26.0      3.0  clears 6.8 on every seed
-Brock Purdy + Malik Nabers + Cam Skattebo -> …   +23.0   +23.4   +23.3      0.4  clears 6.8 on every seed
-Rhamondre Stevenson -> Josh Allen                +22.2   +25.9   +30.5      8.4  clears 6.8 on every seed
-Brock Purdy + Derrick Henry + Mike Evans -> J…   +21.5   +21.5   +23.6      2.1  clears 6.8 on every seed
-Mike Evans + Cam Skattebo -> Jordan Love + Ja…   +18.6   +20.1   +18.3      1.8  clears 6.8 on every seed
-Malik Nabers + Mike Evans + Cam Skattebo -> J…   +18.6    +5.2   +14.2     13.3  SPREAD EXCEEDS THE FLOOR - not a number
-Malik Nabers + Mike Evans + Cam Skattebo -> J…   +18.5   +11.2   +20.2      9.0  clears 6.8 on every seed
-Mike Evans + Cam Skattebo -> Josh Allen + Tre…   +17.7   +13.0   +14.5      4.8  clears 6.8 on every seed
-Brock Purdy + Mike Evans + Cam Skattebo -> Jo…   +16.3    +8.6   +17.7      9.1  clears 6.8 on every seed
-Bo Nix + Mike Evans + Cam Skattebo -> Josh Al…   +15.6   +14.1   +15.3      1.5  clears 6.8 on every seed
-Mike Evans + Cam Skattebo -> Ja'Marr Chase       +15.1   +18.1   +15.9      3.0  clears 6.8 on every seed
-Khalil Shakir -> Kyle Pitts                      +13.6    +9.5    +8.8      4.8  clears 6.8 on every seed
-Khalil Shakir -> Lamar Jackson                   +13.4   +19.0   +11.8      7.2  clears 6.8 on every seed
-Bo Nix + Malik Nabers + Mike Evans -> Matthew…   +12.9    +9.1   +12.1      3.7  clears 6.8 on every seed
-Malik Nabers + Mike Evans -> Jordan Love + Ja…   +12.8    +8.9    +8.4      4.3  clears 6.8 on every seed
-Mike Evans + Cam Skattebo -> Josh Allen + Chr…   +12.5   +12.4   +13.9      1.5  clears 6.8 on every seed
-Josh Downs -> Kyle Pitts                         +12.5    +8.1   +11.7      4.4  clears 6.8 on every seed
-Brock Purdy + Derrick Henry + Malik Nabers ->…   +12.2    +8.6   +14.1      5.5  clears 6.8 on every seed
-Malik Nabers + Mike Evans -> Chris Olave + Tr…   +11.9    +6.8    +8.8      5.1  clears 6.8 on every seed
-Malik Nabers + Mike Evans + Cam Skattebo -> J…   +11.7    +5.0   +11.1      6.7  inside the floor on at least one seed
-Bo Nix + Malik Nabers + Cam Skattebo -> Matth…   +11.4    +9.0   +12.9      3.9  clears 6.8 on every seed
-Malik Nabers + Mike Evans + Cam Skattebo -> J…   +11.3   +11.6   +12.1      0.8  clears 6.8 on every seed
-Josh Downs -> Lamar Jackson                      +11.1   +16.3   +14.7      5.1  clears 6.8 on every seed
-Malik Nabers + Cam Skattebo -> Puka Nacua        +11.1    +0.8   +14.3     13.6  SPREAD EXCEEDS THE FLOOR - not a number
-Brock Purdy + Mike Evans + Cam Skattebo -> Jo…   +11.1    +8.0   +17.1      9.1  clears 6.8 on every seed
-Bo Nix + Mike Evans -> Matthew Stafford + Tre…   +10.8   +14.7   +12.6      3.8  clears 6.8 on every seed
-Malik Nabers + Mike Evans -> Josh Allen + Chr…   +10.6    -4.4    +4.3     15.0  SPREAD EXCEEDS THE FLOOR - not a number
-Brock Purdy + Derrick Henry -> Josh Allen + T…   +10.5   +10.9   +13.4      3.0  clears 6.8 on every seed
-Malik Nabers + Cam Skattebo -> Chris Olave + …   +10.4    +6.7    +9.6      3.8  inside the floor on at least one seed
-Khalil Shakir -> Travis Kelce                    +10.4    +5.8    +2.4      8.0  SPREAD EXCEEDS THE FLOOR - not a number
-Bo Nix + Mike Evans + Cam Skattebo -> Josh Al…   +10.3   +13.5   +14.7      4.3  clears 6.8 on every seed
-Mike Evans -> Trey McBride                        +9.8   +12.3    +9.3      3.0  clears 6.8 on every seed
-Malik Nabers + Mike Evans -> Ja'Marr Chase        +9.3    +6.9    +6.0      3.3  inside the floor on at least one seed
-Brock Purdy + Malik Nabers + Mike Evans -> Jo…    +9.2    -8.8    +7.5     18.0  SPREAD EXCEEDS THE FLOOR - not a number
-Bo Nix + Cam Skattebo -> Matthew Stafford + T…    +9.0   +11.1   +11.9      2.9  clears 6.8 on every seed
-Bo Nix + Derrick Henry -> Kyler Murray + Chri…    +9.0   +15.0   +12.2      6.1  clears 6.8 on every seed
-Bo Nix + Malik Nabers + Mike Evans -> Josh Al…    +8.5    -3.2    +5.1     11.7  SPREAD EXCEEDS THE FLOOR - not a number
-Mike Evans -> Josh Allen                          +8.3    +3.7    +4.2      4.6  inside the floor on at least one seed
-Brock Purdy + Bo Nix + Derrick Henry -> Josh …    +8.2   +11.3   +13.7      5.4  clears 6.8 on every seed
-Malik Nabers + Cam Skattebo -> Jordan Love + …    +8.2    +7.6    +9.0      1.4  clears 6.8 on every seed
-Mike Evans + Cam Skattebo -> Jonathan Taylor      +8.2    +2.7   +11.9      9.2  SPREAD EXCEEDS THE FLOOR - not a number
-Cam Skattebo -> Trey McBride                      +8.0    +8.8    +8.6      0.8  clears 6.8 on every seed
-Jakobi Meyers -> Kyle Pitts                       +7.9    +8.1   +10.1      2.1  clears 6.8 on every seed
-Jordan Addison -> Kyle Pitts                      +7.9    +3.4    +2.6      5.3  inside the floor on at least one seed
-Jordan Addison -> Lamar Jackson                   +7.9   +11.4    +6.8      4.5  clears 6.8 on every seed
-Jakobi Meyers -> Lamar Jackson                    +7.7   +15.4   +13.7      7.7  clears 6.8 on every seed
-Chris Rodriguez -> Los Angeles Rams               +7.6    +4.8    +0.4      7.2  SPREAD EXCEEDS THE FLOOR - not a number
-Bo Nix + Derrick Henry + Mike Evans -> Kyler …    +7.6   +12.7    +9.0      5.2  clears 6.8 on every seed
-Josh Downs -> Travis Kelce                        +7.4    +5.4    +6.8      2.0  inside the floor on at least one seed
-Khalil Shakir -> Brenton Strange                  +7.3    +1.3    -1.5      8.9  SPREAD EXCEEDS THE FLOOR - not a number
-Brock Purdy + Derrick Henry + Malik Nabers ->…    +7.3    +2.5   +10.0      7.5  SPREAD EXCEEDS THE FLOOR - not a number
-Khalil Shakir -> Dalton Kincaid                   +7.2    +5.5    -0.4      7.6  SPREAD EXCEEDS THE FLOOR - not a number
-Brock Purdy + Mike Evans -> Josh Allen + Matt…    +6.9    -0.6    +7.4      8.1  SPREAD EXCEEDS THE FLOOR - not a number
-Chris Rodriguez -> Brenton Strange                +6.9    +3.4    -0.6      7.5  SPREAD EXCEEDS THE FLOOR - not a number
-Chris Rodriguez -> Dalton Kincaid                 +6.6    +6.7    +2.3      4.4  inside the floor on at least one seed
-Bo Nix -> Jared Goff                              +6.5    -1.3    +1.7      7.9  SPREAD EXCEEDS THE FLOOR - not a number
+Bhayshul Tuten -> Josh Allen  [KEEPER]           +22.9   +31.2   +20.3     10.9  clears 6.8 on every seed
+Malik Nabers + Mike Evans + Cam Skattebo -> J…   +22.4    +9.6   +16.5     12.8  clears 6.8 on every seed
+Malik Nabers + Mike Evans + Cam Skattebo -> J…   +21.5   +10.2   +11.0     11.4  clears 6.8 on every seed
+Brock Purdy + Derrick Henry -> Josh Allen + T…   +19.7   +18.7   +10.9      8.8  clears 6.8 on every seed
+Malik Nabers + Mike Evans -> Jordan Love + Ja…   +19.1    +2.0    +3.7     17.1  SPREAD EXCEEDS THE FLOOR - not a number
+Malik Nabers + Mike Evans + Cam Skattebo -> J…   +18.3    +6.2    +4.2     14.1  SPREAD EXCEEDS THE FLOOR - not a number
+Mike Evans + Cam Skattebo -> Jordan Love + Ja…   +17.5   +12.6   +11.2      6.3  clears 6.8 on every seed
+Bo Nix + Mike Evans -> Matthew Stafford + Tre…   +17.5    +5.9    +8.7     11.6  SPREAD EXCEEDS THE FLOOR - not a number
+Malik Nabers + Cam Skattebo -> Jordan Love + …   +16.5    +7.4    +2.5     14.0  SPREAD EXCEEDS THE FLOOR - not a number
+Bo Nix + Mike Evans + Cam Skattebo -> Josh Al…   +16.5   +14.4    +8.2      8.3  clears 6.8 on every seed
+Mike Evans + Cam Skattebo -> Josh Allen + Tre…   +15.0   +13.0    +6.9      8.2  clears 6.8 on every seed
+Malik Nabers + Mike Evans -> Ja'Marr Chase       +14.7    +1.3    +0.2     14.5  SPREAD EXCEEDS THE FLOOR - not a number
 
-worst seed-to-seed spread of a TRADE gain: 18.0 points
+worst seed-to-seed spread of a TRADE gain: 17.1 points
 ObjectiveStability measured 6.8 for a roster MARGINAL at 480 scenarios. This is a
 different quantity at a different scenario count, and the two should not be assumed
 equal - a trade moves two men in opposite directions and the errors need not cancel.

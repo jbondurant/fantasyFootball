@@ -1387,3 +1387,56 @@ real every time.
     `hisRate` in the shipped page made it fail; restoring made it pass. Four
     tests written today turned out to be vacuous and I found out hours later
     each time - a guard that has never been seen to fail is not known to work.
+
+122. **The keeper panel was priced off the wrong draft, and one question found it.**
+    Justin, 2026-09-07: *"how is skattebo getting keeper value if i drafted him
+    this year, and he hasn't yet played."* He had not. The panel came from
+    `KeeperChooser.eligibleCandidates`, which prices against
+    `getPreviousDraftPicks` - "picks from every EARLIER draft" - so in the 2026
+    season it reads the 2025 board. That is exactly right for the 2026 keeper
+    decision, taken in August and already history, and exactly wrong for 2027.
+
+    A man drafted in 2026 was not in the 2025 draft at all, so he took the
+    undrafted default of a tenth-round pick. Ten of sixteen rounds were wrong,
+    in BOTH directions: Skattebo shown at r9 against a true r3, Bo Nix at r8
+    against a true r15. The two men the panel named as keepers were chosen on
+    prices that did not exist.
+
+    Corrected off the 2026 board, the answer inverts. Skattebo is not a keeper -
+    12.8 points short of his real r3 price - and is therefore TRADEABLE, which is
+    the opposite of the advice given all day. Bo Nix at r15 is a keeper worth
+    +32.8, and had been buried. Henry and Nabers cannot be kept at any price,
+    first two rounds, and nothing on the page had said so.
+
+    The tell was available and unread: a table headed "2027" whose costs came
+    from a function documented as reading EARLIER drafts. The label said one
+    thing, the source said another, and nobody had put them side by side.
+
+    *A floor was hiding the rest of it.* `keeperPoints` returns
+    `max(0, worth - replacement)`, so every non-keeper printed exactly 0.0 -
+    Shakir 2.1 short and Downs 25.3 short looked identical, and the ordering
+    below the top three carried no information at all. Right for valuing a
+    roster, wrong for reading a table.
+
+123. **Requiring the other manager to be right about everything.**
+    Justin: *"i think it might be a tad too strict in terms of not allowing other
+    teams to make mistakes."* The trades board gated on every test at once and
+    showed ONE offer out of eighty-five. Measured, the two big cutters were "my
+    gain is inside its own noise" (58) and "he loses on the SIMPLE model" (57) -
+    and that second one demands he come out ahead on a best-legal-ten
+    calculation almost nobody in this league performs. Modelling a manager who
+    completes 0.85 trades a season as an optimiser is a strange choice, and it
+    was mine: I had written earlier that the alternatives machinery should be
+    "demoted to a tiebreaker and stopped from hiding rows", then added three more
+    filters on top of it.
+
+    Tiers replaced the gate. Every test still runs; none of them hides a row.
+    SEND is defensible to offer and to have offered; ASK is good for Justin, safe
+    for his roster, and leaves the other man a story he can tell himself. One and
+    forty-four, against one and nothing.
+
+    *And it caught me repeating my own bug.* Three ASK rows offered managers a
+    trade reading -106 on their own starters, because it took their only defence
+    and the full model refilled the slot off the wire for free - the identical
+    "empties a slot" error fixed on Justin's side that morning and left standing
+    on theirs. Not a mistake they make. One they notice.

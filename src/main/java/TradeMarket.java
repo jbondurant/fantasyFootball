@@ -946,6 +946,35 @@ public class TradeMarket {
     }
 
     /**
+     * The same number WITHOUT the floor, which is how far a man is from being
+     * worth his keeper price.
+     *
+     * `keeperPoints` floors at zero because a keeper you would not keep is worth
+     * nothing, and that is right for valuing a roster. It is wrong for reading a
+     * table: a man forty points short of his price and one a single point short
+     * both print 0.0, so the ordering below the keepers carries no information
+     * and a near miss looks identical to a hopeless one. Skattebo at r3 and
+     * Tre' Harris at r16 are not the same distance from keepable.
+     */
+    static double keeperPointsRaw(Map<String, Integer> keeperRound, Map<String, Double> points,
+                                  Map<Position, java.util.TreeMap<Double, Double>> bestByAdp,
+                                  Map<String, Position> positionOf, AAAConfiguration configuration,
+                                  String id){
+        Integer round = keeperRound.get(id);
+        Position position = positionOf.get(id);
+        if(round == null || position == null){
+            return 0;
+        }
+        java.util.TreeMap<Double, Double> atPosition = bestByAdp.get(position);
+        if(atPosition == null){
+            return 0;
+        }
+        Map.Entry<Double, Double> replacement =
+                atPosition.ceilingEntry((double) configuration.pickNumberFor(round));
+        return points.getOrDefault(id, 0.0) - (replacement == null ? 0 : replacement.getValue());
+    }
+
+    /**
      * Per position, ADP -> the best projection still on the board at that ADP or
      * later. Walked from the back so each entry is a running maximum: what the
      * best man at this position is worth if you wait until this pick.

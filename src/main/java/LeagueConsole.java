@@ -87,6 +87,48 @@ public class LeagueConsole {
         return out.append("]").toString();
     }
 
+    /**
+     * The position a trade would thin, or null if it thins none.
+     *
+     * A position is THIN when the men on it carrying no injury tag cannot fill
+     * the slots the lineup demands - six Questionable receivers and one healthy
+     * one is a three-receiver lineup held together by hope. Sending a body away
+     * from such a position costs more than its projection, because what is
+     * scarce there is availability rather than points, and a doubtful man is
+     * still a ticket that a traded man is not.
+     *
+     * Only the position's own required slots count, not flex. Flex makes the
+     * arithmetic kinder and the conclusion softer, and a rule meant to stop a
+     * bad trade should be the strict version.
+     */
+    static final Map<Position, Integer> SLOTS = Map.of(Position.QB, 1, Position.RB, 2,
+            Position.WR, 3, Position.TE, 1, Position.DEF, 1);
+
+    static String thinnedByTrade(List<String> leaving, List<String> arriving,
+                                 Map<String, Position> positionOf, List<StartSit.Man> roster){
+        for(Position position : SLOTS.keySet()){
+            // NET, not gross. Sending one receiver and receiving two does not
+            // thin the receivers, and the first version flagged it anyway -
+            // it only ever looked at who left. A rule that fires on a trade
+            // which IMPROVES the position it is meant to protect will be
+            // ignored, and then it protects nothing.
+            long out = leaving.stream().filter(id -> positionOf.get(id) == position).count();
+            long in = arriving.stream().filter(id -> positionOf.get(id) == position).count();
+            if(out <= in){
+                continue;
+            }
+            long healthy = roster.stream()
+                    .filter(man -> man.position() == position && man.playing()
+                            && !doubtful(SleeperProjections.injuryStatusOf(man.id())))
+                    .count();
+            if(healthy < SLOTS.get(position)){
+                return position.name() + " (" + healthy + " healthy for " + SLOTS.get(position)
+                        + " slots)";
+            }
+        }
+        return null;
+    }
+
     /** Anything other than no tag at all is a doubt worth pricing. */
     static boolean doubtful(String status){
         return status != null && !status.isBlank() && !status.equalsIgnoreCase("ok");
@@ -477,18 +519,36 @@ public class LeagueConsole {
         }
         Map<Position, java.util.TreeMap<Double, Double>> bestByAdp =
                 TradeMarket.bestStillAvailable(points, everyPosition);
+        // PRICED OFF THIS SEASON'S DRAFT, NOT LAST SEASON'S.
+        //
+        // KeeperChooser.eligibleCandidates reads getPreviousDraftPicks - "picks
+        // from every EARLIER draft" - which in the 2026 season means the 2025
+        // board. That is the right basis for the 2026 keeper decision, made in
+        // August and already history, and the wrong one for 2027: a man drafted
+        // in 2026 was not in the 2025 draft at all and silently took the
+        // undrafted default of a tenth.
+        //
+        // Justin found it by asking how a rookie he drafted this year and who
+        // has not played could have a keeper cost. Ten of sixteen rounds were
+        // wrong in both directions - Skattebo shown at r9 against a true r3, Bo
+        // Nix at r8 against a true r15 - so the two men the panel named as
+        // keepers were picked on prices that did not exist.
+        Map<String, NextYearKeepers.Cost> nextYear =
+                NextYearKeepers.from(configuration.getTodaysDraftPicks());
         Map<String, Integer> keeperRound = new HashMap<>();
-        for(String manager : rosters.keySet()){
-            String user = configuration.getUserIDToDisplayName().entrySet().stream()
-                    .filter(e -> e.getValue().equals(manager)).map(Map.Entry::getKey)
-                    .findFirst().orElse(manager);
-            try {
-                for(Keeper keeper : KeeperChooser.eligibleCandidates(configuration, user)){
-                    keeperRound.put(keeper.player.sleeperIDString, keeper.roundCanBeKept);
-                }
+        Map<String, String> keeperRefusal = new HashMap<>();
+        for(Map.Entry<String, NextYearKeepers.Cost> entry : nextYear.entrySet()){
+            if(entry.getValue().keepable()){
+                keeperRound.put(entry.getKey(), entry.getValue().round());
             }
-            catch(RuntimeException notPriceable){
-                // no keeper column for that manager; stated, not fatal
+            else {
+                keeperRefusal.put(entry.getKey(), entry.getValue().refusal());
+            }
+        }
+        // a man picked up off waivers was in no draft; the ruleset prices him at a tenth
+        for(String id : ownerOf.keySet()){
+            if(!nextYear.containsKey(id)){
+                keeperRound.put(id, Keeper.UNDRAFTED_ROUND_COST);
             }
         }
         Map<String, Double> surplus = new HashMap<>();
@@ -617,6 +677,7 @@ public class LeagueConsole {
         int written = 0;
         int losesToElsewhere = 0;
         int fairTrades = 0;
+        int askTrades = 0;
         int insideItsOwnNoise = 0;
         for(TradeMarket.Trade trade : mutuallyGood){
             // A GAIN THAT ROUNDS TO NOTHING IS NOT INFORMATION. The filter keeps
@@ -694,8 +755,60 @@ public class LeagueConsole {
             // tell from zero. A view built to be the trustworthy one was three
             // quarters unreadable, which is worse than no default at all,
             // because it is the screen he would act from.
-            boolean fair = !noise && trade.myGain() > 0 && himSimple > 0 && !himHole && !hole
-                    && optics.gap() <= TradeMarket.OPTICS_GRAB;
+            // DOES IT THIN A POSITION THAT IS ALREADY HURT?
+            //
+            // Justin, 2026-09-07, on the one trade this page recommended: "the
+            // Kelce downs trade seems bad." He was right and the reason was a
+            // blind spot: trade valuations run on SEASON projections and never
+            // look at injury_status, which the lineup tab had learned to do that
+            // same morning. Six of his seven receivers were Questionable, only
+            // Jordan Addison untagged, and the board cheerfully proposed sending
+            // one of the three he was starting.
+            //
+            // A position is THIN when the men who carry no injury tag cannot
+            // fill the slots the lineup demands. Sending a body away from a thin
+            // position is worse than the season projection says, because what is
+            // scarce is not points, it is availability - and a tagged man is
+            // still a lottery ticket that a traded man is not.
+            String thins = thinnedByTrade(trade.give(), trade.get(), positionOf, mine);
+            // TIERS, NOT A GATE. Justin, 2026-09-07: "i think it might be a tad
+            // too strict in terms of not allowing other teams to make mistakes."
+            // He is right, and the measurement agreed: of eighty-five trades,
+            // fifty-seven failed because the man opposite loses on the SIMPLE
+            // model - a best-legal-ten calculation almost nobody in this league
+            // performs. Requiring him to be correct is a strange way to model
+            // somebody who completes under one trade a season.
+            //
+            // Every test still runs; none of them hides a row any more. What
+            // changes is that a trade is placed rather than rejected:
+            //
+            //   SEND  - good for me beyond the noise, visibly good for him, hurts
+            //           neither roster, and does not read as a grab. Defensible
+            //           to offer and to have offered.
+            //   ASK   - good for me on average, safe for my roster, and there is
+            //           SOME story he can tell himself: he gains on the full
+            //           model, or barely loses on starters, or receives the
+            //           earlier pick. This is the tier that allows for mistakes,
+            //           and it is where most real trades in this league live.
+            //   NO    - it costs me, or it guts a position I cannot cover.
+            //
+            // The reputation rule survives intact: nothing reaches SEND that
+            // grabs the earlier pick or leaves him worse on the number he can
+            // check, and ASK is labelled as a long shot rather than a fair deal.
+            boolean safeForMe = thins == null && !hole && trade.myGain() > 0;
+            boolean visiblyGoodForHim = himSimple > 0 && !himHole;
+            // ...but never one that guts HIS lineup. Three ASK rows offered him a
+            // trade whose simple reading is -106 because it takes his only
+            // defence: the full model likes it only because it refills the empty
+            // slot off the wire for free. That is the same "empties a slot"
+            // error I fixed on my own side and then let stand on his, and it is
+            // not a mistake he will make - it is one he will notice.
+            boolean aStoryHeCanTell = !himHole && (trade.theirGain() > 0 || himSimple > -2.0
+                    || optics.gap() <= -TradeMarket.OPTICS_GRAB);
+            String tier = !safeForMe ? "no"
+                    : !noise && visiblyGoodForHim && optics.gap() <= TradeMarket.OPTICS_GRAB ? "send"
+                    : aStoryHeCanTell ? "ask" : "no";
+            boolean fair = tier.equals("send");
             double hisRate = tradesPerYear.getOrDefault(trade.withManager(), 0.0);
             int[] record = tradeRecord.getOrDefault(trade.withManager(), new int[]{0, 0});
             double hisBest = elsewhere.getOrDefault(trade.withManager(), 0.0);
@@ -708,7 +821,7 @@ public class LeagueConsole {
                             + "\"himSimple\":%s,\"himSeason\":%s,\"himHole\":%b,"
                             + "\"hisBest\":%s,\"hisBestNaive\":%s,\"hisEdge\":%s,\"hisPartner\":%s,"
                             + "\"askPrice\":%s,\"overAsk\":%s,\"fair\":%b,\"hisRate\":%s,\"hisTrades\":%d,\"hisSeasons\":%d,"
-                            + "\"low\":%s,\"high\":%s,\"noise\":%b}",
+                            + "\"low\":%s,\"high\":%s,\"noise\":%b,\"thins\":%s,\"tier\":%s}",
                     quote(label(trade.give(), nameOf)), quote(label(trade.get(), nameOf)),
                     quote(trade.withManager()), num(trade.myGain()), num(trade.theirGain()),
                     num(thisSeason), num(hisKeeper), TradeMarket.asksForAKeeper(hisKeeper),
@@ -719,9 +832,13 @@ public class LeagueConsole {
                     num(himSimple), num(himSeason), himHole, num(hisBest), num(hisBestNaive), num(hisEdge),
                     quote(market.partner().getOrDefault(trade.withManager(), "nobody")),
                     num(askPrice), num(trade.theirGain() - askPrice), fair,
-                    num(hisRate), record[0], record[1], num(low), num(high), noise));
+                    num(hisRate), record[0], record[1], num(low), num(high), noise,
+                    thins == null ? "null" : quote(thins), quote(tier)));
             if(fair){
                 fairTrades++;
+            }
+            if(tier.equals("ask")){
+                askTrades++;
             }
             if(hisEdge < 0){
                 losesToElsewhere++;
@@ -815,13 +932,16 @@ public class LeagueConsole {
         for(String id : myMen){
             Double worth = surplus.get(id);
             Integer round = keeperRound.get(id);
+            double margin = TradeMarket.keeperPointsRaw(keeperRound, points, bestByAdp,
+                    everyPosition, configuration, id);
             keepersJson.append(keeperRows == 0 ? "" : ",").append(String.format(
-                    "{\"name\":%s,\"pos\":%s,\"round\":%s,\"surplus\":%s,\"keep\":%b}",
+                    "{\"name\":%s,\"pos\":%s,\"round\":%s,\"surplus\":%s,\"margin\":%s,\"keep\":%b,\"refusal\":%s}",
                     quote(nameOf.getOrDefault(id, id)),
                     quote(positionOf.get(id) == null ? "?" : positionOf.get(id).name()),
                     round == null ? "null" : String.valueOf(round),
-                    worth == null ? "null" : num(worth),
-                    keeperRows < 2 && worth != null && worth > 0));
+                    worth == null ? "null" : num(worth), num(margin),
+                    keeperRows < 2 && worth != null && worth > 0,
+                    keeperRefusal.containsKey(id) ? quote(keeperRefusal.get(id)) : "null"));
             keeperRows++;
         }
         keepersJson.append("]");
@@ -849,13 +969,13 @@ public class LeagueConsole {
                         + "\"scenarios\":%d,\"keepers\":%b,\"lineupTotal\":%s,\"slots\":%d,"
                         + "\"lineup\":%s,\"trades\":%s,\"supply\":%s,\"faab\":%s,"
                         + "\"faabAll\":%d,\"faabContested\":%d,\"faabFree\":%s,\"costs\":[1,1.5,2,3],"
-                        + "\"budget\":%d,\"wire\":%s,\"swapFloor\":%s,\"wireScenarios\":%d,\"lookahead\":%d,\"chainDepth\":%d,\"chainPool\":%d,\"pool\":%d,\"batnaPool\":%d,\"dataStamp\":%s,\"losesToElsewhere\":%d,\"insideItsOwnNoise\":%d,\"errorSeeds\":%d,\"keepers2027\":%s,\"fairTrades\":%d,\"mirage\":%s,\"opticsBar\":%s,\"winAll\":%s,\"winContested\":%s}",
+                        + "\"budget\":%d,\"wire\":%s,\"swapFloor\":%s,\"wireScenarios\":%d,\"lookahead\":%d,\"chainDepth\":%d,\"chainPool\":%d,\"pool\":%d,\"batnaPool\":%d,\"dataStamp\":%s,\"losesToElsewhere\":%d,\"insideItsOwnNoise\":%d,\"errorSeeds\":%d,\"keepers2027\":%s,\"fairTrades\":%d,\"askTrades\":%d,\"mirage\":%s,\"opticsBar\":%s,\"winAll\":%s,\"winContested\":%s}",
                 quote(season), week, quote(me), quote(LocalDate.now().toString()),
                 scenarios, withKeepers, num(lineup.starters()), lineup.starting().size(),
                 lineupJson, tradesJson, supplyJson, faabGrid(allBand, costs),
                 allPrices.size(), contestedPrices.size(),
                 num(allPrices.isEmpty() ? 0 : allPrices.stream().filter(p -> p == 0).count() * 100.0 / allPrices.size()),
-                budgetLeft, wireJson, num(swapFloor), wireScenarios, lookahead, chainDepth, chainPool, pool, batnaPool, quote(DataStamp.stamp()), losesToElsewhere, insideItsOwnNoise, errorSeeds, keepersJson, fairTrades, mirageJson, num(looksGoodBar), winLadder(allBand), winLadder(contestedBand));
+                budgetLeft, wireJson, num(swapFloor), wireScenarios, lookahead, chainDepth, chainPool, pool, batnaPool, quote(DataStamp.stamp()), losesToElsewhere, insideItsOwnNoise, errorSeeds, keepersJson, fairTrades, askTrades, mirageJson, num(looksGoodBar), winLadder(allBand), winLadder(contestedBand));
 
         Path target = Path.of("data", "console-" + season + "-w" + week + ".html");
         Files.writeString(target, page(json), StandardCharsets.UTF_8);
@@ -957,7 +1077,7 @@ td.first,th.side+th.side,th.sub2:nth-child(4){border-left:1px solid var(--line)}
 <section id="s-trades">
   <div class="row" style="margin-bottom:14px">
     <div><label>Only trades that also help 2026</label><select id="f26"><option value="1">yes</option><option value="0">show all</option></select></div>
-    <div><label>Good trading partner</label><select id="ffair"><option value="1">only trades he thanks you for</option><option value="0">show all</option></select></div>
+    <div><label>How likely he says yes</label><select id="ffair"><option value="both">send + worth asking</option><option value="1">only the ones he thanks you for</option><option value="0">show everything</option></select></div>
     <div><label>He&rsquo;d need you for it</label><select id="fedge"><option value="0">show all</option><option value="1">only positive edge</option></select></div>
     <div><label>Manager</label><select id="fman"></select></div>
     <div><label>Search a name</label><input type="text" id="fname" placeholder="e.g. Tuten"></div>
@@ -1058,7 +1178,9 @@ function trades(){ const only26 = document.getElementById("f26").value==="1";
   const man = mansel.value, q = document.getElementById("fname").value.toLowerCase();
   let rows = D.trades.filter(t => (!only26 || t.season>0) && (man==="everyone"||t.with===man)
     && (!q || (t.give+" "+t.get).toLowerCase().includes(q)));
-  if(document.getElementById("ffair").value==="1"){ rows = rows.filter(r=>r.fair); }
+  const want = document.getElementById("ffair").value;
+  if(want==="1"){ rows = rows.filter(r=>r.fair); }
+  else if(want==="both"){ rows = rows.filter(r=>r.tier!=="no"); }
   if(document.getElementById("fedge").value==="1"){ rows = rows.filter(r=>r.hisEdge>0); }
   const men = +document.getElementById("fmen").value;
   if(men) rows = rows.filter(r=>r.men===men);
@@ -1069,7 +1191,7 @@ function trades(){ const only26 = document.getElementById("f26").value==="1";
     + "<th rowspan=2>Opens up</th><th rowspan=2>ADP out/in</th><th rowspan=2>He trades</th><th class=l rowspan=2>With &middot; how it reads</th></tr>"
     + "<tr><th class=sub2>simple</th><th class=sub2>full</th><th class=sub2>2026</th>"
     + "<th class=sub2>simple</th><th class=sub2>full</th><th class=sub2>2026</th><th class=sub2>vs elsewhere</th><th class=sub2>vs selling them</th></tr>";
-  rows.slice(0,SHOWN).forEach((r,i)=>{ t += `<tr class="${r.chain&&r.chain.length>1?"clickable":""}" data-ch="${i}"><td class=l>${r.give}${r.chain&&r.chain.length>1?' <span class=caret>&#9656;</span>':""}</td><td class=l>${r.get}</td>`
+  rows.slice(0,SHOWN).forEach((r,i)=>{ t += `<tr class="${r.chain&&r.chain.length>1?"clickable":""} ${r.tier==="ask"?"out":""}" data-ch="${i}"><td class=l>${r.give}${r.chain&&r.chain.length>1?' <span class=caret>&#9656;</span>':""}</td><td class=l>${r.get}</td>`
     + `<td class="${r.hole?"":sign(r.simple)} first">${r.hole?'<span class=tag>slot</span>':f1(r.simple)}</td>`
     + `<td class="${r.noise?"":sign(r.you)}" title="across ${D.errorSeeds} seeds: ${f1(r.low)} to ${f1(r.high)}">`
     + `<b>${f1(r.you)}</b>${r.noise?' <span class=tag>noise</span>':` <span class=sub>&plusmn;${((r.high-r.low)/2).toFixed(1)}</span>`}</td>`
@@ -1082,7 +1204,7 @@ function trades(){ const only26 = document.getElementById("f26").value==="1";
     + `<td class=${r.reach===null?"":sign(r.reach)}>${r.reach===null?"&mdash;":f1(r.reach)+(r.chain&&r.chain.length>1?` <span class=tag>${r.chain.length} deep</span>`:"")}</td>`
     + `<td>${r.adpOut.toFixed(0)} / ${r.adpIn.toFixed(0)}</td>`
     + `<td class="${r.hisRate<0.5?"neg":r.hisRate>=3?"pos":""}" title="${r.hisTrades} completed trades in ${r.hisSeasons} seasons">${r.hisRate.toFixed(2)}/yr</td>`
-    + `<td class=l>${r.with} &middot; ${r.reads}`
+    + `<td class=l>${r.tier==="send"?"<b>SEND</b>":r.tier==="ask"?"<span class=tag>worth asking</span>":""} ${r.with} &middot; ${r.reads}${r.thins?` <span class="tag neg">thins ${r.thins}</span>`:""}`
     + (r.hisKeeperTag?'<span class="tag">his keeper</span>':'')+`</td></tr>`;
     if(r.chain && r.chain.length>1){
       t += `<tr class=ladder id="ch${i}" hidden><td class=l colspan=14><div class=ladderbox>`
@@ -1100,8 +1222,10 @@ function trades(){ const only26 = document.getElementById("f26").value==="1";
     `${Math.min(rows.length, SHOWN)} of ${rows.length} matching offers shown (${D.trades.length} searched), one, two and three men each way, all good for <b>both</b> sides &mdash; an offer the other manager loses on is one he declines.<br><br>`
     + `<b>The same three numbers for both managers</b>, so a trade can be argued in whichever terms the man opposite actually uses. <b>SIMPLE</b> is what the best legal ten projects and nothing else &mdash; the number to put in a message, because anybody can check it. <b>FULL</b> prices a bench by how often it is promoted and draws whole historical seasons for injury and boom-or-bust; on his side it is also <i>loss-averse on keepers</i>. <b>2026</b> is this season alone, no keeper value either way. When simple and full disagree, that gap IS the argument: a trade worth +8.8 full and +0.0 simple is one where all the value is bench and injury risk, and no starters-only manager will ever see it. Where a trade <b>empties a slot</b> for either side the simple number is withheld and tagged rather than shown &mdash; sending away an only defence costs the whole slot, which reads as &minus;95 and means &ldquo;you would pick one up&rdquo;.<br><br>`
     + `<b>Your full gain carries its own error bar.</b> Each trade is re-valued under ${D.errorSeeds} seeds of the same objective &mdash; the search is not repeated, so this is the valuation's own wobble and not a different board &mdash; and the range is on hover. A trade whose gain goes negative on any seed is tagged <b>noise</b>: the model cannot tell it from zero, whatever the headline says. <b>${D.insideItsOwnNoise} of ${D.trades.length} are in that state.</b> This replaced a single 6.8-point floor, which was the wrong instrument: that number was measured on a roster MARGINAL at 480 drawn seasons, and a trade is a different quantity at a different count &mdash; measured spreads across sixty real trades ran from 0.4 to 18.0, so no one floor fits them.<br><br>`
+    + `<b>A trade tagged "thins"</b> sends a body away from a position whose UNTAGGED men already cannot fill its slots. That is not in the projections, which price a Questionable starter exactly like a healthy one: what is scarce at such a position is availability, not points, and a doubtful man is still a ticket that a traded man is not. Those offers are excluded from this view entirely.<br><br>`
     + `<b>HE TRADES</b> is completed deals per season from this league's own log, and it is the column to read first. Everything else here models how a rival VALUES an offer; this is the only one that asks whether he does deals at all, and it is probably the larger term. Nothing on the board is worth more than a manager's willingness to open the message: the two biggest gains below go to somebody who has completed one trade in three seasons, while the most active traders sit lower down the table with offers that would actually be taken.<br><br>`
-    + `<b>${D.fairTrades} of the ${D.trades.length} offers survive their own error bar, help him on the number he can check himself, empty nobody's lineup, and do not visibly grab the earlier pick &mdash; and that filter is ON by default.</b> This is a keeper league: the same eleven managers every season, so being somebody people want to deal with is an asset that compounds into next year rather than a nicety. A trade he thanks you for is worth more than a slightly better one he resents.<br><br>`
+    + `<b>${D.fairTrades} to SEND and ${D.askTrades} WORTH ASKING</b>, of ${D.trades.length} searched. Nothing is hidden by a filter any more, because gating on every test at once assumed the man opposite is right about everything &mdash; and fifty-seven of these failed only because he loses on the best-legal-ten calculation, which almost nobody in this league performs. A <b>SEND</b> is defensible to offer and to have offered. <b>WORTH ASKING</b> is good for you, safe for your roster, and leaves him a story he can tell himself &mdash; he gains on the full model, or barely loses on starters, or receives the earlier pick. It is a long shot, not a fair deal, and it is greyed to say so.<br><br>`
+    + `The old rule kept only offers that survive their own error bar, help him on the number he can check himself, empty nobody's lineup, and do not visibly grab the earlier pick &mdash; and that filter is ON by default.</b> This is a keeper league: the same eleven managers every season, so being somebody people want to deal with is an asset that compounds into next year rather than a nicety. A trade he thanks you for is worth more than a slightly better one he resents.<br><br>`
     + `<b>${D.losesToElsewhere} of the ${D.trades.length} offers lose to something he can already get from somebody else.</b> <b>VS ELSEWHERE</b> is the column that says so, and it is the one that decides whether an offer gets taken. His gain is not persuasive on its own: what matters is what it beats. Each rival's best mutually-good trade with somebody who is not you is computed the same way, and this is his gain from your offer minus that. <b>And that alternative is limited by everyone else's alternatives</b>: his best trade needs the manager across from HIM to prefer it to his own options. So the rivals are PAIRED OFF &mdash; each pair striking the deal with the most joint surplus to divide, best pairs forming first &mdash; and his fallback is what he gets from the partner he would actually end up with, not the best partner he can name. Hover a number to see that alongside the naive maximum, which credits him with deals the other man would decline. <b>A negative number means he has something better waiting and will not need you.</b> Two limits, both making the column optimistic: the search is size-balanced, so it cannot see the uneven deals where a manager sends two men for one and refills off the wire &mdash; anyone who can build those has better alternatives than this shows &mdash; and it runs at a pool of ${D.batnaPool}. So a thin edge here is not an edge.<br><br>`
     + `<b>VS SELLING THEM</b> is the same question asked one man at a time. Every player you are asking for has a price of his own: the best a straight one-for-one with somebody who is not you would bring his owner. Asking for two men is asking him to forgo two of those, so this is your offer minus their sum. One-for-one is what isolates a man's contribution &mdash; in a bundle the gain belongs to the pair and splitting it would be a choice rather than a measurement &mdash; which also makes it a floor: bundles can be worth more than their parts, and a man priced at nothing has no one-for-one buyer, not no value.<br><br>`
     + `<b>Opens up</b> answers a different question from <b>Full</b>: not what the trade is worth, but what the board looks like <i>after</i> it. Each of the top ${D.lookahead} is forced as step one and the chain re-searched from the board it leaves, up to ${D.chainDepth} deep, every step clearing the ${D.swapFloor.toFixed(1)}-point floor. The chain searches each side's best ${D.chainPool} men rather than the ${D.pool} the table above uses &mdash; seventy-two board re-searches at the full pool is hours of compute &mdash; so <b>Opens up is a floor on what the trade unlocks, not a ceiling</b>. A +5 that opens a +80 chain beats a +20 that opens a +45, and the greedy chain alone can never tell you that &mdash; it always takes the biggest step and so never finds out where the small one led. Click a row with a caret to see the sequence. Rows showing &mdash; were outside the top ${D.lookahead} by immediate gain and were not priced this way: a chain is a full re-search of every rival at every step.<br><br>`
@@ -1125,13 +1249,14 @@ document.getElementById("mirage-note").innerHTML =
 
 let k = "<tr><th class=l>Your man</th><th class=l>Pos</th><th>Keeper round</th><th>Surplus</th><th class=l>2027</th></tr>";
 D.keepers2027.forEach(r=>{ k += `<tr class="${r.keep?"start":""}"><td class=l>${r.name}</td><td class=l>${r.pos}</td>`
-  + `<td>${r.round===null?"&mdash;":"r"+r.round}</td>`
-  + `<td class="${r.surplus===null?"":sign(r.surplus)}">${r.surplus===null?"&mdash;":f1(r.surplus)}</td>`
-  + `<td class=l>${r.keep?"<b>KEEP</b>":""}</td></tr>`; });
+  + `<td>${r.refusal?`<span class="tag neg">cannot</span>`:r.round===null?"&mdash;":"r"+r.round}</td>`
+  + `<td class="${r.surplus===null?"":sign(r.surplus)}">${r.surplus===null?"&mdash;":r.surplus>0?f1(r.surplus):`<span class=sub>${f1(r.margin)} short</span>`}</td>`
+  + `<td class=l>${r.keep?"<b>KEEP</b>":r.refusal?`<span class=sub>${r.refusal}</span>`:""}</td></tr>`; });
 document.getElementById("t-keepers").innerHTML = k;
 const kept = D.keepers2027.filter(r=>r.keep);
 document.getElementById("keeper-note").innerHTML =
-  `<b>Surplus</b> is what a man is worth beyond the pick you spend to keep him, measured at his own position. Only the best <b>two</b> count, because two is what the rules allow &mdash; a third-best surplus is worth nothing next March, and pricing it as though it were would overvalue a man you cannot actually keep.<br><br>`
+  `Priced off <b>this season's draft</b>, which is what next season's keeper costs are made of. The panel used to read the PREVIOUS draft &mdash; correct for the 2026 decision, made in August and already history, and wrong for 2027: a man drafted this year was not in that board at all and silently took the undrafted default. Ten of sixteen rounds were wrong in both directions.<br><br>`
+  + `A man taken in the <b>first two rounds cannot be kept at any price</b>, and one kept this year costs a round MORE next year. <b>Surplus</b> is what a man is worth beyond the pick you spend to keep him, measured at his own position. Only the best <b>two</b> count, because two is what the rules allow &mdash; a third-best surplus is worth nothing next March, and pricing it as though it were would overvalue a man you cannot actually keep.<br><br>`
   + (kept.length
       ? `On today's roster your 2027 keepers are <b>${kept.map(r=>r.name+" (r"+r.round+", "+f1(r.surplus)+")").join("</b> and <b>")}</b>, worth <b>${f1(kept.reduce((a,r)=>a+r.surplus,0))}</b> together. Every trade on this page already counts that &mdash; giving one away shows up in your own gain &mdash; but the board will never tell you which men those are, so here they are. A trade that moves one of them is a decision about next season, not this one.`
       : `Nothing on this roster carries a positive keeper surplus, so no trade this season can cost you a 2027 keeper. That is worth knowing before you protect somebody out of habit.`);
