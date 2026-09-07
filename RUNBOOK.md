@@ -93,6 +93,26 @@ Appends the finished week and judges the season against a bar frozen before week
 one. It refuses to call anything FINAL before the regular season ends, which is
 the point of freezing it.
 
+## From week 7 — am I still in it
+
+    ./gradlew run -Pmain=SeasonOutlook
+
+Six of twelve make the playoffs. This plays out the real remaining schedule with
+each team's weekly score drawn around its best legal ten, at a spread of 24.9 -
+MEASURED over 840 team-weeks in five completed seasons, not assumed.
+
+It is the number your own rule fires on: *win 2026, but if not after like
+halfway, sell a bit for keepers, not in a drastic way.* Before halfway it will
+refuse to say anything decisive, on purpose - a pivot called in week 3 off a 20%
+sample is not that rule. Past halfway it commits: above 55% buy, below 20% sell
+a bit **with the round 1-3 men staying**, and in between it says undecided
+rather than picking.
+
+What it leaves out - byes, injuries arriving, waivers, trades - all make the
+season MORE uncertain and push every number toward 50%. So a team it calls dead
+is dead by a margin that survives the omissions; a team it calls alive may only
+be alive.
+
 ## Once a week, or when something looks wrong
 
     ./gradlew run -Pmain=TradePartners     # who actually trades, from the log
