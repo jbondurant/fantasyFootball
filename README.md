@@ -47,12 +47,13 @@ fails if one does). Fallbacks are in `RUNBOOK.md`.
 ./gradlew run -Pmain=Keepers16          # every owner's keepers on the SIXTEEN-round weekly objective (injuries, boom/bust, defences): seat, each man alone at his real round, the best pair by search (-Ptrials -Pscenarios -PpairPool -Powners -Pshard=i/N -Pout; -Prender=<report.txt> re-renders the HTML)
 ./gradlew run -Pmain=StartSit            # IN SEASON: the lineup to set this week, with the calls that are inside the measured coin-flip band named as such (-Pweek -Pme; -Pcalibrate measures the odds)
 ./gradlew run -Pmain=TuesdaySwap         # IN SEASON: every (add, drop) pair on the weekly-starter objective; DO NOTHING is the default answer (-Pcandidates -PswapFloor -Pscenarios)
-./gradlew run -Pmain=TradeMarket         # IN SEASON: every size-balanced swap with all eleven rivals, only those BOTH sides gain from, plus what your surplus is actually worth (-Pdepth -Ppool -Ptop)
+./gradlew run -Pmain=LeagueConsole       # IN SEASON: one HTML page for the week - lineup, who to add and for how much, trades. The page COMPUTES NOTHING: every answer is precomputed here and LeagueConsoleTest re-derives them. Your FAAB comes off the rosters feed and each free agent's worth is the model's own (add, drop) marginal - no sliders
+./gradlew run -Pmain=TradeMarket         # IN SEASON: every size-balanced swap with all eleven rivals, only those BOTH sides gain from, plus what your surplus is actually worth (-PchainDepth -Ppool -Ptop)
 # see FAAB-PLAN.md for how a projected bid would be built, and why the demand half needs new data
 ./gradlew run -Pmain=FaabBid             # IN SEASON: what to bid, from this league's own 1448 settled contests (-Pfit to harvest; then -Pvalue=<points> -Pbudget)
 ./gradlew run -Pmain=DefenceThisWeek     # IN SEASON: which defence to start, running the policy WireRateStress actually measured (-Pweek -Plag -Pme)
 ./gradlew run -Pmain=SeasonLedger        # IN SEASON: append each finished week and judge the bench question against a bar frozen before week 1 (-Panchor once, then weekly)
-./gradlew run -Pmain=RankKeyChoice       # ADP or projections: which preseason order should key a man's outcome cell (leave-one-season-out, one feed) (-Pdepth -Pband)
+./gradlew run -Pmain=RankKeyChoice       # ADP or projections: which preseason order should key a man's outcome cell (leave-one-season-out, one feed) (-PrankDepth -Pband)
 ./gradlew run -Pmain=ObjectiveStability   # how much of a man's Keepers16 value is the yardstick's own sampling: marginals under several seeds, worst spread (-Pscenarios -Pseeds)
 #   any planner tool also takes -Pprojections=snapshot:<date> (a day from the AdpSnapshot archive) and -PadpSnapshot=<date>;
 #   the unit suite runs on data/fixtures/2026-pre-draft: the league as it stood on draft morning and the full Sleeper feed of draft night

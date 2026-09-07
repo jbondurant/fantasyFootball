@@ -883,3 +883,274 @@ real every time.
     and it passes again. Worth knowing because the instinct on a three-second
     red build is to go looking at the code that was just written, and the code
     was fine.
+
+100. **Three corrections from the man who plays in the league.** The trade
+    engine was arithmetically right and socially wrong three times, and each fix
+    came from Justin rather than from the data.
+
+    *Loss aversion, not indifference.* "People don't care about gaining keeper
+    value, but they care deeply about losing it." The first model had rivals
+    simply not counting keepers, which made them cheap SELLERS of them - the
+    board filled with buying other people's round-14 men. The truth is a
+    ratchet: no credit for one received, full cost for one given up. That is a
+    property of the TRADE and not of the roster it ends with, so the scorer had
+    to become a three-argument thing (before, out, in). Asking for a rival's
+    keeper is HARDER than a symmetric model says, not easier - the opposite of
+    what had been shipped and stated confidently.
+
+    *Draft position is most of how a trade reads before the season.* "People
+    will not like to trade their round n pick for my round m pick if my m is
+    significantly > n." A third quantity, independent of either valuation. The
+    anchor is the BEST man each way, not the sum, because ADPs do not add and a
+    trade is named after its headline player. Shipped with the sign INVERTED
+    first, telling him that giving Stevenson (73) for Josh Allen (20) was an
+    easy yes when it is the hard ask - a lower ADP is an earlier pick, and the
+    test asserted the error too.
+
+    *Two audiences, two models.* "Some league members have a preference for the
+    simple, and other league members have a preference for the complex." So both
+    numbers sit on the table: the full objective, and what the best legal ten
+    projects. Their DISAGREEMENT is the useful part - Shakir for Kelce is +8.8
+    full and +0.0 simple, so the whole gain is bench and injury risk and no
+    starters-only manager will ever see it. And one place the simple model
+    cannot be shown as a score: trading away the only defence empties the slot,
+    which reads as -95 and means "you would pick one up". That number is
+    withheld rather than printed.
+
+    None of this was reachable from the repository. It came from somebody who
+    knows what the other eleven managers will actually do.
+
+101. **A slider is a bug when the model could have computed the input.** Justin,
+    2026-09-05: *"there should be info on the players I should add to my team,
+    and the faab left, and what is he worth on my roster should not be sliders
+    for me to calculate."* The wire tab shipped three controls, and two of them
+    asked him for facts the repo already holds. FAAB left is in the rosters feed
+    (`settings.waiver_budget_used`, 0 of 100 spent) — not an estimate, a number.
+    And "what is he worth to your roster" is the entire question the objective
+    exists to answer: build the roster with him and without the man he displaces,
+    value both, subtract. Handing that to a slider does not make the tool
+    interactive, it makes the user do the modelling and then admire the lookup.
+
+    Fixing it surfaced three faults that the slider had been hiding, because a
+    slider has no wrong answer:
+
+    *The first table named nobody.* `nameOf` in the console is built from
+    `LeagueOwners.today`, which is by definition the men who are NOT free agents,
+    so every row printed a Sleeper id and a position of `?`. A table of adds that
+    cannot name the adds.
+
+    *Every recommendation was the same one, wearing fourteen faces.* All fourteen
+    rows said "drop Baltimore Ravens" — his only defence — because the objective
+    refills an empty DEF slot off the wire at streaming value, so the defence's
+    marginal is nearly nothing and it is always the cheapest man to cut. True,
+    and useless: "drop your only defence" is a second decision, not a free drop,
+    and repeating it fourteen times is one recommendation printed fourteen times.
+    Now the primary drop is the cheapest one that KEEPS ALL TEN SLOTS FILLED, and
+    the unconstrained one rides underneath it, flagged, when it gains more —
+    Schultz for Tre' Harris +4.8, or for the Ravens +6.8 and a hole. Same shape
+    as the trade table's withheld simple number: an emptied slot is a fact about
+    the move that the score alone will not tell you.
+
+    *The floor belonged to a different population.* The console values at 240
+    drawn seasons; `ObjectiveStability` measured the 6.8-point noise floor at
+    480. Comparing the one to the other asks whether a noisier number clears a
+    quieter number's yardstick — the same root cause as #79 and #81, arriving
+    for the third time in a different costume. The wire search now runs at 480
+    regardless of the page's scenario count, and the page states both, and
+    `LeagueConsoleTest` fails if that count ever stops being 480.
+
+    Aligning the depth (40 free agents per position, as the terminal tool uses)
+    made the page and `TuesdaySwap` agree to the decimal — Schultz +4.8 / +6.8 in
+    both — which is what the claim "the two cannot disagree" is worth: it is only
+    true because the page calls `TuesdaySwap.search` rather than reimplementing
+    it, AND runs it over the same men with the same seeds. Either half missing
+    and it is a slogan.
+
+    *And the fix hid ten men.* Preferring the slot-safe drop meant that a man
+    whose safe pairing gained under the 0.05 cutoff simply disappeared, even when
+    his unconstrained move gained plenty - the table went from 14 rows to 3, and
+    three of those looked like the whole board. That is the flag's own purpose
+    inverted: a move worth warning about was instead made invisible. It now falls
+    back to the slot-emptying pairing, labelled, and the table is 13 rows again.
+    All ten recovered men are inside the noise this week, so no decision changed
+    - but "no decision changed" is a fact discovered after looking, not a reason
+    not to look.
+
+    The answer this week is DO NOTHING: nothing on the wire clears the floor, and
+    the page says "0 men worth a claim" rather than ranking noise.
+
+102. **A green notification for a red build.** The background check finished and
+    the harness reported *"completed (exit code 0)"*. The build had FAILED. The
+    command was `./gradlew check > log 2>&1; echo "EXIT $?" >> log` — a compound
+    statement whose exit status is the `echo`'s, not gradle's, so the wrapper is
+    always 0 no matter what the build did. The log's own last line said `EXIT 1`.
+
+    One test away from committing on a red check, and the thing that would have
+    caught it is the thing I had stopped reading because a notification told me
+    it was fine. Read the log, never the wrapper's status: the summary line the
+    harness prints is about the shell, not about the build. Better still, put the
+    status where it cannot be shadowed — `set -o pipefail`, or let the command be
+    the gradle invocation itself and append the status in a separate step.
+
+    The failure it was hiding: `ProseDriftTest.everyFlagTheCodeReadsIsForwardedByTheBuild`.
+    `LeagueConsole` had grown `Integer.getInteger("wireScenarios", 480)` and
+    `build.gradle` never forwarded it, so `-PwireScenarios=240` would have been
+    accepted on the command line and silently done nothing — a constant wearing a
+    flag's clothes. 623 tests, 1 failed, and the one that failed exists precisely
+    because this repo has shipped that footgun before. The guard worked; the
+    notification nearly kept me from hearing it.
+
+103. **The free wire is only free where something else charges for it.** Justin,
+    2026-09-05: *"if I drop ravens, I need to pick up a defense."* He is right,
+    and `WeeklyStarterValue` says so in its own comment: an unfilled lineup slot
+    is filled from the wire at no cost, and the roster-spot that streaming
+    consumes "is charged where it belongs, in the roster accounting, not by
+    pretending the wire does not exist."
+
+    On the DRAFT path that accounting exists. Sixteen picks fill sixteen spots,
+    and a manager who skips a defence still ends with sixteen men, one of whom is
+    the streamed defence occupying a spot. The books balance.
+
+    On the WAIVER path I never wrote that accounting, and so the wire table
+    offered "drop Baltimore Ravens, add Dalton Schultz, +6.8" - a sixteen-man
+    roster with no defence at all, valued as though a defence would appear in the
+    empty slot for free every week. His roster is full at 16, so fielding one
+    again costs another spot and another claim. The +6.8 was half a plan quoted
+    as a whole one, and the half that was missing is the half that costs.
+
+    `TuesdaySwap.complete` now prices the whole thing: the add, the drop, then
+    the best free man at the emptied position and the man he displaces. A
+    slot-emptying move is reported at the price of the plan or not at all.
+
+    Worth naming why the model liked it in the first place, because it is not
+    nonsense: the Ravens project 7.6 a week and a streamed defence is worth 8.03
+    x DEF_STREAM_OVER_HOLD, so his own defence really is below what the wire
+    offers. That is a true and useful observation. It just is not free, and the
+    place to act on it is `DefenceThisWeek`, weekly, not a one-off drop that
+    leaves the slot bare.
+
+    *And the paired reading.* His other objection - "if it says schultz +4 points
+    if I drop fannin" - is the table's fault even though the table never said it.
+    A marginal is a statement about a PAIR, and a row that prints only the
+    cheapest drop invites reading the number as a property of the player. Schultz
+    is +4.8 against the sixteenth man on the roster and deeply negative against
+    the starter at his own position; both are the same claim. TuesdaySwap now
+    prints the whole ladder for its best add - the same man against every man
+    held - so the number cannot be quoted without its pair.
+
+104. **A test named "unchanged" that floats with the market.** `AppetiteSeesKeepersTest`
+    pins Model A's rounds 1-7 to `[RB, WR, RB, WR, WR, WR, TE]` - "Model A's proven
+    domain and must not move". It failed today with `[QB, QB, RB, RB, RB, RB, RB]`,
+    and nothing in the change had touched it: none of `LeagueConsole`, `TradeMarket`
+    or `TuesdaySwap` is referenced anywhere on the planner's path, and running the
+    same test at HEAD reproduced the same failure.
+
+    What moved was the board. `InOutUtilities.getTodaysWebPage` serves the fixture
+    for files present in `data/fixtures/2026-pre-draft` and falls through for the
+    rest - and its own comment says so: "the projection and ADP feeds still float
+    with the day." Projections happen to be in the fixture. The FFC ADP file was
+    not, so it refreshed at 13:23 mid-session and the pre-draft plan moved with it.
+
+    A pre-draft planner judged against in-season ADP is not being regression-tested,
+    it is being asked a different question every day and marked wrong for answering
+    it. Freezing `ffCalculatorSDSerious2026.txt` at the 2026-09-01 board - the same
+    date the rest of the fixture is pinned to, draft morning - restores the proven
+    plan and both tests pass. Same principle as #79, #81 and #101: a result is only
+    comparable to the population it was proven on.
+
+105. **A flag that steals its own value, in a repo that had already written this down.**
+    The new "opens up" column priced every chain one step deep, so it printed the
+    immediate gain in both columns - a wrong answer wearing the shape of a right
+    one. The cause was `Integer.getInteger("depth", 6)` returning **0**.
+
+    `BoardValue.LOOKAHEAD` documents this exactly: *"Something in this JVM already
+    owns a system property called `depth` and sets it to 0, so -Pdepth=2 arrived as
+    '0' and the two-ply branch never ran - which is why depth 1 and depth 2 produced
+    byte-identical results and differed by 0.4 seconds."* It even ends "Worth a test
+    of its own." I read that comment while debugging and had already walked into it.
+
+    Renamed to `chainDepth` in both places, which a bare-JVM probe confirms is clean.
+    And `TradeMarket` was exposed to the same theft on the same name, where it is
+    worse: `depth` guards `if(depth > 1)`, so a stolen 0 does not shorten the
+    TRADING POWER section, it deletes it, with nothing printed and nothing failing.
+
+    The allowlist test cannot catch this class. It checks that a flag the code reads
+    is forwarded by the build - and `depth` IS forwarded. What it cannot see is that
+    the VALUE is taken before the code gets it. A flag can be present, spelled right,
+    listed, forwarded, and still be a constant.
+
+106. **The recursion he asked for has no fixed point in the obvious form.**
+    Justin, 2026-09-06, on reading the other manager's gain as an acceptance
+    signal: *"the other managers don't have the tools to find the perfect trades
+    elsewhere, and additionally, their perfect trades also would need to be
+    recursively limited by the ability of the other other manager to make a
+    better trade."* Both halves are right, and the first version of the outside
+    option had made exactly the error he names: it took each rival's best
+    mutually-good trade with anybody as his fallback, which credits him with
+    deals the man opposite would decline.
+
+    The obvious fix is to iterate - keep only trades whose counterparty beats his
+    own current fallback, recompute, repeat - and it CANNOT converge:
+
+        round 0: nobody has a fallback, every trade counts, each fallback becomes
+                 that manager's naive MAXIMUM.
+        round 1: a trade counts for A only if it beats B's fallback. B's fallback
+                 is now the largest gain B can get anywhere, so nothing beats it,
+                 not even the trade that produced it. All fall to zero.
+        round 2: back to the maximum. Period two, forever.
+
+    Twelve rounds happened to end on the zero, `getLast()` read that as settled,
+    and the page shipped "every rival's alternative is worth 0.0, all 97 offers
+    are competitive" - the exact opposite of the previous version's "94 of 97
+    lose", and both wrong. The tell was there to see: a quantity that goes from
+    37.9 to 0.0 for every manager at once is not a correction, it is a collapse.
+
+    The defect is definitional, not numerical, so damping would only have hidden
+    it: each manager's fallback was defined in terms of a maximum that already
+    contained it. The structure Justin describes is a MATCHING - managers pair
+    off, a pair strikes the deal with the most joint surplus, and a rival's
+    fallback is what the partner he ACTUALLY ends up with gives him, not the best
+    partner he can name. That has no self-reference and no cycle.
+
+    Two habits worth keeping from this. A model whose output is uniform across
+    every subject is reporting its own structure, not the world. And an iteration
+    presented as converged must show its trajectory: the page now ships the naive
+    maximum beside the settled one, and a test asserts the second never exceeds
+    the first, so a collapse could not have been quiet.
+
+107. **The wrapper's exit code is not the build's, and I reintroduced it.**
+    #102 recorded that `./gradlew check > log; echo "EXIT $?"` makes the harness
+    report success no matter what gradle did. Hours later the same shape -
+    gradle, then `echo`, then a `python3` parse - reported "exited with code 0"
+    over `NoClassDefFoundError: TradeMarket$Alternative` and a FAILED build, and
+    the only reason it was caught is that the page had not changed on disk.
+    Writing a trap down is not the same as not repeating it. The fix is
+    structural rather than remembered: the gradle invocation goes LAST in the
+    command, so the shell's status is the build's status and nothing can mask it.
+
+108. **The guard against a mistake, making the mistake.** `StolenFlagTest` was
+    written to catch flags whose names are taken in the forked JVM. It scanned
+    the whole of `build.gradle` for quoted identifiers - and matched `'depth'`
+    inside the two COMMENTS the same change added to explain why `depth` had been
+    retired. The test was red on the tree that introduced it, and its failure
+    message ("build.gradle forwards -Pdepth") was itself false: nothing forwarded
+    it, the prose merely mentioned it.
+
+    `ProseDriftTest.forwardedByBuild` had solved this twenty lines away, and says
+    why in a comment: *"a knob deleted from the list would still read as
+    forwarded from the line recording its deletion."* Two guards over the same
+    file, one of which already knew. Reusing the existing reader would have cost
+    nothing; writing a fresh regex cost a red build and a review to find it.
+
+    *And the ladder test had never run once.* Its regex anchored on
+    `{"name":..,"pos":..,"proj"` - a shape the LINEUP rows also have, and they
+    are emitted first. So it read a starter's name, compared it to the ladder's
+    add, never matched, and skipped on its own assumption. It showed as "1
+    skipped" in a check I read and did not chase. A skip is not a pass, and a
+    test that has never executed is not evidence of anything; the assumption
+    guard that made it skip was added in the same session to stop it being flaky,
+    which is how a test gets protected into uselessness.
+
+    Both were found by an adversarial review, not by the suite. Of 37 candidates
+    that review raised, 15 survived refutation, and the two most serious were
+    defects in the tests written that hour to prevent defects.

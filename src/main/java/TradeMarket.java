@@ -9,6 +9,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 
 /**
@@ -36,7 +37,7 @@ import java.util.TreeMap;
  * of politeness, but because an offer the other manager loses on is an offer he
  * declines, and a list of those is a list of nothing.
  *
- *   ./gradlew run -Pmain=TradeMarket [-Pme=<name>] [-Pdepth=2] [-Ptop=12]
+ *   ./gradlew run -Pmain=TradeMarket [-Pme=<name>] [-PchainDepth=2] [-Ptop=12]
  *                                    [-Pscenarios=240] [-Ppool=8]
  *
  * WHAT IT DOES NOT DO, and cannot. Justin asked for a cost on unenticing offers -
@@ -91,51 +92,348 @@ public class TradeMarket {
     }
 
     /**
-     * Every size-balanced swap between two rosters, each side priced BY ITS OWN
-     * LIGHTS.
+     * WHAT HE CAN GET INSTEAD OF DEALING WITH YOU.
      *
-     * Justin: "generally people don't give away their keepers, and don't see
-     * much added value in receiving keepers." That is not a detail, it is a
-     * different objective on the other side of the table, and pricing both
-     * rosters the same way gets the trade wrong in both directions. A rival who
-     * does not count keeper value will part with a cheap keeper for season
-     * points - so acquiring one is EASIER than a symmetric model thinks - and he
-     * takes no credit for one he receives, so paying him in keepers is worthless
-     * to him. Justin's own gain still counts his, because he does.
+     * Justin, 2026-09-06: "many people could gain like a ton... That means, for
+     * example, that trades where I offer someone like Nix will not be as great,
+     * because people can easily make a two sided positive trade elsewhere."
+     *
+     * That is the hole in reading `him` as an acceptance signal. A gain of +9 to
+     * the man opposite sounds persuasive until you notice that six other
+     * managers are sitting on a spare quarterback and any of them can hand him
+     * +11 tomorrow. What decides whether he takes YOUR offer is not what it
+     * gains him, it is what it gains him ABOVE HIS BEST ALTERNATIVE - and a
+     * league of twelve rosters has a lot of alternatives.
+     *
+     * So: for each rival, the best gain he can get from a mutually-good trade
+     * with somebody who is not Justin. Both sides of those trades are priced by
+     * the rival objective, because a trade only counts as an alternative if the
+     * OTHER manager would also take it - an offer nobody accepts is not an
+     * outside option, it is a wish.
+     *
+     * Two honest limits. The search is size-balanced, so it cannot see the
+     * uneven deals Justin describes (two men for one, with the short side
+     * refilled off the wire); a manager who can build those has a BETTER outside
+     * option than this reports, which makes every edge here optimistic. And it
+     * runs at a reduced pool for cost, so it is a floor on his alternatives, not
+     * a ceiling. Both mean the same thing: if this says your offer barely beats
+     * what he can get elsewhere, it does not.
      */
-    static List<Trade> between(String me, String them, List<String> mine, List<String> theirs,
-                               java.util.function.ToDoubleFunction<List<String>> myValue,
-                               java.util.function.ToDoubleFunction<List<String>> theirValue, int pool){
-        double myBefore = myValue.applyAsDouble(mine);
-        double theirBefore = theirValue.applyAsDouble(theirs);
-        List<Trade> trades = new ArrayList<>();
-        for(String give : mine){
-            for(String get : theirs){
-                List<String> myAfter = swap(mine, List.of(give), List.of(get));
-                List<String> theirAfter = swap(theirs, List.of(get), List.of(give));
-                trades.add(new Trade(them, List.of(give), List.of(get),
-                        myValue.applyAsDouble(myAfter) - myBefore,
-                        theirValue.applyAsDouble(theirAfter) - theirBefore));
-            }
-        }
-        // two for two, but only among each side's most valuable few: the full
-        // search is 14,400 pairs a rival and almost all of it is noise
-        List<String> myTop = mine.subList(0, Math.min(pool, mine.size()));
-        List<String> theirTop = theirs.subList(0, Math.min(pool, theirs.size()));
-        for(int i = 0; i < myTop.size(); i++){
-            for(int j = i + 1; j < myTop.size(); j++){
-                for(int k = 0; k < theirTop.size(); k++){
-                    for(int l = k + 1; l < theirTop.size(); l++){
-                        List<String> give = List.of(myTop.get(i), myTop.get(j));
-                        List<String> get = List.of(theirTop.get(k), theirTop.get(l));
-                        trades.add(new Trade(them, give, get,
-                                myValue.applyAsDouble(swap(mine, give, get)) - myBefore,
-                                theirValue.applyAsDouble(swap(theirs, get, give)) - theirBefore));
-                    }
+    /**
+     * HOW OFTEN ANYBODY ACTUALLY TRADES, measured rather than assumed.
+     *
+     * Justin, 2026-09-06: "the other managers don't have the tools to find the
+     * perfect trades elsewhere." That is the second thing wrong with reading a
+     * rival's fallback as the BEST deal available to him, and unlike the
+     * recursion it cannot be fixed by computing harder - it is a fact about
+     * people, so it has to come from their record.
+     *
+     * This league's own log has it. Every completed trade in every finished
+     * season, over the twelve managers who could have made one: if a manager
+     * completes about one trade a season while the board offers him dozens that
+     * would help both sides, then he does not find his maximum, and a fallback
+     * computed as that maximum is an upper bound and should be read as one.
+     *
+     * Returns {trades, seasons} so the caller can divide by the league size
+     * itself rather than being handed a rate whose denominator is invisible.
+     */
+    static int[] realisedTrades(String leagueID){
+        int trades = 0, seasons = 0;
+        for(LeagueTransactions.Year year : LeagueTransactions.completedSeasons(leagueID)){
+            seasons++;
+            for(LeagueTransactions.Move move : LeagueTransactions.moves(year)){
+                if("trade".equals(move.type()) && move.complete()){
+                    trades++;
                 }
             }
         }
+        return new int[]{trades, seasons};
+    }
+
+    /**
+     * One rival-to-rival trade: who, what each side sends, and what each gains.
+     *
+     * The men are kept, not just the gains, because the same search answers two
+     * questions - what a manager's fallback is worth (which needs only the
+     * numbers) and what each individual player fetches on the open market (which
+     * needs to know who was in the deal).
+     */
+    record Alternative(String one, String two, List<String> oneGives, List<String> twoGives,
+                       double gainOne, double gainTwo) {}
+
+    /**
+     * Every mutually-good trade between two managers who are not Justin. The
+     * expensive half of the outside-option calculation, done once.
+     */
+    static List<Alternative> alternatives(String me, Map<String, List<String>> rosters,
+                                          Side rivalValue, int pool){
+        List<String> rivals = new ArrayList<>();
+        for(String manager : rosters.keySet()){
+            if(!manager.equals(me)){
+                rivals.add(manager);
+            }
+        }
+        List<Alternative> found = new ArrayList<>();
+        for(int i = 0; i < rivals.size(); i++){
+            for(int j = i + 1; j < rivals.size(); j++){
+                String one = rivals.get(i), two = rivals.get(j);
+                for(Trade trade : mutual(between(one, two, rosters.get(one), rosters.get(two),
+                        rivalValue, rivalValue, pool))){
+                    found.add(new Alternative(one, two, trade.give(), trade.get(),
+                            trade.myGain(), trade.theirGain()));
+                }
+            }
+        }
+        return found;
+    }
+
+    /**
+     * WHAT HE CAN GET INSTEAD OF DEALING WITH YOU.
+     *
+     * Justin, 2026-09-06: "their perfect trades also would need to be recursively
+     * limited by the ability of the other other manager to make a better trade."
+     *
+     * He is right, and the first two attempts at it were both wrong in
+     * instructive ways. Taking each rival's best mutually-good trade with anybody
+     * credits him with deals the man opposite would decline. Trying to fix that
+     * by ITERATING - keep only trades whose counterparty beats his own current
+     * fallback, recompute, repeat - does not converge, and cannot:
+     *
+     *   round 0: nobody has a fallback, so every trade counts, so each fallback
+     *            becomes that manager's naive MAXIMUM.
+     *   round 1: a trade counts for A only if it beats B's fallback. But B's
+     *            fallback is now the largest gain B can get anywhere, so NO
+     *            trade beats it - not even the one that produced it. Everything
+     *            drops to zero.
+     *   round 2: back to the maximum. A period-two cycle, forever.
+     *
+     * Reading the last round of a cycle as "settled" is how that shipped a page
+     * saying every rival's alternative was worth exactly 0.0 and every one of
+     * ninety-seven offers was competitive. The oscillation is not a numerical
+     * wobble to damp; the recursion simply has no fixed point in that form,
+     * because a manager's fallback was being defined in terms of a quantity that
+     * already contains it.
+     *
+     * The structure Justin is describing is a MATCHING. Managers pair off; a
+     * pair does the trade that maximises what there is to split; and what a
+     * rival can get instead of dealing with Justin is what he gets from the
+     * partner he would actually end up with - not the best partner he can name,
+     * because that partner has someone better in mind. Pairing greedily by joint
+     * surplus makes every manager's fallback a deal that a specific other
+     * manager is also taking, which is exactly the constraint the iteration was
+     * groping for and could not express.
+     */
+    static Map<String, Double> outsideOption(String me, Map<String, List<String>> rosters,
+                                             Side rivalValue, int pool){
+        return match(alternatives(me, rosters, rivalValue, pool), rosters.keySet(), me).fallback();
+    }
+
+    /**
+     * WHAT EACH MAN FETCHES ON THE OPEN MARKET, ONE AT A TIME.
+     *
+     * Justin, 2026-09-06: "find trades which are within range of what an owner
+     * can get in value from trading the players I want from them with other
+     * owners, not necessarily in the same pair, but could be each individually,
+     * or each as part of some bundle, but where their contributions are
+     * isolated."
+     *
+     * So: for every man on a rival's roster, the best gain his OWNER can get
+     * from a straight one-for-one that sends him to somebody who is not Justin.
+     * One-for-one is what makes the contribution isolated - in a two-for-two the
+     * gain belongs to the pair and splitting it between the men is a choice, not
+     * a measurement. Asking for two of a manager's players is then asking him to
+     * forgo two of these, and the offer has to be in range of their sum.
+     *
+     * It is a floor on what he could get, in two ways worth saying: bundles can
+     * be worth more than their parts, and the search runs at a reduced pool. A
+     * man priced at zero here has no one-for-one buyer, not no value.
+     */
+    static Map<String, Double> sellPrice(List<Alternative> alternatives){
+        Map<String, Double> price = new TreeMap<>();
+        for(Alternative alternative : alternatives){
+            if(alternative.oneGives().size() == 1){
+                price.merge(alternative.oneGives().get(0), alternative.gainOne(), Math::max);
+            }
+            if(alternative.twoGives().size() == 1){
+                price.merge(alternative.twoGives().get(0), alternative.gainTwo(), Math::max);
+            }
+        }
+        return price;
+    }
+
+    /** Who paired with whom, and what each of them got out of it. */
+    public record Market(Map<String, String> partner, Map<String, Double> fallback,
+                         Map<String, Double> naive) {}
+
+    /**
+     * Pair the rivals off and read each one's fallback out of the pairing.
+     *
+     * `naive` is kept alongside - each manager's best gain over ALL partners,
+     * ignoring whether that partner would have him - so the difference between
+     * the two is visible rather than asserted. It is always the larger.
+     */
+    static Market match(List<Alternative> alternatives, Set<String> managers, String me){
+        // the deal a pair would actually strike: the one with the most joint
+        // surplus to divide, which is the trade they would negotiate towards
+        Map<String, Alternative> bestForPair = new TreeMap<>();
+        Map<String, Double> naive = new TreeMap<>();
+        for(String manager : managers){
+            if(!manager.equals(me)){
+                naive.put(manager, 0.0);
+            }
+        }
+        for(Alternative alternative : alternatives){
+            naive.merge(alternative.one(), alternative.gainOne(), Math::max);
+            naive.merge(alternative.two(), alternative.gainTwo(), Math::max);
+            String key = alternative.one().compareTo(alternative.two()) < 0
+                    ? alternative.one() + "\u0000" + alternative.two()
+                    : alternative.two() + "\u0000" + alternative.one();
+            Alternative held = bestForPair.get(key);
+            if(held == null
+                    || alternative.gainOne() + alternative.gainTwo() > held.gainOne() + held.gainTwo()){
+                bestForPair.put(key, alternative);
+            }
+        }
+
+        List<Alternative> pairs = new ArrayList<>(bestForPair.values());
+        pairs.sort(Comparator.comparingDouble((Alternative a) -> a.gainOne() + a.gainTwo()).reversed());
+        Map<String, String> partner = new TreeMap<>();
+        Map<String, Double> fallback = new TreeMap<>();
+        for(String manager : naive.keySet()){
+            fallback.put(manager, 0.0);
+        }
+        for(Alternative alternative : pairs){
+            if(partner.containsKey(alternative.one()) || partner.containsKey(alternative.two())){
+                continue;                    // one of them is already spoken for
+            }
+            partner.put(alternative.one(), alternative.two());
+            partner.put(alternative.two(), alternative.one());
+            fallback.put(alternative.one(), alternative.gainOne());
+            fallback.put(alternative.two(), alternative.gainTwo());
+        }
+        // AN ODD NUMBER OF RIVALS LEAVES ONE OVER, and a leftover manager with a
+        // fallback of zero is plainly wrong: he is not barred from trading, he
+        // just has no partner in the greedy pairing. He can still break up a
+        // pair - if some matched manager would rather deal with HIM than with
+        // the partner he has, that is a blocking pair, and the deal it names is
+        // genuinely available to both. So one pass of that: an unmatched
+        // manager's fallback is the best trade he can offer somebody who would
+        // take it over what he currently holds. If nobody would, zero is right,
+        // and it is right for a reason rather than by omission.
+        for(String spare : fallback.keySet()){
+            if(partner.containsKey(spare)){
+                continue;
+            }
+            for(Alternative alternative : pairs){
+                String other = alternative.one().equals(spare) ? alternative.two()
+                        : alternative.two().equals(spare) ? alternative.one() : null;
+                if(other == null){
+                    continue;
+                }
+                double hisShare = alternative.one().equals(spare)
+                        ? alternative.gainTwo() : alternative.gainOne();
+                double mine = alternative.one().equals(spare)
+                        ? alternative.gainOne() : alternative.gainTwo();
+                if(hisShare > fallback.get(other)){
+                    fallback.merge(spare, mine, Math::max);   // he would break his pair for this
+                }
+            }
+        }
+        return new Market(partner, fallback, naive);
+    }
+
+    /** What a trade is worth to one manager: his roster before, what leaves, what arrives. */
+    public interface Side {
+        double gain(List<String> before, List<String> out, List<String> in);
+    }
+
+    /** A plain roster scorer, for a side that values a roster and not a transaction. */
+    static Side scoring(java.util.function.ToDoubleFunction<List<String>> value){
+        return (before, out, in) -> value.applyAsDouble(swap(before, out, in)) - value.applyAsDouble(before);
+    }
+
+    /**
+     * The other manager, as Justin describes him: he does not care about GAINING
+     * keeper value, and he cares deeply about LOSING it.
+     *
+     * That asymmetry is a ratchet, not a discount, and it points the opposite way
+     * from the first version of this. Treating him as simply indifferent to
+     * keepers made him a cheap seller of them - the model happily proposed buying
+     * other people's round-14 men for season points. He is not a cheap seller. He
+     * is somebody who will not feel the keeper he receives and will feel every
+     * point of the one he gives up. So: his season gain, minus what leaving costs
+     * his own best two, plus nothing at all for what arrives.
+     */
+    static Side lossAverseOnKeepers(java.util.function.ToDoubleFunction<List<String>> season,
+                                    Map<String, Double> surplus){
+        return (before, out, in) -> {
+            double seasonGain = season.applyAsDouble(swap(before, out, in)) - season.applyAsDouble(before);
+            List<String> keptBack = new ArrayList<>(before);
+            keptBack.removeAll(out);
+            double keeperLoss = keeperValue(before, surplus) - keeperValue(keptBack, surplus);
+            return seasonGain - keeperLoss;
+        };
+    }
+
+    /**
+     * Every size-balanced swap between two rosters, each side priced BY ITS OWN
+     * LIGHTS - and each side's lights are a property of the TRADE, not just of
+     * the roster it ends with, because loss aversion cannot be written as a
+     * roster score.
+     */
+    static List<Trade> between(String me, String them, List<String> mine, List<String> theirs,
+                               Side myValue, Side theirValue, int pool){
+        List<Trade> trades = new ArrayList<>();
+        for(String give : mine){
+            for(String get : theirs){
+                trades.add(new Trade(them, List.of(give), List.of(get),
+                        myValue.gain(mine, List.of(give), List.of(get)),
+                        theirValue.gain(theirs, List.of(get), List.of(give))));
+            }
+        }
+        // two for two and three for three, among each side's most valuable few:
+        // the unrestricted search is 14,400 pairs a rival and almost all of it is
+        // noise. Three-man deals are real here - eleven of this league's 51
+        // completed trades moved four players and six moved five or more - so
+        // leaving them out was leaving out the shape it actually trades in.
+        List<String> myTop = mine.subList(0, Math.min(pool, mine.size()));
+        List<String> theirTop = theirs.subList(0, Math.min(pool, theirs.size()));
+        for(List<String> give : combinations(myTop, 2)){
+            for(List<String> get : combinations(theirTop, 2)){
+                trades.add(new Trade(them, give, get,
+                        myValue.gain(mine, give, get), theirValue.gain(theirs, get, give)));
+            }
+        }
+        for(List<String> give : combinations(myTop, 3)){
+            for(List<String> get : combinations(theirTop, 3)){
+                trades.add(new Trade(them, give, get,
+                        myValue.gain(mine, give, get), theirValue.gain(theirs, get, give)));
+            }
+        }
         return trades;
+    }
+
+    /** Every unordered choice of `size` men from `from`. */
+    static List<List<String>> combinations(List<String> from, int size){
+        List<List<String>> out = new ArrayList<>();
+        int n = from.size();
+        if(size > n){
+            return out;
+        }
+        int[] index = new int[size];
+        for(int i = 0; i < size; i++){ index[i] = i; }
+        while(true){
+            List<String> pick = new ArrayList<>();
+            for(int i : index){ pick.add(from.get(i)); }
+            out.add(pick);
+            int spot = size - 1;
+            while(spot >= 0 && index[spot] == n - size + spot){ spot--; }
+            if(spot < 0){
+                return out;
+            }
+            index[spot]++;
+            for(int i = spot + 1; i < size; i++){ index[i] = index[i - 1] + 1; }
+        }
     }
 
     static List<String> swap(List<String> roster, List<String> out, List<String> in){
@@ -187,7 +485,12 @@ public class TradeMarket {
         int scenarios = Integer.getInteger("scenarios", 240);
         int pool = Integer.getInteger("pool", 8);
         int top = Integer.getInteger("top", 12);
-        int depth = Integer.getInteger("depth", 2);
+        // 'chainDepth', not 'depth' - see BoardValue.LOOKAHEAD. That property is
+        // owned by something in this JVM and reads back 0, and 0 fails the
+        // `depth > 1` guard below, so the whole TRADING POWER section would
+        // silently not print. A flag that steals its own value is worse than a
+        // missing one: nothing errors, the section just is not there.
+        int depth = Integer.getInteger("chainDepth", 2);
         String me = System.getProperty("me", configuration.getUserIDToDisplayName()
                 .getOrDefault(configuration.getMyID(), configuration.getMyID()));
 
@@ -243,6 +546,8 @@ public class TradeMarket {
         java.util.function.ToDoubleFunction<List<String>> both =
                 ids -> value.of(ids) + keeperValue(ids, surplus);
         java.util.function.ToDoubleFunction<List<String>> scorer = withKeepers ? both : season;
+        Side mySide = scoring(scorer);
+        Side theirSide = withKeepers ? lossAverseOnKeepers(season, surplus) : scoring(season);
 
         StringBuilder out = new StringBuilder();
         out.append(String.format("TRADE MARKET  %s  (%s)%n", LocalDate.now(), me));
@@ -252,9 +557,9 @@ public class TradeMarket {
         out.append(withKeepers
                 ? String.format("THE TWO SIDES ARE PRICED DIFFERENTLY, on purpose. YOUR value is the season PLUS the best two%n"
                         + "keeper surpluses on your roster (a surplus being what a man is worth beyond the pick you spend to%n"
-                        + "keep him, measured at HIS OWN position). HIS value is the season alone, because in this league%n"
-                        + "people do not give away their keepers and see little in receiving one. Two consequences worth%n"
-                        + "knowing: buying a cheap keeper off somebody is EASIER than a symmetric model would say, and%n"
+                        + "keep him, measured at HIS OWN position). HIS is LOSS-AVERSE on keepers: he takes no credit for one%n"
+                        + "he receives and feels every point of one he gives up, which is how people here actually behave.%n"
+                        + "So asking for another manager's keeper is HARD - the ask is priced at what it costs him - and%n"
                         + "paying anybody IN keepers buys you nothing. -Pkeepers=false prices you the same way he is.%n%n")
                 : String.format("KEEPER VALUE IS OFF for both sides (-Pkeepers=true to count yours). This prices 2026 alone,%n"
                         + "so giving up a cheap keeper looks free when it is not.%n%n"));
@@ -264,7 +569,7 @@ public class TradeMarket {
             if(entry.getKey().equals(me)){
                 continue;
             }
-            all.addAll(between(me, entry.getKey(), rosters.get(me), entry.getValue(), scorer, season, pool));
+            all.addAll(between(me, entry.getKey(), rosters.get(me), entry.getValue(), mySide, theirSide, pool));
         }
         List<Trade> mutuallyGood = mutual(all);
         java.util.function.ToDoubleFunction<Trade> seasonGain = trade ->
@@ -281,8 +586,8 @@ public class TradeMarket {
                         + "%d offers were dropped for failing that. -PsellMode=true to see them.%n%n",
                         mutuallyGood.size() - good.size()));
 
-        out.append(String.format("%-34s %-34s %8s %8s %8s   %s%n",
-                "YOU GIVE", "YOU GET", "you", "him", "season", "WITH / VERDICT"));
+        out.append(String.format("%-28s %-28s %7s %7s %7s %8s %11s   %s%n",
+                "YOU GIVE", "YOU GET", "you", "him", "season", "SIMPLE", "ADP g/g", "WITH / HOW IT READS"));
         for(Trade trade : good.subList(0, Math.min(top, good.size()))){
             // the same trade priced the OTHER way, so a deal that only works
             // because of keepers - or only in spite of them - shows itself
@@ -296,12 +601,16 @@ public class TradeMarket {
             for(String id : trade.get()){
                 hisKeeper = Math.max(hisKeeper, surplus.getOrDefault(id, 0.0));
             }
-            if(hisKeeper > 25){
+            if(asksForAKeeper(hisKeeper)){
                 verdict += "  (asking for a man worth keeping)";
             }
-            out.append(String.format("%-34s %-34s %+8.1f %+8.1f %+8.1f   %s%n",
+            Optics optics = optics(trade.give(), trade.get(), SleeperProjections::adpOf);
+            double simple = simpleStarters(swap(rosters.get(me), trade.give(), trade.get()), points, positionOf)
+                    - simpleStarters(rosters.get(me), points, positionOf);
+            out.append(String.format("%-28s %-28s %+7.1f %+7.1f %+7.1f %+8.1f %5.0f/%-5.0f   %s - %s%n",
                     label(trade.give(), nameOf), label(trade.get(), nameOf),
-                    trade.myGain(), trade.theirGain(), seasonOnly, verdict));
+                    trade.myGain(), trade.theirGain(), seasonOnly, simple,
+                    optics.mine(), optics.theirs(), verdict, optics.verdict()));
         }
         if(good.isEmpty()){
             out.append("Nothing. Every swap that helps you costs the other man more than it gives him,\n"
@@ -331,8 +640,8 @@ public class TradeMarket {
         // TRADING POWER: can he just keep trading and keep improving?
         if(depth > 1){
             double tradeFloor = Double.parseDouble(System.getProperty("tradeFloor", "6.8"));
-            List<Step> steps = chain(me, rosters, scorer, season, depth, pool, tradeFloor);
-            List<Step> churn = chain(me, rosters, scorer, season, depth, pool, 0.0);
+            List<Step> steps = chain(me, rosters, mySide, theirSide, depth, pool, tradeFloor);
+            List<Step> churn = chain(me, rosters, mySide, theirSide, depth, pool, 0.0);
             out.append(String.format("%n(The chain below is not filtered for 2026 - it is the ceiling of what the board%n"
                     + "offers, not a plan. Read the table above for what to actually send.)%n"));
             out.append(String.format("%nTRADING POWER - trade after trade, each re-searched on the board the last one left.%n"));
@@ -356,7 +665,7 @@ public class TradeMarket {
                 out.append(steps.size() < depth
                         ? String.format("  IT RAN OUT after %d, short of the %d asked for: nothing left clears the floor.%n",
                                 steps.size(), depth)
-                        : String.format("  Still going at %d and stopped by -Pdepth, not by the board. Raise it.%n", depth));
+                        : String.format("  Still going at %d and stopped by -PchainDepth, not by the board. Raise it.%n", depth));
                 out.append(String.format("  The first trade alone was %+.1f, so the chain is worth %.1fx a single one -%n"
                         + "  which is what one-step searching leaves behind.%n",
                         steps.get(0).trade().myGain(), total / Math.max(0.1, steps.get(0).trade().myGain())));
@@ -378,6 +687,120 @@ public class TradeMarket {
         Path target = Path.of("data", "trades-" + LocalDate.now() + ".txt");
         Files.writeString(target, out.toString(), StandardCharsets.UTF_8);
         System.out.println("written to " + target);
+    }
+
+    /**
+     * How a trade LOOKS by draft position, which before the season is most of
+     * how it is judged.
+     *
+     * Justin: "before like the first week, the current adp matters, so even if a
+     * pick is advantageous for both parties, people will not like to trade their
+     * round n pick for my round m pick if my m is significantly > n." That is a
+     * third thing, distinct from either side's valuation: two men can both gain
+     * on the objective and the trade still be refused because one manager is
+     * visibly handing over the earlier pick.
+     *
+     * The anchor is the BEST man each way, not the sum, because that is what a
+     * trade gets named after - "he gave up Henry" - and because ADPs do not add:
+     * two men at 90 are not one man at 45. `theirs` is the earliest ADP among the
+     * men Justin receives, `mine` the earliest among those he sends. A negative
+     * gap means he is receiving the earlier pick and should expect resistance
+     * however good the arithmetic looks.
+     */
+    /**
+     * Is this an ask for a man the other manager would want to keep? One home
+     * for the rule: the console used to re-decide it in JavaScript, so tuning
+     * the number here would have stopped the terminal flagging trades the page
+     * kept flagging, with nothing failing.
+     */
+    static final double HIS_KEEPER_POINTS = 25;
+
+    /**
+     * Picks of draft position past which an ask reads as a grab.
+     *
+     * One home for it: Optics.verdict says "he will feel that" at this number,
+     * and the console's good-partner filter has to agree with the sentence
+     * printed beside it, or the page calls a trade fair and describes it as
+     * something he will resent in the same row.
+     */
+    static final double OPTICS_GRAB = 25;
+
+    static boolean asksForAKeeper(double hisKeeperSurplus){
+        return hisKeeperSurplus > HIS_KEEPER_POINTS;
+    }
+
+    public record Optics(double mine, double theirs, int menEachWay) {
+
+        /**
+         * Picks of draft position between the two headline men. A LOWER ADP is an
+         * EARLIER pick, so a POSITIVE gap means the man arriving was drafted
+         * earlier than the man leaving - Justin is asking for the better pick,
+         * which is the hard direction.
+         */
+        public double gap(){
+            return mine - theirs;
+        }
+
+        public String verdict(){
+            double gap = gap();
+            if(gap >= 60){
+                return "you are asking for a much earlier pick - expect a no on sight";
+            }
+            if(gap >= OPTICS_GRAB){
+                return "you are asking for the earlier pick - he will feel that";
+            }
+            if(gap <= -25){
+                return "you hand over the earlier pick - easy for him to say yes to";
+            }
+            return "reads even on draft position";
+        }
+    }
+
+    /** The earliest ADP on each side of a trade. */
+    static Optics optics(List<String> give, List<String> get,
+                         java.util.function.ToDoubleFunction<String> adpOf){
+        double mine = Double.MAX_VALUE, theirs = Double.MAX_VALUE;
+        for(String id : give){ mine = Math.min(mine, adpOf.applyAsDouble(id)); }
+        for(String id : get){ theirs = Math.min(theirs, adpOf.applyAsDouble(id)); }
+        return new Optics(mine, theirs, Math.max(give.size(), get.size()));
+    }
+
+    /**
+     * THE SIMPLE MODEL: what the best legal ten projects, and nothing else.
+     *
+     * Justin wants both numbers on the table, and the reason is social rather
+     * than statistical: "some league members have a preference for the simple,
+     * and other league members have a preference for the complex." The complex
+     * one - {@link WeeklyStarterValue} - prices a bench by how often it is
+     * promoted, draws whole historical seasons for injuries and boom-or-bust,
+     * and is the better number. It is also unarguable-with over a chat message.
+     * This one adds up the starters anybody can see, so a trade can be made the
+     * case for in the terms the other manager already uses.
+     *
+     * They will sometimes disagree, and when they do that IS the argument: a
+     * trade good on starters and bad on the full model is one where the bench or
+     * the injury risk is doing the work.
+     */
+    static double simpleStarters(List<String> roster, Map<String, Double> points,
+                                 Map<String, Position> positionOf){
+        return simpleLineup(roster, points, positionOf).starters();
+    }
+
+    /** How many of the ten slots this roster can actually fill. */
+    static int slotsFilled(List<String> roster, Map<String, Double> points,
+                           Map<String, Position> positionOf){
+        return simpleLineup(roster, points, positionOf).starting().size();
+    }
+
+    private static TeamRankings.Lineup simpleLineup(List<String> roster, Map<String, Double> points,
+                                                    Map<String, Position> positionOf){
+        List<TeamRankings.Man> men = new ArrayList<>();
+        for(String id : roster){
+            Position position = positionOf.get(id);
+            men.add(new TeamRankings.Man(id, id, position == null ? "?" : position.name(), "",
+                    points.getOrDefault(id, 0.0), false, 0, ""));
+        }
+        return TeamRankings.bestLineup(men);
     }
 
     /** One step of a chain: the trade taken, and where the roster stood after it. */
@@ -489,9 +912,57 @@ public class TradeMarket {
      * What is worth knowing is how FAR away it is, and how much of the gain is
      * his rather than given away to keep the trades acceptable.
      */
+    /**
+     * WHAT A TRADE OPENS UP, not just what it is worth.
+     *
+     * Justin: "I'd prefer to do a +5 trade that opens up a total possibility of
+     * a chain of +80 trades, than a +20 trade that only opens up a chain of
+     * +45." That is a different question from the one the table answers, and
+     * the greedy chain cannot answer it either: `chain` always takes the biggest
+     * step available, so it finds the +20 and never learns what the +5 leads to.
+     *
+     * A first trade changes the board for everybody - it moves men onto and off
+     * two rosters - so the trades available afterwards are not the trades
+     * available now. This forces the given first move, then lets the greedy
+     * chain run from the board that move leaves, and returns the WHOLE sequence
+     * with the forced trade as step one. Its last cumulative is what the first
+     * trade is really worth.
+     *
+     * `chainPool` is DELIBERATELY SMALLER than the pool the headline table uses,
+     * and this is the honest trade-off rather than a corner cut quietly. One
+     * board search at pool 8 is about 4,200 candidate trades a rival, each
+     * costing two runs of the objective; a lookahead over twelve first moves at
+     * depth six is seventy-two of those searches, which is hours. At pool 4 it
+     * is roughly three hundred a rival - thirteen times cheaper - and the chain
+     * still sees every side's best few men, which is where chains come from.
+     * The page states the pool it used, so the number can be read for what it
+     * is: a floor on what the trade opens up, not a ceiling.
+     */
+    static List<Step> chainAfter(String me, Map<String, List<String>> rosters, Trade first,
+                                 Side myValue, Side theirValue,
+                                 int maxSteps, int chainPool, double floor){
+        Map<String, List<String>> board = new TreeMap<>();
+        for(Map.Entry<String, List<String>> entry : rosters.entrySet()){
+            board.put(entry.getKey(), new ArrayList<>(entry.getValue()));
+        }
+        board.put(me, swap(board.get(me), first.give(), first.get()));
+        board.put(first.withManager(), swap(board.get(first.withManager()), first.get(), first.give()));
+
+        List<Step> steps = new ArrayList<>();
+        steps.add(new Step(first, first.myGain()));
+        for(Step step : chain(me, board, myValue, theirValue, maxSteps - 1, chainPool, floor)){
+            steps.add(new Step(step.trade(), first.myGain() + step.cumulative()));
+        }
+        return steps;
+    }
+
+    /** The total a first trade is worth once everything it unlocks is counted. */
+    static double reach(List<Step> chain){
+        return chain.isEmpty() ? 0 : chain.get(chain.size() - 1).cumulative();
+    }
+
     static List<Step> chain(String me, Map<String, List<String>> rosters,
-                            java.util.function.ToDoubleFunction<List<String>> myValue,
-                            java.util.function.ToDoubleFunction<List<String>> theirValue,
+                            Side myValue, Side theirValue,
                             int maxSteps, int pool, double floor){
         Map<String, List<String>> board = new TreeMap<>();
         for(Map.Entry<String, List<String>> entry : rosters.entrySet()){

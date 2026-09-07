@@ -69,6 +69,70 @@ public class TuesdaySwap {
     }
 
     /**
+     * The second half of a move that empties a lineup slot, and the price of the
+     * whole plan.
+     *
+     * {@link WeeklyStarterValue} fills an unfilled slot from the wire for free.
+     * That is deliberate and, on the DRAFT path, sound: the roster still holds
+     * sixteen men, one of whom is the streamed defence, so the spot it occupies
+     * is charged in the roster accounting. On the WAIVER path there is no such
+     * accounting, and Justin caught it - "if I drop ravens, I need to pick up a
+     * defense". A sixteen-man roster with no defence is not a roster that fields
+     * ten slots; it is a roster one claim short, and that claim costs a spot.
+     *
+     * So a swap that empties a required slot is not a move, it is the first half
+     * of one, and pricing the first half alone reports a gain nobody can
+     * actually collect. This finds the cheapest completion - the best free man
+     * at the emptied position, and the man he displaces - and returns the whole
+     * plan's gain against the roster you started with.
+     */
+    public record Completion(Swap first, String addId, String addName,
+                             String dropId, String dropName, double gain) {}
+
+    /**
+     * The completion `swap` forces, or null if it fills every slot on its own.
+     * `replacements` are the free agents that could fill the emptied slot.
+     */
+    static Completion complete(List<String> roster, Swap swap, List<String> replacements,
+                               Map<String, String> nameOf, Map<String, Position> positionOf,
+                               Map<String, Double> points,
+                               java.util.function.ToDoubleFunction<List<String>> value){
+        int required = TradeMarket.slotsFilled(roster, points, positionOf);
+        List<String> after = new ArrayList<>(roster);
+        after.remove(swap.dropId());
+        after.add(swap.addId());
+        if(TradeMarket.slotsFilled(after, points, positionOf) >= required){
+            return null;                      // nothing was emptied; the swap stands
+        }
+        Position emptied = positionOf.get(swap.dropId());
+        double base = value.applyAsDouble(roster);
+        Completion best = null;
+        for(String replacement : replacements){
+            if(positionOf.get(replacement) != emptied || replacement.equals(swap.addId())){
+                continue;
+            }
+            for(String second : after){
+                if(second.equals(swap.addId())){
+                    continue;                 // the man just claimed is not the man to cut
+                }
+                List<String> completed = new ArrayList<>(after);
+                completed.remove(second);
+                completed.add(replacement);
+                if(TradeMarket.slotsFilled(completed, points, positionOf) < required){
+                    continue;                 // still short; not a plan either
+                }
+                double gain = value.applyAsDouble(completed) - base;
+                if(best == null || gain > best.gain()){
+                    best = new Completion(swap, replacement,
+                            nameOf.getOrDefault(replacement, replacement),
+                            second, nameOf.getOrDefault(second, second), gain);
+                }
+            }
+        }
+        return best;
+    }
+
+    /**
      * The move to make, or null for DO NOTHING - which is the answer whenever
      * the best pair does not clear the floor. Waiting costs nothing and buys a
      * week of information; a move inside the noise costs a roster spot for a
@@ -154,6 +218,34 @@ public class TuesdaySwap {
                     swap.addPosition(), swap.dropName(), swap.gain(), swap.gain() * weeksLeft / 17.0));
         }
         out.append("\n");
+
+        // THE WHOLE LADDER FOR THE BEST ADD, because a table that names only the
+        // cheapest drop invites the reading "so he is worth +4.8 over anyone".
+        // He is not: the same man is worth that against the sixteenth-best
+        // receiver and deeply negative against the starter at his own position.
+        // A marginal is a statement about a PAIR, and printing one member of the
+        // pair is how a number gets quoted as if it were about the player.
+        if(!swaps.isEmpty()){
+            String bestAdd = swaps.get(0).addId();
+            out.append(String.format("EVERY DROP FOR %s - the same claim against each man you hold:%n",
+                    swaps.get(0).addName().toUpperCase()));
+            List<Swap> ladder = new ArrayList<>();
+            for(Swap swap : swaps){
+                if(swap.addId().equals(bestAdd)){
+                    ladder.add(swap);
+                }
+            }
+            for(Swap swap : ladder){
+                Completion completion = complete(roster, swap, candidates, nameOf, positionOf,
+                        points, ids -> value.of(ids));
+                out.append(String.format("   drop %-24s %+7.1f%s%n", swap.dropName(), swap.gain(),
+                        completion == null ? ""
+                                : String.format("   <- empties a slot; the whole plan (then add %s,"
+                                        + " drop %s) is %+.1f",
+                                completion.addName(), completion.dropName(), completion.gain())));
+            }
+            out.append("\n");
+        }
         if(best == null){
             out.append(String.format("DO NOTHING. The best pair on the board is worth %+.1f (%.1f from here), inside the%n"
                     + "floor, so it is not a move - it is noise with a transaction attached. Waiting is free and%n"
