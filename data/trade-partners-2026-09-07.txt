@@ -1,0 +1,32 @@
+WHO ACTUALLY TRADES  2026-09-07  (5 finished seasons)
+
+Every acceptance signal on the trades board models how a rival VALUES a deal.
+None of them models whether he does deals at all, which is probably the bigger
+term: a manager who has completed one in five years will decline your best offer.
+
+MANAGER         SEASONS   TRADES  PER YEAR   MOST OFTEN WITH
+KevinDA               5       18      3.60   BHier (5)
+BHier                 4       13      3.25   KevinDA (5)
+Sirardo               1        3      3.00   KevinDA (3)
+itsabust              5       15      3.00   KevinDA (3)
+Hamrliks              5       13      2.60   BHier (3)
+justinb314            5        8      1.60   Hamrliks (2)
+JakeSK                5        7      1.40   KevinDA (3)
+tommyrads             5        7      1.40   Renteez (2)
+Renteez               5        6      1.20   tommyrads (2)
+AlexMex97             1        1      1.00   Hamrliks (1)
+SIMONOTACO            1        1      1.00   JakeSK (1)
+Tsayydeja             1        1      1.00   tommyrads (1)
+d0ddi                 5        4      0.80   itsabust (3)
+JFMarino              3        1      0.33   KevinDA (1)
+patekxwater           4        1      0.25   justinb314 (1)
+jerem9604             5        1      0.20   BHier (1)
+
+100 participations across 50 completed trades.
+A trade counts once for each manager in it, so participations are about twice deals.
+
+READ THIS AGAINST THE BOARD. TradeMarket prices each rival's fallback as the best
+deal he could find - an assumption of exhaustive search. These rates are what that
+assumption is worth: a manager doing well under one trade a season is not running
+a pairwise search over eleven rosters, so his real fallback is far below the
+computed one and your offer is worth more to him than the board says.

@@ -1154,3 +1154,33 @@ real every time.
     Both were found by an adversarial review, not by the suite. Of 37 candidates
     that review raised, 15 survived refutation, and the two most serious were
     defects in the tests written that hour to prevent defects.
+
+109. **The signal nobody was modelling.** Every acceptance number on the trades
+    board - his starters gained, his season, his keepers, his best deal
+    elsewhere, what his men fetch one at a time - models how a rival VALUES an
+    offer. Not one of them asked whether he trades at all, and from this
+    league's own log that is the larger term by a distance:
+
+        KevinDA    3.60/yr      JFMarino     0.33/yr
+        BHier      3.25/yr      patekxwater  0.25/yr
+        itsabust   3.00/yr      jerem9604    0.20/yr
+
+    The two biggest gains on the board go to JFMarino: one completed trade in
+    three seasons. The board had been ranking a message that will not be opened
+    above one that would be accepted, and no amount of further modelling of his
+    valuation would have found that, because his valuation was never the
+    binding constraint.
+
+    It also settles what the "69 of 97 offers lose to what he can get elsewhere"
+    verdict was worth. That number prices each rival's fallback as the best deal
+    he could find - an exhaustive pairwise search over eleven rosters. A manager
+    completing 0.2 deals a season is not running one. The fallback is far below
+    the computed figure and Justin's offers are worth more than the board said,
+    which is the second independent sign, after the lopsided-trades observation,
+    that the opponents were modelled as far sharper than they are.
+
+    The measurement is small on purpose. Fifty completed trades cannot support a
+    decision surface over trade terms - and fitting one on a sample where
+    lopsided deals were accepted would learn a boundary that says yes to
+    everything. They comfortably support twelve per-manager rates. Ask the data
+    a question at the granularity it can answer.

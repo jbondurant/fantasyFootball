@@ -454,6 +454,17 @@ public class LeagueConsole {
         Map<String, Double> naive = market.naive();
         Map<String, Double> elsewhere = market.fallback();
 
+        // DOES HE TRADE AT ALL. Every other signal on this board models how a
+        // rival VALUES a deal; none of them models whether he does deals. From
+        // this league's own log that is the bigger term - the two best offers
+        // here go to a manager who has completed one trade in three seasons.
+        Map<String, Double> tradesPerYear = new HashMap<>();
+        Map<String, int[]> tradeRecord = new HashMap<>();
+        for(TradePartners.Record record : TradePartners.records(configuration.getLeagueID())){
+            tradesPerYear.put(record.manager(), record.rate());
+            tradeRecord.put(record.manager(), new int[]{record.trades(), record.seasons()});
+        }
+
         Map<String, Double> hisSeasonBase = new HashMap<>();
         Map<String, Double> hisSimpleBase = new HashMap<>();
         Map<String, Integer> hisSlotsBase = new HashMap<>();
@@ -546,6 +557,8 @@ public class LeagueConsole {
             // and does not visibly grab the earlier pick.
             boolean fair = trade.myGain() > 0 && himSimple > 0 && !himHole && !hole
                     && optics.gap() <= TradeMarket.OPTICS_GRAB;
+            double hisRate = tradesPerYear.getOrDefault(trade.withManager(), 0.0);
+            int[] record = tradeRecord.getOrDefault(trade.withManager(), new int[]{0, 0});
             double hisBest = elsewhere.getOrDefault(trade.withManager(), 0.0);
             double hisBestNaive = naive.getOrDefault(trade.withManager(), 0.0);
             double hisEdge = trade.theirGain() - hisBest;
@@ -555,7 +568,7 @@ public class LeagueConsole {
                             + "\"reads\":%s,\"men\":%d,\"reach\":%s,\"chain\":%s,"
                             + "\"himSimple\":%s,\"himSeason\":%s,\"himHole\":%b,"
                             + "\"hisBest\":%s,\"hisBestNaive\":%s,\"hisEdge\":%s,\"hisPartner\":%s,"
-                            + "\"askPrice\":%s,\"overAsk\":%s,\"fair\":%b}",
+                            + "\"askPrice\":%s,\"overAsk\":%s,\"fair\":%b,\"hisRate\":%s,\"hisTrades\":%d,\"hisSeasons\":%d}",
                     quote(label(trade.give(), nameOf)), quote(label(trade.get(), nameOf)),
                     quote(trade.withManager()), num(trade.myGain()), num(trade.theirGain()),
                     num(thisSeason), num(hisKeeper), TradeMarket.asksForAKeeper(hisKeeper),
@@ -565,7 +578,8 @@ public class LeagueConsole {
                     reachOf.containsKey(trade) ? chainJson(reachOf.get(trade), nameOf) : "null",
                     num(himSimple), num(himSeason), himHole, num(hisBest), num(hisBestNaive), num(hisEdge),
                     quote(market.partner().getOrDefault(trade.withManager(), "nobody")),
-                    num(askPrice), num(trade.theirGain() - askPrice), fair));
+                    num(askPrice), num(trade.theirGain() - askPrice), fair,
+                    num(hisRate), record[0], record[1]));
             if(fair){
                 fairTrades++;
             }
@@ -777,7 +791,7 @@ td.first,th.side+th.side,th.sub2:nth-child(4){border-left:1px solid var(--line)}
     <div><label>Manager</label><select id="fman"></select></div>
     <div><label>Search a name</label><input type="text" id="fname" placeholder="e.g. Tuten"></div>
     <div><label>Men each way</label><select id="fmen"><option value="0">any</option><option value="1">1 for 1</option><option value="2">2 for 2</option><option value="3">3 for 3</option></select></div>
-    <div><label>Sort by</label><select id="fsort"><option value="you">your full</option><option value="reach">what it opens up</option><option value="simple">your simple</option><option value="season">your 2026</option><option value="him">his full</option><option value="himSimple">his simple</option><option value="hisEdge">his edge over elsewhere</option><option value="overAsk">his edge over selling them</option></select></div>
+    <div><label>Sort by</label><select id="fsort"><option value="you">your full</option><option value="reach">what it opens up</option><option value="simple">your simple</option><option value="season">your 2026</option><option value="him">his full</option><option value="himSimple">his simple</option><option value="hisEdge">his edge over elsewhere</option><option value="overAsk">his edge over selling them</option><option value="hisRate">how often he trades</option></select></div>
   </div>
   <div class="scroll"><table id="t-trades"></table></div>
   <p class="note" id="trade-note"></p></section>
@@ -869,7 +883,7 @@ function trades(){ const only26 = document.getElementById("f26").value==="1";
   rows = rows.slice().sort((a,b)=>(b[key]===null?-1e9:b[key])-(a[key]===null?-1e9:a[key]));
   let t = "<tr><th class=l rowspan=2>You give</th><th class=l rowspan=2>You get</th>"
     + "<th colspan=3 class=side>YOU gain</th><th colspan=5 class=side>HE gains</th>"
-    + "<th rowspan=2>Opens up</th><th rowspan=2>ADP out/in</th><th class=l rowspan=2>With &middot; how it reads</th></tr>"
+    + "<th rowspan=2>Opens up</th><th rowspan=2>ADP out/in</th><th rowspan=2>He trades</th><th class=l rowspan=2>With &middot; how it reads</th></tr>"
     + "<tr><th class=sub2>simple</th><th class=sub2>full</th><th class=sub2>2026</th>"
     + "<th class=sub2>simple</th><th class=sub2>full</th><th class=sub2>2026</th><th class=sub2>vs elsewhere</th><th class=sub2>vs selling them</th></tr>";
   rows.slice(0,SHOWN).forEach((r,i)=>{ t += `<tr class="${r.chain&&r.chain.length>1?"clickable":""}" data-ch="${i}"><td class=l>${r.give}${r.chain&&r.chain.length>1?' <span class=caret>&#9656;</span>':""}</td><td class=l>${r.get}</td>`
@@ -882,15 +896,17 @@ function trades(){ const only26 = document.getElementById("f26").value==="1";
     + `<td class=${sign(r.hisEdge)} title="his best elsewhere ${f1(r.hisBest)}, before the recursion ${f1(r.hisBestNaive)}, partner ${r.hisPartner}">${f1(r.hisEdge)}</td>`
     + `<td class=${sign(r.overAsk)} title="selling those men one at a time would bring him ${f1(r.askPrice)}">${f1(r.overAsk)}</td>`
     + `<td class=${r.reach===null?"":sign(r.reach)}>${r.reach===null?"&mdash;":f1(r.reach)+(r.chain&&r.chain.length>1?` <span class=tag>${r.chain.length} deep</span>`:"")}</td>`
-    + `<td>${r.adpOut.toFixed(0)} / ${r.adpIn.toFixed(0)}</td><td class=l>${r.with} &middot; ${r.reads}`
+    + `<td>${r.adpOut.toFixed(0)} / ${r.adpIn.toFixed(0)}</td>`
+    + `<td class="${r.hisRate<0.5?"neg":r.hisRate>=3?"pos":""}" title="${r.hisTrades} completed trades in ${r.hisSeasons} seasons">${r.hisRate.toFixed(2)}/yr</td>`
+    + `<td class=l>${r.with} &middot; ${r.reads}`
     + (r.hisKeeperTag?'<span class="tag">his keeper</span>':'')+`</td></tr>`;
     if(r.chain && r.chain.length>1){
-      t += `<tr class=ladder id="ch${i}" hidden><td class=l colspan=13><div class=ladderbox>`
+      t += `<tr class=ladder id="ch${i}" hidden><td class=l colspan=14><div class=ladderbox>`
         + `<div class=sub style="margin-bottom:8px">Step one is the trade in the row above &mdash; forced, whatever it is worth. Every step AFTER it is re-searched on the board the last one left and has to clear the ${D.swapFloor.toFixed(1)}-point floor.</div><table class=inner>`;
       r.chain.forEach((c,n)=>{ t += `<tr><td class=l>${n+1}. ${c.with}</td><td class=l>give ${c.give}</td><td class=l>get ${c.get}</td>`
         + `<td class=${sign(c.gain)}>${f1(c.gain)}</td><td><b>${f1(c.running)}</b> running</td></tr>`; });
       t += `</table></div></td></tr>`; } });
-  if(!rows.length) t += "<tr><td class=l colspan=13>Nothing on the board fits that.</td></tr>";
+  if(!rows.length) t += "<tr><td class=l colspan=14>Nothing on the board fits that.</td></tr>";
   document.getElementById("t-trades").innerHTML = t;
   document.querySelectorAll("#t-trades tr.clickable").forEach(tr=>{ tr.onclick=()=>{
     const box = document.getElementById("ch"+tr.dataset.ch);
@@ -899,6 +915,7 @@ function trades(){ const only26 = document.getElementById("f26").value==="1";
   document.getElementById("trade-note").innerHTML =
     `${Math.min(rows.length, SHOWN)} of ${rows.length} matching offers shown (${D.trades.length} searched), one, two and three men each way, all good for <b>both</b> sides &mdash; an offer the other manager loses on is one he declines.<br><br>`
     + `<b>The same three numbers for both managers</b>, so a trade can be argued in whichever terms the man opposite actually uses. <b>SIMPLE</b> is what the best legal ten projects and nothing else &mdash; the number to put in a message, because anybody can check it. <b>FULL</b> prices a bench by how often it is promoted and draws whole historical seasons for injury and boom-or-bust; on his side it is also <i>loss-averse on keepers</i>. <b>2026</b> is this season alone, no keeper value either way. When simple and full disagree, that gap IS the argument: a trade worth +8.8 full and +0.0 simple is one where all the value is bench and injury risk, and no starters-only manager will ever see it. Where a trade <b>empties a slot</b> for either side the simple number is withheld and tagged rather than shown &mdash; sending away an only defence costs the whole slot, which reads as &minus;95 and means &ldquo;you would pick one up&rdquo;.<br><br>`
+    + `<b>HE TRADES</b> is completed deals per season from this league's own log, and it is the column to read first. Everything else here models how a rival VALUES an offer; this is the only one that asks whether he does deals at all, and it is probably the larger term. Nothing on the board is worth more than a manager's willingness to open the message: the two biggest gains below go to somebody who has completed one trade in three seasons, while the most active traders sit lower down the table with offers that would actually be taken.<br><br>`
     + `<b>${D.fairTrades} of the ${D.trades.length} offers help him on the number he can check himself, empty nobody's lineup, and do not visibly grab the earlier pick &mdash; and that filter is ON by default.</b> This is a keeper league: the same eleven managers every season, so being somebody people want to deal with is an asset that compounds into next year rather than a nicety. A trade he thanks you for is worth more than a slightly better one he resents.<br><br>`
     + `<b>${D.losesToElsewhere} of the ${D.trades.length} offers lose to something he can already get from somebody else.</b> <b>VS ELSEWHERE</b> is the column that says so, and it is the one that decides whether an offer gets taken. His gain is not persuasive on its own: what matters is what it beats. Each rival's best mutually-good trade with somebody who is not you is computed the same way, and this is his gain from your offer minus that. <b>And that alternative is limited by everyone else's alternatives</b>: his best trade needs the manager across from HIM to prefer it to his own options. So the rivals are PAIRED OFF &mdash; each pair striking the deal with the most joint surplus to divide, best pairs forming first &mdash; and his fallback is what he gets from the partner he would actually end up with, not the best partner he can name. Hover a number to see that alongside the naive maximum, which credits him with deals the other man would decline. <b>A negative number means he has something better waiting and will not need you.</b> Two limits, both making the column optimistic: the search is size-balanced, so it cannot see the uneven deals where a manager sends two men for one and refills off the wire &mdash; anyone who can build those has better alternatives than this shows &mdash; and it runs at a pool of ${D.batnaPool}. So a thin edge here is not an edge.<br><br>`
     + `<b>VS SELLING THEM</b> is the same question asked one man at a time. Every player you are asking for has a price of his own: the best a straight one-for-one with somebody who is not you would bring his owner. Asking for two men is asking him to forgo two of those, so this is your offer minus their sum. One-for-one is what isolates a man's contribution &mdash; in a bundle the gain belongs to the pair and splitting it would be a choice rather than a measurement &mdash; which also makes it a floor: bundles can be worth more than their parts, and a man priced at nothing has no one-for-one buyer, not no value.<br><br>`
