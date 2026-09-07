@@ -656,6 +656,36 @@ public class LeagueConsole {
         }
         mirageJson.append("]");
 
+        // ---- NEXT YEAR: which two of his own men are the 2027 keepers.
+        //
+        // The surpluses were already computed and already priced into every
+        // trade on the board - his side counts keeper value, so giving one away
+        // shows up in the number. What was missing is him being able to SEE it.
+        // A board that silently prices a keeper is a board that can talk him out
+        // of one without ever naming which men are untouchable, and the goal is
+        // to win this year AND next.
+        //
+        // Only the best TWO count, because that is the rule: two keepers a
+        // season. A third-best surplus is worth nothing next March and pretending
+        // otherwise would overprice a man he cannot actually keep.
+        List<String> myMen = new ArrayList<>(rosters.getOrDefault(me, List.of()));
+        myMen.sort(Comparator.comparingDouble((String id) -> -surplus.getOrDefault(id, 0.0)));
+        StringBuilder keepersJson = new StringBuilder("[");
+        int keeperRows = 0;
+        for(String id : myMen){
+            Double worth = surplus.get(id);
+            Integer round = keeperRound.get(id);
+            keepersJson.append(keeperRows == 0 ? "" : ",").append(String.format(
+                    "{\"name\":%s,\"pos\":%s,\"round\":%s,\"surplus\":%s,\"keep\":%b}",
+                    quote(nameOf.getOrDefault(id, id)),
+                    quote(positionOf.get(id) == null ? "?" : positionOf.get(id).name()),
+                    round == null ? "null" : String.valueOf(round),
+                    worth == null ? "null" : num(worth),
+                    keeperRows < 2 && worth != null && worth > 0));
+            keeperRows++;
+        }
+        keepersJson.append("]");
+
         // ---- what a piece is worth: who else could supply it
         StringBuilder supplyJson = new StringBuilder("[");
         Map<Position, Integer> starts = new TreeMap<>(Map.of(Position.QB, 1, Position.RB, 2,
@@ -679,13 +709,13 @@ public class LeagueConsole {
                         + "\"scenarios\":%d,\"keepers\":%b,\"lineupTotal\":%s,\"slots\":%d,"
                         + "\"lineup\":%s,\"trades\":%s,\"supply\":%s,\"faab\":%s,"
                         + "\"faabAll\":%d,\"faabContested\":%d,\"faabFree\":%s,\"costs\":[1,1.5,2,3],"
-                        + "\"budget\":%d,\"wire\":%s,\"swapFloor\":%s,\"wireScenarios\":%d,\"lookahead\":%d,\"chainDepth\":%d,\"chainPool\":%d,\"pool\":%d,\"batnaPool\":%d,\"losesToElsewhere\":%d,\"fairTrades\":%d,\"mirage\":%s,\"opticsBar\":%s,\"winAll\":%s,\"winContested\":%s}",
+                        + "\"budget\":%d,\"wire\":%s,\"swapFloor\":%s,\"wireScenarios\":%d,\"lookahead\":%d,\"chainDepth\":%d,\"chainPool\":%d,\"pool\":%d,\"batnaPool\":%d,\"losesToElsewhere\":%d,\"keepers2027\":%s,\"fairTrades\":%d,\"mirage\":%s,\"opticsBar\":%s,\"winAll\":%s,\"winContested\":%s}",
                 quote(season), week, quote(me), quote(LocalDate.now().toString()),
                 scenarios, withKeepers, num(lineup.starters()), lineup.starting().size(),
                 lineupJson, tradesJson, supplyJson, faabGrid(allBand, costs),
                 allPrices.size(), contestedPrices.size(),
                 num(allPrices.isEmpty() ? 0 : allPrices.stream().filter(p -> p == 0).count() * 100.0 / allPrices.size()),
-                budgetLeft, wireJson, num(swapFloor), wireScenarios, lookahead, chainDepth, chainPool, pool, batnaPool, losesToElsewhere, fairTrades, mirageJson, num(looksGoodBar), winLadder(allBand), winLadder(contestedBand));
+                budgetLeft, wireJson, num(swapFloor), wireScenarios, lookahead, chainDepth, chainPool, pool, batnaPool, losesToElsewhere, keepersJson, fairTrades, mirageJson, num(looksGoodBar), winLadder(allBand), winLadder(contestedBand));
 
         Path target = Path.of("data", "console-" + season + "-w" + week + ".html");
         Files.writeString(target, page(json), StandardCharsets.UTF_8);
@@ -797,7 +827,10 @@ td.first,th.side+th.side,th.sub2:nth-child(4){border-left:1px solid var(--line)}
   <p class="note" id="trade-note"></p></section>
 <section id="s-mirage"><div class="scroll"><table id="t-mirage"></table></div>
   <p class="note" id="mirage-note"></p></section>
-<section id="s-supply"><div class="scroll"><table id="t-supply"></table></div>
+<section id="s-supply">
+  <div class="scroll"><table id="t-keepers"></table></div>
+  <p class="note" id="keeper-note"></p>
+  <div class="scroll" style="margin-top:26px"><table id="t-supply"></table></div>
   <p class="note">A piece is only a chip if the other teams cannot supply it. A rival counts as an alternative seller when he carries more men at that position than the lineup starts.</p></section>
 <script>
 const D = __DATA__;
@@ -937,6 +970,19 @@ document.getElementById("mirage-note").innerHTML =
   `<b>${D.mirage.length} of them</b>, and read the warning before the table. Trades the main table <b>throws away</b>. Every offer there had to gain for both sides on the model; these gain for you and <b>not</b> for him &mdash; neither on the full model nor on starters alone &mdash; while handing him the visibly earlier pick, by at least ${D.opticsBar.toFixed(0)} places of draft position. That is the gap between what a trade is JUDGED on before the season and what it is WORTH.<br><br>`
   + `<b>Read this board honestly, and think twice before sending from it.</b> ADP is the whole market's opinion of these players; the model is one repository's. A row here is a <b>disagreement</b> between them, not proof he is being fooled &mdash; he may be right and the model wrong, and on a player the market rates far above the projection that is the likelier way round.<br><br>`
   + `And there is a cost the numbers do not carry. This is a keeper league with the same eleven managers every year: a trade both models say he loses, sent because draft position makes it look otherwise, is how somebody stops being a person the league trades with. That price is paid next season and the one after, against a gain measured this week. The <b>Trades</b> tab defaults to the offers he would thank you for; this board exists because you asked what the gap between perception and value looks like, and the honest answer is that it is usually thin and rarely worth what sending it costs.`;
+
+let k = "<tr><th class=l>Your man</th><th class=l>Pos</th><th>Keeper round</th><th>Surplus</th><th class=l>2027</th></tr>";
+D.keepers2027.forEach(r=>{ k += `<tr class="${r.keep?"start":""}"><td class=l>${r.name}</td><td class=l>${r.pos}</td>`
+  + `<td>${r.round===null?"&mdash;":"r"+r.round}</td>`
+  + `<td class="${r.surplus===null?"":sign(r.surplus)}">${r.surplus===null?"&mdash;":f1(r.surplus)}</td>`
+  + `<td class=l>${r.keep?"<b>KEEP</b>":""}</td></tr>`; });
+document.getElementById("t-keepers").innerHTML = k;
+const kept = D.keepers2027.filter(r=>r.keep);
+document.getElementById("keeper-note").innerHTML =
+  `<b>Surplus</b> is what a man is worth beyond the pick you spend to keep him, measured at his own position. Only the best <b>two</b> count, because two is what the rules allow &mdash; a third-best surplus is worth nothing next March, and pricing it as though it were would overvalue a man you cannot actually keep.<br><br>`
+  + (kept.length
+      ? `On today's roster your 2027 keepers are <b>${kept.map(r=>r.name+" (r"+r.round+", "+f1(r.surplus)+")").join("</b> and <b>")}</b>, worth <b>${f1(kept.reduce((a,r)=>a+r.surplus,0))}</b> together. Every trade on this page already counts that &mdash; giving one away shows up in your own gain &mdash; but the board will never tell you which men those are, so here they are. A trade that moves one of them is a decision about next season, not this one.`
+      : `Nothing on this roster carries a positive keeper surplus, so no trade this season can cost you a 2027 keeper. That is worth knowing before you protect somebody out of habit.`);
 
 let s = "<tr><th class=l>Position</th><th>You hold</th><th>You start</th><th>Rivals with a spare</th><th class=l>So</th></tr>";
 D.supply.forEach(r=>{

@@ -589,6 +589,48 @@ public class LeagueConsoleTest {
                 "the headline count and the rows disagree about how many offers he does not need");
     }
 
+    /**
+     * Two keepers, not three, and the two with the most surplus.
+     *
+     * The league allows two, so a third-best surplus is worth nothing next
+     * March. Marking three would overvalue a man Justin cannot actually keep,
+     * and marking the wrong two would tell him to protect the wrong players -
+     * a mistake that costs a whole season and is invisible until then.
+     */
+    @Test
+    public void exactlyTheBestTwoKeepersAreMarked() throws Exception {
+        Path console = newestConsole();
+        assumeBuilt(console);
+        String page = Files.readString(console);
+        Matcher board = Pattern.compile("\"keepers2027\":\\[(.*?)\\],\"fairTrades\"").matcher(page);
+        assertTrue(board.find(), "the page must ship the keeper view");
+
+        Matcher row = Pattern.compile("\\{\"name\":\"([^\"]*)\",\"pos\":\"[^\"]*\","
+                + "\"round\":(null|\\d+),\"surplus\":(null|-?[\\d.]+),\"keep\":(true|false)\\}")
+                .matcher(board.group(1));
+        List<String> kept = new ArrayList<>();
+        double previous = Double.MAX_VALUE;
+        int rows = 0;
+        while(row.find()){
+            double surplus = row.group(3).equals("null") ? 0 : Double.parseDouble(row.group(3));
+            assertTrue(surplus <= previous + 1e-9,
+                    "the keeper table must be ordered by surplus, best first: " + row.group(1));
+            previous = surplus;
+            if(Boolean.parseBoolean(row.group(4))){
+                kept.add(row.group(1));
+                assertTrue(surplus > 0,
+                        row.group(1) + " is marked KEEP with a surplus of " + surplus
+                                + "; a man worth nothing beyond his pick is not a keeper");
+                assertNotEquals("null", row.group(2),
+                        row.group(1) + " is marked KEEP without a round to keep him at");
+            }
+            rows++;
+        }
+        assertTrue(rows > 0, "the keeper view shipped no men, which would make this vacuous");
+        assertTrue(kept.size() <= 2,
+                "the league allows two keepers; the page marks " + kept.size() + ": " + kept);
+    }
+
     /** The perception-gap board carries "give" keys too, and is not the trades table. */
     private static int countMirage(String page){
         Matcher board = Pattern.compile("\"mirage\":\\[(.*?)\\],\"opticsBar\"").matcher(page);
