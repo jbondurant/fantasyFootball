@@ -1,6 +1,7 @@
 import com.google.gson.*;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.LinkedHashMap;
@@ -291,8 +292,37 @@ public class AAAConfiguration {
 
     /** Which overall pick my selection in a given round is, snaking. */
     public int pickNumberFor(int round){
+        return pickNumberFor(round, getMyDraftSlot());
+    }
+
+    /**
+     * The same, for ANY manager's slot.
+     *
+     * A keeper's price is a round, and what that round costs depends on where
+     * its owner sits in the snake: in this twelve-team league round 3 is pick 25
+     * for the manager at slot 1 and pick 36 for the manager at slot 12. Pricing
+     * a rival's keeper at MY pick number - which is what the one-argument form
+     * above does, and what TradeMarket called for every roster in the league -
+     * reads his surplus off the wrong point on the board.
+     */
+    public int pickNumberFor(int round, int slot){
         int teams = getLeagueJson().getAsJsonObject("settings").get("num_teams").getAsInt();
-        return pickNumber(round, getMyDraftSlot(), teams);
+        return pickNumber(round, slot, teams);
+    }
+
+    /** Every manager's slot in this season's draft order, 1-based, by user id. */
+    public Map<String, Integer> getDraftSlots(){
+        JsonObject order = getDraftJson().getAsJsonObject("draft_order");
+        Map<String, Integer> slots = new HashMap<>();
+        if(order == null){
+            return slots;
+        }
+        for(Map.Entry<String, JsonElement> entry : order.entrySet()){
+            if(!entry.getValue().isJsonNull()){
+                slots.put(entry.getKey(), entry.getValue().getAsInt());
+            }
+        }
+        return slots;
     }
 
     /** Overall pick number for any slot in a serpentine draft. */

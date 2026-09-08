@@ -649,13 +649,15 @@ public class TradeMarket {
                 keeperRound.put(entry.getKey(), entry.getValue().round());
             }
         }
+        Map<String, Integer> slotOfPlayer = draftSlotOfPlayer(ownerOf, configuration);
         Map<String, Double> surplus = new HashMap<>();
         for(String id : keeperRound.keySet()){
-            surplus.put(id, keeperPoints(keeperRound, points, bestByAdp, everyPosition, configuration, id));
+            surplus.put(id, keeperPoints(keeperRound, points, bestByAdp, everyPosition,
+                    configuration, slotOfPlayer, id));
         }
         java.util.function.ToDoubleFunction<List<String>> season = ids -> value.of(ids);
         java.util.function.ToDoubleFunction<List<String>> both =
-                ids -> value.of(ids) + keeperValue(ids, surplus);
+                ids -> value.of(ids) + keeperValue(ids, surplus, everyPosition);
         java.util.function.ToDoubleFunction<List<String>> scorer = withKeepers ? both : season;
         Side mySide = scoring(scorer);
         Side theirSide = withKeepers ? lossAverseOnKeepers(season, surplus) : scoring(season);
@@ -943,9 +945,56 @@ public class TradeMarket {
      * pick, and what the pick buys is THE BEST MAN AT HIS POSITION STILL THERE -
      * which is the quantity this compares him with.
      */
+    /**
+     * Player id -> the draft slot of the manager holding him, so a rival's
+     * keeper is priced at HIS pick and not mine.
+     *
+     * `ownerOf` is keyed by display name, `draft_order` by user id, so the two
+     * are joined through the users feed. A man whose owner is not in the draft
+     * order - picked up by a manager who joined after it, or an id the feeds
+     * disagree about - is simply absent, and `keeperPickNumber` falls back to my
+     * slot for him.
+     */
+    static Map<String, Integer> draftSlotOfPlayer(Map<String, String> ownerOf,
+                                                  AAAConfiguration configuration){
+        Map<String, Integer> byUser = configuration.getDraftSlots();
+        Map<String, Integer> byName = new HashMap<>();
+        for(Map.Entry<String, String> entry : configuration.getUserIDToDisplayName().entrySet()){
+            Integer slot = byUser.get(entry.getKey());
+            if(slot != null){
+                byName.put(entry.getValue(), slot);
+            }
+        }
+        Map<String, Integer> byPlayer = new HashMap<>();
+        for(Map.Entry<String, String> entry : ownerOf.entrySet()){
+            Integer slot = byName.get(entry.getValue());
+            if(slot != null){
+                byPlayer.put(entry.getKey(), slot);
+            }
+        }
+        return byPlayer;
+    }
+
+    /**
+     * What the keeper round costs its owner, in overall picks.
+     *
+     * Every keeper in the league was priced at MY pick number until 2026-09-08.
+     * In a twelve-team snake that is wrong by up to eleven picks for a rival, in
+     * whichever direction the round runs - and it is systematically wrong,
+     * because my slot is fixed: a manager at the other end of the order has his
+     * early rounds read off my late picks and his late rounds off my early ones.
+     */
+    static int keeperPickNumber(AAAConfiguration configuration, Map<String, Integer> slotOfPlayer,
+                                int round, String id){
+        Integer slot = slotOfPlayer.get(id);
+        return slot == null ? configuration.pickNumberFor(round)
+                : configuration.pickNumberFor(round, slot);
+    }
+
     static double keeperPoints(Map<String, Integer> keeperRound, Map<String, Double> points,
                                Map<Position, java.util.TreeMap<Double, Double>> bestByAdp,
-                               Map<String, Position> positionOf, AAAConfiguration configuration, String id){
+                               Map<String, Position> positionOf, AAAConfiguration configuration,
+                               Map<String, Integer> slotOfPlayer, String id){
         Integer round = keeperRound.get(id);
         Position position = positionOf.get(id);
         if(round == null || position == null){
@@ -955,7 +1004,7 @@ public class TradeMarket {
         if(atPosition == null){
             return 0;
         }
-        double pick = configuration.pickNumberFor(round);
+        double pick = keeperPickNumber(configuration, slotOfPlayer, round, id);
         // Nobody at his position has an ADP that late: everyone is gone by then,
         // so the pick buys a waiver-level man and the keeper saves his whole
         // projection. Falling back to the deepest entry instead would credit him
@@ -979,7 +1028,7 @@ public class TradeMarket {
     static double keeperPointsRaw(Map<String, Integer> keeperRound, Map<String, Double> points,
                                   Map<Position, java.util.TreeMap<Double, Double>> bestByAdp,
                                   Map<String, Position> positionOf, AAAConfiguration configuration,
-                                  String id){
+                                  Map<String, Integer> slotOfPlayer, String id){
         Integer round = keeperRound.get(id);
         Position position = positionOf.get(id);
         if(round == null || position == null){
@@ -989,8 +1038,8 @@ public class TradeMarket {
         if(atPosition == null){
             return 0;
         }
-        Map.Entry<Double, Double> replacement =
-                atPosition.ceilingEntry((double) configuration.pickNumberFor(round));
+        Map.Entry<Double, Double> replacement = atPosition.ceilingEntry(
+                (double) keeperPickNumber(configuration, slotOfPlayer, round, id));
         return points.getOrDefault(id, 0.0) - (replacement == null ? 0 : replacement.getValue());
     }
 
@@ -1055,10 +1104,6 @@ public class TradeMarket {
      * which is far too slow inside a trade loop. Erring toward not recommending
      * two quarterbacks is the right direction to be wrong in.
      */
-    static double keeperValue(List<String> roster, Map<String, Double> surplus){
-        return keeperValue(roster, surplus, Map.of());
-    }
-
     static double keeperValue(List<String> roster, Map<String, Double> surplus,
                               Map<String, Position> positionOf){
         List<String> men = new ArrayList<>(roster);

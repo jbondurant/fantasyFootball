@@ -118,31 +118,32 @@ public class TradeMarketTest {
         AAAConfiguration configuration = AAAConfiguration.getInstance();
         // a late quarterback is barely a keeper: the pick would have bought one nearly as good
         double qbSurplus = TradeMarket.keeperPoints(Map.of("qbEarly", 13), points, best, positions,
-                configuration, "qbEarly");
+                configuration, Map.of(), "qbEarly");
         double rbSurplus = TradeMarket.keeperPoints(Map.of("rbEarly", 13), points, best, positions,
-                configuration, "rbEarly");
+                configuration, Map.of(), "rbEarly");
         assertEquals(70.0, qbSurplus, 1e-9, "400 against the 330 the pick would have bought");
         assertEquals(126.0, rbSurplus, 1e-9, "226 against a 100 back");
         assertTrue(rbSurplus > qbSurplus,
                 "a back kept at the same round is worth far more than a quarterback, because the pick"
                         + " buys a much worse back than it does a quarterback: " + rbSurplus + " vs " + qbSurplus);
-        assertEquals(0.0, TradeMarket.keeperPoints(Map.of(), points, best, positions, configuration, "qbEarly"), 1e-9,
+        assertEquals(0.0, TradeMarket.keeperPoints(Map.of(), points, best, positions, configuration,
+                Map.of(), "qbEarly"), 1e-9,
                 "a man the rules will not let you keep is worth nothing to keep");
         // and past the end of the board there is no replacement at all
         java.util.TreeMap<Double, Double> shallow = new java.util.TreeMap<>();
         shallow.put(18.0, 400.0);
         assertEquals(400.0, TradeMarket.keeperPoints(Map.of("qbEarly", 13), points,
-                Map.of(Position.QB, shallow), positions, configuration, "qbEarly"), 1e-9,
+                Map.of(Position.QB, shallow), positions, configuration, Map.of(), "qbEarly"), 1e-9,
                 "nobody at his position is left that late, so keeping him saves the whole projection");
     }
 
     @Test
     public void aRosterKeepsTwoMenAndNoMore(){
         Map<String, Double> surplus = Map.of("a", 58.0, "b", 43.0, "c", 31.0, "d", 17.0);
-        assertEquals(101.0, TradeMarket.keeperValue(List.of("a", "b", "c", "d"), surplus), 1e-9,
+        assertEquals(101.0, TradeMarket.keeperValue(List.of("a", "b", "c", "d"), surplus, Map.of()), 1e-9,
                 "the best two only - a third good keeper is worth nothing next March");
-        assertEquals(58.0, TradeMarket.keeperValue(List.of("a"), surplus), 1e-9);
-        assertEquals(0.0, TradeMarket.keeperValue(List.of(), surplus), 1e-9);
+        assertEquals(58.0, TradeMarket.keeperValue(List.of("a"), surplus, Map.of()), 1e-9);
+        assertEquals(0.0, TradeMarket.keeperValue(List.of(), surplus, Map.of()), 1e-9);
     }
 
     /**
@@ -427,4 +428,76 @@ public class TradeMarketTest {
         assertNull(TradeMarket.worstOther(List.of("only"), List.of("only"), points),
                 "a roster with nobody left to cut yields no trade rather than a bad one");
     }
+
+    /**
+     * A KEEPER ROUND COSTS ITS OWNER HIS OWN PICK, not mine.
+     *
+     * Until 2026-09-08 every keeper in the league was priced through
+     * `configuration.pickNumberFor(round)`, which reads MY draft slot. In a
+     * twelve-team snake the same round is up to eleven picks apart at the two
+     * ends of the order, and the error is systematic rather than noisy: my slot
+     * is fixed, so a manager at the far end has his odd rounds read off my late
+     * picks and his even rounds off my early ones.
+     */
+    @Test
+    public void aRivalsKeeperIsPricedAtHisOwnPickNotMine(){
+        assertEquals(25, AAAConfiguration.pickNumber(3, 1, 12), "round 3 at slot 1");
+        assertEquals(36, AAAConfiguration.pickNumber(3, 12, 12), "round 3 at slot 12");
+        assertEquals(48, AAAConfiguration.pickNumber(4, 1, 12), "the snake turns: slot 1 picks last");
+        assertEquals(37, AAAConfiguration.pickNumber(4, 12, 12), "and slot 12 picks first");
+
+        AAAConfiguration configuration = AAAConfiguration.getInstance();
+        int teams = 12;
+        Map<String, Integer> slots = Map.of("early", 1, "late", teams);
+        int atOne = TradeMarket.keeperPickNumber(configuration, slots, 3, "early");
+        int atTwelve = TradeMarket.keeperPickNumber(configuration, slots, 3, "late");
+        assertEquals(AAAConfiguration.pickNumber(3, 1, teams), atOne);
+        assertEquals(AAAConfiguration.pickNumber(3, teams, teams), atTwelve);
+        assertTrue(atTwelve > atOne,
+                "the same round is a later pick at the far end of the order: " + atOne + " vs " + atTwelve);
+        assertEquals(configuration.pickNumberFor(3),
+                TradeMarket.keeperPickNumber(configuration, slots, 3, "notInTheDraftOrder"),
+                "a man whose owner is not in the draft order falls back to my slot, stated not guessed");
+
+        // and the surplus moves with it: a curve whose replacement level drops
+        // between the two picks prices the same man differently for the two
+        // managers, which is the whole point of the fix
+        Map<String, Double> points = Map.of("early", 300.0, "late", 300.0);
+        Map<String, Position> positions = Map.of("early", Position.RB, "late", Position.RB);
+        java.util.TreeMap<Double, Double> rb = new java.util.TreeMap<>();
+        rb.put(25.0, 200.0);
+        rb.put(36.0, 120.0);
+        Map<Position, java.util.TreeMap<Double, Double>> curve = Map.of(Position.RB, rb);
+        Map<String, Integer> round = Map.of("early", 3, "late", 3);
+        double atSlotOne = TradeMarket.keeperPoints(round, points, curve, positions,
+                configuration, slots, "early");
+        double atSlotTwelve = TradeMarket.keeperPoints(round, points, curve, positions,
+                configuration, slots, "late");
+        assertEquals(100.0, atSlotOne, 1e-9, "pick 25 buys a 200 back, so keeping a 300 saves 100");
+        assertEquals(180.0, atSlotTwelve, 1e-9, "pick 36 buys only a 120 back");
+        assertTrue(atSlotTwelve > atSlotOne,
+                "the later the pick the round costs, the more the keeper is worth");
+    }
+
+    /**
+     * The draft-slot join has to survive the two feeds keying managers
+     * differently - rosters by display name, `draft_order` by user id.
+     */
+    @Test
+    public void everyRosteredManGetsALegalSlot(){
+        AAAConfiguration configuration = AAAConfiguration.getInstance();
+        Map<String, Integer> byPlayer = TradeMarket.draftSlotOfPlayer(
+                LeagueOwners.today(configuration), configuration);
+        int teams = configuration.getLeagueJson().getAsJsonObject("settings")
+                .get("num_teams").getAsInt();
+        assertFalse(byPlayer.isEmpty(),
+                "the join produced nothing, so every keeper would silently fall back to my slot");
+        for(Map.Entry<String, Integer> entry : byPlayer.entrySet()){
+            assertTrue(entry.getValue() >= 1 && entry.getValue() <= teams,
+                    entry.getKey() + " sits at slot " + entry.getValue() + " in a " + teams + "-team draft");
+        }
+        assertTrue(new java.util.HashSet<>(byPlayer.values()).size() > 1,
+                "every rostered man came back at the same slot, which is the bug this replaced");
+    }
+
 }

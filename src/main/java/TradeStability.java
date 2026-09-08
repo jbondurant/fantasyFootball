@@ -123,9 +123,11 @@ public class TradeStability {
             }
             Map<Position, java.util.TreeMap<Double, Double>> bestByAdp =
                     TradeMarket.bestStillAvailable(points, positionOf);
+            Map<String, Integer> slotOfPlayer = TradeMarket.draftSlotOfPlayer(
+                    LeagueOwners.today(configuration), configuration);
             for(String id : keeperRound.keySet()){
                 double surplus = TradeMarket.keeperPoints(keeperRound, points, bestByAdp,
-                        positionOf, configuration, id);
+                        positionOf, configuration, slotOfPlayer, id);
                 if(surplus > 0){
                     keeperSurplus.put(nameOf.getOrDefault(id, id), surplus);
                 }

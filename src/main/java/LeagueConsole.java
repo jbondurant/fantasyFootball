@@ -566,10 +566,11 @@ public class LeagueConsole {
                 keeperRound.put(id, Keeper.UNDRAFTED_ROUND_COST);
             }
         }
+        Map<String, Integer> slotOfPlayer = TradeMarket.draftSlotOfPlayer(ownerOf, configuration);
         Map<String, Double> surplus = new HashMap<>();
         for(String id : keeperRound.keySet()){
             surplus.put(id, TradeMarket.keeperPoints(keeperRound, points, bestByAdp,
-                    everyPosition, configuration, id));
+                    everyPosition, configuration, slotOfPlayer, id));
         }
         java.util.function.ToDoubleFunction<List<String>> seasonOnly = ids -> value.of(ids);
         java.util.function.ToDoubleFunction<List<String>> withKeeper =
@@ -974,7 +975,7 @@ public class LeagueConsole {
             Double worth = surplus.get(id);
             Integer round = keeperRound.get(id);
             double margin = TradeMarket.keeperPointsRaw(keeperRound, points, bestByAdp,
-                    everyPosition, configuration, id);
+                    everyPosition, configuration, slotOfPlayer, id);
             keepersJson.append(keeperRows == 0 ? "" : ",").append(String.format(
                     "{\"name\":%s,\"pos\":%s,\"round\":%s,\"surplus\":%s,\"margin\":%s,\"keep\":%b,\"refusal\":%s}",
                     quote(nameOf.getOrDefault(id, id)),

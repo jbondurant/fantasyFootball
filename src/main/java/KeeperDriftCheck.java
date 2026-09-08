@@ -90,6 +90,8 @@ public class KeeperDriftCheck {
         }
         Map<Position, TreeMap<Double, Double>> curve =
                 TradeMarket.bestStillAvailable(points, everyPosition);
+        Map<String, Integer> slotOfPlayer = TradeMarket.draftSlotOfPlayer(
+                LeagueOwners.today(configuration), configuration);
 
         double drift = qbDrift();
         StringBuilder out = new StringBuilder();
@@ -103,16 +105,17 @@ public class KeeperDriftCheck {
                 "MAN", "POS", "ROUND", "AS PRICED", "DRIFT-AWARE", "CHANGE"));
         List<String> order = new ArrayList<>(mine);
         order.sort(Comparator.comparingDouble((String id) ->
-                -TradeMarket.keeperPoints(keeperRound, points, curve, everyPosition, configuration, id)));
+                -TradeMarket.keeperPoints(keeperRound, points, curve, everyPosition,
+                        configuration, slotOfPlayer, id)));
         for(String id : order){
             Integer round = keeperRound.get(id);
             if(round == null){
                 continue;
             }
             double asPriced = TradeMarket.keeperPoints(keeperRound, points, curve,
-                    positionOf, configuration, id);
+                    positionOf, configuration, slotOfPlayer, id);
             double shifted = driftAware(keeperRound, points, curve, positionOf, configuration,
-                    id, drift);
+                    slotOfPlayer, id, drift);
             out.append(String.format("%-22s %-4s %6s %10.1f %12.1f %+10.1f%n",
                     trim(nameOf.getOrDefault(id, id), 22),
                     positionOf.get(id) == null ? "?" : positionOf.get(id).name(),
@@ -139,7 +142,7 @@ public class KeeperDriftCheck {
     static double driftAware(Map<String, Integer> keeperRound, Map<String, Double> points,
                              Map<Position, TreeMap<Double, Double>> curve,
                              Map<String, Position> positionOf, AAAConfiguration configuration,
-                             String id, double drift){
+                             Map<String, Integer> slotOfPlayer, String id, double drift){
         Position position = positionOf.get(id);
         Integer round = keeperRound.get(id);
         if(position == null || round == null){
@@ -147,13 +150,14 @@ public class KeeperDriftCheck {
         }
         if(position != Position.QB){
             return TradeMarket.keeperPoints(keeperRound, points, curve, positionOf,
-                    configuration, id);
+                    configuration, slotOfPlayer, id);
         }
         TreeMap<Double, Double> atPosition = curve.get(position);
         if(atPosition == null){
             return 0;
         }
-        double pick = Math.max(1, configuration.pickNumberFor(round) - drift);
+        double pick = Math.max(1,
+                TradeMarket.keeperPickNumber(configuration, slotOfPlayer, round, id) - drift);
         Map.Entry<Double, Double> replacement = atPosition.ceilingEntry(pick);
         double available = replacement == null ? 0 : replacement.getValue();
         return Math.max(0, points.getOrDefault(id, 0.0) - available);

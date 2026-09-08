@@ -1,5 +1,5 @@
-data: projections 2026-09-07, player metadata 2026-09-07
-TUESDAY SWAP  2026-09-07  season 2026, waivers for week 1  (justinb314)
+data: projections 2026-09-08, player metadata 2026-09-07
+TUESDAY SWAP  2026-09-08  season 2026, waivers for week 1  (justinb314)
 180 free agents searched against all 16 roster spots = 2880 pairs, on the weekly-starter
 objective (480 drawn seasons), which prices a bench man by how often he would actually start.
 Gains are in the objective's seventeen-week units; about 14 of those weeks are left, so
