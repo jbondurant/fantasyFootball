@@ -374,11 +374,18 @@ public class TradeMarket {
      */
     static Side lossAverseOnKeepers(java.util.function.ToDoubleFunction<List<String>> season,
                                     Map<String, Double> surplus){
+        return lossAverseOnKeepers(season, surplus, Map.of());
+    }
+
+    static Side lossAverseOnKeepers(java.util.function.ToDoubleFunction<List<String>> season,
+                                    Map<String, Double> surplus,
+                                    Map<String, Position> positionOf){
         return (before, out, in) -> {
             double seasonGain = season.applyAsDouble(swap(before, out, in)) - season.applyAsDouble(before);
             List<String> keptBack = new ArrayList<>(before);
             keptBack.removeAll(out);
-            double keeperLoss = keeperValue(before, surplus) - keeperValue(keptBack, surplus);
+            double keeperLoss = keeperValue(before, surplus, positionOf)
+                    - keeperValue(keptBack, surplus, positionOf);
             return seasonGain - keeperLoss;
         };
     }
@@ -614,19 +621,32 @@ public class TradeMarket {
         }
         Map<Position, java.util.TreeMap<Double, Double>> bestByAdp =
                 bestStillAvailable(points, everyPosition);
+        // PRICED OFF THIS SEASON'S DRAFT, like the console. KeeperChooser reads
+        // getPreviousDraftPicks - "every EARLIER draft" - which in 2026 means the
+        // 2025 board, so a man drafted this year takes the undrafted default and
+        // every keeper number here is answering the 2026 question that was
+        // settled in August. Fixed in LeagueConsole and left standing here,
+        // which is how the two tools came to disagree about the same roster.
+        // PRICED OFF THIS SEASON'S DRAFT, like the console.
+        //
+        // This read KeeperChooser.eligibleCandidates, which prices against
+        // getPreviousDraftPicks - "every EARLIER draft" - so in 2026 it uses the
+        // 2025 board and answers the keeper question that was settled last
+        // August. A man drafted this year was not in that draft and took the
+        // undrafted default of a tenth. LeagueConsole was fixed and this was
+        // not, which is how the page and the terminal tool came to disagree
+        // about the same roster on the same afternoon.
+        List<String> earlierBoards = new ArrayList<>();
+        for(com.google.gson.JsonArray board : configuration.getPreviousDraftPicks()){
+            earlierBoards.add(board.toString());
+        }
+        Map<String, NextYearKeepers.Cost> priced = NextYearKeepers.from(
+                configuration.getTodaysDraftPicks(),
+                NextYearKeepers.consecutiveYears(earlierBoards));
         Map<String, Integer> keeperRound = new HashMap<>();
-        for(String manager : rosters.keySet()){
-            String user = configuration.getUserIDToDisplayName().entrySet().stream()
-                    .filter(e -> e.getValue().equals(manager)).map(Map.Entry::getKey)
-                    .findFirst().orElse(manager);
-            try {
-                for(Keeper keeper : KeeperChooser.eligibleCandidates(configuration, user)){
-                    keeperRound.put(keeper.player.sleeperIDString, keeper.roundCanBeKept);
-                }
-            }
-            catch(RuntimeException notPriceable){
-                // a manager whose previous-season picks are missing simply has no
-                // keeper column; that is a gap to state, not a reason to stop
+        for(Map.Entry<String, NextYearKeepers.Cost> entry : priced.entrySet()){
+            if(entry.getValue().keepable()){
+                keeperRound.put(entry.getKey(), entry.getValue().round());
             }
         }
         Map<String, Double> surplus = new HashMap<>();
@@ -1008,17 +1028,63 @@ public class TradeMarket {
      * the league lets anybody keep. A third good keeper is worth nothing next
      * March and must not be counted as though it were.
      */
+    /** Positions the lineup starts exactly one of; a second there does not play. */
+    static final java.util.Set<Position> ONE_STARTER =
+            java.util.Set.of(Position.QB, Position.TE, Position.DEF);
+
+    /**
+     * The best PAIR he may keep, not the two biggest numbers.
+     *
+     * Justin, 2026-09-07: "but keeping purdy and nix would nerf one of the two."
+     * He is right and the old version could not see it - it sorted every
+     * surplus, took the top two and added them, with no reference to position at
+     * all. This league starts ONE quarterback. Keeping two means one of them
+     * spends the season on the bench, and his surplus - which was measured as
+     * what he is worth beyond his draft pick, in a starting slot - is very
+     * largely not collected.
+     *
+     * It was not hypothetical: with Tuten traded away the model's fallback pair
+     * was Bo Nix and Brock Purdy, two quarterbacks, valued at 52.5 as though
+     * both played. That understated what parting with Tuten costs, and it would
+     * have recommended the pair outright had he ever been moved.
+     *
+     * So: the best pair that does not put two men at a one-starter position.
+     * This is CONSERVATIVE rather than exact - a backup quarterback is not
+     * literally worthless, he is insurance worth something on the weeks the
+     * starter sits - and pricing that properly means running the objective,
+     * which is far too slow inside a trade loop. Erring toward not recommending
+     * two quarterbacks is the right direction to be wrong in.
+     */
     static double keeperValue(List<String> roster, Map<String, Double> surplus){
-        List<Double> best = new ArrayList<>();
-        for(String id : roster){
-            best.add(surplus.getOrDefault(id, 0.0));
+        return keeperValue(roster, surplus, Map.of());
+    }
+
+    static double keeperValue(List<String> roster, Map<String, Double> surplus,
+                              Map<String, Position> positionOf){
+        List<String> men = new ArrayList<>(roster);
+        men.sort(Comparator.comparingDouble((String id) -> -surplus.getOrDefault(id, 0.0)));
+        double best = 0;
+        for(int i = 0; i < men.size(); i++){
+            double one = surplus.getOrDefault(men.get(i), 0.0);
+            if(one <= 0){
+                break;                       // sorted, so nothing later helps
+            }
+            best = Math.max(best, one);      // keeping just the one is always legal
+            Position first = positionOf.get(men.get(i));
+            for(int j = i + 1; j < men.size(); j++){
+                double two = surplus.getOrDefault(men.get(j), 0.0);
+                if(two <= 0){
+                    break;
+                }
+                Position second = positionOf.get(men.get(j));
+                if(first != null && first == second && ONE_STARTER.contains(first)){
+                    continue;                // two at a one-starter slot; one would sit
+                }
+                best = Math.max(best, one + two);
+                break;                       // the next best legal partner is the best one
+            }
         }
-        best.sort(Comparator.reverseOrder());
-        double total = 0;
-        for(int i = 0; i < Math.min(2, best.size()); i++){
-            total += best.get(i);
-        }
-        return total;
+        return best;
     }
 
     /**

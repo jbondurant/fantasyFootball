@@ -8,33 +8,33 @@ Nothing under 6.8 points is named: that is the yardstick's own seed-to-seed spre
 (ObjectiveStability), so a smaller gain is the measurement moving and not the roster.
 
 ADD                    POS  -> drop                             17wk from here
-Dalton Schultz         TE   -> drop Baltimore Ravens            +4.8      +4.0
-Dalton Schultz         TE   -> drop Tre' Harris                 +4.1      +3.4
 Tyler Shough           QB   -> drop Baltimore Ravens            +3.6      +3.0
-Oronde Gadsden         TE   -> drop Baltimore Ravens            +3.3      +2.7
 Baker Mayfield         QB   -> drop Baltimore Ravens            +2.9      +2.4
-Oronde Gadsden         TE   -> drop Tre' Harris                 +2.8      +2.3
 Sam Darnold            QB   -> drop Baltimore Ravens            +2.5      +2.0
-Tyler Shough           QB   -> drop Tre' Harris                 +2.3      +1.9
+Baker Mayfield         QB   -> drop Bo Nix                      +1.2      +1.0
+Darren Waller          TE   -> drop Baltimore Ravens            +1.1      +0.9
+Malachi Fields         WR   -> drop Baltimore Ravens            +1.0      +0.8
+Chig Okonkwo           TE   -> drop Baltimore Ravens            +1.0      +0.8
+Oronde Gadsden         TE   -> drop Baltimore Ravens            +0.9      +0.7
 
-EVERY DROP FOR DALTON SCHULTZ - the same claim against each man you hold:
-   drop Baltimore Ravens            +4.8   <- empties a slot; the whole plan (then add Detroit Lions, drop Tre' Harris) is +4.1
-   drop Tre' Harris                 +4.1
-   drop Chris Rodriguez             +1.2
-   drop Khalil Shakir               -0.9
-   drop Jakobi Meyers               -1.5
-   drop Josh Downs                  -3.4
-   drop Bo Nix                      -6.6
-   drop Jordan Addison              -7.7
-   drop Brock Purdy                -22.3
-   drop Rhamondre Stevenson        -24.7
-   drop Bhayshul Tuten             -26.7
-   drop Harold Fannin              -28.7
-   drop Cam Skattebo               -42.9
-   drop Mike Evans                 -49.4
-   drop Malik Nabers               -53.0
-   drop Derrick Henry              -92.4
+EVERY DROP FOR TYLER SHOUGH - the same claim against each man you hold:
+   drop Baltimore Ravens            +3.6   <- empties a slot; the whole plan (then add Detroit Lions, drop Chris Rodriguez) is -1.6
+   drop Chris Rodriguez             -1.6
+   drop Dalton Schultz              -1.8
+   drop Bo Nix                      -3.8
+   drop Khalil Shakir               -4.5
+   drop Jakobi Meyers               -5.1
+   drop Josh Downs                  -7.7
+   drop Jordan Addison             -11.5
+   drop Brock Purdy                -15.6
+   drop Rhamondre Stevenson        -26.9
+   drop Bhayshul Tuten             -28.8
+   drop Harold Fannin              -30.5
+   drop Cam Skattebo               -45.7
+   drop Mike Evans                 -53.1
+   drop Malik Nabers               -57.4
+   drop Derrick Henry              -95.3
 
-DO NOTHING. The best pair on the board is worth +4.8 (4.0 from here), inside the
+DO NOTHING. The best pair on the board is worth +3.6 (3.0 from here), inside the
 floor, so it is not a move - it is noise with a transaction attached. Waiting is free and
 buys another week of evidence.

@@ -80,10 +80,21 @@ want to deal with compounds into next season in a way one extra point does not.
 ## What never to trade
 
 The **What you can sell** tab names your two 2027 keepers and what their surplus
-is worth. Every trade on the page already prices them - giving one away shows up
-in your own number - but the board will not tell you which men they are unless
-you look. As of week 1: **Tuten (+58.0)** and **Skattebo (+51.4)**, twenty
-points clear of third.
+is worth, and the trades tab now carries a **keeper cost** column so the charge
+is visible rather than buried inside the full-model gain.
+
+As of week 1, priced off THIS season's draft: **Tuten (r11, +33.8)** and **Bo Nix
+(r15, +32.8)**. Henry and Nabers **cannot be kept at any price** - first two
+rounds. Skattebo is NOT a keeper: he costs a third-rounder and falls 12.8 short,
+so he is tradeable, and an earlier version of this page said the opposite because
+it priced 2027 off the 2025 board.
+
+Two things that are easy to get wrong and are handled:
+
+- the cost of trading a keeper is the drop in your best PAIR, not the man's own
+  surplus. Losing Tuten costs 30.8, not his 33.8, because the next man backfills.
+- you keep two but start ONE quarterback, so the pair may not be two QBs. Without
+  Tuten the fallback is Nix plus the Ravens, not Nix plus Purdy.
 
 ## After the games
 
@@ -115,10 +126,20 @@ be alive.
 
 ## Once a week, or when something looks wrong
 
+    ./gradlew run -Pmain=KeeperDriftCheck  # QB keeper values, priced on THIS league's board
     ./gradlew run -Pmain=ProjectionDrift   # do the season projections still move?
     ./gradlew run -Pmain=TradePartners     # who actually trades, from the log
     ./gradlew run -Pmain=TradeStability    # are the board's numbers bigger than its noise
     ./gradlew check                        # 654 tests; read the LOG, not the exit code
+
+**Keeper surplus for a QUARTERBACK is overstated, and `KeeperDriftCheck` says by how
+much.** The surplus subtracts the best man still available at your keeper pick,
+and that availability comes from Sleeper's national ADP - while `QbMarketGap`
+measured this league letting quarterbacks fall in all five seasons, about twelve
+picks. So better QBs are really on the board than the curve believes, and the
+replacement is stronger than assumed. On the 2026 roster it halved Bo Nix
+(+32.8 to +15.2) and erased Brock Purdy (+19.7 to 0.0). Trust a keeper that
+survives both columns; Tuten does, at 33.8 either way.
 
 **Run `ProjectionDrift` once real games are played.** Keeper surplus, every trade
 valuation and every free agent's worth come from the SEASON projection feed. That

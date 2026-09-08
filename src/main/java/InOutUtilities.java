@@ -101,6 +101,38 @@ public class InOutUtilities {
      * suite must see the league the tests describe - data/fixtures/2026-pre-draft
      * is the league as it stood on 2026-09-01, keepers declared, no pick made.
      */
+    /**
+     * A DAY IS TOO LONG FOR A ROSTER.
+     *
+     * `getTodaysWebPage` serves whatever was fetched earlier today, which is
+     * right for projections and ADP and wrong for the one feed that changes when
+     * somebody clicks a button. On 2026-09-07 Justin won a waiver claim; the
+     * cached rosters file, written at 00:35, still had the man he had dropped
+     * and not the man he had gained, and the console would have been built on a
+     * roster that no longer existed.
+     *
+     * Same failure as the player metadata fetched once in August (#117), a few
+     * hours instead of a few weeks. So: the roster expires in minutes, and the
+     * caller says how many. Everything else about the path is unchanged - the
+     * fixture still wins, so the pinned pre-draft league the tests read is
+     * untouched.
+     */
+    public static String getRecentWebPage(String webURL, String filepathStart, int maxAgeMinutes){
+        String fixtureDir = System.getProperty("fixtureDir");
+        if(fixtureDir != null && !fixtureDir.isBlank()
+                && new File(fixtureDir, filepathStart + ".txt").isFile()){
+            return getTodaysWebPage(webURL, filepathStart);
+        }
+        File today = new File("./" + filepathStart + DateUtility.getTodaysDate() + ".txt");
+        if(today.isFile() && today.lastModified()
+                < System.currentTimeMillis() - maxAgeMinutes * 60_000L){
+            if(!today.delete()){
+                System.out.println("   could not expire " + today + "; it may be stale");
+            }
+        }
+        return getTodaysWebPage(webURL, filepathStart);
+    }
+
     public static String getTodaysWebPage(String webURL, String filepathStart){
         String fixtureDir = System.getProperty("fixtureDir");
         if(fixtureDir != null && !fixtureDir.isBlank()){

@@ -109,6 +109,7 @@ public class SeasonOutlook {
             wins.put(manager, 0);
         }
         List<int[]> remaining = new ArrayList<>();
+        List<Integer> remainingWeek = new ArrayList<>();
         for(int week = 1; week <= lastWeek; week++){
             Map<Integer, List<JsonObject>> byMatchup = new TreeMap<>();
             for(JsonElement element : JsonParser.parseString(InOutUtilities.getTodaysWebPage(
@@ -134,6 +135,7 @@ public class SeasonOutlook {
                 }
                 else {
                     remaining.add(new int[]{a, b});
+                    remainingWeek.add(week);
                 }
             }
         }
@@ -146,18 +148,45 @@ public class SeasonOutlook {
             madeIt.put(manager, 0);
             totalWins.put(manager, 0);
         }
+        // TWO RESULTS A WEEK, NOT ONE. This league runs league_average_match,
+        // so besides his head-to-head every manager also plays the league MEDIAN
+        // that week. Fourteen weeks are twenty-eight games, and simulating half
+        // of them understates how far the better teams separate: doubling the
+        // sample halves the noise in a win total, which is the whole basis of a
+        // playoff race. The first version played only the head-to-heads.
+        boolean medianGame = league.getAsJsonObject("settings").has("league_average_match")
+                && league.getAsJsonObject("settings").get("league_average_match").getAsInt() == 1;
+        Map<Integer, List<int[]>> byWeek = new TreeMap<>();
+        for(int i = 0; i < remaining.size(); i++){
+            byWeek.computeIfAbsent(remainingWeek.get(i), u -> new ArrayList<>()).add(remaining.get(i));
+        }
         for(int sim = 0; sim < sims; sim++){
             Map<String, Double> season = new HashMap<>();
             Map<String, Integer> w = new HashMap<>(wins);
-            for(int[] game : remaining){
-                String a = managerOf.getOrDefault(game[0], "?");
-                String b = managerOf.getOrDefault(game[1], "?");
-                double sa = mean.getOrDefault(a, 100.0) + random.nextGaussian() * spread;
-                double sb = mean.getOrDefault(b, 100.0) + random.nextGaussian() * spread;
-                w.merge(a, sa > sb ? 1 : 0, Integer::sum);
-                w.merge(b, sb > sa ? 1 : 0, Integer::sum);
-                season.merge(a, sa, Double::sum);
-                season.merge(b, sb, Double::sum);
+            for(Map.Entry<Integer, List<int[]>> week : byWeek.entrySet()){
+                Map<String, Double> scored = new HashMap<>();
+                for(int[] game : week.getValue()){
+                    String a = managerOf.getOrDefault(game[0], "?");
+                    String b = managerOf.getOrDefault(game[1], "?");
+                    double sa = mean.getOrDefault(a, 100.0) + random.nextGaussian() * spread;
+                    double sb = mean.getOrDefault(b, 100.0) + random.nextGaussian() * spread;
+                    w.merge(a, sa > sb ? 1 : 0, Integer::sum);
+                    w.merge(b, sb > sa ? 1 : 0, Integer::sum);
+                    season.merge(a, sa, Double::sum);
+                    season.merge(b, sb, Double::sum);
+                    scored.put(a, sa);
+                    scored.put(b, sb);
+                }
+                if(medianGame && scored.size() > 1){
+                    List<Double> sorted = new ArrayList<>(scored.values());
+                    java.util.Collections.sort(sorted);
+                    double median = sorted.size() % 2 == 1
+                            ? sorted.get(sorted.size() / 2)
+                            : (sorted.get(sorted.size() / 2 - 1) + sorted.get(sorted.size() / 2)) / 2;
+                    for(Map.Entry<String, Double> entry : scored.entrySet()){
+                        w.merge(entry.getKey(), entry.getValue() > median ? 1 : 0, Integer::sum);
+                    }
+                }
             }
             List<String> order = new ArrayList<>(mean.keySet());
             // wins first, points scored breaks the tie - the league's own rule
@@ -182,7 +211,11 @@ public class SeasonOutlook {
         out.append(DataStamp.line()).append("\n");
         out.append(String.format("SEASON OUTLOOK  %s  after week %d, %d sims%n%n",
                 LocalDate.now(), thisWeek - 1, sims));
-        out.append(String.format("Six of twelve make the playoffs; weeks 1-%d decide it. Each team's weekly score is%n"
+        out.append(String.format(medianGame
+                ? "Six of twelve make the playoffs; weeks 1-%d decide it, and this league runs a MEDIAN%n"
+                        + "game as well, so each week is two results and the season is twice the sample.%n"
+                        + "Each team's weekly score is%n"
+                : "Six of twelve make the playoffs; weeks 1-%d decide it. Each team's weekly score is%n"
                 + "drawn around its best legal ten with a spread of %.1f - MEASURED over 840 real team-weeks%n"
                 + "in five completed seasons of this league, not assumed.%n%n", lastWeek, spread));
         out.append(String.format("%-14s %10s %8s %9s%n", "MANAGER", "A WEEK", "WINS", "PLAYOFFS"));

@@ -77,6 +77,15 @@ public class WireSurvival {
                     if(!"complete".equals(text(row, "status"))){
                         continue;
                     }
+                    // A TRADED MAN NEVER SAT ON THE WIRE. A trade drops him from
+                    // one roster and adds him to another in the same
+                    // transaction, so counting it opened a spell that closed
+                    // instantly and inflated every denominator with men nobody
+                    // could have claimed. The question is about waiver demand,
+                    // and a trade is not demand of that kind.
+                    if("trade".equals(text(row, "type"))){
+                        continue;
+                    }
                     moves.add(row);
                 }
             }

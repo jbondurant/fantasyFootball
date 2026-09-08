@@ -88,8 +88,18 @@ public class AAAConfiguration {
     public static String filepathStartDraft = "draftData";
     public static String filepathStartPreviousDraftPicks = "previousSeasonDraftPicks";
 
+    /**
+     * Minutes a cached roster may be trusted. Rosters change the moment a waiver
+     * clears or a trade goes through, and a day-old copy quietly answers every
+     * question about a team that no longer exists.
+     */
+    static int rosterFreshnessMinutes(){
+        return Integer.getInteger("rosterMinutes", 20);
+    }
+
     public String getTodaysRosterWebPageSerious(){
-        return InOutUtilities.getTodaysWebPage(this.getRosterWebURL(), filepathStartSeriousRosters + leagueID);
+        return InOutUtilities.getRecentWebPage(this.getRosterWebURL(),
+                filepathStartSeriousRosters + leagueID, rosterFreshnessMinutes());
     }
 
     public String getTodaysDrafts(){

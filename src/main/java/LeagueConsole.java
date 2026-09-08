@@ -135,28 +135,44 @@ public class LeagueConsole {
     }
 
     /**
-     * The best man on the bench who carries no injury tag and could legally take
-     * this slot - same position, or any flex-eligible one when the slot is flex.
+     * WHO ACTUALLY ENTERS THE LINEUP IF THIS MAN SITS, and what the ten are
+     * worth without him.
      *
-     * "Healthy" here means UNTAGGED. A questionable replacement for a
-     * questionable starter is not a decision, it is the same coin twice, and
-     * offering it as an answer would be worse than saying nothing.
+     * The first version named "the best untagged bench man who shares his
+     * position or is flex-eligible", and RB, WR and TE are all flex-eligible -
+     * so it offered Chris Rodriguez, a running back, as the replacement for Mike
+     * Evans at receiver, and Dalton Schultz, a tight end, for Bhayshul Tuten at
+     * running back. Neither can fill the slot in question. Both went on Justin's
+     * screen with a break-even beside them.
+     *
+     * Naming a replacement was the wrong shape. Benching a man does not promote
+     * one specific other man: the lineup REBUILDS, and the effect can cascade -
+     * a back leaves, another back takes his slot, and somebody else inherits the
+     * flex. So this rebuilds the best legal ten without him and reports the
+     * total, which handles the cascade by construction and cannot name an
+     * ineligible man because it never names one at all.
+     *
+     * The break-even that follows is unchanged in spirit and now correct in
+     * fact: start him only while
+     *
+     *     P(active) x (ten with him)  +  (1-P) x (ten with him, minus his points)
+     *          exceeds  (best ten without him)
+     *
+     * which rearranges to P > 1 - (withHim - withoutHim) / his projection. On
+     * Nabers that still gives 85%, because Addison really can take a receiver
+     * slot; it is the cross-position cases the old rule got wrong.
      */
-    static StartSit.Man healthiestBench(StartSit.Man starter, List<StartSit.Man> roster,
-                                        List<String> starters, java.util.Set<String> taken){
-        StartSit.Man best = null;
+    static double bestTenWithout(StartSit.Man out, List<StartSit.Man> roster){
+        List<TeamRankings.Man> men = new ArrayList<>();
         for(StartSit.Man man : roster){
-            if(starters.contains(man.id()) || taken.contains(man.id()) || !man.playing()
-                    || doubtful(SleeperProjections.injuryStatusOf(man.id()))){
+            if(man.id().equals(out.id()) || !man.playing()){
                 continue;
             }
-            boolean sameSlot = man.position() == starter.position();
-            boolean flexable = FLEX.contains(starter.position()) && FLEX.contains(man.position());
-            if((sameSlot || flexable) && (best == null || man.projected() > best.projected())){
-                best = man;
-            }
+            men.add(new TeamRankings.Man(man.id(), man.name(),
+                    man.position() == null ? "?" : man.position().name(), "",
+                    man.projected(), false, 0, ""));
         }
-        return best;
+        return TeamRankings.bestLineup(men).starters();
     }
 
     static final java.util.Set<Position> FLEX =
@@ -292,25 +308,14 @@ public class LeagueConsole {
         // none and says so: if enough of them sit, one is being started hurt
         // whatever the arithmetic says, and that is worth knowing before kickoff
         // rather than at one o'clock.
-        Map<String, String> replacementFor = new HashMap<>();
-        Map<String, Double> replacementProjection = new HashMap<>();
-        List<StartSit.Man> doubtfulStarters = new ArrayList<>();
+        Map<String, Double> withoutHim = new HashMap<>();
         for(StartSit.Man man : mine){
             if(starters.contains(man.id()) && doubtful(SleeperProjections.injuryStatusOf(man.id()))
                     && man.projected() > 0){
-                doubtfulStarters.add(man);
+                withoutHim.put(man.id(), bestTenWithout(man, mine));
             }
         }
-        doubtfulStarters.sort(Comparator.comparingDouble(StartSit.Man::projected).reversed());
-        java.util.Set<String> taken = new java.util.HashSet<>();
-        for(StartSit.Man man : doubtfulStarters){
-            StartSit.Man best = healthiestBench(man, mine, starters, taken);
-            if(best != null){
-                taken.add(best.id());
-                replacementFor.put(man.id(), best.name());
-                replacementProjection.put(man.id(), best.projected());
-            }
-        }
+        double bestTen = lineup.starters();
 
         StringBuilder lineupJson = new StringBuilder("[");
         for(int i = 0; i < mine.size(); i++){
@@ -319,9 +324,14 @@ public class LeagueConsole {
             double gap = starting || !man.playing() ? 0 : StartSit.closestStarter(man, mine, starters);
             double odds = starting || !man.playing() || curve.isEmpty() ? 0 : StartSit.flipRate(curve, gap);
             String status = SleeperProjections.injuryStatusOf(man.id());
-            String replacement = replacementFor.get(man.id());
-            double breakEven = replacement == null ? 0
-                    : replacementProjection.get(man.id()) / man.projected();
+            // start him only while P(active) x (ten with him) + (1-P) x (ten with
+            // him, minus his points) beats the best ten WITHOUT him, which
+            // rearranges to P > 1 - (withHim - withoutHim) / his projection
+            Double without = withoutHim.get(man.id());
+            double breakEven = without == null || man.projected() <= 0 ? 0
+                    : Math.max(0, Math.min(1, 1 - (bestTen - without) / man.projected()));
+            String replacement = without == null ? null
+                    : String.format(java.util.Locale.ROOT, "%.1f without him", without);
             lineupJson.append(i == 0 ? "" : ",").append(String.format(
                     "{\"name\":%s,\"pos\":%s,\"proj\":%s,\"playing\":%b,\"start\":%b,"
                             + "\"gap\":%s,\"odds\":%s,\"status\":%s,\"instead\":%s,\"breakEven\":%s}",
@@ -533,8 +543,13 @@ public class LeagueConsole {
         // wrong in both directions - Skattebo shown at r9 against a true r3, Bo
         // Nix at r8 against a true r15 - so the two men the panel named as
         // keepers were picked on prices that did not exist.
-        Map<String, NextYearKeepers.Cost> nextYear =
-                NextYearKeepers.from(configuration.getTodaysDraftPicks());
+        // ...with the three-consecutive-year cap, which needs the earlier drafts
+        List<String> earlier = new ArrayList<>();
+        for(com.google.gson.JsonArray board : configuration.getPreviousDraftPicks()){
+            earlier.add(board.toString());
+        }
+        Map<String, NextYearKeepers.Cost> nextYear = NextYearKeepers.from(
+                configuration.getTodaysDraftPicks(), NextYearKeepers.consecutiveYears(earlier));
         Map<String, Integer> keeperRound = new HashMap<>();
         Map<String, String> keeperRefusal = new HashMap<>();
         for(Map.Entry<String, NextYearKeepers.Cost> entry : nextYear.entrySet()){
@@ -558,14 +573,14 @@ public class LeagueConsole {
         }
         java.util.function.ToDoubleFunction<List<String>> seasonOnly = ids -> value.of(ids);
         java.util.function.ToDoubleFunction<List<String>> withKeeper =
-                ids -> value.of(ids) + TradeMarket.keeperValue(ids, surplus);
+                ids -> value.of(ids) + TradeMarket.keeperValue(ids, surplus, everyPosition);
         java.util.function.ToDoubleFunction<List<String>> myScorer = withKeepers ? withKeeper : seasonOnly;
         // one pair of Sides, built once and used for both the table and the
         // lookahead, so a trade cannot be scored one way in the row and another
         // way in the chain that row advertises
         TradeMarket.Side mySide = TradeMarket.scoring(myScorer);
         TradeMarket.Side theirSide = withKeepers
-                ? TradeMarket.lossAverseOnKeepers(seasonOnly, surplus)
+                ? TradeMarket.lossAverseOnKeepers(seasonOnly, surplus, everyPosition)
                 : TradeMarket.scoring(seasonOnly);
 
         List<TradeMarket.Trade> everySwap = new ArrayList<>();
@@ -727,12 +742,26 @@ public class LeagueConsole {
             // exactly the "next year" he named. A trade qualifies when it helps
             // him on the number he can check himself, empties nobody's lineup,
             // and does not visibly grab the earlier pick.
+            // what the trade costs next March; deterministic, so it shifts the
+            // mean and adds no spread - which is why the error bar below has to
+            // subtract it rather than ignore it
+            double keeperCost = withKeepers
+                    ? TradeMarket.keeperValue(rosters.get(me), surplus, everyPosition)
+                            - TradeMarket.keeperValue(after, surplus, everyPosition)
+                    : 0;
             // re-value THIS trade under the other seeds; the search is not
             // repeated, so this is the valuation's own wobble and not a
             // different board
+            // THE BAR MUST BRACKET THE NUMBER IT SITS BESIDE. It re-valued
+            // season-only while `you` includes keeper value, so the two were
+            // different quantities and the point estimate could sit outside its
+            // own range - Tuten for Josh Allen read +8.6 [+8.6, +30.7], pinned
+            // at the very bottom of a bracket measuring something else. Keeper
+            // value is deterministic and adds no wobble, so the honest fix is to
+            // subtract the same keeper cost from every re-valuation.
             double low = trade.myGain(), high = trade.myGain();
             for(WeeklyStarterValue shake : shakes){
-                double again = shake.of(after) - shake.of(rosters.get(me));
+                double again = shake.of(after) - shake.of(rosters.get(me)) - keeperCost;
                 low = Math.min(low, again);
                 high = Math.max(high, again);
             }
@@ -809,6 +838,18 @@ public class LeagueConsole {
                     : !noise && visiblyGoodForHim && optics.gap() <= TradeMarket.OPTICS_GRAB ? "send"
                     : aStoryHeCanTell ? "ask" : "no";
             boolean fair = tier.equals("send");
+            // WHAT THE TRADE COSTS YOU NEXT MARCH, shown rather than buried.
+            //
+            // Justin: "where is the keeper value". It was nowhere - charged
+            // inside the full-model gain and never displayed, so a row reading
+            // +22.7 for 2026 and +8.6 on the full model gave no way to see the
+            // 14.1 between them or what it was for.
+            //
+            // And the amount is not the man's own surplus, which is the part
+            // worth showing. You keep TWO, so parting with Tuten does not cost
+            // his +33.8 - it costs the drop in your best two, 66.6 to 52.5,
+            // because Purdy backfills as the second keeper. Fourteen, not
+            // thirty-four. Nobody would derive that from the man's own number.
             double hisRate = tradesPerYear.getOrDefault(trade.withManager(), 0.0);
             int[] record = tradeRecord.getOrDefault(trade.withManager(), new int[]{0, 0});
             double hisBest = elsewhere.getOrDefault(trade.withManager(), 0.0);
@@ -821,7 +862,7 @@ public class LeagueConsole {
                             + "\"himSimple\":%s,\"himSeason\":%s,\"himHole\":%b,"
                             + "\"hisBest\":%s,\"hisBestNaive\":%s,\"hisEdge\":%s,\"hisPartner\":%s,"
                             + "\"askPrice\":%s,\"overAsk\":%s,\"fair\":%b,\"hisRate\":%s,\"hisTrades\":%d,\"hisSeasons\":%d,"
-                            + "\"low\":%s,\"high\":%s,\"noise\":%b,\"thins\":%s,\"tier\":%s}",
+                            + "\"low\":%s,\"high\":%s,\"noise\":%b,\"thins\":%s,\"tier\":%s,\"keeperCost\":%s}",
                     quote(label(trade.give(), nameOf)), quote(label(trade.get(), nameOf)),
                     quote(trade.withManager()), num(trade.myGain()), num(trade.theirGain()),
                     num(thisSeason), num(hisKeeper), TradeMarket.asksForAKeeper(hisKeeper),
@@ -833,7 +874,7 @@ public class LeagueConsole {
                     quote(market.partner().getOrDefault(trade.withManager(), "nobody")),
                     num(askPrice), num(trade.theirGain() - askPrice), fair,
                     num(hisRate), record[0], record[1], num(low), num(high), noise,
-                    thins == null ? "null" : quote(thins), quote(tier)));
+                    thins == null ? "null" : quote(thins), quote(tier), num(keeperCost)));
             if(fair){
                 fairTrades++;
             }
@@ -1111,16 +1152,16 @@ D.lineup.forEach(m=>{ const cls = !m.playing ? "out" : m.start ? "start" : "";
   const verdict = !m.playing ? "NOT PLAYING" : m.start ? "START"
     : "bench \\u00b7 " + m.gap.toFixed(1) + " behind, beats him " + Math.round(m.odds*100) + "% of the time";
   const doubt = m.status
-    ? `<span class="tag neg">${m.status}</span>${m.instead?` <span class=sub>bench for ${m.instead} unless he is ${Math.round(m.breakEven*100)}% to play</span>`:m.start?' <span class=sub>nobody healthy left to replace him</span>':""}`
+    ? `<span class="tag neg">${m.status}</span>${m.instead?` <span class=sub>your ten are worth ${m.instead}; start him only if he is ${Math.round(m.breakEven*100)}% to play</span>`:""}`
     : "";
   h += `<tr class="${cls}"><td class=l>${m.name}</td><td class=l>${m.pos}</td><td>${m.playing?m.proj.toFixed(1):"\\u2014"}</td><td class=l>${doubt}</td><td class=l>${verdict}</td></tr>`; });
 h += `<tr><td class=l colspan=2><b>Projected starters</b></td><td><b>${D.lineupTotal.toFixed(1)}</b></td><td class=l></td><td class=l>${D.slots} of ten slots</td></tr>`;
 document.getElementById("t-lineup").innerHTML = h;
 const doubts = D.lineup.filter(m=>m.start && m.status && m.instead);
 document.getElementById("doubt-note").innerHTML = doubts.length
-  ? `<b>${doubts.length} of your starters carry an injury tag.</b> Starting a doubtful man beats a healthy replacement only while <i>his chance of playing &times; his projection</i> exceeds the replacement's projection, so the bar is simply one over the other &mdash; and it is HIGHEST when your bench is close behind. `
-    + doubts.map(m=>`<b>${m.name}</b> (${m.status}) needs to be <b>${Math.round(m.breakEven*100)}%</b> to play before he beats ${m.instead}`).join("; ")
-    + `. Replacements are <b>exclusive</b> &mdash; one bench man cannot cover four starters, so each is assigned once, best starter first, and a starter with nobody left says so. What this cannot know is the actual chance: that arrives in the inactive report about ninety minutes before kickoff, which is when this decision is made and not before. Only <b>untagged</b> bench men are offered as replacements &mdash; a questionable man for a questionable man is the same coin twice.`
+  ? `<b>${doubts.length} of your starters carry an injury tag.</b> The bar comes from REBUILDING your ten without him, not from naming a substitute &mdash; benching a man does not promote one specific other man, the lineup reshuffles and the effect cascades. An earlier version named "the best untagged bench man who shares his position or is flex-eligible", and since backs, receivers and tight ends are all flex-eligible it offered a running back to replace a receiver and a tight end to replace a back; neither can fill the slot. `
+    + doubts.map(m=>`<b>${m.name}</b> (${m.status}) needs <b>${Math.round(m.breakEven*100)}%</b>`).join("; ")
+    + `. What this still cannot know is the actual chance of him playing: that arrives in the inactive report about ninety minutes before kickoff, which is when the decision is made and not before.`
   : `No starter carries an injury tag.`;
 
 document.getElementById("faabLeft").textContent = "$" + D.budget;
@@ -1187,15 +1228,16 @@ function trades(){ const only26 = document.getElementById("f26").value==="1";
   const key = document.getElementById("fsort").value;
   rows = rows.slice().sort((a,b)=>(b[key]===null?-1e9:b[key])-(a[key]===null?-1e9:a[key]));
   let t = "<tr><th class=l rowspan=2>You give</th><th class=l rowspan=2>You get</th>"
-    + "<th colspan=3 class=side>YOU gain</th><th colspan=5 class=side>HE gains</th>"
+    + "<th colspan=4 class=side>YOU gain</th><th colspan=5 class=side>HE gains</th>"
     + "<th rowspan=2>Opens up</th><th rowspan=2>ADP out/in</th><th rowspan=2>He trades</th><th class=l rowspan=2>With &middot; how it reads</th></tr>"
-    + "<tr><th class=sub2>simple</th><th class=sub2>full</th><th class=sub2>2026</th>"
+    + "<tr><th class=sub2>simple</th><th class=sub2>full</th><th class=sub2>2026</th><th class=sub2>keeper cost</th>"
     + "<th class=sub2>simple</th><th class=sub2>full</th><th class=sub2>2026</th><th class=sub2>vs elsewhere</th><th class=sub2>vs selling them</th></tr>";
   rows.slice(0,SHOWN).forEach((r,i)=>{ t += `<tr class="${r.chain&&r.chain.length>1?"clickable":""} ${r.tier==="ask"?"out":""}" data-ch="${i}"><td class=l>${r.give}${r.chain&&r.chain.length>1?' <span class=caret>&#9656;</span>':""}</td><td class=l>${r.get}</td>`
     + `<td class="${r.hole?"":sign(r.simple)} first">${r.hole?'<span class=tag>slot</span>':f1(r.simple)}</td>`
     + `<td class="${r.noise?"":sign(r.you)}" title="across ${D.errorSeeds} seeds: ${f1(r.low)} to ${f1(r.high)}">`
     + `<b>${f1(r.you)}</b>${r.noise?' <span class=tag>noise</span>':` <span class=sub>&plusmn;${((r.high-r.low)/2).toFixed(1)}</span>`}</td>`
     + `<td class=${sign(r.season)}>${f1(r.season)}</td>`
+    + `<td class="${r.keeperCost>0?"neg":""}">${r.keeperCost>0?"&minus;"+r.keeperCost.toFixed(1):"&mdash;"}</td>`
     + `<td class="${r.himHole?"":sign(r.himSimple)} first">${r.himHole?'<span class=tag>slot</span>':f1(r.himSimple)}</td>`
     + `<td class=${sign(r.him)}><b>${f1(r.him)}</b></td>`
     + `<td class=${sign(r.himSeason)}>${f1(r.himSeason)}</td>`
@@ -1207,12 +1249,12 @@ function trades(){ const only26 = document.getElementById("f26").value==="1";
     + `<td class=l>${r.tier==="send"?"<b>SEND</b>":r.tier==="ask"?"<span class=tag>worth asking</span>":""} ${r.with} &middot; ${r.reads}${r.thins?` <span class="tag neg">thins ${r.thins}</span>`:""}`
     + (r.hisKeeperTag?'<span class="tag">his keeper</span>':'')+`</td></tr>`;
     if(r.chain && r.chain.length>1){
-      t += `<tr class=ladder id="ch${i}" hidden><td class=l colspan=14><div class=ladderbox>`
+      t += `<tr class=ladder id="ch${i}" hidden><td class=l colspan=15><div class=ladderbox>`
         + `<div class=sub style="margin-bottom:8px">Step one is the trade in the row above &mdash; forced, whatever it is worth. Every step AFTER it is re-searched on the board the last one left and has to clear the ${D.swapFloor.toFixed(1)}-point floor.</div><table class=inner>`;
       r.chain.forEach((c,n)=>{ t += `<tr><td class=l>${n+1}. ${c.with}</td><td class=l>give ${c.give}</td><td class=l>get ${c.get}</td>`
         + `<td class=${sign(c.gain)}>${f1(c.gain)}</td><td><b>${f1(c.running)}</b> running</td></tr>`; });
       t += `</table></div></td></tr>`; } });
-  if(!rows.length) t += "<tr><td class=l colspan=14>Nothing on the board fits that.</td></tr>";
+  if(!rows.length) t += "<tr><td class=l colspan=15>Nothing on the board fits that.</td></tr>";
   document.getElementById("t-trades").innerHTML = t;
   document.querySelectorAll("#t-trades tr.clickable").forEach(tr=>{ tr.onclick=()=>{
     const box = document.getElementById("ch"+tr.dataset.ch);
@@ -1222,6 +1264,7 @@ function trades(){ const only26 = document.getElementById("f26").value==="1";
     `${Math.min(rows.length, SHOWN)} of ${rows.length} matching offers shown (${D.trades.length} searched), one, two and three men each way, all good for <b>both</b> sides &mdash; an offer the other manager loses on is one he declines.<br><br>`
     + `<b>The same three numbers for both managers</b>, so a trade can be argued in whichever terms the man opposite actually uses. <b>SIMPLE</b> is what the best legal ten projects and nothing else &mdash; the number to put in a message, because anybody can check it. <b>FULL</b> prices a bench by how often it is promoted and draws whole historical seasons for injury and boom-or-bust; on his side it is also <i>loss-averse on keepers</i>. <b>2026</b> is this season alone, no keeper value either way. When simple and full disagree, that gap IS the argument: a trade worth +8.8 full and +0.0 simple is one where all the value is bench and injury risk, and no starters-only manager will ever see it. Where a trade <b>empties a slot</b> for either side the simple number is withheld and tagged rather than shown &mdash; sending away an only defence costs the whole slot, which reads as &minus;95 and means &ldquo;you would pick one up&rdquo;.<br><br>`
     + `<b>Your full gain carries its own error bar.</b> Each trade is re-valued under ${D.errorSeeds} seeds of the same objective &mdash; the search is not repeated, so this is the valuation's own wobble and not a different board &mdash; and the range is on hover. A trade whose gain goes negative on any seed is tagged <b>noise</b>: the model cannot tell it from zero, whatever the headline says. <b>${D.insideItsOwnNoise} of ${D.trades.length} are in that state.</b> This replaced a single 6.8-point floor, which was the wrong instrument: that number was measured on a roster MARGINAL at 480 drawn seasons, and a trade is a different quantity at a different count &mdash; measured spreads across sixty real trades ran from 0.4 to 18.0, so no one floor fits them.<br><br>`
+    + `<b>KEEPER COST</b> is what the trade takes off next March, and it is charged inside your FULL number &mdash; the gap between <b>full</b> and <b>2026</b> is exactly it. It is NOT the man's own surplus: you keep two, so parting with your best keeper costs the drop in your best PAIR, because the third man backfills. Giving up Tuten (+33.8 on his own) costs 14.1, because Purdy steps up behind him. Nobody would derive that from the keeper table, which is why it is here.<br><br>`
     + `<b>A trade tagged "thins"</b> sends a body away from a position whose UNTAGGED men already cannot fill its slots. That is not in the projections, which price a Questionable starter exactly like a healthy one: what is scarce at such a position is availability, not points, and a doubtful man is still a ticket that a traded man is not. Those offers are excluded from this view entirely.<br><br>`
     + `<b>HE TRADES</b> is completed deals per season from this league's own log, and it is the column to read first. Everything else here models how a rival VALUES an offer; this is the only one that asks whether he does deals at all, and it is probably the larger term. Nothing on the board is worth more than a manager's willingness to open the message: the two biggest gains below go to somebody who has completed one trade in three seasons, while the most active traders sit lower down the table with offers that would actually be taken.<br><br>`
     + `<b>${D.fairTrades} to SEND and ${D.askTrades} WORTH ASKING</b>, of ${D.trades.length} searched. Nothing is hidden by a filter any more, because gating on every test at once assumed the man opposite is right about everything &mdash; and fifty-seven of these failed only because he loses on the best-legal-ten calculation, which almost nobody in this league performs. A <b>SEND</b> is defensible to offer and to have offered. <b>WORTH ASKING</b> is good for you, safe for your roster, and leaves him a story he can tell himself &mdash; he gains on the full model, or barely loses on starters, or receives the earlier pick. It is a long shot, not a fair deal, and it is greyed to say so.<br><br>`

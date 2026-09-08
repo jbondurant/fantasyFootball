@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -51,6 +52,26 @@ public class NextYearKeepers {
      * knowing which roster anybody is.
      */
     static Map<String, Cost> from(String draftPicks){
+        return from(draftPicks, Map.of());
+    }
+
+    /**
+     * ...and with the CONSECUTIVE-YEAR CAP applied.
+     *
+     * `KeeperPricing.MAX_CONSECUTIVE_YEARS` is three, and the first version of
+     * this ignored it entirely: it read `is_keeper` on the current pick, added
+     * one round, and stopped. Seven men in this league have now been kept in
+     * 2024, 2025 AND 2026 - Taylor, Achane, Collins, Kyren Williams, LaPorta,
+     * Nacua, Chase Brown - and every one of them was priced as keepable for a
+     * fourth year they are not allowed. That is 472 points of keeper surplus
+     * that cannot exist, and it does not sit idle: `lossAverseOnKeepers` charges
+     * a rival that surplus for parting with the man, so the board was pricing
+     * other managers' keepers into trades they could not actually keep.
+     *
+     * `priorYears` is how many consecutive seasons each man has ALREADY been
+     * kept, counted from the earlier drafts.
+     */
+    static Map<String, Cost> from(String draftPicks, Map<String, Integer> priorYears){
         Map<String, Cost> costs = new HashMap<>();
         for(JsonElement element : JsonParser.parseString(draftPicks).getAsJsonArray()){
             JsonObject pick = element.getAsJsonObject();
@@ -74,6 +95,14 @@ public class NextYearKeepers {
             }
             // last season's round already carries every earlier escalation, so
             // being kept once more moves it exactly one
+            // one more year on top of what he has already served
+            int served = wasKept ? priorYears.getOrDefault(id, 0) + 1 : 0;
+            if(served >= KeeperPricing.MAX_CONSECUTIVE_YEARS){
+                costs.put(id, new Cost(id, name, round,
+                        "kept " + served + " seasons running; the limit is "
+                                + KeeperPricing.MAX_CONSECUTIVE_YEARS));
+                continue;
+            }
             int cost = wasKept ? round - 1 : round;
             if(cost < 1){
                 costs.put(id, new Cost(id, name, round, "would cost better than a first-round pick"));
@@ -82,6 +111,44 @@ public class NextYearKeepers {
             costs.put(id, new Cost(id, name, cost, null));
         }
         return costs;
+    }
+
+    /**
+     * How many consecutive seasons each man has ALREADY been kept, counted back
+     * through the earlier drafts.
+     *
+     * A man carries `is_keeper` on the pick that kept him, so the chain is just
+     * "was he a keeper last season, and the one before that". The walk stops at
+     * the first season he was not, because the cap is on CONSECUTIVE years - a
+     * man kept, released and kept again starts over.
+     */
+    static Map<String, Integer> consecutiveYears(List<String> earlierDraftsNewestFirst){
+        Map<String, Integer> years = new HashMap<>();
+        java.util.Set<String> stillRunning = null;
+        for(String picks : earlierDraftsNewestFirst){
+            java.util.Set<String> keptThisYear = new java.util.HashSet<>();
+            for(JsonElement element : JsonParser.parseString(picks).getAsJsonArray()){
+                JsonObject pick = element.getAsJsonObject();
+                if(pick.has("player_id") && !pick.get("player_id").isJsonNull()
+                        && pick.has("is_keeper") && !pick.get("is_keeper").isJsonNull()
+                        && pick.get("is_keeper").getAsBoolean()){
+                    keptThisYear.add(pick.get("player_id").getAsString());
+                }
+            }
+            java.util.Set<String> extend = stillRunning == null ? keptThisYear
+                    : new java.util.HashSet<>(keptThisYear);
+            if(stillRunning != null){
+                extend.retainAll(stillRunning);      // the streak has to be unbroken
+            }
+            if(extend.isEmpty()){
+                break;
+            }
+            for(String id : extend){
+                years.merge(id, 1, Integer::sum);
+            }
+            stillRunning = extend;
+        }
+        return years;
     }
 
     /**
