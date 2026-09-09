@@ -1440,3 +1440,52 @@ real every time.
     and the full model refilled the slot off the wire for free - the identical
     "empties a slot" error fixed on Justin's side that morning and left standing
     on theirs. Not a mistake they make. One they notice.
+
+124. **Fixing the artifact you look at and leaving its siblings alone.**
+    Four bugs this session existed only because a fix landed in the tool whose
+    output gets read - `LeagueConsole`, the page - and was never swept for the
+    other callers of the same idea.
+
+    - The roster feed went to a twenty-minute cache on the page; `TradeFinder`,
+      which is the build's DEFAULT mainClass, kept its own day-old copy.
+    - Keeper prices moved to `NextYearKeepers` on the page; `TradeMarket` went on
+      answering the 2026 question that was settled in August.
+    - `keeperValue` learned that two quarterbacks are one keeper; `TradeMarket`
+      still called the position-blind overload, so the terminal board valued
+      Purdy and Nix as two.
+    - The page learned to price a swap's completion before ranking - its own
+      comment says that was "how ten rows that are really negative got listed as
+      gains" - and `TuesdaySwap`, which writes the report and names the CLAIM,
+      still ranked on the raw pair.
+
+    The last one had run divergent all season: on 2026-09-08, from identical data
+    stamps, the report headlined Tyler Shough (+3.6 raw, **-1.6** once the emptied
+    defence slot is refilled) and the page headlined Baker Mayfield (+1.19). The
+    floor was the only thing keeping the report from recommending the losing move.
+
+    The fix that generalises is not a fourth patch: it is to put the idea in ONE
+    function both callers run, and to delete the old entry point rather than
+    leave it correct-but-unused. A defaulting overload kept "for compatibility"
+    is the mechanism by which this recurs - the compiler is the only reviewer who
+    catches every call site.
+
+    **When a bug is found, the next question is where else this pattern lives.**
+
+125. **A guard that skips on the very disagreement it exists to catch.**
+    The ladder test compared the page's swap ladder with the report's and, when
+    the two named different best adds, skipped with "the feeds moved between the
+    two runs; regenerate both to compare". It had never once run.
+
+    The message could not have been true. An earlier check in the same test
+    already required both artifacts to carry the same `dataStamp`, so anything
+    reaching the name comparison was built from one snapshot. The skip was
+    reporting a cause the test had just ruled out - and the real cause was #124,
+    a genuine ranking disagreement, sitting behind a green suite for a season.
+
+    Regenerating both artifacts is the obvious thing to try and it does not help:
+    the two tools disagreed from the same feeds, so a fresh pair disagreed too.
+    That is the tell. If a "just stale data" skip survives a clean regeneration,
+    it is not stale data.
+
+    An assumption is right for "these two artifacts are not comparable". It is
+    wrong for "these two comparable artifacts disagree" - that is the finding.

@@ -133,13 +133,79 @@ public class TuesdaySwap {
     }
 
     /**
+     * One row per man worth adding, PRICED BEFORE ANYTHING IS RANKED.
+     *
+     * A raw pair is half a plan. "Drop the Ravens for +3.6" empties the defence
+     * slot, and the roster is full, so fielding a defence again costs another
+     * spot and another claim - the completed plan is -1.6, and it is the
+     * completed plan you can actually collect. Ranking on the raw number puts a
+     * man at the top of the board whose real move loses points.
+     *
+     * So per added man: prefer the best drop that KEEPS EVERY SLOT FILLED, fall
+     * back to the one that empties a slot when the safe pairing gains nothing
+     * (a man who only helps by leaving a hole must not silently vanish - that
+     * would hide the very move the flag exists to warn about), and price that
+     * fallback at its completion. `worth` is what the whole plan is worth.
+     *
+     * THIS LIVED IN LeagueConsole AND NOWHERE ELSE until 2026-09-08, so the page
+     * ranked on the completed plan while this tool - which writes the report and
+     * names the CLAIM - still ranked on the raw pair. The two named different
+     * best adds from the same feeds all season. One function, both callers.
+     */
+    record Priced(Swap swap, Swap free, boolean hole, Completion completion,
+                  double worth, double altGain) {}
+
+    static List<Priced> price(List<Swap> swaps, List<String> roster, List<String> candidates,
+                              Map<String, String> nameOf, Map<String, Position> positionOf,
+                              Map<String, Double> points,
+                              java.util.function.ToDoubleFunction<List<String>> value){
+        int slotsNow = TradeMarket.slotsFilled(roster, points, positionOf);
+        Map<String, Swap> keepsSlots = new java.util.LinkedHashMap<>();
+        Map<String, Swap> unconstrained = new java.util.LinkedHashMap<>();
+        for(Swap swap : swaps){                      // already sorted, best first
+            unconstrained.putIfAbsent(swap.addId(), swap);
+            if(keepsSlots.containsKey(swap.addId())){
+                continue;
+            }
+            List<String> after = new ArrayList<>(roster);
+            after.remove(swap.dropId());
+            after.add(swap.addId());
+            if(TradeMarket.slotsFilled(after, points, positionOf) >= slotsNow){
+                keepsSlots.put(swap.addId(), swap);
+            }
+        }
+        List<Swap> shown = new ArrayList<>();
+        for(Map.Entry<String, Swap> entry : unconstrained.entrySet()){
+            Swap safe = keepsSlots.get(entry.getKey());
+            shown.add(safe != null && safe.gain() >= 0.05 ? safe : entry.getValue());
+        }
+        List<Priced> priced = new ArrayList<>();
+        for(Swap swap : shown){
+            Swap free = unconstrained.get(swap.addId());
+            boolean hole = free == swap && keepsSlots.get(swap.addId()) != swap;
+            Completion completion = complete(roster, free, candidates, nameOf, positionOf,
+                    points, value);
+            double altGain = completion == null ? free.gain() : completion.gain();
+            priced.add(new Priced(swap, free, hole, completion,
+                    hole && completion != null ? completion.gain() : swap.gain(), altGain));
+        }
+        priced.sort(Comparator.comparingDouble(Priced::worth).reversed());
+        return priced;
+    }
+
+    /**
      * The move to make, or null for DO NOTHING - which is the answer whenever
-     * the best pair does not clear the floor. Waiting costs nothing and buys a
+     * the best plan does not clear the floor. Waiting costs nothing and buys a
      * week of information; a move inside the noise costs a roster spot for a
      * coin flip.
+     *
+     * ON THE PRICED ROWS, not the raw pairs: a pair worth +8 that empties a slot
+     * and completes to -1 is not a move that clears an 6.8 floor, it is a loss
+     * that clears it. Today's floor happens to sit above every hole-creating
+     * pair on the board, which is the only reason this never printed one.
      */
-    static Swap recommend(List<Swap> swaps, double floor){
-        return swaps.isEmpty() || swaps.get(0).gain() < floor ? null : swaps.get(0);
+    static Priced recommend(List<Priced> priced, double floor){
+        return priced.isEmpty() || priced.get(0).worth() < floor ? null : priced.get(0);
     }
 
     public static void main(String[] args) throws Exception {
@@ -198,7 +264,9 @@ public class TuesdaySwap {
         }
 
         List<Swap> swaps = search(roster, candidates, nameOf, positionOf, ids -> value.of(ids));
-        Swap best = recommend(swaps, floor);
+        List<Priced> priced = price(swaps, roster, candidates, nameOf, positionOf, points,
+                ids -> value.of(ids));
+        Priced best = recommend(priced, floor);
         int weeksLeft = Math.max(1, 15 - week);   // the regular season runs to week 14
 
         StringBuilder out = new StringBuilder();
@@ -213,10 +281,16 @@ public class TuesdaySwap {
         out.append(String.format("Nothing under %.1f points is named: that is the yardstick's own seed-to-seed spread%n"
                 + "(ObjectiveStability), so a smaller gain is the measurement moving and not the roster.%n%n", floor));
 
+        // THE COMPLETED PLAN, which is the number you can collect. A row whose
+        // drop empties a slot is priced at what refilling it costs, and it is
+        // flagged, because "+3.6" and "-1.6 once you field a defence again" are
+        // not the same recommendation.
         out.append(String.format("%-22s %-4s -> drop %-22s %9s %9s%n", "ADD", "POS", "", "17wk", "from here"));
-        for(Swap swap : swaps.subList(0, Math.min(8, swaps.size()))){
-            out.append(String.format("%-22s %-4s -> drop %-22s %+9.1f %+9.1f%n", swap.addName(),
-                    swap.addPosition(), swap.dropName(), swap.gain(), swap.gain() * weeksLeft / 17.0));
+        for(Priced row : priced.subList(0, Math.min(8, priced.size()))){
+            Swap swap = row.swap();
+            out.append(String.format("%-22s %-4s -> drop %-22s %+9.1f %+9.1f%s%n", swap.addName(),
+                    swap.addPosition(), swap.dropName(), row.worth(), row.worth() * weeksLeft / 17.0,
+                    row.hole() ? "   <- and refill the slot" : ""));
         }
         out.append("\n");
 
@@ -226,10 +300,10 @@ public class TuesdaySwap {
         // receiver and deeply negative against the starter at his own position.
         // A marginal is a statement about a PAIR, and printing one member of the
         // pair is how a number gets quoted as if it were about the player.
-        if(!swaps.isEmpty()){
-            String bestAdd = swaps.get(0).addId();
+        if(!priced.isEmpty()){
+            String bestAdd = priced.get(0).swap().addId();
             out.append(String.format("EVERY DROP FOR %s - the same claim against each man you hold:%n",
-                    swaps.get(0).addName().toUpperCase()));
+                    priced.get(0).swap().addName().toUpperCase()));
             List<Swap> ladder = new ArrayList<>();
             for(Swap swap : swaps){
                 if(swap.addId().equals(bestAdd)){
@@ -248,15 +322,21 @@ public class TuesdaySwap {
             out.append("\n");
         }
         if(best == null){
-            out.append(String.format("DO NOTHING. The best pair on the board is worth %+.1f (%.1f from here), inside the%n"
+            out.append(String.format("DO NOTHING. The best plan on the board is worth %+.1f (%.1f from here), inside the%n"
                     + "floor, so it is not a move - it is noise with a transaction attached. Waiting is free and%n"
                     + "buys another week of evidence.%n",
-                    swaps.isEmpty() ? 0 : swaps.get(0).gain(),
-                    swaps.isEmpty() ? 0 : swaps.get(0).gain() * weeksLeft / 17.0));
+                    priced.isEmpty() ? 0 : priced.get(0).worth(),
+                    priced.isEmpty() ? 0 : priced.get(0).worth() * weeksLeft / 17.0));
         }
         else {
-            out.append(String.format("CLAIM %s, DROP %s: %+.1f over seventeen weeks, %+.1f from here.%n",
-                    best.addName(), best.dropName(), best.gain(), best.gain() * weeksLeft / 17.0));
+            out.append(String.format("CLAIM %s, DROP %s: %+.1f over seventeen weeks, %+.1f from here.%s%n",
+                    best.swap().addName(), best.swap().dropName(), best.worth(),
+                    best.worth() * weeksLeft / 17.0,
+                    best.hole() && best.completion() != null
+                            ? String.format(" That empties a slot: the plan includes adding %s and"
+                                    + " dropping %s.", best.completion().addName(),
+                            best.completion().dropName())
+                            : ""));
             out.append("This is worth a claim, not necessarily worth a big FAAB bid - what to pay is FaabBid's\n");
             out.append("question, and it is a different one.\n");
         }

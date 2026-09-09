@@ -8,33 +8,33 @@ Nothing under 6.8 points is named: that is the yardstick's own seed-to-seed spre
 (ObjectiveStability), so a smaller gain is the measurement moving and not the roster.
 
 ADD                    POS  -> drop                             17wk from here
-Tyler Shough           QB   -> drop Baltimore Ravens            +3.6      +3.0
-Baker Mayfield         QB   -> drop Baltimore Ravens            +2.9      +2.4
-Sam Darnold            QB   -> drop Baltimore Ravens            +2.5      +2.0
 Baker Mayfield         QB   -> drop Bo Nix                      +1.2      +1.0
-Darren Waller          TE   -> drop Baltimore Ravens            +1.1      +0.9
-Malachi Fields         WR   -> drop Baltimore Ravens            +1.0      +0.8
-Chig Okonkwo           TE   -> drop Baltimore Ravens            +1.0      +0.8
-Oronde Gadsden         TE   -> drop Baltimore Ravens            +0.9      +0.7
+Detroit Lions          DEF  -> drop Baltimore Ravens            +0.0      +0.0
+Kansas City Chiefs     DEF  -> drop Baltimore Ravens            +0.0      +0.0
+Dallas Cowboys         DEF  -> drop Baltimore Ravens            +0.0      +0.0
+Green Bay Packers      DEF  -> drop Baltimore Ravens            +0.0      +0.0
+New York Giants        DEF  -> drop Baltimore Ravens            +0.0      +0.0
+Buffalo Bills          DEF  -> drop Baltimore Ravens            +0.0      +0.0
+San Francisco 49ers    DEF  -> drop Baltimore Ravens            +0.0      +0.0
 
-EVERY DROP FOR TYLER SHOUGH - the same claim against each man you hold:
-   drop Baltimore Ravens            +3.6   <- empties a slot; the whole plan (then add Detroit Lions, drop Chris Rodriguez) is -1.6
-   drop Chris Rodriguez             -1.6
-   drop Dalton Schultz              -1.8
-   drop Bo Nix                      -3.8
-   drop Khalil Shakir               -4.5
-   drop Jakobi Meyers               -5.1
-   drop Josh Downs                  -7.7
-   drop Jordan Addison             -11.5
-   drop Brock Purdy                -15.6
-   drop Rhamondre Stevenson        -26.9
-   drop Bhayshul Tuten             -28.8
-   drop Harold Fannin              -30.5
-   drop Cam Skattebo               -45.7
-   drop Mike Evans                 -53.1
-   drop Malik Nabers               -57.4
-   drop Derrick Henry              -95.3
+EVERY DROP FOR BAKER MAYFIELD - the same claim against each man you hold:
+   drop Baltimore Ravens            +2.9   <- empties a slot; the whole plan (then add Detroit Lions, drop Bo Nix) is +1.2
+   drop Bo Nix                      +1.2
+   drop Chris Rodriguez             -2.3
+   drop Dalton Schultz              -2.5
+   drop Khalil Shakir               -5.2
+   drop Jakobi Meyers               -5.8
+   drop Josh Downs                  -8.4
+   drop Jordan Addison             -12.2
+   drop Brock Purdy                -14.3
+   drop Rhamondre Stevenson        -27.6
+   drop Bhayshul Tuten             -29.5
+   drop Harold Fannin              -31.2
+   drop Cam Skattebo               -46.4
+   drop Mike Evans                 -53.8
+   drop Malik Nabers               -58.1
+   drop Derrick Henry              -96.0
 
-DO NOTHING. The best pair on the board is worth +3.6 (3.0 from here), inside the
+DO NOTHING. The best plan on the board is worth +1.2 (1.0 from here), inside the
 floor, so it is not a move - it is noise with a transaction attached. Waiting is free and
 buys another week of evidence.

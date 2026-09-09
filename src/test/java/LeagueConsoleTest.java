@@ -447,10 +447,17 @@ public class LeagueConsoleTest {
         Matcher pageAdd = Pattern.compile(
                 "\\{\"name\":\"([^\"]*)\",\"pos\":\"[^\"]*\",\"proj\":-?[\\d.]+,\"worth\"").matcher(page);
         assertTrue(pageAdd.find(), "the page must name its first wire row");
-        org.junit.jupiter.api.Assumptions.assumeTrue(
-                named.group(1).trim().equalsIgnoreCase(pageAdd.group(1).trim()),
-                "report's best add is " + named.group(1) + " but the page's is " + pageAdd.group(1)
-                        + " - the feeds moved between the two runs; regenerate both to compare");
+        // AN ASSERTION, NOT AN ASSUMPTION. The dataStamp check above already
+        // established that both artifacts were built from the same snapshot, so
+        // "the feeds moved" cannot explain a disagreement here - and for a
+        // season it did explain one away: the report ranked its best add on the
+        // raw pair and the page on the completed plan, and on 2026-09-08 they
+        // named Tyler Shough and Baker Mayfield off identical stamps. A guard
+        // that skips on the very disagreement it exists to catch is not a guard.
+        assertEquals(named.group(1).trim().toUpperCase(), pageAdd.group(1).trim().toUpperCase(),
+                "the report and the page name different best adds off the SAME data stamp, so they"
+                        + " are ranking the same board differently - they must both go through"
+                        + " TuesdaySwap.price, which is the completed plan and not the raw pair");
         Matcher first = Pattern.compile("\"ladder\":\\[(.*?)\\]").matcher(page);
         assertTrue(first.find(), "the page must ship a ladder with its wire rows");
         List<String> shipped = new ArrayList<>();

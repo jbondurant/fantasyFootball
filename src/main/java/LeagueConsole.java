@@ -416,58 +416,17 @@ public class LeagueConsole {
         List<TuesdaySwap.Swap> swaps = TuesdaySwap.search(myRoster, candidates, nameOf, positionOf,
                 ids -> wireValue.of(ids));
         double swapFloor = Double.parseDouble(System.getProperty("swapFloor", "6.8"));
-        int slotsNow = TradeMarket.slotsFilled(myRoster, points, positionOf);
         StringBuilder wireJson = new StringBuilder("[");
         int wireRows = 0;
         double[] costs = {1.0, 1.5, 2.0, 3.0};
-        // Per added man, the best drop that KEEPS EVERY SLOT FILLED is the
-        // recommendation - "drop your only defence" is a second decision wearing
-        // the first one's number - and the unconstrained best rides along beside
-        // it when it is better, flagged, so the trade-off is visible rather than
-        // hidden by whichever one the sort happened to surface.
-        Map<String, TuesdaySwap.Swap> keepsSlots = new java.util.LinkedHashMap<>();
-        Map<String, TuesdaySwap.Swap> unconstrained = new java.util.LinkedHashMap<>();
-        for(TuesdaySwap.Swap swap : swaps){          // already sorted, best first
-            unconstrained.putIfAbsent(swap.addId(), swap);
-            if(keepsSlots.containsKey(swap.addId())){
-                continue;
-            }
-            List<String> after = new ArrayList<>(myRoster);
-            after.remove(swap.dropId());
-            after.add(swap.addId());
-            if(TradeMarket.slotsFilled(after, points, positionOf) >= slotsNow){
-                keepsSlots.put(swap.addId(), swap);
-            }
-        }
-        // A man whose slot-safe pairing gains nothing but whose unconstrained one
-        // gains plenty must not silently vanish: that would hide the very move
-        // the flag exists to warn about. Prefer the safe drop, fall back to the
-        // one that empties a slot, and say which happened.
-        List<TuesdaySwap.Swap> shown = new ArrayList<>();
-        for(Map.Entry<String, TuesdaySwap.Swap> entry : unconstrained.entrySet()){
-            TuesdaySwap.Swap safe = keepsSlots.get(entry.getKey());
-            shown.add(safe != null && safe.gain() >= 0.05 ? safe : entry.getValue());
-        }
-        // THE SECOND HALF, PRICED, BEFORE ANYTHING IS RANKED OR CUT. Showing
-        // "drop the Ravens for +2.7" is showing half a plan: the roster is full,
-        // so fielding a defence again costs another spot and another claim.
-        // Pricing the completion after sorting would rank rows by a number the
-        // page does not print and cut them by a number nobody can collect -
-        // which is how ten rows that are really negative got listed as gains.
-        record Priced(TuesdaySwap.Swap swap, TuesdaySwap.Swap free, boolean hole,
-                      TuesdaySwap.Completion completion, double worth, double altGain) {}
-        List<Priced> priced = new ArrayList<>();
-        for(TuesdaySwap.Swap swap : shown){
-            TuesdaySwap.Swap free = unconstrained.get(swap.addId());
-            boolean hole = free == swap && keepsSlots.get(swap.addId()) != swap;
-            TuesdaySwap.Completion completion = TuesdaySwap.complete(
-                    myRoster, free, candidates, nameOf, positionOf, points, ids -> wireValue.of(ids));
-            double altGain = completion == null ? free.gain() : completion.gain();
-            priced.add(new Priced(swap, free, hole, completion,
-                    hole && completion != null ? completion.gain() : swap.gain(), altGain));
-        }
-        priced.sort(Comparator.comparingDouble(Priced::worth).reversed());
-        for(Priced row : priced){
+        // ONE PRICING, SHARED WITH TuesdaySwap. The slot-safe drop, the fallback
+        // that empties a slot, and the completion that pays for it used to be
+        // written out here and nowhere else, so this page and the report that
+        // names the CLAIM ranked the same board differently and named different
+        // best adds from the same feeds.
+        List<TuesdaySwap.Priced> priced = TuesdaySwap.price(swaps, myRoster, candidates,
+                nameOf, positionOf, points, ids -> wireValue.of(ids));
+        for(TuesdaySwap.Priced row : priced){
             TuesdaySwap.Swap swap = row.swap();
             TuesdaySwap.Swap free = row.free();
             boolean hole = row.hole();
