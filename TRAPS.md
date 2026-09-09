@@ -1545,3 +1545,20 @@ real every time.
     included it. The three slowest tests turned out to be draft-model fits that
     never touch the trade search. Two changes in one run and the timing pinned on
     whichever was more interesting is not a measurement.
+
+    The second theory was wrong too. Run alone, that class used 133 seconds of
+    CPU across 17 minutes of wall clock - **12% CPU** - so the guess became "the
+    fetches have no timeout and one is hanging". They do have timeouts, 20s
+    connect and 60s read, which caps a hung socket at 80 seconds. And `find data
+    -newermt` showed the run wrote no cache file at all: it never fetched.
+
+    The measurement that ended it was `uptime`: load average 6.27, with two
+    runaway Python processes at 100% CPU each - a Collatz permutation search
+    six hours in and an orphaned mario-kart-violin benchmark two DAYS in - plus
+    macOS storage indexing at 83%. Nothing about the suite had changed. It was
+    being starved.
+
+    Three theories, each plausible, each about the code, and the answer was the
+    machine. `time` reporting 12% CPU said "blocked, not computing" from the
+    start; two of the three theories ignored it. **When wall time and CPU time
+    disagree, measure the box before reading the code.**
