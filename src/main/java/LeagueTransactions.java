@@ -64,8 +64,11 @@ public class LeagueTransactions {
                 "sleeperLeagueMeta" + leagueID);
     }
 
+    // A quiet week really has no transactions, and week 18 of a finished season
+    // never will - so an empty answer here is an answer, not a question asked
+    // too early (TRAPS #85).
     static String transactionsRaw(String leagueID, int week){
-        return InOutUtilities.getCachedForever(
+        return InOutUtilities.getCachedForeverAllowingEmpty(
                 "https://api.sleeper.app/v1/league/" + leagueID + "/transactions/" + week,
                 "sleeperTxns" + leagueID + "w" + week);
     }

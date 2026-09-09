@@ -136,7 +136,7 @@ tasks.register('run', JavaExec) {
      // off the board. The pick schedule always gave up rounds 12 and 13 for
      // them; without this the roster never received them, so a plan drafting
      // no quarterback looked illegal when for him it is not. Off by default.
-     'holdKeepers', 'planSample', 'format', 'noKeepers', 'honestWire', 'from', 'to', 'eraBoards', 'bestBall', 'lostBelow', 'round', 'tierBar', 'fragile', 'floor', 'worlds', 'depth', 'lookahead', 'maxTE', 'maxRB', 'maxWR', 'maxQB', 'fromRank',
+     'holdKeepers', 'planSample', 'format', 'noKeepers', 'honestWire', 'from', 'to', 'eraBoards', 'bestBall', 'lostBelow', 'round', 'tierBar', 'fragile', 'floor', 'worlds', 'lookahead', 'maxTE', 'maxRB', 'maxWR', 'maxQB', 'fromRank',
      // EraSlate.enabled - strip ALL TWENTY-FOUR league keepers from the
      // historical board, not just Justin's two, and skip the picks they spend.
      // PlanBacktest.keeperRanks - value a kept man at his real positional rank
@@ -185,11 +185,42 @@ tasks.register('run', JavaExec) {
      'render',
      // ObjectiveStability - 'seeds' how many seeds of the weekly objective to compare.
      'seeds',
-     // RankKeyChoice - 'depth' how far down each position to judge; 'band' the tier width.
-     'depth', 'band',
+     // RankKeyChoice - 'rankDepth' how far down each position to judge; 'band' the
+     // tier width. NOT 'depth': that name reads back 0 in the forked JVM.
+     'rankDepth', 'band',
      // OutcomeDistributions - 'poolKey=adp' keys outcome cells by FantasyPros ADP rank
      // instead of the measured-better projection rank (RankKeyChoice).
      'poolKey',
+     // In-season tools - 'week' overrides Sleeper's own idea of the NFL week (LeagueWeek);
+     // 'calibrate' runs StartSit's flip-curve measurement instead of setting a lineup.
+     // There is deliberately no bar knob: the odds beside a bench call are read out of
+     // the committed flip curve, not chosen.
+     'week', 'calibrate',
+     // DefenceThisWeek - 'lag' is the weeks before the pick switches from preseason rank to
+     // form; 2 is the value WireRateStress measured at 8.03 a week and anything else is
+     // no longer the measured policy. SeasonLedger - 'anchor' freezes the pre-registered
+     // bench test and refuses to overwrite it.
+     'lag', 'anchor',
+     // TuesdaySwap - 'candidates' free agents per position to search; 'swapFloor' the gain a
+     // pair must clear before it is named at all. FaabBid - 'fit' harvests this league's own
+     // contest history; 'value' is what the man is worth to the roster; 'budget' the FAAB left.
+     'candidates', 'swapFloor', 'fit', 'value', 'budget',
+     // TradeMarket - 'chainDepth' how many trades deep the trading-power search
+     // looks; 'pool' how many of each side's best men enter the two-for-two
+     // search; 'chainPool' the smaller pool the per-trade lookahead uses, since
+     // that runs a whole board re-search per step per candidate.
+     // 'chainDepth' and not 'depth': that name is taken in the forked JVM and
+     // reads back 0 whatever is passed (BoardValue.LOOKAHEAD documents it).
+     // 'opticsBar' - how many picks of draft position count as visibly grabbing
+     // the earlier one, for the board that looks for perception/value gaps.
+     // TradeStability - 'top' how many of the board's best trades to re-value.
+     'chainDepth', 'chainPool', 'batnaPool', 'opticsBar', 'pool', 'tradeFloor', 'keepers', 'sellMode', 'top', 'errorSeeds', 'playerMetaDays', 'teamSpread', 'qbDrift', 'rosterMinutes',
+     // LeagueConsole shares -Pme/-Pscenarios/-Ppool/-Pkeepers/-Pcandidates/-PswapFloor.
+     // 'wireScenarios' is its own: the wire search runs at the scenario count
+     // ObjectiveStability measured the noise floor over (480), independently of
+     // the -Pscenarios the rest of the page uses, so a gain is only ever judged
+     // against a yardstick measured over the same population.
+     'wireScenarios',
      // DraftExpectation - 'who=<last name>' prints which seats take that man and where.
      'who',
      // LeagueActuals.FLAG - grade outcomes under the league's own scoring

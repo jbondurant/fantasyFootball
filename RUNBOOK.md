@@ -1,4 +1,163 @@
-# Draft night — Tuesday 2026-09-01, 20:45
+# In season — the weekly loop
+
+The draft is done. This is what the rest of 2026 looks like. Two moments matter
+each week and they are not the same moment: **Tuesday morning** decides claims
+and trades, **Sunday morning** decides the lineup.
+
+## Regenerate BOTH, or the numbers are from two different worlds
+
+    ./gradlew run -Pmain=TuesdaySwap
+    ./gradlew run -Pmain=LeagueConsole
+
+In that order, back to back. The projection feed is refetched daily and the
+player metadata expires weekly, so two artifacts written hours apart can
+disagree completely and both be right. Each one now prints the snapshot it was
+built from:
+
+    data: projections 2026-09-07, player metadata 2026-09-07
+
+If those lines differ, the reports are not comparable and `check` will say so by
+skipping the ladder comparison rather than pretending. This drift cost three
+false alarms in one day; running them together is the whole fix.
+
+Then open `data/console-<season>-w<week>.html`. Everything below is on that page.
+
+## Sunday, ninety minutes before kickoff — the lineup
+
+The **This week** tab. It says ten-for-ten optimal ON THE PROJECTIONS, which is
+not the same as optimal, and the Status column is where the difference lives.
+
+Every doubtful starter carries a **break-even**: he is worth starting only while
+his chance of playing times his projection beats the healthy man behind him, so
+the bar is one over the other. It is HIGHEST when your bench is close - a
+healthy 9.5 behind a questionable 11.2 needs 85% before the questionable man is
+the right start.
+
+The page cannot know the actual probability. That arrives in the inactive report
+about ninety minutes before kickoff, which is when this decision is made and not
+before. Read the bar, read the report, decide.
+
+Replacements are **exclusive** - one bench man cannot cover four starters - so a
+starter may read "nobody healthy left". That is information, not an omission: if
+enough of them sit you are starting somebody hurt whatever the arithmetic says,
+and it is better to know at ten than at one.
+
+## Tuesday — the wire
+
+The **The wire** tab. Your FAAB is read off the rosters feed, not typed, and
+each free agent's worth is computed: the roster with him and without the man he
+displaces, valued and subtracted.
+
+Two things to respect:
+
+- a row tagged **inside the noise** is under the objective's own seed-to-seed
+  spread. It is the yardstick moving, not the roster improving. DO NOTHING is
+  the answer far more often than it feels like it should be.
+- a drop that **empties a slot** is not a drop. The roster is full, so cutting
+  your only defence means buying one back, and those rows are priced as the
+  whole plan - both adds and both drops - or not shown.
+
+## Tuesday — the trades
+
+The **Trades** tab, which defaults to the offers a rival would thank you for and
+should usually stay there. Read the columns right to left:
+
+1. **He trades** - deals per season from the league's own log. A manager at
+   0.20/yr will not answer your best offer; KevinDA (3.60) and BHier (3.25) are
+   the market. This outranks everything else on the page.
+2. **vs elsewhere** - his gain minus what the partner he would actually pair
+   with gives him. Negative means he has something better waiting.
+3. **Your full**, with its own error bar. A trade tagged **noise** has a gain
+   that goes negative on another seed; the model cannot tell it from zero.
+4. **He gains, simple** - the number he can check himself in ten seconds, and
+   the one to put in the message.
+
+Then say the quiet part in the message. If a man you are sending is Questionable,
+lead with it - he will see it anyway, and volunteering costs nothing. This is a
+keeper league with the same eleven managers every year, so being somebody people
+want to deal with compounds into next season in a way one extra point does not.
+
+## What never to trade
+
+The **What you can sell** tab names your two 2027 keepers and what their surplus
+is worth, and the trades tab now carries a **keeper cost** column so the charge
+is visible rather than buried inside the full-model gain.
+
+As of week 1, priced off THIS season's draft: **Tuten (r11, +33.8)** and **Bo Nix
+(r15, +32.8)**. Henry and Nabers **cannot be kept at any price** - first two
+rounds. Skattebo is NOT a keeper: he costs a third-rounder and falls 12.8 short,
+so he is tradeable, and an earlier version of this page said the opposite because
+it priced 2027 off the 2025 board.
+
+Two things that are easy to get wrong and are handled:
+
+- the cost of trading a keeper is the drop in your best PAIR, not the man's own
+  surplus. Losing Tuten costs 30.8, not his 33.8, because the next man backfills.
+- you keep two but start ONE quarterback, so the pair may not be two QBs. Without
+  Tuten the fallback is Nix plus the Ravens, not Nix plus Purdy.
+
+## After the games
+
+    ./gradlew run -Pmain=SeasonLedger
+
+Appends the finished week and judges the season against a bar frozen before week
+one. It refuses to call anything FINAL before the regular season ends, which is
+the point of freezing it.
+
+## From week 7 — am I still in it
+
+    ./gradlew run -Pmain=SeasonOutlook
+
+Six of twelve make the playoffs. This plays out the real remaining schedule with
+each team's weekly score drawn around its best legal ten, at a spread of 24.9 -
+MEASURED over 840 team-weeks in five completed seasons, not assumed.
+
+It is the number your own rule fires on: *win 2026, but if not after like
+halfway, sell a bit for keepers, not in a drastic way.* Before halfway it will
+refuse to say anything decisive, on purpose - a pivot called in week 3 off a 20%
+sample is not that rule. Past halfway it commits: above 55% buy, below 20% sell
+a bit **with the round 1-3 men staying**, and in between it says undecided
+rather than picking.
+
+What it leaves out - byes, injuries arriving, waivers, trades - all make the
+season MORE uncertain and push every number toward 50%. So a team it calls dead
+is dead by a margin that survives the omissions; a team it calls alive may only
+be alive.
+
+## Once a week, or when something looks wrong
+
+    ./gradlew run -Pmain=KeeperDriftCheck  # QB keeper values, priced on THIS league's board
+    ./gradlew run -Pmain=ProjectionDrift   # do the season projections still move?
+    ./gradlew run -Pmain=TradePartners     # who actually trades, from the log
+    ./gradlew run -Pmain=TradeStability    # are the board's numbers bigger than its noise
+    ./gradlew check                        # 654 tests; read the LOG, not the exit code
+
+**Keeper surplus for a QUARTERBACK is overstated, and `KeeperDriftCheck` says by how
+much.** The surplus subtracts the best man still available at your keeper pick,
+and that availability comes from Sleeper's national ADP - while `QbMarketGap`
+measured this league letting quarterbacks fall in all five seasons, about twelve
+picks. So better QBs are really on the board than the curve believes, and the
+replacement is stronger than assumed. On the 2026 roster it halved Bo Nix
+(+32.8 to +15.2) and erased Brock Purdy (+19.7 to 0.0). Trust a keeper that
+survives both columns; Tuten does, at 33.8 either way.
+
+**Run `ProjectionDrift` once real games are played.** Keeper surplus, every trade
+valuation and every free agent's worth come from the SEASON projection feed. That
+feed demonstrably moves - thirty of 585 players changed between 24 August and 7
+September, Josh Jacobs by 105.9 - but it went silent for the five days before
+week 1. If it is still silent AFTER games have been played, it is frozen at
+preseason values and every in-season number here is answering a question about
+August. That is the moment to blend actuals in, and the tool exists so the moment
+gets noticed instead of assumed away.
+
+`check` takes about half an hour. Read `check-wire.log` for `BUILD SUCCESSFUL`
+and the test count - a shell wrapper's exit status can be the echo's rather than
+gradle's, which has hidden a red build here more than once. And **0 skipped**
+matters as much as 0 failed: a test that never runs is not evidence of anything.
+
+---
+
+# Draft night — Tuesday 2026-09-01, 20:45  *(done; kept for the reasoning)*
 
 Slot 7, 16 rounds. Keepers Tuten (RB, r12) and Purdy (QB, r13) occupy rounds 12
 and 13, so you make **fourteen picks**:

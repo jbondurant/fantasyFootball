@@ -101,6 +101,38 @@ public class InOutUtilities {
      * suite must see the league the tests describe - data/fixtures/2026-pre-draft
      * is the league as it stood on 2026-09-01, keepers declared, no pick made.
      */
+    /**
+     * A DAY IS TOO LONG FOR A ROSTER.
+     *
+     * `getTodaysWebPage` serves whatever was fetched earlier today, which is
+     * right for projections and ADP and wrong for the one feed that changes when
+     * somebody clicks a button. On 2026-09-07 Justin won a waiver claim; the
+     * cached rosters file, written at 00:35, still had the man he had dropped
+     * and not the man he had gained, and the console would have been built on a
+     * roster that no longer existed.
+     *
+     * Same failure as the player metadata fetched once in August (#117), a few
+     * hours instead of a few weeks. So: the roster expires in minutes, and the
+     * caller says how many. Everything else about the path is unchanged - the
+     * fixture still wins, so the pinned pre-draft league the tests read is
+     * untouched.
+     */
+    public static String getRecentWebPage(String webURL, String filepathStart, int maxAgeMinutes){
+        String fixtureDir = System.getProperty("fixtureDir");
+        if(fixtureDir != null && !fixtureDir.isBlank()
+                && new File(fixtureDir, filepathStart + ".txt").isFile()){
+            return getTodaysWebPage(webURL, filepathStart);
+        }
+        File today = new File("./" + filepathStart + DateUtility.getTodaysDate() + ".txt");
+        if(today.isFile() && today.lastModified()
+                < System.currentTimeMillis() - maxAgeMinutes * 60_000L){
+            if(!today.delete()){
+                System.out.println("   could not expire " + today + "; it may be stale");
+            }
+        }
+        return getTodaysWebPage(webURL, filepathStart);
+    }
+
     public static String getTodaysWebPage(String webURL, String filepathStart){
         String fixtureDir = System.getProperty("fixtureDir");
         if(fixtureDir != null && !fixtureDir.isBlank()){
@@ -181,16 +213,61 @@ public class InOutUtilities {
      * season's projections, a completed draft. Fetched once, kept forever.
      */
     public static String getCachedForever(String webURL, String filepathStart){
+        return getCachedForever(webURL, filepathStart, false);
+    }
+
+    /**
+     * The same, for a resource whose EMPTY answer is a real answer.
+     *
+     * Week 18 of a finished season genuinely has no transactions, and Sleeper
+     * will say so forever. Refusing to cache that turned a normal quiet week
+     * into a fatal error for LeagueTransactions on any machine without the
+     * files already on disk. The guard is right for a stats or projection feed,
+     * where empty means "not yet"; it is wrong here, where empty means "none".
+     * The caller has to say which it is, because nothing in the response can.
+     */
+    public static String getCachedForeverAllowingEmpty(String webURL, String filepathStart){
+        return getCachedForever(webURL, filepathStart, true);
+    }
+
+    private static String getCachedForever(String webURL, String filepathStart, boolean mayBeEmpty){
         String filePath = "./" + filepathStart + ".txt";
         File f = new File(filePath);
         if(!f.exists() || f.isDirectory()) {
-            writeContentToFile(WebUrlUtility.urlToString(webURL), filePath);
+            String fetched = WebUrlUtility.urlToString(webURL);
+            // NEVER FREEZE AN EMPTY PAYLOAD. "Kept forever" and "asked too early"
+            // are a bad pair: on 2026-09-04, five days before the season,
+            // /v1/stats/nfl/regular/2026/1 returned "{}" and the 2026 DEF stats
+            // endpoint returned "[]". Cached, those would have been the answer
+            // for the rest of the season - every defence scoring zero, every
+            // week-1 actual missing - with nothing to notice it but the numbers
+            // being wrong. A week that has not happened is not data; it is a
+            // question asked too early, and it must fail loudly.
+            if(!mayBeEmpty && emptyPayload(fetched)){
+                throw new IllegalStateException(webURL + " returned an empty payload ("
+                        + fetched.trim() + ") and getCachedForever would keep it forever."
+                        + " Nothing was written. If this is a week or a season that has not"
+                        + " happened yet, ask again when it has; if its empty answer is a"
+                        + " real answer - a quiet week of transactions, say - call"
+                        + " getCachedForeverAllowingEmpty instead and say so.");
+            }
+            writeContentToFile(fetched, filePath);
         }
         try {
             return Files.readString(Path.of(filePath));
         } catch (IOException e) {
             throw new RuntimeException("could not read cached " + filePath, e);
         }
+    }
+
+    /** "", "{}", "[]" or "null" - a response carrying no rows. */
+    static boolean emptyPayload(String body){
+        if(body == null){
+            return true;
+        }
+        String trimmed = body.trim();
+        return trimmed.isEmpty() || trimmed.equals("{}") || trimmed.equals("[]")
+                || trimmed.equals("null");
     }
 
     public static void downloadTodaysWebPage(String webURL, String filepathStart){
