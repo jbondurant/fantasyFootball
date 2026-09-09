@@ -231,7 +231,7 @@ public class LeagueConsole {
         String season = LeagueWeek.season();
         int week = LeagueWeek.week();
         int scenarios = Integer.getInteger("scenarios", 240);
-        int pool = Integer.getInteger("pool", 6);
+        int pool = Integer.getInteger("pool", TradeMarket.DEFAULT_POOL);
         String me = System.getProperty("me", configuration.getUserIDToDisplayName()
                 .getOrDefault(configuration.getMyID(), configuration.getMyID()));
 

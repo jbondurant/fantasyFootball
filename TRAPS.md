@@ -1520,3 +1520,28 @@ real every time.
     now, and there is a test for the stripper, because a silently wrong stripper
     turns this from a guard into a generator of false alarms - and the response to
     a false alarm is to delete the test.
+
+128. **The page searched a narrower board than the tool it claims to be.**
+    `pool` bounds how many men a side offers into a two-for-two or three-for-three;
+    one-for-ones search the whole roster. It was a literal default in two mains
+    and they disagreed - `TradeMarket` 8, `LeagueConsole` 6 - with no comment
+    either way. So the artifact Justin reads was a strict subset of the terminal
+    board: 81 trades against 182 on the same rosters, on the same afternoon.
+
+    It was under-searching the shape that matters. Eleven of this league's 51
+    completed trades moved four players and six moved five or more, and those
+    deals are built out of a roster's seventh and eighth men - exactly the two
+    the smaller pool dropped. Raising it surfaced a SEND-tier three-for-three
+    that gains Justin +10.8 (worst seed +6.4), gains JFMarino +26.3 on his own
+    model and +0.7 on the simple one, beats his best alternative by 14, empties
+    no slot and costs neither side a keeper. That row did not exist on the page.
+
+    The fix is the constant, not the number: `TradeMarket.DEFAULT_POOL`, read by
+    both, with a test that fails if either main grows a literal again. A default
+    that must match another file's default is a divergence with a timer on it.
+
+    *And the first theory was wrong.* The cost of the wider search was assumed to
+    be an eightfold jump in the check - 24 minutes to 3h10m, on the run that
+    included it. The three slowest tests turned out to be draft-model fits that
+    never touch the trade search. Two changes in one run and the timing pinned on
+    whichever was more interesting is not a measurement.

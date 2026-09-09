@@ -396,6 +396,27 @@ public class TradeMarket {
      * the roster it ends with, because loss aversion cannot be written as a
      * roster score.
      */
+    /**
+     * HOW MANY MEN A SIDE OFFERS INTO A MULTI-PLAYER DEAL.
+     *
+     * One-for-ones search the whole roster; this bounds only the two-for-twos
+     * and three-for-threes, where the combinations explode. It lived as a
+     * literal default in two mains and they disagreed - this tool searched 8 and
+     * LeagueConsole, the artifact Justin actually reads, searched 6. Nothing
+     * said so. The page was therefore a strict subset of the terminal board, and
+     * blind to 101 of the 182 trades on its own roster: every top row involving
+     * his seventh and eighth men (Rhamondre Stevenson) or a rival's (CeeDee
+     * Lamb, Chuba Hubbard, Aaron Jones) simply was not searched.
+     *
+     * That is the wrong shape to under-search. Eleven of this league's 51
+     * completed trades moved four players and six moved five or more, so
+     * multi-player deals are what it actually accepts - and they are built out
+     * of exactly the depth these two picks apart were dropping.
+     *
+     * At 8 the console takes 2m41s, which is a Tuesday-morning cost.
+     */
+    static final int DEFAULT_POOL = 8;
+
     static List<Trade> between(String me, String them, List<String> mine, List<String> theirs,
                                Side myValue, Side theirValue, int pool){
         List<Trade> trades = new ArrayList<>();
@@ -581,7 +602,7 @@ public class TradeMarket {
     public static void main(String[] args) throws Exception {
         AAAConfiguration configuration = AAAConfiguration.getInstance();
         int scenarios = Integer.getInteger("scenarios", 240);
-        int pool = Integer.getInteger("pool", 8);
+        int pool = Integer.getInteger("pool", DEFAULT_POOL);
         int top = Integer.getInteger("top", 12);
         // 'chainDepth', not 'depth' - see BoardValue.LOOKAHEAD. That property is
         // owned by something in this JVM and reads back 0, and 0 fails the
