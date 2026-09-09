@@ -71,4 +71,45 @@ public class TradeStabilityTest {
         }
         assertTrue(seen > 0, "the report listed no trades");
     }
+
+    /**
+     * A LONG ROW KEEPS ITS KEEPER WARNING. The marker used to be appended to
+     * "give -> get" before that string was trimmed to 46 characters, so it was
+     * dropped by the formatter on exactly the rows where it matters most - the
+     * two-for-twos, which are the ones long enough to need trimming. Bo Nix,
+     * worth +32.8 next March, went out unmarked on 2026-09-08.
+     */
+    @Test
+    void theKeeperWarningSurvivesTruncation(){
+        TradeStability.Line long_ = new TradeStability.Line(
+                "Bo Nix + Derrick Henry", "Patrick Mahomes + Josh Jacobs", "someone",
+                new double[]{13.6, 12.0}, new double[]{1.0, 1.0});
+        String printed = TradeStability.row(long_, "  [KEEPER]", 6.8);
+        assertTrue(printed.contains("…"), "this row is long enough that the trade text is trimmed");
+        assertTrue(printed.contains("[KEEPER]"),
+                "the trade text was truncated and took the keeper warning with it: " + printed);
+
+        TradeStability.Line short_ = new TradeStability.Line(
+                "Bo Nix", "Josh Allen", "someone",
+                new double[]{13.6, 12.0}, new double[]{1.0, 1.0});
+        assertTrue(TradeStability.row(short_, "  [KEEPER]", 6.8).contains("[KEEPER]"),
+                "a short row must keep it too - that is the case that always worked");
+        assertFalse(TradeStability.row(short_, "", 6.8).contains("[KEEPER]"),
+                "and a row that sends no keeper must not sprout one");
+    }
+
+    /** The columns a reader lines up must not move when a marker appears. */
+    @Test
+    void theMarkerDoesNotShiftTheNumbers(){
+        TradeStability.Line line = new TradeStability.Line(
+                "Bo Nix + Derrick Henry", "Patrick Mahomes + Josh Jacobs", "someone",
+                new double[]{13.6, 12.0}, new double[]{1.0, 1.0});
+        String marked = TradeStability.row(line, "  [KEEPER]", 6.8);
+        String plain = TradeStability.row(line, "", 6.8);
+        assertEquals(plain.indexOf("+13.6"), marked.indexOf("+13.6"),
+                "the gain column moved because the marker was inserted before it");
+        assertTrue(marked.startsWith(plain.substring(0, plain.indexOf("clears"))),
+                "everything up to the verdict must be byte-identical either way");
+    }
+
 }

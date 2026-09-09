@@ -636,19 +636,7 @@ public class TradeMarket {
         // undrafted default of a tenth. LeagueConsole was fixed and this was
         // not, which is how the page and the terminal tool came to disagree
         // about the same roster on the same afternoon.
-        List<String> earlierBoards = new ArrayList<>();
-        for(com.google.gson.JsonArray board : configuration.getPreviousDraftPicks()){
-            earlierBoards.add(board.toString());
-        }
-        Map<String, NextYearKeepers.Cost> priced = NextYearKeepers.from(
-                configuration.getTodaysDraftPicks(),
-                NextYearKeepers.consecutiveYears(earlierBoards));
-        Map<String, Integer> keeperRound = new HashMap<>();
-        for(Map.Entry<String, NextYearKeepers.Cost> entry : priced.entrySet()){
-            if(entry.getValue().keepable()){
-                keeperRound.put(entry.getKey(), entry.getValue().round());
-            }
-        }
+        Map<String, Integer> keeperRound = NextYearKeepers.roundsForThisLeague(configuration);
         Map<String, Integer> slotOfPlayer = draftSlotOfPlayer(ownerOf, configuration);
         Map<String, Double> surplus = new HashMap<>();
         for(String id : keeperRound.keySet()){

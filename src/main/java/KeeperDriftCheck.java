@@ -61,19 +61,7 @@ public class KeeperDriftCheck {
                 mine.add(entry.getKey());
             }
         }
-        // ...with the three-consecutive-year cap, which needs the earlier drafts
-        List<String> earlier = new ArrayList<>();
-        for(com.google.gson.JsonArray board : configuration.getPreviousDraftPicks()){
-            earlier.add(board.toString());
-        }
-        Map<String, NextYearKeepers.Cost> nextYear = NextYearKeepers.from(
-                configuration.getTodaysDraftPicks(), NextYearKeepers.consecutiveYears(earlier));
-        Map<String, Integer> keeperRound = new HashMap<>();
-        for(Map.Entry<String, NextYearKeepers.Cost> entry : nextYear.entrySet()){
-            if(entry.getValue().keepable()){
-                keeperRound.put(entry.getKey(), entry.getValue().round());
-            }
-        }
+        Map<String, Integer> keeperRound = NextYearKeepers.roundsForThisLeague(configuration);
         // THE CURVE MUST KNOW THE WHOLE PLAYER POOL, not just rostered men.
         // Built from `positionOf` - which came from LeagueOwners and therefore
         // holds only the 192 men on rosters - the deepest quarterback it knew

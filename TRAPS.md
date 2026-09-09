@@ -1489,3 +1489,34 @@ real every time.
 
     An assumption is right for "these two artifacts are not comparable". It is
     wrong for "these two comparable artifacts disagree" - that is the finding.
+
+126. **The formatter threw the warning away.**
+    `TradeStability` marks a row that sends a keeper. The marker was appended to
+    `"give -> get"` and the whole string trimmed to 46 characters, so it survived
+    only on rows short enough not to need trimming - and a two-for-two that ships
+    a keeper is exactly the row too long to fit. The full board's second-best
+    trade, "Bhayshul Tuten -> Josh Allen +22.7", sends the +33.8 keeper and went
+    out unmarked.
+
+    Computed correctly, then discarded by presentation. Nothing in the pipeline
+    was wrong; the last four characters of a `%-46s` were.
+
+    It surfaced only because the claim got checked. The keeper-basis fix above
+    was written up as "it flagged Skattebo and missed Bo Nix" and the tool was
+    run to confirm it - and Bo Nix came back unmarked AFTER the fix. Believing
+    the write-up would have shipped both bugs and closed the file on one of them.
+
+    The marker now prints after the verdict, where nothing truncates it, and two
+    tests pin it: one that a row long enough to be trimmed keeps its warning, one
+    that adding the warning does not shift the number columns.
+
+127. **A source test that matched the comment explaining the fix.**
+    `KeeperBasisTest` looks for tools that still call the old keeper entry point.
+    Its first run failed on all three - every one of which had just been fixed,
+    and carried a comment saying so. It read the prose describing the removal as
+    the call it was hunting.
+
+    A test that reads source has to read CODE. It strips block and line comments
+    now, and there is a test for the stripper, because a silently wrong stripper
+    turns this from a guard into a generator of false alarms - and the response to
+    a false alarm is to delete the test.

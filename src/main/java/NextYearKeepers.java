@@ -46,6 +46,40 @@ public class NextYearKeepers {
     }
 
     /**
+     * THE ONE WAY TO ASK THIS LEAGUE WHAT NEXT YEAR COSTS.
+     *
+     * Three callers - the page, the trade board, the stability check - each
+     * assembled this by hand: pull the earlier boards, stringify them, feed them
+     * to `consecutiveYears`, price against `getTodaysDraftPicks`. Assembling it
+     * by hand is how a caller gets missed. `TradeStability` was missed, and went
+     * on flagging [KEEPER] off `KeeperChooser.eligibleCandidates` - the 2025
+     * basis - so its warnings contradicted the very board it audits: it called
+     * Skattebo a keeper, which he is not, and said nothing about Bo Nix, who is.
+     *
+     * A caller that wants the refusals as well as the prices calls {@link #from}
+     * directly; this is the common case, which is "what can each man be kept
+     * for".
+     */
+    static Map<String, Cost> forThisLeague(AAAConfiguration configuration){
+        List<String> earlier = new java.util.ArrayList<>();
+        for(JsonArray board : configuration.getPreviousDraftPicks()){
+            earlier.add(board.toString());
+        }
+        return from(configuration.getTodaysDraftPicks(), consecutiveYears(earlier));
+    }
+
+    /** ...as the round each KEEPABLE man would cost, which is what a valuer wants. */
+    static Map<String, Integer> roundsForThisLeague(AAAConfiguration configuration){
+        Map<String, Integer> rounds = new HashMap<>();
+        for(Map.Entry<String, Cost> entry : forThisLeague(configuration).entrySet()){
+            if(entry.getValue().keepable()){
+                rounds.put(entry.getKey(), entry.getValue().round());
+            }
+        }
+        return rounds;
+    }
+
+    /**
      * Every man on every roster, priced for next season off `draftPicks`.
      *
      * Keyed by playerID so a caller can look up his own men or a rival's without

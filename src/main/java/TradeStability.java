@@ -107,20 +107,11 @@ public class TradeStability {
         // costs next season.
         Map<String, Double> keeperSurplus = new java.util.TreeMap<>();
         try {
-            Map<String, Integer> keeperRound = new HashMap<>();
-            for(String manager : rosters.keySet()){
-                String user = configuration.getUserIDToDisplayName().entrySet().stream()
-                        .filter(e -> e.getValue().equals(manager)).map(Map.Entry::getKey)
-                        .findFirst().orElse(manager);
-                try {
-                    for(Keeper keeper : KeeperChooser.eligibleCandidates(configuration, user)){
-                        keeperRound.put(keeper.player.sleeperIDString, keeper.roundCanBeKept);
-                    }
-                }
-                catch(RuntimeException notPriceable){
-                    // no keeper column for that manager; stated, not fatal
-                }
-            }
+            // OFF THIS SEASON'S DRAFT, like the board this audits. It read
+            // KeeperChooser.eligibleCandidates - the 2025 basis - so its [KEEPER]
+            // warnings contradicted the board they annotate: Skattebo flagged as
+            // a keeper he is not, Bo Nix unflagged when he is one.
+            Map<String, Integer> keeperRound = NextYearKeepers.roundsForThisLeague(configuration);
             Map<Position, java.util.TreeMap<Double, Double>> bestByAdp =
                     TradeMarket.bestStillAvailable(points, positionOf);
             Map<String, Integer> slotOfPlayer = TradeMarket.draftSlotOfPlayer(
@@ -207,16 +198,7 @@ public class TradeStability {
         out.append("MUTUALLY GOOD trades are measured - the ones that could actually be recommended.\n\n");
         out.append(String.format("%-46s %s   %7s  %s%n", "TRADE", "YOUR GAIN BY SEED", "SPREAD", "VERDICT"));
         for(Line line : lines){
-            String keeper = keeperWarning(line.give(), keeperSurplus, nameOf);
-            out.append(String.format("%-46s", trim(line.give() + " -> " + line.get()
-                    + (keeper.isEmpty() ? "" : keeper), 46)));
-            for(double v : line.mine()){
-                out.append(String.format(" %+7.1f", v));
-            }
-            out.append(String.format("   %6.1f  %s%n", line.mySpread(),
-                    line.survives(floor) ? "clears " + floor + " on every seed"
-                            : line.mySpread() > floor ? "SPREAD EXCEEDS THE FLOOR - not a number"
-                            : "inside the floor on at least one seed"));
+            out.append(row(line, keeperWarning(line.give(), keeperSurplus, nameOf), floor));
         }
         out.append(String.format("%nworst seed-to-seed spread of a TRADE gain: %.1f points%n", worst));
         out.append(String.format("ObjectiveStability measured 6.8 for a roster MARGINAL at 480 scenarios. This is a%n"
@@ -227,6 +209,31 @@ public class TradeStability {
         Files.writeString(target, out.toString(), StandardCharsets.UTF_8);
         System.out.print(out);
         System.out.println("written to " + target);
+    }
+
+    /**
+     * One printed row.
+     *
+     * THE KEEPER MARKER GOES AFTER THE VERDICT, NOT INSIDE THE TRUNCATED NAME.
+     * It used to be appended to "give -> get" and the whole thing trimmed to 46
+     * characters, so it survived only on rows short enough not to need trimming
+     * - and a two-for-two that sends a keeper is exactly the row too long to
+     * fit. On 2026-09-08 Bo Nix, worth +32.8 next March, went out unmarked in a
+     * row that read "Bo Nix + Derrick Henry -> Patrick Mahomes + J…". The
+     * warning was computed correctly and thrown away by the formatter.
+     */
+    static String row(Line line, String keeper, double floor){
+        StringBuilder out = new StringBuilder();
+        out.append(String.format("%-46s", trim(line.give() + " -> " + line.get(), 46)));
+        for(double v : line.mine()){
+            out.append(String.format(" %+7.1f", v));
+        }
+        out.append(String.format("   %6.1f  %s%s%n", line.mySpread(),
+                line.survives(floor) ? "clears " + floor + " on every seed"
+                        : line.mySpread() > floor ? "SPREAD EXCEEDS THE FLOOR - not a number"
+                        : "inside the floor on at least one seed",
+                keeper));
+        return out.toString();
     }
 
     /** Names a man in the outgoing side who is worth keeping, or empty. */
