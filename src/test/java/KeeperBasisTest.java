@@ -25,7 +25,7 @@ public class KeeperBasisTest {
 
     /** The in-season tools whose keeper numbers Justin acts on. */
     private static final List<String> FORWARD_LOOKING = List.of(
-            "LeagueConsole.java", "TradeMarket.java", "TradeStability.java");
+            "LeagueConsole.java", "TradeMarket.java", "TradeStability.java", "KeeperDriftCheck.java");
 
     private static String source(String name) throws Exception {
         Path path = Path.of("src", "main", "java", name);
@@ -102,7 +102,7 @@ public class KeeperBasisTest {
                 if(!name.endsWith(".java") || name.equals("NextYearKeepers.java")){
                     continue;
                 }
-                if(Files.readString(path).contains("NextYearKeepers.consecutiveYears")){
+                if(codeOnly(Files.readString(path)).contains("NextYearKeepers.consecutiveYears")){
                     assemblers.add(name);
                 }
             }

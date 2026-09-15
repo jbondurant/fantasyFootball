@@ -100,4 +100,21 @@ public class TradePartnersTest {
         }
         assertTrue(seen > 0, "the report listed no managers");
     }
+
+    /**
+     * A TRADE OF FAAB ALONE STILL HAS TWO PARTICIPANTS. Sleeper's row carries
+     * roster_ids; the Move dropped them and participants() read adds/drops, so
+     * the 2025 week-11 itsabust/justinb314 deal counted for nobody - the log
+     * holds 51 completed trades and the report said 50.
+     */
+    @Test
+    public void aTradeOfFaabAloneStillHasTwoParticipants(){
+        LeagueTransactions.Move faabOnly = new LeagueTransactions.Move("2025", 11, "trade", "complete",
+                null, null, 0, java.util.List.of(4, 11));
+        assertEquals(Set.of(4, 11), TradePartners.participants(faabOnly));
+        LeagueTransactions.Move legacy = new LeagueTransactions.Move("2025", 11, "trade", "complete",
+                null, null, 0);
+        assertEquals(Set.of(), TradePartners.participants(legacy),
+                "the seven-argument shape still builds, with no roster ids");
+    }
 }

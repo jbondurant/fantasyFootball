@@ -59,8 +59,9 @@ Two things to respect:
 
 ## Tuesday — the trades
 
-The **Trades** tab, which defaults to the offers a rival would thank you for and
-should usually stay there. Read the columns right to left:
+The **Trades** tab. Its filter defaults to *send + worth asking*; switch it to *only
+the ones he thanks you for* to see SEND alone, which is where to start. Read the
+columns right to left:
 
 1. **He trades** - deals per season from the league's own log. A manager at
    0.20/yr will not answer your best offer; KevinDA (3.60) and BHier (3.25) are
@@ -83,11 +84,14 @@ The **What you can sell** tab names your two 2027 keepers and what their surplus
 is worth, and the trades tab now carries a **keeper cost** column so the charge
 is visible rather than buried inside the full-model gain.
 
-As of week 1, priced off THIS season's draft: **Tuten (r11, +33.8)** and **Bo Nix
-(r15, +32.8)**. Henry and Nabers **cannot be kept at any price** - first two
-rounds. Skattebo is NOT a keeper: he costs a third-rounder and falls 12.8 short,
-so he is tradeable, and an earlier version of this page said the opposite because
-it priced 2027 off the 2025 board.
+As of 2026-09-14, priced off THIS season's draft: **Tuten (r11, +58.0)** and **Bo
+Nix (r15, +32.8)**. These move with the projection feed - Tuten read +33.8 a week
+earlier - and the page's *What you can sell* tab is the current answer; the KEEP
+marks there are the legal pair the trades are priced on, not the two biggest
+numbers. Henry and Nabers **cannot be kept at any price** - first two rounds.
+Skattebo is NOT a keeper: he costs a third-rounder and falls 12.3 short, so he is
+tradeable, and an earlier version of this page said the opposite because it priced
+2027 off the 2025 board.
 
 Two things that are easy to get wrong and are handled:
 
@@ -109,8 +113,12 @@ the point of freezing it.
     ./gradlew run -Pmain=SeasonOutlook
 
 Six of twelve make the playoffs. This plays out the real remaining schedule with
-each team's weekly score drawn around its best legal ten, at a spread of 24.9 -
-MEASURED over 840 team-weeks in five completed seasons, not assumed.
+each team's weekly score drawn around its best legal ten, at a spread the tool
+MEASURES every run - the within-team standard deviation over 840 real team-weeks in
+five completed seasons: 23.7 on 2026-09-14. An earlier version typed 24.9, called
+it measured, and had the pooled number (TRAPS #132). Played weeks bank both
+results - the head-to-head and the median game - and the tiebreak starts from
+real points.
 
 It is the number your own rule fires on: *win 2026, but if not after like
 halfway, sell a bit for keepers, not in a drastic way.* Before halfway it will
@@ -130,7 +138,7 @@ be alive.
     ./gradlew run -Pmain=ProjectionDrift   # do the season projections still move?
     ./gradlew run -Pmain=TradePartners     # who actually trades, from the log
     ./gradlew run -Pmain=TradeStability    # are the board's numbers bigger than its noise
-    ./gradlew check                        # 654 tests; read the LOG, not the exit code
+    ./gradlew check                        # read the TESTS: line in the LOG, not the exit code
 
 **Keeper surplus for a QUARTERBACK is overstated, and `KeeperDriftCheck` says by how
 much.** The surplus subtracts the best man still available at your keeper pick,
@@ -150,10 +158,12 @@ preseason values and every in-season number here is answering a question about
 August. That is the moment to blend actuals in, and the tool exists so the moment
 gets noticed instead of assumed away.
 
-`check` takes about half an hour. Read `check-wire.log` for `BUILD SUCCESSFUL`
-and the test count - a shell wrapper's exit status can be the echo's rather than
-gradle's, which has hidden a red build here more than once. And **0 skipped**
-matters as much as 0 failed: a test that never runs is not evidence of anything.
+`check` takes about half an hour. Read `check-wire.log` for `BUILD SUCCESSFUL` and
+the line `TESTS: N run, F failed, S skipped` - a shell wrapper's exit status can be
+the echo's rather than gradle's, which has hidden a red build here more than once.
+And **0 skipped** matters as much as 0 failed: a test that never runs is not
+evidence of anything, which is why every skipped test is logged by name (the task
+logged neither count until 2026-09-14, so this instruction could not be followed).
 
 ---
 

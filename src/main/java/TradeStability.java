@@ -77,7 +77,7 @@ public class TradeStability {
         int scenarios = Integer.getInteger("scenarios", 240);
         int seeds = Integer.getInteger("seeds", 3);
         int top = Integer.getInteger("top", 8);
-        int pool = Integer.getInteger("pool", 6);
+        int pool = Integer.getInteger("pool", TradeMarket.DEFAULT_POOL);
         double floor = Double.parseDouble(System.getProperty("tradeFloor", "6.8"));
         long[] seedValues = {424_242L, 7L, 99L, 2026L, 31_337L};
 
@@ -111,21 +111,28 @@ public class TradeStability {
             // KeeperChooser.eligibleCandidates - the 2025 basis - so its [KEEPER]
             // warnings contradicted the board they annotate: Skattebo flagged as
             // a keeper he is not, Bo Nix unflagged when he is one.
-            Map<String, Integer> keeperRound = NextYearKeepers.roundsForThisLeague(configuration);
+            Map<String, Integer> keeperRound = NextYearKeepers.roundsForThisLeague(configuration, ownerOf.keySet());
+            // THE CURVE MUST KNOW THE WHOLE PLAYER POOL. Built from the rostered
+            // men alone it ended at the deepest rostered quarterback, so a QB kept
+            // at r15 read his entire projection as surplus - the fault
+            // KeeperDriftCheck documents fixing for itself; this copy never got it.
+            Map<String, Position> everyPosition = TradeMarket.everyPosition(points, positionOf);
             Map<Position, java.util.TreeMap<Double, Double>> bestByAdp =
-                    TradeMarket.bestStillAvailable(points, positionOf);
-            Map<String, Integer> slotOfPlayer = TradeMarket.draftSlotOfPlayer(
-                    LeagueOwners.today(configuration), configuration);
+                    TradeMarket.bestStillAvailable(points, everyPosition);
+            Map<String, Integer> slotOfPlayer = TradeMarket.draftSlotOfPlayer(ownerOf, configuration);
             for(String id : keeperRound.keySet()){
                 double surplus = TradeMarket.keeperPoints(keeperRound, points, bestByAdp,
-                        positionOf, configuration, slotOfPlayer, id);
+                        everyPosition, configuration, slotOfPlayer, id);
                 if(surplus > 0){
                     keeperSurplus.put(nameOf.getOrDefault(id, id), surplus);
                 }
             }
         }
         catch(RuntimeException noKeepers){
-            System.out.println("keeper surplus unavailable; rows will not be marked");
+            // A REPORT WITH NO MARKS IS INDISTINGUISHABLE FROM ONE WITH NO KEEPERS,
+            // and the written file still says the rows that send one are marked.
+            throw new IllegalStateException("keeper surplus could not be priced, so the [KEEPER]"
+                    + " marks would be silently absent from the report", noKeepers);
         }
 
         // the board under the first seed, which is the board the page shows
@@ -240,7 +247,7 @@ public class TradeStability {
     static String keeperWarning(String give, Map<String, Double> surplusByName,
                                 Map<String, String> nameOf){
         for(Map.Entry<String, Double> entry : surplusByName.entrySet()){
-            if(entry.getValue() > 25 && give.contains(entry.getKey())){
+            if(entry.getValue() > TradeMarket.HIS_KEEPER_POINTS && give.contains(entry.getKey())){
                 return "  [KEEPER]";
             }
         }

@@ -283,15 +283,23 @@ public class LeagueConsoleTest {
         FaabBid.Band band = new FaabBid.Band("all", 0, Double.MAX_VALUE,
                 FaabBid.readPrices(Files.readAllLines(prices), "ALL"));
 
-        Matcher row = Pattern.compile("\"worth\":(-?[\\d.]+),\"drop\":\"[^\"]*\","
+        // THE BID IS ON THE FROM-HERE WORTH, not the seventeen-week one: the page
+        // bid on the unscaled number until 2026-09-14 while the report beside it
+        // printed the scaled one (TRAPS #134). Both ship; the bid re-derives
+        // from the second.
+        Matcher row = Pattern.compile("\"worth\":(-?[\\d.]+),\"fromHere\":(-?[\\d.]+),\"drop\":\"[^\"]*\","
                 + "\"bid\":(\\d+),\"win\":([\\d.]+),\"noise\":(true|false)").matcher(page);
         int seen = 0;
         while(row.find()){
             double worth = Double.parseDouble(row.group(1));
-            int bid = Integer.parseInt(row.group(2));
-            assertEquals(FaabBid.bestBid(band, worth, 1.5, left), bid,
-                    "the page bids $" + bid + " for a man it values at " + worth);
-            assertEquals(band.winChance(bid), Double.parseDouble(row.group(3)), 0.005,
+            double fromHere = Double.parseDouble(row.group(2));
+            int bid = Integer.parseInt(row.group(3));
+            assertTrue(fromHere <= worth + 1e-9,
+                    "scaling to the weeks left can only shrink a worth: " + worth + " -> " + fromHere);
+            assertEquals(FaabBid.bestBid(band, fromHere, 1.5, left), bid,
+                    "the page bids $" + bid + " for a man worth " + fromHere + " from here ("
+                            + worth + " over seventeen weeks)");
+            assertEquals(band.winChance(bid), Double.parseDouble(row.group(4)), 0.005,
                     "the chance printed beside a $" + bid + " bid must be the band's own");
             seen++;
         }
@@ -333,7 +341,7 @@ public class LeagueConsoleTest {
                         + " is judged against was measured over " + header.group(1)
                         + "; that is one population's number against another's yardstick");
 
-        Matcher row = Pattern.compile("\"worth\":(-?[\\d.]+),\"drop\":\"[^\"]*\",\"bid\":\\d+,"
+        Matcher row = Pattern.compile("\"worth\":(-?[\\d.]+),\"fromHere\":-?[\\d.]+,\"drop\":\"[^\"]*\",\"bid\":\\d+,"
                 + "\"win\":[\\d.]+,\"noise\":(true|false),\"hole\":(true|false),"
                 + "\"altDrop\":(null|\"[^\"]*\"),\"altWorth\":(null|-?[\\d.]+),"
                 + "\"thenAdd\":(null|\"[^\"]*\"),\"thenDrop\":(null|\"[^\"]*\")").matcher(page);
@@ -670,8 +678,12 @@ public class LeagueConsoleTest {
         List<String> kept = new ArrayList<>();
         double previous = Double.MAX_VALUE;
         int rows = 0;
+        int positive = 0;
         while(row.find()){
             double surplus = row.group(3).equals("null") ? 0 : Double.parseDouble(row.group(3));
+            if(surplus > 0){
+                positive++;
+            }
             assertTrue(surplus <= previous + 1e-9,
                     "the keeper table must be ordered by surplus, best first: " + row.group(1));
             previous = surplus;
@@ -684,6 +696,24 @@ public class LeagueConsoleTest {
                         row.group(1) + " is marked KEEP without a round to keep him at");
             }
             rows++;
+        }
+        // THE LEGAL PAIR, NOT THE TOP TWO NUMBERS. No two KEEP rows at a position
+        // that starts one man, and when two men clear zero, exactly two are marked
+        // - the same pair every trade row on the page is priced on. The old
+        // assertion accepted zero marks and two quarterbacks alike.
+        Matcher keep = Pattern.compile("\\{\"name\":\"([^\"]*)\",\"pos\":\"([^\"]*)\",[^}]*?\"keep\":true")
+                .matcher(board.group(1));
+        List<String> keptPositions = new ArrayList<>();
+        while(keep.find()){
+            keptPositions.add(keep.group(2));
+        }
+        for(String one : List.of("QB", "TE", "DEF")){
+            assertTrue(keptPositions.stream().filter(one::equals).count() <= 1,
+                    "two KEEP rows at " + one + ", a position that starts one man: the panel is marking"
+                            + " the top two numbers, not the pair the trades are priced on");
+        }
+        if(positive >= 2){
+            assertEquals(2, kept.size(), "two men clear zero but the panel marks " + kept.size());
         }
         assertTrue(rows > 0, "the keeper view shipped no men, which would make this vacuous");
         assertTrue(kept.size() <= 2,

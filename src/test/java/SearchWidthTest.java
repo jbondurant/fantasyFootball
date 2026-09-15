@@ -30,7 +30,9 @@ public class SearchWidthTest {
     @Test
     public void bothMainsTakeTheirPoolFromTheOneConstant() throws Exception {
         List<String> literal = new ArrayList<>();
-        for(String name : List.of("LeagueConsole.java", "TradeMarket.java")){
+        // TradeStability was the third main building the same board, and the
+        // first version of this list named two files - so it kept its literal 6
+        for(String name : List.of("LeagueConsole.java", "TradeMarket.java", "TradeStability.java")){
             String source = code(name);
             if(!source.contains("Integer.getInteger(\"pool\", TradeMarket.DEFAULT_POOL)")
                     && !source.contains("Integer.getInteger(\"pool\", DEFAULT_POOL)")){

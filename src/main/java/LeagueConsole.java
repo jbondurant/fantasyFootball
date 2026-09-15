@@ -262,8 +262,15 @@ public class LeagueConsole {
                 curve = StartSit.readCurve(Files.readAllLines(newest));
             }
         }
+        // A MAN ON IR IS NOT A MAN YOU CAN START. Sleeper lists reserve men inside
+        // `players` as well as in `reserve`; four rivals carry one today, and every
+        // roster join in this repo read `players` alone until 2026-09-13.
+        Set<String> reserve = LeagueOwners.reserve(configuration);
         List<StartSit.Man> mine = new ArrayList<>();
         for(String id : rosters.getOrDefault(me, List.of())){
+            if(reserve.contains(id)){
+                continue;
+            }
             Double projected = weekPoints.get(id);
             mine.add(new StartSit.Man(id, nameOf.getOrDefault(id, id), positionOf.get(id),
                     projected == null ? 0 : projected, projected != null));
@@ -344,7 +351,11 @@ public class LeagueConsole {
 
         // ---- HIS ACTUAL FAAB, not a slider. The rosters feed carries what each
         // manager has spent, so "how much is left" is a fact and not a question.
-        int budgetLeft = 100;
+        // The budget itself is a league setting, not a literal; and a roster that
+        // cannot be found is an error, not $100 - a silent default here priced
+        // every bid on the page as though nothing had ever been spent.
+        int budget = configuration.getLeagueJson().getAsJsonObject("settings").get("waiver_budget").getAsInt();
+        Integer found = null;
         for(com.google.gson.JsonElement element : com.google.gson.JsonParser
                 .parseString(configuration.getTodaysRosterWebPageSerious()).getAsJsonArray()){
             com.google.gson.JsonObject roster = element.getAsJsonObject();
@@ -353,13 +364,22 @@ public class LeagueConsole {
             }
             String owner = configuration.getUserIDToDisplayName()
                     .getOrDefault(roster.get("owner_id").getAsString(), "");
-            if(owner.equals(me) && roster.has("settings")){
-                com.google.gson.JsonObject settings = roster.getAsJsonObject("settings");
-                if(settings.has("waiver_budget_used") && !settings.get("waiver_budget_used").isJsonNull()){
-                    budgetLeft = 100 - settings.get("waiver_budget_used").getAsInt();
+            if(owner.equals(me)){
+                int used = 0;
+                if(roster.has("settings")){
+                    com.google.gson.JsonObject settings = roster.getAsJsonObject("settings");
+                    if(settings.has("waiver_budget_used") && !settings.get("waiver_budget_used").isJsonNull()){
+                        used = settings.get("waiver_budget_used").getAsInt();
+                    }
                 }
+                found = budget - used;
             }
         }
+        if(found == null){
+            throw new IllegalStateException("no roster in the feed belongs to '" + me
+                    + "', so the FAAB left is unknown; check -Pme against the users feed");
+        }
+        int budgetLeft = found;
 
         // ---- the wire: what a claim clears at, and every bid it implies
         Path faabReport = FaabBid.newestCurve();
@@ -437,7 +457,13 @@ public class LeagueConsole {
                 continue;                     // not a gain once the plan is paid for
             }
             boolean better = free != swap && altGain > worth + 0.05;
-            int bid = FaabBid.bestBid(allBand, worth, 1.5, budgetLeft);
+            // BID ON WHAT IS LEFT OF THE SEASON. The objective prices a swap over
+            // its whole seventeen-week horizon and TuesdaySwap prints the
+            // weeks-left scaling beside every row; this page bid on the unscaled
+            // number, so a man worth 20 in week 8 drew $3 here against $1 at the
+            // 8.2 the report calls collectable. One function, both callers.
+            double fromHere = TuesdaySwap.fromHere(worth, week);
+            int bid = FaabBid.bestBid(allBand, fromHere, 1.5, budgetLeft);
             // THE WHOLE LADDER, SHIPPED. A row that prints only the cheapest
             // drop invites reading its number as a property of the player -
             // Justin read +4.8 as "Schultz is nearly Fannin" when it is +4.8
@@ -460,13 +486,13 @@ public class LeagueConsole {
             }
             ladder.append("]");
             wireJson.append(wireRows++ == 0 ? "" : ",").append(String.format(
-                    "{\"name\":%s,\"pos\":%s,\"proj\":%s,\"worth\":%s,\"drop\":%s,"
+                    "{\"name\":%s,\"pos\":%s,\"proj\":%s,\"worth\":%s,\"fromHere\":%s,\"drop\":%s,"
                             + "\"bid\":%d,\"win\":%s,\"noise\":%b,\"hole\":%b,"
                             + "\"altDrop\":%s,\"altWorth\":%s,\"thenAdd\":%s,\"thenDrop\":%s,"
                             + "\"ladder\":%s}",
                     quote(swap.addName()),
                     quote(swap.addPosition() == null ? "?" : swap.addPosition().name()),
-                    num(points.getOrDefault(swap.addId(), 0.0)), num(worth),
+                    num(points.getOrDefault(swap.addId(), 0.0)), num(worth), num(fromHere),
                     quote(swap.dropName()), bid, num(allBand.winChance(bid)),
                     worth < swapFloor, hole,
                     better ? quote(free.dropName()) : "null",
@@ -479,13 +505,7 @@ public class LeagueConsole {
 
         // ---- the trades, both sides priced by their own lights
         boolean withKeepers = Boolean.parseBoolean(System.getProperty("keepers", "true"));
-        Map<String, Position> everyPosition = new HashMap<>(positionOf);
-        for(String id : points.keySet()){
-            everyPosition.computeIfAbsent(id, u -> {
-                Player player = Player.getPlayerFromSIDV2(u);
-                return player == null ? null : player.position;
-            });
-        }
+        Map<String, Position> everyPosition = TradeMarket.everyPosition(points, positionOf);
         Map<Position, java.util.TreeMap<Double, Double>> bestByAdp =
                 TradeMarket.bestStillAvailable(points, everyPosition);
         // PRICED OFF THIS SEASON'S DRAFT, NOT LAST SEASON'S.
@@ -504,20 +524,14 @@ public class LeagueConsole {
         // keepers were picked on prices that did not exist.
         // ...with the three-consecutive-year cap, which needs the earlier drafts
         Map<String, NextYearKeepers.Cost> nextYear = NextYearKeepers.forThisLeague(configuration);
-        Map<String, Integer> keeperRound = new HashMap<>();
+        // the rounds, with the undrafted-costs-a-tenth default applied in the one
+        // place all four callers share - this page re-implemented it inline, and
+        // the three terminal tools beside it applied it nowhere
+        Map<String, Integer> keeperRound = NextYearKeepers.roundsForThisLeague(configuration, ownerOf.keySet());
         Map<String, String> keeperRefusal = new HashMap<>();
         for(Map.Entry<String, NextYearKeepers.Cost> entry : nextYear.entrySet()){
-            if(entry.getValue().keepable()){
-                keeperRound.put(entry.getKey(), entry.getValue().round());
-            }
-            else {
+            if(!entry.getValue().keepable()){
                 keeperRefusal.put(entry.getKey(), entry.getValue().refusal());
-            }
-        }
-        // a man picked up off waivers was in no draft; the ruleset prices him at a tenth
-        for(String id : ownerOf.keySet()){
-            if(!nextYear.containsKey(id)){
-                keeperRound.put(id, Keeper.UNDRAFTED_ROUND_COST);
             }
         }
         Map<String, Integer> slotOfPlayer = TradeMarket.draftSlotOfPlayer(ownerOf, configuration);
@@ -923,6 +937,11 @@ public class LeagueConsole {
         // otherwise would overprice a man he cannot actually keep.
         List<String> myMen = new ArrayList<>(rosters.getOrDefault(me, List.of()));
         myMen.sort(Comparator.comparingDouble((String id) -> -surplus.getOrDefault(id, 0.0)));
+        // THE PAIR THE TRADES ARE PRICED ON, not the top two numbers. Marking the
+        // two biggest surpluses ignored the one-starter rule every trade row on
+        // this page applies; it agreed today only because the top two happen to be
+        // an RB and a QB.
+        List<String> keepPair = TradeMarket.bestKeeperPair(myMen, surplus, everyPosition);
         StringBuilder keepersJson = new StringBuilder("[");
         int keeperRows = 0;
         for(String id : myMen){
@@ -936,7 +955,7 @@ public class LeagueConsole {
                     quote(positionOf.get(id) == null ? "?" : positionOf.get(id).name()),
                     round == null ? "null" : String.valueOf(round),
                     worth == null ? "null" : num(worth), num(margin),
-                    keeperRows < 2 && worth != null && worth > 0,
+                    keepPair.contains(id),
                     keeperRefusal.containsKey(id) ? quote(keeperRefusal.get(id)) : "null"));
             keeperRows++;
         }
@@ -1122,10 +1141,10 @@ document.getElementById("doubt-note").innerHTML = doubts.length
 document.getElementById("faabLeft").textContent = "$" + D.budget;
 document.getElementById("faabSub").textContent = "$" + (100 - D.budget) + " of $100 already spent";
 document.getElementById("wireCount").textContent = D.wire.filter(r=>!r.noise).length;
-let a = "<tr><th class=l>Add</th><th class=l>Pos</th><th>Proj</th><th>Worth to you</th>"
+let a = "<tr><th class=l>Add</th><th class=l>Pos</th><th>Proj</th><th>Worth to you</th><th>From here</th>"
   + "<th class=l>Instead of</th><th>Bid</th><th>Chance</th></tr>";
 const ladderRow = (r,i) => {
-  let L = `<tr class=ladder id="lad${i}" hidden><td class=l colspan=7><div class=ladderbox>`
+  let L = `<tr class=ladder id="lad${i}" hidden><td class=l colspan=8><div class=ladderbox>`
     + `<div class=sub style="margin-bottom:8px">Every drop for <b>${r.name}</b> &mdash; the same claim against each man you hold. `
     + `The headline above is one row of this table, not a rating of the player.</div><table class=inner>`;
   r.ladder.forEach(x=>{
@@ -1136,18 +1155,19 @@ const ladderRow = (r,i) => {
 D.wire.forEach((r,i)=>{
   a += `<tr class="${r.noise?"out":""} clickable" data-lad="${i}"><td class=l>${r.name} <span class=caret>&#9656;</span></td><td class=l>${r.pos}</td><td>${r.proj.toFixed(1)}</td>`
     + `<td class="${r.noise?"":"pos"}">${f1(r.worth)}${r.noise?" <span class=tag>inside the noise</span>":""}</td>`
+    + `<td>${f1(r.fromHere)}</td>`
     + `<td class=l>${r.drop}${r.hole&&r.thenAdd?` + add ${r.thenAdd}, drop ${r.thenDrop} <span class=tag>whole plan</span>`:r.hole?" <span class=tag>empties a slot</span>":""}`
     + `${r.altDrop?`<div class=sub>or drop ${r.altDrop}, then add ${r.thenAdd||"a replacement"} and drop ${r.thenDrop||"someone"}: ${f1(r.altWorth)} for the whole plan</div>`:""}</td>`
     + `<td><b>$${r.bid}</b></td><td>${Math.round(r.win*100)}%</td></tr>`;
   a += ladderRow(r,i); });
-if(!D.wire.length){ a += "<tr><td class=l colspan=7>Nothing on the wire improves this roster. Do not claim.</td></tr>"; }
+if(!D.wire.length){ a += "<tr><td class=l colspan=8>Nothing on the wire improves this roster. Do not claim.</td></tr>"; }
 document.getElementById("t-wire").innerHTML = a;
 document.querySelectorAll("#t-wire tr.clickable").forEach(tr=>{ tr.onclick=()=>{
   const box = document.getElementById("lad"+tr.dataset.lad);
   box.hidden = !box.hidden;
   tr.querySelector(".caret").innerHTML = box.hidden ? "&#9656;" : "&#9662;"; }; });
 document.getElementById("add-note").innerHTML =
-  `<b>Worth to you</b> is computed, not asked for. For every free agent the model builds your roster with him and without the man he would displace, values both over ${D.wireScenarios} drawn seasons, and reports the difference &mdash; so the recommendation is the <i>pairing</i>, never the add on its own. <b>Instead of</b> is the cheapest drop that still fills all ten slots. Cutting someone you cannot replace &mdash; your only defence, say &mdash; is not a drop, it is the first half of a plan: your roster is full, so fielding a defence again costs another spot. Those show underneath priced as the WHOLE plan, both adds and both drops, never as the half that looks good on its own. The bid follows from the worth and the <b>$${D.budget} you actually have</b>, read off the rosters feed rather than typed in.<br><br>`
+  `<b>Worth to you</b> is computed, not asked for. For every free agent the model builds your roster with him and without the man he would displace, values both over ${D.wireScenarios} drawn seasons, and reports the difference &mdash; so the recommendation is the <i>pairing</i>, never the add on its own. <b>Instead of</b> is the cheapest drop that still fills all ten slots. Cutting someone you cannot replace &mdash; your only defence, say &mdash; is not a drop, it is the first half of a plan: your roster is full, so fielding a defence again costs another spot. Those show underneath priced as the WHOLE plan, both adds and both drops, never as the half that looks good on its own. <b>From here</b> is that worth scaled to the weeks left in the regular season, and the bid is on THAT: a seventeen-week number bought in week 8 is a price for a season that is half over. The bid follows from the from-here worth and the <b>$${D.budget} you actually have</b>, read off the rosters feed rather than typed in.<br><br>`
   + `A gain under <b>${D.swapFloor.toFixed(1)}</b> points is inside the objective's own seed-to-seed spread (ObjectiveStability), so it is the yardstick moving and not the roster improving &mdash; those rows are greyed and the headline counts only the men above it. That floor was measured over ${D.wireScenarios} drawn seasons, which is why this search runs at ${D.wireScenarios} and not the ${D.scenarios} the rest of the page uses: a noisier number does not get judged against a quieter number's yardstick. This is the same search <code>TuesdaySwap</code> runs in the terminal &mdash; the page calls <code>TuesdaySwap.search</code> itself rather than reimplementing it, over the same forty men per position &mdash; so the two agree to the decimal.`;
 
 const csel = document.getElementById("c");

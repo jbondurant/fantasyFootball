@@ -34,7 +34,7 @@ fails if one does). Fallbacks are in `RUNBOOK.md`.
 ./gradlew run -Pmain=KeeperPlan -Pprojections=borischen   # ...valued on another source's numbers
 ./gradlew run -Pmain=DraftPlanner         # Model A: position per round for rounds 1-7 (nine skill slots, no defence)
 ./gradlew run -Pmain=DraftPlanner -Ptrials=500 -Prisk=0.5   # ...risk-averse, tighter error bars
-./gradlew run -Pmain=TradeFinder          # trades worth proposing
+./gradlew run -Pmain=TradeFinder          # SUPERSEDED by TradeMarket (2024 enumerator; kept only until its tests are judged redundant)
 ./gradlew run -Pmain=SleeperLiveDraft     # older draft-day advice; superseded by Draft2026 above
 ./gradlew run -Pmain=KeeperValuation      # which keepers are worth a slot
 ./gradlew run -Pmain=KeeperEligibility    # who is keeping whom, and for how long

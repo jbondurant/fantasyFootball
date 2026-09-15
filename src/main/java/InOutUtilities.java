@@ -199,8 +199,10 @@ public class InOutUtilities {
         }
         for(File candidate : candidates){
             String name = candidate.getName();
-            if(candidate.isFile() && name.startsWith(base) && name.endsWith(".txt")
-                    && name.length() > base.length() + 4
+            // ANCHORED ON THE DATE. A bare prefix match let "...w1" claim "...w14"'s
+            // file: the stale fallback for week 1 would have served week 14.
+            if(candidate.isFile() && name.startsWith(base)
+                    && name.substring(base.length()).matches("\\d{4}-\\d{2}-\\d{2}\\.txt")
                     && (best == null || name.compareTo(best) > 0)){
                 best = name;
             }

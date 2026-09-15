@@ -61,7 +61,7 @@ public class KeeperDriftCheck {
                 mine.add(entry.getKey());
             }
         }
-        Map<String, Integer> keeperRound = NextYearKeepers.roundsForThisLeague(configuration);
+        Map<String, Integer> keeperRound = NextYearKeepers.roundsForThisLeague(configuration, ownerOf.keySet());
         // THE CURVE MUST KNOW THE WHOLE PLAYER POOL, not just rostered men.
         // Built from `positionOf` - which came from LeagueOwners and therefore
         // holds only the 192 men on rosters - the deepest quarterback it knew
@@ -69,13 +69,7 @@ public class KeeperDriftCheck {
         // replacement was priced at zero, and Bo Nix's keeper surplus came out
         // as his ENTIRE season projection: 347.7 points. An answer that large is
         // not a finding, it is a missing denominator.
-        Map<String, Position> everyPosition = new HashMap<>(positionOf);
-        for(String id : points.keySet()){
-            if(!everyPosition.containsKey(id)){
-                Player player = Player.getPlayerFromSIDV2(id);
-                everyPosition.put(id, player == null ? null : player.position);
-            }
-        }
+        Map<String, Position> everyPosition = TradeMarket.everyPosition(points, positionOf);
         Map<Position, TreeMap<Double, Double>> curve =
                 TradeMarket.bestStillAvailable(points, everyPosition);
         Map<String, Integer> slotOfPlayer = TradeMarket.draftSlotOfPlayer(

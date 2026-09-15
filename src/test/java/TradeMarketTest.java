@@ -198,7 +198,7 @@ public class TradeMarketTest {
     public void theOtherManagerFeelsWhatHeLosesAndNotWhatHeGains(){
         Map<String, Double> surplus = Map.of("hisKeeper", 60.0, "myKeeper", 55.0);
         java.util.function.ToDoubleFunction<List<String>> flatSeason = ids -> ids.size() * 10.0;
-        TradeMarket.Side him = TradeMarket.lossAverseOnKeepers(flatSeason, surplus);
+        TradeMarket.Side him = TradeMarket.lossAverseOnKeepers(flatSeason, surplus, Map.of());
 
         // he gives up his keeper and receives mine: season is a wash, and the
         // keeper he receives buys him nothing while the one he loses costs him all of it
@@ -500,4 +500,27 @@ public class TradeMarketTest {
                 "every rostered man came back at the same slot, which is the bug this replaced");
     }
 
+
+    /**
+     * HIS SIDE IS POSITION-AWARE TOO. ac62628 deleted keeperValue's position-blind
+     * overload and left lossAverseOnKeepers's, so the terminal board went on
+     * charging a rival two quarterback keepers where the page charged one.
+     */
+    @Test
+    public void aRivalWithTwoQuarterbackKeepersIsChargedForTheOneHeCanStart(){
+        Map<String, Double> surplus = Map.of("qbA", 60.0, "qbB", 40.0, "rbC", 30.0);
+        Map<String, Position> positions = Map.of("qbA", Position.QB, "qbB", Position.QB, "rbC", Position.RB);
+        assertEquals(List.of("qbA", "rbC"),
+                TradeMarket.bestKeeperPair(List.of("qbA", "qbB", "rbC"), surplus, positions),
+                "two quarterbacks are one keeper; the pair is the better QB and the back");
+        assertEquals(90.0, TradeMarket.keeperValue(List.of("qbA", "qbB", "rbC"), surplus, positions), 1e-9,
+                "and keeperValue is that pair's sum - one function, one answer");
+        java.util.function.ToDoubleFunction<List<String>> flat = ids -> ids.size() * 10.0;
+        TradeMarket.Side him = TradeMarket.lossAverseOnKeepers(flat, surplus, positions);
+        assertEquals(-20.0, him.gain(List.of("qbA", "qbB", "rbC"), List.of("qbA"), List.of("plain")), 1e-9,
+                "losing the better QB drops the pair 90 -> 70: twenty, not the thirty a position-blind"
+                        + " pair (100 -> 70) charged");
+        assertEquals(0.0, him.gain(List.of("qbA", "qbB", "rbC"), List.of("qbB"), List.of("plain")), 1e-9,
+                "the second quarterback was never in the pair; sending him costs nothing next March");
+    }
 }

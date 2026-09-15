@@ -89,4 +89,60 @@ public class SeasonOutlookTest {
         assertTrue(sell.contains("round 1-3"),
                 "the limit is specifically about the early-round men staying");
     }
+
+    private static com.google.gson.JsonObject row(int roster, int matchup, double points){
+        com.google.gson.JsonObject o = new com.google.gson.JsonObject();
+        o.addProperty("roster_id", roster);
+        o.addProperty("matchup_id", matchup);
+        o.addProperty("points", points);
+        return o;
+    }
+
+    /**
+     * A FINISHED WEEK BANKS TWO RESULTS when the league plays the median game.
+     * 81e616c made every simulated week two results and left the banked loop at
+     * one, so from week 2 every manager would have been seeded with half his
+     * games. Twelve known scores: six head-to-head wins and six median wins.
+     */
+    @Test
+    public void aPlayedWeekBanksTheMedianGameToo(){
+        java.util.Map<Integer, String> managerOf = new java.util.TreeMap<>();
+        java.util.List<com.google.gson.JsonObject> rows = new java.util.ArrayList<>();
+        for(int r = 1; r <= 12; r++){
+            managerOf.put(r, "m" + r);
+            rows.add(row(r, (r + 1) / 2, 100 + r));      // 101..112, pairs (1,2) (3,4) ...
+        }
+        java.util.Map<String, Integer> wins = new java.util.TreeMap<>();
+        java.util.Map<String, Double> scored = SeasonOutlook.bankWeek(rows, managerOf, true, wins);
+        assertEquals(12, wins.values().stream().mapToInt(Integer::intValue).sum(),
+                "six head-to-heads and six median wins in one played week");
+        assertEquals(2, wins.get("m12"), "the top scorer wins his game and beats the median");
+        assertEquals(0, wins.get("m1"), "the bottom scorer loses both");
+        assertEquals(1, wins.get("m7"), "107 loses to 108 head-to-head but beats the 106.5 median");
+        assertEquals(112.0, scored.get("m12"), 1e-9, "and the real points come back to seed the tiebreak");
+
+        java.util.Map<String, Integer> h2h = new java.util.TreeMap<>();
+        SeasonOutlook.bankWeek(rows, managerOf, false, h2h);
+        assertEquals(6, h2h.values().stream().mapToInt(Integer::intValue).sum(),
+                "without the median game a week is six results");
+    }
+
+    /**
+     * THE SPREAD IS MEASURED, NOT TYPED, and it is the within-team number: two
+     * teams at means 100 and 60, each varying by ten, have a residual spread of
+     * sqrt(400 / (4 - 2)) = 14.14 - and a pooled spread that would also count the
+     * forty points between the teams.
+     */
+    @Test
+    public void theSpreadIsTheWithinTeamResidual(){
+        SeasonOutlook.Spread s = SeasonOutlook.residualSpread(java.util.List.of(
+                java.util.List.of(90.0, 110.0), java.util.List.of(50.0, 70.0)));
+        assertEquals(4, s.teamWeeks());
+        assertEquals(Math.sqrt(400.0 / 2), s.value(), 1e-9,
+                "one mean per team-season comes off the degrees of freedom");
+        assertEquals(0.0, SeasonOutlook.residualSpread(java.util.List.of(java.util.List.of(80.0))).value(), 1e-9,
+                "a single week has no residual");
+        assertEquals(14.14, SeasonOutlook.measuredSpread(new SeasonOutlook.Spread(14.14, 4, 1)), 1e-9,
+                "with no -PteamSpread the simulation runs on the measurement");
+    }
 }

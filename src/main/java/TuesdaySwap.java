@@ -194,6 +194,29 @@ public class TuesdaySwap {
     }
 
     /**
+     * WHAT A GAIN IS WORTH FROM HERE.
+     *
+     * The objective prices a roster over the seventeen-week season. With `week`
+     * about to be played, only the weeks from it to the end of the regular season
+     * (14) can still be collected, so a seventeen-week gain is scaled by what is
+     * left. One function for the report and the page: the report printed this
+     * beside every row while the page bid FAAB on the unscaled number, and a man
+     * worth 20 in week 8 drew a $3 bid there against $1 here.
+     *
+     * The regime this assumes is a season feed that carries SEASON TOTALS, so
+     * that a gain over seventeen weeks is scaled by the weeks left. The feed does
+     * update those totals in season - Tuten's keeper surplus rose from 33.8 to
+     * 58.0 the week after his first game - but an updated total is still a
+     * total, not a rest-of-season number, so the scaling stands. If the feed
+     * ever switches to rest-of-season values this becomes a double discount, and
+     * ProjectionDrift is the tool that watches it.
+     */
+    static double fromHere(double gain, int week){
+        int weeksLeft = Math.max(1, 15 - week);   // the regular season runs to week 14
+        return gain * weeksLeft / 17.0;
+    }
+
+    /**
      * The move to make, or null for DO NOTHING - which is the answer whenever
      * the best plan does not clear the floor. Waiting costs nothing and buys a
      * week of information; a move inside the noise costs a roster spot for a
@@ -225,8 +248,11 @@ public class TuesdaySwap {
         List<String> roster = new ArrayList<>();
         Map<String, String> nameOf = new HashMap<>();
         Map<String, Position> positionOf = new HashMap<>();
+        // a man on IR holds no active spot and cannot be the drop; he stays OWNED
+        // (not a free agent) but leaves the roster this search may cut from
+        Set<String> reserve = LeagueOwners.reserve(configuration);
         for(Map.Entry<String, String> entry : ownerOf.entrySet()){
-            if(entry.getValue().equals(me)){
+            if(entry.getValue().equals(me) && !reserve.contains(entry.getKey())){
                 roster.add(entry.getKey());
             }
         }
@@ -289,7 +315,7 @@ public class TuesdaySwap {
         for(Priced row : priced.subList(0, Math.min(8, priced.size()))){
             Swap swap = row.swap();
             out.append(String.format("%-22s %-4s -> drop %-22s %+9.1f %+9.1f%s%n", swap.addName(),
-                    swap.addPosition(), swap.dropName(), row.worth(), row.worth() * weeksLeft / 17.0,
+                    swap.addPosition(), swap.dropName(), row.worth(), fromHere(row.worth(), week),
                     row.hole() ? "   <- and refill the slot" : ""));
         }
         out.append("\n");
@@ -326,12 +352,12 @@ public class TuesdaySwap {
                     + "floor, so it is not a move - it is noise with a transaction attached. Waiting is free and%n"
                     + "buys another week of evidence.%n",
                     priced.isEmpty() ? 0 : priced.get(0).worth(),
-                    priced.isEmpty() ? 0 : priced.get(0).worth() * weeksLeft / 17.0));
+                    priced.isEmpty() ? 0 : fromHere(priced.get(0).worth(), week)));
         }
         else {
             out.append(String.format("CLAIM %s, DROP %s: %+.1f over seventeen weeks, %+.1f from here.%s%n",
                     best.swap().addName(), best.swap().dropName(), best.worth(),
-                    best.worth() * weeksLeft / 17.0,
+                    fromHere(best.worth(), week),
                     best.hole() && best.completion() != null
                             ? String.format(" That empties a slot: the plan includes adding %s and"
                                     + " dropping %s.", best.completion().addName(),

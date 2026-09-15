@@ -68,12 +68,29 @@ public class NextYearKeepers {
         return from(configuration.getTodaysDraftPicks(), consecutiveYears(earlier));
     }
 
-    /** ...as the round each KEEPABLE man would cost, which is what a valuer wants. */
-    static Map<String, Integer> roundsForThisLeague(AAAConfiguration configuration){
+    /**
+     * ...as the round each KEEPABLE man would cost, which is what a valuer wants -
+     * INCLUDING THE MEN WHO WERE IN NO DRAFT.
+     *
+     * A man claimed off waivers has no pick on the board, and the ruleset prices
+     * him at a tenth. Until 2026-09-13 only the console applied that (it
+     * re-implemented the loop inline); TradeMarket, TradeStability and
+     * KeeperDriftCheck took this map as-is and silently gave seven rostered men
+     * no keeper cost at all. The rostered ids come in, the default goes out of
+     * one place, and there is no overload without them.
+     */
+    static Map<String, Integer> roundsForThisLeague(AAAConfiguration configuration,
+                                                    java.util.Collection<String> rostered){
+        Map<String, Cost> priced = forThisLeague(configuration);
         Map<String, Integer> rounds = new HashMap<>();
-        for(Map.Entry<String, Cost> entry : forThisLeague(configuration).entrySet()){
+        for(Map.Entry<String, Cost> entry : priced.entrySet()){
             if(entry.getValue().keepable()){
                 rounds.put(entry.getKey(), entry.getValue().round());
+            }
+        }
+        for(String id : rostered){
+            if(!priced.containsKey(id)){
+                rounds.put(id, undrafted(id, id).round());
             }
         }
         return rounds;

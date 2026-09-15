@@ -1562,3 +1562,81 @@ real every time.
     machine. `time` reporting 12% CPU said "blocked, not computing" from the
     start; two of the three theories ignored it. **When wall time and CPU time
     disagree, measure the box before reading the code.**
+
+129. **"The overload is deleted" was true of one method and said of two.**
+    ac62628's message: *"The overload is deleted rather than fixed, so nothing can
+    reach it again."* It deleted `keeperValue`'s two-argument form. The sibling
+    `lossAverseOnKeepers(season, surplus)` kept its own, `TradeMarket.main` called
+    it, and the terminal board went on charging a rival two quarterback keepers
+    where the page charged one - for five more days, with a test pinning the
+    two-argument call. A claim about a signature is checked by grepping for the
+    signature, not by reading the diff of the method one had in mind.
+
+130. **KEEP marked the top two numbers; the trades were priced on the pair.**
+    The keeper panel set `keep` on the two biggest surpluses regardless of
+    position while every trade row on the same page charged the best LEGAL pair
+    (one starter per QB/TE/DEF). Today the top two are an RB and a QB, so the
+    two rules agreed by luck; the day Tuten is traded the panel would have named
+    Nix + Purdy while the rows charged Nix + the Ravens - the runbook's own
+    sentence, contradicted by the page it describes. `bestKeeperPair` is the one
+    home now and `keeperValue` is its sum; the test asserts no two KEEP rows at a
+    one-starter position and exactly two marks when two men clear zero. The old
+    assertion accepted zero marks and two quarterbacks alike.
+
+131. **A hand-kept file list inside a guard is a sibling that can go unswept.**
+    `SearchWidthTest` named two of the three mains that build the trade board, so
+    `TradeStability` kept its literal pool of 6 while the test written to forbid
+    that passed green. `KeeperBasisTest` named three of four forward-looking
+    tools. `LeagueTransactions.Move` carried adds and drops and not Sleeper's own
+    `roster_ids`, so a trade of FAAB alone had no participants and the log
+    counted 50 of 51 - while `TradeMarket.realisedTrades` said 51 beside it.
+    `mostRecentCached` matched on a bare prefix, so `...w1` claimed `...w14`'s
+    file. Same shape every time: the enumeration is the thing that drifts.
+    `ComponentMapTest` derives its list from the filesystem instead of typing
+    it, and fails when a main appears or disappears without `COMPONENTS.md`
+    changing.
+
+132. **24.9 was typed, called measured, and the wrong statistic.**
+    `SeasonOutlook.measuredSpread()` returned `System.getProperty("teamSpread",
+    "24.9")` under a javadoc saying it was read back from the report that
+    measures it, citing #115. No such report or tool existed; the number came
+    from a scratch script, against the standing rule. It was also the POOLED
+    standard deviation over all team-weeks, which carries the spread between
+    teams, where the simulation draws each team around its own mean. Measured
+    by the tool now, every run, over the same 840 team-weeks in 5 completed
+    seasons the prose quoted: **23.7** within-team, printed with its n. The
+    banked loop in the same file had the sibling fault - 81e616c gave the
+    simulated weeks two results (the median game) and the banked weeks one -
+    and its join read the live league's users through a forever cache. All
+    three moved the odds table at once, together with week 1 being played, and
+    were not decomposed; the per-fix behaviour is pinned by tests on synthetic
+    weeks instead.
+
+133. **A man on injured reserve was active everywhere.**
+    Sleeper lists a reserve man inside `players` as well as in `reserve`. Every
+    roster join in the repo read `players` alone, so four rivals' IR men sat in
+    their lineups, their swap searches and their trade valuations. The policy is
+    stated once in `LeagueOwners`: the lineup and the wire's droppable roster
+    exclude him; ownership keeps him (not a free agent); the trade board keeps
+    him (tradeable, valued on projection). The swap report's best plan moved
+    from +1.2 to +0.7 the same day - the feed moved too, so that is not
+    attributed.
+
+134. **The page bid FAAB on seventeen weeks; the report beside it scaled to
+    what was left.** `TuesdaySwap` printed `worth x weeksLeft/17` beside every
+    row and the console bid on the unscaled `worth`: a man worth 20 in week 8
+    drew a $3 bid on the page against $1 at the 8.2 the report calls
+    collectable, and the gap grows every week. `TuesdaySwap.fromHere` is the one
+    function; the page ships `fromHere` beside `worth` and bids on it. The
+    regime this assumes - a season feed that does not roll after kickoff - is
+    what `ProjectionDrift` is for; if the feed starts rolling this is a double
+    discount and that tool says so.
+
+135. **When the feed moves between before and after, rerun the old code on the
+    new feed.** The page's trade count read 182 on the committed artifact and 98
+    after the fixes, six days and one played week apart. That diff cannot say
+    whether the fixes or the data did it. Stashing the source and regenerating
+    once on today's feed gave 98 with tiers 7/72/19 - identical to the new
+    code's. The fixes moved the page's board by exactly zero, which is what the
+    plan predicted and what only the controlled run could show. A before/after
+    across a moving feed is a story, not a measurement.

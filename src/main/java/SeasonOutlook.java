@@ -8,6 +8,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -31,8 +33,9 @@ import java.util.TreeMap;
  *
  *   - each team's weekly mean is its best legal ten by projection, divided by
  *     nothing - it IS a week's worth
- *   - the spread is MEASURED, not assumed: 24.9 points, the standard deviation
- *     of 840 real team-weeks across five completed seasons of this league
+ *   - the spread is MEASURED, by this tool, every run: the within-team standard
+ *     deviation of every real team-week in the league's completed seasons,
+ *     printed with its n. An earlier version typed 24.9 and called it measured.
  *   - the real remaining schedule is played out, results counted as wins
  *
  * What it deliberately does NOT model: byes, injuries arriving, waiver
@@ -46,15 +49,149 @@ import java.util.TreeMap;
  */
 public class SeasonOutlook {
 
+    /** The spread, measured: its value and the population it came from. */
+    public record Spread(double value, int teamWeeks, int seasons){}
+
     /**
-     * The weekly spread of a real team's score in this league.
+     * The within-team standard deviation of a real team's weekly score, pooled
+     * over every completed season in the league chain.
      *
-     * Measured over every completed season's every scored team-week, because an
-     * assumed number here would drive every probability the tool prints. Read
-     * back from the report that measures it rather than typed - see #115.
+     * WITHIN-TEAM, because that is how the simulation applies it: each team's
+     * week is drawn around ITS OWN mean. The pooled standard deviation over all
+     * team-weeks also carries the spread BETWEEN teams and is the wrong number
+     * by about a point. Until 2026-09-13 this was the typed literal 24.9 under a
+     * comment that said it was read back from a measuring report; no such
+     * report or tool existed, and every probability this prints rested on it.
+     *
+     * Completed seasons never change, so their matchups are cached forever; the
+     * current season is excluded - it is the thing being predicted.
      */
-    static double measuredSpread(){
-        return Double.parseDouble(System.getProperty("teamSpread", "24.9"));
+    static Spread measureSpread(AAAConfiguration configuration){
+        List<List<Double>> teamSeasons = new ArrayList<>();
+        int seasons = 0;
+        String leagueID = configuration.getPreviousLeagueID();
+        int guard = 0;
+        while(leagueID != null && guard++ < 8){
+            JsonObject league = JsonParser.parseString(InOutUtilities.getCachedForever(
+                    "https://api.sleeper.app/v1/league/" + leagueID,
+                    "leagueChain" + leagueID)).getAsJsonObject();
+            int lastWeek = league.getAsJsonObject("settings").get("playoff_week_start").getAsInt() - 1;
+            Map<Integer, List<Double>> byRoster = new TreeMap<>();
+            for(int week = 1; week <= lastWeek; week++){
+                for(JsonElement e : JsonParser.parseString(InOutUtilities.getCachedForever(
+                        "https://api.sleeper.app/v1/league/" + leagueID + "/matchups/" + week,
+                        "sleeperMatchups" + leagueID + "w" + week)).getAsJsonArray()){
+                    JsonObject row = e.getAsJsonObject();
+                    double p = weekPoints(row);
+                    if(p <= 0){
+                        continue;                            // an unplayed week, not a zero
+                    }
+                    byRoster.computeIfAbsent(row.get("roster_id").getAsInt(),
+                            u -> new ArrayList<>()).add(p);
+                }
+            }
+            if(!byRoster.isEmpty()){
+                seasons++;
+                teamSeasons.addAll(byRoster.values());
+            }
+            leagueID = league.has("previous_league_id") && !league.get("previous_league_id").isJsonNull()
+                    ? league.get("previous_league_id").getAsString() : null;
+        }
+        Spread measured = residualSpread(teamSeasons);
+        return new Spread(measured.value(), measured.teamWeeks(), seasons);
+    }
+
+    /**
+     * The arithmetic alone, so a test can pin it: one mean estimated per
+     * team-season, and that many degrees of freedom taken off n.
+     */
+    static Spread residualSpread(Collection<List<Double>> teamSeasons){
+        double ss = 0;
+        int n = 0;
+        int estimated = 0;
+        for(List<Double> weeks : teamSeasons){
+            if(weeks.isEmpty()){
+                continue;
+            }
+            double mean = 0;
+            for(double w : weeks){
+                mean += w;
+            }
+            mean /= weeks.size();
+            for(double w : weeks){
+                ss += (w - mean) * (w - mean);
+                n++;
+            }
+            estimated++;
+        }
+        int dof = n - estimated;
+        return new Spread(dof > 0 ? Math.sqrt(ss / dof) : 0, n, 0);
+    }
+
+    /** The spread the simulation runs on: the measurement, unless -PteamSpread overrides it for a what-if. */
+    static double measuredSpread(Spread measured){
+        String override = System.getProperty("teamSpread");
+        return override == null || override.isBlank() ? measured.value() : Double.parseDouble(override);
+    }
+
+    static String spreadProvenance(Spread measured, double used){
+        String basis = String.format("the within-team standard deviation over %d real team-weeks in %d"
+                + " completed seasons of this league", measured.teamWeeks(), measured.seasons());
+        return Math.abs(used - measured.value()) < 1e-9
+                ? "MEASURED here: " + basis
+                : String.format("OVERRIDDEN by -PteamSpread=%.1f; measured %.1f, %s", used, measured.value(), basis);
+    }
+
+    static double weekPoints(JsonObject row){
+        return row.has("points") && !row.get("points").isJsonNull() ? row.get("points").getAsDouble() : 0;
+    }
+
+    static double median(Collection<Double> values){
+        List<Double> sorted = new ArrayList<>(values);
+        Collections.sort(sorted);
+        int n = sorted.size();
+        return n % 2 == 1 ? sorted.get(n / 2) : (sorted.get(n / 2 - 1) + sorted.get(n / 2)) / 2;
+    }
+
+    /**
+     * Bank one finished week: every head-to-head, and - when the league plays
+     * the median game - every score against the week's median. Returns the
+     * week's scores by manager so the caller can seed the points tiebreak.
+     *
+     * 81e616c gave the SIMULATED weeks two results and left the banked loop at
+     * one. From week 2 the real standings would read 2-0 / 1-1 / 0-2 while every
+     * manager here was seeded with half his games, and by week 7 - the week the
+     * buy/sell rule fires - each total would be missing up to seven median wins.
+     */
+    static Map<String, Double> bankWeek(List<JsonObject> rows, Map<Integer, String> managerOf,
+                                        boolean medianGame, Map<String, Integer> wins){
+        Map<Integer, List<JsonObject>> byMatchup = new TreeMap<>();
+        Map<String, Double> scored = new TreeMap<>();
+        for(JsonObject row : rows){
+            if(row.has("matchup_id") && !row.get("matchup_id").isJsonNull()){
+                byMatchup.computeIfAbsent(row.get("matchup_id").getAsInt(), u -> new ArrayList<>()).add(row);
+            }
+        }
+        for(List<JsonObject> pair : byMatchup.values()){
+            if(pair.size() != 2){
+                continue;
+            }
+            String a = managerOf.getOrDefault(pair.get(0).get("roster_id").getAsInt(), "?");
+            String b = managerOf.getOrDefault(pair.get(1).get("roster_id").getAsInt(), "?");
+            double pa = weekPoints(pair.get(0));
+            double pb = weekPoints(pair.get(1));
+            wins.merge(a, pa > pb ? 1 : 0, Integer::sum);
+            wins.merge(b, pb > pa ? 1 : 0, Integer::sum);
+            scored.put(a, pa);
+            scored.put(b, pb);
+        }
+        if(medianGame && scored.size() > 1){
+            double median = median(scored.values());
+            for(Map.Entry<String, Double> entry : scored.entrySet()){
+                wins.merge(entry.getKey(), entry.getValue() > median ? 1 : 0, Integer::sum);
+            }
+        }
+        return scored;
     }
 
     /** One team's season: who, how strong a week, and how often it makes six. */
@@ -96,12 +233,34 @@ public class SeasonOutlook {
             Player player = Player.getPlayerFromSIDV2(entry.getKey());
             positionOf.put(entry.getKey(), player == null ? null : player.position);
         }
-        Map<Integer, String> managerOf = TradePartners.managersOf(leagueID);
+        // THE SAME ROSTERS THE MEANS COME FROM. TradePartners.managersOf caches a
+        // league's users and rosters forever - right for a finished season, and
+        // for the live one it froze 2026-09-07's copy while `mean` is keyed by
+        // today's names: a rename or an owner change would give a team a silent
+        // 100.0 default and zero banked wins.
+        Map<Integer, String> managerOf = SeasonLedger.managerByRoster(configuration);
 
         Map<String, Double> mean = new TreeMap<>();
         for(Map.Entry<String, List<String>> entry : rosters.entrySet()){
             mean.put(entry.getKey(), weeklyMean(entry.getValue(), points, positionOf, 17));
         }
+
+        for(String name : managerOf.values()){
+            if(!mean.containsKey(name)){
+                throw new IllegalStateException("the roster join names '" + name
+                        + "' but the roster means do not - two reads of the league disagree");
+            }
+        }
+
+        // TWO RESULTS A WEEK, NOT ONE. This league runs league_average_match,
+        // so besides his head-to-head every manager also plays the league MEDIAN
+        // that week. Fourteen weeks are twenty-eight games, and simulating half
+        // of them understates how far the better teams separate: doubling the
+        // sample halves the noise in a win total, which is the whole basis of a
+        // playoff race. The first version played only the head-to-heads; the
+        // second fixed the simulated weeks and not the banked ones.
+        boolean medianGame = league.getAsJsonObject("settings").has("league_average_match")
+                && league.getAsJsonObject("settings").get("league_average_match").getAsInt() == 1;
 
         // the real schedule, and whatever is already banked
         Map<String, Integer> wins = new TreeMap<>();
@@ -110,12 +269,23 @@ public class SeasonOutlook {
         }
         List<int[]> remaining = new ArrayList<>();
         List<Integer> remainingWeek = new ArrayList<>();
+        Map<String, Double> banked = new TreeMap<>();
         for(int week = 1; week <= lastWeek; week++){
-            Map<Integer, List<JsonObject>> byMatchup = new TreeMap<>();
+            List<JsonObject> rows = new ArrayList<>();
             for(JsonElement element : JsonParser.parseString(InOutUtilities.getTodaysWebPage(
                     "https://api.sleeper.app/v1/league/" + leagueID + "/matchups/" + week,
                     "sleeperOutlook" + leagueID + "w" + week)).getAsJsonArray()){
-                JsonObject row = element.getAsJsonObject();
+                rows.add(element.getAsJsonObject());
+            }
+            boolean played = week < thisWeek && rows.stream().anyMatch(r -> weekPoints(r) > 0);
+            if(played){
+                for(Map.Entry<String, Double> entry : bankWeek(rows, managerOf, medianGame, wins).entrySet()){
+                    banked.merge(entry.getKey(), entry.getValue(), Double::sum);
+                }
+                continue;
+            }
+            Map<Integer, List<JsonObject>> byMatchup = new TreeMap<>();
+            for(JsonObject row : rows){
                 if(row.has("matchup_id") && !row.get("matchup_id").isJsonNull()){
                     byMatchup.computeIfAbsent(row.get("matchup_id").getAsInt(),
                             u -> new ArrayList<>()).add(row);
@@ -125,22 +295,14 @@ public class SeasonOutlook {
                 if(pair.size() != 2){
                     continue;
                 }
-                int a = pair.get(0).get("roster_id").getAsInt();
-                int b = pair.get(1).get("roster_id").getAsInt();
-                double pa = pair.get(0).has("points") ? pair.get(0).get("points").getAsDouble() : 0;
-                double pb = pair.get(1).has("points") ? pair.get(1).get("points").getAsDouble() : 0;
-                if(week < thisWeek && (pa > 0 || pb > 0)){
-                    wins.merge(managerOf.getOrDefault(a, "?"), pa > pb ? 1 : 0, Integer::sum);
-                    wins.merge(managerOf.getOrDefault(b, "?"), pb > pa ? 1 : 0, Integer::sum);
-                }
-                else {
-                    remaining.add(new int[]{a, b});
-                    remainingWeek.add(week);
-                }
+                remaining.add(new int[]{pair.get(0).get("roster_id").getAsInt(),
+                        pair.get(1).get("roster_id").getAsInt()});
+                remainingWeek.add(week);
             }
         }
 
-        double spread = measuredSpread();
+        Spread measured = measureSpread(configuration);
+        double spread = measuredSpread(measured);
         Random random = new Random(424_242L);
         Map<String, Integer> madeIt = new TreeMap<>();
         Map<String, Integer> totalWins = new TreeMap<>();
@@ -148,20 +310,12 @@ public class SeasonOutlook {
             madeIt.put(manager, 0);
             totalWins.put(manager, 0);
         }
-        // TWO RESULTS A WEEK, NOT ONE. This league runs league_average_match,
-        // so besides his head-to-head every manager also plays the league MEDIAN
-        // that week. Fourteen weeks are twenty-eight games, and simulating half
-        // of them understates how far the better teams separate: doubling the
-        // sample halves the noise in a win total, which is the whole basis of a
-        // playoff race. The first version played only the head-to-heads.
-        boolean medianGame = league.getAsJsonObject("settings").has("league_average_match")
-                && league.getAsJsonObject("settings").get("league_average_match").getAsInt() == 1;
         Map<Integer, List<int[]>> byWeek = new TreeMap<>();
         for(int i = 0; i < remaining.size(); i++){
             byWeek.computeIfAbsent(remainingWeek.get(i), u -> new ArrayList<>()).add(remaining.get(i));
         }
         for(int sim = 0; sim < sims; sim++){
-            Map<String, Double> season = new HashMap<>();
+            Map<String, Double> season = new HashMap<>(banked);   // the tiebreak starts from real points
             Map<String, Integer> w = new HashMap<>(wins);
             for(Map.Entry<Integer, List<int[]>> week : byWeek.entrySet()){
                 Map<String, Double> scored = new HashMap<>();
@@ -178,11 +332,7 @@ public class SeasonOutlook {
                     scored.put(b, sb);
                 }
                 if(medianGame && scored.size() > 1){
-                    List<Double> sorted = new ArrayList<>(scored.values());
-                    java.util.Collections.sort(sorted);
-                    double median = sorted.size() % 2 == 1
-                            ? sorted.get(sorted.size() / 2)
-                            : (sorted.get(sorted.size() / 2 - 1) + sorted.get(sorted.size() / 2)) / 2;
+                    double median = median(scored.values());
                     for(Map.Entry<String, Double> entry : scored.entrySet()){
                         w.merge(entry.getKey(), entry.getValue() > median ? 1 : 0, Integer::sum);
                     }
@@ -211,13 +361,14 @@ public class SeasonOutlook {
         out.append(DataStamp.line()).append("\n");
         out.append(String.format("SEASON OUTLOOK  %s  after week %d, %d sims%n%n",
                 LocalDate.now(), thisWeek - 1, sims));
+        // two appends, because `+` binds tighter than `?:` and the first version's
+        // spread sentence silently belonged to the no-median branch alone
         out.append(String.format(medianGame
                 ? "Six of twelve make the playoffs; weeks 1-%d decide it, and this league runs a MEDIAN%n"
                         + "game as well, so each week is two results and the season is twice the sample.%n"
-                        + "Each team's weekly score is%n"
-                : "Six of twelve make the playoffs; weeks 1-%d decide it. Each team's weekly score is%n"
-                + "drawn around its best legal ten with a spread of %.1f - MEASURED over 840 real team-weeks%n"
-                + "in five completed seasons of this league, not assumed.%n%n", lastWeek, spread));
+                : "Six of twelve make the playoffs; weeks 1-%d decide it.%n", lastWeek));
+        out.append(String.format("Each team's weekly score is drawn around its best legal ten with a spread of %.1f%n"
+                + "- %s.%n%n", spread, spreadProvenance(measured, spread)));
         out.append(String.format("%-14s %10s %8s %9s%n", "MANAGER", "A WEEK", "WINS", "PLAYOFFS"));
         for(Team team : table){
             out.append(String.format("%-14s %10.1f %8.1f %8.1f%%%s%n", team.manager(),

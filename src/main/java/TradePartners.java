@@ -93,6 +93,9 @@ public class TradePartners {
     /** The roster ids a move touched, on either side. */
     static Set<Integer> participants(LeagueTransactions.Move move){
         Set<Integer> rosters = new TreeSet<>();
+        if(move.rosterIDs() != null){
+            rosters.addAll(move.rosterIDs());      // Sleeper's own list; adds/drops can both be empty
+        }
         if(move.adds() != null){
             rosters.addAll(move.adds().values());
         }

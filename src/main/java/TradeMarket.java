@@ -373,11 +373,6 @@ public class TradeMarket {
      * his own best two, plus nothing at all for what arrives.
      */
     static Side lossAverseOnKeepers(java.util.function.ToDoubleFunction<List<String>> season,
-                                    Map<String, Double> surplus){
-        return lossAverseOnKeepers(season, surplus, Map.of());
-    }
-
-    static Side lossAverseOnKeepers(java.util.function.ToDoubleFunction<List<String>> season,
                                     Map<String, Double> surplus,
                                     Map<String, Position> positionOf){
         return (before, out, in) -> {
@@ -633,13 +628,7 @@ public class TradeMarket {
 
         // WHAT EACH MAN IS WORTH TO KEEP, for every roster - a trade moves keeper
         // value as surely as it moves this season's lineup
-        Map<String, Position> everyPosition = new HashMap<>(positionOf);
-        for(String id : points.keySet()){
-            everyPosition.computeIfAbsent(id, u -> {
-                Player player = Player.getPlayerFromSIDV2(u);
-                return player == null ? null : player.position;
-            });
-        }
+        Map<String, Position> everyPosition = everyPosition(points, positionOf);
         Map<Position, java.util.TreeMap<Double, Double>> bestByAdp =
                 bestStillAvailable(points, everyPosition);
         // PRICED OFF THIS SEASON'S DRAFT, like the console. KeeperChooser reads
@@ -657,7 +646,7 @@ public class TradeMarket {
         // undrafted default of a tenth. LeagueConsole was fixed and this was
         // not, which is how the page and the terminal tool came to disagree
         // about the same roster on the same afternoon.
-        Map<String, Integer> keeperRound = NextYearKeepers.roundsForThisLeague(configuration);
+        Map<String, Integer> keeperRound = NextYearKeepers.roundsForThisLeague(configuration, ownerOf.keySet());
         Map<String, Integer> slotOfPlayer = draftSlotOfPlayer(ownerOf, configuration);
         Map<String, Double> surplus = new HashMap<>();
         for(String id : keeperRound.keySet()){
@@ -669,7 +658,11 @@ public class TradeMarket {
                 ids -> value.of(ids) + keeperValue(ids, surplus, everyPosition);
         java.util.function.ToDoubleFunction<List<String>> scorer = withKeepers ? both : season;
         Side mySide = scoring(scorer);
-        Side theirSide = withKeepers ? lossAverseOnKeepers(season, surplus) : scoring(season);
+        // POSITION-AWARE ON HIS SIDE TOO. ac62628 said the position-blind overload
+        // was deleted; it deleted keeperValue's and left this one, so the terminal
+        // board went on charging a rival two quarterback keepers where the page
+        // charged one. The overload is gone now, so the compiler is the reviewer.
+        Side theirSide = withKeepers ? lossAverseOnKeepers(season, surplus, everyPosition) : scoring(season);
 
         StringBuilder out = new StringBuilder();
         out.append(String.format("TRADE MARKET  %s  (%s)%n", LocalDate.now(), me));
@@ -1115,15 +1108,39 @@ public class TradeMarket {
      */
     static double keeperValue(List<String> roster, Map<String, Double> surplus,
                               Map<String, Position> positionOf){
+        double total = 0;
+        for(String id : bestKeeperPair(roster, surplus, positionOf)){
+            total += surplus.getOrDefault(id, 0.0);
+        }
+        return total;
+    }
+
+    /**
+     * THE PAIR THE VALUE IS THE SUM OF - so the page can mark the two men it
+     * actually prices.
+     *
+     * The console marked KEEP on the top two surpluses regardless of position
+     * while every trade row on the same page charged the legal pair. Today the
+     * top two are an RB and a QB, so nothing showed; the day Tuten is traded the
+     * panel would have named Nix + Purdy while the rows charged Nix + the Ravens
+     * - the runbook's own sentence, contradicted by the page it describes.
+     * Zero, one or two ids; nobody with a surplus at or below zero is a keeper.
+     */
+    static List<String> bestKeeperPair(List<String> roster, Map<String, Double> surplus,
+                                       Map<String, Position> positionOf){
         List<String> men = new ArrayList<>(roster);
         men.sort(Comparator.comparingDouble((String id) -> -surplus.getOrDefault(id, 0.0)));
-        double best = 0;
+        List<String> best = List.of();
+        double bestValue = 0;
         for(int i = 0; i < men.size(); i++){
             double one = surplus.getOrDefault(men.get(i), 0.0);
             if(one <= 0){
                 break;                       // sorted, so nothing later helps
             }
-            best = Math.max(best, one);      // keeping just the one is always legal
+            if(one > bestValue){             // keeping just the one is always legal
+                best = List.of(men.get(i));
+                bestValue = one;
+            }
             Position first = positionOf.get(men.get(i));
             for(int j = i + 1; j < men.size(); j++){
                 double two = surplus.getOrDefault(men.get(j), 0.0);
@@ -1134,11 +1151,35 @@ public class TradeMarket {
                 if(first != null && first == second && ONE_STARTER.contains(first)){
                     continue;                // two at a one-starter slot; one would sit
                 }
-                best = Math.max(best, one + two);
+                if(one + two > bestValue){
+                    best = List.of(men.get(i), men.get(j));
+                    bestValue = one + two;
+                }
                 break;                       // the next best legal partner is the best one
             }
         }
         return best;
+    }
+
+    /**
+     * Every projected man's position, not just the rostered men's.
+     *
+     * The keeper replacement curve asks for the best man at a position still on
+     * the board at pick N. Built from the 192 rostered men it ends at the deepest
+     * rostered quarterback, and a keeper priced past that reads his whole
+     * projection as surplus - Bo Nix at 347.7. Three callers each carried this
+     * loop; TradeStability did not, and stayed wrong. One home.
+     */
+    static Map<String, Position> everyPosition(Map<String, Double> points,
+                                               Map<String, Position> positionOf){
+        Map<String, Position> every = new HashMap<>(positionOf);
+        for(String id : points.keySet()){
+            every.computeIfAbsent(id, u -> {
+                Player player = Player.getPlayerFromSIDV2(u);
+                return player == null ? null : player.position;
+            });
+        }
+        return every;
     }
 
     /**

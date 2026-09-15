@@ -29,6 +29,20 @@ test {
     useJUnitPlatform {
         excludeTags 'smoke'
     }
+    // THE LOG MUST CARRY THE COUNT. The RUNBOOK tells Justin to read the test
+    // count and "0 skipped" out of check-wire.log, and until 2026-09-14 the test
+    // task logged neither - only smokeTest did - so the instruction could not be
+    // followed and "692 tests" was read off the XML by hand. A skip is a test
+    // that is not evidence, which is why it is logged by name.
+    testLogging {
+        events 'skipped', 'failed'
+        exceptionFormat 'full'
+    }
+    afterSuite { desc, result ->
+        if(desc.parent == null){
+            println "TESTS: ${result.testCount} run, ${result.failedTestCount} failed, ${result.skippedTestCount} skipped (${result.resultType})"
+        }
+    }
     // THE SUITE SEES THE LEAGUE AS IT STOOD BEFORE THE 2026 DRAFT. Sleeper
     // rewrites league state after a draft (every roster's keepers field went
     // from two to zero on 2026-09-02) and four tests written against the
@@ -106,13 +120,13 @@ tasks.register('smokeTest', Test) {
 }
 
 // Every entry point is a plain `main`, and they all read/write their day-cached
-// API responses from the working directory. `./gradlew run -Pmain=TradeFinder`
+// API responses from the working directory. `./gradlew run -Pmain=LeagueConsole`
 // keeps those files in the project root instead of scattering them.
 tasks.register('run', JavaExec) {
     group = 'application'
-    description = 'Runs a main class, e.g. ./gradlew run -Pmain=TradeFinder'
+    description = 'Runs a main class, e.g. ./gradlew run -Pmain=LeagueConsole'
     classpath = sourceSets.main.runtimeClasspath
-    mainClass = project.findProperty('main') ?: 'TradeFinder'
+    mainClass = project.findProperty('main') ?: 'LeagueConsole'   // the page; TradeFinder is the 2024 enumerator
     workingDir = project.projectDir
     standardInput = System.in
 

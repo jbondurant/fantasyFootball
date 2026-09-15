@@ -179,9 +179,10 @@ public class StartSit {
 
         Map<String, Double> projected = LeagueWeek.projected(season, week);
         Map<String, String> ownerOf = LeagueOwners.today(configuration);
+        java.util.Set<String> reserve = LeagueOwners.reserve(configuration);   // IR cannot start
         List<Man> mine = new ArrayList<>();
         for(Map.Entry<String, String> entry : ownerOf.entrySet()){
-            if(!entry.getValue().equals(me)){
+            if(!entry.getValue().equals(me) || reserve.contains(entry.getKey())){
                 continue;
             }
             Player player = Player.getPlayerFromSIDV2(entry.getKey());
