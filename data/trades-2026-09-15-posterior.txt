@@ -1,0 +1,63 @@
+TRADE MARKET  2026-09-15  (justinb314; projections: posterior)
+Every size-balanced swap with all eleven rivals, both rosters priced on the same
+weekly-starter objective (240 drawn seasons). Only trades BOTH sides gain from are listed:
+an offer the other manager loses on is an offer he declines.
+THE TWO SIDES ARE PRICED DIFFERENTLY, on purpose. YOUR value is the season PLUS the best two
+keeper surpluses on your roster (a surplus being what a man is worth beyond the pick you spend to
+keep him, measured at HIS OWN position). HIS is LOSS-AVERSE on keepers: he takes no credit for one
+he receives and feels every point of one he gives up, which is how people here actually behave.
+So asking for another manager's keeper is HARD - the ask is priced at what it costs him - and
+paying anybody IN keepers buys you nothing. -Pkeepers=false prices you the same way he is.
+
+50976 swaps searched, 204 good for both sides, 172 of those also good for 2026.
+A trade must stand up WITHOUT the keeper value as well - the plan is to win 2026, and
+keeper value is a tiebreak on a deal that already helps now, not a reason to get worse.
+32 offers were dropped for failing that. -PsellMode=true to see them.
+
+YOU GIVE                     YOU GET                          you     him  season   SIMPLE     ADP g/g   WITH / HOW IT READS
+Bo Nix + Malik Nabers + Rhamondre Stevenson Malik Willis + Christian Watson + Garrett Wilson   +24.6    +8.3   +24.6    +34.2    29/47      KevinDA - reads even on draft position
+Bo Nix + Mike Evans + Cam Skattebo Kyler Murray + De'Von Achane + Garrett Wilson   +22.9    +0.3   +22.9    +23.5    36/13      KevinDA - reads even on draft position
+Bo Nix + Derrick Henry + Rhamondre Stevenson Kyler Murray + Christian McCaffrey + De'Von Achane   +22.4    +0.5   +22.4    +12.9    15/5       KevinDA - reads even on draft position
+Bo Nix + Malik Nabers + Cam Skattebo Kyler Murray + De'Von Achane + Garrett Wilson   +22.4    +1.9   +22.4    +23.3    29/13      KevinDA - reads even on draft position
+Bo Nix + Mike Evans + Rhamondre Stevenson Malik Willis + Christian Watson + Garrett Wilson   +21.6    +7.4   +21.6    +34.4    63/47      KevinDA - reads even on draft position
+Bo Nix + Cam Skattebo        Malik Willis + De'Von Achane   +19.6    +4.4   +19.6    +31.3    36/13      KevinDA - reads even on draft position
+Bo Nix + Cam Skattebo        De'Von Achane                  +19.6    +4.4   +19.6    +31.3    36/13      KevinDA - reads even on draft position
+Mike Evans + Rhamondre Stevenson Ja'Marr Chase                  +18.9   +20.1   +18.9    +26.7    63/4       Renteez - you are asking for the earlier pick - he will feel that
+Bo Nix + Rhamondre Stevenson Kyler Murray + Garrett Wilson   +18.6   +11.1   +18.6    +21.9    70/47      KevinDA - reads even on draft position
+Bo Nix + Cam Skattebo + Rhamondre Stevenson Kyler Murray + Malik Willis + Christian McCaffrey   +18.6    +9.6   +18.6    +40.3    36/5       KevinDA - you are asking for the earlier pick - he will feel that
+Brock Purdy + Malik Nabers   Trevor Lawrence + Drake London   +18.4    +3.2   +11.6     +3.4    29/21      itsabust  (asking for a man worth keeping) - reads even on draft position
+Malik Nabers + Rhamondre Stevenson Ja'Marr Chase                  +17.3   +17.2   +17.3    +26.5    29/4       Renteez - you are asking for the earlier pick - he will feel that
+
+WHAT YOUR SURPLUS IS WORTH - how many rivals could offer the same thing:
+  QB   you hold 2, start 1;  7 of 11 rivals also carry a spare -> INVENTORY, not a chip - the market is flooded
+  RB   you hold 5, start 2;  11 of 11 rivals also carry a spare -> INVENTORY, not a chip - the market is flooded
+  WR   you hold 6, start 3;  11 of 11 rivals also carry a spare -> INVENTORY, not a chip - the market is flooded
+  TE   you hold 2, start 1;  8 of 11 rivals also carry a spare -> INVENTORY, not a chip - the market is flooded
+  DEF  you hold 1, start 1;  0 of 11 rivals also carry a spare -> nothing to sell
+
+(The chain below is not filtered for 2026 - it is the ceiling of what the board
+offers, not a plan. Read the table above for what to actually send.)
+
+TRADING POWER - trade after trade, each re-searched on the board the last one left.
+Only trades worth more than 6.8 to you are taken: that is the objective's own
+seed-to-seed spread, so anything smaller is the yardstick moving and not the roster.
+
+   1. Bo Nix + Malik Nabers + Rhamondre Stevenson for Malik Willis + Christian Watson + Garrett Wilson   +24.6  (him   +8.3)  running   +24.6
+   2. Mike Evans + Jakobi Meyers         for Matthew Stafford + CeeDee Lamb       +23.7  (him   +8.4)  running   +48.3
+
+  2 trades, +48.3 to you, +16.8 handed to the men opposite to make them take it.
+  Still going at 2 and stopped by -PchainDepth, not by the board. Raise it.
+  The first trade alone was +24.6, so the chain is worth 2.0x a single one -
+  which is what one-step searching leaves behind.
+
+  AND THE ANSWER TO 'CAN I JUST KEEP TRADING?' - no. Ignoring the floor entirely,
+  the chain runs 2 trades and +48.3, but everything past the 2 above is smaller than the
+  yardstick's own noise, and it starts churning: it reacquires men it gave away earlier.
+  Every trade has to improve BOTH rosters, so the league's total value only rises and is
+  bounded by the best possible allocation of a fixed set of players. It must stop, and it
+  does. Local maxima are NOT the problem here; the floor is.
+
+WHAT THIS CANNOT TELL YOU. Sleeper records only COMPLETED trades - 51 across five
+seasons of this league, and not one refusal - so there is no way to fit what a manager
+will ACCEPT. 'His gain' is the honest stand-in: a trade that clearly helps him is one he
+is likelier to take. Judge the offer by that column and by what you know about him.

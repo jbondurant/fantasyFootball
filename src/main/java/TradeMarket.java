@@ -37,7 +37,7 @@ import java.util.TreeMap;
  * of politeness, but because an offer the other manager loses on is an offer he
  * declines, and a list of those is a list of nothing.
  *
- *   ./gradlew run -Pmain=TradeMarket [-Pme=<name>] [-PchainDepth=2] [-Ptop=12]
+ *   ./gradlew run -Pmain=TradeMarket [-Pme=<name>] [-PchainDepth=2] [-Ptop=12] [-Pprojections=posterior]
  *                                    [-Pscenarios=240] [-Ppool=8]
  *
  * WHAT IT DOES NOT DO, and cannot. Justin asked for a cost on unenticing offers -
@@ -608,7 +608,12 @@ public class TradeMarket {
         String me = System.getProperty("me", configuration.getUserIDToDisplayName()
                 .getOrDefault(configuration.getMyID(), configuration.getMyID()));
 
-        Map<String, Double> points = ProjectionSources.resolve("sleeper");
+        // -Pprojections=posterior prices every man on Sleeper's number moved by the
+        // weeks already played at the measured rate (InSeasonPosterior); the
+        // default is Sleeper's season feed as it stands, which does not move on
+        // results. Run both and read the difference.
+        String source = System.getProperty("projections", "sleeper");
+        Map<String, Double> points = ProjectionSources.resolve(source);
         WeeklyStarterValue value = WeeklyStarterValue.forCurrentBoard(configuration, points, scenarios, 424_242L);
         boolean withKeepers = Boolean.parseBoolean(System.getProperty("keepers", "true"));
         Map<String, String> ownerOf = LeagueOwners.today(configuration);
@@ -665,7 +670,7 @@ public class TradeMarket {
         Side theirSide = withKeepers ? lossAverseOnKeepers(season, surplus, everyPosition) : scoring(season);
 
         StringBuilder out = new StringBuilder();
-        out.append(String.format("TRADE MARKET  %s  (%s)%n", LocalDate.now(), me));
+        out.append(String.format("TRADE MARKET  %s  (%s; projections: %s)%n", LocalDate.now(), me, source));
         out.append(String.format("Every size-balanced swap with all eleven rivals, both rosters priced on the same%n"
                 + "weekly-starter objective (%d drawn seasons). Only trades BOTH sides gain from are listed:%n"
                 + "an offer the other manager loses on is an offer he declines.%n", scenarios));
@@ -801,7 +806,8 @@ public class TradeMarket {
         out.append("will ACCEPT. 'His gain' is the honest stand-in: a trade that clearly helps him is one he\n");
         out.append("is likelier to take. Judge the offer by that column and by what you know about him.\n");
         System.out.print(out);
-        Path target = Path.of("data", "trades-" + LocalDate.now() + ".txt");
+        Path target = Path.of("data", "trades-" + LocalDate.now()
+                + (source.equals("sleeper") ? "" : "-" + source.replace(':', '_').replace(',', '_')) + ".txt");
         Files.writeString(target, out.toString(), StandardCharsets.UTF_8);
         System.out.println("written to " + target);
     }

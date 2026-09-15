@@ -582,7 +582,7 @@ chain re-searches unsorted rosters after step one, so no shipped chain ever move
 acquired man. `TradeFinder` — the legacy enumerator on `ScoredRoster` — is still the
 build's default main.
 
-**Fixes** (12 confirmed):
+**Fixes** (12 confirmed, plus 2 found in season):
 
 1. [high/small] Delete the two-arg `lossAverseOnKeepers`; pass `everyPosition` at `TradeMarket:672` (= keeper fix 1).
 2. [medium/trivial] `TradeStability` pool → `DEFAULT_POOL`; `SearchWidthTest` lists it (= keeper fix 3).
@@ -597,6 +597,7 @@ build's default main.
 11. [medium/medium] Carry the forced cut on the `Trade` record; one `TradeMarket.after(roster, trade, side)` for every consumer — `TradeMarket:495,509`, `LeagueConsole:681`, `TradeStability:170`.
 12. [low] Stale "size-balanced" prose; the unfloored-chain paragraph; `realisedTrades`/`outsideOption` dead; `KeeperBasisTest:105` reads raw source; `TradeStabilityTest:68` asserts at the rounding bound.
 13. [low/trivial] `build.gradle:115` default main → `LeagueConsole`; README line 37.
+14. [high/small] (found 2026-09-15) The board prices a man on his projection whatever his injury tag: on `-Pprojections=posterior` its top rows ask KevinDA for Kyler Murray a day after his concussion, because a 0.6-point game reads as a bad week. Read `SleeperProjections.injuryStatusOf` for every man in a row and mark Out/IR/Doubtful in HOW IT READS, on both pricings; `WeekReaction` already overrides its verdict with HURT.
 
 **Improvements.** (G1/G3) one row builder shared by page and terminal board. (upkeep/G1) fold `TradeStability` into the console's per-trade error bars, or make it read the shipped rows. (G3) print the rival's per-seed spread. (G2) pin the RUNBOOK's "What never to trade" paragraph to the page's KEEP rows. (G1) after the re-sort, re-measure reach and decide `chainPool` on a measurement.
 
