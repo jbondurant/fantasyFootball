@@ -107,15 +107,22 @@ public class LeagueActuals {
      * club's whole offence and would otherwise be scored as if they were a man.
      */
     public static Map<String, Double> leagueWeeklyPoints(String season, int week){
+        return leagueWeeklyPoints(WeeklyActuals.raw(season, week));
+    }
+
+    /** The same scoring over a week feed's body - the live week's partial read comes through here too. */
+    public static Map<String, Double> leagueWeeklyPoints(String body){
         LeagueScoringSettings scoring = leagueScoring();
-        JsonObject rows = JsonParser.parseString(WeeklyActuals.raw(season, week))
-                .getAsJsonObject();
+        JsonObject rows = JsonParser.parseString(body).getAsJsonObject();
         Map<String, Double> points = new HashMap<>();
         for(Map.Entry<String, JsonElement> entry : rows.entrySet()){
             if(!entry.getValue().isJsonObject()){
                 continue;
             }
             JsonObject stats = entry.getValue().getAsJsonObject();
+            if(entry.getKey().startsWith("TEAM_")){
+                continue;   // a club's aggregate line, never a man and never on a roster
+            }
             // Absent pts_half_ppr means Sleeper scored him nothing at all - an
             // inactive, or a man with only snap counts. The old path skipped
             // those rows, and "no entry" is what the lineup filler reads as
@@ -233,6 +240,11 @@ public class LeagueActuals {
      * week 5, and those are team lines rather than defences. A defence id is
      * the bare two- or three-letter abbreviation.
      */
+    /** A skill player's id: not a defence, not a club aggregate. What a count of "men" counts. */
+    public static boolean isMan(String sleeperID){
+        return sleeperID != null && !isDefence(sleeperID) && !sleeperID.startsWith("TEAM_");
+    }
+
     public static boolean isDefence(String sleeperID){
         return sleeperID != null && sleeperID.matches("[A-Z]{2,3}");
     }

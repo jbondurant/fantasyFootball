@@ -1640,3 +1640,65 @@ real every time.
     code's. The fixes moved the page's board by exactly zero, which is what the
     plan predicted and what only the controlled run could show. A before/after
     across a moving feed is a story, not a measurement.
+
+136. **"Sleeper's season projections become rest-of-season in season" was a
+    sentence, not a measurement - and the repo held both sides of it.**
+    `TuesdaySwap`'s header asserted the roll; #134 scaled the FAAB horizon on the
+    opposite assumption; `ProjectionDrift` was written on 2026-09-07 to settle
+    it after real games and had not been run since. Run on 2026-09-14 with the
+    sixteenth game of week one in progress, three tools read the same daily caches
+    and agree: `ProjectionDrift` 8 of 586 men moved 09-11 to 09-14, biggest A.J.
+    Brown; `MarketMovers` five drafted men over three points; `WeekReaction` six
+    of 186 rostered skill men - every one on an injury tag or a news item (A.J.
+    Brown to IR -67.7, Bowers Out -22.0, Jeanty cleared +17.3) and not one on a
+    box score: Swift's 31.9, Caleb Williams's 41.3 and Coker's 29.8 all read
+    +0.0 while Sleeper restamped every record in the feed that morning (a 03:00
+    stamp, before Tuesday's refresh - rerun before treating it as a property).
+    So the trade board and the wire had not seen week one at all, and a "sell
+    high" read off them is a read of August. `WeekReaction` prints the count in its
+    header every run; the day the numbers start rolling, that line changes
+    first. The claim was cheap to test, the tool to test it existed, and it had
+    been assumed for a week in one file and denied in another.
+
+137. **A week's projection fetched after the games is not what was projected.**
+    `WeeklyFeedAudit` on 2026-09-14: between the last read of the week-1 feed
+    before kickoff (09-08) and the read after fifteen games (09-14), 81 of 809
+    shared rows moved by a league point or more and 103 rows appeared or
+    vanished - six days of news and whatever Sleeper revises once a game is
+    in. Nothing on disk separates the two. `LeagueWeek` freezes a
+    finished week's projection from whatever read it gets first, and the first
+    read after Sleeper moves to week 2 is a post-game one; `WeekReaction`'s
+    "wk-pr" column for week 1 came from the 09-14 read for the same reason. The
+    pre-kickoff number is the projection; the fix is to freeze the finished
+    week from the newest live read dated before its first game, which needs
+    the week's kickoff date and is in Batch 2 (B2-7). Until then a "projected
+    vs actual" for a finished week is a projected-after-the-fact vs actual for
+    a tenth of the men.
+
+138. **The season feed's defence is a four-category stub, and every tool that
+    prices a defence from it is a quarter low.** `WeeklyFeedAudit` found every
+    one of 32 defences summing to 1.31x its season number and, on 2026-09-14,
+    stopped at "they disagree". The refuters read the rows: the season DEF
+    line carries sacks, interceptions, fumble recoveries and blocked kicks, and
+    its pts_half_ppr equals exactly what the league pays for those four; the
+    weekly DEF lines add defensive touchdowns, forced fumbles, safeties and the
+    points-allowed tiers, and match league scoring within 0.07. So the season
+    feed's defence is about 25 points a season low under this league's rules,
+    uniformly, wherever the season feed prices one - the trade board, the wire,
+    the outlook - while the weekly feed and the actuals are complete. The
+    audit now prints the two category sets from the data. Fix: price a defence
+    from the sum of its weekly rows (A11), and never explain a ratio with a
+    sentence when the keys of the two rows can be diffed.
+
+139. **An archived source that is Sleeper's number for the men it did not
+    cover.** `ProjectionSources.resolve` builds espn, cbs and borischen by
+    merging the source's men over Sleeper's whole map, and `AdpSnapshot`
+    archives that merged map. So the archived espn column is Sleeper's
+    number for every man ESPN did not project, and every defence in every
+    column is Sleeper's. `ProjectionShootout`'s first draft paired those rows
+    against Sleeper and counted them as ties - 17 of borischen's 56 backs -
+    which shrinks every difference toward zero and inflates n. The tool now
+    drops a man from a source's row when his archived value equals Sleeper's
+    and prints the count; DEF is not compared. The archive should keep each
+    source's own rows and the fill-in as a flag (B2-1). A merged map is a
+    convenience for a planner and a lie for a comparison.

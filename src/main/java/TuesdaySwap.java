@@ -33,11 +33,15 @@ import java.util.Set;
  *
  * TWO HONEST LIMITS, printed with the answer rather than buried.
  *
- * The projections are Sleeper's SEASON numbers, which in-season become
- * rest-of-season - that is what makes them the right feed for "is this man worth
- * having from here", and it also means the objective's seventeen-week framing
- * is now a seventeen-week-equivalent unit rather than a calendar. The report
- * scales the headline to the weeks that are actually left and says so.
+ * The projections are Sleeper's SEASON numbers. This header used to say they
+ * "in-season become rest-of-season"; that was a sentence, not a measurement,
+ * and the measurement went the other way: on 2026-09-14, after fifteen of week
+ * one's sixteen games, not one of 186 rostered skill men's season numbers had
+ * moved on a box score (six moved, every one on an injury tag or a news item -
+ * `WeekReaction` counts this every run, `MarketMovers` independently). So the
+ * feed is a preseason number that moves on news, the objective's seventeen-week
+ * framing is a unit rather than a calendar, and the report scales the headline
+ * to the weeks actually left and says so (TRAPS #134, #136).
  *
  * And the noise floor is the objective's own: `ObjectiveStability` measured the
  * worst seed-to-seed spread of a man's marginal at 6.8 points, so a swap worth

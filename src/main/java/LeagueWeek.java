@@ -71,8 +71,12 @@ public class LeagueWeek {
      */
     public static Map<String, Double> projected(String season, int week){
         String url = "https://api.sleeper.app/v1/projections/nfl/regular/" + season + "/" + week;
-        String body = feed(url, "sleeperWeekProjection" + season + "w" + week,
-                "sleeperLiveProjection" + season + "w" + week, week);
+        return projectedFrom(feed(url, "sleeperWeekProjection" + season + "w" + week,
+                "sleeperLiveProjection" + season + "w" + week, week));
+    }
+
+    /** The same league scoring over any read of a week's projection feed - a dated cache file, or today's. */
+    static Map<String, Double> projectedFrom(String body){
         LeagueScoringSettings scoring = SleeperLeague.getSeriousLeague().league.leagueScoringSettings;
         Map<String, Double> points = new HashMap<>();
         for(Map.Entry<String, JsonElement> entry : JsonParser.parseString(body).getAsJsonObject().entrySet()){
@@ -109,6 +113,35 @@ public class LeagueWeek {
         return LeagueActuals.weeklyPoints(season, week);
     }
 
+    /**
+     * What every man has scored in a week so far, league-scored, whether or not
+     * the week is over. A finished week is {@link #actual}; the live week is the
+     * day's read of the stats feed - a PARTIAL week, absent men unplayed rather
+     * than scoreless, which the caller must say in its header. Same cache
+     * policy as every other feed here: the live name is dated, the finished
+     * name is the one {@link WeeklyActuals} keeps forever.
+     */
+    public static Map<String, Double> actualSoFar(String season, int week){
+        if(finished(week)){
+            return actual(season, week);
+        }
+        return LeagueActuals.leagueWeeklyPoints(actualsBody(season, week));
+    }
+
+    /**
+     * The league's matchups for a week - every roster, its started ten and the
+     * points the league recorded - through the same policy: frozen once the
+     * week is over (the name {@code LineupPromotion} keeps), the day's read
+     * while it is live. Reading a live week through the forever cache would
+     * freeze Sunday-afternoon scores into the record, which is the trap this
+     * class exists to close.
+     */
+    public static String matchups(String leagueID, int week){
+        String url = "https://api.sleeper.app/v1/league/" + leagueID + "/matchups/" + week;
+        return feed(url, "sleeperMatchups" + leagueID + "w" + week,
+                "sleeperLiveMatchups" + leagueID + "w" + week, week);
+    }
+
     /** Player ids on somebody's roster right now. */
     public static Set<String> rostered(AAAConfiguration configuration){
         Set<String> owned = new HashSet<>();
@@ -131,5 +164,17 @@ public class LeagueWeek {
         Set<String> free = new HashSet<>(candidates);
         free.removeAll(owned);
         return free;
+    }
+
+    /**
+     * The raw stats feed of a week under the same policy: frozen once the week
+     * is over (the name {@link WeeklyActuals} keeps), the day's read while it
+     * is live. For readers that need the stat line itself - usage, snaps -
+     * and not only the score.
+     */
+    public static String actualsBody(String season, int week){
+        String url = "https://api.sleeper.app/v1/stats/nfl/regular/" + season + "/" + week;
+        return feed(url, "sleeperWeekActuals" + season + "w" + week,
+                "sleeperLiveActuals" + season + "w" + week, week);
     }
 }

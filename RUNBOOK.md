@@ -108,6 +108,49 @@ Appends the finished week and judges the season against a bar frozen before week
 one. It refuses to call anything FINAL before the regular season ends, which is
 the point of freezing it.
 
+## After the games — who to sell, who to keep, who to ask for
+
+    ./gradlew run -Pmain=WeekReaction
+
+Every rostered skill man's week against his preseason prior, and what the
+evidence keeps of it. One game moves the honest estimate by a measured share of
+the surprise (`InSeasonLearning`'s kappa, refitted each run and printed at the
+top), and the rest is noise: after one week nearly every big box score is a
+SELL HIGH if somebody will pay for it, and nearly every bad one is a HOLD on my
+side or a BUY LOW on theirs. The one exception the data supports is printed on
+the row: when Sleeper RAISED his season projection in the same window, the
+projection's authors saw a role change and not a box score, and he is a KEEP or
+a PAY UP.
+
+Read the header before the rows. It counts how many rostered men's season
+projections moved since the season started; when the answer is none, the trade
+board and the wire have not seen the week, and this report is the only thing
+that has. What a rival will PAY is assumed, not measured — nothing in this repo
+can measure it, and the footer says so every run.
+
+Runs partial on Monday (men whose game is unplayed are listed, not scored) and
+complete on Tuesday once Sleeper moves to the next week. Writes
+`data/week-reaction-<season>-w<week>.txt`.
+
+    ./gradlew run -Pmain=WeeklyFeedAudit
+
+The same question of the WEEKLY feed, which the lineup tab reads: whether the
+eighteen weekly numbers sum to the season number, whether week 2's projection
+leans on week 1's result (a slope, by position), and whether any live week's
+projection moved between two cached days. Keep running it daily: no read of a
+week predates the games two weeks before it, so from week 3 on each week's
+reads straddle the previous week's games and the days of news between, and the
+lean row stays the measurement that isolates the box score.
+
+    ./gradlew run -Pmain=ProjectionShootout
+
+When a roster the model ranked low outscores the league (JFMarino, week 1):
+which of the four archived sources, or Sleeper's own pre-game week feed, was
+closest to what each man scored, paired against Sleeper on the same men with a
+standard error, and how each source would have ranked the twelve rosters. One
+week separates nothing at the roster level (twelve managers, standard error
+about 0.3); the rows accumulate across the season and that is the test.
+
 ## From week 7 — am I still in it
 
     ./gradlew run -Pmain=SeasonOutlook
