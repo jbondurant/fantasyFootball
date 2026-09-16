@@ -1,0 +1,64 @@
+TRADE MARKET  2026-09-05  (justinb314)
+Every size-balanced swap with all eleven rivals, both rosters priced on the same
+weekly-starter objective (120 drawn seasons). Only trades BOTH sides gain from are listed:
+an offer the other manager loses on is an offer he declines.
+THE TWO SIDES ARE PRICED DIFFERENTLY, on purpose. YOUR value is the season PLUS the best two
+keeper surpluses on your roster (a surplus being what a man is worth beyond the pick you spend to
+keep him, measured at HIS OWN position). HIS is LOSS-AVERSE on keepers: he takes no credit for one
+he receives and feels every point of one he gives up, which is how people here actually behave.
+So asking for another manager's keeper is HARD - the ask is priced at what it costs him - and
+paying anybody IN keepers buys you nothing. -Pkeepers=false prices you the same way he is.
+
+9739 swaps searched, 83 good for both sides, 81 of those also good for 2026.
+A trade must stand up WITHOUT the keeper value as well - the plan is to win 2026, and
+keeper value is a tiebreak on a deal that already helps now, not a reason to get worse.
+2 offers were dropped for failing that. -PsellMode=true to see them.
+
+YOU GIVE                     YOU GET                          you     him  season   SIMPLE     ADP g/g   WITH / HOW IT READS
+Brock Purdy + Malik Nabers + Mike Evans Josh Allen + Matthew Stafford + CeeDee Lamb   +28.2    +2.3   +28.2    +31.2    27/12      JFMarino - reads even on draft position
+Rhamondre Stevenson          Josh Allen                     +18.3   +10.6   +18.3    +35.1    73/20      JFMarino - you are asking for the earlier pick - he will feel that
+Derrick Henry + Mike Evans   Christian McCaffrey + Garrett Wilson   +11.9    +0.4   +11.9    +13.8    13/5       KevinDA - reads even on draft position
+Bo Nix + Derrick Henry + Mike Evans Kyler Murray + Christian McCaffrey + Garrett Wilson   +10.9    +6.8   +10.9    +13.8    13/5       KevinDA - reads even on draft position
+Khalil Shakir                Travis Kelce                    +8.8    +4.8    +8.8     +0.0   153/96      BHier - you are asking for the earlier pick - he will feel that
+Jakobi Meyers                Travis Kelce                    +7.7   +11.5    +7.7     +0.0   132/96      BHier - you are asking for the earlier pick - he will feel that
+Josh Downs                   Travis Kelce                    +6.8    +5.0    +6.8     +0.0   111/96      BHier - reads even on draft position
+Jakobi Meyers                Kyle Pitts                      +6.7    +3.6    +6.7     +0.0   132/71      BHier - you are asking for a much earlier pick - expect a no on sight
+Derrick Henry + Malik Nabers + Mike Evans Jahmyr Gibbs + Jaylen Waddle + Carnell Tate    +6.7    +2.8    +6.7     +7.9    13/1       JakeSK - reads even on draft position
+Brock Purdy + Derrick Henry  Josh Allen + Trey McBride       +6.1    +1.7    +6.1     +0.8    13/20      JFMarino - reads even on draft position
+Jordan Addison               Lamar Jackson                   +6.1    +0.3    +6.1    +12.4   101/35      Renteez - you are asking for a much earlier pick - expect a no on sight
+Derrick Henry + Malik Nabers Christian McCaffrey + Garrett Wilson    +5.5    +1.2    +5.5     +7.3    13/5       KevinDA - reads even on draft position
+
+WHAT YOUR SURPLUS IS WORTH - how many rivals could offer the same thing:
+  QB   you hold 2, start 1;  5 of 11 rivals also carry a spare -> ordinary supply
+  RB   you hold 5, start 2;  11 of 11 rivals also carry a spare -> INVENTORY, not a chip - the market is flooded
+  WR   you hold 7, start 3;  11 of 11 rivals also carry a spare -> INVENTORY, not a chip - the market is flooded
+  TE   you hold 1, start 1;  7 of 11 rivals also carry a spare -> nothing to sell
+  DEF  you hold 1, start 1;  0 of 11 rivals also carry a spare -> nothing to sell
+
+(The chain below is not filtered for 2026 - it is the ceiling of what the board
+offers, not a plan. Read the table above for what to actually send.)
+
+TRADING POWER - trade after trade, each re-searched on the board the last one left.
+Only trades worth more than 6.8 to you are taken: that is the objective's own
+seed-to-seed spread, so anything smaller is the yardstick moving and not the roster.
+
+   1. Brock Purdy + Malik Nabers + Mike Evans for Josh Allen + Matthew Stafford + CeeDee Lamb   +28.2  (him   +2.3)  running   +28.2
+   2. Rhamondre Stevenson + Harold Fannin for Trey McBride + Aaron Jones            +9.6  (him   +7.3)  running   +37.7
+   3. Josh Downs                         for Travis Kelce                          +9.1  (him   +5.0)  running   +46.8
+
+  3 trades, +46.8 to you, +14.6 handed to the men opposite to make them take it.
+  Still going at 3 and stopped by -Pdepth, not by the board. Raise it.
+  The first trade alone was +28.2, so the chain is worth 1.7x a single one -
+  which is what one-step searching leaves behind.
+
+  AND THE ANSWER TO 'CAN I JUST KEEP TRADING?' - no. Ignoring the floor entirely,
+  the chain runs 3 trades and +46.8, but everything past the 3 above is smaller than the
+  yardstick's own noise, and it starts churning: it reacquires men it gave away earlier.
+  Every trade has to improve BOTH rosters, so the league's total value only rises and is
+  bounded by the best possible allocation of a fixed set of players. It must stop, and it
+  does. Local maxima are NOT the problem here; the floor is.
+
+WHAT THIS CANNOT TELL YOU. Sleeper records only COMPLETED trades - 51 across five
+seasons of this league, and not one refusal - so there is no way to fit what a manager
+will ACCEPT. 'His gain' is the honest stand-in: a trade that clearly helps him is one he
+is likelier to take. Judge the offer by that column and by what you know about him.

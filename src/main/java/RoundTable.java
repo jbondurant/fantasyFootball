@@ -28,7 +28,7 @@ public class RoundTable {
      *
      * Justin, on seeing the old column: how can the plan, selecting 2 QBs in
      * addition to Purdy, make sense? It cannot, and it was my error to keep
-     * printing it after finding it. RUNBOOK.md:77 makes the round-10
+     * printing it after finding it. RUNBOOK.md "The committed plan (laptop-dies fallback)" makes the round-10
      * quarterback conditional - "if he is there, else RB/WR" - and :79 offers
      * round 14 as the ALTERNATIVE to that stash, not an addition. The encoded
      * string takes both conditionals as certain and adds a tight end at 11, so

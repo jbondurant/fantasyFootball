@@ -34,18 +34,31 @@ fails if one does). Fallbacks are in `RUNBOOK.md`.
 ./gradlew run -Pmain=KeeperPlan -Pprojections=borischen   # ...valued on another source's numbers
 ./gradlew run -Pmain=DraftPlanner         # Model A: position per round for rounds 1-7 (nine skill slots, no defence)
 ./gradlew run -Pmain=DraftPlanner -Ptrials=500 -Prisk=0.5   # ...risk-averse, tighter error bars
-./gradlew run -Pmain=TradeFinder          # trades worth proposing
+./gradlew run -Pmain=TradeFinder          # SUPERSEDED by TradeMarket (2024 enumerator; kept only until its tests are judged redundant)
 ./gradlew run -Pmain=SleeperLiveDraft     # older draft-day advice; superseded by Draft2026 above
 ./gradlew run -Pmain=KeeperValuation      # which keepers are worth a slot
 ./gradlew run -Pmain=KeeperEligibility    # who is keeping whom, and for how long
 ./gradlew run -Pmain=WaitOrTake           # take him now, or gamble he lasts a round
 ./gradlew run -Pmain=AdpSnapshot          # record today's ADP; run often before the draft
 ./gradlew run -Pmain=MarketMovers       # who the market moved on in the last days, and why Sleeper thinks so (-Pdays -Ptop -PminMove)
+./gradlew run -Pmain=WeeklyFeedAudit    # IN SEASON: do Sleeper's weekly projections sum to the season number, does week 2 lean on week 1's result, and did any live week's projection move day to day
+./gradlew run -Pmain=UsageSignal        # do targets, carries, air yards and red-zone touches say more than the score: their correlation with the points-only rule's residual on 13 seasons, the MAE and flip accuracy gained by a fitted usage term, and that fit applied to every rostered man's usage this week (-Pweek)
+./gradlew run -Pmain=RosBands           # is the update rule's rest-of-season band honest: coverage and interval score on 13 seasons, level vs rate scale, normal vs empirical quantiles; and Sleeper's next-week number vs the posterior as an estimate
+./gradlew run -Pmain=ProjectionShootout # IN SEASON, after the games: which archived source (sleeper, espn, cbs, borischen, and sleeper's week feed) matched the week - per player, paired against sleeper - and how each would have ranked the twelve rosters (-Pweek)
 ./gradlew run -Pmain=TeamRankings       # every roster's best legal lineup scored and ranked, HTML in data/ (-Pprojections -Pme)
 ./gradlew run -Pmain=DraftExpectation   # each seat's expected starters (room model drafts every seat from the pre-draft league) vs the roster actually drafted (-Ptrials)
 ./gradlew run -Pmain=OwnerLadder        # every owner: seat alone, + keepers as declared, + the 10k ledger's best pair, and the roster drafted - HTML in data/ (-Ptrials -Pledger)
 ./gradlew run -Pmain=Keepers16          # every owner's keepers on the SIXTEEN-round weekly objective (injuries, boom/bust, defences): seat, each man alone at his real round, the best pair by search (-Ptrials -Pscenarios -PpairPool -Powners -Pshard=i/N -Pout; -Prender=<report.txt> re-renders the HTML)
-./gradlew run -Pmain=RankKeyChoice       # ADP or projections: which preseason order should key a man's outcome cell (leave-one-season-out, one feed) (-Pdepth -Pband)
+./gradlew run -Pmain=StartSit            # IN SEASON: the lineup to set this week, with the calls that are inside the measured coin-flip band named as such (-Pweek -Pme; -Pcalibrate measures the odds)
+./gradlew run -Pmain=TuesdaySwap         # IN SEASON: every (add, drop) pair on the weekly-starter objective; DO NOTHING is the default answer (-Pcandidates -PswapFloor -Pscenarios; -Pprojections=posterior prices on Sleeper's numbers moved by the played weeks, report to data/tuesday-swap-<season>-w<week>-posterior.txt)
+./gradlew run -Pmain=WeekReaction        # IN SEASON, after the games: each man's week against his prior, the share the measured update rule keeps, whether Sleeper's season numbers moved, and a sell-high / buy-low verdict that names its assumption (-Pweek -Pme -PminMove -Ptop)
+./gradlew run -Pmain=LeagueConsole       # IN SEASON: one HTML page for the week - lineup, who to add and for how much, trades. The page COMPUTES NOTHING: every answer is precomputed here and LeagueConsoleTest re-derives them. Your FAAB comes off the rosters feed and each free agent's worth is the model's own (add, drop) marginal - no sliders
+./gradlew run -Pmain=TradeMarket         # IN SEASON: every size-balanced swap with all eleven rivals, only those BOTH sides gain from, plus what your surplus is actually worth (-PchainDepth -Ppool -Ptop; -Pprojections=posterior prices on Sleeper's numbers moved by the played weeks at the measured rate, report to data/trades-<date>-posterior.txt)
+# see FAAB-PLAN.md for how a projected bid would be built, and why the demand half needs new data
+./gradlew run -Pmain=FaabBid             # IN SEASON: what to bid, from this league's own 1448 settled contests (-Pfit to harvest; then -Pvalue=<points> -Pbudget)
+./gradlew run -Pmain=DefenceThisWeek     # IN SEASON: which defence to start, running the policy WireRateStress actually measured (-Pweek -Plag -Pme)
+./gradlew run -Pmain=SeasonLedger        # IN SEASON: append each finished week and judge the bench question against a bar frozen before week 1 (-Panchor once, then weekly)
+./gradlew run -Pmain=RankKeyChoice       # ADP or projections: which preseason order should key a man's outcome cell (leave-one-season-out, one feed) (-PrankDepth -Pband)
 ./gradlew run -Pmain=ObjectiveStability   # how much of a man's Keepers16 value is the yardstick's own sampling: marginals under several seeds, worst spread (-Pscenarios -Pseeds)
 #   any planner tool also takes -Pprojections=snapshot:<date> (a day from the AdpSnapshot archive) and -PadpSnapshot=<date>;
 #   the unit suite runs on data/fixtures/2026-pre-draft: the league as it stood on draft morning and the full Sleeper feed of draft night
