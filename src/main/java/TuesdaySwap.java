@@ -29,7 +29,7 @@ import java.util.Set;
  * the thing a projection ranking cannot answer.
  *
  *   ./gradlew run -Pmain=TuesdaySwap [-Pweek=n] [-Pme=<name>] [-Pcandidates=40]
- *                                    [-Pscenarios=480] [-PswapFloor=<points>]
+ *                                    [-Pscenarios=480] [-PswapFloor=<points>] [-Pprojections=posterior]
  *
  * TWO HONEST LIMITS, printed with the answer rather than buried.
  *
@@ -245,7 +245,11 @@ public class TuesdaySwap {
         String me = System.getProperty("me", configuration.getUserIDToDisplayName()
                 .getOrDefault(configuration.getMyID(), configuration.getMyID()));
 
-        Map<String, Double> points = ProjectionSources.resolve("sleeper");
+        // -Pprojections=posterior prices on Sleeper's numbers moved by the played
+        // weeks at the measured rate (InSeasonPosterior); the default is Sleeper's
+        // season feed as it stands, which does not move on results.
+        String source = System.getProperty("projections", "sleeper");
+        Map<String, Double> points = ProjectionSources.resolve(source);
         WeeklyStarterValue value = WeeklyStarterValue.forCurrentBoard(configuration, points, scenarios, 424_242L);
         Map<String, String> ownerOf = LeagueOwners.today(configuration);
 
@@ -371,7 +375,8 @@ public class TuesdaySwap {
             out.append("question, and it is a different one.\n");
         }
         System.out.print(out);
-        Path target = Path.of("data", "tuesday-swap-" + season + "-w" + week + ".txt");
+        Path target = Path.of("data", "tuesday-swap-" + season + "-w" + week
+                + (source.equals("sleeper") ? "" : "-" + source.replace(':', '_').replace(',', '_')) + ".txt");
         Files.writeString(target, out.toString(), StandardCharsets.UTF_8);
         System.out.println("written to " + target);
     }
