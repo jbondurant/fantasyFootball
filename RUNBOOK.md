@@ -44,6 +44,14 @@ and it is better to know at ten than at one.
 
 ## Tuesday — the wire
 
+    ./gradlew run -Pmain=WaiverLog
+
+First, what the league actually did: every claim this season with the bids by
+manager, the winner and the clearing price, and each manager's FAAB against
+Sleeper's own counter. The league runs DAILY waivers (noon Eastern, one-day
+clear), so a man dropped Sunday night clears Tuesday noon and a claim can
+settle any day - "Tuesday" is when most of them do, not the only time.
+
 The **The wire** tab. Your FAAB is read off the rosters feed, not typed, and
 each free agent's worth is computed: the roster with him and without the man he
 displaces, valued and subtracted.

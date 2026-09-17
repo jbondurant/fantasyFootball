@@ -177,4 +177,18 @@ public class LeagueWeek {
         return feed(url, "sleeperWeekActuals" + season + "w" + week,
                 "sleeperLiveActuals" + season + "w" + week, week);
     }
+
+    /**
+     * A week's transactions under the policy: frozen once the week is over
+     * (an empty week is a real answer there - TRAPS #85), the day's read while
+     * it is live, so a claim placed this morning is in the log this afternoon.
+     * {@link LeagueTransactions#transactionsRaw} routes the configured league
+     * here; past seasons stay on the forever cache, every week of them being over.
+     */
+    public static String transactions(String leagueID, int week){
+        String url = "https://api.sleeper.app/v1/league/" + leagueID + "/transactions/" + week;
+        return finished(week)
+                ? InOutUtilities.getCachedForeverAllowingEmpty(url, "sleeperTxns" + leagueID + "w" + week)
+                : InOutUtilities.getTodaysWebPage(url, "sleeperLiveTxns" + leagueID + "w" + week);
+    }
 }

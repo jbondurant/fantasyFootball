@@ -92,6 +92,9 @@ public class LeagueTransactions {
     // never will - so an empty answer here is an answer, not a question asked
     // too early (TRAPS #85).
     static String transactionsRaw(String leagueID, int week){
+        if(leagueID.equals(AAAConfiguration.getInstance().getLeagueID())){
+            return LeagueWeek.transactions(leagueID, week);   // the season in progress: its live week moves
+        }
         return InOutUtilities.getCachedForeverAllowingEmpty(
                 "https://api.sleeper.app/v1/league/" + leagueID + "/transactions/" + week,
                 "sleeperTxns" + leagueID + "w" + week);
