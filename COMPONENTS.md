@@ -665,6 +665,7 @@ after-the-fact shape, and the reason to fix it before the wire gets busy.
 - `StartSit` — The best legal ten from league-scored week projections, with the measured coin-flip band (-Pcalibrate write…
 - `TuesdaySwap` — Tuesday waiver search over (add, drop) pairs on WeeklyStarterValue with DO NOTHING as default; prints the d…
 - `WaiverLog` — This season's waiver claims from the transactions feed, live: each contest's bids by manager and the winner, claims that died for room marked as such, FAAB spent per manager against the roster feed's counter, and my own claims. Report to data/waiver-log-<season>-w<week>.txt.
+- `FaabDemand` — The claim harvest cut by the weekday it cleared (the big run after the games vs the rest: contests, dollars, prices, win ladder), a leave-one-season-out logistic model of P(contested) on snap share, snap jump, touches, points, dropped and position, and this week's wire with the big-run bid that wins 50/75/90. Report to data/faab-demand-<date>.txt.
 - `WeekReaction` — After the games: every rostered skill man's week against his preseason prior, the share the measured update rule keeps (InSeasonLearning's kappa, refit per run), whether Sleeper's season projection moved, and a sell-high / buy-low verdict that names which half is assumed. Report to data/week-reaction-<season>-w<week>.txt.
 
 **diagnostic** (7)

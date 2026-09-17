@@ -29,6 +29,26 @@ level. The projection jump is that event's observable trace, and it is the only
 feature that flips the sign. It is weak for a data reason rather than a
 theoretical one (§3).
 
+## 0. Added 2026-09-16: the run is the market, and demand still is not foreseeable
+
+Justin: most of the money is spent on the Wednesday run. Measured (`FaabDemand`,
+1,207 skill-position contests, weekday of the clearing moment in the league's zone):
+
+| run | contests | dollars | contested | median | 75th | 90th |
+|---|---|---|---|---|---|---|
+| Wednesday | 48% | 76% | 39% | $3 | $6 | $12 |
+| every other day | 52% | 24% | 16-27% | $0 | $1-2 | $3-6 |
+
+The page had bid every claim from the pooled ladder. `FaabBid -Pfit` now writes the
+big run's prices as `PRICES BIGRUN` and the page bids from them (TRAPS #140).
+
+The demand half was retried with features that DO have a vintage - last week's snap
+share and its jump over the week before, touches, league points, a drop this week,
+and the position, all from the stats and transactions feeds as the market saw them.
+Leave-one-season-out logistic model of P(two or more bidders): log-loss gain over the
+base rate +0.003 +- 0.005; the predicted terciles clear at the same median. Position
+is the only feature with a pulse (RB, r = +0.17 with bidders). Section 2 below stands.
+
 ## 1. The decomposition: do not project the price, project the demand
 
 Price given demand is already strong, monotonic, and measurable **today** from

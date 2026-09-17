@@ -60,9 +60,14 @@ import java.util.TreeMap;
  */
 public class FaabBid {
 
-    /** One settled contest: what it took to win a man, and how many were bidding. */
+    /** One settled contest: what it took to win a man, how many were bidding, and when it cleared. */
     public record Contest(String season, int week, String playerID, int clearingBid,
-                          int bidders, double projection) {}
+                          int bidders, double projection, long cleared) {
+        /** The shape before the clearing moment was carried; tests still build it. */
+        public Contest(String season, int week, String playerID, int clearingBid, int bidders, double projection){
+            this(season, week, playerID, clearingBid, bidders, projection, 0);
+        }
+    }
 
     /** Clearing prices for one band of player quality. */
     public record Band(String label, double fromProjection, double toProjection,
@@ -163,9 +168,10 @@ public class FaabBid {
                 continue;   // nobody won it, or the top bid lost for a reason that is not price
             }
             String playerID = entry.getKey().substring(0, entry.getKey().indexOf('@'));
+            long cleared = Long.parseLong(entry.getKey().substring(entry.getKey().indexOf('@') + 1));
             Map<String, Double> projections = projectionByWeek.getOrDefault(winner.week(), Map.of());
             out.add(new Contest(season, winner.week(), playerID, winner.bid(), claims.size(),
-                    projections.getOrDefault(playerID, 0.0)));
+                    projections.getOrDefault(playerID, 0.0), cleared));
         }
         return out;
     }
@@ -309,18 +315,47 @@ public class FaabBid {
         return prices;
     }
 
+    /**
+     * The weekday whose run carries the most dollars - the first run after the
+     * week's games, measured rather than assumed (FaabDemand section 1: on
+     * 2026-09-16 Wednesday held 48% of contests and 76% of dollars, with a
+     * median of $3 against $0 on every other day). Claims placed after the
+     * games clear into THAT market, so its prices are the ones to bid from.
+     */
+    static java.time.DayOfWeek bigRun(List<Contest> contests){
+        Map<java.time.DayOfWeek, Integer> dollars = new java.util.EnumMap<>(java.time.DayOfWeek.class);
+        for(Contest contest : contests){
+            if(contest.cleared() > 0){
+                dollars.merge(FaabDemand.weekday(contest.cleared()), contest.clearingBid(), Integer::sum);
+            }
+        }
+        java.time.DayOfWeek best = null;
+        for(Map.Entry<java.time.DayOfWeek, Integer> e : dollars.entrySet()){
+            if(best == null || e.getValue() > dollars.get(best)){
+                best = e.getKey();
+            }
+        }
+        return best;
+    }
+
     static String report(List<Contest> contests){
-        List<Integer> all = new ArrayList<>(), contested = new ArrayList<>();
+        List<Integer> all = new ArrayList<>(), contested = new ArrayList<>(), bigRun = new ArrayList<>();
+        java.time.DayOfWeek big = bigRun(contests);
         for(Contest contest : contests){
             all.add(contest.clearingBid());
             if(contest.bidders() >= 2){
                 contested.add(contest.clearingBid());
             }
+            if(big != null && contest.cleared() > 0 && FaabDemand.weekday(contest.cleared()) == big){
+                bigRun.add(contest.clearingBid());
+            }
         }
         all.sort(Comparator.naturalOrder());
         contested.sort(Comparator.naturalOrder());
+        bigRun.sort(Comparator.naturalOrder());
         Band allBand = new Band("all", 0, Double.MAX_VALUE, all);
         Band contestedBand = new Band("contested", 0, Double.MAX_VALUE, contested);
+        Band bigBand = new Band("big run", 0, Double.MAX_VALUE, bigRun);
         long free = all.stream().filter(price -> price == 0).count();
 
         StringBuilder out = new StringBuilder();
@@ -341,6 +376,10 @@ public class FaabBid {
         out.append(String.format("%-12s %8d %8d %8d %8d %8d %8d%n", "contested", contested.size(),
                 contestedBand.quantile(0.50), contestedBand.quantile(0.75), contestedBand.quantile(0.90),
                 contestedBand.quantile(0.99), contestedBand.quantile(0.999)));
+        out.append(String.format("%-12s %8d %8d %8d %8d %8d %8d   the %s run, first after the games: %.0f%% of every dollar%n",
+                "big run", bigRun.size(), bigBand.quantile(0.50), bigBand.quantile(0.75), bigBand.quantile(0.90),
+                bigBand.quantile(0.99), bigBand.quantile(0.999), big,
+                100.0 * bigRun.stream().mapToInt(Integer::intValue).sum() / Math.max(1, all.stream().mapToInt(Integer::intValue).sum())));
         out.append(String.format("%n%d of %d claims cleared at nothing (%.0f%%), so the usual right bid is 0 or 1.%n",
                 free, all.size(), 100.0 * free / all.size()));
         out.append("\nWHAT A BID BUYS - P(win) at each price:\n");
@@ -353,8 +392,13 @@ public class FaabBid {
         out.append("\n");
         out.append(String.format("%-12s", "contested"));
         for(int bid : ladder){ out.append(String.format(" %5.0f%%", 100 * contestedBand.winChance(bid))); }
+        out.append("\n");
+        out.append(String.format("%-12s", "big run"));
+        for(int bid : ladder){ out.append(String.format(" %5.0f%%", 100 * bigBand.winChance(bid))); }
+        out.append("\nThe page bids from the big-run prices: a claim placed after the games clears into that market.");
         out.append("\n\nPRICES ALL\n");
-        out.append(join(all)).append("\n\nPRICES CONTESTED\n").append(join(contested)).append("\n");
+        out.append(join(all)).append("\n\nPRICES CONTESTED\n").append(join(contested));
+        out.append("\n\nPRICES BIGRUN\n").append(join(bigRun)).append("\n");
         return out.toString();
     }
 

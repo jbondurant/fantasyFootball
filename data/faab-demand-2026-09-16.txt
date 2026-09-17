@@ -1,0 +1,65 @@
+FAAB DEMAND  2026-09-16  (1207 settled contests over 5 seasons 2021-2025; skill positions; features as the market saw them)
+
+== 1. THE RUN: contests and dollars by the weekday they cleared (league zone), regular-season legs 2-18 ==
+day        contests   share  dollars   share contested  median     p75     p90   P(win) at $1 $3 $5 $8 $13 $20
+MONDAY            9      1%        3      0%        0%       0       0       3     89%  94% 100% 100% 100% 100%
+WEDNESDAY       535     48%     2802     76%       39%       3       6      12     39%  54%  67%  80%  91%  95%
+THURSDAY        148     13%      241      6%       18%       0       2       5     70%  81%  89%  95%  99%  99%
+FRIDAY           91      8%      161      4%       16%       0       1       6     75%  82%  87%  95%  97%  98%
+SATURDAY        119     11%      208      6%       18%       0       1       4     72%  88%  93%  96%  97%  99%
+SUNDAY          214     19%      293      8%       27%       0       2       4     69%  85%  92%  96% 100% 100%
+the big run is WEDNESDAY: the ladder to bid into on that day is its row, not the pooled one the page uses today.
+
+== 2. THE DEMAND: P(two or more bidders) from what the market could see, leave-one-season-out ==
+feature       r bidders    r price
+snap share       -0.093     -0.115
+snap jump        +0.009     +0.010
+touches          +0.035     +0.015
+points           -0.074     -0.051
+dropped          -0.010     -0.027
+RB               +0.174     +0.176
+WR               -0.038     -0.095
+TE               -0.084     -0.051
+QB               -0.102     -0.056
+
+contested base rate 30%; held-out log loss 0.615 vs base rate's 0.618: gain +0.003 +- 0.005 over 5 seasons  <- not separated
+predicted    contests  P(cont.)    mean p  median     p75     p90   P(win) at $1 $3 $5 $8 $13 $20
+low demand        372       26%       21%       0       3       7     56%  72%  82%  92%  98%  99%
+mid               372       31%       30%       0       4       9     56%  69%  79%  88%  95%  97%
+high demand       372       31%       37%       0       4      12     55%  68%  78%  85%  92%  95%
+all-season fit, log-odds per sd: snap share +0.09 snap jump -0.02 touches +0.06 points -0.02 dropped +0.03 RB +0.20 WR +0.01 TE -0.09 QB -0.22
+
+on the big run (WEDNESDAY) only, by predicted tercile:
+low demand        191                                   2       5       9     40%  57%  73%  86%  97%  98%
+mid               192                                   2       7      12     40%  54%  66%  79%  91%  95%
+high demand       152                                   3       9      17     36%  49%  63%  73%  85%  92%
+
+== 3. THIS WEEK: the wire's men and the big-run bid that wins 50 / 75 / 90% (one ladder for all: section 2 did not earn the terciles) ==
+player                 pos  season P(cont.) tercile      share  jump  touch    pts dropped   bid to win 50 / 75 / 90 on the big run
+Tyler Shough           QB    314.9      17% -             100% +100%    4.0   29.2           $3 / $8 / $13
+Sam Darnold            QB    314.7      14% -              10%  +10%    0.0    0.5           $3 / $8 / $13
+C.J. Stroud            QB    291.8      17% -             100% +100%    2.0   18.5           $3 / $8 / $13
+Bryce Young            QB    275.6      16% -              90%  +90%    2.0   38.4           $3 / $8 / $13
+Geno Smith             QB    266.5      18% -             100% +100%    6.0    8.3           $3 / $8 / $13
+Cam Ward               QB    265.8      17% -             100% +100%    4.0   13.7           $3 / $8 / $13
+Daniel Jones           QB    261.5      17% -             100% +100%    1.0   12.0           $3 / $8 / $13
+Fernando Mendoza       QB    250.2      14% -               0%   +0%    0.0    0.0           $3 / $8 / $13
+Aaron Rodgers          QB    213.0      17% -             100% +100%    3.0   14.5           $3 / $8 / $13
+Jacoby Brissett        QB    190.0      18% -             100% +100%    6.0   18.5           $3 / $8 / $13
+Michael Penix          QB    169.2      14% -               0%   +0%    0.0    0.0           $3 / $8 / $13
+Brenton Strange        TE    129.5      25% -              68%  +68%    3.0    9.3     yes   $3 / $8 / $13
+Deshaun Watson         QB    118.1      18% -             100% +100%    6.0   16.0           $3 / $8 / $13
+Oronde Gadsden         TE    113.8      23% -              18%  +18%    2.0    4.2     yes   $3 / $8 / $13
+Chig Okonkwo           TE    113.6      23% -              56%  +56%    3.0    2.6           $3 / $8 / $13
+AJ Barner              TE    113.4      24% -              88%  +88%    2.0    2.3           $3 / $8 / $13
+Shedeur Sanders        QB    111.1      14% -               0%   +0%    0.0    0.0           $3 / $8 / $13
+Tua Tagovailoa         QB    111.0      14% -               0%   +0%    0.0    0.0           $3 / $8 / $13
+Omar Cooper            WR    104.6      27% -               7%   +7%    1.0    3.5     yes   $3 / $8 / $13
+Pat Freiermuth         TE    102.9      24% -              73%  +73%    5.0   13.1           $3 / $8 / $13
+Gunnar Helm            TE    101.8      25% -              76%  +76%    5.0    4.8           $3 / $8 / $13
+Tyrone Tracy           RB    100.8      36% -               3%   +3%    2.0   -1.6     yes   $3 / $8 / $13
+Darren Waller          TE     99.1      22% -              35%  +35%    2.0    3.8           $3 / $8 / $13
+Jerry Jeudy            WR     98.1      30% -              63%  +63%    4.0    3.6     yes   $3 / $8 / $13
+Cade Otton             TE     95.8      26% -              98%  +98%    5.0    4.1           $3 / $8 / $13
+the twenty-five free skill men by season projection; worth is TuesdaySwap's column, and the bid is the smallest
+on the ladder that wins the share shown against the big run's prices. A bid above his worth is a loss.

@@ -49,6 +49,13 @@ public class LeagueConsoleTest {
     }
 
     /** The comparator above, exercised on the order that would have broken it. */
+    /** The band the page bids from: the big run's prices, or every claim's on an older contests file. */
+    private static FaabBid.Band biddingBand(List<String> lines){
+        List<Integer> bigRun = FaabBid.readPrices(lines, "BIGRUN");
+        return new FaabBid.Band(bigRun.isEmpty() ? "all" : "big run", 0, Double.MAX_VALUE,
+                bigRun.isEmpty() ? FaabBid.readPrices(lines, "ALL") : bigRun);
+    }
+
     @Test
     public void theNewestConsoleIsTheNewestAndNotTheAlphabeticallyLast(){
         Pattern named = Pattern.compile("console-(\\d{4})-w(\\d+)\\.html");
@@ -95,8 +102,7 @@ public class LeagueConsoleTest {
 
         Path prices = FaabBid.newestCurve();
         assertNotNull(prices, "the contest history the page priced from must be committed");
-        FaabBid.Band band = new FaabBid.Band("all", 0, Double.MAX_VALUE,
-                FaabBid.readPrices(Files.readAllLines(prices), "ALL"));
+        FaabBid.Band band = biddingBand(Files.readAllLines(prices));
         double[] costs = {1.0, 1.5, 2.0, 3.0};
 
         int checked = 0;
@@ -127,8 +133,7 @@ public class LeagueConsoleTest {
         Path prices = FaabBid.newestCurve();
         assertNotNull(prices, "the contest history the page priced from must be committed");
         List<String> lines = Files.readAllLines(prices);
-        FaabBid.Band all = new FaabBid.Band("all", 0, Double.MAX_VALUE,
-                FaabBid.readPrices(lines, "ALL"));
+        FaabBid.Band all = biddingBand(lines);
         FaabBid.Band contested = new FaabBid.Band("contested", 0, Double.MAX_VALUE,
                 FaabBid.readPrices(lines, "CONTESTED"));
 
@@ -280,8 +285,7 @@ public class LeagueConsoleTest {
 
         Path prices = FaabBid.newestCurve();
         assertNotNull(prices, "the contest history the page priced from must be committed");
-        FaabBid.Band band = new FaabBid.Band("all", 0, Double.MAX_VALUE,
-                FaabBid.readPrices(Files.readAllLines(prices), "ALL"));
+        FaabBid.Band band = biddingBand(Files.readAllLines(prices));
 
         // THE BID IS ON THE FROM-HERE WORTH, not the seventeen-week one: the page
         // bid on the unscaled number until 2026-09-14 while the report beside it

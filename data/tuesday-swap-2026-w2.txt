@@ -1,5 +1,5 @@
-data: projections 2026-09-15, player metadata 2026-09-14
-TUESDAY SWAP  2026-09-15  season 2026, waivers for week 2  (justinb314)
+data: projections 2026-09-16, player metadata 2026-09-14
+TUESDAY SWAP  2026-09-16  season 2026, waivers for week 2  (justinb314)
 180 free agents searched against all 16 roster spots = 2880 pairs, on the weekly-starter
 objective (480 drawn seasons), which prices a bench man by how often he would actually start.
 Gains are in the objective's seventeen-week units; about 13 of those weeks are left, so
@@ -10,12 +10,12 @@ Nothing under 6.8 points is named: that is the yardstick's own seed-to-seed spre
 ADD                    POS  -> drop                             17wk from here
 Brenton Strange        TE   -> drop Dalton Schultz              +0.7      +0.5
 Detroit Lions          DEF  -> drop Baltimore Ravens            +0.0      +0.0
+Jacksonville Jaguars   DEF  -> drop Baltimore Ravens            +0.0      +0.0
 Kansas City Chiefs     DEF  -> drop Baltimore Ravens            +0.0      +0.0
+Los Angeles Chargers   DEF  -> drop Baltimore Ravens            +0.0      +0.0
 Dallas Cowboys         DEF  -> drop Baltimore Ravens            +0.0      +0.0
-Green Bay Packers      DEF  -> drop Baltimore Ravens            +0.0      +0.0
 New York Giants        DEF  -> drop Baltimore Ravens            +0.0      +0.0
-Buffalo Bills          DEF  -> drop Baltimore Ravens            +0.0      +0.0
-San Francisco 49ers    DEF  -> drop Baltimore Ravens            +0.0      +0.0
+Chicago Bears          DEF  -> drop Baltimore Ravens            +0.0      +0.0
 
 EVERY DROP FOR BRENTON STRANGE - the same claim against each man you hold:
    drop Baltimore Ravens            +2.6   <- empties a slot; the whole plan (then add Detroit Lions, drop Dalton Schultz) is +0.7

@@ -56,6 +56,12 @@ The **The wire** tab. Your FAAB is read off the rosters feed, not typed, and
 each free agent's worth is computed: the roster with him and without the man he
 displaces, valued and subtracted.
 
+The bid on each row is into the WEDNESDAY run - the first after the games,
+where three dollars in four are spent and a claim clears at a median of $3
+against $0 any other day (`FaabDemand`). A claim on a man dropped mid-week
+clears into the cheaper market; the page's bid is then generous by a dollar
+or two, which is the right side to err on.
+
 Two things to respect:
 
 - a row tagged **inside the noise** is under the objective's own seed-to-seed

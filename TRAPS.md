@@ -1702,3 +1702,18 @@ real every time.
     and prints the count; DEF is not compared. The archive should keep each
     source's own rows and the fill-in as a flag (B2-1). A merged map is a
     convenience for a planner and a lie for a comparison.
+
+140. **One ladder for six markets.** The league runs daily waivers, and the page
+    bid every claim from a ladder pooled over every run. Cut by the weekday
+    the claims cleared (`FaabDemand`, five seasons), the Wednesday run - the
+    first after the week's games - holds 48% of contests and 76-77% of every
+    dollar and clears at a median of $3, 75th $6, 90th $12; every other day
+    clears at a median of $0. A $1 bid wins 57% pooled and 42% on Wednesday;
+    $3 wins 72% pooled and 59% on Wednesday. Justin said where the money went
+    before the tool did; the pooled ladder had been answering a question about
+    Thursday. The contests file now carries the big run's prices as their own
+    block and the page bids from them. Demand itself is still not foreseeable:
+    snap share, its jump, touches, points, a drop this week and the position,
+    all as the market saw them, give a held-out log-loss gain of +0.003 +-
+    0.005 over the base rate - the same finding FAAB-PLAN.md reached with
+    projections, now with the vintage-free features too.

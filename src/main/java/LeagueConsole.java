@@ -387,7 +387,15 @@ public class LeagueConsole {
                 : FaabBid.readPrices(Files.readAllLines(faabReport), "ALL");
         List<Integer> contestedPrices = faabReport == null ? List.of()
                 : FaabBid.readPrices(Files.readAllLines(faabReport), "CONTESTED");
-        FaabBid.Band allBand = new FaabBid.Band("all", 0, Double.MAX_VALUE, allPrices);
+        // THE BID IS INTO THE BIG RUN. The league runs daily waivers, but the run
+        // after the games carries three dollars in four and clears at a median of
+        // $3 where every other day clears at $0 (FaabDemand, 2026-09-16). A claim
+        // placed on Tuesday settles into that market, so its prices are the ladder;
+        // the pooled one bid a dollar where the run wanted three.
+        List<Integer> bigRunPrices = faabReport == null ? List.of()
+                : FaabBid.readPrices(Files.readAllLines(faabReport), "BIGRUN");
+        FaabBid.Band allBand = new FaabBid.Band(bigRunPrices.isEmpty() ? "all" : "big run", 0, Double.MAX_VALUE,
+                bigRunPrices.isEmpty() ? allPrices : bigRunPrices);
         FaabBid.Band contestedBand = new FaabBid.Band("contested", 0, Double.MAX_VALUE, contestedPrices);
 
         // ---- WHO TO ADD, with the model doing the valuing.
