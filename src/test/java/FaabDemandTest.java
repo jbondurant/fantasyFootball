@@ -17,13 +17,16 @@ public class FaabDemandTest {
         assertEquals(0.75, FaabDemand.snapShare(line), 1e-9);
         assertTrue(Double.isNaN(FaabDemand.snapShare(JsonParser.parseString("{\"rec_tgt\":7}").getAsJsonObject())));
         assertTrue(Double.isNaN(FaabDemand.snapShare(null)));
-        double[] f = FaabDemand.features(line, null, 12.5, true, Position.WR);
+        double[] f = FaabDemand.features(line, null, 12.5, 8.0, 150, true, Position.WR);
         assertEquals(0.75, f[0], 1e-9, "share");
         assertEquals(0.75, f[1], 1e-9, "jump from a missing week reads as from zero");
         assertEquals(9.0, f[2], 1e-9, "touches = targets + carries");
         assertEquals(12.5, f[3], 1e-9);
-        assertEquals(1.0, f[4], 1e-9, "dropped");
-        assertArrayEquals(new double[]{0, 1, 0, 0}, new double[]{f[5], f[6], f[7], f[8]}, 1e-9, "WR indicator");
+        assertEquals(8.0, f[4], 1e-9, "points per game so far");
+        assertEquals(Math.log(150), f[5], 1e-9, "log ADP");
+        assertEquals(1.0, f[6], 1e-9, "dropped");
+        assertArrayEquals(new double[]{0, 1, 0, 0}, new double[]{f[7], f[8], f[9], f[10]}, 1e-9, "WR indicator");
+        assertEquals(0.0, FaabDemand.features(line, null, 0, 0, 0, false, Position.RB)[5], 1e-9, "an ADP under one logs to zero, never below");
     }
 
     @Test
@@ -62,6 +65,13 @@ public class FaabDemandTest {
     public void theWeekdayIsTheLeaguesNotTheMachines(){
         // 2026-09-16 12:08 New York = 16:08 UTC = 1789574880000 ms
         assertEquals(DayOfWeek.WEDNESDAY, FaabDemand.weekday(1789574880000L));
+    }
+
+    @Test
+    public void everyManOnAnyRosterIsRostered(){
+        String matchups = "[{\"roster_id\":1,\"players\":[\"1\",\"2\",null]},{\"roster_id\":2,\"players\":[\"3\"]},{\"roster_id\":3}]";
+        java.util.Set<String> rostered = FaabDemand.rosteredIn(matchups);
+        assertEquals(java.util.Set.of("1", "2", "3"), rostered);
     }
 
     @Test

@@ -1712,8 +1712,25 @@ real every time.
     $3 wins 72% pooled and 59% on Wednesday. Justin said where the money went
     before the tool did; the pooled ladder had been answering a question about
     Thursday. The contests file now carries the big run's prices as their own
-    block and the page bids from them. Demand itself is still not foreseeable:
-    snap share, its jump, touches, points, a drop this week and the position,
-    all as the market saw them, give a held-out log-loss gain of +0.003 +-
-    0.005 over the base rate - the same finding FAAB-PLAN.md reached with
-    projections, now with the vintage-free features too.
+    block and the page bids from them.
+
+141. **A demand model fitted on the men who were already claimed.** The first
+    draft of `FaabDemand` modelled P(two or more bidders) over settled
+    contests and found nothing (+0.003 +- 0.005 in held-out log loss). Justin:
+    "obviously valueless - 95 percent of players have no bids", and the
+    contested "vary wildly in quality". The population was wrong. Rebuilt over
+    the whole wire - every free skill man who played, at every big run, from
+    the week's own rosters in the matchups feed: 10,197 men, 8.1% claimed -
+    the same kind of model on touches, points, points per game so far, ADP,
+    a drop this week and position gains +0.056 +- 0.005, and the top decile
+    is claimed 35% of the time against 1.8% in the bottom. Who gets a bid is
+    foreseeable from production and pedigree. What he COSTS, among the
+    claimed, still is not: the price correlates +0.03 with points per game
+    and -0.04 with ADP; the snap jump, the only trace of an event in the box
+    score, is the best at +0.14. And the miss on the first live run says why:
+    Rashod Bateman drew four bids the morning after A.J. Brown went to IR, on
+    a week he did not play - rank 156 of 162 for a model that reads box
+    scores. The event is a teammate's injury, which the stats feed does not
+    carry; nflverse does (team by week), and that is the next feature. Pick
+    the population the decision is made over, not the one the data makes
+    convenient.

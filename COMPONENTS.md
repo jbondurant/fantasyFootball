@@ -59,6 +59,7 @@ Fixes, in order:
 - **A2.** `WeeklyStarterValue` takes a `RosterRules`; `fill` counts come from it.
 - **A3.** `StartingLineup.FIXED` derived from `RosterRules` minus DEF; `SKILL_SLOTS`/`FLEX_SLOTS` derived.
 - **A4.** `MarketMovers`, `ScoringAudit` literals → `LeagueScoringSettings.halfPprFeed().passTD`.
+- **A13.** (found 2026-09-16, TRAPS #141) the FAAB demand model's next feature is a teammate's injury - the leader at his team and position by ppg missing the week - which needs team-by-week from nflverse (`NflverseWeekly` has team and opponent per row, ids need the boards' name match).
 - **A12.** (found 2026-09-15, TRAPS #139) `AdpSnapshot` archives the merged map, so an archived source is Sleeper's number for the men it did not cover; archive each source's own rows plus a fill-in flag (with B2-1), and drop fill-ins in any comparison (`ProjectionShootout` does).
 - **A11.** (found 2026-09-14, TRAPS #138) the season feed's DEF line is a four-category stub ~25 pts/season low under league scoring; price defences from the sum of the weekly DEF rows wherever the season feed is read for one (`TradeMarket`, the wire, `SeasonOutlook`, `MarketMovers`).
 - **A10.** (found 2026-09-14, TRAPS #137) `LeagueWeek.projected` freezes a finished week from its first post-game read; freeze it from the newest live read dated before the week's first game instead (needs the kickoff date - with B2-7).
@@ -665,7 +666,7 @@ after-the-fact shape, and the reason to fix it before the wire gets busy.
 - `StartSit` — The best legal ten from league-scored week projections, with the measured coin-flip band (-Pcalibrate write…
 - `TuesdaySwap` — Tuesday waiver search over (add, drop) pairs on WeeklyStarterValue with DO NOTHING as default; prints the d…
 - `WaiverLog` — This season's waiver claims from the transactions feed, live: each contest's bids by manager and the winner, claims that died for room marked as such, FAAB spent per manager against the roster feed's counter, and my own claims. Report to data/waiver-log-<season>-w<week>.txt.
-- `FaabDemand` — The claim harvest cut by the weekday it cleared (the big run after the games vs the rest: contests, dollars, prices, win ladder), a leave-one-season-out logistic model of P(contested) on snap share, snap jump, touches, points, dropped and position, and this week's wire with the big-run bid that wins 50/75/90. Report to data/faab-demand-<date>.txt.
+- `FaabDemand` — The claim harvest cut by the weekday it cleared (the big run after the games vs the rest: contests, dollars, prices, win ladder); P(any bid) over the WHOLE wire at every big run (rosters from the matchups feed) from touches, points, ppg so far, ADP, snap share and jump, a drop and position, leave-one-season-out, read by decile; the price by ADP and ppg band among the claimed; this week's wire ranked by P(bid) with the big-run bid to win 50/75/90, and a backtest of the run that just cleared. Report to data/faab-demand-<date>.txt.
 - `WeekReaction` — After the games: every rostered skill man's week against his preseason prior, the share the measured update rule keeps (InSeasonLearning's kappa, refit per run), whether Sleeper's season projection moved, and a sell-high / buy-low verdict that names which half is assumed. Report to data/week-reaction-<season>-w<week>.txt.
 
 **diagnostic** (7)

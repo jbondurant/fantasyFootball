@@ -42,12 +42,20 @@ Justin: most of the money is spent on the Wednesday run. Measured (`FaabDemand`,
 The page had bid every claim from the pooled ladder. `FaabBid -Pfit` now writes the
 big run's prices as `PRICES BIGRUN` and the page bids from them (TRAPS #140).
 
-The demand half was retried with features that DO have a vintage - last week's snap
-share and its jump over the week before, touches, league points, a drop this week,
-and the position, all from the stats and transactions feeds as the market saw them.
-Leave-one-season-out logistic model of P(two or more bidders): log-loss gain over the
-base rate +0.003 +- 0.005; the predicted terciles clear at the same median. Position
-is the only feature with a pulse (RB, r = +0.17 with bidders). Section 2 below stands.
+The demand half, over the WHOLE WIRE (Justin's correction to a first draft fitted on
+the claimed men only - TRAPS #141): every free skill man who played, at every big run,
+10,197 of them, 8.1% claimed. Features with a vintage - touches, points and points per
+game so far, preseason ADP, snap share and its jump, a drop this week, position. A
+leave-one-season-out logistic model of P(any bid) gains +0.056 +- 0.005 in log loss
+over the base rate; the top predicted decile is claimed 35% of the time, the bottom
+1.8%. WHO gets a bid is foreseeable. WHAT HE COSTS among the claimed is not: r of the
+price with points per game +0.03, with ADP -0.04, with the snap jump +0.14 (n 528);
+by ADP band the median is $5 for a top-100 pick and $2 otherwise. The first live run
+(2026-09-16) put the model's rank 1 (Antonio Williams, 3 bidders, $7), 4 and 6 among
+the claimed, and missed Rashod Bateman entirely (four bids the morning after A.J.
+Brown went to IR, on a week he did not play): the event is a TEAMMATE's injury, which
+the stats feed does not carry. nflverse carries team by week; that feature is next.
+Section 2 below stands for the price; for the demand it is superseded by this.
 
 ## 1. The decomposition: do not project the price, project the demand
 
