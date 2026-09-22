@@ -1,0 +1,28 @@
+PROJECTION DRIFT  2026-09-07  (13 archived snapshots)
+
+Keeper surplus, every trade valuation and every free agent's worth are computed from
+the SEASON projection feed. If it is frozen at preseason values then by November a man
+who has missed six games still carries his August number.
+
+FROM         TO             SHARED    MOVED   BIGGEST   WHO
+2026-08-24   2026-08-25        592        9      51.9   Tank Dell
+2026-08-25   2026-08-26        592        0       0.0   -
+2026-08-26   2026-08-27        591        4      11.8   Darnell Mooney
+2026-08-27   2026-08-28        587        9      45.0   Tua Tagovailoa
+2026-08-28   2026-08-29        587        0       0.0   -
+2026-08-29   2026-08-30        587        0       0.0   -
+2026-08-30   2026-08-31        587        0       0.0   -
+2026-08-31   2026-09-01        585        6     105.9   Josh Jacobs
+2026-09-01   2026-09-02        586        3       5.4   Brashard Smith
+2026-09-02   2026-09-05        586        0       0.0   -
+2026-09-05   2026-09-06        586        0       0.0   -
+2026-09-06   2026-09-07        586        0       0.0   -
+
+2026-08-24   2026-09-07        585       30     105.9   Josh Jacobs
+
+overall: 5.1% of shared players moved between the oldest and newest snapshot.
+
+HOW TO READ IT. Before any game is played, zero drift proves nothing - nothing had
+happened yet. AFTER real games, zero drift means the feed is static and every in-season
+number here is answering a question about the preseason. That is the moment to blend
+actuals in, and this tool exists so the moment is noticed rather than assumed away.

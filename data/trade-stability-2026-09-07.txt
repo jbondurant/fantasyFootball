@@ -1,0 +1,31 @@
+TRADE STABILITY  2026-09-07  (240 scenarios, 3 seeds, top 12 trades)
+
+THIS MEASURES NOISE, NOT DESIRABILITY. It values both sides season-only and symmetric,
+because spread is what it is after, and keeper value is deterministic - it shifts a mean
+and adds no wobble. So the trades below are NOT recommendations: a row can look strong
+here and give away a man worth fifty points as a keeper next March. Rows that send one
+are marked. The board that recommends is the console, which prices keepers on both sides.
+
+The trades board applies no noise floor - it keeps anything above +0.05. This asks
+whether the numbers it prints survive re-drawing the seasons underneath them. Each
+column is one seed; the SAME trades are re-valued, never re-searched, and only
+MUTUALLY GOOD trades are measured - the ones that could actually be recommended.
+
+TRADE                                          YOUR GAIN BY SEED    SPREAD  VERDICT
+Bhayshul Tuten -> Josh Allen  [KEEPER]           +22.9   +31.2   +20.3     10.9  clears 6.8 on every seed
+Malik Nabers + Mike Evans + Cam Skattebo -> J…   +22.4    +9.6   +16.5     12.8  clears 6.8 on every seed
+Malik Nabers + Mike Evans + Cam Skattebo -> J…   +21.5   +10.2   +11.0     11.4  clears 6.8 on every seed
+Brock Purdy + Derrick Henry -> Josh Allen + T…   +19.7   +18.7   +10.9      8.8  clears 6.8 on every seed
+Malik Nabers + Mike Evans -> Jordan Love + Ja…   +19.1    +2.0    +3.7     17.1  SPREAD EXCEEDS THE FLOOR - not a number
+Malik Nabers + Mike Evans + Cam Skattebo -> J…   +18.3    +6.2    +4.2     14.1  SPREAD EXCEEDS THE FLOOR - not a number
+Mike Evans + Cam Skattebo -> Jordan Love + Ja…   +17.5   +12.6   +11.2      6.3  clears 6.8 on every seed
+Bo Nix + Mike Evans -> Matthew Stafford + Tre…   +17.5    +5.9    +8.7     11.6  SPREAD EXCEEDS THE FLOOR - not a number
+Malik Nabers + Cam Skattebo -> Jordan Love + …   +16.5    +7.4    +2.5     14.0  SPREAD EXCEEDS THE FLOOR - not a number
+Bo Nix + Mike Evans + Cam Skattebo -> Josh Al…   +16.5   +14.4    +8.2      8.3  clears 6.8 on every seed
+Mike Evans + Cam Skattebo -> Josh Allen + Tre…   +15.0   +13.0    +6.9      8.2  clears 6.8 on every seed
+Malik Nabers + Mike Evans -> Ja'Marr Chase       +14.7    +1.3    +0.2     14.5  SPREAD EXCEEDS THE FLOOR - not a number
+
+worst seed-to-seed spread of a TRADE gain: 17.1 points
+ObjectiveStability measured 6.8 for a roster MARGINAL at 480 scenarios. This is a
+different quantity at a different scenario count, and the two should not be assumed
+equal - a trade moves two men in opposite directions and the errors need not cancel.

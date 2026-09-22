@@ -1,0 +1,59 @@
+RECORD BOOK  2026-09-21  (6 seasons 2021-2026, 91 weeks with points, 1092 team-weeks; the current week excluded until it is over)
+points are the league's own, as Sleeper scored the week; playoff weeks and weeks with no game scheduled are marked.
+
+== THE 10 HIGHEST TEAM WEEKS EVER ==
+#   manager       season  wk  points   result
+1   tommyrads       2024  14   201.5   beat d0ddi 155.6
+2   JFMarino        2023   3   200.6   beat KevinDA 130.7
+3   Renteez         2021  16   196.7   beat SIMONOTACO 107.2  [playoff]
+4   KevinDA         2024  17   195.5   beat Hamrliks 139.7  [playoff]
+5   tommyrads       2024   5   193.9   beat jerem9604 135.6
+6   itsabust        2025  16   192.9   beat d0ddi 110.0  [playoff]
+7   Hamrliks        2024  15   187.7   beat Renteez 184.9  [playoff]
+8   Renteez         2024  15   184.9   lost to Hamrliks 187.7  [playoff]
+9   KevinDA         2024   9   184.4   beat BHier 107.1
+10  itsabust        2025  12   180.8   beat JFMarino 94.5
+
+== THE 10 HIGHEST WEEK-2 SCORES ACROSS THE SEASONS ==
+#   manager       season  points   result
+1   JakeSK          2022   171.6   beat Renteez 165.0
+2   KevinDA         2025   165.5   beat JakeSK 143.8
+3   Renteez         2022   165.0   lost to JakeSK 171.6
+4   patekxwater     2022   162.2   beat Tsayydeja 118.0
+5   tommyrads       2022   160.8   beat Hamrliks 130.5
+6   KevinDA         2021   159.6   beat SIMONOTACO 80.4
+7   Hamrliks        2024   157.2   beat justinb314 79.0
+8   Renteez         2024   152.3   beat d0ddi 123.8
+9   Renteez         2023   152.3   beat patekxwater 119.0
+10  JFMarino        2023   152.1   beat Hamrliks 95.2
+
+== EACH MANAGER'S BEST WEEK ==
+tommyrads       2024 wk 14   201.5   beat d0ddi 155.6
+JFMarino        2023 wk  3   200.6   beat KevinDA 130.7
+Renteez         2021 wk 16   196.7   beat SIMONOTACO 107.2  [playoff]
+KevinDA         2024 wk 17   195.5   beat Hamrliks 139.7  [playoff]
+itsabust        2025 wk 16   192.9   beat d0ddi 110.0  [playoff]
+Hamrliks        2024 wk 15   187.7   beat Renteez 184.9  [playoff]
+justinb314      2021 wk  1   178.1   beat itsabust 118.9
+JakeSK          2022 wk  2   171.6   beat Renteez 165.0
+d0ddi           2025 wk  5   171.3   beat Renteez 133.0
+jerem9604       2025 wk  9   170.5   beat Hamrliks 141.7
+AlexMex97       2021 wk 11   168.0   beat Sirardo 142.1
+patekxwater     2023 wk  8   165.9   beat JFMarino 120.5
+Sirardo         2021 wk 18   152.8   no game  [playoff]
+BHier           2024 wk 13   151.2   beat patekxwater 84.0
+SIMONOTACO      2021 wk  6   146.5   beat justinb314 125.4
+Tsayydeja       2022 wk  1   141.8   beat tommyrads 111.4
+
+== THE 10 HIGHEST WEEKS BY A STARTED PLAYER ==
+#   player                     started by    season  wk  points
+1   Josh Allen (QB)            justinb314      2024  14    57.9
+2   Trevor Lawrence (QB)       itsabust        2025  15    54.3
+3   Joe Mixon (RB)             jerem9604       2022   9    53.1
+4   Tua Tagovailoa (QB)        Hamrliks        2022   2    52.9
+5   Jonathan Taylor (RB)       itsabust        2021  11    51.9
+6   C.J. Stroud (QB)           itsabust        2023   9    50.8
+7   Josh Allen (QB)            Renteez         2025  11    50.7
+8   Ja'Marr Chase (WR)         JakeSK          2021  17    50.1
+9   Jahmyr Gibbs (RB)          Renteez         2025  12    49.9
+10  Ja'Marr Chase (WR)         tommyrads       2024  10    49.9

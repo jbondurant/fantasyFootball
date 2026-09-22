@@ -33,3 +33,8 @@ data/nflverse
 
 # daily AdpSnapshot job log (tools/adp_snapshot_daily.sh)
 data/logs/
+
+# gradle check transcripts (kept locally, never committed)
+check-*.log
+
+.DS_Store

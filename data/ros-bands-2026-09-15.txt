@@ -1,0 +1,56 @@
+REST-OF-SEASON BANDS  (13 seasons 2013-2025, 7025 forecasts; every prior, kappa, level, cv and quantile fitted leave-one-season-out)
+a forecast: the posterior mean of a man's rate after k games, against the mean of his remaining played games (at least 3).
+coverage = the share of realised rates inside the band, mean over seasons +- se; score = 80% interval score, points, lower is better.
+
+== after 1 game ==
+pos    men | LEVEL normal: cov50 cov80 cov95 | RATE normal: cov50 cov80 cov95 | score80: L-norm L-emp R-norm R-emp | z p10/p90 (level) - a normal reads -1.28/+1.28
+QB     286 |   42%    74%    89% (+-4)     |   41%    75%    89% (+-4)     |  16.17  16.54  16.31  16.76         | -1.39 / +1.70
+RB     551 |   47%    76%    94% (+-2)     |   50%    77%    92% (+-2)     |  12.75  12.76  12.90  13.11         | -1.32 / +1.54
+WR     683 |   49%    78%    95% (+-2)     |   49%    76%    93% (+-2)     |  10.77  11.10  10.82  10.91         | -1.37 / +1.36
+TE     214 |   38%    62%    82% (+-5)     |   37%    63%    79% (+-6)     |  14.58  15.64  14.46  15.38         | -1.53 / +2.62
+chosen by the 80% score: LEVEL scale, normal quantiles;  80% multipliers QB -1.28/+1.28  RB -1.28/+1.28  WR -1.28/+1.28  TE -1.28/+1.28  
+
+== after 2 games ==
+pos    men | LEVEL normal: cov50 cov80 cov95 | RATE normal: cov50 cov80 cov95 | score80: L-norm L-emp R-norm R-emp | z p10/p90 (level) - a normal reads -1.28/+1.28
+QB     286 |   47%    78%    93% (+-2)     |   47%    78%    91% (+-2)     |  14.91  15.09  14.97  15.42         | -1.31 / +1.33
+RB     564 |   44%    74%    92% (+-2)     |   47%    75%    91% (+-1)     |  12.87  12.59  13.04  13.09         | -1.27 / +1.67
+WR     713 |   52%    77%    94% (+-2)     |   50%    77%    94% (+-2)     |  10.63  10.72  10.76  11.00         | -1.38 / +1.33
+TE     227 |   41%    69%    87% (+-4)     |   40%    68%    85% (+-4)     |  11.52  11.73  11.56  12.34         | -1.35 / +2.15
+chosen by the 80% score: LEVEL scale, EMPIRICAL quantiles;  80% multipliers QB -1.31/+1.33  RB -1.27/+1.67  WR -1.38/+1.33  TE -1.35/+2.15  
+
+== after 4 games ==
+pos    men | LEVEL normal: cov50 cov80 cov95 | RATE normal: cov50 cov80 cov95 | score80: L-norm L-emp R-norm R-emp | z p10/p90 (level) - a normal reads -1.28/+1.28
+QB     285 |   44%    78%    93% (+-2)     |   45%    80%    92% (+-2)     |  14.80  15.14  14.93  15.12         | -1.33 / +1.35
+RB     562 |   45%    75%    92% (+-2)     |   48%    75%    91% (+-2)     |  12.49  12.39  12.97  13.04         | -1.32 / +1.53
+WR     716 |   50%    78%    94% (+-2)     |   49%    77%    93% (+-2)     |  10.31  10.37  10.56  10.61         | -1.34 / +1.26
+TE     228 |   45%    71%    89% (+-3)     |   43%    73%    90% (+-3)     |  10.62  10.50  10.47  10.68         | -1.16 / +1.91
+chosen by the 80% score: LEVEL scale, normal quantiles;  80% multipliers QB -1.28/+1.28  RB -1.28/+1.28  WR -1.28/+1.28  TE -1.28/+1.28  
+
+== after 8 games ==
+pos    men | LEVEL normal: cov50 cov80 cov95 | RATE normal: cov50 cov80 cov95 | score80: L-norm L-emp R-norm R-emp | z p10/p90 (level) - a normal reads -1.28/+1.28
+QB     262 |   43%    77%    93% (+-3)     |   44%    80%    93% (+-3)     |  15.71  15.89  15.71  15.89         | -1.49 / +1.15
+RB     539 |   47%    77%    92% (+-2)     |   49%    77%    91% (+-2)     |  12.73  12.72  13.43  13.57         | -1.36 / +1.46
+WR     689 |   45%    77%    93% (+-2)     |   44%    75%    94% (+-2)     |  11.13  11.20  11.36  11.42         | -1.33 / +1.33
+TE     220 |   49%    75%    93% (+-2)     |   46%    78%    94% (+-2)     |   9.81   9.81   9.81   9.92         | -1.33 / +1.47
+chosen by the 80% score: LEVEL scale, normal quantiles;  80% multipliers QB -1.28/+1.28  RB -1.28/+1.28  WR -1.28/+1.28  TE -1.28/+1.28  
+
+cv = a man's week-to-week sd over his own rate, fitted on the field: QB 0.46 RB 0.67 WR 0.65 TE 0.68
+
+== SLEEPER'S NEXT-WEEK PROJECTION AGAINST THE POSTERIOR, as estimates of the man's rate from week k+2 on ==
+seasons with weekly projections on disk; league-scored; paired |error| on the same men, clustered on season.
+seen  pos     men   r post   r slpr MAE post MAE slpr   |err slpr| - |err post|, mean +- se over seasons
+1     QB      106    0.332    0.471     3.80     3.95   +0.19 +- 0.51 (5 seasons)
+1     RB      201    0.596    0.605     2.93     3.08   +0.14 +- 0.12 (5 seasons)
+1     WR      250    0.555    0.620     2.40     2.38   -0.02 +- 0.10 (5 seasons)
+1     TE       82    0.230    0.505     2.70     2.08   -0.70 +- 0.38 (5 seasons)
+2     QB       99    0.367    0.428     3.63     4.11   +0.52 +- 0.46 (5 seasons)
+2     RB      204    0.635    0.599     2.90     3.16   +0.24 +- 0.14 (5 seasons)
+2     WR      245    0.633    0.650     2.27     2.30   +0.03 +- 0.14 (5 seasons)
+2     TE       86    0.460    0.615     2.33     1.93   -0.43 +- 0.26 (5 seasons)
+4     QB       86    0.406    0.345     3.73     4.30   +0.55 +- 0.34 (5 seasons)
+4     RB      176    0.639    0.631     2.88     3.04   +0.14 +- 0.11 (5 seasons)
+4     WR      220    0.625    0.609     2.37     2.53   +0.14 +- 0.10 (5 seasons)
+4     TE       77    0.528    0.522     1.92     2.14   +0.21 +- 0.20 (5 seasons)
+negative = Sleeper's next-week number is the closer estimate. The posterior reads weeks 1..k and a preseason board;
+Sleeper's week k+1 number reads the same weeks plus the injury report and the matchup for one game.
+NOT here: the band on a rest-of-season TOTAL, which needs the availability draw WeeklyStarterValue already makes.
