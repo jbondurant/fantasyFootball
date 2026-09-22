@@ -209,7 +209,7 @@ tasks.register('run', JavaExec) {
      // 'calibrate' runs StartSit's flip-curve measurement instead of setting a lineup.
      // There is deliberately no bar knob: the odds beside a bench call are read out of
      // the committed flip curve, not chosen.
-     'week', 'calibrate',
+     'week', 'calibrate', 'live',
      // DefenceThisWeek - 'lag' is the weeks before the pick switches from preseason rank to
      // form; 2 is the value WireRateStress measured at 8.03 a week and anything else is
      // no longer the measured policy. SeasonLedger - 'anchor' freezes the pre-registered

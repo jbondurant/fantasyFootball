@@ -47,14 +47,32 @@ public class LeagueWeek {
         return state().get("season").getAsString();
     }
 
-    /** A week whose games are all played, so its numbers can never change again. */
+    /** A week of THIS season whose games are all played, so its numbers can never change again. */
     public static boolean finished(int week){
-        return week < state().get("week").getAsInt();
+        return finished(season(), week);
+    }
+
+    /**
+     * The same question for any season: a week of a season already gone is
+     * over whatever its number, and no week of a season not yet begun is.
+     *
+     * The week-number-only form read week 5 of 2021 as unfinished all through
+     * a September, because the NFL was on week 3 - so a past season's frozen
+     * numbers were fetched again every day under a live cache name. A season
+     * is half the question and was missing from it.
+     */
+    public static boolean finished(String season, int week){
+        JsonObject state = state();
+        int sameSeason = season.compareTo(state.get("season").getAsString());
+        if(sameSeason != 0){
+            return sameSeason < 0;
+        }
+        return week < state.get("week").getAsInt();
     }
 
     /** Raw week feed, read through the policy that matches whether the week is done. */
-    static String feed(String url, String immutableName, String liveName, int week){
-        return finished(week)
+    static String feed(String url, String immutableName, String liveName, String season, int week){
+        return finished(season, week)
                 ? InOutUtilities.getCachedForever(url, immutableName)
                 : InOutUtilities.getTodaysWebPage(url, liveName);
     }
@@ -72,7 +90,7 @@ public class LeagueWeek {
     public static Map<String, Double> projected(String season, int week){
         String url = "https://api.sleeper.app/v1/projections/nfl/regular/" + season + "/" + week;
         return projectedFrom(feed(url, "sleeperWeekProjection" + season + "w" + week,
-                "sleeperLiveProjection" + season + "w" + week, week));
+                "sleeperLiveProjection" + season + "w" + week, season, week));
     }
 
     /** The same league scoring over any read of a week's projection feed - a dated cache file, or today's. */
@@ -105,7 +123,7 @@ public class LeagueWeek {
      * a game not played, and the old cache would have kept the empty answer.
      */
     public static Map<String, Double> actual(String season, int week){
-        if(!finished(week)){
+        if(!finished(season, week)){
             throw new IllegalStateException("week " + week + " of " + season
                     + " is not finished (the NFL is on week " + state().get("week").getAsInt()
                     + "), so it has no actuals; asking now would cache an empty week forever");
@@ -122,7 +140,7 @@ public class LeagueWeek {
      * name is the one {@link WeeklyActuals} keeps forever.
      */
     public static Map<String, Double> actualSoFar(String season, int week){
-        if(finished(week)){
+        if(finished(season, week)){
             return actual(season, week);
         }
         return LeagueActuals.leagueWeeklyPoints(actualsBody(season, week));
@@ -139,7 +157,7 @@ public class LeagueWeek {
     public static String matchups(String leagueID, int week){
         String url = "https://api.sleeper.app/v1/league/" + leagueID + "/matchups/" + week;
         return feed(url, "sleeperMatchups" + leagueID + "w" + week,
-                "sleeperLiveMatchups" + leagueID + "w" + week, week);
+                "sleeperLiveMatchups" + leagueID + "w" + week, season(), week);
     }
 
     /** Player ids on somebody's roster right now. */
@@ -175,7 +193,7 @@ public class LeagueWeek {
     public static String actualsBody(String season, int week){
         String url = "https://api.sleeper.app/v1/stats/nfl/regular/" + season + "/" + week;
         return feed(url, "sleeperWeekActuals" + season + "w" + week,
-                "sleeperLiveActuals" + season + "w" + week, week);
+                "sleeperLiveActuals" + season + "w" + week, season, week);
     }
 
     /**

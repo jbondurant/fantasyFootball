@@ -32,6 +32,21 @@ public class RecordBookTest {
     }
 
     @Test
+    public void theShareIsTheBestStartersOverTheTeamsPoints(){
+        List<RecordBook.ManWeek> lineup = List.of(
+                new RecordBook.ManWeek("2024", 5, "A", "1", 50.0),
+                new RecordBook.ManWeek("2024", 5, "A", "2", 30.0),
+                new RecordBook.ManWeek("2024", 5, "A", "3", 15.0),
+                new RecordBook.ManWeek("2024", 5, "A", "4", 5.0));
+        assertEquals(0.5, RecordBook.shareOfTop(lineup, 100, 1), 1e-9);
+        assertEquals(0.95, RecordBook.shareOfTop(lineup, 100, 3), 1e-9);
+        assertEquals(1.0, RecordBook.shareOfTop(lineup, 100, 10), 1e-9, "more men than the lineup holds is the whole lineup");
+        assertEquals(0.0, RecordBook.shareOfTop(lineup, 0, 1), 1e-9, "a week with no points has no share");
+        assertEquals(0.0, RecordBook.shareOfTop(List.of(), 100, 1), 1e-9);
+        assertEquals("2024|5|A", RecordBook.key("2024", 5, "A"));
+    }
+
+    @Test
     public void startedMenAreReadWithTheirPointsAndEmptySlotsSkipped(){
         List<RecordBook.ManWeek> men = RecordBook.manWeeks(BODY, "2024", 5, MANAGERS);
         assertEquals(4, men.size(), "the '0' slot is empty, not a man");

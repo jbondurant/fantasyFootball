@@ -1734,3 +1734,17 @@ real every time.
     carry; nflverse does (team by week), and that is the next feature. Pick
     the population the decision is made over, not the one the data makes
     convenient.
+
+142. **A week number without its season read a frozen year as live.**
+    `LeagueWeek.finished(week)` was `week < state.week`, and every caller
+    passed a week of the season it happened to be working in. Asked about week
+    5 of 2021 in September 2026 it answered "not finished", because 5 is not
+    less than 3 - so the projections, actuals and matchups of five closed
+    seasons were fetched again every day under live cache names, and a finished
+    season's immutable numbers were treated as moving. Found building
+    `RecordBook`'s projected-against-actual section, which reads every week of
+    every season. `finished(String season, int week)` is the one home now: a
+    season already gone is over whatever the week number, a season not yet
+    begun has played nothing, and only inside the current season does the week
+    number decide. A predicate that takes half of a compound key will answer
+    confidently about the other half.
