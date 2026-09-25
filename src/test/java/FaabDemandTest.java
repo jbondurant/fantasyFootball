@@ -17,7 +17,7 @@ public class FaabDemandTest {
         assertEquals(0.75, FaabDemand.snapShare(line), 1e-9);
         assertTrue(Double.isNaN(FaabDemand.snapShare(JsonParser.parseString("{\"rec_tgt\":7}").getAsJsonObject())));
         assertTrue(Double.isNaN(FaabDemand.snapShare(null)));
-        double[] f = FaabDemand.features(line, null, 12.5, 8.0, 150, true, Position.WR);
+        double[] f = FaabDemand.features(line, null, 12.5, 8.0, 150, true, Position.WR, true);
         assertEquals(0.75, f[0], 1e-9, "share");
         assertEquals(0.75, f[1], 1e-9, "jump from a missing week reads as from zero");
         assertEquals(9.0, f[2], 1e-9, "touches = targets + carries");
@@ -26,7 +26,13 @@ public class FaabDemandTest {
         assertEquals(Math.log(150), f[5], 1e-9, "log ADP");
         assertEquals(1.0, f[6], 1e-9, "dropped");
         assertArrayEquals(new double[]{0, 1, 0, 0}, new double[]{f[7], f[8], f[9], f[10]}, 1e-9, "WR indicator");
-        assertEquals(0.0, FaabDemand.features(line, null, 0, 0, 0, false, Position.RB)[5], 1e-9, "an ADP under one logs to zero, never below");
+        assertEquals(1.0, f[11], 1e-9, "next man up");
+        assertEquals(FaabDemand.FEATURES.length, f.length, "one name per column");
+        double[] rb = FaabDemand.features(line, null, 0, 0, 0, false, Position.RB, false);
+        assertEquals(0.0, rb[5], 1e-9, "an ADP under one logs to zero, never below");
+        assertEquals(0.0, rb[11], 1e-9);
+        assertArrayEquals(java.util.Arrays.copyOf(f, 11), FaabDemand.pick(f, FaabDemand.WITHOUT_NEXT_UP), 1e-12,
+                "the model without the feature is the same row less its last column");
     }
 
     @Test

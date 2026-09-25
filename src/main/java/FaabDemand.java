@@ -47,9 +47,17 @@ import java.util.TreeSet;
  *     could see, vintage-free: his snap share that week and its jump over the
  *     week before (the trace of an injury ahead of him), his touches and league
  *     points that week and per game so far, whether he was dropped that week,
- *     his preseason ADP (the FFC board, undrafted at the tail), and position.
+ *     his preseason ADP (the FFC board, undrafted at the tail), position, and
+ *     whether he is the next man up behind a teammate who went down in that
+ *     week ({@link NextManUp}, from the team each man played for that week).
  *     A ridge logistic model of P(any bid) is fitted leaving each season out
  *     and scored on the held-out season; a claim is then read by decile.
+ *
+ *  2a. THE NEXT MAN UP, with and without. The first live run missed Rashod
+ *     Bateman, promoted by a teammate's early exit in week 1 (TRAPS #148);
+ *     the feature is scored leave-one-season-out against the same model
+ *     without it, and this season's cleared runs - in no fit - are ranked
+ *     both ways, man by man.
  *
  *  2b. THE PRICE, BY QUALITY. Justin's second objection: contested men vary
  *     wildly in quality, so one ladder over them mixes a $76 starter with a $2
@@ -73,7 +81,10 @@ public class FaabDemand {
     static final ZoneId LEAGUE_ZONE = ZoneId.of("America/New_York");
     static final double LAMBDA = 1.0;
     static final int[] LADDER = {0, 1, 2, 3, 5, 8, 13, 20, 35, 50};
-    static final String[] FEATURES = {"snap share", "snap jump", "touches", "points", "ppg so far", "log ADP", "dropped", "RB", "WR", "TE", "QB"};
+    static final String[] FEATURES = {"snap share", "snap jump", "touches", "points", "ppg so far", "log ADP", "dropped", "RB", "WR", "TE", "QB",
+            "next man up"};
+    /** The columns of the model before the teammate feature, for the with-and-without test. */
+    static final int[] WITHOUT_NEXT_UP = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
     /** The ADP rank an undrafted man is given: past the board, the same for every season. */
     static final double UNDRAFTED_ADP = 300;
 
@@ -102,10 +113,12 @@ public class FaabDemand {
      * The feature row: snap share last week, its jump over the week before
      * (missing weeks read as zero share), touches and league points last week,
      * points per game so far, log of preseason ADP (undrafted at the tail),
-     * dropped-this-week, and the position as four indicators.
+     * dropped-this-week, the position as four indicators, and whether he is
+     * the next man up behind a teammate who went down in the week just played
+     * ({@link NextManUp}).
      */
     static double[] features(JsonObject lastWeek, JsonObject weekBefore, double pointsLastWeek, double ppgSoFar,
-                             double adp, boolean dropped, Position position){
+                             double adp, boolean dropped, Position position, boolean nextUp){
         double share = snapShare(lastWeek);
         double before = snapShare(weekBefore);
         double s = Double.isNaN(share) ? 0 : share;
@@ -113,7 +126,74 @@ public class FaabDemand {
         return new double[]{s, s - b, stat(lastWeek, "rec_tgt") + stat(lastWeek, "rush_att"), pointsLastWeek,
                 ppgSoFar, Math.log(Math.max(1, adp)), dropped ? 1 : 0,
                 position == Position.RB ? 1 : 0, position == Position.WR ? 1 : 0,
-                position == Position.TE ? 1 : 0, position == Position.QB ? 1 : 0};
+                position == Position.TE ? 1 : 0, position == Position.QB ? 1 : 0, nextUp ? 1 : 0};
+    }
+
+    /** A feature row reduced to the given columns. */
+    static double[] pick(double[] row, int[] columns){
+        double[] out = new double[columns.length];
+        for(int i = 0; i < columns.length; i++){
+            out[i] = row[columns[i]];
+        }
+        return out;
+    }
+
+    /**
+     * Leave-one-season-out on the given columns: each season's men predicted
+     * by a fit on the other seasons. Seasons with fewer than a hundred
+     * training rows are left out, as in the main fit.
+     */
+    static Map<WireMan, Double> heldOut(List<WireMan> wire, List<String> seasons, int[] columns){
+        Map<WireMan, Double> out = new HashMap<>();
+        for(String held : seasons){
+            List<double[]> trainX = new ArrayList<>();
+            List<Boolean> trainY = new ArrayList<>();
+            for(WireMan m : wire){
+                if(!m.season().equals(held)){
+                    trainX.add(pick(m.features(), columns));
+                    trainY.add(m.claimed());
+                }
+            }
+            if(trainX.size() < 100){
+                continue;
+            }
+            double[][] mo = UsageSignal.moments(trainX, columns.length);
+            List<double[]> z = new ArrayList<>();
+            boolean[] y = new boolean[trainX.size()];
+            for(int i = 0; i < y.length; i++){
+                z.add(standardised(trainX.get(i), mo));
+                y[i] = trainY.get(i);
+            }
+            double[] beta = logistic(z, y, LAMBDA);
+            for(WireMan m : wire){
+                if(m.season().equals(held)){
+                    out.put(m, predict(beta, standardised(pick(m.features(), columns), mo)));
+                }
+            }
+        }
+        return out;
+    }
+
+    /** A fit on every man given, on the given columns: {beta, moments}, for predicting men outside it. */
+    record Fit(double[] beta, double[][] moments, int[] columns) {
+        double p(double[] features){
+            return predict(beta, standardised(pick(features, columns), moments));
+        }
+    }
+
+    static Fit fit(List<WireMan> wire, int[] columns){
+        List<double[]> x = new ArrayList<>();
+        boolean[] y = new boolean[wire.size()];
+        for(int i = 0; i < wire.size(); i++){
+            x.add(pick(wire.get(i).features(), columns));
+            y[i] = wire.get(i).claimed();
+        }
+        double[][] mo = UsageSignal.moments(x, columns.length);
+        List<double[]> z = new ArrayList<>();
+        for(double[] row : x){
+            z.add(standardised(row, mo));
+        }
+        return new Fit(logistic(z, y, LAMBDA), mo, columns);
     }
 
     static double sigmoid(double z){
@@ -282,6 +362,19 @@ public class FaabDemand {
         return out;
     }
 
+    static int[] allColumns(){
+        int[] all = new int[FEATURES.length];
+        for(int i = 0; i < all.length; i++){
+            all[i] = i;
+        }
+        return all;
+    }
+
+    static String nameOf(String id){
+        Player player = Player.getPlayerFromSIDV2(id);
+        return player == null ? id : player.firstName + " " + player.lastName;
+    }
+
     /** One free man at one big run: what the market could see, and what it did. */
     record WireMan(String season, int weekPlayed, String playerID, Position position, double adp,
                    int bidders, int price, boolean priced, double[] features) {
@@ -325,6 +418,7 @@ public class FaabDemand {
                         java.util.function.IntFunction<String> matchups,
                         java.util.function.IntFunction<JsonObject> actuals,
                         java.util.function.IntFunction<Map<String, Double>> points,
+                        java.util.function.IntFunction<Map<String, NextManUp.Line>> teamLines, int lastPlayed,
                         Map<String, Double> adpOf, List<Contest> contests, List<WireMan> wire){
         Map<Integer, Map<String, List<Long>>> drops = new HashMap<>();
         List<WaiverLog.Claim> claims = new ArrayList<>();
@@ -380,9 +474,17 @@ public class FaabDemand {
         }
         Map<Integer, JsonObject> weeks = new HashMap<>();
         Map<Integer, Map<String, Double>> scored = new HashMap<>();
+        Map<Integer, Map<String, NextManUp.Line>> teamWeeks = new HashMap<>();
         for(Map.Entry<Integer, String> e : bigDayOfLeg.entrySet()){
             int leg = e.getKey();
             int played = leg - 1;
+            if(played > lastPlayed){
+                continue;       // a run in a week whose games are not all played yet is not the big run
+            }
+            for(int k = 1; k <= played; k++){
+                teamWeeks.computeIfAbsent(k, teamLines::apply);
+            }
+            Map<String, String> promoted = NextManUp.promoted(teamWeeks, played, adpOf);
             JsonObject lastWeek = weeks.computeIfAbsent(played, actuals::apply);
             JsonObject before = played >= 2 ? weeks.computeIfAbsent(played - 1, actuals::apply) : null;
             Map<String, Double> lastPoints = scored.computeIfAbsent(played, points::apply);
@@ -430,7 +532,7 @@ public class FaabDemand {
                 wire.add(new WireMan(season, played, id, player.position, adp,
                         s == null ? 0 : s.bidders(), s == null ? -1 : s.price(), s != null && s.priced(),
                         features(line, beforeLine, lastPoints.getOrDefault(id, 0.0), games == 0 ? 0 : total / games,
-                                adp, dropped, player.position)));
+                                adp, dropped, player.position, promoted.containsKey(id))));
             }
         }
     }
@@ -451,8 +553,24 @@ public class FaabDemand {
                     week -> LineupPromotion.matchupsRaw(year.leagueID(), week),
                     week -> JsonParser.parseString(WeeklyActuals.raw(season, week)).getAsJsonObject(),
                     week -> LeagueActuals.leagueWeeklyPoints(season, week),
+                    week -> NextManUp.lines(LeagueWeek.teamStatsBody(season, week)), WeeklyActuals.WEEKS,
                     board == null ? Map.of() : board.adp(), all, wire);
             seasons.add(season);
+        }
+        // this season, harvested the same way over its finished weeks and kept
+        // out of every fit: the out-of-sample check on the runs already cleared
+        String seasonNow = LeagueWeek.season();
+        int lastPlayedNow = LeagueWeek.week() - 1;
+        Map<String, Double> preseasonAdp = SleeperProjections.adpSnapshot(RosModel.preseasonLines(), RosModel.preseasonAdpDay());
+        List<WireMan> wireNow = new ArrayList<>();
+        if(lastPlayedNow >= 1){
+            harvest(seasonNow,
+                    leg -> leg <= lastPlayedNow + 1 ? LeagueWeek.transactions(configuration.getLeagueID(), leg) : "[]",
+                    week -> LeagueWeek.matchups(configuration.getLeagueID(), week),
+                    week -> JsonParser.parseString(LeagueWeek.actualsBody(seasonNow, week)).getAsJsonObject(),
+                    week -> LeagueWeek.actualSoFar(seasonNow, week),
+                    week -> NextManUp.lines(LeagueWeek.teamStatsBody(seasonNow, week)), lastPlayedNow,
+                    preseasonAdp, new ArrayList<>(), wireNow);
         }
         StringBuilder out = new StringBuilder();
         out.append(String.format("FAAB DEMAND  %s  (%d settled contests over %d seasons %s-%s; %d free men at %d big runs; features as the market saw them)%n",
@@ -609,6 +727,109 @@ public class FaabDemand {
         }
         out.append('\n');
 
+        // ---------------------------------------------------------------- 2a. the next man up
+        out.append("\n== 2a. THE NEXT MAN UP: his team's leader at his position went down in the week just played (NextManUp) ==\n");
+        int flagged = 0;
+        int flaggedClaimed = 0;
+        int rest = 0;
+        int restClaimed = 0;
+        for(WireMan m : wire){
+            if(m.features()[11] > 0){
+                flagged++;
+                flaggedClaimed += m.claimed() ? 1 : 0;
+            }
+            else{
+                rest++;
+                restClaimed += m.claimed() ? 1 : 0;
+            }
+        }
+        out.append(String.format("%d of %d free men were the next man up; %.1f%% of them drew a bid, against %.1f%% of the rest.%n",
+                flagged, wire.size(), 100.0 * flaggedClaimed / Math.max(1, flagged), 100.0 * restClaimed / Math.max(1, rest)));
+        Map<WireMan, Double> pWithout = heldOut(wire, seasons, WITHOUT_NEXT_UP);
+        Map<String, List<Double>> nextUpGain = new TreeMap<>();
+        for(Map.Entry<WireMan, Double> e : pOf.entrySet()){
+            WireMan m = e.getKey();
+            if(pWithout.containsKey(m)){
+                nextUpGain.computeIfAbsent(m.season(), k -> new ArrayList<>()).add(
+                        logLoss(List.of(pWithout.get(m)), List.of(m.claimed())) - logLoss(List.of(e.getValue()), List.of(m.claimed())));
+            }
+        }
+        double[] nu = RosBands.overSeasons(nextUpGain);
+        boolean nextUpEarns = !Double.isNaN(nu[1]) && nu[0] > RosBands.tCritical95((int) nu[2] - 1) * nu[1];
+        out.append(String.format("held-out log loss, the same men and seasons: gain from adding it %+.4f +- %.4f over %d seasons%s%n",
+                nu[0], nu[1], (int) nu[2], nextUpEarns ? "  <- it earns its place" : "  <- not separated: noise on this evidence"));
+        Map<String, List<Double>> flaggedGain = new TreeMap<>();
+        for(Map.Entry<WireMan, Double> e : pOf.entrySet()){
+            WireMan m = e.getKey();
+            if(m.features()[11] > 0 && pWithout.containsKey(m)){
+                flaggedGain.computeIfAbsent(m.season(), k -> new ArrayList<>()).add(
+                        logLoss(List.of(pWithout.get(m)), List.of(m.claimed())) - logLoss(List.of(e.getValue()), List.of(m.claimed())));
+            }
+        }
+        double[] fg = RosBands.overSeasons(flaggedGain);
+        out.append(String.format("on the flagged men alone: %+.4f +- %.4f a man (the whole-wire gain is this spread over %d men per flag)%n",
+                fg[0], fg[1], Math.round((double) wire.size() / Math.max(1, flagged))));
+
+        Fit withIt = fit(wire, allColumns());
+        Fit withoutIt = fit(wire, WITHOUT_NEXT_UP);
+        out.append(String.format("%nTHIS SEASON (%s), in no fit - the runs already cleared, scored by the fit on all %d past seasons:%n",
+                seasonNow, seasons.size()));
+        if(wireNow.isEmpty()){
+            out.append("no finished week yet\n");
+        }
+        else{
+            List<Double> pw = new ArrayList<>();
+            List<Double> po = new ArrayList<>();
+            List<Boolean> yNow = new ArrayList<>();
+            for(WireMan m : wireNow){
+                pw.add(withIt.p(m.features()));
+                po.add(withoutIt.p(m.features()));
+                yNow.add(m.claimed());
+            }
+            out.append(String.format("log loss over %d free men at %d run%s: %.4f with the feature, %.4f without (a check, not a test - one season)%n",
+                    wireNow.size(), wireNow.stream().map(WireMan::weekPlayed).distinct().count(),
+                    wireNow.stream().map(WireMan::weekPlayed).distinct().count() == 1 ? "" : "s",
+                    logLoss(pw, yNow), logLoss(po, yNow)));
+            Map<Integer, Map<String, String>> events = NextManUp.season(
+                    week -> NextManUp.lines(LeagueWeek.teamStatsBody(seasonNow, week)), lastPlayedNow, preseasonAdp);
+            for(int played = 1; played <= lastPlayedNow; played++){
+                List<WireMan> run = new ArrayList<>();
+                for(WireMan m : wireNow){
+                    if(m.weekPlayed() == played){
+                        run.add(m);
+                    }
+                }
+                if(run.isEmpty()){
+                    continue;
+                }
+                List<WireMan> byWith = new ArrayList<>(run);
+                byWith.sort(Comparator.comparingDouble((WireMan m) -> -withIt.p(m.features())));
+                List<WireMan> byWithout = new ArrayList<>(run);
+                byWithout.sort(Comparator.comparingDouble((WireMan m) -> -withoutIt.p(m.features())));
+                out.append(String.format("%n-- the run after week %d: %d free men --%n", played, run.size()));
+                Map<String, String> here = events.getOrDefault(played, Map.of());
+                out.append("next men up that week (leader who went down -> next man, and whether he was free):\n");
+                Map<String, WireMan> inRun = new HashMap<>();
+                for(WireMan m : run){
+                    inRun.put(m.playerID(), m);
+                }
+                for(Map.Entry<String, String> ev : here.entrySet()){
+                    WireMan m = inRun.get(ev.getKey());
+                    out.append(String.format("   %-22s -> %-22s %s%n", nameOf(ev.getValue()), nameOf(ev.getKey()),
+                            m == null ? "rostered, or no stat row" : m.claimed() ? m.bidders() + " bidder" + (m.bidders() == 1 ? "" : "s") : "free, no bid"));
+                }
+                out.append(String.format("%-22s %-3s %8s %10s %14s %14s%n", "claimed man", "pos", "bidders", "next up", "with: P, rank", "without"));
+                for(WireMan m : byWith){
+                    if(!m.claimed()){
+                        continue;
+                    }
+                    out.append(String.format("%-22s %-3s %8d %10s %7.0f%%, %4d %7.0f%%, %4d%n", nameOf(m.playerID()), m.position(), m.bidders(),
+                            m.features()[11] > 0 ? "yes" : "", 100 * withIt.p(m.features()), byWith.indexOf(m) + 1,
+                            100 * withoutIt.p(m.features()), byWithout.indexOf(m) + 1));
+                }
+            }
+        }
+
         // ---------------------------------------------------------------- 2b. the price by quality
         out.append("\n== 2b. THE PRICE BY QUALITY, among the claimed at the big run (priced contests only) ==\n");
         String[] adpBands = {"ADP 1-100", "ADP 101-200", "ADP 200+ or undrafted"};
@@ -680,14 +901,11 @@ public class FaabDemand {
             for(int l = Math.max(1, week - 1); l <= week; l++){
                 dropsIn(LeagueWeek.transactions(configuration.getLeagueID(), l)).forEach((id, at) -> dropped.computeIfAbsent(id, k -> new ArrayList<>()).addAll(at));
             }
-            Map<String, Double> adpNow = new HashMap<>();
-            for(JsonElement e : SleeperProjections.getTodaysProjections()){
-                JsonObject record = e.getAsJsonObject();
-                if(record.has("stats") && record.get("stats").isJsonObject() && record.getAsJsonObject("stats").has("adp_half_ppr")
-                        && !record.getAsJsonObject("stats").get("adp_half_ppr").isJsonNull()){
-                    adpNow.put(record.get("player_id").getAsString(), record.getAsJsonObject("stats").get("adp_half_ppr").getAsDouble());
-                }
-            }
+            // the preseason board, as the harvest reads each past season's: today's
+            // ADP has absorbed the season so far, the market's surprises included
+            Map<String, Double> adpNow = preseasonAdp;
+            Map<String, String> promotedNow = NextManUp.season(
+                    w -> NextManUp.lines(LeagueWeek.teamStatsBody(season, w)), last, preseasonAdp).getOrDefault(last, Map.of());
             // The pool at the run: men on no roster DURING the week just played,
             // the same rule as the harvest - today's rosters already hold the men
             // this morning's run awarded, and the backtest below needs them in.
@@ -745,13 +963,13 @@ public class FaabDemand {
                 double adp = adpNow.getOrDefault(id, UNDRAFTED_ADP);
                 adp = adp >= 999 ? UNDRAFTED_ADP : adp;
                 double[] f = features(line, beforeLine, scoredWeeks.get(last - 1).getOrDefault(id, 0.0),
-                        games == 0 ? 0 : total / games, adp, dropped.containsKey(id), player.position);
+                        games == 0 ? 0 : total / games, adp, dropped.containsKey(id), player.position, promotedNow.containsKey(id));
                 candidates.add(new Candidate(player.firstName + " " + player.lastName, player.position,
                         predict(betaAll, standardised(f, mAll)), adp, f));
             }
             candidates.sort(Comparator.comparingDouble((Candidate c) -> -c.p()));
-            out.append(String.format("%-22s %-3s %8s %6s %5s %5s %6s %6s %6s %7s   %s%n", "player", "pos", "P(bid)", "ADP", "share", "jump",
-                    "touch", "pts", "ppg", "dropped", "bid to win 50 / 75 / 90 in his ADP band"));
+            out.append(String.format("%-22s %-3s %8s %6s %5s %5s %6s %6s %6s %7s %7s   %s%n", "player", "pos", "P(bid)", "ADP", "share", "jump",
+                    "touch", "pts", "ppg", "dropped", "next up", "bid to win 50 / 75 / 90 in his ADP band"));
             int shown = 0;
             for(Candidate c : candidates){
                 if(shown++ >= 30){
@@ -759,13 +977,13 @@ public class FaabDemand {
                 }
                 int a = c.adp() <= 100 ? 0 : c.adp() <= 200 ? 1 : 2;
                 List<Integer> pr = pricesByAdp.get(a);
-                out.append(String.format("%-22s %-3s %7.0f%% %6s %4.0f%% %+4.0f%% %6.1f %6.1f %6.1f %7s   $%d / $%d / $%d%n",
+                out.append(String.format("%-22s %-3s %7.0f%% %6s %4.0f%% %+4.0f%% %6.1f %6.1f %6.1f %7s %7s   $%d / $%d / $%d%n",
                         c.name(), c.position(), 100 * c.p(), c.adp() >= UNDRAFTED_ADP ? "-" : String.format("%.0f", c.adp()),
-                        100 * c.f()[0], 100 * c.f()[1], c.f()[2], c.f()[3], c.f()[4], c.f()[6] > 0 ? "yes" : "",
+                        100 * c.f()[0], 100 * c.f()[1], c.f()[2], c.f()[3], c.f()[4], c.f()[6] > 0 ? "yes" : "", c.f()[11] > 0 ? "yes" : "",
                         bidFor(pr, 0.5), bidFor(pr, 0.75), bidFor(pr, 0.9)));
             }
-            out.append("the thirty free skill men the model expects a bid on; ADP is Sleeper's half-PPR today (the harvest used each\n");
-            out.append("season's FFC board). Worth is TuesdaySwap's column, and a bid above it is a loss whatever the ladder says.\n");
+            out.append("the thirty free skill men the model expects a bid on; ADP is Sleeper's half-PPR preseason board (the harvest used\n");
+            out.append("each past season's FFC board). Worth is TuesdaySwap's column, and a bid above it is a loss whatever the ladder says.\n");
             Map<String, Double> pByName = new HashMap<>();
             Map<String, Integer> rankByName = new HashMap<>();
             for(int i = 0; i < candidates.size(); i++){

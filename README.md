@@ -39,7 +39,7 @@ fails if one does). Fallbacks are in `RUNBOOK.md`.
 ./gradlew run -Pmain=KeeperValuation      # which keepers are worth a slot
 ./gradlew run -Pmain=KeeperEligibility    # who is keeping whom, and for how long
 ./gradlew run -Pmain=WaitOrTake           # take him now, or gamble he lasts a round
-./gradlew run -Pmain=AdpSnapshot          # record today's ADP; run often before the draft
+./gradlew run -Pmain=AdpSnapshot          # record today's ADP and every projection feed, each on its own (in season: sleeper, sleeper-ros, espn-ros, cbs-ros, borischen-week); exits non-zero naming any feed that failed
 ./gradlew run -Pmain=MarketMovers       # who the market moved on in the last days, and why Sleeper thinks so (-Pdays -Ptop -PminMove)
 ./gradlew run -Pmain=WeeklyFeedAudit    # IN SEASON: do Sleeper's weekly projections sum to the season number, does week 2 lean on week 1's result, and did any live week's projection move day to day
 ./gradlew run -Pmain=UsageSignal        # do targets, carries, air yards and red-zone touches say more than the score: their correlation with the points-only rule's residual on 13 seasons, the MAE and flip accuracy gained by a fitted usage term, and that fit applied to every rostered man's usage this week (-Pweek)
@@ -59,7 +59,7 @@ fails if one does). Fallbacks are in `RUNBOOK.md`.
 ./gradlew run -Pmain=TradeMarket         # IN SEASON: every size-balanced swap with all eleven rivals, only those BOTH sides gain from, plus what your surplus is actually worth (-PchainDepth -Ppool -Ptop; -Pprojections=posterior prices on Sleeper's numbers moved by the played weeks at the measured rate, report to data/trades-<date>-posterior.txt)
 # see FAAB-PLAN.md for how a projected bid would be built, and why the demand half needs new data
 ./gradlew run -Pmain=FaabBid             # IN SEASON: what to bid, from this league's own settled contests (-Pfit to harvest, which also writes the big run's prices the page bids from; then -Pvalue=<points> -Pbudget)
-./gradlew run -Pmain=FaabDemand          # IN SEASON: the claim harvest by the weekday it cleared (the Wednesday run is the market), whether demand is foreseeable from snap share / touches / points / drops (leave-one-season-out), and the wire with the big-run bid to win 50/75/90
+./gradlew run -Pmain=FaabDemand          # IN SEASON: the claim harvest by the weekday it cleared (the Wednesday run is the market), whether demand is foreseeable from snap share / touches / points / drops (leave-one-season-out), the next-man-up feature tested with and without, this season's runs scored out of sample, and the wire with the big-run bid to win 50/75/90
 ./gradlew run -Pmain=DefenceThisWeek     # IN SEASON: which defence to start, running the policy WireRateStress actually measured (-Pweek -Plag -Pme)
 ./gradlew run -Pmain=SeasonLedger        # IN SEASON: append each finished week and judge the bench question against a bar frozen before week 1 (-Panchor once, then weekly)
 ./gradlew run -Pmain=RankKeyChoice       # ADP or projections: which preseason order should key a man's outcome cell (leave-one-season-out, one feed) (-PrankDepth -Pband)

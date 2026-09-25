@@ -52,9 +52,14 @@ over the base rate; the top predicted decile is claimed 35% of the time, the bot
 price with points per game +0.03, with ADP -0.04, with the snap jump +0.14 (n 528);
 by ADP band the median is $5 for a top-100 pick and $2 otherwise. The first live run
 (2026-09-16) put the model's rank 1 (Antonio Williams, 3 bidders, $7), 4 and 6 among
-the claimed, and missed Rashod Bateman entirely (four bids the morning after A.J.
-Brown went to IR, on a week he did not play): the event is a TEAMMATE's injury, which
-the stats feed does not carry. nflverse carries team by week; that feature is next.
+the claimed, and missed Rashod Bateman entirely (four bids the morning after Baltimore's
+top receiver, Zay Flowers, left week 1 after 20 of 68 snaps; Bateman played 53 and
+caught nothing - an earlier line here named A.J. Brown, who plays for New England, TRAPS
+#148): the event is a TEAMMATE's injury. Sleeper's /stats rows carry each man's team by
+week, and `NextManUp` now reads it: over five seasons the next man up drew a bid 15.6% of
+the time against 7.9%, and the feature adds +0.0007 +- 0.0003 held-out log loss -
+positive, not separated. It moved Keon Coleman from 24th to 7th on the week-2 run;
+Bateman only from 120th to 83rd.
 Section 2 below stands for the price; for the demand it is superseded by this.
 
 ## 1. The decomposition: do not project the price, project the demand

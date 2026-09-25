@@ -49,6 +49,17 @@ public class LeagueWeek {
         return state().get("season").getAsString();
     }
 
+    /**
+     * The regular season is under way, by Sleeper's state. This is when the
+     * other shops change what their season addresses serve (AdpSnapshot's
+     * archive names them for it); before the first game a rest-of-season
+     * number and a season number are the same number.
+     */
+    public static boolean inSeason(){
+        JsonElement type = state().get("season_type");
+        return type != null && !type.isJsonNull() && "regular".equals(type.getAsString());
+    }
+
     /** A week of THIS season whose games are all played, so its numbers can never change again. */
     public static boolean finished(int week){
         return finished(season(), week);
@@ -233,6 +244,52 @@ public class LeagueWeek {
             weeks.add(projected(season, w));
         }
         return countWeeks(weeks);
+    }
+
+    /**
+     * Each man's weekly projections of a season summed over the weeks that
+     * {@code include} admits, league-scored: id -> {points, weeks carrying a
+     * projection}. The week count travels with the sum because a sum over
+     * weekly feeds not yet published is small for want of weeks, not of
+     * points, and a caller must be able to tell.
+     */
+    public static Map<String, double[]> summed(String season, java.util.function.IntPredicate include){
+        List<Map<String, Double>> weeks = new ArrayList<>();
+        for(int w = 1; w <= WeeklyActuals.WEEKS; w++){
+            if(include.test(w)){
+                weeks.add(projected(season, w));
+            }
+        }
+        return sumWeeks(weeks);
+    }
+
+    /** id -> {sum of his values over the maps, maps he appears in}. */
+    static Map<String, double[]> sumWeeks(List<Map<String, Double>> weeks){
+        Map<String, double[]> out = new HashMap<>();
+        for(Map<String, Double> week : weeks){
+            for(Map.Entry<String, Double> e : week.entrySet()){
+                double[] s = out.computeIfAbsent(e.getKey(), k -> new double[2]);
+                s[0] += e.getValue();
+                s[1]++;
+            }
+        }
+        return out;
+    }
+
+    /**
+     * Every skill man's box-score row of a week WITH HIS TEAM that week - the
+     * /stats array form, which carries team and opponent where the /v1 map
+     * {@link #actualsBody} reads does not. A teammate's injury can only be
+     * read through the team (FaabDemand's next man up, via {@link NextManUp}),
+     * and a man traded in October is on a different one before and after, so
+     * the team is taken from the week, never from today's player database.
+     * Checked 2026-09-25: 618 rows for 2025 week 5, every one with a team.
+     */
+    public static String teamStatsBody(String season, int week){
+        String url = "https://api.sleeper.app/stats/nfl/" + season + "/" + week
+                + "?season_type=regular&position[]=QB&position[]=RB&position[]=WR&position[]=TE";
+        return feed(url, "sleeperTeamStats" + season + "w" + week,
+                "sleeperLiveTeamStats" + season + "w" + week, season, week);
     }
 
     /** The number of maps each key appears in. */

@@ -1729,7 +1729,7 @@ real every time.
     and -0.04 with ADP; the snap jump, the only trace of an event in the box
     score, is the best at +0.14. And the miss on the first live run says why:
     Rashod Bateman drew four bids the morning after A.J. Brown went to IR, on
-    a week he did not play - rank 156 of 162 for a model that reads box
+    a week he did not play (both halves wrong - see #148) - rank 156 of 162 for a model that reads box
     scores. The event is a teammate's injury, which the stats feed does not
     carry; nflverse does (team by week), and that is the next feature. Pick
     the population the decision is made over, not the one the data makes
@@ -1803,3 +1803,49 @@ real every time.
     both ways and names a claim only when the move is not a loss under either;
     on the same day the rebuilt report shows the move at +3.1 on Sleeper and
     -23.1 on the rest-of-season model.
+
+147. **An address that serves a different number once games are played, and a
+    loop that let one refusal stop everything.** The projection archive stopped
+    on 2 September and nothing said so for three weeks. `AdpSnapshot` appended
+    the day's ADP, then resolved four feeds in one loop that wrote only at the
+    end; on 11 and 25 September the ADP landed and was committed, CBS's QB
+    guard threw, and not one projection row was written for any feed. CBS had
+    begun answering its season address with its current-week page ("Week 1
+    Proj", "Week 3 Proj" in the cached titles), and the guard was right to
+    refuse that page and wrong to take three sound feeds down with it. The
+    same reading found every other shop changed meaning at the same address:
+    ESPN's season line is its rest of season once games are played (Bijan
+    Robinson's 300.9 on 25 September is exactly his week 3-18 weekly lines),
+    and Boris Chen's tier files are weekly tiers (Brock Purdy in the top QB
+    tier). Archived under their preseason names they would have put weekly and
+    rest-of-season numbers in columns of season numbers. Now each feed is read
+    and appended on its own; a failure is named and ends the run non-zero after
+    the rest have landed; a rerun fills in only what is missing; each feed's
+    own men are archived, not the merged map (#139); CBS names the page it was
+    served; and in season the feeds carry names that say what they are -
+    sleeper, sleeper-ros, espn-ros, cbs-ros, borischen-week.
+    `ProjectionSources.resolve` refuses espn, cbs and borischen in season for
+    the same reason. A check that throws inside a loop over independent things
+    has to fail only its own thing, and a scheduled job has to fail loudly.
+
+148. **Two events on one morning told as one story, and a fix designed for
+    the story.** #141 and FAAB-PLAN said Rashod Bateman drew four bids "the
+    morning after A.J. Brown went to IR, on a week he did not play". Neither
+    half survives the team-by-week rows (`LeagueWeek.teamStatsBody`): Bateman
+    plays for Baltimore and was on the field for 53 of its 68 week-1 snaps,
+    catching nothing; A.J. Brown plays for New England, and the New England
+    receiver who drew bids at that run was Mack Hollins (two). Baltimore's own
+    leader by ADP, Zay Flowers, played 20 of the 68 and missed week 2 - that
+    is Bateman's event. The feature planned from the story, "the leader by
+    points per game missed the week", could not have seen it: after week 1
+    there is no points-per-game yet, and Flowers did not miss week 1, he left
+    it. `NextManUp` reads the early exit from the snaps and judges a week-1
+    leader against the man behind him. Measured: over five seasons 225 of
+    10,198 free men were a next man up, and 15.6% of them drew a bid against
+    7.9% of the rest; leave-one-season-out the feature improves log loss by
+    +0.0007 +- 0.0003, positive and short of the 95% bar on four degrees of
+    freedom. On this season's two runs, kept out of every fit, it moves Keon
+    Coleman (DJ Moore out, five bidders) from 24th to 7th, and Bateman only
+    from 120th to 83rd of 126: a man with no catches still reads as nobody to
+    a box-score model. An account of a miss is a claim like any other; check
+    it against the rows before designing the fix around it.

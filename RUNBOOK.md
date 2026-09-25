@@ -156,6 +156,17 @@ week predates the games two weeks before it, so from week 3 on each week's
 reads straddle the previous week's games and the days of news between, and the
 lean row stays the measurement that isolates the box score.
 
+    ./gradlew run -Pmain=AdpSnapshot
+
+Keeps the projection archive alive in season: today's number from every shop,
+each under a name that says what it now serves - `sleeper` (the season feed,
+which does not move on results), `sleeper-ros`, `espn-ros`, `cbs-ros` (the
+rest of the season, current week included) and `borischen-week`. Each feed is
+recorded on its own and a rerun fills in only the ones missing; a feed that
+failed is printed as FAILED and the run exits non-zero. Tuesday and Friday at
+least - the launchd job cannot read ~/Documents, so nothing runs it for you,
+and it sat dead for three weeks once (TRAPS #147).
+
     ./gradlew run -Pmain=ProjectionShootout
 
 When a roster the model ranked low outscores the league (JFMarino, week 1):

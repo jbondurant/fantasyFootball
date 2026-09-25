@@ -24,20 +24,84 @@ RB               +0.076     +0.096   0.32 vs 0.20
 WR               +0.002     +0.001   0.37 vs 0.36
 TE               -0.065     -0.066   0.18 vs 0.29
 QB               -0.008     -0.029   0.13 vs 0.14
+next man up      +0.041     +0.090   0.04 vs 0.02
 
-held-out log loss 0.2234 vs base rate's 0.2796: gain +0.0562 +- 0.0048 over 5 seasons  <- real
+held-out log loss 0.2228 vs base rate's 0.2796: gain +0.0568 +- 0.0048 over 5 seasons  <- real
 decile       men   mean p   claimed   2+ bids   by predicted P(any bid), held out
-1           1019     0.6%      1.8%      0.1%
-2           1020     1.5%      1.1%      0.2%
-3           1020     2.1%      1.3%      0.2%
-4           1020     2.7%      2.6%      0.8%
-5           1020     3.5%      3.0%      0.7%
-6           1019     4.5%      3.1%      0.7%
-7           1020     6.1%      6.1%      1.2%
-8           1020     8.9%      8.8%      2.0%
-9           1020    14.5%     17.5%      5.8%
-10          1020    36.8%     35.1%     15.1%
-all-season fit, log-odds per sd: snap share -0.11 snap jump -0.11 touches +0.38 points +0.23 ppg so far +1.19 log ADP -0.35 dropped +0.37 RB +0.39 WR +0.23 TE +0.09 QB -0.90
+1           1019     0.6%      1.6%      0.0%
+2           1020     1.5%      1.3%      0.2%
+3           1020     2.1%      1.1%      0.2%
+4           1020     2.7%      3.0%      1.0%
+5           1020     3.4%      2.5%      0.4%
+6           1019     4.4%      2.9%      1.0%
+7           1020     6.0%      6.9%      1.0%
+8           1020     8.8%      8.9%      2.3%
+9           1020    14.5%     17.4%      5.8%
+10          1020    37.1%     34.9%     14.9%
+all-season fit, log-odds per sd: snap share -0.13 snap jump -0.14 touches +0.37 points +0.24 ppg so far +1.21 log ADP -0.36 dropped +0.37 RB +0.39 WR +0.24 TE +0.10 QB -0.91 next man up +0.32
+
+== 2a. THE NEXT MAN UP: his team's leader at his position went down in the week just played (NextManUp) ==
+225 of 10198 free men were the next man up; 15.6% of them drew a bid, against 7.9% of the rest.
+held-out log loss, the same men and seasons: gain from adding it +0.0007 +- 0.0003 over 5 seasons  <- not separated: noise on this evidence
+on the flagged men alone: +0.0315 +- 0.0123 a man (the whole-wire gain is this spread over 45 men per flag)
+
+THIS SEASON (2026), in no fit - the runs already cleared, scored by the fit on all 5 past seasons:
+log loss over 254 free men at 2 runs: 0.2904 with the feature, 0.2909 without (a check, not a test - one season)
+
+-- the run after week 1: 126 free men --
+next men up that week (leader who went down -> next man, and whether he was free):
+   Josh Jacobs            -> Chris Brooks           rostered, or no stat row
+   Fernando Mendoza       -> Kirk Cousins           free, no bid
+   Kyler Murray           -> Carson Wentz           free, no bid
+   Oronde Gadsden         -> David Njoku            free, no bid
+   Sam Darnold            -> Drew Lock              free, no bid
+   Zay Flowers            -> Rashod Bateman         4 bidders
+claimed man            pos  bidders    next up  with: P, rank        without
+Devin Singletary       RB         1                 66%,    2      68%,    2
+Antonio Williams       WR         3                 63%,    3      62%,    3
+Kalif Raymond          WR         1                 51%,    4      53%,    4
+Demarcus Robinson      WR         2                 28%,   13      29%,   11
+Samaje Perine          RB         1                 24%,   15      25%,   12
+Jack Bech              WR         1                 22%,   16      22%,   13
+Adonai Mitchell        WR         2                 12%,   21      13%,   23
+Mack Hollins           WR         2                  9%,   26      10%,   26
+Raheim Sanders         RB         1                  7%,   29       8%,   29
+DeMario Douglas        WR         2                  6%,   34       7%,   34
+Tre' Harris            WR         2                  5%,   43       6%,   41
+Roman Wilson           WR         1                  5%,   44       6%,   43
+Sione Vaki             RB         1                  4%,   50       4%,   50
+Rashod Bateman         WR         4        yes       2%,   83       1%,  120
+
+-- the run after week 2: 128 free men --
+next men up that week (leader who went down -> next man, and whether he was free):
+   Nico Collins           -> Xavier Hutchinson      rostered, or no stat row
+   Saquon Barkley         -> Will Shipley           free, no bid
+   Chig Okonkwo           -> Ben Sinnott            free, no bid
+   DJ Moore               -> Keon Coleman           5 bidders
+   Puka Nacua             -> Konata Mumpfield       free, no bid
+   RJ Harvey              -> Jonah Coleman          rostered, or no stat row
+   Jaxson Dart            -> Jameis Winston         free, no bid
+   Kyler Murray           -> Carson Wentz           free, no bid
+   A.J. Brown             -> Mack Hollins           rostered, or no stat row
+   Jordan Mason           -> Aaron Jones            rostered, or no stat row
+   Dallas Goedert         -> Johnny Mundt           free, no bid
+   Sam Darnold            -> Drew Lock              free, no bid
+   Zay Flowers            -> Rashod Bateman         rostered, or no stat row
+   Alec Pierce            -> Josh Downs             rostered, or no stat row
+claimed man            pos  bidders    next up  with: P, rank        without
+Terrance Ferguson      TE         2                 92%,    1      92%,    1
+Keon Coleman           WR         5        yes      25%,    7      11%,   24
+Darren Waller          TE         1                 24%,    8      24%,    9
+Emanuel Wilson         RB         6                 23%,   11      24%,    8
+Kalif Raymond          WR         1                 22%,   14      22%,   12
+C.J. Stroud            QB         1                 16%,   18      17%,   15
+Bryce Young            QB         3                 15%,   20      15%,   17
+Elic Ayomanor          WR         1                 13%,   23      13%,   20
+Oronde Gadsden         TE         4                 13%,   24      13%,   21
+Isaiah Williams        WR         1                  6%,   43       6%,   40
+Darnell Mooney         WR         1                  5%,   45       5%,   44
+DeeJay Dallas          RB         1                  4%,   56       4%,   52
+Darius Slayton         WR         1                  1%,  115       1%,  116
 
 == 2b. THE PRICE BY QUALITY, among the claimed at the big run (priced contests only) ==
 band                     n  median     p75     p90   P(win) at $1 $3 $5 $8 $13 $20
@@ -51,38 +115,38 @@ ppg < 5                173       1       5      11     48%  65%  77%  86%  92%  
 r of the price with log ADP -0.041, with ppg so far +0.031, with the snap jump +0.141 (n 528)
 
 == 3. THIS WEEK: every free skill man who played, P(any bid) at the big run, and the bid that wins 50 / 75 / 90% in his ADP band ==
-player                 pos   P(bid)    ADP share  jump  touch    pts    ppg dropped   bid to win 50 / 75 / 90 in his ADP band
-Terrance Ferguson      TE       92%    202   58%   +7%    9.0   14.4   14.4     yes   $3 / $8 / $13
-Cody White             WR       62%      -   11%   -5%    2.0   15.4   15.4           $3 / $8 / $13
-Emanuel Wilson         RB       28%    266   41%  +35%   22.0    9.2    4.8           $3 / $8 / $13
-Ryan Miller            WR       26%      -   12%  +12%    1.0   14.2   14.2           $3 / $8 / $13
-Malik Willis           QB       24%    201  100%   +0%    2.0   14.5   15.6     yes   $3 / $8 / $13
-C.J. Stroud            QB       17%    205  100%   +0%    3.0   17.0   17.7           $3 / $8 / $13
-Cam Ward               QB       16%    228  100%   +0%    4.0   20.0   16.9           $3 / $8 / $13
-Bryce Young            QB       15%    235   94%   +4%    1.0   30.1   34.3           $3 / $8 / $13
-Kyle Juszczyk          RB       14%      -   44%   -7%    2.0    9.7    9.7           $3 / $8 / $13
-Nate Adkins            TE       12%      -   37%  +37%    4.0   11.3   11.3           $3 / $8 / $13
-Joshua Palmer          WR       12%      -   38%   +7%    3.0   10.8   10.4           $3 / $8 / $13
-Oronde Gadsden         TE       12%    179   44%  +26%    2.0    8.8    6.5           $3 / $8 / $13
-Germie Bernard         WR       12%    241   79%  +74%    8.0    5.5    5.5           $3 / $8 / $13
-Keon Coleman           WR       11%    242   74%  +24%    6.0    9.3    5.0           $3 / $8 / $13
-Darren Waller          TE       11%      -   44%   +9%    3.0   16.8   10.3           $3 / $8 / $13
-Tyquan Thornton        WR       11%      -   59%  +59%    4.0   10.6   10.6           $3 / $8 / $13
-Deshaun Watson         QB       11%      -  100%   +0%    7.0   23.7   19.9           $3 / $8 / $13
-Ted Hurst              WR       10%    240   74%   -2%    7.0    3.7    4.4           $3 / $8 / $13
-Kalif Raymond          WR       10%      -   62%   +2%    5.0    6.5    9.5           $3 / $8 / $13
-Samaje Perine          RB       10%      -   40%  +12%    3.0    2.7    4.6     yes   $3 / $8 / $13
-Justice Hill           RB        9%    223   47%   +1%    4.0    2.8    3.1           $3 / $8 / $13
-Darius Cooper          WR        9%      -   41%  +26%    3.0    9.6    9.6           $3 / $8 / $13
-Brenton Strange        TE        9%    166   83%  +15%    2.0    2.7    6.0           $3 / $8 / $13
-Kaytron Allen          RB        8%    234    8%   -2%    5.0    2.4    2.0           $3 / $8 / $13
-Cade Otton             TE        8%    246   89%   -9%    6.0    5.3    4.7           $3 / $8 / $13
-David Njoku            TE        8%    222   16%  -38%    3.0    1.4    4.9           $3 / $8 / $13
-Kirk Cousins           QB        7%      -  100%   +0%    4.0   27.2   24.5           $3 / $8 / $13
-Cooper Kupp            WR        7%    209   43%  -35%    2.0    3.0    3.8           $3 / $8 / $13
-Isaac TeSlaa           WR        7%    230   75%   +8%    5.0    3.6    3.6           $3 / $8 / $13
-Jordan James           RB        6%    222   15%  +15%    4.0    1.5    1.5           $3 / $8 / $13
-the thirty free skill men the model expects a bid on; ADP is Sleeper's half-PPR today (the harvest used each
-season's FFC board). Worth is TuesdaySwap's column, and a bid above it is a loss whatever the ladder says.
+player                 pos   P(bid)    ADP share  jump  touch    pts    ppg dropped next up   bid to win 50 / 75 / 90 in his ADP band
+Terrance Ferguson      TE       92%    207   58%   +7%    9.0   14.4   14.4     yes           $3 / $8 / $13
+Cody White             WR       63%      -   11%   -5%    2.0   15.4   15.4                   $3 / $8 / $13
+Ryan Miller            WR       49%      -   12%  +12%    1.0   14.2   14.2                   $3 / $8 / $13
+Kyle Juszczyk          RB       29%      -   44%   -7%    2.0    9.7    9.7                   $3 / $8 / $13
+Joshua Palmer          WR       26%      -   38%   +7%    3.0   10.8   10.4                   $3 / $8 / $13
+Nate Adkins            TE       26%      -   37%  +37%    4.0   11.3   11.3                   $3 / $8 / $13
+Keon Coleman           WR       25%    242   74%  +24%    6.0    9.3    5.0             yes   $3 / $8 / $13
+Darren Waller          TE       24%      -   44%   +9%    3.0   16.8   10.3                   $3 / $8 / $13
+Malik Willis           QB       24%    192  100%   +0%    2.0   14.5   15.6     yes           $3 / $8 / $13
+Tyquan Thornton        WR       23%      -   59%  +59%    4.0   10.6   10.6                   $3 / $8 / $13
+Emanuel Wilson         RB       23%      -   41%  +35%   22.0    9.2    4.8                   $3 / $8 / $13
+Will Shipley           RB       22%      -   51%  +33%    9.0    3.9    2.8             yes   $3 / $8 / $13
+Deshaun Watson         QB       22%      -  100%   +0%    7.0   23.7   19.9                   $3 / $8 / $13
+Kalif Raymond          WR       22%      -   62%   +2%    5.0    6.5    9.5                   $3 / $8 / $13
+Drew Lock              QB       22%      -  100%  +10%    0.0   27.4   21.1             yes   $3 / $8 / $13
+Samaje Perine          RB       21%      -   40%  +12%    3.0    2.7    4.6     yes           $3 / $8 / $13
+Darius Cooper          WR       20%      -   41%  +26%    3.0    9.6    9.6                   $3 / $8 / $13
+C.J. Stroud            QB       16%    210  100%   +0%    3.0   17.0   17.7                   $3 / $8 / $13
+Kirk Cousins           QB       16%      -  100%   +0%    4.0   27.2   24.5                   $3 / $8 / $13
+Bryce Young            QB       15%    235   94%   +4%    1.0   30.1   34.3                   $3 / $8 / $13
+Cam Ward               QB       15%    235  100%   +0%    4.0   20.0   16.9                   $3 / $8 / $13
+Xavier Legette         WR       14%      -   50%   -3%    4.0    7.4    7.4                   $3 / $8 / $13
+Elic Ayomanor          WR       13%      -   53%   +1%    3.0    7.9    7.8                   $3 / $8 / $13
+Oronde Gadsden         TE       13%    172   44%  +26%    2.0    8.8    6.5                   $3 / $8 / $13
+Jalen Royals           WR       12%      -   15%  +15%    2.0    7.6    7.6                   $3 / $8 / $13
+Germie Bernard         WR       11%    241   79%  +74%    8.0    5.5    5.5                   $3 / $8 / $13
+Ted Hurst              WR       10%    240   74%   -2%    7.0    3.7    4.4                   $3 / $8 / $13
+Laquon Treadwell       WR       10%      -   74%  +39%    3.0    7.6    7.6                   $3 / $8 / $13
+Justice Hill           RB        9%    219   47%   +1%    4.0    2.8    3.1                   $3 / $8 / $13
+Carson Wentz           QB        9%      -  100%  +17%    3.0    5.3   15.3             yes   $3 / $8 / $13
+the thirty free skill men the model expects a bid on; ADP is Sleeper's half-PPR preseason board (the harvest used
+each past season's FFC board). Worth is TuesdaySwap's column, and a bid above it is a loss whatever the ladder says.
 
 the run that already cleared on these features (2026-09-24): the skill men who drew a bid, with the model's P(bid) and rank among 162 free men

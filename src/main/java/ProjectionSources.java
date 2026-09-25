@@ -45,9 +45,69 @@ public class ProjectionSources {
             new Slot("rotogrinders", "RotoGrinders (DFS-oriented) numbers", "hand-keyed CSV"),
             new Slot("props", "Sportsbook season props as stat counts", "hand-keyed props CSV"));
 
-    /** The feeds that fetch themselves - archived daily by AdpSnapshot. */
+    /** The feeds that fetch themselves - the preseason boards, archived daily by AdpSnapshot before the season. */
     public static List<String> automaticSources(){
         return List.of("sleeper", "borischen", "espn", "cbs");
+    }
+
+    /**
+     * The feeds the daily archive records. Before the season, the four
+     * preseason boards under their own names. Once games are played the shops
+     * change what their addresses serve without changing the address: ESPN's
+     * season line becomes the sum of its weekly projections from the current
+     * week on (Bijan Robinson's 300.9 on 2026-09-25 is exactly his weeks 3-18),
+     * CBS's season page turns into its current-week page, and Boris Chen's tier
+     * files become weekly tiers. So the in-season archive names each number for
+     * what it is, and a rest-of-season number never lands in a column of season
+     * numbers:
+     *
+     *   sleeper         the season feed, which does not move on results (TRAPS #136)
+     *   sleeper-ros     Sleeper's weekly projections summed over the weeks not finished
+     *   espn-ros        ESPN's season line, which in season is its rest of season
+     *   cbs-ros         CBS's rest-of-season page
+     *   borischen-week  the day's weekly tiers on Sleeper's curve for the current week
+     *
+     * The rest-of-season numbers all count the current week, played games and
+     * all, from the week's first kickoff to its last - the definition ESPN
+     * uses - so a comparison must score them against weeks from the same one.
+     */
+    public static List<String> archiveFeeds(boolean inSeason){
+        return inSeason ? List.of("sleeper", "sleeper-ros", "espn-ros", "cbs-ros", "borischen-week")
+                : automaticSources();
+    }
+
+    /**
+     * One archived feed's OWN rows - the men it projects and nobody else. The
+     * planner's {@link #resolve} fills a source's gaps with Sleeper, which is
+     * right for a board and wrong for a record: an archived espn number equal
+     * to Sleeper's for a man ESPN never projected is a comparison rigged to a
+     * tie (TRAPS #139). Anything not named here is a subscriber CSV.
+     */
+    static Map<String, Double> own(String feed){
+        return switch(feed){
+            case "sleeper" -> SleeperProjections.parseTodaysWebPage();
+            case "sleeper-ros" -> sleeperRos();
+            case "borischen" -> BorisChenTiers.leaguePointsBySleeperID();
+            case "borischen-week" -> BorisChenTiers.weekPointsBySleeperID();
+            case "espn", "espn-ros" -> EspnProjections.leaguePointsBySleeperID();
+            case "cbs" -> CbsProjections.leaguePointsBySleeperID("season");
+            case "cbs-ros" -> CbsProjections.leaguePointsBySleeperID("restofseason");
+            default -> {
+                Map<String, Double> external = ProjectionBridge.externalSource(feed);
+                if(external == null){
+                    throw new IllegalArgumentException("no projection feed named " + feed);
+                }
+                yield external;
+            }
+        };
+    }
+
+    /** Sleeper's weekly projections summed over the weeks of this season not yet finished, the current one included. */
+    static Map<String, Double> sleeperRos(){
+        String season = LeagueWeek.season();
+        Map<String, Double> out = new LinkedHashMap<>();
+        LeagueWeek.summed(season, w -> !LeagueWeek.finished(season, w)).forEach((id, s) -> out.put(id, s[0]));
+        return out;
     }
 
     /** The planner's feed resolver, blends included. */
@@ -119,6 +179,13 @@ public class ProjectionSources {
             }
             return blended;
         }
+        if(source != null && automaticSources().contains(source) && !source.equals("sleeper") && LeagueWeek.inSeason()){
+            // the address still answers, with a different kind of number: a
+            // rest-of-season or one week's, merged below over Sleeper's season
+            throw new IllegalStateException(source + " is a preseason board, and in season its address serves a rest-of-season"
+                    + " or a weekly number (archived as " + source + (source.equals("borischen") ? "-week" : "-ros")
+                    + "); price in-season decisions on sleeper, ros or posterior");
+        }
         Map<String, Double> automatic = switch(source == null ? "" : source){
             case "borischen" -> BorisChenTiers.leaguePointsBySleeperID();
             case "espn" -> EspnProjections.leaguePointsBySleeperID();
@@ -163,7 +230,14 @@ public class ProjectionSources {
             if(source.equals("sleeper")){
                 continue;
             }
-            Map<String, Double> feed = resolve(source);
+            Map<String, Double> feed;
+            try {
+                feed = resolve(source);
+            }
+            catch(IllegalStateException inSeason){
+                System.out.printf("%n%s: %s%n", source, inSeason.getMessage());
+                continue;
+            }
             List<Gap> gaps = new ArrayList<>();
             for(Map.Entry<String, Double> entry : feed.entrySet()){
                 Double base = sleeper.get(entry.getKey());

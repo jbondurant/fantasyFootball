@@ -59,9 +59,9 @@ Fixes, in order:
 - **A2.** `WeeklyStarterValue` takes a `RosterRules`; `fill` counts come from it.
 - **A3.** `StartingLineup.FIXED` derived from `RosterRules` minus DEF; `SKILL_SLOTS`/`FLEX_SLOTS` derived.
 - **A4.** `MarketMovers`, `ScoringAudit` literals → `LeagueScoringSettings.halfPprFeed().passTD`.
-- **A13.** (found 2026-09-16, TRAPS #141) the FAAB demand model's next feature is a teammate's injury - the leader at his team and position by ppg missing the week - which needs team-by-week from nflverse (`NflverseWeekly` has team and opponent per row, ids need the boards' name match).
-- **A12.** (found 2026-09-15, TRAPS #139) `AdpSnapshot` archives the merged map, so an archived source is Sleeper's number for the men it did not cover; archive each source's own rows plus a fill-in flag (with B2-1), and drop fill-ins in any comparison (`ProjectionShootout` does).
-- **A11.** (found 2026-09-14, TRAPS #138) the season feed's DEF line is a four-category stub ~25 pts/season low under league scoring; price defences from the sum of the weekly DEF rows wherever the season feed is read for one (`TradeMarket`, the wire, `SeasonOutlook`, `MarketMovers`).
+- **A13.** (found 2026-09-16, TRAPS #141) the FAAB demand model's next feature is a teammate's injury. **Done 2026-09-25 (TRAPS #148):** `NextManUp` reads the team of each week from Sleeper's `/stats` array rows (`LeagueWeek.teamStatsBody`, every season 2021-2026, no id match needed), flags the next man up when his team's ADP leader played under half his usual snaps or none; `FaabDemand` §2a tests it with and without, and scores this season's runs out of sample. +0.0007 +- 0.0003 log loss over five seasons: positive, not separated.
+- **A12.** (found 2026-09-15, TRAPS #139) `AdpSnapshot` archives the merged map, so an archived source is Sleeper's number for the men it did not cover. **Done 2026-09-25 (TRAPS #147):** each feed's own rows (`ProjectionSources.own`), no fill-ins to flag; rows before that day are the merged map and `ProjectionShootout` still drops them.
+- **A11.** (found 2026-09-14, TRAPS #138) the season feed's DEF line is a four-category stub ~25 pts/season low under league scoring. **Done 2026-09-25:** `SleeperProjections.parseTodaysWebPage` (and `getScoreList`) price every defence from the sum of its eighteen weekly rows when 16+ weeks carry one - the one place the tools read the season feed; `parseSeasonFeed` keeps the feed as served for `WeeklyFeedAudit`. `MarketMovers` still diffs the raw feed day to day, which is consistent with itself.
 - **A10.** (found 2026-09-14, TRAPS #137) `LeagueWeek.projected` freezes a finished week from its first post-game read; freeze it from the newest live read dated before the week's first game instead (needs the kickoff date - with B2-7).
 - **A5.** `RosterRules.justinsKeepers()` ← `planner.myKeepers` / `getTodaysKeepers()` with the literal as fallback and a feed-agreement test (the `FALLBACK_SLOTS` pattern).
 - **A6.** `KeeperBasis.forNextDeclaration(configuration)` — reads the draft object's `status`; IN_SEASON → `NextYearKeepers`, PRE_DRAFT → `eligibleCandidates`; the four in-season callers use it; the August tools refuse to run in season. Pure `moment(String)` tested on both arms.
@@ -139,22 +139,23 @@ bridge; player metadata; the data stamp.
 
 **State of health.** The scoring bridge and the fetch layer are sound in the small and
 tested for the pure parts, and there is no single statement of cache policy (workstream D).
-The daily four-feed projection archive has been **silently dead since 2026-09-02**: CBS now
-answers its season URL with the current week's page, `CbsProjections:65` throws, and
-`AdpSnapshot:157-169` buffers all four sources and writes nothing — while the ADP half
-keeps being committed (`5d54626`, 2026-09-11). The archive that exists labels Sleeper's
-numbers as ESPN/CBS/borischen for every player those feeds never covered (102 defence rows
-a day, measured).
+The daily projection archive was **silently dead from 2026-09-02 to 2026-09-25**: CBS
+answers its season URL with the current week's page in season, its guard threw, and the
+archive loop wrote nothing for any feed while the ADP half kept being committed. Resumed
+2026-09-25 (TRAPS #147): each feed on its own, failures named with a non-zero exit, each
+feed's own men, and in-season names for what the shops now serve (sleeper, sleeper-ros,
+espn-ros, cbs-ros, borischen-week). The rows before that day label Sleeper's numbers as
+ESPN/CBS/borischen for every player those feeds never covered.
 
 **Fixes** (11 confirmed; evidence file §1):
 
-1. [high/small] Archive each feed as it resolves; never lose a day to one broken source — `AdpSnapshot:157-169`, `tools/adp_snapshot_daily.sh` (`set -o pipefail`, commit only when both files gained a row).
-2. [high/small] CBS: detect the in-season week page and say so; drop `cbs` from `automaticSources()` in season, printed every run — `CbsProjections:21,65`, `ProjectionSources:47`.
+1. **Done 2026-09-25.** [high/small] Archive each feed as it resolves; never lose a day to one broken source — `AdpSnapshot:157-169`, `tools/adp_snapshot_daily.sh` (`set -o pipefail`, commit only when both files gained a row).
+2. **Done 2026-09-25** (in season the archive reads `cbs-ros`, CBS's rest-of-season page). [high/small] CBS: detect the in-season week page and say so; drop `cbs` from `automaticSources()` in season, printed every run — `CbsProjections:21,65`, `ProjectionSources:47`.
 3. [medium/trivial] Anchor `mostRecentCached` to the date so `w1` cannot serve `w14` — `InOutUtilities:202`.
 4. [medium/trivial] `WeeklyProjections` uses `LeagueWeek`'s `finished()` gate; the week-1 file on disk is the 09-05 copy — `WeeklyProjections:31`.
 5. [medium/small] Refuse an empty or error-wrapper payload in the day cache too (`getCachedForever` already does) — `InOutUtilities:151,264`; behavioural test.
 6. [medium/small] Injury tags expire on game day; `DataStamp` carries the fetch minute, not just the date — `SleeperProjections:34`, `DataStamp:28`.
-7. [medium/small] Archive the raw feed maps, not the Sleeper-backfilled merge — `ProjectionSources:121`, `AdpSnapshot:158`.
+7. **Done 2026-09-25.** [medium/small] Archive the raw feed maps, not the Sleeper-backfilled merge — `ProjectionSources:121`, `AdpSnapshot:158`.
 8. [medium/small] One cache name per URL; the fixture pin covers every name the suite reads — `AAAConfiguration:119` vs `SleeperLeague:50`.
 9. [medium/trivial] Give `/state/nfl` a short expiry so Tuesday's week flip is seen the day it happens — `LeagueWeek:35` (*verify on 2026-09-15 first*).
 10. [medium/trivial] Write defences into the ADP archive (`-PadpSnapshot` pins every DEF at 100% survival today) — `AdpSnapshot:93`.
@@ -667,7 +668,7 @@ after-the-fact shape, and the reason to fix it before the wire gets busy.
 - `StartSit` — The best legal ten from league-scored week projections, with the measured coin-flip band (-Pcalibrate write…
 - `TuesdaySwap` — Tuesday waiver search over (add, drop) pairs on WeeklyStarterValue with DO NOTHING as default; prints the d…
 - `WaiverLog` — This season's waiver claims from the transactions feed, live: each contest's bids by manager and the winner, claims that died for room marked as such, FAAB spent per manager against the roster feed's counter, and my own claims. Report to data/waiver-log-<season>-w<week>.txt.
-- `FaabDemand` — The claim harvest cut by the weekday it cleared (the big run after the games vs the rest: contests, dollars, prices, win ladder); P(any bid) over the WHOLE wire at every big run (rosters from the matchups feed) from touches, points, ppg so far, ADP, snap share and jump, a drop and position, leave-one-season-out, read by decile; the price by ADP and ppg band among the claimed; this week's wire ranked by P(bid) with the big-run bid to win 50/75/90, and a backtest of the run that just cleared. Report to data/faab-demand-<date>.txt.
+- `FaabDemand` — The claim harvest cut by the weekday it cleared (the big run after the games vs the rest: contests, dollars, prices, win ladder); P(any bid) over the WHOLE wire at every big run (rosters from the matchups feed) from touches, points, ppg so far, preseason ADP, snap share and jump, a drop, position and whether he is the next man up behind a teammate who went down (`NextManUp`), leave-one-season-out, read by decile, with the next-man-up feature tested with and without; this season's cleared runs scored out of sample; the price by ADP and ppg band among the claimed; this week's wire ranked by P(bid) with the big-run bid to win 50/75/90, and a backtest of the run that just cleared. Report to data/faab-demand-<date>.txt. Its helper `NextManUp` (no main) reads the man a teammate's injury promotes from box scores with the team of each week (`LeagueWeek.teamStatsBody`, Sleeper's /stats array rows): the ADP leader at a team and position played under half his usual snap share or none, having been up in the team's previous game (week 1: under half the share of the man behind him), and the next man is the rest's most-snapped.
 - `WeekReaction` — After the games: every rostered skill man's week against his preseason prior, the share the measured update rule keeps (InSeasonLearning's kappa, refit per run), whether Sleeper's season projection moved, and a sell-high / buy-low verdict that names which half is assumed. Report to data/week-reaction-<season>-w<week>.txt.
 
 **diagnostic** (7)

@@ -141,7 +141,10 @@ public class WeeklyFeedAudit {
         int gamesInSeason = WeeklyStarterValue.WEEKS;
         LeagueScoringSettings scoring = SleeperLeague.getSeriousLeague().league.leagueScoringSettings;
 
-        Map<String, Double> seasonPoints = ProjectionSources.resolve("sleeper");
+        // the feed as served: the tools price defences from the weekly sum now
+        // (TRAPS #138), so reading them through the tools' map would compare
+        // the weekly sum with itself
+        Map<String, Double> seasonPoints = SleeperProjections.parseSeasonFeed();
         TreeMap<String, Path> seasonDays = MarketMovers.cachedDays(season);
         Map<String, MarketMovers.Row> meta = MarketMovers.read(seasonDays.get(seasonDays.lastKey()), scoring);
 
@@ -236,8 +239,9 @@ public class WeeklyFeedAudit {
         onlyWeekly.removeAll(seasonKeys);
         out.append("season DEF line: " + String.join(" ", seasonKeys) + "\n");
         out.append("weekly DEF line adds: " + String.join(" ", onlyWeekly) + "\n");
-        out.append("(both are scored by Sleeper's own pts_half_ppr, a defence having no offensive line; a season line missing\n");
-        out.append("categories the league pays for is that much low everywhere the season feed prices a defence)\n");
+        out.append("(both are scored by Sleeper's own pts_half_ppr, a defence having no offensive line. A season line missing\n");
+        out.append("categories the league pays for is that much low, which is why the tools price a defence from the sum of\n");
+        out.append("these weekly rows instead - SleeperProjections.parseTodaysWebPage, TRAPS #138; this audit reads the feed as served)\n");
         gaps.sort(Comparator.comparingDouble((String[] g) -> -Math.abs(Double.parseDouble(g[2]))));
         out.append("\nbiggest gaps, sum minus season:\n");
         for(String[] g : gaps.subList(0, Math.min(10, gaps.size()))){
