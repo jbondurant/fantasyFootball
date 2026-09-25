@@ -1748,3 +1748,19 @@ real every time.
     begun has played nothing, and only inside the current season does the week
     number decide. A predicate that takes half of a compound key will answer
     confidently about the other half.
+
+143. **A week being over does not settle its transactions.** `WaiverLog` and
+    `FaabBid` read a week's claims through the same policy the scoring feeds
+    use: frozen once Sleeper's week counter passes it. But Sleeper files a
+    claim under the leg it was CREATED in and clears it when the run happens,
+    which can be days later - eight bids on Emanuel Wilson were filed under
+    week 2 and settled in the 09-23 run, a day after the counter moved to 3.
+    Week 2 had been frozen on 09-22, so the log showed that contest as one bid
+    by a manager who actually lost it, the winning $13 was missing, and four
+    managers' FAAB counters disagreed with the log's sum - which is the guard
+    that caught it, printed beside every row since the tool was written. On
+    2026-09-22 this produced a briefing that said the league was not spending
+    when the busiest run of the season was about to clear. The season being
+    played now reads every week's transactions through the day's cache; only a
+    past season freezes. The clearing timestamps were never the problem: all 35
+    claims in that run carry the same millisecond.

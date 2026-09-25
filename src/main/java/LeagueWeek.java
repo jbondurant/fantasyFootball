@@ -197,16 +197,23 @@ public class LeagueWeek {
     }
 
     /**
-     * A week's transactions under the policy: frozen once the week is over
-     * (an empty week is a real answer there - TRAPS #85), the day's read while
-     * it is live, so a claim placed this morning is in the log this afternoon.
-     * {@link LeagueTransactions#transactionsRaw} routes the configured league
-     * here; past seasons stay on the forever cache, every week of them being over.
+     * A week's transactions in the season being played, through the DAY's cache
+     * whatever week it is. {@link LeagueTransactions#transactionsRaw} routes only
+     * the configured league here; a past season stays on the forever cache,
+     * every run of it having settled long ago.
+     *
+     * A WEEK BEING OVER DOES NOT SETTLE ITS TRANSACTIONS. Sleeper files a claim
+     * under the leg it was CREATED in and clears it days later: eight bids on
+     * Emanuel Wilson were filed under week 2 and settled in the 09-23 run, a day
+     * after the week counter moved to 3. Freezing week 2 the moment it was
+     * "finished" kept the list as it stood before that run - the winning claims
+     * missing, the contest reading as one bid, and Sleeper's own FAAB counters
+     * disagreeing with the log for four managers (TRAPS #143). The season's own
+     * weeks are small and few; re-reading them daily costs nothing and is the
+     * only way the log is true.
      */
     public static String transactions(String leagueID, int week){
         String url = "https://api.sleeper.app/v1/league/" + leagueID + "/transactions/" + week;
-        return finished(week)
-                ? InOutUtilities.getCachedForeverAllowingEmpty(url, "sleeperTxns" + leagueID + "w" + week)
-                : InOutUtilities.getTodaysWebPage(url, "sleeperLiveTxns" + leagueID + "w" + week);
+        return InOutUtilities.getTodaysWebPage(url, "sleeperLiveTxns" + leagueID + "w" + week);
     }
 }
