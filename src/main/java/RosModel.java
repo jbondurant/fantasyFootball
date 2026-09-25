@@ -103,7 +103,7 @@ public class RosModel {
 
     /** One man at k games seen: the two estimates and what he then did. */
     record Case(String season, Position position, int seen, String id, double posterior, double sleeper,
-                double target) {}
+                double target, Double espn) {}
 
     /**
      * The least-squares weight on {@code a} against {@code b} for predicting
@@ -125,6 +125,39 @@ public class RosModel {
         return Math.max(0, Math.min(1, numerator / denominator));
     }
 
+    /**
+     * The least-squares weights of a three-way blend, {posterior, ESPN}, Sleeper
+     * taking the rest: the point on the simplex, searched at a twentieth, that
+     * minimises the squared error of a*posterior + b*ESPN + (1-a-b)*Sleeper
+     * against the outcome. Rows are {posterior, Sleeper, ESPN, y}. Kept on the
+     * simplex so no source is ever bet against.
+     */
+    static double[] blendWeights3(List<double[]> rows){
+        double bestA = 0;
+        double bestB = 0;
+        double bestError = Double.MAX_VALUE;
+        for(int i = 0; i <= 20; i++){
+            for(int j = 0; i + j <= 20; j++){
+                double a = i / 20.0;
+                double b = j / 20.0;
+                double error = 0;
+                for(double[] r : rows){
+                    error += sq(blend3(a, b, r[0], r[1], r[2]) - r[3]);
+                }
+                if(error < bestError - 1e-12){
+                    bestError = error;
+                    bestA = a;
+                    bestB = b;
+                }
+            }
+        }
+        return new double[]{bestA, bestB};
+    }
+
+    static double blend3(double a, double b, double posterior, double sleeper, double espn){
+        return a * posterior + b * espn + (1 - a - b) * sleeper;
+    }
+
     static double blend(double w, double posterior, double sleeper){
         return w * posterior + (1 - w) * sleeper;
     }
@@ -137,7 +170,8 @@ public class RosModel {
     /** Every case from every season whose week k+1 projection carries points; the seasons used are added to {@code withWeeks}. */
     static List<Case> cases(Map<String, List<InSeasonLearning.Man>> harvest, List<String> seasons,
                             Map<String, Map<Position, double[]>> priors,
-                            Map<String, Map<Position, InSeasonLearning.Kappa>> kappas, List<String> withWeeks){
+                            Map<String, Map<Position, InSeasonLearning.Kappa>> kappas, List<String> withWeeks,
+                            Map<String, EspnWeekly.Season> espn){
         List<Case> cases = new ArrayList<>();
         for(String season : seasons){
             boolean any = false;
@@ -163,10 +197,13 @@ public class RosModel {
                                 || !next.containsKey(man.id())){
                             continue;
                         }
+                        EspnWeekly.Season espnSeason = espn.get(season);
+                        Double espnNext = espnSeason == null ? null
+                                : espnSeason.byWeek().getOrDefault(seen + 1, Map.of()).get(man.id());
                         cases.add(new Case(season, position, seen, man.id(),
                                 InSeasonLearning.estimate(man, seen, kappa, priors.get(season), level),
                                 next.get(man.id()),
-                                man.restPoints(seen + 1) / man.restGames(seen + 1)));
+                                man.restPoints(seen + 1) / man.restGames(seen + 1), espnNext));
                     }
                 }
             }
@@ -347,7 +384,7 @@ public class RosModel {
             priors.put(season, InSeasonLearning.priorTable(harvest, season, null, DEPTH));
             kappas.put(season, InSeasonLearning.fitKappa(harvest, season, DEPTH));
         }
-        List<Case> cases = cases(harvest, seasons, priors, kappas, new ArrayList<>());
+        List<Case> cases = cases(harvest, seasons, priors, kappas, new ArrayList<>(), Map.of());
         Map<String, Double> out = new java.util.LinkedHashMap<>(SleeperProjections.parseTodaysWebPage());
         Map<String, Ros> ros = thisSeason(harvest, cases);
         // A SEASON TOTAL INCLUDES THE GAMES HE MISSES. The objective reads it that
@@ -381,7 +418,21 @@ public class RosModel {
             kappas.put(season, InSeasonLearning.fitKappa(harvest, season, DEPTH));
         }
         List<String> withWeeks = new ArrayList<>();
-        List<Case> cases = cases(harvest, seasons, priors, kappas, withWeeks);
+        Map<String, EspnWeekly.Season> espn = new TreeMap<>();
+        StringBuilder espnMatch = new StringBuilder();
+        for(String season : seasons){
+            try {
+                EspnWeekly.Season s = EspnWeekly.season(season);
+                if(!s.byWeek().isEmpty()){
+                    espn.put(season, s);
+                    espnMatch.append(String.format("%s%s %d/%d", espnMatch.length() == 0 ? "" : ", ", season, s.matched(), s.men()));
+                }
+            }
+            catch(RuntimeException unavailable){
+                // ESPN does not serve this season: it is simply not in the three-way test
+            }
+        }
+        List<Case> cases = cases(harvest, seasons, priors, kappas, withWeeks, espn);
 
         StringBuilder out = new StringBuilder();
         out.append(String.format("REST-OF-SEASON MODEL  %s  (%d cases over %s; posterior fitted on %d seasons %s-%s, leave-one-season-out)%n",
@@ -484,6 +535,104 @@ public class RosModel {
             out.append(String.format("all positions: blend minus the better single estimator %+.2f +- %.2f in squared error%s%n",
                     pooled[0], pooled[1], earned ? "  <- the blend is EARNED at this many games" : "  <- not separated"));
         }
+
+        // ---------------------------------------------------------------- with ESPN
+        List<double[]> espnVsTarget = new ArrayList<>();
+        List<double[]> slprVsTarget = new ArrayList<>();
+        int withEspn = 0;
+        for(Case c : cases){
+            if(c.espn() != null){
+                withEspn++;
+                espnVsTarget.add(new double[]{c.espn(), c.target()});
+                slprVsTarget.add(new double[]{c.sleeper(), c.target()});
+            }
+        }
+        out.append("\n== WITH ESPN: a second shop's week k+1 projection, on the men all three project ==\n");
+        out.append(String.format("%d of %d cases carry an ESPN number; ESPN men matched to Sleeper ids by season: %s.%n",
+                withEspn, cases.size(), espnMatch));
+        out.append(String.format("correlation with the outcome on those cases: ESPN %.3f, Sleeper %.3f - a number revised after the games%n",
+                WeeklyFeedAudit.fit(espnVsTarget).r(), WeeklyFeedAudit.fit(slprVsTarget).r()));
+        out.append("would read near 1, so these are forecasts. The question is whether a third forecaster adds to the two already blended.\n");
+        List<Integer> espnEarned = new ArrayList<>();
+        for(int seen : SEEN){
+            out.append(String.format("%n-- after %d game%s --%n", seen, seen == 1 ? "" : "s"));
+            out.append(String.format("%-4s %5s %9s %9s %9s %9s %14s   %-24s %-24s %s%n", "pos", "men", "RMSE slpr", "RMSE espn",
+                    "RMSE 2way", "RMSE 3way", "w post/espn", "espn - slpr (sq err)", "3-way - 2-way", "reading"));
+            Map<String, List<Double>> pooledAdds = new TreeMap<>();
+            for(Position position : InSeasonLearning.POSITIONS){
+                List<Case> here = new ArrayList<>();
+                for(Case c : cases){
+                    if(c.seen() == seen && c.position() == position && c.espn() != null){
+                        here.add(c);
+                    }
+                }
+                if(here.size() < 20){
+                    continue;
+                }
+                Map<String, List<Double>> sqS = new TreeMap<>();
+                Map<String, List<Double>> sqE = new TreeMap<>();
+                Map<String, List<Double>> sq2 = new TreeMap<>();
+                Map<String, List<Double>> sq3 = new TreeMap<>();
+                Map<String, List<Double>> eMinusS = new TreeMap<>();
+                Map<String, List<Double>> threeMinusTwo = new TreeMap<>();
+                for(String held : withWeeks){
+                    List<double[]> train2 = new ArrayList<>();
+                    List<double[]> train3 = new ArrayList<>();
+                    for(Case c : here){
+                        if(!c.season().equals(held)){
+                            train2.add(new double[]{c.posterior(), c.sleeper(), c.target()});
+                            train3.add(new double[]{c.posterior(), c.sleeper(), c.espn(), c.target()});
+                        }
+                    }
+                    if(train2.size() < 10){
+                        continue;
+                    }
+                    double w2 = blendWeight(train2);
+                    double[] w3 = blendWeights3(train3);
+                    for(Case c : here){
+                        if(!c.season().equals(held)){
+                            continue;
+                        }
+                        double es = sq(c.sleeper() - c.target());
+                        double ee = sq(c.espn() - c.target());
+                        double e2 = sq(blend(w2, c.posterior(), c.sleeper()) - c.target());
+                        double e3 = sq(blend3(w3[0], w3[1], c.posterior(), c.sleeper(), c.espn()) - c.target());
+                        sqS.computeIfAbsent(held, k -> new ArrayList<>()).add(es);
+                        sqE.computeIfAbsent(held, k -> new ArrayList<>()).add(ee);
+                        sq2.computeIfAbsent(held, k -> new ArrayList<>()).add(e2);
+                        sq3.computeIfAbsent(held, k -> new ArrayList<>()).add(e3);
+                        eMinusS.computeIfAbsent(held, k -> new ArrayList<>()).add(ee - es);
+                        threeMinusTwo.computeIfAbsent(held, k -> new ArrayList<>()).add(e3 - e2);
+                        pooledAdds.computeIfAbsent(held, k -> new ArrayList<>()).add(e3 - e2);
+                    }
+                }
+                List<double[]> all3 = new ArrayList<>();
+                for(Case c : here){
+                    all3.add(new double[]{c.posterior(), c.sleeper(), c.espn(), c.target()});
+                }
+                double[] wAll = blendWeights3(all3);
+                double[] es = overSeasons(eMinusS);
+                double[] adds = overSeasons(threeMinusTwo);
+                String reading = !RosBands.separated(es) ? "ESPN = Sleeper" : es[0] < 0 ? "ESPN better" : "Sleeper better";
+                reading += RosBands.belowZero(adds) ? "; ESPN ADDS to the blend" : "";
+                out.append(String.format("%-4s %5d %9.2f %9.2f %9.2f %9.2f %6.2f / %-5.2f   %+7.2f +- %-12.2f %+7.2f +- %-12.2f %s%n",
+                        position, here.size(), Math.sqrt(overSeasons(sqS)[0]), Math.sqrt(overSeasons(sqE)[0]),
+                        Math.sqrt(overSeasons(sq2)[0]), Math.sqrt(overSeasons(sq3)[0]), wAll[0], wAll[1],
+                        es[0], es[1], adds[0], adds[1], reading));
+            }
+            double[] pooled = overSeasons(pooledAdds);
+            if(RosBands.belowZero(pooled)){
+                espnEarned.add(seen);
+            }
+            out.append(String.format("all positions: adding ESPN to the blend %+.2f +- %.2f in squared error%s%n", pooled[0], pooled[1],
+                    RosBands.belowZero(pooled) ? "  <- ESPN EARNS a place at this many games" : "  <- not separated: noise on this evidence"));
+        }
+
+        out.append(String.format("%nESPN earned a place at %d of %d weeks-seen %s. Across that many tests one crossing is about what chance%n",
+                espnEarned.size(), SEEN.length, espnEarned));
+        out.append(espnEarned.size() * 2 <= SEEN.length
+                ? "gives, so on this evidence a second shop is noise and -Pprojections=ros stays the two-way blend.\n"
+                : "gives - more than that, so the three-way blend is worth building into the source.\n");
 
         out.append("\n== THE READING ==\n");
         out.append("w is the weight the data puts on the posterior against Sleeper's next-week number (0 = all Sleeper, 1 = all posterior).\n");
