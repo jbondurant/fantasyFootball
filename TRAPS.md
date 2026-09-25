@@ -1764,3 +1764,42 @@ real every time.
     played now reads every week's transactions through the day's cache; only a
     past season freezes. The clearing timestamps were never the problem: all 35
     claims in that run carry the same millisecond.
+
+144. **His cut, priced and then forgotten.** On a two-for-one the partner ends
+    at seventeen men and must cut one, and `TradeMarket.unbalanced` prices his
+    side with that cut. The trade record did not carry it, so every place that
+    rebuilt his roster afterwards rebuilt it from what he sends me alone - a
+    seventeen-man roster nobody may hold. Five places: the page's own two rows
+    of his numbers, the chain's lookahead (twice, so his roster grew with each
+    step) and `TradeStability`'s re-pricing. The invariant test caught it the
+    first day the data produced a case: jerem9604's full gain 5.20 against his
+    season-only 5.05 on Barkley for Evans and Stevenson, where loss aversion on
+    keepers can only subtract. `Trade.hisCut` and `hisOut()` carry it now, and
+    `HisCutTest` fails if anything rebuilds his side from the bare `get()`.
+
+145. **A validated model applied outside what it was validated on.** `RosModel`
+    was backtested on men inside roster depth by preseason ADP, scored per
+    played game, with a preseason prior - and its first live section broke all
+    three. It blended men past the depth the prior table covers (a receiver
+    Sleeper projects for nothing read 7.9 a game on one catch); it served a
+    per-game rate times seventeen where the objective reads a season total that
+    already counts missed games (every blended man about 8% high against the
+    rest); and it ranked the prior on today's ADP, which has absorbed the
+    season it was meant to be prior to. The same unit mix sat in
+    `InSeasonPosterior` from its first day: Sleeper's season over seventeen as
+    the prior rate, against an observed rate per game actually played. Found by
+    independent refuters and by Dalton Schultz vanishing from the table. Now:
+    the population is the whole preseason board, measured to contain every man
+    this league rosters, and the backtest was rerun on it; the rate is
+    multiplied by the weeks Sleeper projects him to play; the prior ranks on the
+    last ADP snapshot before kickoff.
+
+146. **A claim read off the pricing that could not see the results.** On
+    2026-09-25 a $0 claim of Brenton Strange for Dalton Schultz went out on
+    `TuesdaySwap`'s +3.1, priced on Sleeper's season feed, which does not move
+    on results. The posterior pricing already on disk put the same move at or
+    below zero - it had seen Schultz's twelve catches - and nobody read it,
+    because it was a separate file. The swap report now prices every listed row
+    both ways and names a claim only when the move is not a loss under either;
+    on the same day the rebuilt report shows the move at +3.1 on Sleeper and
+    -23.1 on the rest-of-season model.

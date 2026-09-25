@@ -2,8 +2,10 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -215,5 +217,32 @@ public class LeagueWeek {
     public static String transactions(String leagueID, int week){
         String url = "https://api.sleeper.app/v1/league/" + leagueID + "/transactions/" + week;
         return InOutUtilities.getTodaysWebPage(url, "sleeperLiveTxns" + leagueID + "w" + week);
+    }
+
+    /**
+     * How many of the season's weeks Sleeper projects each man to play: a week
+     * with no row for him is a bye, an injury or a benching. Sleeper's season
+     * number is, to within its rounding, the sum of these weekly numbers
+     * (WeeklyFeedAudit), so this count is the availability its season total
+     * already carries - the unit a per-game rate has to be multiplied by to be
+     * compared with it.
+     */
+    public static Map<String, Integer> projectedWeeks(String season){
+        List<Map<String, Double>> weeks = new ArrayList<>();
+        for(int w = 1; w <= WeeklyActuals.WEEKS; w++){
+            weeks.add(projected(season, w));
+        }
+        return countWeeks(weeks);
+    }
+
+    /** The number of maps each key appears in. */
+    static Map<String, Integer> countWeeks(List<Map<String, Double>> weeks){
+        Map<String, Integer> out = new HashMap<>();
+        for(Map<String, Double> week : weeks){
+            for(String id : week.keySet()){
+                out.merge(id, 1, Integer::sum);
+            }
+        }
+        return out;
     }
 }

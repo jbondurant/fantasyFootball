@@ -83,4 +83,15 @@ public class TuesdaySwapTest {
                 });
         assertEquals(2, swaps.size());
     }
+
+    @Test
+    public void thePlanAfterIsTheWholeMoveIncludingTheRefill(){
+        List<String> roster = List.of("keep", "weak");
+        List<TuesdaySwap.Priced> rows = priced(roster, List.of("free1"));
+        TuesdaySwap.Priced top = rows.get(0);
+        List<String> after = TuesdaySwap.planAfter(roster, top);
+        assertTrue(after.contains(top.swap().addId()), "the add is on the roster after");
+        assertFalse(after.contains(top.swap().dropId()), "the drop is not");
+        assertEquals(roster.size(), after.size(), "a swap keeps the roster at its size");
+    }
 }

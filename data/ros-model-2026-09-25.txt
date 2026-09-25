@@ -1,0 +1,102 @@
+REST-OF-SEASON MODEL  2026-09-25  (6081 cases over 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025; posterior fitted on 13 seasons 2013-2025, leave-one-season-out)
+estimates of a man's rate from week k+2 on, after k games: the posterior (InSeasonLearning's rule), Sleeper's
+week k+1 projection, and their least-squares blend w*posterior + (1-w)*Sleeper, w fitted on the other seasons.
+RMSE in league points a game; the paired columns are differences in squared error on the same men, mean over
+seasons +- se (8 seasons, each a cluster); negative favours the first named. A reading needs the
+t critical value for that many seasons (2.365), not two; and these are 24 readings a table on overlapping men.
+
+== after 1 game ==
+pos    men RMSE post RMSE slpr RMSE blnd      w   slpr - post (sq err)       blend - better of two      reading
+QB     171     4.45     4.75     4.26   0.59     +2.71 +- 3.85             -1.67 +- 1.60           not separated
+RB     377     3.71     3.79     3.57   0.56     +0.60 +- 0.70             -1.05 +- 0.39           not separated; BLEND beats both
+WR     446     3.03     2.97     2.89   0.43     -0.33 +- 0.35             -0.47 +- 0.14           not separated; BLEND beats both
+TE     124     3.52     2.64     2.64   0.00     -5.42 +- 2.03             +0.01 +- 0.01           Sleeper better
+all positions: blend minus the better single estimator -0.79 +- 0.26 in squared error  <- the blend is EARNED at this many games
+
+== after 2 games ==
+pos    men RMSE post RMSE slpr RMSE blnd      w   slpr - post (sq err)       blend - better of two      reading
+QB     161     4.39     4.93     4.35   0.70     +5.05 +- 3.44             -0.31 +- 0.60           not separated
+RB     378     3.72     4.02     3.63   0.68     +2.39 +- 0.54             -0.64 +- 0.23           posterior better; BLEND beats both
+WR     449     2.97     2.99     2.89   0.54     +0.14 +- 0.73             -1.20 +- 0.31           not separated; BLEND beats both
+TE     132     3.04     2.66     2.67   0.15     -2.19 +- 1.01             +0.05 +- 0.15           not separated
+all positions: blend minus the better single estimator -0.75 +- 0.18 in squared error  <- the blend is EARNED at this many games
+
+== after 3 games ==
+pos    men RMSE post RMSE slpr RMSE blnd      w   slpr - post (sq err)       blend - better of two      reading
+QB     157     4.21     4.67     4.15   0.70     +4.13 +- 2.55             -0.47 +- 0.44           not separated
+RB     358     3.62     3.87     3.55   0.67     +1.89 +- 0.77             -0.46 +- 0.28           posterior better
+WR     425     2.91     3.02     2.86   0.60     +0.65 +- 0.70             -0.30 +- 0.29           not separated
+TE     127     3.11     2.97     2.92   0.35     -0.86 +- 0.60             -0.31 +- 0.27           not separated
+all positions: blend minus the better single estimator -0.40 +- 0.16 in squared error  <- the blend is EARNED at this many games
+
+== after 4 games ==
+pos    men RMSE post RMSE slpr RMSE blnd      w   slpr - post (sq err)       blend - better of two      reading
+QB     141     4.37     5.12     4.38   0.94     +7.12 +- 2.31             +0.12 +- 0.12           posterior better
+RB     328     3.68     3.85     3.57   0.62     +1.27 +- 0.90             -0.76 +- 0.36           not separated
+WR     399     2.98     3.10     2.94   0.64     +0.70 +- 0.40             -0.26 +- 0.16           not separated
+TE     116     2.75     2.85     2.68   0.59     +0.54 +- 0.85             -0.40 +- 0.36           not separated
+all positions: blend minus the better single estimator -0.39 +- 0.20 in squared error  <- not separated
+
+== after 6 games ==
+pos    men RMSE post RMSE slpr RMSE blnd      w   slpr - post (sq err)       blend - better of two      reading
+QB     134     4.47     5.17     4.60   0.78     +6.75 +- 4.83             +1.23 +- 1.11           not separated
+RB     310     3.65     3.83     3.56   0.65     +1.36 +- 0.85             -0.64 +- 0.27           not separated
+WR     365     3.09     3.12     3.01   0.54     +0.23 +- 0.31             -0.47 +- 0.16           not separated; BLEND beats both
+TE     101     2.84     2.89     2.82   0.63     +0.27 +- 0.94             -0.79 +- 0.39           not separated
+all positions: blend minus the better single estimator -0.32 +- 0.20 in squared error  <- not separated
+
+== after 8 games ==
+pos    men RMSE post RMSE slpr RMSE blnd      w   slpr - post (sq err)       blend - better of two      reading
+QB     124     4.88     5.66     4.88   1.00     +8.29 +- 2.66             +0.06 +- 0.06           posterior better
+RB     297     3.84     4.13     3.80   0.71     +2.32 +- 1.18             -0.32 +- 0.34           not separated
+WR     364     3.24     3.30     3.16   0.56     +0.35 +- 0.45             -0.51 +- 0.23           not separated
+TE      97     3.10     3.19     3.08   0.60     +0.60 +- 0.89             -0.10 +- 0.35           not separated
+all positions: blend minus the better single estimator -0.31 +- 0.15 in squared error  <- not separated
+
+== THE READING ==
+w is the weight the data puts on the posterior against Sleeper's next-week number (0 = all Sleeper, 1 = all posterior).
+A w near 0 says Sleeper's number already holds what the posterior knows: it is updating, just not in its SEASON feed.
+A w between says each knows something the other does not - Sleeper the injury report, depth chart and matchup,
+the posterior the measured rate at which a box score is worth believing.
+Matchup caution: Sleeper's number is one game's projection, opponent included, against a rest-of-season target;
+part of its extra error - most at quarterback - is that matchup, not a reluctance to update.
+Leakage caution: past week projections have no vintage and a few are post-game revisions (TRAPS #137); any leak
+flatters Sleeper, so a reading in the posterior's favour is conservative and one in Sleeper's favour is not.
+
+== THIS WEEK: the blend on the season being played, at the weights for 2 weeks seen (the blend was EARNED at this many games, pooled over positions) ==
+prior ranks from the ADP snapshot of 2026-09-02, the last before the season started; the per-position
+verdicts above say where each position's blend stands on its own.
+player                 pos owner        games posterior   slpr wk      w     ROS/g slpr seas
+Brock Purdy            QB  justinb314       2      20.6      26.0   0.70      22.2      21.4
+Bo Nix                 QB  justinb314       2      18.1      19.3   0.70      18.4      20.5
+Derrick Henry          RB  justinb314       2      16.1      18.1   0.68      16.7      14.0
+Cam Skattebo           RB  justinb314       2       9.9      13.1   0.68      10.9      10.6
+Bhayshul Tuten         RB  justinb314       2       9.4      10.5   0.68       9.8       9.3
+Rhamondre Stevenson    RB  justinb314       2       8.3       9.4   0.68       8.7       9.1
+Chris Rodriguez        RB  justinb314       2       5.9       4.5   0.68       5.4       7.4
+Malik Nabers           WR  justinb314       2       9.6      11.3   0.54      10.4      11.4
+Mike Evans             WR  justinb314       2       9.1      11.3   0.54      10.2      11.0
+Josh Downs             WR  justinb314       2       7.1       9.0   0.54       8.0       8.1
+Jordan Addison         WR  justinb314       1       7.2       7.7   0.54       7.5       8.3
+Khalil Shakir          WR  justinb314       2       6.5       8.1   0.54       7.3       8.0
+Jakobi Meyers          WR  justinb314       2       6.8       6.7   0.54       6.7       8.1
+Dalton Schultz         TE  justinb314       2       7.8       8.9   0.15       8.8       7.0
+Harold Fannin          TE  justinb314       2       7.6       7.6   0.15       7.6       8.4
+the best free men at each position:
+Justin Herbert         QB  free agent       2      19.4      18.9   0.70      19.3      20.4
+Jaxson Dart            QB  free agent       2      19.2         -   1.00      19.2      20.0
+Sam Darnold            QB  free agent       1      16.2      20.4   0.70      17.5      18.5
+Demond Claiborne       RB  free agent       1       7.8       2.3   0.68       6.1       1.3
+Kaytron Allen          RB  free agent       2       7.2       1.8   0.68       5.5       2.5
+Justice Hill           RB  free agent       2       5.2       5.9   0.68       5.4       3.3
+Keenan Allen           WR  free agent       2       5.9       5.7   0.54       5.8       5.0
+Omar Cooper            WR  free agent       1       5.8         -   1.00       5.8       6.2
+Cooper Kupp            WR  free agent       2       5.4       6.1   0.54       5.8       4.1
+Brenton Strange        TE  free agent       2       6.8       7.3   0.15       7.2       7.6
+Chig Okonkwo           TE  free agent       1       6.7         -   1.00       6.7       6.7
+David Njoku            TE  free agent       2       6.7         -   1.00       6.7       2.7
+ROS/g is the blend, w*posterior + (1-w)*Sleeper's week-3 projection; slpr seas is Sleeper's season number
+over 17 games, which does not move on results. -Pprojections=ros serves ROS/g times the weeks Sleeper
+projects him to play, so a blended total counts missed games the way every other man's does.
+Only men on the preseason board (the population the backtest scored) are blended; a backup who has just
+become a starter keeps Sleeper's stale season number here, and his current-week projection is the better read.

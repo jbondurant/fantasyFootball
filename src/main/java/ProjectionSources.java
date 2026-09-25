@@ -25,6 +25,7 @@ public class ProjectionSources {
 
     static final List<Slot> SLOTS = List.of(
             new Slot("sleeper", "Rotowire stat lines via Sleeper (the default)", "automatic"),
+            new Slot("ros", "the rest-of-season blend of the posterior and Sleeper's current-week projection, weights fitted in RosModel", "automatic, in season"),
             new Slot("posterior", "Sleeper's season number moved by this season's played weeks at InSeasonLearning's measured rate", "automatic, in season"),
             new Slot("borischen", "FP-consensus ranks (Chen tiers) on the points curve - not independent of espn/cbs", "automatic"),
             new Slot("espn", "ESPN stat lines via their fantasy API", "automatic"),
@@ -89,6 +90,9 @@ public class ProjectionSources {
     }
 
     public static Map<String, Double> resolve(String source){
+        if("ros".equals(source)){
+            return RosModel.season(AAAConfiguration.getInstance());
+        }
         if("posterior".equals(source)){
             return InSeasonPosterior.season(AAAConfiguration.getInstance());
         }

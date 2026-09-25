@@ -492,7 +492,7 @@ public class UsageSignal {
                 // column prints the usage and no adjustment - an adjustment the
                 // test refuted is a typed number wearing a model's clothes.
                 double[] gain = finalGain.get(p);
-                boolean earned = gain != null && !Double.isNaN(gain[1]) && gain[0] < -2 * gain[1];
+                boolean earned = gain != null && RosBands.belowZero(gain);
                 double adjustment = earned ? predict(finalBeta.get(p), standardise(picked, finalMoments.get(p))) : 0;
                 MarketMovers.Row row = then.get(id);
                 today.add(new Today(row.name(), p, e.getValue(), posterior, adjustment, picked, earned));
@@ -502,7 +502,7 @@ public class UsageSignal {
             boolean any = false;
             for(Position p : InSeasonLearning.POSITIONS){
                 double[] gain = finalGain.get(p);
-                if(gain != null && !Double.isNaN(gain[1]) && gain[0] < -2 * gain[1]){
+                if(gain != null && RosBands.belowZero(gain)){
                     out.append(' ').append(p);
                     any = true;
                 }

@@ -166,6 +166,37 @@ public class RosBands {
         return out;
     }
 
+    /**
+     * The two-sided 95% critical value of Student's t with {@code df} degrees of
+     * freedom - mathematics, not a measurement. A mean over n season clusters has
+     * n-1 of them, and "two standard errors" is the right bar only for many:
+     * at eight seasons it is 2.365, so a 2.2-se reading printed as separated was
+     * a one-in-eleven chance per test rather than one in twenty (the RosModel
+     * refuters, 2026-09-25). Every verdict over season clusters reads this.
+     */
+    static double tCritical95(int df){
+        double[] table = {Double.NaN, 12.706, 4.303, 3.182, 2.776, 2.571, 2.447, 2.365, 2.306, 2.262, 2.228,
+                2.201, 2.179, 2.160, 2.145, 2.131, 2.120, 2.110, 2.101, 2.093, 2.086,
+                2.080, 2.074, 2.069, 2.064, 2.060, 2.056, 2.052, 2.048, 2.045, 2.042};
+        if(df < 1){
+            return Double.POSITIVE_INFINITY;
+        }
+        if(df <= 30){
+            return table[df];
+        }
+        return df <= 40 ? 2.021 : df <= 60 ? 2.000 : df <= 120 ? 1.980 : 1.960;
+    }
+
+    /** Whether a mean over season clusters, {mean, se, n} from {@link #overSeasons}, is below zero past its t bar. */
+    static boolean belowZero(double[] m){
+        return !Double.isNaN(m[1]) && m[0] < -tCritical95((int) m[2] - 1) * m[1];
+    }
+
+    /** Whether it is away from zero in either direction past its t bar. */
+    static boolean separated(double[] m){
+        return !Double.isNaN(m[1]) && Math.abs(m[0]) > tCritical95((int) m[2] - 1) * m[1];
+    }
+
     /** Mean and standard error of a per-season statistic over the seasons it is measured in. */
     static double[] overSeasons(Map<String, List<Double>> perSeason){
         List<Double> means = new ArrayList<>();
@@ -432,7 +463,7 @@ public class RosBands {
                 double[] d = overSeasons(diff);
                 out.append(String.format("%-5d %-4s %6d %8.3f %8.3f %8.2f %8.2f   %+.2f +- %.2f (%d seasons)%s%n", seen, position, men,
                         WeeklyFeedAudit.fit(post).r(), WeeklyFeedAudit.fit(slpr).r(), maePost / men, maeSlpr / men,
-                        d[0], d[1], (int) d[2], Math.abs(d[0]) > 2 * d[1] ? "  <- separated" : ""));
+                        d[0], d[1], (int) d[2], separated(d) ? "  <- separated" : ""));
             }
         }
         out.append("negative = Sleeper's next-week number is the closer estimate. The posterior reads weeks 1..k and a preseason board;\n");

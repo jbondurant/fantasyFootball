@@ -175,7 +175,7 @@ public class TradeStability {
             for(TradeMarket.Trade trade : chosen){
                 mine.get(trade)[s] = side.gain(rosters.get(me), trade.give(), trade.get());
                 theirs.get(trade)[s] = side.gain(rosters.get(trade.withManager()),
-                        trade.get(), trade.give());
+                        trade.hisOut(), trade.give());
             }
         }
 

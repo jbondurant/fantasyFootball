@@ -220,6 +220,18 @@ public class TuesdaySwap {
         return gain * weeksLeft / 17.0;
     }
 
+    /** The roster after a whole plan: the add and drop, and the completion's add and drop when it empties a slot. */
+    static List<String> planAfter(List<String> roster, Priced row){
+        List<String> after = new ArrayList<>(roster);
+        after.remove(row.swap().dropId());
+        after.add(row.swap().addId());
+        if(row.completion() != null){
+            after.remove(row.completion().dropId());
+            after.add(row.completion().addId());
+        }
+        return after;
+    }
+
     /**
      * The move to make, or null for DO NOTHING - which is the answer whenever
      * the best plan does not clear the floor. Waiting costs nothing and buys a
@@ -301,12 +313,35 @@ public class TuesdaySwap {
         List<Priced> priced = price(swaps, roster, candidates, nameOf, positionOf, points,
                 ids -> value.of(ids));
         Priced best = recommend(priced, floor);
+
+        // THE OTHER PRICING, BESIDE EVERY LISTED ROW. On 2026-09-25 a +3.1 claim of
+        // Brenton Strange for Dalton Schultz was read off this report's Sleeper
+        // column while the pricing that had seen Schultz's 20-point week put the
+        // same move at or below zero - and the $0 recommendation went out on the
+        // number that could not see the results. Both are printed now, and a
+        // CLAIM is named only when the move is not a loss under either (TRAPS #146).
+        String altSource = source.equals("sleeper") ? "ros" : "sleeper";
+        WeeklyStarterValue alt = WeeklyStarterValue.forCurrentBoard(configuration,
+                ProjectionSources.resolve(altSource), scenarios, 424_242L);
+        double altBase = alt.of(roster);
+        Map<Priced, Double> altWorth = new HashMap<>();
+        for(Priced row : priced.subList(0, Math.min(8, priced.size()))){
+            altWorth.put(row, alt.of(planAfter(roster, row)) - altBase);
+        }
+        if(best != null){
+            altWorth.computeIfAbsent(best, row -> alt.of(planAfter(roster, row)) - altBase);
+        }
+        Priced blocked = null;
+        if(best != null && altWorth.get(best) < 0){
+            blocked = best;
+            best = null;
+        }
         int weeksLeft = Math.max(1, 15 - week);   // the regular season runs to week 14
 
         StringBuilder out = new StringBuilder();
         out.append(DataStamp.line()).append("\n");
-        out.append(String.format("TUESDAY SWAP  %s  season %s, waivers for week %d  (%s)%n",
-                LocalDate.now(), season, week, me));
+        out.append(String.format("TUESDAY SWAP  %s  season %s, waivers for week %d  (%s; priced on %s, with %s beside it)%n",
+                LocalDate.now(), season, week, me, source, altSource));
         out.append(String.format("%d free agents searched against all %d roster spots = %d pairs, on the weekly-starter%n",
                 candidates.size(), roster.size(), swaps.size()));
         out.append(String.format("objective (%d drawn seasons), which prices a bench man by how often he would actually start.%n", scenarios));
@@ -319,13 +354,17 @@ public class TuesdaySwap {
         // drop empties a slot is priced at what refilling it costs, and it is
         // flagged, because "+3.6" and "-1.6 once you field a defence again" are
         // not the same recommendation.
-        out.append(String.format("%-22s %-4s -> drop %-22s %9s %9s%n", "ADD", "POS", "", "17wk", "from here"));
+        out.append(String.format("%-22s %-4s -> drop %-22s %9s %9s %9s%n", "ADD", "POS", "", "17wk", "from here",
+                altSource));
         for(Priced row : priced.subList(0, Math.min(8, priced.size()))){
             Swap swap = row.swap();
-            out.append(String.format("%-22s %-4s -> drop %-22s %+9.1f %+9.1f%s%n", swap.addName(),
+            out.append(String.format("%-22s %-4s -> drop %-22s %+9.1f %+9.1f %+9.1f%s%s%n", swap.addName(),
                     swap.addPosition(), swap.dropName(), row.worth(), fromHere(row.worth(), week),
-                    row.hole() ? "   <- and refill the slot" : ""));
+                    altWorth.get(row), row.hole() ? "   <- and refill the slot" : "",
+                    altWorth.get(row) < 0 && row.worth() > 0 ? "   <- a loss on " + altSource : ""));
         }
+        out.append(String.format("the %s column is the same move priced on the other projection source (17-week units); ros is the%n", altSource));
+        out.append("rest-of-season model that has seen the results (RosModel), sleeper the season feed that has not.\n");
         out.append("\n");
 
         // THE WHOLE LADDER FOR THE BEST ADD, because a table that names only the
@@ -354,6 +393,11 @@ public class TuesdaySwap {
                                 completion.addName(), completion.dropName(), completion.gain())));
             }
             out.append("\n");
+        }
+        if(blocked != null){
+            out.append(String.format("NOT CLAIMED: %s for %s clears the floor at %+.1f on %s but is a loss of %+.1f on %s.%n"
+                    + "A move that loses under either pricing is not a move.%n%n", blocked.swap().addName(),
+                    blocked.swap().dropName(), blocked.worth(), source, altWorth.get(blocked), altSource));
         }
         if(best == null){
             out.append(String.format("DO NOTHING. The best plan on the board is worth %+.1f (%.1f from here), inside the%n"

@@ -17,8 +17,8 @@ import java.util.Map;
  * For every man at the four fitted positions who has played, his season number
  * becomes the posterior of {@link InSeasonLearning}'s rule - the preseason rate
  * and the played weeks' rate weighted by kappa, the one free parameter the
- * study measured on thirteen seasons and refit here - times the games the
- * objective counts. After one game that keeps 8-15% of the surprise. A man who
+ * study measured on thirteen seasons and refit here - times the weeks Sleeper
+ * projects him to play, the unit its own season number is in. After one game that keeps 8-15% of the surprise. A man who
  * has not played, a defence, or a man outside the four positions keeps
  * Sleeper's number, so a consumer reads this map exactly as it reads Sleeper's.
  *
@@ -29,10 +29,21 @@ import java.util.Map;
  */
 public class InSeasonPosterior {
 
-    /** His season number after `games` played weeks at `observedPpg`: the posterior rate over the games the objective counts. */
-    static double season(double seasonPrior, double observedPpg, int games, double kappa, int gamesInSeason){
-        double prior = seasonPrior / gamesInSeason;
-        return WeekReaction.posterior(prior, observedPpg, games, kappa) * gamesInSeason;
+    /**
+     * His season number after {@code games} played at {@code observedPpg}, when
+     * Sleeper projects him to play {@code projectedGames} weeks in all.
+     *
+     * Sleeper's season number is his per-game rate times the games he is
+     * expected to play, so the prior RATE is the number over those games, not
+     * over seventeen - dividing by seventeen mixed a rate that counts missed
+     * games with an observed rate that cannot (a man only scores in the games he
+     * plays), and pulled every played man upward (TRAPS #145). The posterior is
+     * then multiplied back by the same games, which also makes the anchor exact:
+     * with no games played it returns Sleeper's own number.
+     */
+    static double season(double seasonPrior, double observedPpg, int games, double kappa, int projectedGames){
+        double prior = seasonPrior / projectedGames;
+        return WeekReaction.posterior(prior, observedPpg, games, kappa) * projectedGames;
     }
 
     /** Sleeper's season projections with every played man moved by his weeks so far. */
@@ -50,6 +61,7 @@ public class InSeasonPosterior {
         Map<Position, InSeasonLearning.Kappa> kappa = InSeasonLearning.fitKappa(
                 InSeasonLearning.harvest(EraBoards.usable("ppr", EraIngest.MIN_RATE, EraIngest.minDepth())), null);
         Map<String, Double> out = new LinkedHashMap<>(sleeper);
+        Map<String, Integer> projectedWeeks = LeagueWeek.projectedWeeks(season);
         int moved = 0;
         for(Map.Entry<String, Double> e : sleeper.entrySet()){
             Player player = Player.getPlayerFromSIDV2(e.getKey());
@@ -66,11 +78,12 @@ public class InSeasonPosterior {
                     total += points;
                 }
             }
-            if(games == 0){
-                continue;
+            int n = projectedWeeks.getOrDefault(e.getKey(), 0);
+            if(games == 0 || n == 0){
+                continue;       // nothing played, or Sleeper projects him for no week: its number stands
             }
             out.put(e.getKey(), season(e.getValue(), total / games, games,
-                    kappa.get(position).kappa(), WeeklyStarterValue.WEEKS));
+                    kappa.get(position).kappa(), n));
             moved++;
         }
         System.out.printf("posterior: %d men moved by %d played week%s at kappa QB %.1f RB %.1f WR %.1f TE %.1f games%n",

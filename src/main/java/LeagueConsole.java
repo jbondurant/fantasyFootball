@@ -700,7 +700,7 @@ public class LeagueConsole {
                     < TradeMarket.slotsFilled(rosters.get(me), points, positionOf);
             // and the identical three for the manager opposite, on his roster
             List<String> hisRoster = rosters.get(trade.withManager());
-            List<String> hisAfter = TradeMarket.swap(hisRoster, trade.get(), trade.give());
+            List<String> hisAfter = TradeMarket.swap(hisRoster, trade.hisOut(), trade.give());
             double himSeason = seasonOnly.applyAsDouble(hisAfter)
                     - hisSeasonBase.get(trade.withManager());
             double himSimple = TradeMarket.simpleStarters(hisAfter, points, positionOf)
@@ -899,7 +899,7 @@ public class LeagueConsole {
         int mirages = 0;
         for(TradeMarket.Trade trade : mismatched){
             List<String> hisRoster = rosters.get(trade.withManager());
-            List<String> hisAfter = TradeMarket.swap(hisRoster, trade.get(), trade.give());
+            List<String> hisAfter = TradeMarket.swap(hisRoster, trade.hisOut(), trade.give());
             double himSimple = TradeMarket.simpleStarters(hisAfter, points, positionOf)
                     - hisSimpleBase.get(trade.withManager());
             if(himSimple > 0){

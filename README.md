@@ -43,6 +43,7 @@ fails if one does). Fallbacks are in `RUNBOOK.md`.
 ./gradlew run -Pmain=MarketMovers       # who the market moved on in the last days, and why Sleeper thinks so (-Pdays -Ptop -PminMove)
 ./gradlew run -Pmain=WeeklyFeedAudit    # IN SEASON: do Sleeper's weekly projections sum to the season number, does week 2 lean on week 1's result, and did any live week's projection move day to day
 ./gradlew run -Pmain=UsageSignal        # do targets, carries, air yards and red-zone touches say more than the score: their correlation with the points-only rule's residual on 13 seasons, the MAE and flip accuracy gained by a fitted usage term, and that fit applied to every rostered man's usage this week (-Pweek)
+./gradlew run -Pmain=RosModel           # is Sleeper slow or rightly cautious: the posterior, Sleeper's next-week projection and their least-squares blend as rest-of-season estimates, scored on squared error leave-one-season-out
 ./gradlew run -Pmain=RosBands           # is the update rule's rest-of-season band honest: coverage and interval score on 13 seasons, level vs rate scale, normal vs empirical quantiles; and Sleeper's next-week number vs the posterior as an estimate
 ./gradlew run -Pmain=ProjectionShootout # IN SEASON, after the games: which archived source (sleeper, espn, cbs, borischen, and sleeper's week feed) matched the week - per player, paired against sleeper - and how each would have ranked the twelve rosters (-Pweek)
 ./gradlew run -Pmain=TeamRankings       # every roster's best legal lineup scored and ranked, HTML in data/ (-Pprojections -Pme)

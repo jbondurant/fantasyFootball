@@ -573,7 +573,7 @@ public class FaabDemand {
             gain.put(s, d);
         }
         double[] g = RosBands.overSeasons(gain);
-        boolean earned = g[0] > 2 * g[1];
+        boolean earned = !Double.isNaN(g[1]) && g[0] > RosBands.tCritical95((int) g[2] - 1) * g[1];
         out.append(String.format("%nheld-out log loss %.4f vs base rate's %.4f: gain %+.4f +- %.4f over %d seasons%s%n",
                 loss[0], baseLoss[0], g[0], g[1], (int) g[2], earned ? "  <- real" : "  <- not separated"));
         List<WireMan> ranked = new ArrayList<>(pOf.keySet());

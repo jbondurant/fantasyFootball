@@ -53,7 +53,30 @@ public class TradeMarket {
 
     /** One offer: what goes each way, and what each side gains. */
     public record Trade(String withManager, List<String> give, List<String> get,
-                        double myGain, double theirGain) {
+                        double myGain, double theirGain, List<String> hisCut) {
+
+        /** A trade in which he cuts nobody: every balanced swap, and every deal that leaves him short. */
+        public Trade(String withManager, List<String> give, List<String> get, double myGain, double theirGain){
+            this(withManager, give, get, myGain, theirGain, List.of());
+        }
+
+        /**
+         * EVERY MAN WHO LEAVES HIS ROSTER: what he sends me, and the man he must
+         * cut when he receives more men than he gives. His gain was priced with
+         * the cut, so every place that rebuilds his roster after the trade must
+         * rebuild it with the cut too. Five places rebuilt it from {@link #get}
+         * alone and priced a seventeen-man roster nobody is allowed to hold,
+         * which put his full number ABOVE his season number on a two-for-one
+         * (jerem9604, 2026-09-25: 5.20 against 5.05). TRAPS #144.
+         */
+        public List<String> hisOut(){
+            if(hisCut.isEmpty()){
+                return get;
+            }
+            List<String> out = new ArrayList<>(get);
+            out.addAll(hisCut);
+            return out;
+        }
 
         /** The smaller of the two gains - a trade is only as good as its weaker half. */
         public double weaker(){
@@ -490,7 +513,7 @@ public class TradeMarket {
                 List<String> hisOut = new ArrayList<>(in);
                 hisOut.add(cut);
                 trades.add(new Trade(them, give, in,
-                        myValue.gain(mine, give, in), theirValue.gain(theirs, hisOut, give)));
+                        myValue.gain(mine, give, in), theirValue.gain(theirs, hisOut, give), List.of(cut)));
             }
         }
         // I receive two, send one: I end at seventeen and cut, he ends at fifteen
@@ -1235,7 +1258,7 @@ public class TradeMarket {
             board.put(entry.getKey(), new ArrayList<>(entry.getValue()));
         }
         board.put(me, swap(board.get(me), first.give(), first.get()));
-        board.put(first.withManager(), swap(board.get(first.withManager()), first.get(), first.give()));
+        board.put(first.withManager(), swap(board.get(first.withManager()), first.hisOut(), first.give()));
 
         List<Step> steps = new ArrayList<>();
         steps.add(new Step(first, first.myGain()));
@@ -1279,7 +1302,7 @@ public class TradeMarket {
             }
             Trade best = good.get(0);
             board.put(me, swap(board.get(me), best.give(), best.get()));
-            board.put(best.withManager(), swap(board.get(best.withManager()), best.get(), best.give()));
+            board.put(best.withManager(), swap(board.get(best.withManager()), best.hisOut(), best.give()));
             cumulative += best.myGain();
             steps.add(new Step(best, cumulative));
         }
