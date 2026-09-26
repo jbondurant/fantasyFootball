@@ -262,7 +262,10 @@ tasks.register('run', JavaExec) {
      // seasons to the sixteen on disk under data/nflverse; 'perWeek' scores a
      // missed week as a zero instead of dividing availability out; 'maxPick'
      // moves the drafted-starter cutoff; 'blend' sets the form weight.
-     'source', 'perWeek', 'maxPick', 'blend'].each { knob ->
+     'source', 'perWeek', 'maxPick', 'blend',
+     // FeatureScreen: audit, discovery or confirm. Missing from this list on
+     // 2026-09-25, so -Pstage=audit silently ran the default stage (discovery).
+     'stage'].each { knob ->
         if (project.hasProperty(knob)) {
             systemProperty knob, project.property(knob)
         }

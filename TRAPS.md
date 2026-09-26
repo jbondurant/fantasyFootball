@@ -1849,3 +1849,37 @@ real every time.
     from 120th to 83rd of 126: a man with no catches still reads as nobody to
     a box-score model. An account of a miss is a claim like any other; check
     it against the rows before designing the fix around it.
+
+149. **A run nobody meant, and the review it got ahead of.** `FeatureScreen`
+    was built to be pre-registered: definitions fixed, reviewed, committed,
+    then run. On 2026-09-25 the run meant as the data-only audit ran DISCOVERY
+    - `-Pstage` was not among build.gradle's forwarded knobs, and the tool had
+    a default - while an independent code review was still reading the code.
+    That run shortlisted nothing (0 of 166 tests; best two-sided p 0.016
+    against a Benjamini-Hochberg bar near 0.0006;
+    data/feature-screen-discovery-2026-09-25-first-run.txt). The review then
+    found what would have had to be fixed anyway. The leader features chose
+    the team's leader with the man himself left out, so a WR1 was "promoted"
+    whenever his WR2 sat. The pace and pass-rate priors mixed units: a share
+    added to a count of passes, and an offence's plays standing in for a
+    defence's plays faced. nflverse codes four stadiums' surfaces wrong in
+    2019-2020. Sleeper's air yards count completions only. The momentum
+    ratio exploded on promoted backups. A second-half contrast's constant
+    depended on who was projected later in the season. Positions came from
+    today's player record, putting Taysom Hill's QB starts in the TE stratum.
+    A leader's status this week read gp, a post-kickoff record, where
+    Sleeper's projection membership is fixed after the inactives. Residual
+    histories carried the season's calibration drift. The per-player stage
+    fitted slopes through the origin, which reads Sleeper's standing bias on
+    a man as his "susceptibility". The big model credited the betting line's
+    gain to the features. The calibration assumed a N(0,1) null where pooled
+    leave-one-season-out Clark-West z's sit near mean -0.46, sd 1.23 with
+    right errors. And an unreadable week would have become an empty one.
+    Every change after the first run is one of those, or the logic error the
+    run exposed: a negative Clark-West z is a worse prediction, never a
+    discovery, so the test is one-sided and the direction lives in c. None
+    was chosen by reading a result, and neither run read the confirmation
+    seasons. The knob is forwarded, the tool refuses to run without a stage,
+    and the protocol fingerprint now covers the code as well as the registry
+    text. A tool with a default stage will one day run the stage you did not
+    mean.

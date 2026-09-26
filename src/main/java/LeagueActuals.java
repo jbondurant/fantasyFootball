@@ -124,9 +124,12 @@ public class LeagueActuals {
                 continue;   // a club's aggregate line, never a man and never on a roster
             }
             // Absent pts_half_ppr means Sleeper scored him nothing at all - an
-            // inactive, or a man with only snap counts. The old path skipped
-            // those rows, and "no entry" is what the lineup filler reads as
-            // "did not play", so the two paths must agree on WHICH ids exist.
+            // inactive, a man with only snap counts, OR A MAN WHO PLAYED AND
+            // SCORED EXACTLY ZERO (2.4-4.8% of the men projected for 5+ who
+            // played, by season). The old path skipped those rows, and "no
+            // entry" is what the lineup filler reads as "did not play", so the
+            // two paths must agree on WHICH ids exist - and a caller that needs
+            // "played" must read gp, never membership here (FeatureScreen does).
             JsonElement half = stats.get("pts_half_ppr");
             if(half == null || half.isJsonNull()){
                 continue;

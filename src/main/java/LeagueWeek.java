@@ -101,9 +101,14 @@ public class LeagueWeek {
      * different answers.
      */
     public static Map<String, Double> projected(String season, int week){
+        return projectedFrom(projectionsBody(season, week));
+    }
+
+    /** The raw projection feed of a week, same policy - for readers that need the projected stat line, not only its points. */
+    public static String projectionsBody(String season, int week){
         String url = "https://api.sleeper.app/v1/projections/nfl/regular/" + season + "/" + week;
-        return projectedFrom(feed(url, "sleeperWeekProjection" + season + "w" + week,
-                "sleeperLiveProjection" + season + "w" + week, season, week));
+        return feed(url, "sleeperWeekProjection" + season + "w" + week,
+                "sleeperLiveProjection" + season + "w" + week, season, week);
     }
 
     /** The same league scoring over any read of a week's projection feed - a dated cache file, or today's. */

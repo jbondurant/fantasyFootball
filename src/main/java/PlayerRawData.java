@@ -76,6 +76,26 @@ public class PlayerRawData {
     }
 
 
+    /**
+     * Sleeper id -> birth date, for the men the database dates (about nine in
+     * ten skill players). A man without one is absent, never given a default
+     * age: FeatureScreen tests age only where it is known.
+     */
+    public static java.util.Map<String, java.time.LocalDate> birthDates() throws IOException {
+        java.util.Map<String, java.time.LocalDate> out = new java.util.HashMap<>();
+        JsonObject all;
+        try (FileReader reader = new FileReader("sleeperDataPlayerAPI.json")) {
+            all = JsonParser.parseReader(reader).getAsJsonObject();
+        }
+        for(String id : all.keySet()){
+            String born = optionalString(all.getAsJsonObject(id), "birth_date");
+            if(born.matches("\\d{4}-\\d{2}-\\d{2}")){
+                out.put(id, java.time.LocalDate.parse(born));
+            }
+        }
+        return out;
+    }
+
     private static String optionalString(JsonObject object, String key){
         JsonElement element = object.get(key);
         if(element == null || element.isJsonNull()){
