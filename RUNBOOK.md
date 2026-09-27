@@ -176,6 +176,15 @@ standard error, and how each source would have ranked the twelve rosters. One
 week separates nothing at the roster level (twelve managers, standard error
 about 0.3); the rows accumulate across the season and that is the test.
 
+    ./gradlew run -Pmain=MarketProjection -Pweek=N
+
+Before setting the lineup, Saturday night or Sunday morning: Sleeper's weekly
+projection with every stat Kalshi prices replaced by the market's, your roster
+both ways and the best lineup under each. Over 2025 the market's version was
+closer to what happened by about 1% (QB passing and touchdowns most, receptions
+not at all), so use it on close calls; it changes a starter only when Sleeper
+has two men nearly tied. Reading Kalshi's prices needs no account (BETTING.md).
+
 ## From week 7 — am I still in it
 
     ./gradlew run -Pmain=SeasonOutlook

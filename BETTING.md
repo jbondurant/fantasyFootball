@@ -75,6 +75,32 @@ edge after fees beat 3, 5 or 10 cents, clustered by player. One week is noise.
 score and the gaps paying beyond two standard errors, there is no model to bet
 with, and this file will say so.**
 
+## Using the market to beat Sleeper (for the fantasy team, not for betting)
+
+Justin, 2026-09-26: "can it be optimized, not to beat the market but to use the
+efficient market makers to beat Sleeper?" Yes, a little. Reading prices is legal
+from Quebec and needs no account.
+
+`MarketVsSleeper` raced them over the 2025 regular season. Kalshi's prop prices an
+hour before kickoff were read as a projection: the one whose calibrated
+distribution, fitted without 2025, reproduces the prices. That was set against
+Sleeper's stored weekly projection on the same player-weeks and scored against
+what happened. In fantasy points, with each priced stat replaced by the market's,
+3,548 player-weeks came out at RMSE 6.27 against Sleeper's 6.33 (squared-error
+gain +0.77 +- 0.27, clustered by week). By stat:
+
+- **Market better:** QB passing yards (error 68.8 against 71.5; Sleeper
+  over-projected by 4.7 yards, the market by 0.05), QB passing TDs, WR receiving
+  yards, and touchdowns at every position. RB rushing yards leans the market's way
+  without separating.
+- **No better:** receptions at every position (the retail over-lean again), RB and
+  TE receiving yards, and QB rushing.
+
+This is one season on a thin exchange (median receiving-yards market about 400
+contracts), and a deeper sportsbook consensus would probably do at least as well.
+The gain is about a tenth of a point per man. It decides close lineup calls, not
+rosters. `MarketProjection` produces it live each week.
+
 ## What the research established (verified against primary sources)
 
 - **Historical prop odds** exist to buy only from May 2023 (The Odds API; about
@@ -166,4 +192,6 @@ event contracts treated as capital).
 ./gradlew run -Pmain=KalshiArb               # static arbitrage across Kalshi's contracts (live)
 ./gradlew run -Pmain=KalshiFair -Pweek=N     # model vs Kalshi + the ledger (before kickoff; commit it)
 ./gradlew run -Pmain=KalshiSettle -Pweeks=N  # score the ledgers after the games
+./gradlew run -Pmain=MarketVsSleeper         # the 2025 race: market projection vs Sleeper
+./gradlew run -Pmain=MarketProjection -Pweek=N   # this week's market projection, your roster both ways
 ```

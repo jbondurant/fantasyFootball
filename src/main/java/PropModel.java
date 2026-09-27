@@ -130,6 +130,11 @@ public class PropModel {
 
         /** E[payoff(stat)] for a man projected m, over the same neighbours. */
         double expect(double m, java.util.function.DoubleUnaryOperator payoff){
+            return expect(m, payoff, null);
+        }
+
+        /** The same, leaving out {@code exclude}'s season (so a season can be scored with a shape it did not shape). */
+        double expect(double m, java.util.function.DoubleUnaryOperator payoff, String exclude){
             int at = Arrays.binarySearch(projected, m);
             if(at < 0){
                 at = -at - 1;
@@ -140,6 +145,9 @@ public class PropModel {
             double sum = 0;
             while(taken < NEIGHBOURS && (lo >= 0 || hi < projected.length)){
                 int pick = lo < 0 ? hi++ : hi >= projected.length ? lo-- : m - projected[lo] <= projected[hi] - m ? lo-- : hi++;
+                if(season[pick].equals(exclude)){
+                    continue;
+                }
                 taken++;
                 sum += payoff.applyAsDouble(actual[pick]);
             }
