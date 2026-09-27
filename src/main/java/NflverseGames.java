@@ -106,6 +106,77 @@ public class NflverseGames {
         return out;
     }
 
+    /**
+     * One whole game with its prices, for the market tools (MarketEfficiency):
+     * the spread and total and the odds actually offered on each side, and the
+     * moneylines. American odds as integers; null where the file has none
+     * (prices start in 2006 and are complete from 2010). Teams in Sleeper's
+     * codes. Scores are null for a game not yet played.
+     */
+    record Game(String gameId, String season, int week, String gameday, String gametime, String home, String away,
+                Integer homeScore, Integer awayScore, boolean neutral, boolean divisional, Double spread, Double total,
+                Integer homeMoneyline, Integer awayMoneyline, Integer homeSpreadOdds, Integer awaySpreadOdds,
+                Integer overOdds, Integer underOdds, String roof, Double wind, Double temp, Integer homeRest, Integer awayRest) {
+
+        boolean played(){
+            return homeScore != null && awayScore != null;
+        }
+
+        /** Home points minus away points. */
+        int margin(){
+            return homeScore - awayScore;
+        }
+
+        int points(){
+            return homeScore + awayScore;
+        }
+    }
+
+    /** Every regular-season game of the file, in file order (chronological). */
+    static List<Game> games(List<String> lines){
+        Map<String, Integer> column = new HashMap<>();
+        List<String> header = NflverseWeekly.split(lines.get(0));
+        for(int i = 0; i < header.size(); i++){
+            column.put(header.get(i), i);
+        }
+        List<Game> out = new java.util.ArrayList<>();
+        for(String line : lines.subList(1, lines.size())){
+            if(line.isBlank()){
+                continue;
+            }
+            List<String> cells = NflverseWeekly.split(line);
+            if(!"REG".equals(text(cells, column, "game_type"))){
+                continue;
+            }
+            out.add(new Game(text(cells, column, "game_id"), text(cells, column, "season"),
+                    Integer.parseInt(text(cells, column, "week")), text(cells, column, "gameday"), text(cells, column, "gametime"),
+                    sleeperTeam(text(cells, column, "home_team")), sleeperTeam(text(cells, column, "away_team")),
+                    integer(cells, column, "home_score"), integer(cells, column, "away_score"),
+                    "Neutral".equals(text(cells, column, "location")), "1".equals(text(cells, column, "div_game")),
+                    number(cells, column, "spread_line"), number(cells, column, "total_line"),
+                    integer(cells, column, "home_moneyline"), integer(cells, column, "away_moneyline"),
+                    integer(cells, column, "home_spread_odds"), integer(cells, column, "away_spread_odds"),
+                    integer(cells, column, "over_odds"), integer(cells, column, "under_odds"),
+                    text(cells, column, "roof"), number(cells, column, "wind"), number(cells, column, "temp"),
+                    integer(cells, column, "home_rest"), integer(cells, column, "away_rest")));
+        }
+        return out;
+    }
+
+    private static List<Game> cachedGames;
+
+    static synchronized List<Game> games(){
+        if(cachedGames == null){
+            try {
+                cachedGames = games(Files.readAllLines(FILE, StandardCharsets.UTF_8));
+            }
+            catch(IOException missing){
+                throw new IllegalStateException(FILE + " is not on disk: it is nflverse/nfldata's games.csv, placed by hand", missing);
+            }
+        }
+        return cachedGames;
+    }
+
     private static Map<String, Side> cached;
 
     /** The file on disk, read once. */

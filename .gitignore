@@ -38,3 +38,6 @@ data/logs/
 check-*.log
 
 .DS_Store
+
+# Kalshi market reads (KalshiMarkets): raw, large, regenerable only at the moment they were taken - kept local
+data/kalshi/

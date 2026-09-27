@@ -265,7 +265,10 @@ tasks.register('run', JavaExec) {
      'source', 'perWeek', 'maxPick', 'blend',
      // FeatureScreen: audit, discovery or confirm. Missing from this list on
      // 2026-09-25, so -Pstage=audit silently ran the default stage (discovery).
-     'stage'].each { knob ->
+     'stage',
+     // The market tools: KalshiArb/KalshiFair read the latest archived Kalshi
+     // snapshot instead of the live API; KalshiSettle scores several weeks.
+     'offline', 'weeks'].each { knob ->
         if (project.hasProperty(knob)) {
             systemProperty knob, project.property(knob)
         }
