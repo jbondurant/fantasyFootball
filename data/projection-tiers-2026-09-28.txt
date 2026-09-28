@@ -1,0 +1,30 @@
+PROJECTION TIERS  2026-09-28  (Sleeper's weekly projection against what the man scored, played weeks 2018-2025, league points)
+Each row: the men Sleeper projected in that band. gap = mean outcome minus mean projection, with its season-week
+clustered standard error; t = gap / se. A top band well above zero means Sleeper sells its best men short.
+
+pos  projected    weeks mean proj  mean got   ratio      gap      se      t
+QB   11-14           92     13.08     13.22   1.011    +0.14    0.91   +0.2
+QB   14-17          455     15.65     14.51   0.927    -1.14    0.41   -2.8
+QB   17-20          839     18.57     17.51   0.943    -1.06    0.33   -3.2
+QB   20+           2397     23.72     21.53   0.908    -2.19    0.23   -9.5
+
+RB   5-8           1690      6.43      6.43   1.000    +0.00    0.14   +0.0
+RB   8-11          1529      9.56      9.62   1.007    +0.06    0.17   +0.4
+RB   11-14         1474     12.39     12.51   1.009    +0.11    0.18   +0.6
+RB   14-17          864     15.32     14.93   0.975    -0.39    0.26   -1.5
+RB   17-20          339     18.18     16.96   0.933    -1.21    0.44   -2.7
+RB   20+            121     21.32     20.85   0.978    -0.47    0.76   -0.6
+
+WR   5-8           3441      6.52      6.17   0.947    -0.34    0.10   -3.5
+WR   8-11          3100      9.47      9.10   0.961    -0.37    0.13   -2.8
+WR   11-14         1971     12.28     11.62   0.946    -0.66    0.17   -3.8
+WR   14-17          757     15.20     14.78   0.972    -0.42    0.30   -1.4
+WR   17-20          158     17.93     16.29   0.909    -1.64    0.59   -2.8
+
+TE   5-8           1910      6.43      6.20   0.963    -0.24    0.14   -1.7
+TE   8-11           925      9.10      8.65   0.951    -0.45    0.22   -2.1
+TE   11-14          231     12.37     11.83   0.956    -0.54    0.50   -1.1
+TE   14-17           75     15.16     13.49   0.890    -1.67    0.81   -2.1
+
+Played weeks only: a man who sat out is not in a band, so this is what a projection is worth given he plays;
+the objective draws availability separately, from whole historical seasons.

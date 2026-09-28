@@ -1883,3 +1883,42 @@ real every time.
     and the protocol fingerprint now covers the code as well as the registry
     text. A tool with a default stage will one day run the stage you did not
     mean.
+
+150. **"He gains on our model" read as "he would accept", on a draft check
+    drawn as a straight line, from a feed that had not heard the news.** On
+    2026-09-27 the trade finder's short list opened with seven offers for
+    Ja'Marr Chase, led by Malik Nabers + Rhamondre Stevenson, and the report
+    said it "reads even on draft position". Justin: "no way that trade goes
+    through. something is wrong if you thought it would have even the slightest
+    chance of getting accepted." Three things were wrong at once. (1) The
+    draft check subtracted ADPs: Nabers 28.6 minus Chase 3.9 is 24.7, under the
+    25 that meant "a grab" - but 25 picks from a first-rounder to a third are
+    worth 107 against 54 season points above the starter line on the chart
+    history gives, where 25 picks from the tenth round to the twelfth are 20
+    against 13. (2) Nothing read what the other manager sees: that week Chase
+    averaged 15.2 a game, Nabers 5.2 with his quarterback on IR, Stevenson 6.5.
+    (3) The pricing was Sleeper's season feed, which does not move on news - it
+    still carried Jaxson Dart at 340.5 on IR. On Sleeper's own weekly
+    projections for the games left, the same trade is -3.8 for Justin, not
+    +30.2: it was never good for him either. Fixed: `sleeper-remaining` is the
+    trade tools' default (keeper surpluses stay on the season feed, since they
+    stand in for next year); `TradeScreens` reads every trade from his side on
+    draft value and this season's points, the short list needs a trade fair to
+    him on both, and one that asks him to take less on both than any side of
+    any trade this league has accepted is dropped as no chance - and so is one
+    that leaves him behind on both, whatever a few other managers once took.
+    The Chase offer is now a NO: 78% of the draft value and 0% of the points;
+    2 of 60 accepted sides took as little (BHier and Hamrliks, never Renteez).
+    The console's "a story he can tell himself" had also included "he gains on
+    the full model", which every listed trade does, so its WORTH ASKING tier
+    held 75 of 114 trades; it now needs him ahead on draft value or on this
+    season's points. Justin also doubted the evaluator on his side -
+    that giving up Chase could be a gain for Renteez. `ProjectionTiers` tested
+    the one way it could be systematically wrong in that direction, Sleeper
+    selling its best men short, and it does not: receivers projected 14-17 a
+    week scored 97.2% of it, those at 11-14 scored 94.6%, a 0.4-a-game tilt
+    toward Chase. Renteez's gain on points is real - his second flex is Kayshon
+    Boutte - and his "no" is about what he can see, which is now modelled. The
+    lesson is old (TRAPS #93): a model of what a trade is worth is not a model
+    of whether it is taken, and a check on how it looks has to be drawn in the
+    units people judge in.

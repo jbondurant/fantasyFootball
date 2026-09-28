@@ -163,6 +163,28 @@ public class NflverseGames {
         return out;
     }
 
+    /**
+     * Sleeper's club codes whose game of a week has kicked off by `nowEastern`
+     * (nflverse's gameday and gametime are Eastern). A game with no time is
+     * taken to start at 13:00. A season the file does not schedule gives an
+     * empty set - nobody has kicked off - which is the old behaviour.
+     */
+    static java.util.Set<String> kickedOff(List<Game> games, String season, int week, java.time.LocalDateTime nowEastern){
+        java.util.Set<String> started = new java.util.HashSet<>();
+        for(Game g : games){
+            if(!g.season().equals(season) || g.week() != week || g.gameday() == null || g.gameday().isBlank()){
+                continue;
+            }
+            java.time.LocalDateTime kickoff = java.time.LocalDateTime.parse(g.gameday() + "T"
+                    + (g.gametime() == null || g.gametime().isBlank() ? "13:00" : g.gametime()));
+            if(!nowEastern.isBefore(kickoff)){
+                started.add(sleeperTeam(g.home()));
+                started.add(sleeperTeam(g.away()));
+            }
+        }
+        return started;
+    }
+
     private static List<Game> cachedGames;
 
     static synchronized List<Game> games(){

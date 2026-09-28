@@ -45,9 +45,20 @@ import java.util.TreeMap;
  * 51 of them across this league's five seasons, and not one refusal. There is no
  * record of what was turned down, so acceptance cannot be fitted, and a number
  * invented for it would be exactly the signal-that-is-not-there this repo keeps
- * catching (TRAPS #93, #94). What stands in for it is honest and weaker: trades
- * are ranked by what they give the OTHER side as well as this one, and the
- * report shows his gain so the offer can be judged by eye.
+ * catching (TRAPS #93, #94).
+ *
+ * WHAT STANDS IN FOR IT, since 2026-09-28 (TRAPS #150). "His gain on our model"
+ * alone put Nabers + Stevenson for Ja'Marr Chase at the top of the short list, in
+ * the week Chase averaged 15.2 a game to Nabers' 5.2 - Justin: "something is
+ * wrong if you thought it would have even the slightest chance." He judges an
+ * offer on what he can see, so {@link TradeScreens} reads every trade from his
+ * side on draft value and on this season's points. The short list now needs a
+ * trade fair to him on both; one that leaves him behind on both, or that no
+ * accepted side in this league ever took as little on, is dropped; the rest are
+ * listed apart as long shots.
+ * And the default pricing is Sleeper's weekly projections for the games left
+ * (sleeper-remaining), because the season feed does not move on injuries - on it
+ * that same trade read +30.2 for Justin, on the games left -3.8.
  */
 public class TradeMarket {
 
@@ -646,17 +657,18 @@ public class TradeMarket {
                 .getOrDefault(configuration.getMyID(), configuration.getMyID()));
 
         // -Pprojections=posterior prices every man on Sleeper's number moved by the
-        // weeks already played at the measured rate (InSeasonPosterior); the
-        // default is Sleeper's season feed as it stands, which does not move on
-        // results. Run both and read the difference.
-        String source = System.getProperty("projections", "sleeper");
+        // weeks already played at the measured rate (InSeasonPosterior). The
+        // default is Sleeper's weekly projections summed over the games each man
+        // has left (sleeper-remaining), which drop a man Sleeper has ruled out;
+        // -Pprojections=sleeper is the season feed, which does not move on news.
+        String source = System.getProperty("projections", "sleeper-remaining");
         Map<String, Double> points = ProjectionSources.resolve(source);
         WeeklyStarterValue value = WeeklyStarterValue.forCurrentBoard(configuration, points, scenarios, 424_242L);
         // THE OTHER PRICING, beside it - the swap report's rule (TRAPS #146) brought
         // to trades. Sleeper's season feed does not move on results (TRAPS #136);
         // the rest-of-season model does (RosModel). Every listed trade is re-priced
         // on the other one, and the short list names only trades that hold on both.
-        String alt = source.equals("sleeper") ? "ros" : "sleeper";
+        String alt = source.equals("ros") ? "sleeper-remaining" : "ros";
         Map<String, Double> altPoints = ProjectionSources.resolve(alt);
         WeeklyStarterValue altValue = WeeklyStarterValue.forCurrentBoard(configuration, altPoints, scenarios, 424_242L);
         double tradeFloor = Double.parseDouble(System.getProperty("tradeFloor", "6.8"));
@@ -678,9 +690,13 @@ public class TradeMarket {
 
         // WHAT EACH MAN IS WORTH TO KEEP, for every roster - a trade moves keeper
         // value as surely as it moves this season's lineup
-        Map<String, Position> everyPosition = everyPosition(points, positionOf);
+        // Keeper surpluses stand in for NEXT season, so they stay on the season
+        // feed whatever this season is priced on: a man ruled out this year is
+        // absent from the games-left sum, and that must not zero his keeper value.
+        Map<String, Double> seasonFeed = source.equals("sleeper") ? points : ProjectionSources.resolve("sleeper");
+        Map<String, Position> everyPosition = everyPosition(seasonFeed, positionOf);
         Map<Position, java.util.TreeMap<Double, Double>> bestByAdp =
-                bestStillAvailable(points, everyPosition);
+                bestStillAvailable(seasonFeed, everyPosition);
         // PRICED OFF THIS SEASON'S DRAFT, like the console. KeeperChooser reads
         // getPreviousDraftPicks - "every EARLIER draft" - which in 2026 means the
         // 2025 board, so a man drafted this year takes the undrafted default and
@@ -700,7 +716,7 @@ public class TradeMarket {
         Map<String, Integer> slotOfPlayer = draftSlotOfPlayer(ownerOf, configuration);
         Map<String, Double> surplus = new HashMap<>();
         for(String id : keeperRound.keySet()){
-            surplus.put(id, keeperPoints(keeperRound, points, bestByAdp, everyPosition,
+            surplus.put(id, keeperPoints(keeperRound, seasonFeed, bestByAdp, everyPosition,
                     configuration, slotOfPlayer, id));
         }
         java.util.function.ToDoubleFunction<List<String>> season = ids -> value.of(ids);
@@ -756,6 +772,7 @@ public class TradeMarket {
         for(TradePartners.Record record : TradePartners.records(configuration.getLeagueID())){
             tradesPerYear.put(record.manager(), record.rate());
         }
+        TradeScreens.Context screens = TradeScreens.load(configuration);
 
         List<Trade> all = new ArrayList<>();
         for(Map.Entry<String, List<String>> entry : rosters.entrySet()){
@@ -781,8 +798,10 @@ public class TradeMarket {
                         + "%d offers were dropped for failing that. -PsellMode=true to see them.%n%n",
                         mutuallyGood.size() - good.size()));
 
-        out.append(String.format("%-28s %-28s %7s %7s %7s %8s %9s %9s %11s   %s%n",
-                "YOU GIVE", "YOU GET", "you", "him", "season", "SIMPLE", "you:" + alt, "him:" + alt, "ADP g/g", "WITH / HOW IT READS"));
+        out.append(String.format("'his view' is the trade from HIS side on the two numbers he can check (TradeScreens): what he gets back%n"
+                + "of the draft value and of this season's points he gives, '-' where he gives none.%n"));
+        out.append(String.format("%-28s %-28s %7s %7s %7s %8s %9s %9s %11s %10s   %s%n",
+                "YOU GIVE", "YOU GET", "you", "him", "season", "SIMPLE", "you:" + alt, "him:" + alt, "ADP g/g", "his view", "WITH / HOW IT READS"));
         for(Trade trade : good.subList(0, Math.min(top, good.size()))){
             // the same trade priced the OTHER way, so a deal that only works
             // because of keepers - or only in spite of them - shows itself
@@ -805,40 +824,66 @@ public class TradeMarket {
             double[] other = onOther(trade, rosters, me, altValue, scoreAlt);
             verdict += other[0] > 0 && other[1] > 0 ? "  holds on " + alt
                     : other[0] <= 0 ? "  LOSES FOR YOU on " + alt : "  he loses on " + alt;
-            out.append(String.format("%-28s %-28s %+7.1f %+7.1f %+7.1f %+8.1f %+9.1f %+9.1f %5.0f/%-5.0f   %s - %s%n",
+            TradeScreens.Screens seen = screens.of(trade);
+            out.append(String.format("%-28s %-28s %+7.1f %+7.1f %+7.1f %+8.1f %+9.1f %+9.1f %5.0f/%-5.0f %10s   %s - %s%n",
                     label(trade.give(), nameOf), label(trade.get(), nameOf),
                     trade.myGain(), trade.theirGain(), seasonOnly, simple, other[0], other[1],
-                    optics.mine(), optics.theirs(), verdict, optics.verdict()));
+                    optics.mine(), optics.theirs(), seen.ratios(), verdict, seen.verdict()));
         }
         if(good.isEmpty()){
             out.append("Nothing. Every swap that helps you costs the other man more than it gives him,\n"
                     + "which is what a league of twelve reasonable drafts usually looks like.\n");
         }
 
-        // THE SHORT LIST: what to actually send
-        record Short(Trade trade, double season, double seasonAlt, double hisAlt){}
+        // THE SHORT LIST: what to actually send - good for both on both pricings,
+        // AND fair to him on what he can see. Until 2026-09-28 the last clause was
+        // missing, and the list's top seven were all Ja'Marr Chase from Renteez.
+        record Short(Trade trade, double season, double seasonAlt, double hisAlt, TradeScreens.Screens seen){}
         List<Short> shortList = new ArrayList<>();
+        List<Short> longShots = new ArrayList<>();
+        int noChance = 0;
         for(Trade trade : good){
             double seasonOnly = season.applyAsDouble(swap(rosters.get(me), trade.give(), trade.get()))
                     - season.applyAsDouble(rosters.get(me));
             double[] other = onOther(trade, rosters, me, altValue, scoreAlt);
             if(seasonOnly >= tradeFloor && other[0] >= tradeFloor && trade.theirGain() > 0 && other[1] > 0){
-                shortList.add(new Short(trade, seasonOnly, other[0], other[1]));
+                TradeScreens.Screens seen = screens.of(trade);
+                Short s = new Short(trade, seasonOnly, other[0], other[1], seen);
+                if(seen.fairToHim()){
+                    shortList.add(s);
+                }
+                else if(seen.worthAsking()){
+                    longShots.add(s);
+                }
+                else{
+                    noChance++;
+                }
             }
         }
-        shortList.sort(Comparator.comparingDouble((Short s) -> -Math.min(s.season(), s.seasonAlt())));
+        Comparator<Short> best = Comparator.comparingDouble((Short s) -> -Math.min(s.season(), s.seasonAlt()));
+        shortList.sort(best);
+        longShots.sort(best);
         out.append(String.format("%nTHE SHORT LIST - %d of the %d: good for BOTH sides on BOTH pricings, you gaining at least the%n"
-                + "noise floor (%.1f, ObjectiveStability's seed-to-seed spread) this season on each. Best first by the smaller of%n"
-                + "your two gains; 'trades/yr' is how often he has actually traded (TradePartners) - a man near zero will not answer.%n",
+                + "noise floor (%.1f, ObjectiveStability's seed-to-seed spread) this season on each, AND fair to him on what he%n"
+                + "can see - he gets back at least the draft value and this season's points he gives (TradeScreens). Best first by%n"
+                + "the smaller of your two gains; 'trades/yr' is how often he has actually traded (TradePartners).%n",
                 shortList.size(), good.size(), tradeFloor));
-        out.append(String.format("  %-28s %-28s %8s %8s %8s %-16s %9s%n", "YOU GIVE", "YOU GET", "you", "you:" + alt, "him:" + alt, "WITH", "trades/yr"));
+        out.append(String.format("  %-28s %-28s %8s %8s %8s %10s %-16s %9s%n", "YOU GIVE", "YOU GET", "you", "you:" + alt, "him:" + alt,
+                "his view", "WITH", "trades/yr"));
         for(Short s : shortList.subList(0, Math.min(10, shortList.size()))){
-            out.append(String.format("  %-28s %-28s %+8.1f %+8.1f %+8.1f %-16s %9.2f%n", label(s.trade().give(), nameOf),
-                    label(s.trade().get(), nameOf), s.season(), s.seasonAlt(), s.hisAlt(), s.trade().withManager(),
+            out.append(String.format("  %-28s %-28s %+8.1f %+8.1f %+8.1f %10s %-16s %9.2f%n", label(s.trade().give(), nameOf),
+                    label(s.trade().get(), nameOf), s.season(), s.seasonAlt(), s.hisAlt(), s.seen().ratios(), s.trade().withManager(),
                     tradesPerYear.getOrDefault(s.trade().withManager(), 0.0)));
         }
         if(shortList.isEmpty()){
-            out.append("  none. Every trade that helps on one pricing is noise or a loss on the other - wait a week for evidence.\n");
+            out.append("  none. No trade that helps you on both pricings also looks fair to him on draft value and this season's points.\n");
+        }
+        out.append(String.format("%nLONG SHOTS - %d more that pass both pricings and leave him ahead on ONE of the numbers he can see, with a%n"
+                + "precedent in this league (who is named). Not offers to lead with. %d more were dropped: behind on both of his%n"
+                + "numbers, or as lopsided as no accepted side here ever took.%n", longShots.size(), noChance));
+        for(Short s : longShots.subList(0, Math.min(5, longShots.size()))){
+            out.append(String.format("  %-28s %-28s %+8.1f %+8.1f  %s: %s%n", label(s.trade().give(), nameOf),
+                    label(s.trade().get(), nameOf), s.season(), s.seasonAlt(), s.trade().withManager(), s.seen().verdict()));
         }
 
         // WHAT A PIECE IS ACTUALLY WORTH: the supply behind it
@@ -904,11 +949,15 @@ public class TradeMarket {
 
         out.append("\nWHAT THIS CANNOT TELL YOU. Sleeper records only COMPLETED trades - 51 across five\n");
         out.append("seasons of this league, and not one refusal - so there is no way to fit what a manager\n");
-        out.append("will ACCEPT. 'His gain' is the honest stand-in: a trade that clearly helps him is one he\n");
-        out.append("is likelier to take. Judge the offer by that column and by what you know about him.\n");
+        out.append("will ACCEPT. What stands in: his gain on the model, and 'his view' - the trade on the two\n");
+        out.append("numbers he can check, against every trade this league has accepted. A trade fair on both is\n");
+        out.append("one he can check and find fair; that is not the same as one he will take.\n");
         System.out.print(out);
+        // the pricing is always in the name: the default moved from the season
+        // feed to sleeper-remaining on 2026-09-28, and a bare trades-<date>.txt
+        // would no longer say which one it was priced on
         Path target = Path.of("data", "trades-" + LocalDate.now()
-                + (source.equals("sleeper") ? "" : "-" + source.replace(':', '_').replace(',', '_')) + ".txt");
+                + "-" + source.replace(':', '_').replace(',', '_') + ".txt");
         Files.writeString(target, out.toString(), StandardCharsets.UTF_8);
         System.out.println("written to " + target);
     }
@@ -939,16 +988,6 @@ public class TradeMarket {
      */
     static final double HIS_KEEPER_POINTS = 25;
 
-    /**
-     * Picks of draft position past which an ask reads as a grab.
-     *
-     * One home for it: Optics.verdict says "he will feel that" at this number,
-     * and the console's good-partner filter has to agree with the sentence
-     * printed beside it, or the page calls a trade fair and describes it as
-     * something he will resent in the same row.
-     */
-    static final double OPTICS_GRAB = 25;
-
     static boolean asksForAKeeper(double hisKeeperSurplus){
         return hisKeeperSurplus > HIS_KEEPER_POINTS;
     }
@@ -965,19 +1004,13 @@ public class TradeMarket {
             return mine - theirs;
         }
 
-        public String verdict(){
-            double gap = gap();
-            if(gap >= 60){
-                return "you are asking for a much earlier pick - expect a no on sight";
-            }
-            if(gap >= OPTICS_GRAB){
-                return "you are asking for the earlier pick - he will feel that";
-            }
-            if(gap <= -25){
-                return "you hand over the earlier pick - easy for him to say yes to";
-            }
-            return "reads even on draft position";
-        }
+        // There was a verdict() here that read this gap on a straight line - 25
+        // picks either way was "a grab" - and it called Nabers (28.6) for Ja'Marr
+        // Chase (3.9) "reads even on draft position". 25 picks between a first
+        // and a third-rounder are not the 25 between the tenth round and the
+        // twelfth. How a trade reads is TradeScreens' job now, on a chart that
+        // is steep where the draft is; this record only carries the two ADPs
+        // the tables print.
     }
 
     /** The earliest ADP on each side of a trade. */

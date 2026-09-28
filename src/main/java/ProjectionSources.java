@@ -149,7 +149,49 @@ public class ProjectionSources {
         }
     }
 
+    /**
+     * Sleeper's weekly projections summed over the games each man has LEFT: every
+     * week after the current one, and the current one only if his team has not
+     * kicked off yet (NflverseGames' schedule, Eastern time).
+     *
+     * Justin, 2026-09-27: "did sleeper weekly projections update, and can we sum
+     * those instead?" They did, where the season feed did not: TradeCheck's reads
+     * of weeks 4-18 drop Jaxson Dart after his injury (278.9 on 14 September,
+     * absent from 25 September) and add Jameis Winston (243.9), while the season
+     * feed still carried Dart at 340.5 on IR. So the trade tools price on this.
+     *
+     * Not {@link #sleeperRos}: the archived feed counts the current week played
+     * games and all, the definition ESPN's rest-of-season uses, so the archive
+     * can compare like with like. A trade made on a Sunday night buys only the
+     * games still to come, so this one leaves a played game out.
+     */
+    static Map<String, Double> sleeperRemaining(){
+        String season = LeagueWeek.season();
+        int current = LeagueWeek.week();
+        Map<String, Double> out = new LinkedHashMap<>();
+        LeagueWeek.summed(season, w -> w > current && !LeagueWeek.finished(season, w)).forEach((id, s) -> out.put(id, s[0]));
+        if(!LeagueWeek.finished(season, current)){
+            java.util.Set<String> started = NflverseGames.kickedOff(NflverseGames.games(), season, current,
+                    java.time.LocalDateTime.now(java.time.ZoneId.of("America/New_York")));
+            LeagueWeek.projected(season, current).forEach((id, pts) -> {
+                if(!started.contains(teamOf(id))){
+                    out.merge(id, pts, Double::sum);
+                }
+            });
+        }
+        return out;
+    }
+
+    /** A man's club today; a defence's id is its club. */
+    static String teamOf(String id){
+        Player p = Player.getPlayerFromSIDV2(id);
+        return p != null && p.team != null ? p.team : id;
+    }
+
     public static Map<String, Double> resolve(String source){
+        if("sleeper-remaining".equals(source)){
+            return sleeperRemaining();
+        }
         if("ros".equals(source)){
             return RosModel.season(AAAConfiguration.getInstance());
         }

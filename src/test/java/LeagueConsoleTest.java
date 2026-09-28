@@ -866,6 +866,25 @@ public class LeagueConsoleTest {
                         + "\"himSeason\":-?[\\d.]+,\"himHole\":(true|false).*?"
                         + "\"low\":(-?[\\d.]+),\"high\":-?[\\d.]+,\"noise\":(true|false),"
                         + "\"thins\":(null|\"[^\"]*\"),\"tier\":\"(send|ask|no)\"").matcher(page);
+        // WHAT HE CAN SEE (TRAPS #150): pages built from 2026-09-28 carry each
+        // trade's screens, and a SEND must be fair to him on both; a trade no
+        // accepted side here ever took as little on is a NO
+        Matcher screens = Pattern.compile("\"tier\":\"(send|ask|no)\",\"keeperCost\":-?[\\d.]+,"
+                + "\"hisDraft\":([^,]+),\"hisPoints\":([^,]+),\"precedents\":(\\d+),\"fairToHim\":(true|false)").matcher(page);
+        while(screens.find()){
+            String tier = screens.group(1);
+            double draft = screens.group(2).equals("null") ? Double.POSITIVE_INFINITY : Double.parseDouble(screens.group(2));
+            double points = screens.group(3).equals("null") ? Double.POSITIVE_INFINITY : Double.parseDouble(screens.group(3));
+            if(tier.equals("send")){
+                assertTrue(Boolean.parseBoolean(screens.group(5)), "a SEND must be fair to him on draft value and this season's points");
+            }
+            if(tier.equals("ask")){
+                assertTrue(draft >= 1 || points >= 1,
+                        "a WORTH ASKING must leave him ahead on one number he can see: " + draft + "/" + points);
+                assertTrue(Integer.parseInt(screens.group(4)) > 0 || Boolean.parseBoolean(screens.group(5)),
+                        "and have a precedent in this league");
+            }
+        }
         int send = 0, ask = 0, seen = 0;
         while(row.find()){
             double you = Double.parseDouble(row.group(1));

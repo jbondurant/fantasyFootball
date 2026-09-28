@@ -237,19 +237,14 @@ public class TradeMarketTest {
         // him that giving Stevenson (73) for Josh Allen (20) was easy to get agreed.
         TradeMarket.Optics grab = TradeMarket.optics(List.of("myLate"), List.of("hisEarly"), adpOf);
         assertEquals(120.0, grab.gap(), 1e-9, "150 out against 30 in");
-        assertTrue(grab.verdict().contains("expect a no on sight"),
-                "asking for a pick 120 places earlier is the hardest ask there is, not the easiest: "
-                        + grab.verdict());
 
         TradeMarket.Optics give = TradeMarket.optics(List.of("myEarly"), List.of("hisLate"), adpOf);
         assertEquals(-118.0, give.gap(), 1e-9);
-        assertTrue(give.verdict().contains("you hand over the earlier pick"),
-                "sending the earlier pick is what he says yes to: " + give.verdict());
 
-        // and a fair-looking one
         TradeMarket.Optics even = TradeMarket.optics(List.of("myEarly"), List.of("hisEarly"), adpOf);
         assertEquals(-3.0, even.gap(), 1e-9);
-        assertTrue(even.verdict().contains("reads even"));
+        // How each of these READS is TradeScreensTest's now: the straight-line
+        // verdict that lived here called pick 29 for pick 4 even (TRAPS #150).
 
         // PAIRS ANCHOR ON THE BEST MAN, because ADPs do not add: two men at 90
         // are not one man at 45, and a trade is named after its headline player

@@ -194,6 +194,11 @@ public class LeagueConsole {
         return out.append('"').toString();
     }
 
+    /** A screen ratio: null where he sends nothing on that screen and so cannot lose on it. */
+    static String ratioJson(double r){
+        return Double.isInfinite(r) || Double.isNaN(r) ? "null" : num(r);
+    }
+
     static String num(double v){
         // Locale.ROOT, not the default: a comma-decimal locale writes 4,79 and
         // splits the value into a bogus extra member of the object literal, so
@@ -548,9 +553,25 @@ public class LeagueConsole {
             surplus.put(id, TradeMarket.keeperPoints(keeperRound, points, bestByAdp,
                     everyPosition, configuration, slotOfPlayer, id));
         }
-        java.util.function.ToDoubleFunction<List<String>> seasonOnly = ids -> value.of(ids);
+        // TRADES ARE PRICED ON THE GAMES LEFT (2026-09-28). The season feed does
+        // not move on news: it still carried Jaxson Dart at 340.5 on IR, and on
+        // it Nabers + Stevenson for Ja'Marr Chase read +30.2 for Justin, where
+        // Sleeper's own weekly projections for the games left read -3.8
+        // (TradeScreens). The keeper surpluses above stay on the season feed:
+        // they stand in for NEXT year, which a man's injury this year does not
+        // zero. The wire above keeps the season feed too, so it agrees with
+        // TuesdaySwap to the decimal.
+        Map<String, Double> tradePoints = ProjectionSources.resolve("sleeper-remaining");
+        WeeklyStarterValue tradeValue = WeeklyStarterValue.forCurrentBoard(configuration, tradePoints, scenarios, 424_242L);
+        for(List<String> roster : rosters.values()){
+            roster.sort(Comparator.comparingDouble((String id) -> -tradePoints.getOrDefault(id, 0.0)));
+        }
+        // WHAT THE MAN OPPOSITE SEES (TradeScreens): draft value and this
+        // season's points, and whether any accepted trade here took as little
+        TradeScreens.Context screensContext = TradeScreens.load(configuration);
+        java.util.function.ToDoubleFunction<List<String>> seasonOnly = ids -> tradeValue.of(ids);
         java.util.function.ToDoubleFunction<List<String>> withKeeper =
-                ids -> value.of(ids) + TradeMarket.keeperValue(ids, surplus, everyPosition);
+                ids -> tradeValue.of(ids) + TradeMarket.keeperValue(ids, surplus, everyPosition);
         java.util.function.ToDoubleFunction<List<String>> myScorer = withKeepers ? withKeeper : seasonOnly;
         // one pair of Sides, built once and used for both the table and the
         // lookahead, so a trade cannot be scored one way in the row and another
@@ -570,7 +591,7 @@ public class LeagueConsole {
             // and the uneven shapes, which is where consolidation lives: he holds
             // seven receivers and five backs at positions every rival has spare
             everySwap.addAll(TradeMarket.unbalanced(me, entry.getKey(), rosters.get(me),
-                    entry.getValue(), mySide, theirSide, pool, points));
+                    entry.getValue(), mySide, theirSide, pool, tradePoints));
         }
         List<TradeMarket.Trade> mutuallyGood = TradeMarket.mutual(everySwap);
         double myBase = seasonOnly.applyAsDouble(rosters.get(me));
@@ -590,7 +611,7 @@ public class LeagueConsole {
         // much the recursion moved things is the interesting part and asserting
         // it would be worth nothing.
         int batnaPool = Integer.getInteger("batnaPool", 4);
-        List<TradeMarket.Alternative> rivalBoard = TradeMarket.alternatives(me, rosters, theirSide, batnaPool, points);
+        List<TradeMarket.Alternative> rivalBoard = TradeMarket.alternatives(me, rosters, theirSide, batnaPool, tradePoints);
         TradeMarket.Market market = TradeMarket.match(rivalBoard, rosters.keySet(), me);
         // what each of his men fetches on his own, so an ask for two of them can
         // be set against what selling those two separately would bring him
@@ -614,8 +635,8 @@ public class LeagueConsole {
         Map<String, Integer> hisSlotsBase = new HashMap<>();
         for(Map.Entry<String, List<String>> entry : rosters.entrySet()){
             hisSeasonBase.put(entry.getKey(), seasonOnly.applyAsDouble(entry.getValue()));
-            hisSimpleBase.put(entry.getKey(), TradeMarket.simpleStarters(entry.getValue(), points, positionOf));
-            hisSlotsBase.put(entry.getKey(), TradeMarket.slotsFilled(entry.getValue(), points, positionOf));
+            hisSimpleBase.put(entry.getKey(), TradeMarket.simpleStarters(entry.getValue(), tradePoints, positionOf));
+            hisSlotsBase.put(entry.getKey(), TradeMarket.slotsFilled(entry.getValue(), tradePoints, positionOf));
         }
 
         // WHAT EACH TRADE OPENS UP. Justin: "I'd prefer to do a +5 trade that
@@ -661,7 +682,7 @@ public class LeagueConsole {
         long[] otherSeeds = {7L, 99L, 2026L, 31_337L};
         List<WeeklyStarterValue> shakes = new ArrayList<>();
         for(int i = 0; i < errorSeeds - 1; i++){
-            shakes.add(WeeklyStarterValue.forCurrentBoard(configuration, points, scenarios,
+            shakes.add(WeeklyStarterValue.forCurrentBoard(configuration, tradePoints, scenarios,
                     otherSeeds[i % otherSeeds.length]));
         }
 
@@ -687,25 +708,26 @@ public class LeagueConsole {
                 hisKeeper = Math.max(hisKeeper, surplus.getOrDefault(id, 0.0));
             }
             TradeMarket.Optics optics = TradeMarket.optics(trade.give(), trade.get(), SleeperProjections::adpOf);
+            TradeScreens.Screens screens = screensContext.of(trade);
             List<String> after = TradeMarket.swap(rosters.get(me), trade.give(), trade.get());
-            double simple = TradeMarket.simpleStarters(after, points, positionOf)
-                    - TradeMarket.simpleStarters(rosters.get(me), points, positionOf);
+            double simple = TradeMarket.simpleStarters(after, tradePoints, positionOf)
+                    - TradeMarket.simpleStarters(rosters.get(me), tradePoints, positionOf);
             // A TRADE THAT EMPTIES A SLOT IS NOT A MINUS NINETY-FIVE. The simple
             // model has no waiver wire, so sending away the only defence loses
             // the whole slot and reads as catastrophic when it means "you would
             // pick one up". The full model fills it at the streamed level and
             // says +1.6. Neither number is wrong; the simple one is answering a
             // different question, and shown as a score it would mislead.
-            boolean hole = TradeMarket.slotsFilled(after, points, positionOf)
-                    < TradeMarket.slotsFilled(rosters.get(me), points, positionOf);
+            boolean hole = TradeMarket.slotsFilled(after, tradePoints, positionOf)
+                    < TradeMarket.slotsFilled(rosters.get(me), tradePoints, positionOf);
             // and the identical three for the manager opposite, on his roster
             List<String> hisRoster = rosters.get(trade.withManager());
             List<String> hisAfter = TradeMarket.swap(hisRoster, trade.hisOut(), trade.give());
             double himSeason = seasonOnly.applyAsDouble(hisAfter)
                     - hisSeasonBase.get(trade.withManager());
-            double himSimple = TradeMarket.simpleStarters(hisAfter, points, positionOf)
+            double himSimple = TradeMarket.simpleStarters(hisAfter, tradePoints, positionOf)
                     - hisSimpleBase.get(trade.withManager());
-            boolean himHole = TradeMarket.slotsFilled(hisAfter, points, positionOf)
+            boolean himHole = TradeMarket.slotsFilled(hisAfter, tradePoints, positionOf)
                     < hisSlotsBase.get(trade.withManager());
             double askPrice = 0;
             for(String id : trade.get()){
@@ -789,18 +811,20 @@ public class LeagueConsole {
             // changes is that a trade is placed rather than rejected:
             //
             //   SEND  - good for me beyond the noise, visibly good for him, hurts
-            //           neither roster, and does not read as a grab. Defensible
-            //           to offer and to have offered.
-            //   ASK   - good for me on average, safe for my roster, and there is
-            //           SOME story he can tell himself: he gains on the full
-            //           model, or barely loses on starters, or receives the
-            //           earlier pick. This is the tier that allows for mistakes,
-            //           and it is where most real trades in this league live.
-            //   NO    - it costs me, or it guts a position I cannot cover.
+            //           neither roster, and fair to him on draft value and on
+            //           this season's points (TradeScreens). Defensible to offer
+            //           and to have offered.
+            //   ASK   - good for me on average, safe for my roster, and a story
+            //           he can tell himself from what he can see: he comes out
+            //           ahead on draft value or on this season's points, and
+            //           some manager here has accepted as lopsided a trade. This
+            //           is the tier that allows for mistakes.
+            //   NO    - it costs me, it guts a position I cannot cover, or it
+            //           leaves him behind on both numbers he can see.
             //
             // The reputation rule survives intact: nothing reaches SEND that
-            // grabs the earlier pick or leaves him worse on the number he can
-            // check, and ASK is labelled as a long shot rather than a fair deal.
+            // leaves him worse on a number he can check, and ASK is labelled as
+            // a long shot rather than a fair deal.
             boolean safeForMe = thins == null && !hole && trade.myGain() > 0;
             boolean visiblyGoodForHim = himSimple > 0 && !himHole;
             // ...but never one that guts HIS lineup. Three ASK rows offered him a
@@ -809,10 +833,27 @@ public class LeagueConsole {
             // slot off the wire for free. That is the same "empties a slot"
             // error I fixed on my own side and then let stand on his, and it is
             // not a mistake he will make - it is one he will notice.
-            boolean aStoryHeCanTell = !himHole && (trade.theirGain() > 0 || himSimple > -2.0
-                    || optics.gap() <= -TradeMarket.OPTICS_GRAB);
-            String tier = !safeForMe ? "no"
-                    : !noise && visiblyGoodForHim && optics.gap() <= TradeMarket.OPTICS_GRAB ? "send"
+            //
+            // WHAT HE CAN SEE, 2026-09-28. The draft-position test here was a
+            // straight line - 25 picks either way - and it let Nabers (28.6) +
+            // Stevenson for Ja'Marr Chase (3.9) read "even", in the week Chase
+            // averaged 15.2 a game to Nabers' 5.2. Justin: "something is wrong if
+            // you thought it would have even the slightest chance of getting
+            // accepted." TradeScreens replaces it: a SEND must be fair to him on
+            // draft value (a chart that is steep where the draft is) AND on this
+            // season's points; a trade that asks him to take less on both than
+            // any side of any trade this league has accepted is a NO, however
+            // good it is for either roster.
+            //
+            // And the story he can tell himself has to be one he can SEE. It used
+            // to include "he gains on the full model", which every row here does
+            // (mutual() requires it), so the test passed everything that did not
+            // empty his lineup - and "barely loses on starters", a sum of Sleeper
+            // projections that also liked Chase for Nabers. Now: he comes out
+            // ahead on draft value or on this season's points.
+            boolean aStoryHeCanTell = !himHole && screens.worthAsking();
+            String tier = !safeForMe || !screens.worthAsking() ? "no"
+                    : !noise && visiblyGoodForHim && screens.fairToHim() ? "send"
                     : aStoryHeCanTell ? "ask" : "no";
             boolean fair = tier.equals("send");
             // WHAT THE TRADE COSTS YOU NEXT MARCH, shown rather than buried.
@@ -839,19 +880,21 @@ public class LeagueConsole {
                             + "\"himSimple\":%s,\"himSeason\":%s,\"himHole\":%b,"
                             + "\"hisBest\":%s,\"hisBestNaive\":%s,\"hisEdge\":%s,\"hisPartner\":%s,"
                             + "\"askPrice\":%s,\"overAsk\":%s,\"fair\":%b,\"hisRate\":%s,\"hisTrades\":%d,\"hisSeasons\":%d,"
-                            + "\"low\":%s,\"high\":%s,\"noise\":%b,\"thins\":%s,\"tier\":%s,\"keeperCost\":%s}",
+                            + "\"low\":%s,\"high\":%s,\"noise\":%b,\"thins\":%s,\"tier\":%s,\"keeperCost\":%s,"
+                            + "\"hisDraft\":%s,\"hisPoints\":%s,\"precedents\":%d,\"fairToHim\":%b}",
                     quote(label(trade.give(), nameOf)), quote(label(trade.get(), nameOf)),
                     quote(trade.withManager()), num(trade.myGain()), num(trade.theirGain()),
                     num(thisSeason), num(hisKeeper), TradeMarket.asksForAKeeper(hisKeeper),
                     num(simple), hole,
-                    num(optics.mine()), num(optics.theirs()), quote(optics.verdict()), optics.menEachWay(),
+                    num(optics.mine()), num(optics.theirs()), quote(screens.verdict()), optics.menEachWay(),
                     reachOf.containsKey(trade) ? num(TradeMarket.reach(reachOf.get(trade))) : "null",
                     reachOf.containsKey(trade) ? chainJson(reachOf.get(trade), nameOf) : "null",
                     num(himSimple), num(himSeason), himHole, num(hisBest), num(hisBestNaive), num(hisEdge),
                     quote(market.partner().getOrDefault(trade.withManager(), "nobody")),
                     num(askPrice), num(trade.theirGain() - askPrice), fair,
                     num(hisRate), record[0], record[1], num(low), num(high), noise,
-                    thins == null ? "null" : quote(thins), quote(tier), num(keeperCost)));
+                    thins == null ? "null" : quote(thins), quote(tier), num(keeperCost),
+                    ratioJson(screens.draftRatio()), ratioJson(screens.pointsRatio()), screens.precedents(), screens.fairToHim()));
             if(fair){
                 fairTrades++;
             }
@@ -900,7 +943,7 @@ public class LeagueConsole {
         for(TradeMarket.Trade trade : mismatched){
             List<String> hisRoster = rosters.get(trade.withManager());
             List<String> hisAfter = TradeMarket.swap(hisRoster, trade.hisOut(), trade.give());
-            double himSimple = TradeMarket.simpleStarters(hisAfter, points, positionOf)
+            double himSimple = TradeMarket.simpleStarters(hisAfter, tradePoints, positionOf)
                     - hisSimpleBase.get(trade.withManager());
             if(himSimple > 0){
                 continue;                    // the starters-only reading likes it, so it is not this board
@@ -911,12 +954,12 @@ public class LeagueConsole {
             // each reading -95 on your own simple model. A trade that empties
             // your slot is not a clever read of the market, it is a trade you
             // would not make, and it drowned the two real rows.
-            if(TradeMarket.slotsFilled(after, points, positionOf)
-                    < TradeMarket.slotsFilled(rosters.get(me), points, positionOf)){
+            if(TradeMarket.slotsFilled(after, tradePoints, positionOf)
+                    < TradeMarket.slotsFilled(rosters.get(me), tradePoints, positionOf)){
                 continue;
             }
-            double simple = TradeMarket.simpleStarters(after, points, positionOf)
-                    - TradeMarket.simpleStarters(rosters.get(me), points, positionOf);
+            double simple = TradeMarket.simpleStarters(after, tradePoints, positionOf)
+                    - TradeMarket.simpleStarters(rosters.get(me), tradePoints, positionOf);
             TradeMarket.Optics look = TradeMarket.optics(trade.give(), trade.get(), SleeperProjections::adpOf);
             mirageJson.append(mirages++ == 0 ? "" : ",").append(String.format(
                     "{\"give\":%s,\"get\":%s,\"with\":%s,\"you\":%s,\"simple\":%s,"
@@ -1250,7 +1293,8 @@ function trades(){ const only26 = document.getElementById("f26").value==="1";
     + `<b>KEEPER COST</b> is what the trade takes off next March, and it is charged inside your FULL number &mdash; the gap between <b>full</b> and <b>2026</b> is exactly it. It is NOT the man's own surplus: you keep two, so parting with your best keeper costs the drop in your best PAIR, because the third man backfills. Giving up Tuten (+33.8 on his own) costs 14.1, because Purdy steps up behind him. Nobody would derive that from the keeper table, which is why it is here.<br><br>`
     + `<b>A trade tagged "thins"</b> sends a body away from a position whose UNTAGGED men already cannot fill its slots. That is not in the projections, which price a Questionable starter exactly like a healthy one: what is scarce at such a position is availability, not points, and a doubtful man is still a ticket that a traded man is not. Those offers are excluded from this view entirely.<br><br>`
     + `<b>HE TRADES</b> is completed deals per season from this league's own log, and it is the column to read first. Everything else here models how a rival VALUES an offer; this is the only one that asks whether he does deals at all, and it is probably the larger term. Nothing on the board is worth more than a manager's willingness to open the message: the two biggest gains below go to somebody who has completed one trade in three seasons, while the most active traders sit lower down the table with offers that would actually be taken.<br><br>`
-    + `<b>${D.fairTrades} to SEND and ${D.askTrades} WORTH ASKING</b>, of ${D.trades.length} searched. Nothing is hidden by a filter any more, because gating on every test at once assumed the man opposite is right about everything &mdash; and fifty-seven of these failed only because he loses on the best-legal-ten calculation, which almost nobody in this league performs. A <b>SEND</b> is defensible to offer and to have offered. <b>WORTH ASKING</b> is good for you, safe for your roster, and leaves him a story he can tell himself &mdash; he gains on the full model, or barely loses on starters, or receives the earlier pick. It is a long shot, not a fair deal, and it is greyed to say so.<br><br>`
+    + `<b>${D.fairTrades} to SEND and ${D.askTrades} WORTH ASKING</b>, of ${D.trades.length} searched. Nothing is hidden by a filter any more, because gating on every test at once assumed the man opposite is right about everything &mdash; and fifty-seven of these failed only because he loses on the best-legal-ten calculation, which almost nobody in this league performs. A <b>SEND</b> is defensible to offer and to have offered. <b>WORTH ASKING</b> is good for you, safe for your roster, and leaves him a story he can tell himself from what he can see &mdash; he comes out ahead on draft value or on this season's points, and some manager here has accepted a trade as lopsided. It is a long shot, not a fair deal, and it is greyed to say so.<br><br>`
+    + `<b>What he can see</b> (TradeScreens, since 2026-09-28): every row is read from HIS side on two numbers he can check himself &mdash; <i>draft value</i>, each man's ADP on a chart of what a man drafted there has been worth (steep where the draft is steep, so pick 4 against pick 29 is a big gap and pick 104 against 129 a small one), and <i>this season's points</i>, points a game above the last starter at the position. A SEND must be fair to him on both. A trade that leaves him behind on both is a NO however good it is on the models &mdash; the Nabers + Stevenson for Chase offer was one (78% of the draft value, 0% of the points), and the old straight-line draft check called it even. Trades here are priced on Sleeper's weekly projections for the games left, not the season feed, which does not move on injuries.<br><br>`
     + `The old rule kept only offers that survive their own error bar, help him on the number he can check himself, empty nobody's lineup, and do not visibly grab the earlier pick &mdash; and that filter is ON by default.</b> This is a keeper league: the same eleven managers every season, so being somebody people want to deal with is an asset that compounds into next year rather than a nicety. A trade he thanks you for is worth more than a slightly better one he resents.<br><br>`
     + `<b>${D.losesToElsewhere} of the ${D.trades.length} offers lose to something he can already get from somebody else.</b> <b>VS ELSEWHERE</b> is the column that says so, and it is the one that decides whether an offer gets taken. His gain is not persuasive on its own: what matters is what it beats. Each rival's best mutually-good trade with somebody who is not you is computed the same way, and this is his gain from your offer minus that. <b>And that alternative is limited by everyone else's alternatives</b>: his best trade needs the manager across from HIM to prefer it to his own options. So the rivals are PAIRED OFF &mdash; each pair striking the deal with the most joint surplus to divide, best pairs forming first &mdash; and his fallback is what he gets from the partner he would actually end up with, not the best partner he can name. Hover a number to see that alongside the naive maximum, which credits him with deals the other man would decline. <b>A negative number means he has something better waiting and will not need you.</b> Two limits, both making the column optimistic: the search is size-balanced, so it cannot see the uneven deals where a manager sends two men for one and refills off the wire &mdash; anyone who can build those has better alternatives than this shows &mdash; and it runs at a pool of ${D.batnaPool}. So a thin edge here is not an edge.<br><br>`
     + `<b>VS SELLING THEM</b> is the same question asked one man at a time. Every player you are asking for has a price of his own: the best a straight one-for-one with somebody who is not you would bring his owner. Asking for two men is asking him to forgo two of those, so this is your offer minus their sum. One-for-one is what isolates a man's contribution &mdash; in a bundle the gain belongs to the pair and splitting it would be a choice rather than a measurement &mdash; which also makes it a floor: bundles can be worth more than their parts, and a man priced at nothing has no one-for-one buyer, not no value.<br><br>`

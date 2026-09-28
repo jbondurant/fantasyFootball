@@ -268,7 +268,11 @@ tasks.register('run', JavaExec) {
      'stage',
      // The market tools: KalshiArb/KalshiFair read the latest archived Kalshi
      // snapshot instead of the live API; KalshiSettle scores several weeks.
-     'offline', 'weeks'].each { knob ->
+     'offline', 'weeks',
+     // TradeCheck: the players to show, comma-separated full names
+     'players',
+     // TradeScreens: one trade to put on both screens - the men you send and the men you receive
+     'send', 'receive'].each { knob ->
         if (project.hasProperty(knob)) {
             systemProperty knob, project.property(knob)
         }

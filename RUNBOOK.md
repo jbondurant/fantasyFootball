@@ -74,8 +74,12 @@ Two things to respect:
 ## Tuesday — the trades
 
 The **Trades** tab. Its filter defaults to *send + worth asking*; switch it to *only
-the ones he thanks you for* to see SEND alone, which is where to start. Read the
-columns right to left:
+the ones he thanks you for* to see SEND alone, which is where to start. Each row's
+*how it reads* is the trade from HIS side on draft value and this season's points
+(`TradeScreens`): a SEND is fair to him on both, and a trade no manager here ever
+accepted anything as lopsided as is a NO however good it looks for either roster.
+Trades on the page are priced on Sleeper's weekly projections for the games left.
+Read the columns right to left:
 
 1. **He trades** - deals per season from the league's own log. A manager at
    0.20/yr will not answer your best offer; KevinDA (3.60) and BHier (3.25) are
@@ -92,20 +96,33 @@ lead with it - he will see it anyway, and volunteering costs nothing. This is a
 keeper league with the same eleven managers every year, so being somebody people
 want to deal with compounds into next season in a way one extra point does not.
 
-The terminal version prices every trade TWO ways and is the one to trust while
-the page still prices on Sleeper's season feed alone:
+The terminal version prices every trade TWO ways:
 
     ./gradlew run -Pmain=TradeMarket
 
 It opens with **every roster's score** - the season points its starters are
 expected to score, 17 x the best legal lineup from whoever is healthy in a drawn
-week, the bench worth the weeks it covers - on Sleeper's season feed (which does
-not move on results) and on the rest-of-season model (which does), with your
-rank on each. Then every mutually good trade carries both pricings, and **THE
-SHORT LIST** names only the trades good for both sides on both, you clearing the
-6.8 noise floor on each, with how often the other manager actually trades. Start
-there; a trade that works on one pricing and loses on the other is a bet on which
-projection is right, not a trade.
+week, the bench worth the weeks it covers - on Sleeper's weekly projections for
+the games left (`sleeper-remaining`, which drops a man Sleeper has ruled out) and
+on the rest-of-season model, with your rank on each. Then every mutually good
+trade carries both pricings and **his view**: the trade from HIS side on the two
+numbers he can check, draft value and this season's points (`TradeScreens`).
+**THE SHORT LIST** names only trades good for both sides on both pricings, you
+clearing the 6.8 noise floor on each, AND fair to him on both of his numbers.
+Long shots - trades some manager here once accepted something as lopsided as -
+are listed apart, with who took them; trades nobody here ever took are dropped.
+
+**Retracted, 2026-09-28:** the 27 September report put Nabers + Stevenson for
+Ja'Marr Chase first on the short list. It was priced on the season feed, which
+had not heard that Jaxson Dart was out, and on the games left it costs you 3.8;
+and it asked Renteez to give up a man averaging 15.2 a game for two averaging
+5.2 and 6.5, which the old straight-line draft check called "even". TRAPS #150.
+
+To check one trade by hand - both screens, both pricings, and the other
+manager's lineup before and after:
+
+    ./gradlew run -Pmain=TradeScreens -Psend="Malik Nabers,Rhamondre Stevenson" -Preceive="Ja'Marr Chase"
+    ./gradlew run -Pmain=TradeCheck -Pplayers="Malik Nabers,Ja'Marr Chase"   # points by week, ADP, every projection, and Sleeper's weekly sums by date
 
 ## What never to trade
 
