@@ -618,7 +618,7 @@ build's default main.
 
 **live** (2)
 
-- `TradeMarket` — Every size-balanced swap with all eleven rivals priced on WeeklyStarterValue, shown only where both sides g…
+- `TradeMarket` — Every size-balanced swap with all eleven rivals priced on WeeklyStarterValue, shown only where both sides g… Also prints every roster's score on both pricings (the -Pprojections source and the other of sleeper/ros) and re-prices each listed trade on the other; THE SHORT LIST names trades good for both sides on both, you over the 6.8 floor on each, with the partner's trades/yr.
 - `TradeStability` — Re-values the board's top trades under several seeds and reports the spread, so a recommended margin can be…
 
 **archive** (3)

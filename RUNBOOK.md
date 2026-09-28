@@ -92,6 +92,21 @@ lead with it - he will see it anyway, and volunteering costs nothing. This is a
 keeper league with the same eleven managers every year, so being somebody people
 want to deal with compounds into next season in a way one extra point does not.
 
+The terminal version prices every trade TWO ways and is the one to trust while
+the page still prices on Sleeper's season feed alone:
+
+    ./gradlew run -Pmain=TradeMarket
+
+It opens with **every roster's score** - the season points its starters are
+expected to score, 17 x the best legal lineup from whoever is healthy in a drawn
+week, the bench worth the weeks it covers - on Sleeper's season feed (which does
+not move on results) and on the rest-of-season model (which does), with your
+rank on each. Then every mutually good trade carries both pricings, and **THE
+SHORT LIST** names only the trades good for both sides on both, you clearing the
+6.8 noise floor on each, with how often the other manager actually trades. Start
+there; a trade that works on one pricing and loses on the other is a bet on which
+projection is right, not a trade.
+
 ## What never to trade
 
 The **What you can sell** tab names your two 2027 keepers and what their surplus

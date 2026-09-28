@@ -617,6 +617,20 @@ public class TradeMarket {
         return good;
     }
 
+    /**
+     * A trade re-priced on another objective, this season only: {your gain,
+     * his gain}. His side takes his cut on the two-for-one (Trade.hisOut) - the
+     * same accounting as every other rebuild of his roster (TRAPS #144).
+     */
+    static double[] onOther(Trade trade, Map<String, List<String>> rosters, String me, WeeklyStarterValue other,
+                            Map<String, Double> baseOnOther){
+        List<String> mine = rosters.get(me);
+        List<String> his = rosters.get(trade.withManager());
+        double myGain = other.of(swap(mine, trade.give(), trade.get())) - baseOnOther.get(me);
+        double hisGain = other.of(swap(his, trade.hisOut(), trade.give())) - baseOnOther.get(trade.withManager());
+        return new double[]{myGain, hisGain};
+    }
+
     public static void main(String[] args) throws Exception {
         AAAConfiguration configuration = AAAConfiguration.getInstance();
         int scenarios = Integer.getInteger("scenarios", 240);
@@ -638,6 +652,14 @@ public class TradeMarket {
         String source = System.getProperty("projections", "sleeper");
         Map<String, Double> points = ProjectionSources.resolve(source);
         WeeklyStarterValue value = WeeklyStarterValue.forCurrentBoard(configuration, points, scenarios, 424_242L);
+        // THE OTHER PRICING, beside it - the swap report's rule (TRAPS #146) brought
+        // to trades. Sleeper's season feed does not move on results (TRAPS #136);
+        // the rest-of-season model does (RosModel). Every listed trade is re-priced
+        // on the other one, and the short list names only trades that hold on both.
+        String alt = source.equals("sleeper") ? "ros" : "sleeper";
+        Map<String, Double> altPoints = ProjectionSources.resolve(alt);
+        WeeklyStarterValue altValue = WeeklyStarterValue.forCurrentBoard(configuration, altPoints, scenarios, 424_242L);
+        double tradeFloor = Double.parseDouble(System.getProperty("tradeFloor", "6.8"));
         boolean withKeepers = Boolean.parseBoolean(System.getProperty("keepers", "true"));
         Map<String, String> ownerOf = LeagueOwners.today(configuration);
         Map<String, List<String>> rosters = new TreeMap<>();
@@ -707,6 +729,34 @@ public class TradeMarket {
                 : String.format("KEEPER VALUE IS OFF for both sides (-Pkeepers=true to count yours). This prices 2026 alone,%n"
                         + "so giving up a cheap keeper looks free when it is not.%n%n"));
 
+        // HOW EVERY ROSTER SCORES: the objective itself, per team, on both pricings
+        Map<String, Double> scoreOn = new HashMap<>();
+        Map<String, Double> scoreAlt = new HashMap<>();
+        for(Map.Entry<String, List<String>> entry : rosters.entrySet()){
+            scoreOn.put(entry.getKey(), value.of(entry.getValue()));
+            scoreAlt.put(entry.getKey(), altValue.of(entry.getValue()));
+        }
+        List<String> byOn = new ArrayList<>(rosters.keySet());
+        byOn.sort(Comparator.comparingDouble((String m) -> -scoreOn.get(m)));
+        List<String> byAlt = new ArrayList<>(rosters.keySet());
+        byAlt.sort(Comparator.comparingDouble((String m) -> -scoreAlt.get(m)));
+        out.append(String.format("HOW EVERY ROSTER SCORES - the season points its starters are expected to score: 17 x the best legal%n"
+                + "lineup from whoever is healthy in a drawn week, the bench worth the weeks it covers, every slot floored at%n"
+                + "the waiver wire. On %s and on %s (the rest-of-season model moves on this season's results; Sleeper's%n"
+                + "season feed does not):%n", source, alt));
+        out.append(String.format("  %-4s %-16s %8s   %-4s %8s%n", "rank", "manager", source, "rank", alt));
+        for(int i = 0; i < byOn.size(); i++){
+            String m = byOn.get(i);
+            out.append(String.format("  %-4d %-16s %8.1f   %-4d %8.1f%s%n", i + 1, m, scoreOn.get(m), byAlt.indexOf(m) + 1, scoreAlt.get(m),
+                    m.equals(me) ? "   <- you" : ""));
+        }
+        out.append('\n');
+
+        Map<String, Double> tradesPerYear = new HashMap<>();
+        for(TradePartners.Record record : TradePartners.records(configuration.getLeagueID())){
+            tradesPerYear.put(record.manager(), record.rate());
+        }
+
         List<Trade> all = new ArrayList<>();
         for(Map.Entry<String, List<String>> entry : rosters.entrySet()){
             if(entry.getKey().equals(me)){
@@ -731,8 +781,8 @@ public class TradeMarket {
                         + "%d offers were dropped for failing that. -PsellMode=true to see them.%n%n",
                         mutuallyGood.size() - good.size()));
 
-        out.append(String.format("%-28s %-28s %7s %7s %7s %8s %11s   %s%n",
-                "YOU GIVE", "YOU GET", "you", "him", "season", "SIMPLE", "ADP g/g", "WITH / HOW IT READS"));
+        out.append(String.format("%-28s %-28s %7s %7s %7s %8s %9s %9s %11s   %s%n",
+                "YOU GIVE", "YOU GET", "you", "him", "season", "SIMPLE", "you:" + alt, "him:" + alt, "ADP g/g", "WITH / HOW IT READS"));
         for(Trade trade : good.subList(0, Math.min(top, good.size()))){
             // the same trade priced the OTHER way, so a deal that only works
             // because of keepers - or only in spite of them - shows itself
@@ -752,14 +802,43 @@ public class TradeMarket {
             Optics optics = optics(trade.give(), trade.get(), SleeperProjections::adpOf);
             double simple = simpleStarters(swap(rosters.get(me), trade.give(), trade.get()), points, positionOf)
                     - simpleStarters(rosters.get(me), points, positionOf);
-            out.append(String.format("%-28s %-28s %+7.1f %+7.1f %+7.1f %+8.1f %5.0f/%-5.0f   %s - %s%n",
+            double[] other = onOther(trade, rosters, me, altValue, scoreAlt);
+            verdict += other[0] > 0 && other[1] > 0 ? "  holds on " + alt
+                    : other[0] <= 0 ? "  LOSES FOR YOU on " + alt : "  he loses on " + alt;
+            out.append(String.format("%-28s %-28s %+7.1f %+7.1f %+7.1f %+8.1f %+9.1f %+9.1f %5.0f/%-5.0f   %s - %s%n",
                     label(trade.give(), nameOf), label(trade.get(), nameOf),
-                    trade.myGain(), trade.theirGain(), seasonOnly, simple,
+                    trade.myGain(), trade.theirGain(), seasonOnly, simple, other[0], other[1],
                     optics.mine(), optics.theirs(), verdict, optics.verdict()));
         }
         if(good.isEmpty()){
             out.append("Nothing. Every swap that helps you costs the other man more than it gives him,\n"
                     + "which is what a league of twelve reasonable drafts usually looks like.\n");
+        }
+
+        // THE SHORT LIST: what to actually send
+        record Short(Trade trade, double season, double seasonAlt, double hisAlt){}
+        List<Short> shortList = new ArrayList<>();
+        for(Trade trade : good){
+            double seasonOnly = season.applyAsDouble(swap(rosters.get(me), trade.give(), trade.get()))
+                    - season.applyAsDouble(rosters.get(me));
+            double[] other = onOther(trade, rosters, me, altValue, scoreAlt);
+            if(seasonOnly >= tradeFloor && other[0] >= tradeFloor && trade.theirGain() > 0 && other[1] > 0){
+                shortList.add(new Short(trade, seasonOnly, other[0], other[1]));
+            }
+        }
+        shortList.sort(Comparator.comparingDouble((Short s) -> -Math.min(s.season(), s.seasonAlt())));
+        out.append(String.format("%nTHE SHORT LIST - %d of the %d: good for BOTH sides on BOTH pricings, you gaining at least the%n"
+                + "noise floor (%.1f, ObjectiveStability's seed-to-seed spread) this season on each. Best first by the smaller of%n"
+                + "your two gains; 'trades/yr' is how often he has actually traded (TradePartners) - a man near zero will not answer.%n",
+                shortList.size(), good.size(), tradeFloor));
+        out.append(String.format("  %-28s %-28s %8s %8s %8s %-16s %9s%n", "YOU GIVE", "YOU GET", "you", "you:" + alt, "him:" + alt, "WITH", "trades/yr"));
+        for(Short s : shortList.subList(0, Math.min(10, shortList.size()))){
+            out.append(String.format("  %-28s %-28s %+8.1f %+8.1f %+8.1f %-16s %9.2f%n", label(s.trade().give(), nameOf),
+                    label(s.trade().get(), nameOf), s.season(), s.seasonAlt(), s.hisAlt(), s.trade().withManager(),
+                    tradesPerYear.getOrDefault(s.trade().withManager(), 0.0)));
+        }
+        if(shortList.isEmpty()){
+            out.append("  none. Every trade that helps on one pricing is noise or a loss on the other - wait a week for evidence.\n");
         }
 
         // WHAT A PIECE IS ACTUALLY WORTH: the supply behind it
@@ -784,7 +863,6 @@ public class TradeMarket {
 
         // TRADING POWER: can he just keep trading and keep improving?
         if(depth > 1){
-            double tradeFloor = Double.parseDouble(System.getProperty("tradeFloor", "6.8"));
             List<Step> steps = chain(me, rosters, mySide, theirSide, depth, pool, tradeFloor);
             List<Step> churn = chain(me, rosters, mySide, theirSide, depth, pool, 0.0);
             out.append(String.format("%n(The chain below is not filtered for 2026 - it is the ceiling of what the board%n"
