@@ -1,0 +1,93 @@
+TRADE MARKET  2026-09-27  (justinb314; projections: sleeper)
+Every size-balanced swap with all eleven rivals, both rosters priced on the same
+weekly-starter objective (240 drawn seasons). Only trades BOTH sides gain from are listed:
+an offer the other manager loses on is an offer he declines.
+THE TWO SIDES ARE PRICED DIFFERENTLY, on purpose. YOUR value is the season PLUS the best two
+keeper surpluses on your roster (a surplus being what a man is worth beyond the pick you spend to
+keep him, measured at HIS OWN position). HIS is LOSS-AVERSE on keepers: he takes no credit for one
+he receives and feels every point of one he gives up, which is how people here actually behave.
+So asking for another manager's keeper is HARD - the ask is priced at what it costs him - and
+paying anybody IN keepers buys you nothing. -Pkeepers=false prices you the same way he is.
+
+HOW EVERY ROSTER SCORES - the season points its starters are expected to score: 17 x the best legal
+lineup from whoever is healthy in a drawn week, the bench worth the weeks it covers, every slot floored at
+the waiver wire. On sleeper and on ros (the rest-of-season model moves on this season's results; Sleeper's
+season feed does not):
+  rank manager           sleeper   rank      ros
+  1    JakeSK             2160.2   2      2166.2
+  2    KevinDA            2137.3   7      2125.5
+  3    justinb314         2123.6   6      2134.8   <- you
+  4    Hamrliks           2118.6   5      2139.3
+  5    d0ddi              2114.2   4      2147.3
+  6    patekxwater        2099.7   9      2095.8
+  7    jerem9604          2094.4   3      2152.5
+  8    BHier              2094.3   12     1927.6
+  9    itsabust           2081.8   8      2098.6
+  10   tommyrads          2062.3   10     2038.1
+  11   Renteez            1990.4   11     2003.9
+  12   JFMarino           1955.8   1      2224.7
+
+51136 swaps searched, 184 good for both sides, 180 of those also good for 2026.
+A trade must stand up WITHOUT the keeper value as well - the plan is to win 2026, and
+keeper value is a tiebreak on a deal that already helps now, not a reason to get worse.
+4 offers were dropped for failing that. -PsellMode=true to see them.
+
+YOU GIVE                     YOU GET                          you     him  season   SIMPLE   you:ros   him:ros     ADP g/g   WITH / HOW IT READS
+Mike Evans + Rhamondre Stevenson Ja'Marr Chase                  +40.1    +0.2   +40.1    +52.2     +25.1      +0.9    63/4       Renteez  holds on ros - you are asking for the earlier pick - he will feel that
+Brock Purdy + Mike Evans + Cam Skattebo Josh Allen + CeeDee Lamb + Seattle Seahawks   +35.4    +6.1   +35.4    +57.7     +65.6     -50.1    35/12      JFMarino  he loses on ros - reads even on draft position
+Malik Nabers + Mike Evans + Rhamondre Stevenson Ja'Marr Chase + Ladd McConkey + Philadelphia Eagles   +35.2    +5.2   +35.2    +51.2     +28.9      +0.1    29/4       Renteez  holds on ros - reads even on draft position
+Malik Nabers + Rhamondre Stevenson Ja'Marr Chase + Philadelphia Eagles   +31.7    +5.3   +31.7    +50.7     +18.4      +9.1    29/4       Renteez  holds on ros - reads even on draft position
+Brock Purdy + Mike Evans + Rhamondre Stevenson Josh Allen + Trey McBride + Seattle Seahawks   +31.3   +12.2   +31.3    +47.8     +88.9     -76.6    63/21      JFMarino  he loses on ros - you are asking for the earlier pick - he will feel that
+Malik Nabers + Cam Skattebo + Rhamondre Stevenson Ja'Marr Chase + Ladd McConkey + Philadelphia Eagles   +30.5    +2.9   +30.5    +58.2      -7.9     +26.5    29/4       Renteez  LOSES FOR YOU on ros - reads even on draft position
+Malik Nabers + Rhamondre Stevenson Ja'Marr Chase                  +30.2    +6.8   +30.2    +45.7     +16.6     +10.9    29/4       Renteez  holds on ros - reads even on draft position
+Brock Purdy + Mike Evans + Cam Skattebo Lamar Jackson + Ja'Marr Chase + Philadelphia Eagles   +29.2   +14.8   +29.2    +48.3     +19.2     +10.5    35/4       Renteez  holds on ros - you are asking for the earlier pick - he will feel that
+Brock Purdy + Malik Nabers + Cam Skattebo Josh Allen + CeeDee Lamb + Seattle Seahawks   +27.7   +14.6   +27.7    +51.2     +58.6     -45.4    29/12      JFMarino  he loses on ros - reads even on draft position
+Mike Evans + Cam Skattebo + Rhamondre Stevenson Ja'Marr Chase + Terry McLaurin + Philadelphia Eagles   +27.4    +4.1   +27.4    +53.8     -41.9     +49.2    35/4       Renteez  LOSES FOR YOU on ros - you are asking for the earlier pick - he will feel that
+Brock Purdy + Malik Nabers + Mike Evans Josh Allen + CeeDee Lamb + Seattle Seahawks   +27.3   +16.4   +27.3    +44.2     +87.1     -65.8    29/12      JFMarino  he loses on ros - reads even on draft position
+Brock Purdy + Cam Skattebo + Rhamondre Stevenson Josh Allen + Trey McBride + Seattle Seahawks   +26.4    +1.8   +26.4    +54.8     +52.1     -55.9    35/21      JFMarino  he loses on ros - reads even on draft position
+
+THE SHORT LIST - 7 of the 180: good for BOTH sides on BOTH pricings, you gaining at least the
+noise floor (6.8, ObjectiveStability's seed-to-seed spread) this season on each. Best first by the smaller of
+your two gains; 'trades/yr' is how often he has actually traded (TradePartners) - a man near zero will not answer.
+  YOU GIVE                     YOU GET                           you  you:ros  him:ros WITH             trades/yr
+  Malik Nabers + Mike Evans + Rhamondre Stevenson Ja'Marr Chase + Ladd McConkey + Philadelphia Eagles    +35.2    +28.9     +0.1 Renteez               1.20
+  Mike Evans + Rhamondre Stevenson Ja'Marr Chase                   +40.1    +25.1     +0.9 Renteez               1.20
+  Brock Purdy + Mike Evans + Cam Skattebo Lamar Jackson + Ja'Marr Chase + Philadelphia Eagles    +29.2    +19.2    +10.5 Renteez               1.20
+  Malik Nabers + Rhamondre Stevenson Ja'Marr Chase + Philadelphia Eagles    +31.7    +18.4     +9.1 Renteez               1.20
+  Malik Nabers + Mike Evans + Cam Skattebo Ja'Marr Chase + Javonte Williams + Philadelphia Eagles    +17.3    +24.5     +0.7 Renteez               1.20
+  Malik Nabers + Rhamondre Stevenson Ja'Marr Chase                   +30.2    +16.6    +10.9 Renteez               1.20
+  Brock Purdy + Malik Nabers + Cam Skattebo Lamar Jackson + Ja'Marr Chase + Philadelphia Eagles    +20.1    +11.2    +21.9 Renteez               1.20
+
+WHAT YOUR SURPLUS IS WORTH - how many rivals could offer the same thing:
+  QB   you hold 2, start 1;  8 of 11 rivals also carry a spare -> INVENTORY, not a chip - the market is flooded
+  RB   you hold 5, start 2;  11 of 11 rivals also carry a spare -> INVENTORY, not a chip - the market is flooded
+  WR   you hold 6, start 3;  11 of 11 rivals also carry a spare -> INVENTORY, not a chip - the market is flooded
+  TE   you hold 2, start 1;  8 of 11 rivals also carry a spare -> INVENTORY, not a chip - the market is flooded
+  DEF  you hold 1, start 1;  1 of 11 rivals also carry a spare -> nothing to sell
+
+(The chain below is not filtered for 2026 - it is the ceiling of what the board
+offers, not a plan. Read the table above for what to actually send.)
+
+TRADING POWER - trade after trade, each re-searched on the board the last one left.
+Only trades worth more than 6.8 to you are taken: that is the objective's own
+seed-to-seed spread, so anything smaller is the yardstick moving and not the roster.
+
+   1. Brock Purdy + Mike Evans + Cam Skattebo for Josh Allen + CeeDee Lamb + Seattle Seahawks   +35.4  (him   +6.1)  running   +35.4
+   2. Derrick Henry + Rhamondre Stevenson + Jordan Addison for Ja'Marr Chase + Travis Etienne + Philadelphia Eagles   +31.0  (him   +0.0)  running   +66.4
+
+  2 trades, +66.4 to you, +6.1 handed to the men opposite to make them take it.
+  Still going at 2 and stopped by -PchainDepth, not by the board. Raise it.
+  The first trade alone was +35.4, so the chain is worth 1.9x a single one -
+  which is what one-step searching leaves behind.
+
+  AND THE ANSWER TO 'CAN I JUST KEEP TRADING?' - no. Ignoring the floor entirely,
+  the chain runs 2 trades and +66.4, but everything past the 2 above is smaller than the
+  yardstick's own noise, and it starts churning: it reacquires men it gave away earlier.
+  Every trade has to improve BOTH rosters, so the league's total value only rises and is
+  bounded by the best possible allocation of a fixed set of players. It must stop, and it
+  does. Local maxima are NOT the problem here; the floor is.
+
+WHAT THIS CANNOT TELL YOU. Sleeper records only COMPLETED trades - 51 across five
+seasons of this league, and not one refusal - so there is no way to fit what a manager
+will ACCEPT. 'His gain' is the honest stand-in: a trade that clearly helps him is one he
+is likelier to take. Judge the offer by that column and by what you know about him.
