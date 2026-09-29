@@ -142,23 +142,66 @@ public class PlayerRawData {
      * looks men up through here, so it cannot claim anybody it has never heard
      * of.
      *
-     * It is not day-cached like the small feeds because fifteen megabytes a day
-     * for data that changes weekly is a poor trade. A week is the compromise,
-     * and unlike "never" it is a number that can be argued with.
+     * THEN IT WAS A WEEK, and in season a week is wrong too. The injury tag,
+     * practice report and depth chart live in this file and move daily. On
+     * 2026-09-28 it was from 2026-09-21 and still had Mike Evans Questionable
+     * (hip) while Sleeper's projection feed, fetched that morning, had him Out
+     * (ribs) - two pages of the same console reading two different weeks. So
+     * while the regular season is on (LeagueWeek.inSeason) a file fetched on an
+     * earlier calendar day is stale, the policy the small feeds use and the date
+     * DataStamp prints; out of season the week stands, since fifteen megabytes
+     * a day for a file that changes weekly is a poor trade. -PplayerMetaDays
+     * overrides both.
      */
-    static final int STALE_AFTER_DAYS = Integer.getInteger("playerMetaDays", 7);
+    static final int STALE_AFTER_DAYS = 7;
 
-    public static ArrayList<Player> getPlayerMetaData() throws IOException {
+    /** Whether a file fetched on {@code fetched} must be refetched on {@code today}. */
+    static boolean stale(java.time.LocalDate fetched, java.time.LocalDate today, boolean inSeason, Integer overrideDays){
+        int days = overrideDays != null ? overrideDays : inSeason ? 1 : STALE_AFTER_DAYS;
+        return !fetched.plusDays(days).isAfter(today);
+    }
+
+    /** In season by Sleeper's state; a state that cannot be read falls back to the weekly policy rather than failing the run. */
+    private static boolean inSeasonOrWeekly(){
+        try {
+            return LeagueWeek.inSeason();
+        }
+        catch(RuntimeException unreadable){
+            return false;
+        }
+    }
+
+    /** The file, refetched first if it is missing or stale. */
+    private static void ensureFresh() throws IOException {
         File f = new File("./sleeperDataPlayerAPI.json");
         boolean missing = !f.exists() || f.isDirectory();
-        boolean stale = !missing && f.lastModified()
-                < System.currentTimeMillis() - STALE_AFTER_DAYS * 24L * 60 * 60 * 1000;
-        if(missing || stale){
+        java.time.LocalDate fetched = missing ? null : java.time.Instant.ofEpochMilli(f.lastModified())
+                .atZone(java.time.ZoneId.systemDefault()).toLocalDate();
+        boolean inSeason = inSeasonOrWeekly();
+        if(missing || stale(fetched, java.time.LocalDate.now(), inSeason, Integer.getInteger("playerMetaDays"))){
             System.out.println(missing ? "player metadata missing, downloading"
-                    : "player metadata is more than " + STALE_AFTER_DAYS + " days old, refreshing");
+                    : "player metadata from " + fetched + " is stale ("
+                            + (inSeason ? "daily in season" : "weekly out of season") + "), refreshing");
             downloadRawPlayerMetaData();
         }
+    }
+
+    public static ArrayList<Player> getPlayerMetaData() throws IOException {
+        ensureFresh();
         return cleanRawPlayerMetaData();
+    }
+
+    /**
+     * The whole player database as Sleeper serves it, id -> record, through the
+     * same expiry. For the readers that need fields Player does not carry - the
+     * injury tag, practice report, depth chart - and used to open the file
+     * directly, which read whatever was on disk whether or not it had expired.
+     */
+    public static JsonObject database() throws IOException {
+        ensureFresh();
+        try (FileReader reader = new FileReader("sleeperDataPlayerAPI.json")) {
+            return JsonParser.parseReader(reader).getAsJsonObject();
+        }
     }
 
 

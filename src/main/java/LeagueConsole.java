@@ -410,9 +410,18 @@ public class LeagueConsole {
         // WITH him and without the man he displaces, minus the roster as it
         // stands - and the bid follows from that value and the budget he
         // actually has.
+        //
+        // ON THE GAMES LEFT, with TuesdaySwap (2026-09-29). The season feed put
+        // "add Jaxson Dart, drop Bo Nix" second on the 28 September board - Dart
+        // on IR, season over, still 340.5 there. The wire now prices on the same
+        // source as TuesdaySwap and the trades below; its from-here worth is in
+        // that source's units (TuesdaySwap.Units) and its noise floor is the one
+        // measured on it (ObjectiveStability.floorFor, TRAPS #151).
+        Map<String, Double> wirePoints = ProjectionSources.resolve(TuesdaySwap.DEFAULT_SOURCE);
+        TuesdaySwap.Units wireUnits = TuesdaySwap.units(TuesdaySwap.DEFAULT_SOURCE, week);
         Set<String> owned = new java.util.HashSet<>(ownerOf.keySet());
         Map<Position, List<String>> freeByPosition = new java.util.EnumMap<>(Position.class);
-        for(Map.Entry<String, Double> entry : points.entrySet()){
+        for(Map.Entry<String, Double> entry : wirePoints.entrySet()){
             if(owned.contains(entry.getKey()) || entry.getValue() == null || entry.getValue() <= 0){
                 continue;
             }
@@ -426,7 +435,7 @@ public class LeagueConsole {
         List<String> candidates = new ArrayList<>();
         for(Map.Entry<Position, List<String>> entry : freeByPosition.entrySet()){
             List<String> men = entry.getValue();
-            men.sort(Comparator.comparingDouble((String id) -> -points.get(id)));
+            men.sort(Comparator.comparingDouble((String id) -> -wirePoints.get(id)));
             candidates.addAll(men.subList(0, Math.min(perPosition, men.size())));
         }
         for(String id : candidates){          // free agents are not in ownerOf, so
@@ -443,12 +452,13 @@ public class LeagueConsole {
         // over 240 is a noisier number, and comparing it to that floor would be
         // asking whether one population clears another population's yardstick.
         int wireScenarios = Integer.getInteger("wireScenarios", 480);
-        WeeklyStarterValue wireValue = wireScenarios == scenarios ? value
-                : WeeklyStarterValue.forCurrentBoard(configuration, points, wireScenarios, 424_242L);
+        WeeklyStarterValue wireValue = WeeklyStarterValue.forCurrentBoard(configuration, wirePoints, wireScenarios, 424_242L);
         List<String> myRoster = rosters.getOrDefault(me, List.of());
         List<TuesdaySwap.Swap> swaps = TuesdaySwap.search(myRoster, candidates, nameOf, positionOf,
                 ids -> wireValue.of(ids));
-        double swapFloor = Double.parseDouble(System.getProperty("swapFloor", "6.8"));
+        // the yardstick measured on the wire's own pricing (TRAPS #151)
+        ObjectiveStability.Floor measuredFloor = ObjectiveStability.floorFor(TuesdaySwap.DEFAULT_SOURCE);
+        double swapFloor = measuredFloor.points();
         StringBuilder wireJson = new StringBuilder("[");
         int wireRows = 0;
         double[] costs = {1.0, 1.5, 2.0, 3.0};
@@ -458,7 +468,7 @@ public class LeagueConsole {
         // names the CLAIM ranked the same board differently and named different
         // best adds from the same feeds.
         List<TuesdaySwap.Priced> priced = TuesdaySwap.price(swaps, myRoster, candidates,
-                nameOf, positionOf, points, ids -> wireValue.of(ids));
+                nameOf, positionOf, wirePoints, ids -> wireValue.of(ids));
         for(TuesdaySwap.Priced row : priced){
             TuesdaySwap.Swap swap = row.swap();
             TuesdaySwap.Swap free = row.free();
@@ -475,7 +485,7 @@ public class LeagueConsole {
             // weeks-left scaling beside every row; this page bid on the unscaled
             // number, so a man worth 20 in week 8 drew $3 here against $1 at the
             // 8.2 the report calls collectable. One function, both callers.
-            double fromHere = TuesdaySwap.fromHere(worth, week);
+            double fromHere = wireUnits.fromHere(worth);
             int bid = FaabBid.bestBid(allBand, fromHere, 1.5, budgetLeft);
             // THE WHOLE LADDER, SHIPPED. A row that prints only the cheapest
             // drop invites reading its number as a property of the player -
@@ -489,7 +499,7 @@ public class LeagueConsole {
                     continue;
                 }
                 TuesdaySwap.Completion whole = TuesdaySwap.complete(myRoster, rung, candidates,
-                        nameOf, positionOf, points, ids -> wireValue.of(ids));
+                        nameOf, positionOf, wirePoints, ids -> wireValue.of(ids));
                 ladder.append(rungs++ == 0 ? "" : ",").append(String.format(
                         "{\"drop\":%s,\"gain\":%s,\"thenAdd\":%s,\"thenDrop\":%s,\"whole\":%s}",
                         quote(rung.dropName()), num(rung.gain()),
@@ -505,7 +515,7 @@ public class LeagueConsole {
                             + "\"ladder\":%s}",
                     quote(swap.addName()),
                     quote(swap.addPosition() == null ? "?" : swap.addPosition().name()),
-                    num(points.getOrDefault(swap.addId(), 0.0)), num(worth), num(fromHere),
+                    num(wirePoints.getOrDefault(swap.addId(), 0.0)), num(worth), num(fromHere),
                     quote(swap.dropName()), bid, num(allBand.winChance(bid)),
                     worth < swapFloor, hole,
                     better ? quote(free.dropName()) : "null",
@@ -559,9 +569,9 @@ public class LeagueConsole {
         // Sleeper's own weekly projections for the games left read -3.8
         // (TradeScreens). The keeper surpluses above stay on the season feed:
         // they stand in for NEXT year, which a man's injury this year does not
-        // zero. The wire above keeps the season feed too, so it agrees with
-        // TuesdaySwap to the decimal.
-        Map<String, Double> tradePoints = ProjectionSources.resolve("sleeper-remaining");
+        // zero. The wire above prices on the same map, resolved once, so a kickoff
+        // between two reads cannot put the wire and the trades on different boards.
+        Map<String, Double> tradePoints = wirePoints;
         WeeklyStarterValue tradeValue = WeeklyStarterValue.forCurrentBoard(configuration, tradePoints, scenarios, 424_242L);
         for(List<String> roster : rosters.values()){
             roster.sort(Comparator.comparingDouble((String id) -> -tradePoints.getOrDefault(id, 0.0)));
@@ -1035,13 +1045,16 @@ public class LeagueConsole {
                         + "\"scenarios\":%d,\"keepers\":%b,\"lineupTotal\":%s,\"slots\":%d,"
                         + "\"lineup\":%s,\"trades\":%s,\"supply\":%s,\"faab\":%s,"
                         + "\"faabAll\":%d,\"faabContested\":%d,\"faabFree\":%s,\"costs\":[1,1.5,2,3],"
-                        + "\"budget\":%d,\"wire\":%s,\"swapFloor\":%s,\"wireScenarios\":%d,\"lookahead\":%d,\"chainDepth\":%d,\"chainPool\":%d,\"pool\":%d,\"batnaPool\":%d,\"dataStamp\":%s,\"losesToElsewhere\":%d,\"insideItsOwnNoise\":%d,\"errorSeeds\":%d,\"keepers2027\":%s,\"fairTrades\":%d,\"askTrades\":%d,\"mirage\":%s,\"opticsBar\":%s,\"winAll\":%s,\"winContested\":%s}",
+                        + "\"budget\":%d,\"wire\":%s,\"swapFloor\":%s,\"wireScenarios\":%d,\"lookahead\":%d,\"chainDepth\":%d,\"chainPool\":%d,\"pool\":%d,\"batnaPool\":%d,\"dataStamp\":%s,\"losesToElsewhere\":%d,\"insideItsOwnNoise\":%d,\"errorSeeds\":%d,\"keepers2027\":%s,\"fairTrades\":%d,\"askTrades\":%d,\"mirage\":%s,\"opticsBar\":%s,\"winAll\":%s,\"winContested\":%s,"
+                        + "\"floorBasis\":%s,\"tradeFloor\":%s,\"wireBasis\":%s,\"wireUnits\":%s,\"wireHere\":%s}",
                 quote(season), week, quote(me), quote(LocalDate.now().toString()),
                 scenarios, withKeepers, num(lineup.starters()), lineup.starting().size(),
                 lineupJson, tradesJson, supplyJson, faabGrid(allBand, costs),
                 allPrices.size(), contestedPrices.size(),
                 num(allPrices.isEmpty() ? 0 : allPrices.stream().filter(p -> p == 0).count() * 100.0 / allPrices.size()),
-                budgetLeft, wireJson, num(swapFloor), wireScenarios, lookahead, chainDepth, chainPool, pool, batnaPool, quote(DataStamp.stamp()), losesToElsewhere, insideItsOwnNoise, errorSeeds, keepersJson, fairTrades, askTrades, mirageJson, num(looksGoodBar), winLadder(allBand), winLadder(contestedBand));
+                budgetLeft, wireJson, num(swapFloor), wireScenarios, lookahead, chainDepth, chainPool, pool, batnaPool, quote(DataStamp.stamp()), losesToElsewhere, insideItsOwnNoise, errorSeeds, keepersJson, fairTrades, askTrades, mirageJson, num(looksGoodBar), winLadder(allBand), winLadder(contestedBand),
+                quote(measuredFloor.source() + " on " + measuredFloor.date()), num(tradeFloor), quote(TuesdaySwap.DEFAULT_SOURCE), quote(wireUnits.describe()),
+                num(wireUnits.fromHere(1.0)));
 
         Path target = Path.of("data", "console-" + season + "-w" + week + ".html");
         Files.writeString(target, page(json), StandardCharsets.UTF_8);
@@ -1192,7 +1205,7 @@ document.getElementById("doubt-note").innerHTML = doubts.length
 document.getElementById("faabLeft").textContent = "$" + D.budget;
 document.getElementById("faabSub").textContent = "$" + (100 - D.budget) + " of $100 already spent";
 document.getElementById("wireCount").textContent = D.wire.filter(r=>!r.noise).length;
-let a = "<tr><th class=l>Add</th><th class=l>Pos</th><th>Proj</th><th>Worth to you</th><th>From here</th>"
+let a = "<tr><th class=l>Add</th><th class=l>Pos</th><th>Games left</th><th>Worth to you</th><th>From here</th>"
   + "<th class=l>Instead of</th><th>Bid</th><th>Chance</th></tr>";
 const ladderRow = (r,i) => {
   let L = `<tr class=ladder id="lad${i}" hidden><td class=l colspan=8><div class=ladderbox>`
@@ -1218,8 +1231,8 @@ document.querySelectorAll("#t-wire tr.clickable").forEach(tr=>{ tr.onclick=()=>{
   box.hidden = !box.hidden;
   tr.querySelector(".caret").innerHTML = box.hidden ? "&#9656;" : "&#9662;"; }; });
 document.getElementById("add-note").innerHTML =
-  `<b>Worth to you</b> is computed, not asked for. For every free agent the model builds your roster with him and without the man he would displace, values both over ${D.wireScenarios} drawn seasons, and reports the difference &mdash; so the recommendation is the <i>pairing</i>, never the add on its own. <b>Instead of</b> is the cheapest drop that still fills all ten slots. Cutting someone you cannot replace &mdash; your only defence, say &mdash; is not a drop, it is the first half of a plan: your roster is full, so fielding a defence again costs another spot. Those show underneath priced as the WHOLE plan, both adds and both drops, never as the half that looks good on its own. <b>From here</b> is that worth scaled to the weeks left in the regular season, and the bid is on THAT: a seventeen-week number bought in week 8 is a price for a season that is half over. The bid follows from the from-here worth and the <b>$${D.budget} you actually have</b>, read off the rosters feed rather than typed in.<br><br>`
-  + `A gain under <b>${D.swapFloor.toFixed(1)}</b> points is inside the objective's own seed-to-seed spread (ObjectiveStability), so it is the yardstick moving and not the roster improving &mdash; those rows are greyed and the headline counts only the men above it. That floor was measured over ${D.wireScenarios} drawn seasons, which is why this search runs at ${D.wireScenarios} and not the ${D.scenarios} the rest of the page uses: a noisier number does not get judged against a quieter number's yardstick. This is the same search <code>TuesdaySwap</code> runs in the terminal &mdash; the page calls <code>TuesdaySwap.search</code> itself rather than reimplementing it, over the same forty men per position &mdash; so the two agree to the decimal.`;
+  `<b>Worth to you</b> is computed, not asked for. For every free agent the model builds your roster with him and without the man he would displace, values both over ${D.wireScenarios} drawn seasons, and reports the difference &mdash; so the recommendation is the <i>pairing</i>, never the add on its own. <b>Instead of</b> is the cheapest drop that still fills all ten slots. Cutting someone you cannot replace &mdash; your only defence, say &mdash; is not a drop, it is the first half of a plan: your roster is full, so fielding a defence again costs another spot. Those show underneath priced as the WHOLE plan, both adds and both drops, never as the half that looks good on its own. The wire is priced on <code>${D.wireBasis}</code>, Sleeper's weekly projections summed over the games left, so a man Sleeper has ruled out is off the board and a worth is ${D.wireUnits}. <b>From here</b> is the share of that in the regular season (${D.wireHere.toFixed(2)} of it), and the bid is on THAT. The bid follows from the from-here worth and the <b>$${D.budget} you actually have</b>, read off the rosters feed rather than typed in.<br><br>`
+  + `A gain under <b>${D.swapFloor.toFixed(1)}</b> points is inside the objective's own seed-to-seed spread (ObjectiveStability, measured on ${D.floorBasis}: a floor belongs to the pricing it was measured on), so it is the yardstick moving and not the roster improving &mdash; those rows are greyed and the headline counts only the men above it. That floor was measured over ${D.wireScenarios} drawn seasons, which is why this search runs at ${D.wireScenarios} and not the ${D.scenarios} the rest of the page uses: a noisier number does not get judged against a quieter number's yardstick. This is the same search <code>TuesdaySwap</code> runs in the terminal &mdash; the page calls <code>TuesdaySwap.search</code> itself rather than reimplementing it, over the same forty men per position &mdash; so the two agree to the decimal.`;
 
 const csel = document.getElementById("c");
 D.costs.forEach((c,i)=>{ const o=document.createElement("option"); o.value=i; o.textContent = c===1?"the same later (1.0x)":c+"x as much later"; csel.appendChild(o); });
@@ -1276,7 +1289,7 @@ function trades(){ const only26 = document.getElementById("f26").value==="1";
     + (r.hisKeeperTag?'<span class="tag">his keeper</span>':'')+`</td></tr>`;
     if(r.chain && r.chain.length>1){
       t += `<tr class=ladder id="ch${i}" hidden><td class=l colspan=15><div class=ladderbox>`
-        + `<div class=sub style="margin-bottom:8px">Step one is the trade in the row above &mdash; forced, whatever it is worth. Every step AFTER it is re-searched on the board the last one left and has to clear the ${D.swapFloor.toFixed(1)}-point floor.</div><table class=inner>`;
+        + `<div class=sub style="margin-bottom:8px">Step one is the trade in the row above &mdash; forced, whatever it is worth. Every step AFTER it is re-searched on the board the last one left and has to clear the ${D.tradeFloor.toFixed(1)}-point floor.</div><table class=inner>`;
       r.chain.forEach((c,n)=>{ t += `<tr><td class=l>${n+1}. ${c.with}</td><td class=l>give ${c.give}</td><td class=l>get ${c.get}</td>`
         + `<td class=${sign(c.gain)}>${f1(c.gain)}</td><td><b>${f1(c.running)}</b> running</td></tr>`; });
       t += `</table></div></td></tr>`; } });
@@ -1298,7 +1311,7 @@ function trades(){ const only26 = document.getElementById("f26").value==="1";
     + `The old rule kept only offers that survive their own error bar, help him on the number he can check himself, empty nobody's lineup, and do not visibly grab the earlier pick &mdash; and that filter is ON by default.</b> This is a keeper league: the same eleven managers every season, so being somebody people want to deal with is an asset that compounds into next year rather than a nicety. A trade he thanks you for is worth more than a slightly better one he resents.<br><br>`
     + `<b>${D.losesToElsewhere} of the ${D.trades.length} offers lose to something he can already get from somebody else.</b> <b>VS ELSEWHERE</b> is the column that says so, and it is the one that decides whether an offer gets taken. His gain is not persuasive on its own: what matters is what it beats. Each rival's best mutually-good trade with somebody who is not you is computed the same way, and this is his gain from your offer minus that. <b>And that alternative is limited by everyone else's alternatives</b>: his best trade needs the manager across from HIM to prefer it to his own options. So the rivals are PAIRED OFF &mdash; each pair striking the deal with the most joint surplus to divide, best pairs forming first &mdash; and his fallback is what he gets from the partner he would actually end up with, not the best partner he can name. Hover a number to see that alongside the naive maximum, which credits him with deals the other man would decline. <b>A negative number means he has something better waiting and will not need you.</b> Two limits, both making the column optimistic: the search is size-balanced, so it cannot see the uneven deals where a manager sends two men for one and refills off the wire &mdash; anyone who can build those has better alternatives than this shows &mdash; and it runs at a pool of ${D.batnaPool}. So a thin edge here is not an edge.<br><br>`
     + `<b>VS SELLING THEM</b> is the same question asked one man at a time. Every player you are asking for has a price of his own: the best a straight one-for-one with somebody who is not you would bring his owner. Asking for two men is asking him to forgo two of those, so this is your offer minus their sum. One-for-one is what isolates a man's contribution &mdash; in a bundle the gain belongs to the pair and splitting it would be a choice rather than a measurement &mdash; which also makes it a floor: bundles can be worth more than their parts, and a man priced at nothing has no one-for-one buyer, not no value.<br><br>`
-    + `<b>Opens up</b> answers a different question from <b>Full</b>: not what the trade is worth, but what the board looks like <i>after</i> it. Each of the top ${D.lookahead} is forced as step one and the chain re-searched from the board it leaves, up to ${D.chainDepth} deep, every step clearing the ${D.swapFloor.toFixed(1)}-point floor. The chain searches each side's best ${D.chainPool} men rather than the ${D.pool} the table above uses &mdash; seventy-two board re-searches at the full pool is hours of compute &mdash; so <b>Opens up is a floor on what the trade unlocks, not a ceiling</b>. A +5 that opens a +80 chain beats a +20 that opens a +45, and the greedy chain alone can never tell you that &mdash; it always takes the biggest step and so never finds out where the small one led. Click a row with a caret to see the sequence. Rows showing &mdash; were outside the top ${D.lookahead} by immediate gain and were not priced this way: a chain is a full re-search of every rival at every step.<br><br>`
+    + `<b>Opens up</b> answers a different question from <b>Full</b>: not what the trade is worth, but what the board looks like <i>after</i> it. Each of the top ${D.lookahead} is forced as step one and the chain re-searched from the board it leaves, up to ${D.chainDepth} deep, every step clearing the ${D.tradeFloor.toFixed(1)}-point floor. The chain searches each side's best ${D.chainPool} men rather than the ${D.pool} the table above uses &mdash; seventy-two board re-searches at the full pool is hours of compute &mdash; so <b>Opens up is a floor on what the trade unlocks, not a ceiling</b>. A +5 that opens a +80 chain beats a +20 that opens a +45, and the greedy chain alone can never tell you that &mdash; it always takes the biggest step and so never finds out where the small one led. Click a row with a caret to see the sequence. Rows showing &mdash; were outside the top ${D.lookahead} by immediate gain and were not priced this way: a chain is a full re-search of every rival at every step.<br><br>`
     + `<b>ADP out/in</b> is how it reads before the season, when draft position is most of how a trade is judged: a lower number is an earlier pick, so asking for a much earlier one draws a no however good the arithmetic. His side is <b>loss-averse on keepers</b> &mdash; he feels every point of one he gives up and takes no credit for one he receives &mdash; so asking for his keeper is priced at what it costs him. <b>Acceptance itself is not modelled</b>: Sleeper records only completed trades, 51 in five seasons and not one refusal.`; }
 ["f26","ffair","fedge","fname","fmen","fsort"].forEach(id=>document.getElementById(id).addEventListener("input",trades));
 mansel.addEventListener("change",trades); trades();

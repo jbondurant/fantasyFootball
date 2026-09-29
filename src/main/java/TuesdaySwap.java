@@ -29,11 +29,20 @@ import java.util.Set;
  * the thing a projection ranking cannot answer.
  *
  *   ./gradlew run -Pmain=TuesdaySwap [-Pweek=n] [-Pme=<name>] [-Pcandidates=40]
- *                                    [-Pscenarios=480] [-PswapFloor=<points>] [-Pprojections=posterior]
+ *                                    [-Pscenarios=480] [-PswapFloor=<points>] [-Pprojections=ros]
+ *
+ * PRICED ON THE GAMES LEFT since 2026-09-29: Sleeper's weekly projections
+ * summed over the games still to play (sleeper-remaining), with the
+ * rest-of-season model (ros) beside every row. On 2026-09-28 the season feed
+ * put "add Jaxson Dart, drop Bo Nix" second on this board - Dart was on IR,
+ * his season over, and the season feed still carried him at 340.5. The trade
+ * tools had moved off it that morning (TRAPS #150); this is the same move for
+ * the wire (TRAPS #151). The history below is why the season feed was never
+ * the right number in season.
  *
  * TWO HONEST LIMITS, printed with the answer rather than buried.
  *
- * The projections are Sleeper's SEASON numbers. This header used to say they
+ * The season feed's projections are Sleeper's SEASON numbers. This header used to say they
  * "in-season become rest-of-season"; that was a sentence, not a measurement,
  * and the measurement went the other way: on 2026-09-14, after fifteen of week
  * one's sixteen games, not one of 186 rostered skill men's season numbers had
@@ -197,27 +206,77 @@ public class TuesdaySwap {
         return priced;
     }
 
+    /** The wire's pricing, and the console's: Sleeper's weekly projections for the games left. */
+    static final String DEFAULT_SOURCE = "sleeper-remaining";
+
+    /** The other pricing printed beside every row: the rest-of-season model, or the games left when ros is the one priced. */
+    static String altOf(String source){
+        return "ros".equals(source) ? DEFAULT_SOURCE : "ros";
+    }
+
+    /** The last week of this league's regular season (playoffs from week 15). */
+    static final int LAST_REGULAR_WEEK = 14;
+
     /**
-     * WHAT A GAIN IS WORTH FROM HERE.
+     * WHAT A GAIN IS DENOMINATED IN, AND SO WHAT IT IS WORTH FROM HERE AND WHAT
+     * FLOOR IT HAS TO CLEAR.
      *
-     * The objective prices a roster over the seventeen-week season. With `week`
-     * about to be played, only the weeks from it to the end of the regular season
-     * (14) can still be collected, so a seventeen-week gain is scaled by what is
-     * left. One function for the report and the page: the report printed this
-     * beside every row while the page bid FAAB on the unscaled number, and a man
-     * worth 20 in week 8 drew a $3 bid there against $1 here.
+     * The objective reads each man's total as seventeen weeks of a rate, and is
+     * exactly proportional to the totals it is given (the expected score, the
+     * drawn rate and the wire all scale with them). So a gain is in the units
+     * of the feed that priced it:
      *
-     * The regime this assumes is a season feed that carries SEASON TOTALS, so
-     * that a gain over seventeen weeks is scaled by the weeks left. The feed does
-     * update those totals in season - Tuten's keeper surplus rose from 33.8 to
-     * 58.0 the week after his first game - but an updated total is still a
-     * total, not a rest-of-season number, so the scaling stands. If the feed
-     * ever switches to rest-of-season values this becomes a double discount, and
-     * ProjectionDrift is the tool that watches it.
+     *   a season feed (sleeper, ros, posterior) - SEASON TOTALS. A gain is over
+     *   the whole season, and what is left of it is the weeks from `week` to
+     *   the end of the regular season over seventeen. The feed does update its
+     *   totals in season - Tuten's keeper surplus rose from 33.8 to 58.0 the
+     *   week after his first game - but an updated total is still a total.
+     *
+     *   a games-left feed (sleeper-remaining) - GAMES-LEFT TOTALS, weeks now to
+     *   18. A gain is already over the games left, and scaling it by
+     *   (15 - week) / 17 as well would discount it twice: a man worth 10 over
+     *   the games left at week 4 would bid as if worth 6.5. What is left of the
+     *   regular season is its share of the weeks the feed spans.
+     *
+     * One function for the report and the page: the report printed the scaled
+     * number beside every row while the page bid FAAB on the unscaled one, and
+     * a man worth 20 in week 8 drew a $3 bid there against $1 here.
+     *
+     * The noise floor is NOT converted here. It scales with the size of the
+     * totals, and a games-left total is not the fraction of a season total its
+     * weeks suggest - Sleeper's lines for the weeks to come add up to about its
+     * season number - so each pricing is judged against the floor measured on
+     * it (ObjectiveStability.floorFor, TRAPS #151).
      */
-    static double fromHere(double gain, int week){
-        int weeksLeft = Math.max(1, 15 - week);   // the regular season runs to week 14
-        return gain * weeksLeft / 17.0;
+    record Units(String source, boolean gamesLeft, double spanWeeks, double regularWeeks){
+
+        /** A gain in these units, as points collectable in the regular season left. */
+        double fromHere(double gain){
+            return spanWeeks <= 0 ? 0 : gain * regularWeeks / spanWeeks;
+        }
+
+        /** What a gain in these units is, in words. */
+        String describe(){
+            return gamesLeft
+                    ? String.format("points over the games left (%.1f weeks to week %d, %s's own totals)",
+                            spanWeeks, WeeklyActuals.WEEKS, source)
+                    : "the objective's seventeen-week units (" + source + " carries season totals)";
+        }
+
+        static Units season(String source, int week){
+            return new Units(source, false, 17, Math.max(1, LAST_REGULAR_WEEK + 1 - week));
+        }
+
+        static Units gamesLeft(String source, ProjectionSources.Horizon horizon){
+            return new Units(source, true, horizon.weeks(), horizon.regularWeeks());
+        }
+    }
+
+    /** The units of a pricing source this week. */
+    static Units units(String source, int week){
+        return DEFAULT_SOURCE.equals(source)
+                ? Units.gamesLeft(source, ProjectionSources.remainingHorizon(LAST_REGULAR_WEEK))
+                : Units.season(source, week);
     }
 
     /** The roster after a whole plan: the add and drop, and the completion's add and drop when it empties a slot. */
@@ -253,15 +312,19 @@ public class TuesdaySwap {
         int week = LeagueWeek.week();
         int scenarios = Integer.getInteger("scenarios", 480);
         int perPosition = Integer.getInteger("candidates", 40);
-        double floor = Double.parseDouble(System.getProperty("swapFloor", "6.8"));
         String me = System.getProperty("me", configuration.getUserIDToDisplayName()
                 .getOrDefault(configuration.getMyID(), configuration.getMyID()));
 
-        // -Pprojections=posterior prices on Sleeper's numbers moved by the played
-        // weeks at the measured rate (InSeasonPosterior); the default is Sleeper's
-        // season feed as it stands, which does not move on results.
-        String source = System.getProperty("projections", "sleeper");
+        // The default is Sleeper's weekly projections for the games left, which drop
+        // a man Sleeper has ruled out; -Pprojections=ros prices on the rest-of-season
+        // model, sleeper on the season feed, which moves on neither results nor
+        // most news (TRAPS #136, #151).
+        String source = System.getProperty("projections", DEFAULT_SOURCE);
         Map<String, Double> points = ProjectionSources.resolve(source);
+        Units units = units(source, week);
+        // the yardstick measured on THIS pricing, never another's converted
+        ObjectiveStability.Floor measured = ObjectiveStability.floorFor(source);
+        double floor = measured.points();
         WeeklyStarterValue value = WeeklyStarterValue.forCurrentBoard(configuration, points, scenarios, 424_242L);
         Map<String, String> ownerOf = LeagueOwners.today(configuration);
 
@@ -320,7 +383,8 @@ public class TuesdaySwap {
         // same move at or below zero - and the $0 recommendation went out on the
         // number that could not see the results. Both are printed now, and a
         // CLAIM is named only when the move is not a loss under either (TRAPS #146).
-        String altSource = source.equals("sleeper") ? "ros" : "sleeper";
+        String altSource = altOf(source);
+        Units altUnits = units(altSource, week);
         WeeklyStarterValue alt = WeeklyStarterValue.forCurrentBoard(configuration,
                 ProjectionSources.resolve(altSource), scenarios, 424_242L);
         double altBase = alt.of(roster);
@@ -336,7 +400,6 @@ public class TuesdaySwap {
             blocked = best;
             best = null;
         }
-        int weeksLeft = Math.max(1, 15 - week);   // the regular season runs to week 14
 
         StringBuilder out = new StringBuilder();
         out.append(DataStamp.line()).append("\n");
@@ -345,26 +408,29 @@ public class TuesdaySwap {
         out.append(String.format("%d free agents searched against all %d roster spots = %d pairs, on the weekly-starter%n",
                 candidates.size(), roster.size(), swaps.size()));
         out.append(String.format("objective (%d drawn seasons), which prices a bench man by how often he would actually start.%n", scenarios));
-        out.append(String.format("Gains are in the objective's seventeen-week units; about %d of those weeks are left, so%n"
-                + "scale by %.2f for what a move is worth from here.%n", weeksLeft, weeksLeft / 17.0));
-        out.append(String.format("Nothing under %.1f points is named: that is the yardstick's own seed-to-seed spread%n"
-                + "(ObjectiveStability), so a smaller gain is the measurement moving and not the roster.%n%n", floor));
+        out.append(String.format("Gains are %s; %.1f of those%n"
+                + "weeks are the regular season, so a gain is worth %.2f of itself from here.%n",
+                units.describe(), units.regularWeeks(), units.fromHere(1.0)));
+        out.append(String.format("Nothing under %.1f points is named: that is the yardstick's own worst seed-to-seed spread,%n"
+                + "measured on %s on %s (ObjectiveStability), so a smaller gain is the measurement moving%n"
+                + "and not the roster.%n%n", floor, measured.source(), measured.date()));
 
         // THE COMPLETED PLAN, which is the number you can collect. A row whose
         // drop empties a slot is priced at what refilling it costs, and it is
         // flagged, because "+3.6" and "-1.6 once you field a defence again" are
         // not the same recommendation.
-        out.append(String.format("%-22s %-4s -> drop %-22s %9s %9s %9s%n", "ADD", "POS", "", "17wk", "from here",
-                altSource));
+        out.append(String.format("%-22s %-4s -> drop %-22s %9s %9s %9s%n", "ADD", "POS", "",
+                units.gamesLeft() ? "left" : "17wk", "from here", "alt here"));
         for(Priced row : priced.subList(0, Math.min(8, priced.size()))){
             Swap swap = row.swap();
             out.append(String.format("%-22s %-4s -> drop %-22s %+9.1f %+9.1f %+9.1f%s%s%n", swap.addName(),
-                    swap.addPosition(), swap.dropName(), row.worth(), fromHere(row.worth(), week),
-                    altWorth.get(row), row.hole() ? "   <- and refill the slot" : "",
+                    swap.addPosition(), swap.dropName(), row.worth(), units.fromHere(row.worth()),
+                    altUnits.fromHere(altWorth.get(row)), row.hole() ? "   <- and refill the slot" : "",
                     altWorth.get(row) < 0 && row.worth() > 0 ? "   <- a loss on " + altSource : ""));
         }
-        out.append(String.format("the %s column is the same move priced on the other projection source (17-week units); ros is the%n", altSource));
-        out.append("rest-of-season model that has seen the results (RosModel), sleeper the season feed that has not.\n");
+        out.append(String.format("alt here is the same move priced on %s and put in from-here points too, so the two columns%n"
+                + "read in one unit; ros is the rest-of-season model that has seen the results (RosModel),%n"
+                + "sleeper-remaining Sleeper's weekly projections for the games left, which drop a man ruled out.%n", altSource));
         out.append("\n");
 
         // THE WHOLE LADDER FOR THE BEST ADD, because a table that names only the
@@ -395,21 +461,23 @@ public class TuesdaySwap {
             out.append("\n");
         }
         if(blocked != null){
-            out.append(String.format("NOT CLAIMED: %s for %s clears the floor at %+.1f on %s but is a loss of %+.1f on %s.%n"
+            out.append(String.format("NOT CLAIMED: %s for %s clears the floor at %+.1f on %s but is a loss of %+.1f from here on %s.%n"
                     + "A move that loses under either pricing is not a move.%n%n", blocked.swap().addName(),
-                    blocked.swap().dropName(), blocked.worth(), source, altWorth.get(blocked), altSource));
+                    blocked.swap().dropName(), blocked.worth(), source,
+                    altUnits.fromHere(altWorth.get(blocked)), altSource));
         }
         if(best == null){
             out.append(String.format("DO NOTHING. The best plan on the board is worth %+.1f (%.1f from here), inside the%n"
                     + "floor, so it is not a move - it is noise with a transaction attached. Waiting is free and%n"
                     + "buys another week of evidence.%n",
                     priced.isEmpty() ? 0 : priced.get(0).worth(),
-                    priced.isEmpty() ? 0 : fromHere(priced.get(0).worth(), week)));
+                    priced.isEmpty() ? 0 : units.fromHere(priced.get(0).worth())));
         }
         else {
-            out.append(String.format("CLAIM %s, DROP %s: %+.1f over seventeen weeks, %+.1f from here.%s%n",
+            out.append(String.format("CLAIM %s, DROP %s: %+.1f %s, %+.1f from here.%s%n",
                     best.swap().addName(), best.swap().dropName(), best.worth(),
-                    fromHere(best.worth(), week),
+                    units.gamesLeft() ? "over the games left" : "over seventeen weeks",
+                    units.fromHere(best.worth()),
                     best.hole() && best.completion() != null
                             ? String.format(" That empties a slot: the plan includes adding %s and"
                                     + " dropping %s.", best.completion().addName(),
@@ -420,7 +488,7 @@ public class TuesdaySwap {
         }
         System.out.print(out);
         Path target = Path.of("data", "tuesday-swap-" + season + "-w" + week
-                + (source.equals("sleeper") ? "" : "-" + source.replace(':', '_').replace(',', '_')) + ".txt");
+                + (source.equals(DEFAULT_SOURCE) ? "" : "-" + source.replace(':', '_').replace(',', '_')) + ".txt");
         Files.writeString(target, out.toString(), StandardCharsets.UTF_8);
         System.out.println("written to " + target);
     }

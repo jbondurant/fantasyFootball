@@ -329,20 +329,22 @@ public class LeagueConsoleTest {
         // this repo's most repeated mistake - #79, #81, #101 and #112 are all
         // the same error - and a hardcoded 480 is that mistake waiting to
         // happen: regenerate ObjectiveStability at another count and this test
-        // keeps passing while the floor silently stops applying.
-        Path measured;
-        try(var files = Files.list(Path.of("data"))){
-            measured = files.filter(p -> p.getFileName().toString()
-                            .matches("objective-stability-\\d{4}-\\d{2}-\\d{2}\\.txt"))
-                    .max(Comparator.comparing(p -> p.getFileName().toString())).orElse(null);
-        }
-        assertNotNull(measured, "the floor's own measurement must be committed beside the code");
-        Matcher header = Pattern.compile("\\((\\d+) scenarios,").matcher(
-                Files.readString(measured));
-        assertTrue(header.find(), "the stability report must say what it measured over");
-        assertEquals(Integer.parseInt(header.group(1)), Integer.parseInt(stated.group(2)),
+        // keeps passing while the floor silently stops applying. The page names
+        // the report (source and day, TRAPS #151): the floor must be THAT
+        // report's, and measured on the pricing the wire uses.
+        Matcher basis = Pattern.compile("\"floorBasis\":\"([^\"]*) on (\\d{4}-\\d{2}-\\d{2})\"").matcher(page);
+        assertTrue(basis.find(), "the page must name the report its floor came from");
+        assertEquals(TuesdaySwap.DEFAULT_SOURCE, basis.group(1),
+                "the wire is judged by a floor measured on another pricing");
+        Path measured = Path.of("data", "objective-stability-" + basis.group(2)
+                + ObjectiveStability.suffix(basis.group(1)) + ".txt");
+        assertTrue(Files.isRegularFile(measured), "the floor's own measurement must be committed beside the code: " + measured);
+        ObjectiveStability.Floor report = ObjectiveStability.parse(Files.readString(measured), basis.group(2), basis.group(1));
+        assertNotNull(report, "the stability report must say what it measured over");
+        assertEquals(report.points(), floor, 1e-9, "the page applies a floor its report does not say");
+        assertEquals(report.scenarios(), Integer.parseInt(stated.group(2)),
                 "the wire search runs at " + stated.group(2) + " drawn seasons but the floor it"
-                        + " is judged against was measured over " + header.group(1)
+                        + " is judged against was measured over " + report.scenarios()
                         + "; that is one population's number against another's yardstick");
 
         Matcher row = Pattern.compile("\"worth\":(-?[\\d.]+),\"fromHere\":-?[\\d.]+,\"drop\":\"[^\"]*\",\"bid\":\\d+,"
@@ -521,7 +523,10 @@ public class LeagueConsoleTest {
         Path console = newestConsole();
         assumeBuilt(console);
         String page = Files.readString(console);
-        Matcher floor = Pattern.compile("\"swapFloor\":([\\d.]+)").matcher(page);
+        // the TRADE floor, which the chain clears: it read "swapFloor" while the
+        // wire's and the chain's floors were both 6.8, and failed the day the
+        // wire's became the one measured on its own pricing (TRAPS #151)
+        Matcher floor = Pattern.compile("\"tradeFloor\":([\\d.]+)").matcher(page);
         assertTrue(floor.find(), "the page must state the floor its chains cleared");
         double bar = Double.parseDouble(floor.group(1));
 

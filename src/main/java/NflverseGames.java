@@ -185,6 +185,18 @@ public class NflverseGames {
         return started;
     }
 
+    /** Sleeper's club codes with a game in a week; empty for a week the file does not schedule. */
+    static java.util.Set<String> playing(List<Game> games, String season, int week){
+        java.util.Set<String> out = new java.util.HashSet<>();
+        for(Game g : games){
+            if(g.season().equals(season) && g.week() == week){
+                out.add(sleeperTeam(g.home()));
+                out.add(sleeperTeam(g.away()));
+            }
+        }
+        return out;
+    }
+
     private static List<Game> cachedGames;
 
     static synchronized List<Game> games(){

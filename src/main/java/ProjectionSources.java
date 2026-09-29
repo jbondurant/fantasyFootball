@@ -182,6 +182,43 @@ public class ProjectionSources {
         return out;
     }
 
+    /**
+     * The NFL weeks {@link #sleeperRemaining}'s totals span, and how many of them
+     * are this league's regular season - the unit a gain priced on it is in.
+     *
+     * The objective reads a total as seventeen weeks of a rate (total / 17 each
+     * week, WeeklyStarterValue), and every piece of it - the expected score that
+     * sets the lineup, the drawn rate, the wire - is proportional to the totals.
+     * So a board of games-left totals gives a value in games-left points: at
+     * week 4 a gain is points over weeks 4-18, not a seventeen-week number to be
+     * scaled down to the weeks left. The current week counts for the share of
+     * its teams not yet kicked off, the rule sleeperRemaining uses to include it.
+     */
+    record Horizon(double weeks, double regularWeeks){
+        static Horizon of(int current, double currentShareLeft, int lastWeek, int lastRegularWeek){
+            double weeks = Math.max(0, lastWeek - current) + (current <= lastWeek ? currentShareLeft : 0);
+            double regular = Math.max(0, lastRegularWeek - current) + (current <= lastRegularWeek ? currentShareLeft : 0);
+            return new Horizon(weeks, regular);
+        }
+    }
+
+    /** The horizon of today's sleeper-remaining. A season the schedule does not carry counts the current week whole, as sleeperRemaining does. */
+    static Horizon remainingHorizon(int lastRegularWeek){
+        String season = LeagueWeek.season();
+        int current = LeagueWeek.week();
+        double share = 0;
+        if(!LeagueWeek.finished(season, current)){
+            List<NflverseGames.Game> games = NflverseGames.games();
+            java.util.Set<String> playing = NflverseGames.playing(games, season, current);
+            java.util.Set<String> started = NflverseGames.kickedOff(games, season, current,
+                    java.time.LocalDateTime.now(java.time.ZoneId.of("America/New_York")));
+            java.util.Set<String> waiting = new java.util.HashSet<>(playing);
+            waiting.removeAll(started);
+            share = playing.isEmpty() ? 1.0 : (double) waiting.size() / playing.size();
+        }
+        return Horizon.of(current, share, WeeklyActuals.WEEKS, lastRegularWeek);
+    }
+
     /** A man's club today; a defence's id is its club. */
     static String teamOf(String id){
         Player p = Player.getPlayerFromSIDV2(id);

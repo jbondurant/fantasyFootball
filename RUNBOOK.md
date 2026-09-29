@@ -9,8 +9,9 @@ and trades, **Sunday morning** decides the lineup.
     ./gradlew run -Pmain=TuesdaySwap
     ./gradlew run -Pmain=LeagueConsole
 
-In that order, back to back. The projection feed is refetched daily and the
-player metadata expires weekly, so two artifacts written hours apart can
+In that order, back to back. The projection feed is refetched daily and so,
+in season, is the player metadata (injury tags, practice reports, depth charts;
+weekly out of season), so two artifacts written hours apart can
 disagree completely and both be right. Each one now prints the snapshot it was
 built from:
 
@@ -52,9 +53,26 @@ Sleeper's own counter. The league runs DAILY waivers (noon Eastern, one-day
 clear), so a man dropped Sunday night clears Tuesday noon and a claim can
 settle any day - "Tuesday" is when most of them do, not the only time.
 
+Then the news, before the projections have heard it:
+
+    ./gradlew run -Pmain=NewsCheck [-Pplayers="Ollie Gordon II,De'Von Achane"]
+
+Your roster, any men you name, and Sleeper's trending adds of the last 48 hours
+marked FREE or held: injury tag, practice report, depth chart, snap and target
+share over the last three games, bye and next opponent, whether the tag lets him
+sit in an IR slot here, and what Sleeper projects for his games left. A free man
+near the top of the trending list whose LEFT has not moved is the managers
+reading news the projections have not caught up with - on 28 September, Ollie
+Gordon II a day after De'Von Achane's ACL. The wire tab below cannot see him
+until Sleeper moves; this is where you can.
+
 The **The wire** tab. Your FAAB is read off the rosters feed, not typed, and
 each free agent's worth is computed: the roster with him and without the man he
-displaces, valued and subtracted.
+displaces, valued and subtracted. It is priced on Sleeper's weekly projections
+for the games left (`sleeper-remaining`), the same as `TuesdaySwap` and the
+trades, so a man Sleeper has ruled out is not on it - on 28 September the season
+feed had "add Jaxson Dart (IR, season over)" second. A worth is in points over
+the games left, *from here* is its regular-season share, and the bid is on that.
 
 The bid on each row is into the WEDNESDAY run - the first after the games,
 where three dollars in four are spent and a claim clears at a median of $3
@@ -66,7 +84,12 @@ Two things to respect:
 
 - a row tagged **inside the noise** is under the objective's own seed-to-seed
   spread. It is the yardstick moving, not the roster improving. DO NOTHING is
-  the answer far more often than it feels like it should be.
+  the answer far more often than it feels like it should be. The spread is
+  measured on the pricing it judges - on the games left, not the season feed's
+  6.8 - and the page and the report both name the report they read. It shrinks
+  as the games left do, so a month-old measurement is on the cautious side;
+  refresh it with `./gradlew run -Pmain=ObjectiveStability
+  -Pprojections=sleeper-remaining` (TRAPS #151).
 - a drop that **empties a slot** is not a drop. The roster is full, so cutting
   your only defence means buying one back, and those rows are priced as the
   whole plan - both adds and both drops - or not shown.

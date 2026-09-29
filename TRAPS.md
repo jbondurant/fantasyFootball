@@ -1922,3 +1922,45 @@ real every time.
     lesson is old (TRAPS #93): a model of what a trade is worth is not a model
     of whether it is taken, and a check on how it looks has to be drawn in the
     units people judge in.
+
+151. **A floor carried across a change of units by an argument, and the
+    argument was half true.** On 2026-09-28 `TuesdaySwap`'s second row was "add
+    Jaxson Dart, drop Bo Nix": the wire still priced on Sleeper's season feed,
+    which carried Dart at 340.5 on IR with his season over. The trade tools had
+    moved to `sleeper-remaining` that morning (#150); the wire and the console's
+    wire tab now price there too, with `ros` beside every row, and agree to the
+    decimal because they call the same search on the same map. Two units
+    questions came with the move. (1) *From here.* `fromHere` scaled a
+    seventeen-week gain by (15 - week)/17 because a season feed carries season
+    totals. The objective is exactly proportional to the totals it is given
+    (`WireUnitsTest` scales a real board by 0.6 and gets 0.6 of the value and of
+    a marginal), so on games-left totals a gain is already points over the
+    games left, and the old scaling on top was a double discount - a man worth
+    15 over weeks 4-18 bid as 9.7 instead of 11. `TuesdaySwap.Units` now says
+    what a gain is in, and *from here* is its regular-season share of the weeks
+    the totals span (the current week counted for the clubs yet to kick off).
+    Keeper surpluses stay on the season feed. (2) *The floor.* The plan was to
+    carry 6.8 across the same way: proportional objective, games-left totals
+    15/18 of season totals, so 6.8 x 15/18 = 5.7 in week 4 and 3.4 by week 10.
+    Measured before it shipped, on the same thirteen-man roster, three seeds and
+    480 scenarios, the same day: the season feed (25 September snapshot) values
+    the roster at 1791 with a worst spread of 6.3; the games left value it at
+    1717 with a worst spread of 11.3 (Zay Flowers, whose marginal is 172 there
+    against 97). The proportionality holds; the premise about the totals does
+    not - the games left value the roster at 96% of what the season feed does
+    (1717/1791), where the weeks suggested 83% - and the roster's shape moves
+    the worst man's marginal besides. Scaled down, the floor would have named claims inside
+    the noise. Decided: a floor belongs to the pricing it was measured on.
+    `ObjectiveStability` writes a run on another source under that source's
+    name, `floorFor` hands each pricing its own (a source never measured falls
+    back to the season feed's, loudly), the console names the report it read
+    and `LeagueConsoleTest` checks the page against that report. The wire's
+    floor is 11.3 from 2026-09-29. Rebuilt that day (week 4): Dart is off the
+    board, Ollie Gordon is on it second, and the best plan - Brenton Strange for
+    Chris Rodriguez - is +4.8 over the games left, 3.5 from here, under the
+    floor: DO NOTHING. It shrinks as the games left do, so an old
+    measurement errs toward DO NOTHING; rerun it monthly with
+    -Pprojections=sleeper-remaining. The trade tools still judge their short
+    list against 6.8 on the same games-left pricing, which by this measurement
+    is too lenient; that is open, not fixed here. A conversion between units is
+    a claim about two populations, and it gets measured like one.

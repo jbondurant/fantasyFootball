@@ -9,7 +9,7 @@ import java.util.Comparator;
  * Two artifacts written on the same afternoon can disagree completely and both
  * be correct, because the feeds underneath them move: the projection file is
  * refetched daily and was rewritten at 13:23 one day mid-session, and the player
- * metadata expires weekly and refreshed at 04:29 on another. A date stamp of
+ * metadata (weekly then, daily in season since 2026-09-29) refreshed at 04:29 on another. A date stamp of
  * `LocalDate.now()` records when a file was written, which is not the question -
  * the question is what it was written FROM.
  *
@@ -38,7 +38,7 @@ public class DataStamp {
         }
     }
 
-    /** The day the player metadata was last fetched, which expires weekly. */
+    /** The day the player metadata was last fetched: it expires daily in season, weekly out of it (PlayerRawData). */
     static String metadata(){
         File file = new File("sleeperDataPlayerAPI.json");
         return file.exists()

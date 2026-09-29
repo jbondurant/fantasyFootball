@@ -83,9 +83,7 @@ public class TradeCheck {
         int week = LeagueWeek.week();
         String[] names = System.getProperty("players", "").split(",");
         JsonObject db;
-        try(FileReader reader = new FileReader("sleeperDataPlayerAPI.json")){
-            db = JsonParser.parseReader(reader).getAsJsonObject();
-        }
+        db = PlayerRawData.database();   // through the in-season daily expiry
         Map<String, Double> feed = SleeperProjections.parseTodaysWebPage();
         Map<String, Double> ros = ProjectionSources.resolve("ros");
         Map<String, Double> next = LeagueWeek.projected(season, week + 1);

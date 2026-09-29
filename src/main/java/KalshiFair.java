@@ -51,9 +51,7 @@ public class KalshiFair {
     /** Sleeper id by normalised full name, for the men with a projection this week. */
     static Map<String, List<String>> nameIndex(Map<String, JsonObject> projected) throws IOException {
         JsonObject all;
-        try(FileReader reader = new FileReader("sleeperDataPlayerAPI.json")){
-            all = JsonParser.parseReader(reader).getAsJsonObject();
-        }
+        all = PlayerRawData.database();   // through the in-season daily expiry
         Map<String, List<String>> out = new HashMap<>();
         for(String id : projected.keySet()){
             JsonElement e = all.get(id);

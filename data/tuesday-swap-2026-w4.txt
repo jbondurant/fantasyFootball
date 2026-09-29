@@ -1,0 +1,44 @@
+data: projections 2026-09-29, player metadata 2026-09-29
+TUESDAY SWAP  2026-09-29  season 2026, waivers for week 4  (justinb314; priced on sleeper-remaining, with ros beside it)
+153 free agents searched against all 16 roster spots = 2448 pairs, on the weekly-starter
+objective (480 drawn seasons), which prices a bench man by how often he would actually start.
+Gains are points over the games left (15.0 weeks to week 18, sleeper-remaining's own totals); 11.0 of those
+weeks are the regular season, so a gain is worth 0.73 of itself from here.
+Nothing under 11.3 points is named: that is the yardstick's own worst seed-to-seed spread,
+measured on sleeper-remaining on 2026-09-29 (ObjectiveStability), so a smaller gain is the measurement moving
+and not the roster.
+
+ADD                    POS  -> drop                             left from here  alt here
+Brenton Strange        TE   -> drop Chris Rodriguez             +4.8      +3.5      +0.9
+Ollie Gordon           RB   -> drop Chris Rodriguez             +1.9      +1.4      -1.3   <- a loss on ros
+Jaylen Wright          RB   -> drop Chris Rodriguez             +1.8      +1.3      -0.7   <- a loss on ros
+Malik Willis           QB   -> drop Chris Rodriguez             +1.3      +1.0      -1.3   <- a loss on ros
+Tre' Harris            WR   -> drop Chris Rodriguez             +1.2      +0.9      -0.6   <- a loss on ros
+Keenan Allen           WR   -> drop Chris Rodriguez             +1.0      +0.8      +0.9
+Mike Gesicki           TE   -> drop Chris Rodriguez             +1.0      +0.7      -0.9   <- a loss on ros
+Justice Hill           RB   -> drop Chris Rodriguez             +0.9      +0.7      -0.0   <- a loss on ros
+alt here is the same move priced on ros and put in from-here points too, so the two columns
+read in one unit; ros is the rest-of-season model that has seen the results (RosModel),
+sleeper-remaining Sleeper's weekly projections for the games left, which drop a man ruled out.
+
+EVERY DROP FOR BRENTON STRANGE - the same claim against each man you hold:
+   drop Baltimore Ravens            +5.1   <- empties a slot; the whole plan (then add Detroit Lions, drop Chris Rodriguez) is +4.8
+   drop Chris Rodriguez             +4.8
+   drop Dalton Schultz              +1.5
+   drop Jordan Addison              +1.3
+   drop Khalil Shakir               +0.2
+   drop Jakobi Meyers               +0.0
+   drop Bo Nix                      -7.3
+   drop Harold Fannin              -20.4
+   drop Josh Downs                 -20.7
+   drop Malik Nabers               -32.7
+   drop Rhamondre Stevenson        -53.5
+   drop Mike Evans                 -59.2
+   drop Cam Skattebo               -61.1
+   drop Bhayshul Tuten             -64.4
+   drop Brock Purdy                -85.1
+   drop Derrick Henry             -134.2
+
+DO NOTHING. The best plan on the board is worth +4.8 (3.5 from here), inside the
+floor, so it is not a move - it is noise with a transaction attached. Waiting is free and
+buys another week of evidence.

@@ -77,9 +77,7 @@ public class MarketVsSleeper {
         // Sleeper ids by normalised name, over the whole player database (2025 men are not all projected today)
         Map<String, List<String>> ids = new HashMap<>();
         JsonObject db;
-        try(FileReader reader = new FileReader("sleeperDataPlayerAPI.json")){
-            db = JsonParser.parseReader(reader).getAsJsonObject();
-        }
+        db = PlayerRawData.database();   // through the in-season daily expiry
         for(Map.Entry<String, JsonElement> e : db.entrySet()){
             if(e.getValue().isJsonObject()){
                 JsonObject p = e.getValue().getAsJsonObject();

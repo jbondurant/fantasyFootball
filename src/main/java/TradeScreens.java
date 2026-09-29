@@ -497,9 +497,7 @@ public class TradeScreens {
     /** Today's men with these full names (a team, so a retired namesake is not picked up), in order. */
     static List<String> idsNamed(String csv) throws IOException {
         JsonObject db;
-        try(FileReader reader = new FileReader("sleeperDataPlayerAPI.json")){
-            db = JsonParser.parseReader(reader).getAsJsonObject();
-        }
+        db = PlayerRawData.database();   // through the in-season daily expiry
         List<String> out = new ArrayList<>();
         for(String raw : csv.split(",")){
             String name = raw.trim();
