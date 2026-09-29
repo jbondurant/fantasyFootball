@@ -1964,3 +1964,16 @@ real every time.
     list against 6.8 on the same games-left pricing, which by this measurement
     is too lenient; that is open, not fixed here. A conversion between units is
     a claim about two populations, and it gets measured like one.
+    Revised 2026-09-29, on Justin's point that "people will sell low people
+    who are underperforming or injured, albeit perhaps not low enough": the
+    two screens are now one, draft value counted as k games against the games
+    played, and k is revealed by this league's accepted trades - the k that
+    makes them read most even is 10 games (90% bootstrap 6 to 16), about the
+    statistical weight InSeasonLearning measures (6-12 by position). So
+    managers here do discount a disappointing pick, at about the rate the
+    evidence warrants. A trade is a NO when it gives him less than nine
+    accepted sides in ten took (the one-in-ten is a choice, stated in
+    Screens.noChance). On that rule the Chase offer, at 52% against a 10th
+    percentile of 52%, reads as a long shot rather than a NO - 7 of 60 accepted
+    sides took as little, never Renteez - and it stays off every list because
+    it costs Justin 3.8 on the games left.

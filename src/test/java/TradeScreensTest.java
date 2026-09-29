@@ -56,50 +56,80 @@ public class TradeScreensTest {
         Map<String, Double> adp = Map.of("nabers", 28.6, "stevenson", 69.2, "chase", 3.9);
         Map<String, Double> points = Map.of("nabers", 0.0, "stevenson", 0.0, "chase", 131.5);
         TradeScreens.Screens seen = TradeScreens.screen(List.of("nabers", "stevenson"), List.of("chase"),
-                id -> chart.at(adp.get(id)), points::get, List.of(), "Renteez");
+                id -> chart.at(adp.get(id)), points::get, List.of(), "Renteez", 10, 3);
         assertTrue(seen.draftRatio() < 1, "he gives the most draft value: " + seen.draftRatio());
         assertEquals(0.0, seen.pointsRatio(), 1e-9, "and gets none of the season's points he gives");
+        assertTrue(seen.blendedRatio() < 0.6, "blended, draft as ten games against three: " + seen.blendedRatio());
         assertFalse(seen.fairToHim());
         assertTrue(seen.noChance(), "with no accepted trade as lopsided, it is no chance: " + seen.verdict());
-        assertTrue(seen.verdict().startsWith("NO CHANCE"), seen.verdict());
+        assertTrue(seen.verdict().startsWith("NO"), seen.verdict());
     }
 
-    /** Precedents must be at least as lopsided on BOTH screens, and a screen he sends nothing on cannot be lost. */
+    /**
+     * Justin, 2026-09-29: "what if draft value is slightly less important,
+     * since obviously, people will sell low people who are underperforming or
+     * injured." Draft value counts as k games against the g played, so the
+     * same trade that loses him draft value can be fair once his pace is in.
+     */
     @Test
-    public void aPrecedentHasToBeAsLopsidedOnBothScreens(){
-        List<TradeScreens.Precedent> history = List.of(
-                new TradeScreens.Precedent("2025", 6, "Hamrliks", "a", "b", 38, 100, 0, 50),    // 38%, 0%
-                new TradeScreens.Precedent("2024", 4, "BHier", "c", "d", 30, 100, 90, 60),      // 30%, 150%
-                new TradeScreens.Precedent("2022", 1, "KevinDA", "e", "f", 50, 100, 0, 0));     // 50%, nothing sent
-        // 78% of the draft value, 0% of the points: only the first took as little on both
-        List<String> took = TradeScreens.precedents(0.78, 0.0, history);
-        assertEquals(List.of("Hamrliks"), took);
-        // a trade in which he sends no points at all is constrained by draft value alone
-        assertEquals(3, TradeScreens.precedents(0.78, Double.POSITIVE_INFINITY, history).size());
-
-        TradeScreens.Screens seen = new TradeScreens.Screens(78, 100, 0, 50, took, 60, "Renteez");
-        assertFalse(seen.noChance(), "one accepted side took as little, so there is a precedent");
-        assertTrue(seen.losesOnBoth(), "but he is behind on both numbers he can see");
-        assertFalse(seen.worthAsking(), "and another manager's lopsided yes is not a reason for his: " + seen.verdict());
-        assertTrue(seen.verdict().startsWith("NO") && seen.verdict().contains("never Renteez"),
-                "the verdict says so, and that the one who took it was somebody else: " + seen.verdict());
-
-        // ahead on one of his numbers, with a precedent: a long shot worth asking
-        TradeScreens.Screens mixed = new TradeScreens.Screens(78, 100, 60, 50,
-                TradeScreens.precedents(0.78, 1.2, history), 60, "Renteez");
-        assertFalse(mixed.losesOnBoth());
-        assertTrue(mixed.worthAsking(), mixed.verdict());
-        assertTrue(mixed.verdict().startsWith("a long shot"), mixed.verdict());
+    public void draftValueFadesAsGamesArePlayed(){
+        assertEquals(100.0, TradeScreens.blend(100, 40, 10, 0), 1e-9, "before a game, draft value is all he has");
+        assertEquals((10 * 100 + 10 * 40) / 20.0, TradeScreens.blend(100, 40, 10, 10), 1e-9, "at k games, half and half");
+        // he gives a disappointing early pick for a later one who is producing: 80% of the draft value, 175% of the pace
+        TradeScreens.Screens week1 = new TradeScreens.Screens(80, 100, 70, 40, 10, 1, List.of(), 60, "x");
+        TradeScreens.Screens week9 = new TradeScreens.Screens(80, 100, 70, 40, 10, 9, List.of(), 60, "x");
+        assertFalse(week1.fairToHim(), "a week in, the draft slot still dominates: " + week1.blendedRatio());
+        assertTrue(week9.fairToHim(), "by week 9 the production carries it: " + week9.blendedRatio());
     }
 
-    /** Fair means not losing on either screen; sending nothing on a screen is not a loss on it. */
+    /** Precedents are sides that took as little on the blend, each read at its own week; under one in ten is a NO. */
     @Test
-    public void fairMeansHeLosesOnNeither(){
-        assertTrue(new TradeScreens.Screens(60, 50, 20, 20, List.of(), 60, "x").fairToHim());
-        assertFalse(new TradeScreens.Screens(60, 50, 19, 20, List.of(), 60, "x").fairToHim());
-        assertTrue(new TradeScreens.Screens(60, 50, 0, 0, List.of(), 60, "x").fairToHim(),
-                "no points either way: the points screen has nothing to say");
-        assertEquals("120%/-", new TradeScreens.Screens(60, 50, 0, 0, List.of(), 60, "x").ratios());
+    public void aPrecedentIsAnAcceptedSideThatTookAsLittle(){
+        List<TradeScreens.Precedent> history = new java.util.ArrayList<>();
+        history.add(new TradeScreens.Precedent("2025", 6, "Hamrliks", "a", "b", 38, 100, 0, 50));   // week 6: 5 games
+        for(int i = 0; i < 19; i++){
+            history.add(new TradeScreens.Precedent("2024", 1, "m" + i, "c", "d", 95, 100, 0, 0));    // preseason, 95%
+        }
+        double k = 10;
+        assertEquals(38 * 10.0 / (100 * 10 + 50 * 5), history.get(0).blendedRatio(k), 1e-9);
+        assertEquals(List.of("Hamrliks"), TradeScreens.precedents(0.5, k, history));
+        assertEquals(20, TradeScreens.precedents(0.95, k, history).size());
+
+        TradeScreens.Screens lopsided = new TradeScreens.Screens(40, 100, 0, 60, k, 3,
+                TradeScreens.precedents(0.35, k, history), history.size(), "Renteez");
+        assertTrue(lopsided.noChance(), "one side in twenty is under one in ten: " + lopsided.verdict());
+        assertTrue(lopsided.verdict().startsWith("NO") && lopsided.verdict().contains("never Renteez"), lopsided.verdict());
+
+        TradeScreens.Screens close = new TradeScreens.Screens(95, 100, 0, 0, k, 3,
+                TradeScreens.precedents(0.95, k, history), history.size(), "Renteez");
+        assertTrue(close.worthAsking() && !close.fairToHim(), close.verdict());
+        assertTrue(close.verdict().startsWith("a long shot"), close.verdict());
+    }
+
+    /** The k the trades reveal: plant one, and the fit finds it. */
+    @Test
+    public void theRevealedKIsTheOneThatMakesAcceptedTradesEven(){
+        // trades that are exactly even at k = 6 with 4 games played, uneven at any other k
+        List<TradeScreens.Precedent> history = new java.util.ArrayList<>();
+        double k = 6, g = 4;
+        for(int i = 0; i < 10; i++){
+            double draftIn = 50 + 5 * i, draftOut = 80, paceOut = 20;
+            // choose his pace in so the blend is even at k: k*dIn + g*pIn = k*dOut + g*pOut
+            double paceIn = (k * draftOut + g * paceOut - k * draftIn) / g;
+            history.add(new TradeScreens.Precedent("2025", 5, "a", "x", "y", draftIn, draftOut, paceIn, paceOut));
+            history.add(new TradeScreens.Precedent("2025", 5, "b", "y", "x", draftOut, draftIn, paceOut, paceIn));
+        }
+        assertEquals(6.0, TradeScreens.revealedK(history, TradeScreens.K_GRID), 1e-9);
+    }
+
+    /** Fair means not losing on the blend; a trade with nothing going either way on a screen reads on the other. */
+    @Test
+    public void fairMeansHeDoesNotLoseOnTheBlend(){
+        assertTrue(new TradeScreens.Screens(60, 50, 20, 20, 10, 3, List.of(), 60, "x").fairToHim());
+        assertFalse(new TradeScreens.Screens(40, 50, 20, 20, 10, 3, List.of(), 60, "x").fairToHim());
+        assertTrue(new TradeScreens.Screens(60, 50, 0, 0, 10, 3, List.of(), 60, "x").fairToHim(),
+                "no points either way: draft value decides");
+        assertEquals("120%/-=120%", new TradeScreens.Screens(60, 50, 0, 0, 10, 3, List.of(), 60, "x").ratios());
     }
 
     /** The points screen: per-game points above the last starter's, at a season's pace; zero below the line or sidelined. */

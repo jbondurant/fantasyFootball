@@ -237,14 +237,76 @@ public class TradeScreens {
         public double pointsRatio(){
             return ratio(pointsIn, pointsOut);
         }
+        /** Games each man had played when it was made: the weeks before its own. */
+        public double games(){
+            return Math.max(0, week - 1);
+        }
+        /** Both screens as one, draft value counting as k games of this season's pace. */
+        public double blendedRatio(double k){
+            return ratio(blend(draftIn, pointsIn, k, games()), blend(draftOut, pointsOut, k, games()));
+        }
     }
+
+    /**
+     * THE TWO SCREENS AS ONE, 2026-09-29. Justin: "what if draft value is
+     * slightly less important, since obviously, people will sell low people who
+     * are underperforming or injured, albeit perhaps not low enough." A man's
+     * value as the other manager sees it: his draft value weighted as k games,
+     * his pace this season weighted by the g games he has played. k is how long
+     * draft position holds out against results in this league's own trades
+     * ({@link #revealedK}), not a number chosen here.
+     */
+    static double blend(double draft, double pace, double k, double games){
+        return (k * draft + games * pace) / (k + games);
+    }
+
+    /**
+     * The k, in games, that makes this league's accepted trades read most even:
+     * the least total |log ratio| over every side made after week 1 (before
+     * then k does not matter) with value both ways. Absolute rather than squared
+     * so a handful of lopsided deals cannot drag it (TradePartners: "many trades
+     * were lopsided"). Both sides of a trade carry reciprocal ratios, so each
+     * trade counts twice, evenly.
+     */
+    static double revealedK(List<Precedent> sides, double[] grid){
+        double best = grid[0], lowest = Double.MAX_VALUE;
+        for(double k : grid){
+            double loss = evenness(sides, k);
+            if(loss < lowest){
+                lowest = loss;
+                best = k;
+            }
+        }
+        return best;
+    }
+
+    /** Mean |log blended ratio| over the sides that inform k. */
+    static double evenness(List<Precedent> sides, double k){
+        double total = 0;
+        int n = 0;
+        for(Precedent p : sides){
+            if(informs(p)){
+                total += Math.abs(Math.log(p.blendedRatio(k)));
+                n++;
+            }
+        }
+        return n == 0 ? 0 : total / n;
+    }
+
+    /** Made after week 1, with value going both ways on the blend at any k. */
+    static boolean informs(Precedent p){
+        return p.games() > 0 && p.draftIn() + p.pointsIn() >= NOTHING && p.draftOut() + p.pointsOut() >= NOTHING
+                && p.draftIn() > 0 && p.draftOut() > 0;
+    }
+
+    static final double[] K_GRID = {0.25, 0.5, 1, 1.5, 2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 30, 50, 100, 1000};
 
     /**
      * A trade as the man opposite sees it: what he receives and sends on each
      * screen, and who in this league ever took as little. `with` is the man
      * opposite, so a precedent can be told apart from his own.
      */
-    public record Screens(double draftIn, double draftOut, double pointsIn, double pointsOut,
+    public record Screens(double draftIn, double draftOut, double pointsIn, double pointsOut, double k, double games,
                           List<String> takenBy, int sides, String with) {
 
         public double draftRatio(){
@@ -255,7 +317,12 @@ public class TradeScreens {
             return ratio(pointsIn, pointsOut);
         }
 
-        /** Sides of accepted trades here at least as lopsided on both screens. */
+        /** What he gets back on what he can see: both screens blended, draft value counted as k games against the g played. */
+        public double blendedRatio(){
+            return ratio(blend(draftIn, pointsIn, k, games), blend(draftOut, pointsOut, k, games));
+        }
+
+        /** Sides of accepted trades here that took as little on the blend, each read at its own week. */
         public int precedents(){
             return takenBy.size();
         }
@@ -271,49 +338,47 @@ public class TradeScreens {
             return n;
         }
 
-        /** He does not lose on either number he can check. */
+        /** He does not lose on what he can see. */
         public boolean fairToHim(){
-            return draftRatio() >= 1 && pointsRatio() >= 1;
-        }
-
-        /** He loses, and no side of any accepted trade here ever took as little on both. */
-        public boolean noChance(){
-            return !fairToHim() && precedents() == 0;
+            return blendedRatio() >= 1;
         }
 
         /**
-         * He comes out behind on BOTH numbers he can check, so nothing on his
-         * screen argues for the trade. Nabers + Stevenson for Ja'Marr Chase was
-         * this (78% of the draft value, 0% of the season's points): two accepted
-         * sides in five seasons took as little, both other managers, which is
-         * other people's mistakes rather than a reason he would make this one.
+         * He loses, and fewer than one accepted side in ten here ever took as
+         * little. The one-in-ten is a choice, not a measurement: accepted trades
+         * cannot say what was refused, and a single lopsided yes from somebody
+         * else is not a reason he would say yes (Nabers + Stevenson for Chase).
          */
+        public boolean noChance(){
+            return !fairToHim() && (precedents() == 0 || precedents() < ASK_SHARE * sides);
+        }
+
+        /** Behind on both numbers separately - shown, no longer a rule of its own. */
         public boolean losesOnBoth(){
             return draftRatio() < 1 && pointsRatio() < 1;
         }
 
-        /** Worth putting in front of him at all: fair, or ahead on one of his numbers with a precedent here. */
+        /** Worth putting in front of him at all. */
         public boolean worthAsking(){
-            return fairToHim() || !losesOnBoth() && !noChance();
+            return !noChance();
         }
 
-        /** "45%/0%": what he gets back on each screen, "-" where he sends nothing on it. */
+        /** "78%/0% = 57%": draft value and this season's points he gets back, then the blend of the two. */
         public String ratios(){
-            return share(draftRatio()) + "/" + share(pointsRatio());
+            return share(draftRatio()) + "/" + share(pointsRatio()) + "=" + share(blendedRatio());
         }
 
         public String verdict(){
+            String took = String.format("he gets back %s of what he gives on what he can see (%s of the draft value, %s of the"
+                    + " season's points; draft counted as %s games against %s played)", share(blendedRatio()), share(draftRatio()),
+                    share(pointsRatio()), fmt(k), fmt(games));
             if(fairToHim()){
-                return "fair to him on draft value and on this season's points";
+                return "fair to him - " + took;
             }
-            String took = "he gets back " + share(draftRatio()) + " of the draft value and " + share(pointsRatio())
-                    + " of the season's points he gives";
-            if(precedents() == 0){
-                return "NO CHANCE - " + took + "; no side of the " + sides + " accepted here took that little on both";
-            }
-            String who = precedents() + " of " + sides + " accepted sides here took as little ("
-                    + String.join(", ", new java.util.TreeSet<>(takenBy)) + ")" + (with == null ? "" : his() == 0 ? ", never " + with : "");
-            return (losesOnBoth() ? "NO - behind on both numbers he can see: " : "a long shot - ") + took + "; " + who;
+            String who = precedents() + " of " + sides + " accepted sides here took as little"
+                    + (takenBy.isEmpty() ? "" : " (" + String.join(", ", new java.util.TreeSet<>(takenBy)) + ")")
+                    + (with == null || takenBy.isEmpty() ? "" : his() == 0 ? ", never " + with : "");
+            return (noChance() ? "NO - " : "a long shot - ") + took + "; " + who;
         }
 
         static String share(double r){
@@ -321,11 +386,14 @@ public class TradeScreens {
         }
     }
 
-    /** The managers of the sides of accepted trades at least as lopsided as this on BOTH screens, one entry a side. */
-    static List<String> precedents(double draftRatio, double pointsRatio, List<Precedent> history){
+    /** Below this share of accepted sides taking as little, a trade is not worth asking (see Screens.noChance). */
+    static final double ASK_SHARE = 0.10;
+
+    /** The managers of the sides of accepted trades that took as little on the blend (each at its own week), one entry a side. */
+    static List<String> precedents(double blendedRatio, double k, List<Precedent> history){
         List<String> out = new ArrayList<>();
         for(Precedent p : history){
-            if(p.draftRatio() <= draftRatio && p.pointsRatio() <= pointsRatio){
+            if(p.blendedRatio(k) <= blendedRatio){
                 out.add(p.manager());
             }
         }
@@ -334,7 +402,7 @@ public class TradeScreens {
 
     /** One trade from HIS side: he receives hisIn and sends hisOut. */
     static Screens screen(List<String> hisIn, List<String> hisOut, ToDoubleFunction<String> draft,
-                          ToDoubleFunction<String> points, List<Precedent> history, String with){
+                          ToDoubleFunction<String> points, List<Precedent> history, String with, double k, double games){
         double draftIn = 0, draftOut = 0, pointsIn = 0, pointsOut = 0;
         for(String id : hisIn){
             draftIn += draft.applyAsDouble(id);
@@ -344,8 +412,9 @@ public class TradeScreens {
             draftOut += draft.applyAsDouble(id);
             pointsOut += points.applyAsDouble(id);
         }
-        return new Screens(draftIn, draftOut, pointsIn, pointsOut,
-                precedents(ratio(draftIn, draftOut), ratio(pointsIn, pointsOut), history), history.size(), with);
+        double blended = ratio(blend(draftIn, pointsIn, k, games), blend(draftOut, pointsOut, k, games));
+        return new Screens(draftIn, draftOut, pointsIn, pointsOut, k, games, precedents(blended, k, history),
+                history.size(), with);
     }
 
     /** Every side of every completed player-for-player trade in the league's finished seasons, on both screens. */
@@ -452,11 +521,11 @@ public class TradeScreens {
 
     /** Everything a caller needs to put today's trades on both screens. */
     public record Context(Chart chart, History history, ToDoubleFunction<String> draft, ToDoubleFunction<String> points,
-                          int weeksPlayed) {
+                          int weeksPlayed, double k) {
 
         /** A trade from his side: he receives what Justin gives and sends what Justin gets (and any man he must cut). */
         public Screens of(TradeMarket.Trade trade){
-            return screen(trade.give(), trade.hisOut(), draft, points, history.sides(), trade.withManager());
+            return screen(trade.give(), trade.hisOut(), draft, points, history.sides(), trade.withManager(), k, weeksPlayed);
         }
     }
 
@@ -491,7 +560,8 @@ public class TradeScreens {
             Player p = Player.getPlayerFromSIDV2(id);
             return p != null && skill(p.position) ? chart.at(SleeperProjections.adpOf(id)) : 0;
         };
-        return new Context(chart, history, draft, id -> production.getOrDefault(id, 0.0), week);
+        return new Context(chart, history, draft, id -> production.getOrDefault(id, 0.0), week,
+                revealedK(history.sides(), K_GRID));
     }
 
     /** Today's men with these full names (a team, so a retired namesake is not picked up), in order. */
@@ -545,6 +615,43 @@ public class TradeScreens {
         }
         out.append("  (the twenty most lopsided against the side named, by the better of its two screens)\n");
 
+        // HOW MUCH DRAFT POSITION HOLDS OUT AGAINST RESULTS, revealed by the trades
+        List<Precedent> informing = new ArrayList<>();
+        for(Precedent p : sides){
+            if(informs(p)){
+                informing.add(p);
+            }
+        }
+        double k = context.k();
+        java.util.Random random = new java.util.Random(7);
+        List<Double> boot = new ArrayList<>();
+        for(int b = 0; b < 1000; b++){
+            List<Precedent> draw = new ArrayList<>();
+            for(int i = 0; i < informing.size(); i++){
+                draw.add(informing.get(random.nextInt(informing.size())));
+            }
+            boot.add(revealedK(draw, K_GRID));
+        }
+        boot.sort(Double::compare);
+        out.append(String.format("%nHOW LONG DRAFT POSITION HOLDS OUT AGAINST RESULTS, in this league's accepted trades. Each side's value%n"
+                + "is (k x draft value + g x this season's pace) / (k + g), g the games played when the trade was made; k is the%n"
+                + "one that makes the %d sides made after week 1 read most even (mean |log ratio|):%n  ", informing.size()));
+        for(double kk : K_GRID){
+            out.append(String.format("k=%s:%.3f  ", kk % 1 == 0 ? String.valueOf((int) kk) : String.valueOf(kk), evenness(sides, kk)));
+        }
+        out.append(String.format("%n  revealed k = %s games (90%% bootstrap over sides: %s to %s). Draft position counts as that many%n"
+                        + "  games of results; k = 1000 is draft value alone, k = 0.25 is this season's pace alone.%n",
+                fmt(k), fmt(boot.get(50)), fmt(boot.get(949))));
+        List<Double> blended = new ArrayList<>();
+        for(Precedent p : sides){
+            blended.add(p.blendedRatio(k));
+        }
+        blended.sort(Double::compare);
+        out.append(String.format("  On that blend, what accepted sides got back: 10th percentile %s, 25th %s, median %s. A trade that%n"
+                        + "  gives him less than the 10th percentile is a NO (Screens.noChance).%n",
+                Screens.share(blended.get(blended.size() / 10)), Screens.share(blended.get(blended.size() / 4)),
+                Screens.share(blended.get(blended.size() / 2))));
+
         String give = System.getProperty("send", "");
         String get = System.getProperty("receive", "");
         if(!give.isBlank() && !get.isBlank()){
@@ -552,7 +659,7 @@ public class TradeScreens {
             List<String> hisOut = idsNamed(get);
             Map<String, String> ownerOf = LeagueOwners.today(configuration);
             Screens s = screen(hisIn, hisOut, context.draft(), context.points(), sides,
-                    hisOut.isEmpty() ? null : ownerOf.get(hisOut.get(0)));
+                    hisOut.isEmpty() ? null : ownerOf.get(hisOut.get(0)), context.k(), context.weeksPlayed());
             out.append(String.format("%nTHE TRADE - you give %s, you get %s. From HIS side:%n", give, get));
             for(String id : hisIn){
                 out.append(String.format("  he gets  %-24s draft %6.1f   points %6.1f%n", name(id), context.draft().applyAsDouble(id),
@@ -649,6 +756,10 @@ public class TradeScreens {
         }
         TeamRankings.Man m = starting.get(i);
         return String.format("%-3s %-22s %6.1f", m.position(), m.name(), m.points());
+    }
+
+    static String fmt(double k){
+        return k % 1 == 0 ? String.valueOf((int) k) : String.valueOf(k);
     }
 
     static String name(String id){

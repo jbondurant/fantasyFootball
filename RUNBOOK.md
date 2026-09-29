@@ -4,6 +4,14 @@ The draft is done. This is what the rest of 2026 looks like. Two moments matter
 each week and they are not the same moment: **Tuesday morning** decides claims
 and trades, **Sunday morning** decides the lineup.
 
+## Tuesday morning, one command
+
+    ./weekly.sh
+
+Runs NewsCheck, TuesdaySwap, TradeMarket and LeagueConsole in that order, one
+after another, and stops at the first that fails. No agent is needed for any of
+it: the trade search, the wire and the news are all code. Then open the page.
+
 ## Regenerate BOTH, or the numbers are from two different worlds
 
     ./gradlew run -Pmain=TuesdaySwap
@@ -129,7 +137,9 @@ week, the bench worth the weeks it covers - on Sleeper's weekly projections for
 the games left (`sleeper-remaining`, which drops a man Sleeper has ruled out) and
 on the rest-of-season model, with your rank on each. Then every mutually good
 trade carries both pricings and **his view**: the trade from HIS side on the two
-numbers he can check, draft value and this season's points (`TradeScreens`).
+numbers he can check, draft value and this season's points, blended with
+draft value counted as the games of results this league's own trades reveal
+(about ten, 2026-09-29) (`TradeScreens`).
 **THE SHORT LIST** names only trades good for both sides on both pricings, you
 clearing the 6.8 noise floor on each, AND fair to him on both of his numbers.
 Long shots - trades some manager here once accepted something as lopsided as -

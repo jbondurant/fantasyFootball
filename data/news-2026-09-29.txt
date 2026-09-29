@@ -18,66 +18,59 @@ Chris Rodriguez          RB  JAX  you              -                  -        R
 Mike Evans               WR  SF   you              Out Ribs           -        LWR1  09-28    8 w4 v DEN    56%   20% yes  171.0      
 Malik Nabers             WR  NYG  you              -                  -        LWR1  09-28    8 w4 v ARI    68%   23% -    141.0      
 Josh Downs               WR  IND  you              -                  -        SWR1  09-28   13 w4 @WAS     79%   26% -    128.7      
-Jakobi Meyers            WR  JAX  you              -                  -        RWR3  09-28    7 w4 @CIN     79%   14% -    106.1 137274
-Jordan Addison           WR  MIN  you              -                  -        RWR2  09-28    6 w4 v MIA    90%   24% -    103.6 354960
+Jakobi Meyers            WR  JAX  you              -                  -        RWR3  09-28    7 w4 @CIN     79%   14% -    106.1 225390
+Jordan Addison           WR  MIN  you              -                  -        RWR2  09-28    6 w4 v MIA    90%   24% -    103.6 574776
 Khalil Shakir            WR  BUF  you              -                  -        SWR2  09-27    7 w4 v NE     58%   18% -    103.1      
-Harold Fannin            TE  CLE  you              -                  -        TE1   09-28   11 w4 v PIT    85%   22% -    132.0      
+Harold Fannin            TE  CLE  you              -                  -        TE1   09-28   11 w4 v PIT    85%   22% -    132.0 83550
 Dalton Schultz           TE  HOU  you              -                  -        TE1   09-27    8 w4 v DAL    63%   22% -    107.4      
-Baltimore Ravens         DEF BAL  you              -                  -        -     -       13 w4 v TEN      -     - -    105.2 104385
-
-NAMED
-                         POS TEAM HELD BY          STATUS             PRACTICE DEPTH NEWS   BYE NEXT       SNAP   TGT IR    LEFT  ADDS
-Ollie Gordon             RB  MIA  FREE             Questionable Undi~ -        RB2   09-28    6 w4 @MIN     40%    4% -     95.0 6220291
-De'Von Achane            RB  MIA  KevinDA          IR Knee - ACL      -        RB1   09-28    6 w4 @MIN     52%   15% yes      -      
-Mike Evans               WR  SF   you              Out Ribs           -        LWR1  09-28    8 w4 v DEN    56%   20% yes  171.0      
+Baltimore Ravens         DEF BAL  you              -                  -        -     -       13 w4 v TEN      -     - -    105.2 293955
 
 TRENDING ADDS ACROSS SLEEPER, LAST 48 HOURS (FREE = on this league's wire)
                          POS TEAM HELD BY          STATUS             PRACTICE DEPTH NEWS   BYE NEXT       SNAP   TGT IR    LEFT  ADDS
-Ollie Gordon             RB  MIA  FREE             Questionable Undi~ -        RB2   09-28    6 w4 @MIN     40%    4% -     95.0 6220291
-Kenyon Sadiq             TE  NYJ  tommyrads        -                  -        TE1   09-28   13 w4 @CHI     45%   15% -    101.5 1520424
-Tyreek Hill              WR  FA   Hamrliks          Knee - ACL        -        -     09-28    - -             -     - -        - 1060776
-Braelon Allen            RB  NYJ  tommyrads        -                  -        RB2   09-28   13 w4 @CHI     41%    5% -     76.9 944984
-Terrance Ferguson        TE  LAR  JakeSK           Questionable Ankle -        TE1   09-28   11 w4 @PHI     43%   11% -     83.7 513704
-Kirk Cousins             QB  LV   FREE             -                  -        QB1   09-28   13 w4 v KC    100%    0% -    280.2 409176
-Alvin Kamara             RB  NO   Hamrliks         -                  -        RB2   09-28    8 w4 v ATL    19%    6% -     97.9 396488
-Malik Washington         WR  MIA  JFMarino         -                  -        SWR1  09-28    6 w4 @MIN     86%   28% -    126.6 359832
-Keaton Mitchell          RB  LAC  jerem9604        -                  -        RB2   09-28    7 w4 @SEA     31%    5% -     74.5 357354
-Jordan Addison           WR  MIN  you              -                  -        RWR2  09-28    6 w4 v MIA    90%   24% -    103.6 354960
-Sam Darnold              QB  SEA  BHier            -                  -        QB1   09-28   11 w4 v LAC    39%    0% -    254.7 307857
-Konata Mumpfield         WR  LAR  FREE             -                  -        LWR3  09-28   11 w4 @PHI     58%   10% -     29.3 298476
-Las Vegas Raiders        DEF LV   FREE             -                  -        -     -       13 w4 v KC       -     - -     71.2 277860
-Darren Waller            TE  CAR  KevinDA          -                  -        TE1   09-28    5 w4 v DET    44%   12% -    105.4 275814
-Roman Wilson             WR  PIT  FREE             -                  -        SWR3  09-28    9 w4 @CLE     58%   17% -     61.3 271377
-Keenan Allen             WR  IND  FREE             -                  -        RWR2  09-28   13 w4 @WAS     64%   21% -     81.9 224780
-Isaiah Williams          WR  NYJ  FREE             -                  -        SWR2  09-27   13 w4 @CHI     77%    9% -     21.9 189864
-Deshaun Watson           QB  CLE  FREE             -                  -        QB1   09-28   11 w4 v PIT    99%    0% -    122.5 177288
-Xavier Hutchinson        WR  HOU  BHier            -                  -        LWR1  09-27    8 w4 v DAL    65%   19% -     58.6 170058
-Minnesota Vikings        DEF MIN  KevinDA          -                  -        -     -        6 w4 v MIA      -     - -    107.5 166360
-Tyler Higbee             TE  LAR  FREE             -                  -        TE3   09-28   11 w4 @PHI     43%   12% -     22.6 152352
-Tyler Shough             QB  NO   KevinDA          -                  -        QB1   09-28    8 w4 v ATL   100%    0% -    297.1 145048
-Emmett Johnson           RB  KC   patekxwater      -                  -        RB2   09-28    5 w4 @LV      26%    4% -     54.6 141903
-Jakobi Meyers            WR  JAX  you              -                  -        RWR3  09-28    7 w4 @CIN     79%   14% -    106.1 137274
-Jaylen Wright            RB  MIA  FREE             Out Foot           -        RB5   09-28    6 w4 @MIN      4%    0% yes   98.1 132734
-Matthew Golden           WR  GB   tommyrads        -                  -        RWR2  09-25   11 w4 @TB      83%   25% -    139.4 119308
-Michael Wilson           WR  ARI  patekxwater      -                  -        RWR1  09-28   14 w4 @NYG     91%   27% -    164.1 117972
-Kalif Raymond            WR  CHI  itsabust         -                  -        SWR3  09-28   10 w4 v NYJ    61%   23% -     93.8 116720
-New York Giants          DEF NYG  FREE             -                  -        -     -        8 w4 v ARI      -     - -     88.9 116560
-Austin Ekeler            RB  FA   FREE             -                  -        -     09-28    - -             -     - -        - 104416
-Baltimore Ravens         DEF BAL  you              -                  -        -     -       13 w4 v TEN      -     - -    105.2 104385
-Kyler Murray             QB  MIN  KevinDA          -                  -        QB1   09-28    6 w4 v MIA    40%    0% -    272.1 99376
-Zach Ertz                TE  PHI  FREE             -                  -        TE3   09-28   10 w4 v LAR     0%    2% -     31.0 95868
-Justice Hill             RB  BAL  FREE             -                  -        RB2   09-28   13 w4 v TEN    42%    4% -     74.7 93447
-J.J. McCarthy            QB  NYG  FREE             Out Coach's Decis~ -        QB2   09-28    8 w4 v ARI     0%    0% yes      - 92637
-Juwan Johnson            TE  NO   patekxwater      -                  -        TE1   09-28    8 w4 v ATL    68%   15% -    131.7 87798
-Pat Bryant               WR  DEN  KevinDA          -                  -        SWR3  09-28   10 w4 @SF      66%   10% -     91.7 87016
-Travis Homer             RB  PIT  FREE             -                  -        RB2   09-26    9 w4 @CLE      3%    0% -      6.2 82304
-Tyson Bagent             QB  CHI  FREE             -                  -        QB2   09-28   10 w4 v NYJ     7%    0% -     17.4 80532
-Raheim Sanders           RB  CLE  FREE             -                  -        RB2   09-28   11 w4 v PIT    33%   11% -     56.3 80288
-Jalon Daniels            QB  TB   FREE             -                  -        QB3   09-28   10 w4 v GB      2%    0% -     50.0 79922
-Geno Smith               QB  NYJ  FREE             -                  -        QB1   09-27   13 w4 @CHI    100%    0% -    231.7 79236
-Pittsburgh Steelers      DEF PIT  Hamrliks         -                  -        -     -        9 w4 @CLE       -     - -     97.6 78774
-Brian Robinson           RB  ATL  JFMarino         -                  -        RB2   09-25   11 w4 @NO      34%    3% -     57.6 77928
-Jacksonville Jaguars     DEF JAX  FREE             -                  -        -     -        7 w4 @CIN       -     - -     97.3 77886
-New Orleans Saints       DEF NO   FREE             -                  -        -     -        8 w4 v ATL      -     - -     81.9 70135
-Marcus Mariota           QB  WAS  FREE             -                  -        QB1   09-27    7 w4 v IND    48%    0% -     18.9 65652
-Chris Bell               WR  MIA  JakeSK           -                  -        LWR2  09-28    6 w4 @MIN     56%   12% -     74.8 65275
+Ollie Gordon             RB  MIA  FREE             Questionable Undi~ -        RB2   09-28    6 w4 @MIN     40%    4% -     95.0 9020592
+Kenyon Sadiq             TE  NYJ  tommyrads        -                  -        TE1   09-28   13 w4 @CHI     45%   15% -    101.5 2524653
+Braelon Allen            RB  NYJ  tommyrads        -                  -        RB2   09-28   13 w4 @CHI     41%    5% -     76.9 2253396
+Tyreek Hill              WR  FA   Hamrliks          Knee - ACL        -        -     09-28    - -             -     - -        - 1017056
+Alvin Kamara             RB  NO   Hamrliks         -                  -        RB2   09-28    8 w4 v ATL    19%    6% -     97.9 700768
+Konata Mumpfield         WR  LAR  FREE             -                  -        LWR3  09-28   11 w4 @PHI     58%   10% -     29.3 617805
+Keaton Mitchell          RB  LAC  jerem9604        -                  -        RB2   09-28    7 w4 @SEA     31%    5% -     74.5 581400
+Jordan Addison           WR  MIN  you              -                  -        RWR2  09-28    6 w4 v MIA    90%   24% -    103.6 574776
+Kirk Cousins             QB  LV   FREE             -                  -        QB1   09-28   13 w4 v KC    100%    0% -    280.2 506704
+Tyler Higbee             TE  LAR  FREE             -                  -        TE3   09-28   11 w4 @PHI     43%   12% -     22.6 499689
+Keenan Allen             WR  IND  FREE             -                  -        RWR2  09-28   13 w4 @WAS     64%   21% -     81.9 475736
+Las Vegas Raiders        DEF LV   FREE             -                  -        -     -       13 w4 v KC       -     - -     71.2 411852
+Darren Waller            TE  CAR  KevinDA          -                  -        TE1   09-28    5 w4 v DET    44%   12% -    105.4 389664
+Roman Wilson             WR  PIT  FREE             -                  -        SWR3  09-28    9 w4 @CLE     58%   17% -     61.3 371277
+Kalif Raymond            WR  CHI  itsabust         -                  -        SWR3  09-28   10 w4 v NYJ    61%   23% -     93.8 354400
+Sam Darnold              QB  SEA  BHier            -                  -        QB1   09-28   11 w4 v LAC    39%    0% -    254.7 311469
+Minnesota Vikings        DEF MIN  KevinDA          -                  -        -     -        6 w4 v MIA      -     - -    107.5 301820
+Baltimore Ravens         DEF BAL  you              -                  -        -     -       13 w4 v TEN      -     - -    105.2 293955
+Jaylen Wright            RB  MIA  FREE             Out Foot           -        RB5   09-28    6 w4 @MIN      4%    0% yes   98.1 282680
+Isaiah Davis             RB  NYJ  FREE             -                  -        RB3   09-22   13 w4 @CHI      0%    0% -     15.8 274500
+Malik Washington         WR  MIA  JFMarino         -                  -        SWR1  09-28    6 w4 @MIN     86%   28% -    126.6 263616
+Deshaun Watson           QB  CLE  FREE             -                  -        QB1   09-28   11 w4 v PIT    99%    0% -    122.5 230280
+Jakobi Meyers            WR  JAX  you              -                  -        RWR3  09-28    7 w4 @CIN     79%   14% -    106.1 225390
+Pittsburgh Steelers      DEF PIT  Hamrliks         -                  -        -     -        9 w4 @CLE       -     - -     97.6 209943
+Michael Wilson           WR  ARI  patekxwater      -                  -        RWR1  09-28   14 w4 @NYG     91%   27% -    164.1 190215
+Tyler Shough             QB  NO   KevinDA          -                  -        QB1   09-28    8 w4 v ATL   100%    0% -    297.1 175656
+Matthew Golden           WR  GB   tommyrads        -                  -        RWR2  09-25   11 w4 @TB      83%   25% -    139.4 169421
+Jalon Daniels            QB  TB   FREE             -                  -        QB3   09-28   10 w4 v GB      2%    0% -     50.0 165388
+Cleveland Browns         DEF CLE  FREE             -                  -        -     -       11 w4 v PIT      -     - -     87.5 156814
+Austin Ekeler            RB  FA   FREE             -                  -        -     09-28    - -             -     - -        - 155660
+Juwan Johnson            TE  NO   patekxwater      -                  -        TE1   09-28    8 w4 v ATL    68%   15% -    131.7 139064
+Kendre Miller            RB  NO   FREE             -                  -        RB3   09-28    8 w4 v ATL    17%    2% -      8.2 131726
+Brian Robinson           RB  ATL  JFMarino         -                  -        RB2   09-25   11 w4 @NO      34%    3% -     57.6 126288
+Chris Bell               WR  MIA  JakeSK           -                  -        LWR2  09-28    6 w4 @MIN     56%   12% -     74.8 123095
+Marcus Mariota           QB  WAS  FREE             -                  -        QB1   09-27    7 w4 v IND    48%    0% -     18.9 122508
+Pat Bryant               WR  DEN  KevinDA          -                  -        SWR3  09-28   10 w4 @SF      66%   10% -     91.7 118752
+J.J. McCarthy            QB  NYG  FREE             Out Coach's Decis~ -        QB2   09-28    8 w4 v ARI     0%    0% yes      - 113430
+Raheim Sanders           RB  CLE  FREE             -                  -        RB2   09-28   11 w4 v PIT    33%   11% -     56.3 111520
+Terrance Ferguson        TE  LAR  JakeSK           Questionable Ankle -        TE1   09-28   11 w4 @PHI     43%   11% -     83.7 108440
+Jacksonville Jaguars     DEF JAX  FREE             -                  -        -     -        7 w4 @CIN       -     - -     97.3 104736
+Skyy Moore               WR  GB   FREE             -                  -        SWR3  09-26   11 w4 @TB      31%    9% -      8.0 96848
+Kyler Murray             QB  MIN  KevinDA          -                  -        QB1   09-28    6 w4 v MIA    40%    0% -    272.1 90928
+Case Keenum              QB  CHI  FREE             -                  -        QB1   09-28   10 w4 v NYJ     0%    0% -        - 88574
+Harold Fannin            TE  CLE  you              -                  -        TE1   09-28   11 w4 v PIT    85%   22% -    132.0 83550
+Chicago Bears            DEF CHI  d0ddi            -                  -        -     -       10 w4 v NYJ      -     - -     91.3 81603
+MarShawn Lloyd           RB  GB   d0ddi            -                  -        RB1   09-25   11 w4 @TB      32%    5% -     96.5 79308
+AJ Barner                TE  SEA  BHier            -                  -        TE1   09-29   11 w4 v LAC    86%   13% -    101.1 72696

@@ -52,9 +52,10 @@ import java.util.TreeMap;
  * the week Chase averaged 15.2 a game to Nabers' 5.2 - Justin: "something is
  * wrong if you thought it would have even the slightest chance." He judges an
  * offer on what he can see, so {@link TradeScreens} reads every trade from his
- * side on draft value and on this season's points. The short list now needs a
- * trade fair to him on both; one that leaves him behind on both, or that no
- * accepted side in this league ever took as little on, is dropped; the rest are
+ * side on draft value and on this season's points, blended with draft value
+ * counted as the games of results this league's own trades reveal (about ten,
+ * 2026-09-29). The short list needs a trade fair to him on that; one that gives
+ * him less than nine accepted sides in ten ever took is dropped; the rest are
  * listed apart as long shots.
  * And the default pricing is Sleeper's weekly projections for the games left
  * (sleeper-remaining), because the season feed does not move on injuries - on it
@@ -865,9 +866,10 @@ public class TradeMarket {
         longShots.sort(best);
         out.append(String.format("%nTHE SHORT LIST - %d of the %d: good for BOTH sides on BOTH pricings, you gaining at least the%n"
                 + "noise floor (%.1f, ObjectiveStability's seed-to-seed spread) this season on each, AND fair to him on what he%n"
-                + "can see - he gets back at least the draft value and this season's points he gives (TradeScreens). Best first by%n"
-                + "the smaller of your two gains; 'trades/yr' is how often he has actually traded (TradePartners).%n",
-                shortList.size(), good.size(), tradeFloor));
+                + "can see - at least what he gives, with draft value counted as %s games of this season's pace (the weight this%n"
+                + "league's accepted trades reveal, TradeScreens). Best first by the smaller of your two gains; 'trades/yr' is how%n"
+                + "often he has actually traded (TradePartners).%n",
+                shortList.size(), good.size(), tradeFloor, TradeScreens.fmt(screens.k())));
         out.append(String.format("  %-28s %-28s %8s %8s %8s %10s %-16s %9s%n", "YOU GIVE", "YOU GET", "you", "you:" + alt, "him:" + alt,
                 "his view", "WITH", "trades/yr"));
         for(Short s : shortList.subList(0, Math.min(10, shortList.size()))){
@@ -876,11 +878,11 @@ public class TradeMarket {
                     tradesPerYear.getOrDefault(s.trade().withManager(), 0.0)));
         }
         if(shortList.isEmpty()){
-            out.append("  none. No trade that helps you on both pricings also looks fair to him on draft value and this season's points.\n");
+            out.append("  none. No trade that helps you on both pricings also looks fair to him on what he can see.\n");
         }
-        out.append(String.format("%nLONG SHOTS - %d more that pass both pricings and leave him ahead on ONE of the numbers he can see, with a%n"
-                + "precedent in this league (who is named). Not offers to lead with. %d more were dropped: behind on both of his%n"
-                + "numbers, or as lopsided as no accepted side here ever took.%n", longShots.size(), noChance));
+        out.append(String.format("%nLONG SHOTS - %d more that pass both pricings but give him less than he gives on what he can see, though%n"
+                + "at least one accepted side in ten here took as little (who is named). Not offers to lead with. %d more were%n"
+                + "dropped: fewer than one accepted side in ten here ever took that little.%n", longShots.size(), noChance));
         for(Short s : longShots.subList(0, Math.min(5, longShots.size()))){
             out.append(String.format("  %-28s %-28s %+8.1f %+8.1f  %s: %s%n", label(s.trade().give(), nameOf),
                     label(s.trade().get(), nameOf), s.season(), s.seasonAlt(), s.trade().withManager(), s.seen().verdict()));

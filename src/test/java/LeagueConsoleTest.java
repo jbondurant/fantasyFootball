@@ -884,10 +884,8 @@ public class LeagueConsoleTest {
                 assertTrue(Boolean.parseBoolean(screens.group(5)), "a SEND must be fair to him on draft value and this season's points");
             }
             if(tier.equals("ask")){
-                assertTrue(draft >= 1 || points >= 1,
-                        "a WORTH ASKING must leave him ahead on one number he can see: " + draft + "/" + points);
                 assertTrue(Integer.parseInt(screens.group(4)) > 0 || Boolean.parseBoolean(screens.group(5)),
-                        "and have a precedent in this league");
+                        "a WORTH ASKING must have a precedent in this league: " + draft + "/" + points);
             }
         }
         int send = 0, ask = 0, seen = 0;
