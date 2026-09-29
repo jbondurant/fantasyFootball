@@ -5,6 +5,8 @@ import com.google.gson.JsonParser;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * Sleeper's season projections. This is the only remaining feed that publishes
@@ -58,8 +60,28 @@ public class SleeperProjections {
      * Sleeper's own pts_half_ppr assumes 4 points per passing touchdown; rather
      * than patching that up afterwards the points are recomputed from the stat
      * line using the league's real settings.
+     *
+     * Defences are the exception the stat line cannot fix: the season feed's
+     * DEF row carries four categories (sacks, interceptions, fumble recoveries,
+     * blocked kicks) where the league pays for eight, so its number is about a
+     * quarter low for all 32 alike (TRAPS #138). Every defence is priced here
+     * instead from the sum of its eighteen weekly projections, whose rows are
+     * complete - see {@link #defenceSeasonPoints}. This is the one place the
+     * season feed is read for the tools, so the trade board, the wire and the
+     * outlook all get the same number.
      */
     public static HashMap<String, Double> parseTodaysWebPage() {
+        HashMap<String, Double> points = parseSeasonFeed();
+        points.putAll(defenceSeasonPoints());
+        return points;
+    }
+
+    /**
+     * The season feed exactly as served, defences at its stub. For auditing
+     * the feed itself (WeeklyFeedAudit); a tool pricing a player wants
+     * {@link #parseTodaysWebPage}.
+     */
+    static HashMap<String, Double> parseSeasonFeed() {
         LeagueScoringSettings scoringSettings = SleeperLeague.getSeriousLeague().league.leagueScoringSettings;
         HashMap<String, Double> playerSIDToScore = new HashMap<>();
 
@@ -94,11 +116,13 @@ public class SleeperProjections {
             if(stats == null){
                 continue;
             }
-            Player player = Player.getPlayerFromSIDV2(playerObject.get("player_id").getAsString());
+            String sleeperID = playerObject.get("player_id").getAsString();
+            Player player = Player.getPlayerFromSIDV2(sleeperID);
             if(player == null){
                 continue;
             }
-            scores.add(new Score(scoreStatLine(stats, scoringSettings), player));
+            Double weeklyDefence = defenceSeasonPoints().get(sleeperID);
+            scores.add(new Score(weeklyDefence != null ? weeklyDefence : scoreStatLine(stats, scoringSettings), player));
         }
         return scores;
     }
@@ -127,6 +151,55 @@ public class SleeperProjections {
         }
 
         return passing + rushing + receiving + twoPointConversions + turnovers;
+    }
+
+    /**
+     * A season's worth of weekly projections: seventeen games in eighteen
+     * weeks, one missing allowed. Fewer means the weekly feeds are not all
+     * published yet (early in a preseason), and a sum over half a season is
+     * not a season - the defence keeps the stub, and says so.
+     */
+    static final int DEFENCE_MIN_WEEKS = 16;
+
+    /**
+     * Each defence's season number as the sum of its weekly projections, for
+     * the defences projected in at least {@link #DEFENCE_MIN_WEEKS} weeks.
+     * {@code weekly} is id -> {points, weeks}, from {@link LeagueWeek#summed}.
+     */
+    static Map<String, Double> defencesFromWeeks(Map<String, double[]> weekly){
+        Map<String, Double> out = new TreeMap<>();
+        for(Map.Entry<String, double[]> e : weekly.entrySet()){
+            if(LeagueActuals.isDefence(e.getKey()) && e.getValue()[1] >= DEFENCE_MIN_WEEKS){
+                out.put(e.getKey(), e.getValue()[0]);
+            }
+        }
+        return out;
+    }
+
+    private static Map<String, Double> cachedDefences;
+
+    /**
+     * The defences' weekly-sum season numbers, read once per run: eighteen
+     * weekly feeds, finished weeks cached forever and the rest daily by
+     * LeagueWeek's policy. Unreadable feeds leave the stub in place and say
+     * so once, rather than stopping every tool that prices a roster.
+     */
+    static synchronized Map<String, Double> defenceSeasonPoints(){
+        if(cachedDefences == null){
+            try {
+                cachedDefences = defencesFromWeeks(LeagueWeek.summed(getSeason(), w -> true));
+                if(cachedDefences.isEmpty()){
+                    System.out.println("defences keep the season feed's four-category number: the weekly feeds for "
+                            + getSeason() + " do not yet project a season (TRAPS #138)");
+                }
+            }
+            catch(RuntimeException unreadable){
+                System.out.println("defences keep the season feed's four-category number: weekly feeds unreadable ("
+                        + unreadable.getMessage() + ")");
+                cachedDefences = Map.of();
+            }
+        }
+        return cachedDefences;
     }
 
     private static final String[] OFFENSIVE_STATS =

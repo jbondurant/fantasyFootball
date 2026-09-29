@@ -496,8 +496,12 @@ public class TradeFinder {
     }
 
     private static String getTodaysSleeperRosterWebPage(AAAConfiguration configuration){
-        return InOutUtilities.getTodaysWebPage(configuration.getRosterWebURL(),
-                configuration.getMyNameForLeague());
+        // the 20-minute roster rule, which this file was the last to join: a
+        // waiver clearing at noon was invisible here until midnight, and this is
+        // the DEFAULT mainClass, so a bare `./gradlew run` was the most likely
+        // way to read a roster that no longer existed
+        return InOutUtilities.getRecentWebPage(configuration.getRosterWebURL(),
+                configuration.getMyNameForLeague(), AAAConfiguration.rosterFreshnessMinutes());
     }
 
     private static ArrayList<JsonObject> getTodaysSleeperRosters(AAAConfiguration configuration) {

@@ -1,0 +1,79 @@
+WEEK 3 REACTION  season 2026  PARTIAL: Sleeper still says week 3; 311 men carry a scored line so far (a game may be in progress) and the rest have not played
+data: projections 2026-09-28, player metadata 2026-09-21; prior 2026-09-08 (the last daily snapshot before Sleeper's season start 2026-09-09)
+
+== THE RULE: what one week's evidence is worth, measured on the harvest ==
+POS     kappa  keeps after 3    weekly sd   a flip of the board at week 3 is right
+QB     12.1 g            20%       9.1 pts   58.4% (bar 8.5, noise, 438 flips)
+RB      5.9 g            34%       6.4 pts   56.5% (bar 6.3, REAL, 2096 flips)
+WR     10.8 g            22%       6.3 pts   58.0% (bar 3.7, REAL, 2528 flips)
+TE     10.1 g            23%       5.4 pts   58.1% (bar 10.4, noise, 396 flips)
+kappa is in games; 'keeps' is the share of a surprise the estimate keeps after 3 games;
+weekly sd is one man's own week-to-week scatter at that position's level this season (z is the surprise over it).
+seasons 13 (2013-2025), boards FFC ADP, outcomes Sleeper weekly under this league's scoring; InSeasonLearning's fit, rerun.
+band = 80% on his rest-of-season rate: the position's scale, empirical quantiles, chosen by RosBands' interval score at 3 games seen;
+its coverage on thirteen seasons is in data/ros-bands-<date>.txt (tight ends under-cover early).
+
+== DID SLEEPER MOVE: season projections 2026-09-08 -> 2026-09-28, rostered skill men ==
+6 of 194 moved by 3+ season points (1 rostered skill men have no row in the prior snapshot and are not read).
+   A.J. Brown             WR  NE   itsabust      -67.7   injury healthy -> IR (Ankle); news 09-24
+   Josh Jacobs            RB  GB   jerem9604     +47.7   na Personal; news 09-27
+   Demarcus Robinson      WR  SF   itsabust      +28.8   injury healthy -> IR (Ankle); news 09-26
+   Kaelon Black           RB  SF   Renteez       +27.9   news 09-28
+   Brock Bowers           TE  LV   jerem9604     -22.0   news 09-28
+   Ashton Jeanty          RB  LV   Hamrliks      +17.3   injury Questionable -> healthy; news 09-28
+The trade board and the wire price on these season numbers, so what did not move here the board has not seen.
+
+== MINE ==
+player                 pos team owner        prior/g  wk-pr wk-act   ppg(g)     z  keeps   new/g  80% band/g     ROS   SlprD  verdict                                Sleeper's own data says
+Derrick Henry          RB  BAL  justinb314      14.0   18.2   21.4  24.1(3)  +2.7    34%    17.4  13.9-22.0    +47.9    +0.0  SELL HIGH: the box score, not the man  news 09-28
+Brock Purdy            QB  SF   justinb314      21.4   25.9   39.3  33.3(3)  +2.3    20%    23.7  19.4-28.7    +33.1    +0.0  SELL HIGH: the box score, not the man  news 09-28
+Dalton Schultz         TE  HOU  justinb314       7.0    9.3    4.5  10.0(3)  +1.0    23%     7.7   5.1-11.9     +9.6    +0.0                                         news 09-27
+Bhayshul Tuten         RB  JAX  justinb314       9.3   10.5   16.0  12.8(3)  +0.9    34%    10.5   7.0-15.0    +16.5    +0.0                                         injury Questionable -> healthy; news 09-27
+Harold Fannin          TE  CLE  justinb314       8.4    7.6   20.6  10.5(3)  +0.7    23%     8.9   6.3-13.2     +6.7    +0.0                                         news 09-27
+Jakobi Meyers          WR  JAX  justinb314       8.1    6.8   15.9  10.1(3)  +0.6    22%     8.5   5.3-11.2     +6.2    +0.0                                         injury Questionable -> healthy; news 09-27
+Jordan Addison         WR  MIN  justinb314       8.3    7.7   17.5  10.3(2)  +0.4    16%     8.6   5.4-11.4     +4.3    +0.0                                         news 09-28
+Josh Downs             WR  IND  justinb314       8.1    9.0   10.2   8.5(3)  +0.1    22%     8.2   5.0-10.9     +1.4    +0.0                                         injury Questionable -> healthy; news 09-28
+Mike Evans             WR  SF   justinb314      11.0   10.7   10.9  10.6(3)  -0.1    22%    10.9   7.7-13.6     -1.4    +0.0  HURT                                   injury Questionable -> Out (Ribs); news 09-27
+Cam Skattebo           RB  NYG  justinb314      10.6   14.2   10.5  10.0(3)  -0.2    34%    10.4   6.9-14.9     -2.7    +0.0                                         news 09-27
+Bo Nix                 QB  DEN  justinb314      20.5   20.3   29.1  17.2(3)  -0.6    20%    19.8  15.5-24.8     -8.9    +0.0                                         news 09-28
+Rhamondre Stevenson    RB  NE   justinb314       9.1    9.5    5.3   6.5(3)  -0.7    34%     8.2   4.7-12.7    -12.4    +0.0                                         news 09-27
+Chris Rodriguez        RB  JAX  justinb314       7.4    4.5    9.7   4.4(3)  -0.8    34%     6.4   2.9-10.9    -13.8    +0.0                                         news 09-21
+Khalil Shakir          WR  BUF  justinb314       8.0    7.9    1.1   4.5(3)  -1.0    22%     7.2   4.0-9.9     -10.6    +0.0                                         injury Questionable -> healthy; news 09-27
+Malik Nabers           WR  NYG  justinb314      11.4   11.4    5.1   5.2(3)  -1.7    22%    10.1   6.9-12.8    -18.8    +0.0  HOLD: one bad week                     injury Questionable -> healthy; news 09-27
+
+== THEIRS, outside a normal week (|z| >= 1) ==
+player                 pos team owner        prior/g  wk-pr wk-act   ppg(g)     z  keeps   new/g  80% band/g     ROS   SlprD  verdict                                Sleeper's own data says
+Jaxon Smith-Njigba     WR  SEA  itsabust        13.8   18.6   30.4  30.2(3)  +4.5    22%    17.4  14.2-20.1    +49.6    +0.0  DON'T CHASE: a box score               news 09-27
+Jahmyr Gibbs           RB  DET  JakeSK          17.6   21.4   37.9  29.4(3)  +3.2    34%    21.6  18.1-26.1    +55.8    +0.0  DON'T CHASE: a box score               news 09-27
+Kenneth Walker         RB  KC   tommyrads       13.3   18.4   20.3  24.6(3)  +3.1    34%    17.1  13.6-21.6    +53.5    +0.0  DON'T CHASE: a box score               news 09-27
+Christian Watson       WR  GB   KevinDA         10.4   13.6   19.1  20.3(3)  +2.7    22%    12.5   9.3-15.2    +30.2    +0.0  DON'T CHASE: a box score               news 09-25
+Davante Adams          WR  LAR  JFMarino         9.5   11.8   17.2  18.9(3)  +2.6    22%    11.5   8.3-14.2    +28.7    +0.0  DON'T CHASE: a box score               news 09-28
+Drake Maye             QB  NE   Hamrliks        22.3   21.1    3.8   9.2(3)  -2.5    20%    19.7  15.4-24.7    -36.3    +0.0  BUY LOW: one bad week                  news 09-27
+Bryce Young            QB  CAR  itsabust        16.2   18.9   16.6  28.4(3)  +2.3    20%    18.6  14.3-23.6    +33.8    +0.0  DON'T CHASE: a box score               news 09-27
+Amon-Ra St. Brown      WR  DET  d0ddi           13.4   16.4    9.9  21.4(3)  +2.2    22%    15.1  11.9-17.8    +24.4    +0.0  DON'T CHASE: a box score               news 09-27
+Chuba Hubbard          RB  CAR  JFMarino         8.1   13.4   13.0  16.2(3)  +2.2    34%    10.8   7.3-15.3    +38.6    +0.0  DON'T CHASE: a box score               injury Questionable -> healthy; news 09-27
+Juwan Johnson          TE  NO   patekxwater      6.6    8.3   18.3  13.3(3)  +2.1    23%     8.2   5.6-12.4    +21.3    +0.0  DON'T CHASE: a box score               news 09-28
+D'Andre Swift          RB  CHI  patekxwater     11.1   12.2      -  20.7(2)  +2.1    25%    13.6   9.9-18.2    +33.8    +0.0  DON'T CHASE: a box score               injury Questionable -> healthy; news 09-26
+Chris Olave            WR  NO   JFMarino        11.5   15.0   15.2  19.0(3)  +2.1    22%    13.1   9.9-15.8    +22.9    +0.0  DON'T CHASE: a box score               news 09-28
+CeeDee Lamb            WR  DAL  JFMarino        13.1   14.4   16.7  20.3(3)  +2.0    22%    14.7  11.5-17.4    +21.9    +0.0  DON'T CHASE: a box score               news 09-28
+Brock Bowers           TE  LV   jerem9604       11.9   10.3   22.6  22.6(1)  +2.0     9%    12.9  10.2-17.3    +13.5   -22.0  DON'T CHASE: a box score               news 09-28
+Kenyon Sadiq           TE  NYJ  tommyrads        4.7    6.8   20.0  10.9(3)  +2.0    23%     6.1   3.6-10.4    +19.7    +0.0  DON'T CHASE: a box score               injury Questionable -> healthy; news 09-27
+Dontayvion Wicks       WR  PHI  d0ddi            3.4    7.6      -  12.1(2)  +2.0    16%     4.7   1.5-7.5     +19.0    +0.0  DON'T CHASE: a box score               news 09-27
+Travis Kelce           TE  KC   BHier            8.0    9.4   12.9  14.0(3)  +1.9    23%     9.4   6.8-13.6    +19.3    +0.0  DON'T CHASE: a box score               news 09-27
+Kyler Murray           QB  MIN  KevinDA         19.2   20.1   13.4   7.0(2)  -1.9    14%    17.5  13.2-22.6    -24.2    +0.0  BUY LOW: one bad week                  news 09-28
+Josh Allen             QB  BUF  JFMarino        24.4   26.8   18.0  34.1(3)  +1.8    20%    26.4  22.1-31.4    +26.9    +0.0  DON'T CHASE: a box score               news 09-27
+Kalif Raymond          WR  CHI  itsabust         1.4    4.9      -   9.5(2)  +1.8    16%     2.6  -0.6-5.4     +17.6    +0.0  DON'T CHASE: a box score               news 09-26
+George Kittle          TE  SF   itsabust         8.1   10.1   23.2  13.8(3)  +1.8    23%     9.4   6.9-13.7    +18.2    +0.0  DON'T CHASE: a box score               injury Questionable -> healthy; news 09-28
+Jalen Coker            WR  CAR  JakeSK           8.0   12.1    2.8  14.4(3)  +1.8    22%     9.4   6.2-12.1    +19.4    +0.0  HURT                                   injury healthy -> Out (Quadriceps); news 09-27
+De'Von Achane          RB  MIA  KevinDA         13.5   14.4    1.7   7.0(3)  -1.8    34%    11.3   7.8-15.8    -30.7    +0.0  HURT                                   injury healthy -> Out (Knee); news 09-27
+Saquon Barkley         RB  PHI  jerem9604       13.4   14.8      -   5.5(2)  -1.8    25%    11.4   7.8-16.1    -28.2    +0.0  BUY LOW: one bad week                  news 09-26
+Tyler Shough           QB  NO   KevinDA         18.5   21.5   30.8  27.8(3)  +1.8    20%    20.4  16.1-25.4    +25.7    +0.0  DON'T CHASE: a box score               news 09-28
+
+== THE WIRE: the box scores everybody will bid on (free, drafted at the prior, z >= 1) ==
+player                 pos team owner        prior/g  wk-pr wk-act   ppg(g)     z  keeps   new/g  80% band/g     ROS   SlprD  verdict                                Sleeper's own data says
+
+prior/g = season projection at the prior snapshot over 17 games; wk-pr/wk-act = this week, league-scored;
+ppg(g) = mean of his played weeks so far; z = (ppg - prior) over his weekly sd / sqrt(g); keeps = the share the rule keeps;
+new/g = the posterior; 80% band/g = RosBands' interval on his rate over the weeks left; ROS = (new - prior) x weeks left (byes not subtracted); SlprD = his season projection today minus the prior snapshot.
+ASSUMED, NOT MEASURED: that rivals price the box score. Nothing in this repo measures what a manager will pay this week.
+MEASURED: what the evidence keeps, and whether Sleeper's season number moved. Defences are not read.

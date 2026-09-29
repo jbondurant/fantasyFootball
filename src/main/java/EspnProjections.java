@@ -63,7 +63,7 @@ public class EspnProjections {
         }
     }
 
-    private static final Map<Integer, Position> POSITIONS = Map.of(
+    static final Map<Integer, Position> POSITIONS = Map.of(
             1, Position.QB, 2, Position.RB, 3, Position.WR, 4, Position.TE);
 
     /** ESPN stat id -> the repo's Sleeper stat key. */

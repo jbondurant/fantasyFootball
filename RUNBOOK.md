@@ -1,4 +1,315 @@
-# Draft night — Tuesday 2026-09-01, 20:45
+# In season — the weekly loop
+
+The draft is done. This is what the rest of 2026 looks like. Two moments matter
+each week and they are not the same moment: **Tuesday morning** decides claims
+and trades, **Sunday morning** decides the lineup.
+
+## Tuesday morning, one command
+
+    ./weekly.sh
+
+Runs NewsCheck, TuesdaySwap, TradeMarket and LeagueConsole in that order, one
+after another, and stops at the first that fails. No agent is needed for any of
+it: the trade search, the wire and the news are all code. Then open the page.
+
+## Regenerate BOTH, or the numbers are from two different worlds
+
+    ./gradlew run -Pmain=TuesdaySwap
+    ./gradlew run -Pmain=LeagueConsole
+
+In that order, back to back. The projection feed is refetched daily and so,
+in season, is the player metadata (injury tags, practice reports, depth charts;
+weekly out of season), so two artifacts written hours apart can
+disagree completely and both be right. Each one now prints the snapshot it was
+built from:
+
+    data: projections 2026-09-07, player metadata 2026-09-07
+
+If those lines differ, the reports are not comparable and `check` will say so by
+skipping the ladder comparison rather than pretending. This drift cost three
+false alarms in one day; running them together is the whole fix.
+
+Then open `data/console-<season>-w<week>.html`. Everything below is on that page.
+
+## Sunday, ninety minutes before kickoff — the lineup
+
+The **This week** tab. It says ten-for-ten optimal ON THE PROJECTIONS, which is
+not the same as optimal, and the Status column is where the difference lives.
+
+Every doubtful starter carries a **break-even**: he is worth starting only while
+his chance of playing times his projection beats the healthy man behind him, so
+the bar is one over the other. It is HIGHEST when your bench is close - a
+healthy 9.5 behind a questionable 11.2 needs 85% before the questionable man is
+the right start.
+
+The page cannot know the actual probability. That arrives in the inactive report
+about ninety minutes before kickoff, which is when this decision is made and not
+before. Read the bar, read the report, decide.
+
+Replacements are **exclusive** - one bench man cannot cover four starters - so a
+starter may read "nobody healthy left". That is information, not an omission: if
+enough of them sit you are starting somebody hurt whatever the arithmetic says,
+and it is better to know at ten than at one.
+
+## Tuesday — the wire
+
+    ./gradlew run -Pmain=WaiverLog
+
+First, what the league actually did: every claim this season with the bids by
+manager, the winner and the clearing price, and each manager's FAAB against
+Sleeper's own counter. The league runs DAILY waivers (noon Eastern, one-day
+clear), so a man dropped Sunday night clears Tuesday noon and a claim can
+settle any day - "Tuesday" is when most of them do, not the only time.
+
+Then the news, before the projections have heard it:
+
+    ./gradlew run -Pmain=NewsCheck [-Pplayers="Ollie Gordon II,De'Von Achane"]
+
+Your roster, any men you name, and Sleeper's trending adds of the last 48 hours
+marked FREE or held: injury tag, practice report, depth chart, snap and target
+share over the last three games, bye and next opponent, whether the tag lets him
+sit in an IR slot here, and what Sleeper projects for his games left. A free man
+near the top of the trending list whose LEFT has not moved is the managers
+reading news the projections have not caught up with - on 28 September, Ollie
+Gordon II a day after De'Von Achane's ACL. The wire tab below cannot see him
+until Sleeper moves; this is where you can.
+
+The **The wire** tab. Your FAAB is read off the rosters feed, not typed, and
+each free agent's worth is computed: the roster with him and without the man he
+displaces, valued and subtracted. It is priced on Sleeper's weekly projections
+for the games left (`sleeper-remaining`), the same as `TuesdaySwap` and the
+trades, so a man Sleeper has ruled out is not on it - on 28 September the season
+feed had "add Jaxson Dart (IR, season over)" second. A worth is in points over
+the games left, *from here* is its regular-season share, and the bid is on that.
+
+The bid on each row is into the WEDNESDAY run - the first after the games,
+where three dollars in four are spent and a claim clears at a median of $3
+against $0 any other day (`FaabDemand`). A claim on a man dropped mid-week
+clears into the cheaper market; the page's bid is then generous by a dollar
+or two, which is the right side to err on.
+
+Two things to respect:
+
+- a row tagged **inside the noise** is under the objective's own seed-to-seed
+  spread. It is the yardstick moving, not the roster improving. DO NOTHING is
+  the answer far more often than it feels like it should be. The spread is
+  measured on the pricing it judges - on the games left, not the season feed's
+  6.8 - and the page and the report both name the report they read. It shrinks
+  as the games left do, so a month-old measurement is on the cautious side;
+  refresh it with `./gradlew run -Pmain=ObjectiveStability
+  -Pprojections=sleeper-remaining` (TRAPS #151).
+- a drop that **empties a slot** is not a drop. The roster is full, so cutting
+  your only defence means buying one back, and those rows are priced as the
+  whole plan - both adds and both drops - or not shown.
+
+## Tuesday — the trades
+
+The **Trades** tab. Its filter defaults to *send + worth asking*; switch it to *only
+the ones he thanks you for* to see SEND alone, which is where to start. Each row's
+*how it reads* is the trade from HIS side on draft value and this season's points
+(`TradeScreens`): a SEND is fair to him on both, and a trade no manager here ever
+accepted anything as lopsided as is a NO however good it looks for either roster.
+Trades on the page are priced on Sleeper's weekly projections for the games left.
+Read the columns right to left:
+
+1. **He trades** - deals per season from the league's own log. A manager at
+   0.20/yr will not answer your best offer; KevinDA (3.60) and BHier (3.25) are
+   the market. This outranks everything else on the page.
+2. **vs elsewhere** - his gain minus what the partner he would actually pair
+   with gives him. Negative means he has something better waiting.
+3. **Your full**, with its own error bar. A trade tagged **noise** has a gain
+   that goes negative on another seed; the model cannot tell it from zero.
+4. **He gains, simple** - the number he can check himself in ten seconds, and
+   the one to put in the message.
+
+Then say the quiet part in the message. If a man you are sending is Questionable,
+lead with it - he will see it anyway, and volunteering costs nothing. This is a
+keeper league with the same eleven managers every year, so being somebody people
+want to deal with compounds into next season in a way one extra point does not.
+
+The terminal version prices every trade TWO ways:
+
+    ./gradlew run -Pmain=TradeMarket
+
+It opens with **every roster's score** - the season points its starters are
+expected to score, 17 x the best legal lineup from whoever is healthy in a drawn
+week, the bench worth the weeks it covers - on Sleeper's weekly projections for
+the games left (`sleeper-remaining`, which drops a man Sleeper has ruled out) and
+on the rest-of-season model, with your rank on each. Then every mutually good
+trade carries both pricings and **his view**: the trade from HIS side on the two
+numbers he can check, draft value and this season's points, blended with
+draft value counted as the games of results this league's own trades reveal
+(about ten, 2026-09-29) (`TradeScreens`).
+**THE SHORT LIST** names only trades good for both sides on both pricings, you
+clearing the 6.8 noise floor on each, AND fair to him on both of his numbers.
+Long shots - trades some manager here once accepted something as lopsided as -
+are listed apart, with who took them; trades nobody here ever took are dropped.
+
+**Retracted, 2026-09-28:** the 27 September report put Nabers + Stevenson for
+Ja'Marr Chase first on the short list. It was priced on the season feed, which
+had not heard that Jaxson Dart was out, and on the games left it costs you 3.8;
+and it asked Renteez to give up a man averaging 15.2 a game for two averaging
+5.2 and 6.5, which the old straight-line draft check called "even". TRAPS #150.
+
+To check one trade by hand - both screens, both pricings, and the other
+manager's lineup before and after:
+
+    ./gradlew run -Pmain=TradeScreens -Psend="Malik Nabers,Rhamondre Stevenson" -Preceive="Ja'Marr Chase"
+    ./gradlew run -Pmain=TradeCheck -Pplayers="Malik Nabers,Ja'Marr Chase"   # points by week, ADP, every projection, and Sleeper's weekly sums by date
+
+## What never to trade
+
+The **What you can sell** tab names your two 2027 keepers and what their surplus
+is worth, and the trades tab now carries a **keeper cost** column so the charge
+is visible rather than buried inside the full-model gain.
+
+As of 2026-09-14, priced off THIS season's draft: **Tuten (r11, +58.0)** and **Bo
+Nix (r15, +32.8)**. These move with the projection feed - Tuten read +33.8 a week
+earlier - and the page's *What you can sell* tab is the current answer; the KEEP
+marks there are the legal pair the trades are priced on, not the two biggest
+numbers. Henry and Nabers **cannot be kept at any price** - first two rounds.
+Skattebo is NOT a keeper: he costs a third-rounder and falls 12.3 short, so he is
+tradeable, and an earlier version of this page said the opposite because it priced
+2027 off the 2025 board.
+
+Two things that are easy to get wrong and are handled:
+
+- the cost of trading a keeper is the drop in your best PAIR, not the man's own
+  surplus. Losing Tuten costs 30.8, not his 33.8, because the next man backfills.
+- you keep two but start ONE quarterback, so the pair may not be two QBs. Without
+  Tuten the fallback is Nix plus the Ravens, not Nix plus Purdy.
+
+## After the games
+
+    ./gradlew run -Pmain=SeasonLedger
+
+Appends the finished week and judges the season against a bar frozen before week
+one. It refuses to call anything FINAL before the regular season ends, which is
+the point of freezing it.
+
+## After the games — who to sell, who to keep, who to ask for
+
+    ./gradlew run -Pmain=WeekReaction
+
+Every rostered skill man's week against his preseason prior, and what the
+evidence keeps of it. One game moves the honest estimate by a measured share of
+the surprise (`InSeasonLearning`'s kappa, refitted each run and printed at the
+top), and the rest is noise: after one week nearly every big box score is a
+SELL HIGH if somebody will pay for it, and nearly every bad one is a HOLD on my
+side or a BUY LOW on theirs. The one exception the data supports is printed on
+the row: when Sleeper RAISED his season projection in the same window, the
+projection's authors saw a role change and not a box score, and he is a KEEP or
+a PAY UP.
+
+Read the header before the rows. It counts how many rostered men's season
+projections moved since the season started; when the answer is none, the trade
+board and the wire have not seen the week, and this report is the only thing
+that has. What a rival will PAY is assumed, not measured — nothing in this repo
+can measure it, and the footer says so every run.
+
+Runs partial on Monday (men whose game is unplayed are listed, not scored) and
+complete on Tuesday once Sleeper moves to the next week. Writes
+`data/week-reaction-<season>-w<week>.txt`.
+
+    ./gradlew run -Pmain=WeeklyFeedAudit
+
+The same question of the WEEKLY feed, which the lineup tab reads: whether the
+eighteen weekly numbers sum to the season number, whether week 2's projection
+leans on week 1's result (a slope, by position), and whether any live week's
+projection moved between two cached days. Keep running it daily: no read of a
+week predates the games two weeks before it, so from week 3 on each week's
+reads straddle the previous week's games and the days of news between, and the
+lean row stays the measurement that isolates the box score.
+
+    ./gradlew run -Pmain=AdpSnapshot
+
+Keeps the projection archive alive in season: today's number from every shop,
+each under a name that says what it now serves - `sleeper` (the season feed,
+which does not move on results), `sleeper-ros`, `espn-ros`, `cbs-ros` (the
+rest of the season, current week included) and `borischen-week`. Each feed is
+recorded on its own and a rerun fills in only the ones missing; a feed that
+failed is printed as FAILED and the run exits non-zero. Tuesday and Friday at
+least - the launchd job cannot read ~/Documents, so nothing runs it for you,
+and it sat dead for three weeks once (TRAPS #147).
+
+    ./gradlew run -Pmain=ProjectionShootout
+
+When a roster the model ranked low outscores the league (JFMarino, week 1):
+which of the four archived sources, or Sleeper's own pre-game week feed, was
+closest to what each man scored, paired against Sleeper on the same men with a
+standard error, and how each source would have ranked the twelve rosters. One
+week separates nothing at the roster level (twelve managers, standard error
+about 0.3); the rows accumulate across the season and that is the test.
+
+    ./gradlew run -Pmain=MarketProjection -Pweek=N
+
+Before setting the lineup, Saturday night or Sunday morning: Sleeper's weekly
+projection with every stat Kalshi prices replaced by the market's, your roster
+both ways and the best lineup under each. Over 2025 the market's version was
+closer to what happened by about 1% (QB passing and touchdowns most, receptions
+not at all), so use it on close calls; it changes a starter only when Sleeper
+has two men nearly tied. Reading Kalshi's prices needs no account (BETTING.md).
+
+## From week 7 — am I still in it
+
+    ./gradlew run -Pmain=SeasonOutlook
+
+Six of twelve make the playoffs. This plays out the real remaining schedule with
+each team's weekly score drawn around its best legal ten, at a spread the tool
+MEASURES every run - the within-team standard deviation over 840 real team-weeks in
+five completed seasons: 23.7 on 2026-09-14. An earlier version typed 24.9, called
+it measured, and had the pooled number (TRAPS #132). Played weeks bank both
+results - the head-to-head and the median game - and the tiebreak starts from
+real points.
+
+It is the number your own rule fires on: *win 2026, but if not after like
+halfway, sell a bit for keepers, not in a drastic way.* Before halfway it will
+refuse to say anything decisive, on purpose - a pivot called in week 3 off a 20%
+sample is not that rule. Past halfway it commits: above 55% buy, below 20% sell
+a bit **with the round 1-3 men staying**, and in between it says undecided
+rather than picking.
+
+What it leaves out - byes, injuries arriving, waivers, trades - all make the
+season MORE uncertain and push every number toward 50%. So a team it calls dead
+is dead by a margin that survives the omissions; a team it calls alive may only
+be alive.
+
+## Once a week, or when something looks wrong
+
+    ./gradlew run -Pmain=KeeperDriftCheck  # QB keeper values, priced on THIS league's board
+    ./gradlew run -Pmain=ProjectionDrift   # do the season projections still move?
+    ./gradlew run -Pmain=TradePartners     # who actually trades, from the log
+    ./gradlew run -Pmain=TradeStability    # are the board's numbers bigger than its noise
+    ./gradlew check                        # read the TESTS: line in the LOG, not the exit code
+
+**Keeper surplus for a QUARTERBACK is overstated, and `KeeperDriftCheck` says by how
+much.** The surplus subtracts the best man still available at your keeper pick,
+and that availability comes from Sleeper's national ADP - while `QbMarketGap`
+measured this league letting quarterbacks fall in all five seasons, about twelve
+picks. So better QBs are really on the board than the curve believes, and the
+replacement is stronger than assumed. On the 2026 roster it halved Bo Nix
+(+32.8 to +15.2) and erased Brock Purdy (+19.7 to 0.0). Trust a keeper that
+survives both columns; Tuten does, at 33.8 either way.
+
+**Run `ProjectionDrift` once real games are played.** Keeper surplus, every trade
+valuation and every free agent's worth come from the SEASON projection feed. That
+feed demonstrably moves - thirty of 585 players changed between 24 August and 7
+September, Josh Jacobs by 105.9 - but it went silent for the five days before
+week 1. If it is still silent AFTER games have been played, it is frozen at
+preseason values and every in-season number here is answering a question about
+August. That is the moment to blend actuals in, and the tool exists so the moment
+gets noticed instead of assumed away.
+
+`check` takes about half an hour. Read `check-wire.log` for `BUILD SUCCESSFUL` and
+the line `TESTS: N run, F failed, S skipped` - a shell wrapper's exit status can be
+the echo's rather than gradle's, which has hidden a red build here more than once.
+And **0 skipped** matters as much as 0 failed: a test that never runs is not
+evidence of anything, which is why every skipped test is logged by name (the task
+logged neither count until 2026-09-14, so this instruction could not be followed).
+
+---
+
+# Draft night — Tuesday 2026-09-01, 20:45  *(done; kept for the reasoning)*
 
 Slot 7, 16 rounds. Keepers Tuten (RB, r12) and Purdy (QB, r13) occupy rounds 12
 and 13, so you make **fourteen picks**:

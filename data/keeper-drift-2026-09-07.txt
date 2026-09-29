@@ -1,0 +1,26 @@
+KEEPER DRIFT CHECK  2026-09-07  (QB drift 11.7 picks)
+
+Keeper surplus subtracts the best man still available at the keeper's pick, and that
+availability comes from Sleeper's national ADP. QbMarketGap measured this league letting
+quarterbacks fall in all five seasons, so at a late pick the QBs really on the board are
+BETTER than the curve thinks and a QB keeper's surplus is overstated.
+
+MAN                    POS   ROUND  AS PRICED  DRIFT-AWARE     CHANGE
+Bhayshul Tuten         RB      r11       33.8         33.8       +0.0
+Bo Nix                 QB      r15       32.8         15.2      -17.6
+Brock Purdy            QB      r12       19.7          0.0      -19.7
+Baltimore Ravens       DEF     r14        3.0          3.0       +0.0
+Josh Downs             WR       r8        0.0          0.0       +0.0
+Jordan Addison         WR       r7        0.0          0.0       +0.0
+Jakobi Meyers          WR      r10        0.0          0.0       +0.0
+Mike Evans             WR       r4        0.0          0.0       +0.0
+Cam Skattebo           RB       r3        0.0          0.0       +0.0
+Khalil Shakir          WR      r11        0.0          0.0       +0.0
+Rhamondre Stevenson    RB       r5        0.0          0.0       +0.0
+Chris Rodriguez        RB       r9        0.0          0.0       +0.0
+Harold Fannin          TE       r6        0.0          0.0       +0.0
+Tre' Harris            WR      r16        0.0          0.0       +0.0
+
+Only quarterbacks move: the gap measured is QB-specific, with the board-wide keeper shift
+already removed. A keeper that survives both columns is safe; one that does not was
+resting on a draft board belonging to other leagues.

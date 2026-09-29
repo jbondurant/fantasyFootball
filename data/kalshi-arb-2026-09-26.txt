@@ -1,0 +1,8 @@
+KALSHI NFL STATIC ARBITRAGE  2026-09-26T16:14:58  (live read)
+5852 open contracts in 25 series; 5554 with a two-sided quote; median bid-ask spread 0.02
+series with open markets: KXNFLESCALATORREC 81  KXNFLESCALATORRECYDS 81  KXNFLESCALATORRSHYDS 45  KXNFLGAME 62  KXNFLLADDERREC 81  KXNFLLADDERRECYDS 81  KXNFLLADDERRSHYDS 45  KXNFLPASSATT 90  KXNFLPASSCOMP 90  KXNFLPASSINT 90  KXNFLPASSTDS 119  KXNFLPASSYDS 242  KXNFLREC 1025  KXNFLRECYDS 1168  KXNFLRRYDS 102  KXNFLRSHYDS 658  KXNFLSPREAD 412  KXNFLTD 667  KXNFLTEAMTOTAL 409  KXNFLTOTAL 304  
+checked: 898 player-stat threshold sets, 414 ladders/escalators against their strips, 30 quarterbacks against receivers
+
+1 opportunities that pay more in every outcome than they cost after fees:
+  ladder cheap                       26SEP27CINPIT  edge $0.002 per unit (pays >= 0.500, costs 0.483 + fees 0.015), size 4338
+    DK Metcalf: 9+ receptions: buy KXNFLLADDERREC-26SEP27CINPIT-PITDMETCALF4, sell the threshold strip

@@ -35,6 +35,80 @@ public class ObjectiveStability {
         }
     }
 
+    /**
+     * A floor as a report measured it: the worst spread, the day, the scenario
+     * count and the projection source it was measured on.
+     *
+     * THE FLOOR BELONGS TO THE FEED IT WAS MEASURED ON (2026-09-29). The wire
+     * moved to the games left, and the plan was to carry the 6.8 across by
+     * the weeks those totals span - 6.8 x 15/18 = 5.7 in week 4 - on the
+     * argument that the objective is proportional to the totals (true, and
+     * WireUnitsTest proves it) and that games-left totals are that fraction of
+     * season totals (false). Measured before it shipped, on the same roster,
+     * seeds and scenario count: 11.3 on the games left, and the roster's value
+     * 1717 against 1752 - Sleeper's weekly lines for the weeks to come add up
+     * to about what its season number does. So a pricing reads the floor
+     * measured on its own source, never a conversion of another's (TRAPS #151).
+     */
+    record Floor(double points, String date, int scenarios, String source) {}
+
+    /** The report's name suffix for a source: none for the season feed the original floor was measured on. */
+    static String suffix(String source){
+        return source.equals("sleeper") ? "" : "-" + source.replace(':', '_').replace(',', '_');
+    }
+
+    /** A report's floor, or null if the text is not a stability report. */
+    static Floor parse(String text, String date, String source){
+        java.util.regex.Matcher worst = java.util.regex.Pattern.compile(
+                "worst seed-to-seed spread of a marginal: ([\\d.]+) points").matcher(text);
+        java.util.regex.Matcher count = java.util.regex.Pattern.compile("\\((\\d+) scenarios,").matcher(text);
+        if(!worst.find() || !count.find()){
+            return null;
+        }
+        return new Floor(Double.parseDouble(worst.group(1)), date, Integer.parseInt(count.group(1)), source);
+    }
+
+    /** The newest floor measured on {@code source} in {@code directory}, or null if it has never been measured there. */
+    static Floor measured(Path directory, String source){
+        java.util.regex.Pattern name = java.util.regex.Pattern.compile(
+                "objective-stability-(\\d{4}-\\d{2}-\\d{2})" + java.util.regex.Pattern.quote(suffix(source)) + "\\.txt");
+        try(var files = Files.list(directory)){
+            Path newest = files.filter(p -> name.matcher(p.getFileName().toString()).matches())
+                    .max(java.util.Comparator.comparing(p -> p.getFileName().toString())).orElse(null);
+            if(newest == null){
+                return null;
+            }
+            java.util.regex.Matcher m = name.matcher(newest.getFileName().toString());
+            m.matches();
+            return parse(Files.readString(newest), m.group(1), source);
+        }
+        catch(java.io.IOException unreadable){
+            return null;
+        }
+    }
+
+    /**
+     * The floor a pricing on {@code source} is judged against: -PswapFloor if
+     * given, else the one measured on that source. A source never measured
+     * falls back to the season feed's, loudly, since that is a yardstick from
+     * another population.
+     */
+    static Floor floorFor(String source){
+        String given = System.getProperty("swapFloor");
+        if(given != null){
+            return new Floor(Double.parseDouble(given), "given", -1, "-PswapFloor");
+        }
+        Floor own = measured(Path.of("data"), source);
+        if(own != null){
+            return own;
+        }
+        Floor season = measured(Path.of("data"), "sleeper");
+        System.out.println("NO NOISE FLOOR MEASURED ON " + source + ": judging it against the season feed's"
+                + (season == null ? " 6.8" : " " + season.points()) + ". Measure it:"
+                + " ./gradlew run -Pmain=ObjectiveStability -Pprojections=" + source);
+        return season != null ? season : new Floor(6.8, "2026-09-04", 480, "sleeper");
+    }
+
     /** Largest seed-to-seed spread over the lines. */
     static double worstSpread(List<Line> lines){
         double worst = 0;
@@ -54,7 +128,10 @@ public class ObjectiveStability {
         long[] seedValues = {424_242L, 7L, 99L, 2026L, 31_337L, 8_675_309L};
         AAAConfiguration configuration = AAAConfiguration.getInstance();
         String user = System.getProperty("me", configuration.getMyID());
-        Map<String, Double> points = ProjectionSources.resolve(System.getProperty("projections", "sleeper"));
+        // the floor the wire applies was measured on "sleeper"; another source is
+        // written under its own name, so it can never become the newest "the floor"
+        String source = System.getProperty("projections", "sleeper");
+        Map<String, Double> points = ProjectionSources.resolve(source);
 
         List<String> roster = new ArrayList<>();
         Map<String, String> nameOf = new HashMap<>();
@@ -81,8 +158,9 @@ public class ObjectiveStability {
         lines.sort((a, b) -> Double.compare(b.marginals()[0], a.marginals()[0]));
 
         StringBuilder out = new StringBuilder();
-        out.append(String.format("OBJECTIVE STABILITY  %s  (%d scenarios, %d seeds, roster of %d projected men the rules let %s keep)%n",
-                LocalDate.now(), scenarios, seeds, roster.size(), configuration.getUserIDToDisplayName().getOrDefault(user, user)));
+        out.append(String.format("OBJECTIVE STABILITY  %s  (%d scenarios, %d seeds, roster of %d projected men the rules let %s keep)%s%n",
+                LocalDate.now(), scenarios, seeds, roster.size(), configuration.getUserIDToDisplayName().getOrDefault(user, user),
+                source.equals("sleeper") ? "" : "  priced on " + source));
         out.append("Each column is one seed of WeeklyStarterValue; MARGINAL = roster with the man minus roster without him.\n\n");
         out.append(String.format("%-28s", "roster total"));
         for(double t : totals){ out.append(String.format(" %8.1f", t)); }
@@ -94,7 +172,7 @@ public class ObjectiveStability {
         }
         out.append(String.format("%nworst seed-to-seed spread of a marginal: %.1f points - two men closer than this are not separated by the yardstick%n", worstSpread(lines)));
         System.out.print(out);
-        Path target = Path.of("data", "objective-stability-" + LocalDate.now() + ".txt");
+        Path target = Path.of("data", "objective-stability-" + LocalDate.now() + suffix(source) + ".txt");
         Files.writeString(target, out.toString(), StandardCharsets.UTF_8);
         System.out.println("written to " + target);
     }
