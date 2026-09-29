@@ -1,4 +1,4 @@
-WAIVER LOG  season 2026 through week 3  (118 claims, 73 contests; the live week read today)
+WAIVER LOG  season 2026 through week 3  (131 claims, 85 contests; the live week read today)
 daily waivers at 9:00, 1-day clear, FAAB budget 100. Bids in order, winner marked; 'no room' = the roster would have been over-full, not outbid.
 
 == cleared 09-02 ==
@@ -106,17 +106,35 @@ daily waivers at 9:00, 1-day clear, FAAB budget 100. Bids in order, winner marke
 == cleared 09-24 ==
 12:08  GB D/ST                  1 bid:  d0ddi $1 WON  dropping DET D/ST
 
+== cleared 09-25 ==
+12:08  Samaje Perine            1 bid:  d0ddi $0 WON  dropping Tre' Harris
+12:08  Drew Lock                1 bid:  BHier $0
+12:08  AJ Dillon                1 bid:  Renteez $0 WON  dropping Michael Mayer
+
+== cleared 09-26 ==
+12:07  Ted Hurst                1 bid:  d0ddi $0 WON  dropping DeeJay Dallas
+12:07  Demond Claiborne         1 bid:  d0ddi $0 (no room)
+12:07  Sam Darnold              1 bid:  BHier $7
+
+== cleared 09-27 ==
+12:08  Malachi Fields           1 bid:  d0ddi $0 (no room)
+12:08  Zach Ertz                1 bid:  d0ddi $0 (no room)
+12:08  Tyreek Hill              1 bid:  Hamrliks $4 WON
+12:08  Sam Darnold              2 bids:  BHier $5 WON  BHier $5  dropping Jauan Jennings
+12:08  Justin Herbert           1 bid:  patekxwater $0 WON
+12:08  CHI D/ST                 1 bid:  d0ddi $0 WON
+
 == FAAB, 100 each ==
 manager         used log says    left    won outbid  no room
 itsabust          39       39      61      8      3        6
 KevinDA           23       23      77     11      8        7
-patekxwater       21       21      79      4      0        0
-Hamrliks          13       13      87      5      8        5
+patekxwater       21       21      79      5      0        0
+Hamrliks          17       17      83      6      8        5
+BHier              7        7      93      5      6        0
 JakeSK             6        6      94      3      4        0
-Renteez            5        5      95      7      4        0
+Renteez            5        5      95      8      4        0
 jerem9604          5        5      95      2      1        0
-d0ddi              3        3      97      7     10        3
-BHier              2        2      98      4      3        0
+d0ddi              3        3      97     10     10        6
 JFMarino           2        2      98      1      0        1
 justinb314         0        0     100      1      0        0   <- you
 tommyrads          0        0     100      1      1        0
