@@ -595,18 +595,23 @@ public class LeagueConsole {
         TradeMarket.Side theirSide = withKeepers
                 ? TradeMarket.lossAverseOnKeepers(seasonOnly, surplus, everyPosition)
                 : TradeMarket.scoring(seasonOnly);
+        // each rival by his own season, as TradeMarket prices him (TitleOdds): the
+        // search uses these; the rival-to-rival market below keeps the plain Side
+        TitleOdds.Stakes stakes = TitleOdds.stakes(configuration, TitleOdds.SIMS);
+        Map<String, TradeMarket.Side> rivalSide = TradeMarket.rivalSides(seasonOnly, surplus, everyPosition, stakes, withKeepers);
 
         List<TradeMarket.Trade> everySwap = new ArrayList<>();
         for(Map.Entry<String, List<String>> entry : rosters.entrySet()){
             if(entry.getKey().equals(me)){
                 continue;
             }
+            TradeMarket.Side his = rivalSide.getOrDefault(entry.getKey(), theirSide);
             everySwap.addAll(TradeMarket.between(me, entry.getKey(), rosters.get(me), entry.getValue(),
-                    mySide, theirSide, pool));
+                    mySide, his, pool));
             // and the uneven shapes, which is where consolidation lives: he holds
             // seven receivers and five backs at positions every rival has spare
             everySwap.addAll(TradeMarket.unbalanced(me, entry.getKey(), rosters.get(me),
-                    entry.getValue(), mySide, theirSide, pool, tradePoints));
+                    entry.getValue(), mySide, his, pool, tradePoints));
         }
         List<TradeMarket.Trade> mutuallyGood = TradeMarket.mutual(everySwap);
         double myBase = seasonOnly.applyAsDouble(rosters.get(me));
@@ -871,6 +876,22 @@ public class LeagueConsole {
                     : !noise && visiblyGoodForHim && screens.fairToHim() ? "send"
                     : aStoryHeCanTell ? "ask" : "no";
             boolean fair = tier.equals("send");
+            // HIS SIDE'S PARTS, shipped so the page's test can check them: what a point
+            // is worth to him, how much he feels the future, and the keeper value the
+            // men he receives add to his best two (TradeMarket.rivalSide)
+            double hisWeight = stakes.weight().getOrDefault(trade.withManager(), 1.0);
+            double hisFuture = 1 - stakes.playoffs().getOrDefault(trade.withManager(), 0.0);
+            List<String> hisKeptBack = new ArrayList<>(hisRoster);
+            hisKeptBack.removeAll(trade.hisOut());
+            double hisKeeperIn = Math.max(0, TradeMarket.keeperValue(hisAfter, surplus, everyPosition)
+                    - TradeMarket.keeperValue(hisKeptBack, surplus, everyPosition));
+            // and what it does to the title, for the rows the page offers (TitleOdds)
+            String reads = screens.verdict();
+            if(!tier.equals("no")){
+                TitleOdds.Delta[] title = stakes.swap(me, after, trade.withManager(), hisAfter);
+                reads += String.format(" | title odds %+.1fpp you, %+.1fpp him (%s)", 100 * title[0].change(),
+                        100 * title[1].change(), stakes.state(trade.withManager()));
+            }
             // WHAT THE TRADE COSTS YOU NEXT MARCH, shown rather than buried.
             //
             // Justin: "where is the keeper value". It was nowhere - charged
@@ -896,12 +917,13 @@ public class LeagueConsole {
                             + "\"hisBest\":%s,\"hisBestNaive\":%s,\"hisEdge\":%s,\"hisPartner\":%s,"
                             + "\"askPrice\":%s,\"overAsk\":%s,\"fair\":%b,\"hisRate\":%s,\"hisTrades\":%d,\"hisSeasons\":%d,"
                             + "\"low\":%s,\"high\":%s,\"noise\":%b,\"thins\":%s,\"tier\":%s,\"keeperCost\":%s,"
-                            + "\"hisDraft\":%s,\"hisPoints\":%s,\"precedents\":%d,\"fairToHim\":%b}",
+                            + "\"hisDraft\":%s,\"hisPoints\":%s,\"precedents\":%d,\"fairToHim\":%b,"
+                            + "\"hisWeight\":%s,\"hisFuture\":%s,\"hisKeeperIn\":%s}",
                     quote(label(trade.give(), nameOf)), quote(label(trade.get(), nameOf)),
                     quote(trade.withManager()), num(trade.myGain()), num(trade.theirGain()),
                     num(thisSeason), num(hisKeeper), TradeMarket.asksForAKeeper(hisKeeper),
                     num(simple), hole,
-                    num(optics.mine()), num(optics.theirs()), quote(screens.verdict()), optics.menEachWay(),
+                    num(optics.mine()), num(optics.theirs()), quote(reads), optics.menEachWay(),
                     reachOf.containsKey(trade) ? num(TradeMarket.reach(reachOf.get(trade))) : "null",
                     reachOf.containsKey(trade) ? chainJson(reachOf.get(trade), nameOf) : "null",
                     num(himSimple), num(himSeason), himHole, num(hisBest), num(hisBestNaive), num(hisEdge),
@@ -909,7 +931,8 @@ public class LeagueConsole {
                     num(askPrice), num(trade.theirGain() - askPrice), fair,
                     num(hisRate), record[0], record[1], num(low), num(high), noise,
                     thins == null ? "null" : quote(thins), quote(tier), num(keeperCost),
-                    ratioJson(screens.draftRatio()), ratioJson(screens.pointsRatio()), screens.precedents(), screens.fairToHim()));
+                    ratioJson(screens.draftRatio()), ratioJson(screens.pointsRatio()), screens.precedents(), screens.fairToHim(),
+                    num(hisWeight), num(hisFuture), num(hisKeeperIn)));
             if(fair){
                 fairTrades++;
             }

@@ -597,20 +597,30 @@ public class LeagueConsoleTest {
                         + "\"hisKeeper\":-?[\\d.]+,\"hisKeeperTag\":(?:true|false),"
                         + "\"simple\":(-?[\\d.]+),\"hole\":(true|false).*?"
                         + "\"himSimple\":(-?[\\d.]+),\"himSeason\":(-?[\\d.]+),"
-                        + "\"himHole\":(true|false)").matcher(page);
+                        + "\"himHole\":(true|false)"
+                        + "(?:.*?\"hisWeight\":(-?[\\d.]+),\"hisFuture\":(-?[\\d.]+),\"hisKeeperIn\":(-?[\\d.]+))?").matcher(page);
         int seen = 0;
         while(row.find()){
             double him = Double.parseDouble(row.group(2));
             double himSeason = Double.parseDouble(row.group(7));
+            // since 2026-10-03 a rival is priced by his own season (TradeMarket.rivalSide):
+            // his season gain times what a point is worth to him, less any keeper he gives
+            // up, plus (1 - his playoff odds) of the keeper value he receives. Pages
+            // before that weighed every rival at 1 and credited no incoming keeper.
+            double weight = row.group(9) == null ? 1 : Double.parseDouble(row.group(9));
+            double future = row.group(10) == null ? 0 : Double.parseDouble(row.group(10));
+            double keeperIn = row.group(11) == null ? 0 : Double.parseDouble(row.group(11));
+            // the page prints two decimals, so a weight off by 0.005 moves the product by that much of his season
+            double tolerance = 0.05 + 0.006 * (Math.abs(himSeason) + keeperIn);
             if(keepersOn){
-                assertTrue(him <= himSeason + 0.02,
-                        "his full gain " + him + " exceeds his 2026 gain " + himSeason
-                                + ", but loss aversion on keepers can only subtract - the"
-                                + " asymmetry is applied backwards");
+                assertTrue(him <= weight * himSeason + future * keeperIn + tolerance,
+                        "his full gain " + him + " exceeds his weighted 2026 gain " + weight * himSeason
+                                + " plus the keeper value he receives " + future * keeperIn
+                                + ", but a keeper he gives up can only subtract - the asymmetry is applied backwards");
             }
             else {
-                assertEquals(himSeason, him, 0.02,
-                        "with keepers off his two numbers are the same computation");
+                assertEquals(weight * himSeason, him, tolerance,
+                        "with keepers off his gain is his weighted 2026 gain and nothing else");
             }
             seen++;
         }

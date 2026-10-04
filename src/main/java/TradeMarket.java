@@ -421,6 +421,44 @@ public class TradeMarket {
     }
 
     /**
+     * EACH RIVAL BY HIS OWN SEASON (2026-10-03). In a keeper league a manager who
+     * is out of it sells this season for next, and a contender does the reverse;
+     * one Side for all eleven priced them all as if they were in the same race.
+     * Now a rival's season gain is weighted by what a point is worth to HIM -
+     * TitleOdds' change in his title odds per point of weekly mean, over the
+     * league average (about 1.7 for a contender, near 0 for a team out of it) -
+     * and a keeper he receives counts for (1 - his playoff odds) of its value: a
+     * contender does not feel it (Justin's loss-aversion rule, unchanged for him),
+     * a team out of it does. A keeper he gives up still costs him all of it.
+     */
+    static Side rivalSide(java.util.function.ToDoubleFunction<List<String>> season, Map<String, Double> surplus,
+                          Map<String, Position> positionOf, double weight, double future){
+        return (before, out, in) -> {
+            List<String> after = swap(before, out, in);
+            double seasonGain = season.applyAsDouble(after) - season.applyAsDouble(before);
+            List<String> keptBack = new ArrayList<>(before);
+            keptBack.removeAll(out);
+            double kept = keeperValue(keptBack, surplus, positionOf);
+            double keeperLoss = keeperValue(before, surplus, positionOf) - kept;
+            double keeperGain = Math.max(0, keeperValue(after, surplus, positionOf) - kept);
+            return weight * seasonGain - keeperLoss + future * keeperGain;
+        };
+    }
+
+    /** Every rival's Side from one TitleOdds simulation; without keepers, his season gain alone, weighted. */
+    static Map<String, Side> rivalSides(java.util.function.ToDoubleFunction<List<String>> season, Map<String, Double> surplus,
+                                        Map<String, Position> positionOf, TitleOdds.Stakes stakes, boolean withKeepers){
+        Map<String, Side> out = new HashMap<>();
+        for(String m : stakes.league().managers()){
+            double weight = stakes.weight().getOrDefault(m, 1.0);
+            double future = 1 - stakes.playoffs().getOrDefault(m, 0.0);
+            out.put(m, withKeepers ? rivalSide(season, surplus, positionOf, weight, future)
+                    : (before, outMen, in) -> weight * (season.applyAsDouble(swap(before, outMen, in)) - season.applyAsDouble(before)));
+        }
+        return out;
+    }
+
+    /**
      * Every size-balanced swap between two rosters, each side priced BY ITS OWN
      * LIGHTS - and each side's lights are a property of the TRADE, not just of
      * the roster it ends with, because loss aversion cannot be written as a
@@ -774,15 +812,30 @@ public class TradeMarket {
             tradesPerYear.put(record.manager(), record.rate());
         }
         TradeScreens.Context screens = TradeScreens.load(configuration);
+        // THE SEASON EACH MANAGER IS IN (TitleOdds): title odds, and what a point is worth to each
+        TitleOdds.Stakes stakes = TitleOdds.stakes(configuration, TitleOdds.SIMS);
+        Map<String, Side> rivalSide = rivalSides(season, surplus, everyPosition, stakes, withKeepers);
+        out.append(String.format("THE SEASON EACH RIVAL IS IN (TitleOdds, %d seasons from week %d). 'weight' is what a point of season%n"
+                + "value is worth to him against the league average; a rival's gain below is his season gain times it, less any%n"
+                + "keeper he gives up, plus (1 - his playoff odds) of any keeper he receives.%n", TitleOdds.SIMS, stakes.league().thisWeek()));
+        out.append(String.format("  %-16s %8s %7s %7s  %s%n", "manager", "playoffs", "title", "weight", "state"));
+        List<String> byTitle = new ArrayList<>(stakes.league().managers());
+        byTitle.sort(Comparator.comparingDouble((String m) -> -stakes.title(m)));
+        for(String m : byTitle){
+            out.append(String.format("  %-16s %7.1f%% %6.1f%% %7.2f  %s%s%n", m, 100 * stakes.playoffs().get(m), 100 * stakes.title(m),
+                    stakes.weight().get(m), stakes.state(m), m.equals(me) ? "   <- you" : ""));
+        }
+        out.append('\n');
 
         List<Trade> all = new ArrayList<>();
         for(Map.Entry<String, List<String>> entry : rosters.entrySet()){
             if(entry.getKey().equals(me)){
                 continue;
             }
-            all.addAll(between(me, entry.getKey(), rosters.get(me), entry.getValue(), mySide, theirSide, pool));
+            Side his = rivalSide.getOrDefault(entry.getKey(), theirSide);
+            all.addAll(between(me, entry.getKey(), rosters.get(me), entry.getValue(), mySide, his, pool));
             all.addAll(unbalanced(me, entry.getKey(), rosters.get(me), entry.getValue(),
-                    mySide, theirSide, pool, points));
+                    mySide, his, pool, points));
         }
         List<Trade> mutuallyGood = mutual(all);
         java.util.function.ToDoubleFunction<Trade> seasonGain = trade ->
@@ -800,9 +853,14 @@ public class TradeMarket {
                         mutuallyGood.size() - good.size()));
 
         out.append(String.format("'his view' is the trade from HIS side on the two numbers he can check (TradeScreens): what he gets back%n"
-                + "of the draft value and of this season's points he gives, '-' where he gives none.%n"));
-        out.append(String.format("%-28s %-28s %7s %7s %7s %8s %9s %9s %11s %10s   %s%n",
-                "YOU GIVE", "YOU GET", "you", "him", "season", "SIMPLE", "you:" + alt, "him:" + alt, "ADP g/g", "his view", "WITH / HOW IT READS"));
+                + "of the draft value and of this season's points he gives, '-' where he gives none. 'title' is the change in%n"
+                + "your title odds and his, in percentage points (TitleOdds, the same %d seasons before and after).%n", TitleOdds.SIMS));
+        java.util.function.Function<Trade, TitleOdds.Delta[]> titleOf = trade -> stakes.swap(me,
+                swap(rosters.get(me), trade.give(), trade.get()), trade.withManager(),
+                swap(rosters.get(trade.withManager()), trade.hisOut(), trade.give()));
+        out.append(String.format("%-28s %-28s %7s %7s %7s %8s %9s %9s %11s %10s %11s   %s%n",
+                "YOU GIVE", "YOU GET", "you", "him", "season", "SIMPLE", "you:" + alt, "him:" + alt, "ADP g/g", "his view", "title y/h",
+                "WITH / HOW IT READS"));
         for(Trade trade : good.subList(0, Math.min(top, good.size()))){
             // the same trade priced the OTHER way, so a deal that only works
             // because of keepers - or only in spite of them - shows itself
@@ -826,10 +884,12 @@ public class TradeMarket {
             verdict += other[0] > 0 && other[1] > 0 ? "  holds on " + alt
                     : other[0] <= 0 ? "  LOSES FOR YOU on " + alt : "  he loses on " + alt;
             TradeScreens.Screens seen = screens.of(trade);
-            out.append(String.format("%-28s %-28s %+7.1f %+7.1f %+7.1f %+8.1f %+9.1f %+9.1f %5.0f/%-5.0f %10s   %s - %s%n",
+            TitleOdds.Delta[] title = titleOf.apply(trade);
+            out.append(String.format("%-28s %-28s %+7.1f %+7.1f %+7.1f %+8.1f %+9.1f %+9.1f %5.0f/%-5.0f %10s %+5.1f/%+5.1f   %s - %s%n",
                     label(trade.give(), nameOf), label(trade.get(), nameOf),
                     trade.myGain(), trade.theirGain(), seasonOnly, simple, other[0], other[1],
-                    optics.mine(), optics.theirs(), seen.ratios(), verdict, seen.verdict()));
+                    optics.mine(), optics.theirs(), seen.ratios(), 100 * title[0].change(), 100 * title[1].change(),
+                    verdict, seen.verdict()));
         }
         if(good.isEmpty()){
             out.append("Nothing. Every swap that helps you costs the other man more than it gives him,\n"
@@ -839,7 +899,7 @@ public class TradeMarket {
         // THE SHORT LIST: what to actually send - good for both on both pricings,
         // AND fair to him on what he can see. Until 2026-09-28 the last clause was
         // missing, and the list's top seven were all Ja'Marr Chase from Renteez.
-        record Short(Trade trade, double season, double seasonAlt, double hisAlt, TradeScreens.Screens seen){}
+        record Short(Trade trade, double season, double seasonAlt, double hisAlt, TradeScreens.Screens seen, TitleOdds.Delta[] title){}
         List<Short> shortList = new ArrayList<>();
         List<Short> longShots = new ArrayList<>();
         int noChance = 0;
@@ -849,7 +909,7 @@ public class TradeMarket {
             double[] other = onOther(trade, rosters, me, altValue, scoreAlt);
             if(seasonOnly >= tradeFloor && other[0] >= tradeFloor && trade.theirGain() > 0 && other[1] > 0){
                 TradeScreens.Screens seen = screens.of(trade);
-                Short s = new Short(trade, seasonOnly, other[0], other[1], seen);
+                Short s = new Short(trade, seasonOnly, other[0], other[1], seen, seen.worthAsking() ? titleOf.apply(trade) : null);
                 if(seen.fairToHim()){
                     shortList.add(s);
                 }
@@ -861,20 +921,22 @@ public class TradeMarket {
                 }
             }
         }
-        Comparator<Short> best = Comparator.comparingDouble((Short s) -> -Math.min(s.season(), s.seasonAlt()));
+        // best first by what it does to YOUR TITLE ODDS, the thing the season is for
+        Comparator<Short> best = Comparator.comparingDouble((Short s) -> -s.title()[0].change());
         shortList.sort(best);
         longShots.sort(best);
         out.append(String.format("%nTHE SHORT LIST - %d of the %d: good for BOTH sides on BOTH pricings, you gaining at least the%n"
                 + "noise floor (%.1f, ObjectiveStability's seed-to-seed spread) this season on each, AND fair to him on what he%n"
                 + "can see - at least what he gives, with draft value counted as %s games of this season's pace (the weight this%n"
-                + "league's accepted trades reveal, TradeScreens). Best first by the smaller of your two gains; 'trades/yr' is how%n"
-                + "often he has actually traded (TradePartners).%n",
+                + "league's accepted trades reveal, TradeScreens). Best first by the change in your title odds ('title', in%n"
+                + "percentage points, +- its standard error); 'trades/yr' is how often he has actually traded (TradePartners).%n",
                 shortList.size(), good.size(), tradeFloor, TradeScreens.fmt(screens.k())));
-        out.append(String.format("  %-28s %-28s %8s %8s %8s %10s %-16s %9s%n", "YOU GIVE", "YOU GET", "you", "you:" + alt, "him:" + alt,
-                "his view", "WITH", "trades/yr"));
+        out.append(String.format("  %-28s %-28s %8s %8s %8s %13s %10s %-16s %9s%n", "YOU GIVE", "YOU GET", "you", "you:" + alt, "him:" + alt,
+                "title", "his view", "WITH", "trades/yr"));
         for(Short s : shortList.subList(0, Math.min(10, shortList.size()))){
-            out.append(String.format("  %-28s %-28s %+8.1f %+8.1f %+8.1f %10s %-16s %9.2f%n", label(s.trade().give(), nameOf),
-                    label(s.trade().get(), nameOf), s.season(), s.seasonAlt(), s.hisAlt(), s.seen().ratios(), s.trade().withManager(),
+            out.append(String.format("  %-28s %-28s %+8.1f %+8.1f %+8.1f %+6.1f+-%-4.1f %10s %-16s %9.2f%n", label(s.trade().give(), nameOf),
+                    label(s.trade().get(), nameOf), s.season(), s.seasonAlt(), s.hisAlt(), 100 * s.title()[0].change(),
+                    100 * s.title()[0].se(), s.seen().ratios(), s.trade().withManager(),
                     tradesPerYear.getOrDefault(s.trade().withManager(), 0.0)));
         }
         if(shortList.isEmpty()){
@@ -884,8 +946,9 @@ public class TradeMarket {
                 + "at least one accepted side in ten here took as little (who is named). Not offers to lead with. %d more were%n"
                 + "dropped: fewer than one accepted side in ten here ever took that little.%n", longShots.size(), noChance));
         for(Short s : longShots.subList(0, Math.min(5, longShots.size()))){
-            out.append(String.format("  %-28s %-28s %+8.1f %+8.1f  %s: %s%n", label(s.trade().give(), nameOf),
-                    label(s.trade().get(), nameOf), s.season(), s.seasonAlt(), s.trade().withManager(), s.seen().verdict()));
+            out.append(String.format("  %-28s %-28s %+8.1f %+8.1f  title %+5.1f+-%.1f  %s (%s): %s%n", label(s.trade().give(), nameOf),
+                    label(s.trade().get(), nameOf), s.season(), s.seasonAlt(), 100 * s.title()[0].change(), 100 * s.title()[0].se(),
+                    s.trade().withManager(), stakes.state(s.trade().withManager()), s.seen().verdict()));
         }
 
         // WHAT A PIECE IS ACTUALLY WORTH: the supply behind it

@@ -8,8 +8,15 @@ and trades, **Sunday morning** decides the lineup.
 
     ./weekly.sh
 
-Runs NewsCheck, TuesdaySwap, TradeMarket and LeagueConsole in that order, one
-after another, and stops at the first that fails. No agent is needed for any of
+Runs NewsCheck, TitleOdds, FaabRivals, TuesdaySwap, TradeMarket and
+LeagueConsole in that order, one after another, and stops at the first that
+fails. Since 2026-10-03 the wire, the trades and the page all say what each
+move does to your TITLE ODDS (TitleOdds: the rest of the season and the
+bracket played out on each week's projections), rivals are priced by the
+season they are in (a point is worth little to a team out of it, which is
+where sell-for-keepers trades come from), FaabRivals shows who else a waiver
+target helps and how much FAAB each has left, and NewsCheck's PLAYS column is
+how often a man with that injury status has played (PlayProbability). No agent is needed for any of
 it: the trade search, the wire and the news are all code. Then open the page.
 
 ## Regenerate BOTH, or the numbers are from two different worlds
@@ -32,6 +39,19 @@ false alarms in one day; running them together is the whole fix.
 Then open `data/console-<season>-w<week>.html`. Everything below is on that page.
 
 ## Sunday, ninety minutes before kickoff — the lineup
+
+    ./gradlew run -Pmain=WinProbability
+
+The lineup that wins the week, which is not always the one that scores most:
+every legal one-man change of the best lineup by projection, scored by
+expected wins (beat your opponent + beat the league median) on the same 20,000
+drawn weeks, each man drawn from what men projected like him actually scored.
+It names your lineup as set too. A change is worth making only when it beats
+the best by more than twice its standard error.
+
+For a doubtful starter, NewsCheck's PLAYS column is the base rate behind the
+break-even: 82% of fantasy-relevant Questionable men played 2018-2025 - 96%
+after a full Friday practice, 59% after none - and 2% of Doubtful ones.
 
 The **This week** tab. It says ten-for-ten optimal ON THE PROJECTIONS, which is
 not the same as optimal, and the Status column is where the difference lives.

@@ -274,7 +274,9 @@ tasks.register('run', JavaExec) {
      // TradeScreens: one trade to put on both screens - the men you send and the men you receive
      'send', 'receive',
      // TuesdaySwap: men you are moving to an IR slot; the spot they free is priced as an add with no drop
-     'ir'].each { knob ->
+     'ir',
+     // FaabRivals: free agents per position to read the room for
+     'faabTargets'].each { knob ->
         if (project.hasProperty(knob)) {
             systemProperty knob, project.property(knob)
         }

@@ -321,10 +321,12 @@ public class NewsCheck {
         out.append("SNAP and TGT are his share of his team's offensive snaps and targets over its last three games,\n"
                 + "a game he missed counting as zero. LEFT is Sleeper's weekly projections summed over the games he\n"
                 + "has left (sleeper-remaining) - the number that moves last; '-' is a man projected for none.\n"
-                + "NEWS is the day Sleeper last had news on him.\n");
-        String header = String.format(ROW, "", "POS", "TEAM", "HELD BY", "STATUS", "PRACTICE", "DEPTH", "NEWS", "BYE",
+                + "NEWS is the day Sleeper last had news on him. PLAYS is how often a man listed with his status played,\n"
+                + "2018-2025 (PlayProbability; Sleeper's feed carries no practice line, so this is the status base rate).\n");
+        String header = String.format(ROW, "", "POS", "TEAM", "HELD BY", "STATUS", "PLAYS", "DEPTH", "NEWS", "BYE",
                 "NEXT", "SNAP", "TGT", "IR", "LEFT", "ADDS");
-        Context context = new Context(db, ownerOf, reserve, me, rule, left, games, season, week, now, weeks, trending);
+        Context context = new Context(db, ownerOf, reserve, me, rule, left, games, season, week, now, weeks, trending,
+                PlayProbability.rates());
         section(out, "YOUR ROSTER", header, mine, context);
         if(!asked.isEmpty() || !unknown.isEmpty()){
             section(out, "NAMED", header, asked, context);
@@ -345,7 +347,7 @@ public class NewsCheck {
     /** Everything a row reads, gathered once. */
     record Context(JsonObject db, Map<String, String> ownerOf, Set<String> reserve, String me, ReserveRule rule,
                    Map<String, Double> left, List<NflverseGames.Game> games, String season, int week,
-                   LocalDateTime now, List<Map<String, WeekLine>> weeks, Map<String, Integer> trending) {}
+                   LocalDateTime now, List<Map<String, WeekLine>> weeks, Map<String, Integer> trending, Map<String, Double> plays) {}
 
     static void section(StringBuilder out, String title, String header, List<String> ids, Context c){
         out.append("\n").append(title).append("\n").append(header);
@@ -374,7 +376,7 @@ public class NewsCheck {
                     clip(fullName(p).isEmpty() ? id : fullName(p), 24), or(ScreenData.text(p, "position")),
                     team == null ? "FA" : team, clip(held, 16),
                     clip(status == null ? "-" : status + (part == null ? "" : " " + part), 18),
-                    clip(or(ScreenData.text(p, "practice_participation")), 8),
+                    clip(PlayProbability.label(status, c.plays()), 8),
                     depthPosition == null ? "-" : depthPosition + (depthOrder == null ? "" : depthOrder),
                     newsDay, bye == null ? "-" : bye.toString(), or(next),
                     pct(usage.snapShare()), pct(usage.targetShare()),

@@ -440,15 +440,31 @@ public class TuesdaySwap {
         // drop empties a slot is priced at what refilling it costs, and it is
         // flagged, because "+3.6" and "-1.6 once you field a defence again" are
         // not the same recommendation.
-        out.append(String.format("%-22s %-4s -> drop %-22s %9s %9s %9s%n", "ADD", "POS", "",
-                units.gamesLeft() ? "left" : "17wk", "from here", "alt here"));
+        // WHAT EACH MOVE DOES TO THE TITLE (TitleOdds): the rows are ranked on points,
+        // and the title column says when in the season those points arrive. The men
+        // off this search's roster (IR slots, -Pir) come back in the title roster,
+        // because a man on IR now is projected back when he is.
+        TitleOdds.Stakes stakes = TitleOdds.stakes(configuration, TitleOdds.SIMS);
+        List<String> away = new ArrayList<>();
+        for(Map.Entry<String, String> entry : ownerOf.entrySet()){
+            if(entry.getValue().equals(me) && !roster.contains(entry.getKey())){
+                away.add(entry.getKey());
+            }
+        }
+        out.append(String.format("%-22s %-4s -> drop %-22s %9s %9s %9s %8s%n", "ADD", "POS", "",
+                units.gamesLeft() ? "left" : "17wk", "from here", "alt here", "title"));
         for(Priced row : priced.subList(0, Math.min(8, priced.size()))){
             Swap swap = row.swap();
-            out.append(String.format("%-22s %-4s -> drop %-22s %+9.1f %+9.1f %+9.1f%s%s%n", swap.addName(),
+            List<String> titleRoster = planAfter(roster, row);
+            titleRoster.addAll(away);
+            out.append(String.format("%-22s %-4s -> drop %-22s %+9.1f %+9.1f %+9.1f %+7.2f%s%s%n", swap.addName(),
                     swap.addPosition(), swap.dropName(), row.worth(), units.fromHere(row.worth()),
-                    altUnits.fromHere(altWorth.get(row)), row.hole() ? "   <- and refill the slot" : "",
+                    altUnits.fromHere(altWorth.get(row)), 100 * stakes.one(me, titleRoster).change(),
+                    row.hole() ? "   <- and refill the slot" : "",
                     altWorth.get(row) < 0 && row.worth() > 0 ? "   <- a loss on " + altSource : ""));
         }
+        out.append(String.format("title is the change in your title odds in percentage points (TitleOdds, %d seasons, the same draws%n"
+                + "before and after); your odds now are %.1f%%.%n", TitleOdds.SIMS, 100 * stakes.title(me)));
         out.append(String.format("alt here is the same move priced on %s and put in from-here points too, so the two columns%n"
                 + "read in one unit; ros is the rest-of-season model that has seen the results (RosModel),%n"
                 + "sleeper-remaining Sleeper's weekly projections for the games left, which drop a man ruled out.%n", altSource));
@@ -466,14 +482,17 @@ public class TuesdaySwap {
             }
             List<Map.Entry<String, Double>> open = openSpot(roster, candidates, ids -> value.of(ids));
             out.append(String.format("OPEN SPOT - with %s on IR, each free agent added with NO drop:%n", String.join(", ", named)));
-            out.append(String.format("%-22s %-4s %9s %9s %9s%n", "ADD", "POS", units.gamesLeft() ? "left" : "17wk", "from here", "alt here"));
+            out.append(String.format("%-22s %-4s %9s %9s %9s %8s%n", "ADD", "POS", units.gamesLeft() ? "left" : "17wk", "from here",
+                    "alt here", "title"));
             for(Map.Entry<String, Double> e : open.subList(0, Math.min(8, open.size()))){
                 List<String> with = new ArrayList<>(roster);
                 with.add(e.getKey());
                 double altGain = alt.of(with) - altBase;
-                out.append(String.format("%-22s %-4s %+9.1f %+9.1f %+9.1f%s%n", nameOf.get(e.getKey()), positionOf.get(e.getKey()),
+                List<String> titleRoster = new ArrayList<>(with);
+                titleRoster.addAll(away);
+                out.append(String.format("%-22s %-4s %+9.1f %+9.1f %+9.1f %+7.2f%s%n", nameOf.get(e.getKey()), positionOf.get(e.getKey()),
                         e.getValue(), units.fromHere(e.getValue()), altUnits.fromHere(altGain),
-                        e.getValue() < floor ? "   <- inside the floor" : ""));
+                        100 * stakes.one(me, titleRoster).change(), e.getValue() < floor ? "   <- inside the floor" : ""));
             }
             out.append(String.format("A rental until %s is activated, when somebody must be dropped - read the swap table above for who.%n%n",
                     String.join(", ", named)));
