@@ -107,4 +107,15 @@ public class TuesdaySwapTest {
         org.junit.jupiter.api.Assertions.assertEquals(7.0, open.get(0).getValue(), 1e-9, "nobody leaves, so the whole man is the gain");
         org.junit.jupiter.api.Assertions.assertEquals(3.0, open.get(1).getValue(), 1e-9);
     }
+
+    /** The man to drop is the one the roster misses least. */
+    @Test
+    public void theDropLadderIsCheapestFirst(){
+        java.util.Map<String, Double> worth = java.util.Map.of("star", 20.0, "bench", 1.0, "mid", 6.0);
+        java.util.List<java.util.Map.Entry<String, Double>> ladder = TuesdaySwap.dropLadder(java.util.List.of("star", "bench", "mid"),
+                ids -> ids.stream().mapToDouble(worth::get).sum());
+        org.junit.jupiter.api.Assertions.assertEquals("bench", ladder.get(0).getKey());
+        org.junit.jupiter.api.Assertions.assertEquals(1.0, ladder.get(0).getValue(), 1e-9);
+        org.junit.jupiter.api.Assertions.assertEquals("star", ladder.get(2).getKey());
+    }
 }

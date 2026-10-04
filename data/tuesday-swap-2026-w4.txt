@@ -23,6 +23,27 @@ alt here is the same move priced on ros and put in from-here points too, so the 
 read in one unit; ros is the rest-of-season model that has seen the results (RosModel),
 sleeper-remaining Sleeper's weekly projections for the games left, which drop a man ruled out.
 
+MUST ACTIVATE MIKE EVANS: he is Questionable, which an IR slot here does not take, so Sleeper blocks every move
+until he is back on the roster - and that takes a drop. With him active, what each man costs you:
+   drop                          left from here    title
+   Tre' Harris                   -1.9      -1.4   +0.00
+   Chris Rodriguez               -2.2      -1.6   +0.00
+   Jordan Addison                -2.8      -2.1   -0.11
+   Baltimore Ravens              -3.2      -2.4   -9.75
+   Dalton Schultz                -4.2      -3.1   -0.63
+   Khalil Shakir                 -4.7      -3.5   -0.10
+   Jakobi Meyers                 -8.7      -6.3   -0.22
+   Bo Nix                       -12.9      -9.4   -0.97
+   Harold Fannin                -21.1     -15.4   -3.15
+   Josh Downs                   -27.8     -20.4   -1.81
+   Malik Nabers                 -35.5     -26.0   -3.37
+   Rhamondre Stevenson          -52.9     -38.7   -3.58
+   Bhayshul Tuten               -71.1     -52.0   -6.08
+   Cam Skattebo                 -79.0     -57.8   -7.52
+   Brock Purdy                  -84.5     -61.8   -8.70
+   Derrick Henry               -138.1    -101.2  -11.58
+The top row is the cheapest man to lose. Activating him and dropping that man is one move in Sleeper.
+
 EVERY DROP FOR PHILADELPHIA EAGLES - the same claim against each man you hold:
    drop Baltimore Ravens            +0.8
    drop Chris Rodriguez             -2.4

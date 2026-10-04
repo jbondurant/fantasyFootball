@@ -302,6 +302,19 @@ public class TuesdaySwap {
      * that clears it. Today's floor happens to sit above every hole-creating
      * pair on the board, which is the only reason this never printed one.
      */
+    /** What losing each man costs a roster, cheapest first: the value with him, less without. */
+    static List<Map.Entry<String, Double>> dropLadder(List<String> roster, java.util.function.ToDoubleFunction<List<String>> value){
+        double base = value.applyAsDouble(roster);
+        List<Map.Entry<String, Double>> out = new ArrayList<>();
+        for(String id : roster){
+            List<String> without = new ArrayList<>(roster);
+            without.remove(id);
+            out.add(Map.entry(id, base - value.applyAsDouble(without)));
+        }
+        out.sort(Comparator.comparingDouble(Map.Entry::getValue));
+        return out;
+    }
+
     /** Every free agent as an add with nothing dropped, best first: the value of the roster with him, less without. */
     static List<Map.Entry<String, Double>> openSpot(List<String> roster, List<String> candidates,
                                                     java.util.function.ToDoubleFunction<List<String>> value){
@@ -469,6 +482,42 @@ public class TuesdaySwap {
                 + "read in one unit; ros is the rest-of-season model that has seen the results (RosModel),%n"
                 + "sleeper-remaining Sleeper's weekly projections for the games left, which drop a man ruled out.%n", altSource));
         out.append("\n");
+
+        // MUST ACTIVATE: a man in an IR slot whose tag the league no longer takes
+        // there. Sleeper then blocks every move until he is back on the roster, and
+        // with sixteen active men that takes a drop. Justin, 2026-10-03, the day
+        // Mike Evans went from Out to Questionable: "I need to get rid of a player
+        // to move anyone." Each man he could drop is priced with the returning man
+        // active: what the roster loses without him, and what that does to the title.
+        NewsCheck.ReserveRule rule = NewsCheck.ReserveRule.of(configuration.getLeagueJson().getAsJsonObject("settings"));
+        for(String id : away){
+            String status = SleeperProjections.injuryStatusOf(id);
+            if(!reserve.contains(id) || rule.eligible(status)){
+                continue;
+            }
+            Player back = Player.getPlayerFromSIDV2(id);
+            String name = back == null ? id : back.firstName + " " + back.lastName;
+            List<String> withHim = new ArrayList<>(roster);
+            withHim.add(id);
+            nameOf.putIfAbsent(id, name);
+            out.append(String.format("MUST ACTIVATE %s: he is %s, which an IR slot here does not take, so Sleeper blocks every move%n"
+                    + "until he is back on the roster - and that takes a drop. With him active, what each man costs you:%n",
+                    name.toUpperCase(), status == null ? "healthy" : status));
+            out.append(String.format("   %-24s %9s %9s %8s%n", "drop", units.gamesLeft() ? "left" : "17wk", "from here", "title"));
+            List<String> others = new ArrayList<>(away);
+            others.remove(id);
+            for(Map.Entry<String, Double> e : dropLadder(withHim, ids -> value.of(ids))){
+                if(e.getKey().equals(id)){
+                    continue;
+                }
+                List<String> titleRoster = new ArrayList<>(withHim);
+                titleRoster.remove(e.getKey());
+                titleRoster.addAll(others);
+                out.append(String.format("   %-24s %+9.1f %+9.1f %+7.2f%n", nameOf.getOrDefault(e.getKey(), e.getKey()), -e.getValue(),
+                        -units.fromHere(e.getValue()), 100 * stakes.one(me, titleRoster).change()));
+            }
+            out.append("The top row is the cheapest man to lose. Activating him and dropping that man is one move in Sleeper.\n\n");
+        }
 
         // THE OPEN SPOT: with a man on IR there is room for one more, so every free
         // agent is priced as an add with nothing dropped. It is a rental: when he
