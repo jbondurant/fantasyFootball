@@ -302,6 +302,20 @@ public class TuesdaySwap {
      * that clears it. Today's floor happens to sit above every hole-creating
      * pair on the board, which is the only reason this never printed one.
      */
+    /** Every free agent as an add with nothing dropped, best first: the value of the roster with him, less without. */
+    static List<Map.Entry<String, Double>> openSpot(List<String> roster, List<String> candidates,
+                                                    java.util.function.ToDoubleFunction<List<String>> value){
+        double base = value.applyAsDouble(roster);
+        List<Map.Entry<String, Double>> out = new ArrayList<>();
+        for(String id : candidates){
+            List<String> with = new ArrayList<>(roster);
+            with.add(id);
+            out.add(Map.entry(id, value.applyAsDouble(with) - base));
+        }
+        out.sort(Comparator.comparingDouble((Map.Entry<String, Double> e) -> -e.getValue()));
+        return out;
+    }
+
     static Priced recommend(List<Priced> priced, double floor){
         return priced.isEmpty() || priced.get(0).worth() < floor ? null : priced.get(0);
     }
@@ -340,6 +354,13 @@ public class TuesdaySwap {
             }
         }
         Set<String> owned = new HashSet<>(ownerOf.keySet());
+        // -Pir="Mike Evans": men you are about to move to an IR slot (this league
+        // takes Out and Doubtful there, two slots). They leave the active roster as
+        // a reserve man does, and the spot they free is priced below as an add with
+        // no drop. Justin, 2026-09-29: "which athletes to submit waiver claim for
+        // while evans is in ir".
+        List<String> toIr = TradeScreens.idsNamed(System.getProperty("ir", ""));
+        roster.removeAll(toIr);
 
         // the wire, pruned to the men who could plausibly matter: the best few
         // dozen per position by projection, because a search over every free
@@ -433,6 +454,31 @@ public class TuesdaySwap {
                 + "sleeper-remaining Sleeper's weekly projections for the games left, which drop a man ruled out.%n", altSource));
         out.append("\n");
 
+        // THE OPEN SPOT: with a man on IR there is room for one more, so every free
+        // agent is priced as an add with nothing dropped. It is a rental: when he
+        // comes off IR a man must go to activate him, and the swap table above is
+        // that later choice.
+        if(!toIr.isEmpty()){
+            List<String> named = new ArrayList<>();
+            for(String id : toIr){
+                Player player = Player.getPlayerFromSIDV2(id);
+                named.add(player == null ? id : player.firstName + " " + player.lastName);
+            }
+            List<Map.Entry<String, Double>> open = openSpot(roster, candidates, ids -> value.of(ids));
+            out.append(String.format("OPEN SPOT - with %s on IR, each free agent added with NO drop:%n", String.join(", ", named)));
+            out.append(String.format("%-22s %-4s %9s %9s %9s%n", "ADD", "POS", units.gamesLeft() ? "left" : "17wk", "from here", "alt here"));
+            for(Map.Entry<String, Double> e : open.subList(0, Math.min(8, open.size()))){
+                List<String> with = new ArrayList<>(roster);
+                with.add(e.getKey());
+                double altGain = alt.of(with) - altBase;
+                out.append(String.format("%-22s %-4s %+9.1f %+9.1f %+9.1f%s%n", nameOf.get(e.getKey()), positionOf.get(e.getKey()),
+                        e.getValue(), units.fromHere(e.getValue()), altUnits.fromHere(altGain),
+                        e.getValue() < floor ? "   <- inside the floor" : ""));
+            }
+            out.append(String.format("A rental until %s is activated, when somebody must be dropped - read the swap table above for who.%n%n",
+                    String.join(", ", named)));
+        }
+
         // THE WHOLE LADDER FOR THE BEST ADD, because a table that names only the
         // cheapest drop invites the reading "so he is worth +4.8 over anyone".
         // He is not: the same man is worth that against the sixteenth-best
@@ -487,8 +533,12 @@ public class TuesdaySwap {
             out.append("question, and it is a different one.\n");
         }
         System.out.print(out);
+        // an -Pir run is a different roster (the man on IR is out of it), so it gets
+        // its own file: it overwrote the plain report once, and the console's ladder
+        // check rightly failed against a fifteen-man ladder
         Path target = Path.of("data", "tuesday-swap-" + season + "-w" + week
-                + (source.equals(DEFAULT_SOURCE) ? "" : "-" + source.replace(':', '_').replace(',', '_')) + ".txt");
+                + (source.equals(DEFAULT_SOURCE) ? "" : "-" + source.replace(':', '_').replace(',', '_'))
+                + (toIr.isEmpty() ? "" : "-ir") + ".txt");
         Files.writeString(target, out.toString(), StandardCharsets.UTF_8);
         System.out.println("written to " + target);
     }

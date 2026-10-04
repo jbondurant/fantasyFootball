@@ -94,4 +94,17 @@ public class TuesdaySwapTest {
         assertFalse(after.contains(top.swap().dropId()), "the drop is not");
         assertEquals(roster.size(), after.size(), "a swap keeps the roster at its size");
     }
+
+    /** With a man on IR the spot is priced as an add with nothing dropped, best first. */
+    @Test
+    public void anOpenSpotPricesEachAddWithNoDrop(){
+        java.util.Map<String, Double> worth = java.util.Map.of("a", 10.0, "b", 5.0, "x", 3.0, "y", 7.0);
+        java.util.function.ToDoubleFunction<java.util.List<String>> value =
+                ids -> ids.stream().mapToDouble(worth::get).sum();
+        java.util.List<java.util.Map.Entry<String, Double>> open =
+                TuesdaySwap.openSpot(java.util.List.of("a", "b"), java.util.List.of("x", "y"), value);
+        org.junit.jupiter.api.Assertions.assertEquals("y", open.get(0).getKey());
+        org.junit.jupiter.api.Assertions.assertEquals(7.0, open.get(0).getValue(), 1e-9, "nobody leaves, so the whole man is the gain");
+        org.junit.jupiter.api.Assertions.assertEquals(3.0, open.get(1).getValue(), 1e-9);
+    }
 }

@@ -21,6 +21,18 @@ alt here is the same move priced on ros and put in from-here points too, so the 
 read in one unit; ros is the rest-of-season model that has seen the results (RosModel),
 sleeper-remaining Sleeper's weekly projections for the games left, which drop a man ruled out.
 
+OPEN SPOT - with Mike Evans on IR, each free agent added with NO drop:
+ADD                    POS       left from here  alt here
+Kirk Cousins           QB        +2.5      +1.9      +0.0   <- inside the floor
+Kendrick Bourne        WR        +1.7      +1.3      +0.0   <- inside the floor
+Kyler Murray           QB        +1.7      +1.2      +0.0   <- inside the floor
+Elic Ayomanor          WR        +1.5      +1.1      +0.0   <- inside the floor
+Jalen Nailor           WR        +1.4      +1.0      +0.8   <- inside the floor
+Justice Hill           RB        +1.3      +1.0      +0.4   <- inside the floor
+Jacoby Brissett        QB        +1.2      +0.9      +0.0   <- inside the floor
+Gunnar Helm            TE        +1.1      +0.8      -0.3   <- inside the floor
+A rental until Mike Evans is activated, when somebody must be dropped - read the swap table above for who.
+
 EVERY DROP FOR PHILADELPHIA EAGLES - the same claim against each man you hold:
    drop Baltimore Ravens            +0.8
    drop Chris Rodriguez             -2.4

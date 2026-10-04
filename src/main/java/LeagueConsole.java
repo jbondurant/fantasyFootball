@@ -453,7 +453,12 @@ public class LeagueConsole {
         // asking whether one population clears another population's yardstick.
         int wireScenarios = Integer.getInteger("wireScenarios", 480);
         WeeklyStarterValue wireValue = WeeklyStarterValue.forCurrentBoard(configuration, wirePoints, wireScenarios, 424_242L);
-        List<String> myRoster = rosters.getOrDefault(me, List.of());
+        // the ACTIVE roster, as TuesdaySwap prices it: a man in an IR slot holds no
+        // spot and cannot be the drop. Until 2026-10-03 this read every man held, so
+        // the day Mike Evans went to IR the page priced each drop with him still
+        // active and the ladder check against TuesdaySwap failed - rightly
+        List<String> myRoster = new ArrayList<>(rosters.getOrDefault(me, List.of()));
+        myRoster.removeAll(reserve);
         List<TuesdaySwap.Swap> swaps = TuesdaySwap.search(myRoster, candidates, nameOf, positionOf,
                 ids -> wireValue.of(ids));
         // the yardstick measured on the wire's own pricing (TRAPS #151)

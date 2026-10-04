@@ -88,6 +88,14 @@ against $0 any other day (`FaabDemand`). A claim on a man dropped mid-week
 clears into the cheaper market; the page's bid is then generous by a dollar
 or two, which is the right side to err on.
 
+A man listed Out or Doubtful can go to one of the two IR slots, which frees a
+spot. Price that spot before claiming:
+
+    ./gradlew run -Pmain=TuesdaySwap -Pir="Mike Evans"
+
+adds an OPEN SPOT table - every free agent added with nothing dropped. It is a
+rental: when he is activated somebody goes, and the swap table is that choice.
+
 Two things to respect:
 
 - a row tagged **inside the noise** is under the objective's own seed-to-seed
