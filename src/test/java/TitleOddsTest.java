@@ -30,7 +30,7 @@ public class TitleOddsTest {
             wins.put(managers.get(i), 0);
         }
         Map<Integer, List<int[]>> schedule = Map.of(1, List.of(new int[]{1, 2}, new int[]{3, 4}, new int[]{5, 6}));
-        return new TitleOdds.League("2026", 1, 1, 2, 6, true, spread, managers, managerOf, wins, new TreeMap<>(), schedule);
+        return new TitleOdds.League("2026", 1, 1, 2, 6, true, spread, managers, managerOf, wins, new TreeMap<>(), schedule, Map.of());
     }
 
     static Map<String, double[]> flat(double a){
@@ -64,6 +64,29 @@ public class TitleOddsTest {
         assertEquals(0.0, d.se(), 1e-12);
         TitleOdds.Delta up = TitleOdds.title(a, TitleOdds.play(league(25), flat(130), 4_000, 42L), "A");
         assertTrue(up.change() > 0 && up.change() > 3 * up.se(), "twenty points a week more is more titles: " + up);
+    }
+
+    /** A week under way: what has been scored is settled, and the spread is only the share still to play. */
+    @Test
+    public void aFinishedLiveWeekIsSettledExactly(){
+        TitleOdds.League base = league(25);
+        Map<String, double[]> live = new HashMap<>();
+        for(String m : List.of("A", "B", "C", "D", "E", "F")){
+            live.put(m, new double[]{100, 0});
+        }
+        live.put("B", new double[]{140, 0});         // B beat A, finished
+        TitleOdds.League done = new TitleOdds.League("2026", 1, 1, 2, 6, true, 25, base.managers(), base.managerOf(),
+                base.wins(), base.banked(), base.schedule(), live);
+        assertEquals(0.0, done.liveSpread("A"), 1e-12, "nothing left to play, nothing left to draw");
+        live.put("C", new double[]{50, 50});
+        assertEquals(25 * Math.sqrt(0.5), done.liveSpread("C"), 1e-12, "half the lineup still to play: the spread of half a week");
+        assertEquals(25, base.liveSpread("A"), 1e-12, "no live read: the whole week is drawn");
+        Map<String, double[]> means = flat(100);
+        for(String m : means.keySet()){
+            TitleOdds.liveWeek(done, m, means.get(m));
+        }
+        assertEquals(140, means.get("B")[0], 1e-12, "this week's mean is what was scored plus what is still to play");
+        assertEquals(100, means.get("B")[1], 1e-12, "and next week is still the projection");
     }
 
     @Test

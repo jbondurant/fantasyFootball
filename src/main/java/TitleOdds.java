@@ -57,7 +57,25 @@ public class TitleOdds {
     /** The league as the simulation needs it. Managers are in a fixed order, which fixes the order of the draws. */
     public record League(String season, int thisWeek, int lastRegular, int playoffStart, int playoffTeams,
                          boolean medianGame, double spread, List<String> managers, Map<Integer, String> managerOf,
-                         Map<String, Integer> wins, Map<String, Double> banked, Map<Integer, List<int[]>> schedule) {
+                         Map<String, Integer> wins, Map<String, Double> banked, Map<Integer, List<int[]>> schedule,
+                         Map<String, double[]> live) {
+        /**
+         * THE WEEK IN PROGRESS (2026-10-05). Justin: "include week 4 results." On a
+         * Monday Sleeper still names the week whose Monday game is unplayed, and the
+         * week was played out from projections as if Sunday had not happened. `live`
+         * holds each manager's {points his starters have scored in games that have
+         * kicked off, projection of his starters still to play}: this week's mean is
+         * their sum, and its spread is the measured spread scaled by the square root
+         * of the share still to play, so a finished week is settled exactly.
+         */
+        double liveSpread(String manager){
+            double[] l = live.get(manager);
+            if(l == null){
+                return spread;
+            }
+            double total = l[0] + l[1];
+            return total <= 0 ? 0 : spread * Math.sqrt(Math.max(0, l[1]) / total);
+        }
         int lastWeek(){
             return playoffStart + 2;
         }
@@ -159,7 +177,43 @@ public class TitleOdds {
         }
         double spread = SeasonOutlook.measuredSpread(SeasonOutlook.measureSpread(configuration));
         return new League(LeagueWeek.season(), thisWeek, lastRegular, playoffStart, playoffTeams, medianGame, spread,
-                managers, managerOf, wins, banked, schedule);
+                managers, managerOf, wins, banked, schedule, live(leagueID, thisWeek, managerOf));
+    }
+
+    /** Each manager's {scored, still to play} this week, from the lineups as set and the games that have kicked off. */
+    static Map<String, double[]> live(String leagueID, int week, Map<Integer, String> managerOf){
+        String season = LeagueWeek.season();
+        java.util.Set<String> started = NflverseGames.kickedOff(NflverseGames.games(), season, week,
+                java.time.LocalDateTime.now(java.time.ZoneId.of("America/New_York")));
+        if(started.isEmpty()){
+            return Map.of();      // nothing has kicked off: the week is all projection, as before
+        }
+        Map<String, Double> projected = LeagueWeek.projected(season, week);
+        Map<String, double[]> out = new HashMap<>();
+        for(JsonElement element : JsonParser.parseString(LeagueWeek.matchups(leagueID, week)).getAsJsonArray()){
+            JsonObject row = element.getAsJsonObject();
+            String manager = managerOf.get(row.get("roster_id").getAsInt());
+            if(manager == null || !row.has("starters") || !row.get("starters").isJsonArray()){
+                continue;
+            }
+            JsonObject scored = row.has("players_points") && row.get("players_points").isJsonObject()
+                    ? row.getAsJsonObject("players_points") : new JsonObject();
+            double done = 0, left = 0;
+            for(JsonElement e : row.getAsJsonArray("starters")){
+                String id = e.isJsonNull() ? "0" : e.getAsString();
+                if(id.equals("0")){
+                    continue;      // an empty slot scores nothing
+                }
+                if(started.contains(ProjectionSources.teamOf(id))){
+                    done += scored.has(id) && !scored.get(id).isJsonNull() ? scored.get(id).getAsDouble() : 0;
+                }
+                else{
+                    left += projected.getOrDefault(id, 0.0);
+                }
+            }
+            out.put(manager, new double[]{done, left});
+        }
+        return out;
     }
 
     /** Sleeper's projection for every week left, today's read of each. */
@@ -188,9 +242,18 @@ public class TitleOdds {
     static Map<String, double[]> means(League league, Map<String, List<String>> rosters, Map<Integer, Map<String, Double>> projected){
         Map<String, double[]> out = new HashMap<>();
         for(Map.Entry<String, List<String>> e : rosters.entrySet()){
-            out.put(e.getKey(), teamMeans(league, e.getValue(), projected));
+            out.put(e.getKey(), liveWeek(league, e.getKey(), teamMeans(league, e.getValue(), projected)));
         }
         return out;
+    }
+
+    /** This week's mean from the lineup as set when the week is under way - a roster change now cannot touch it. */
+    static double[] liveWeek(League league, String manager, double[] m){
+        double[] l = league.live().get(manager);
+        if(l != null){
+            m[0] = l[0] + l[1];
+        }
+        return m;
     }
 
     static double[] teamMeans(League league, List<String> roster, Map<Integer, Map<String, Double>> projected){
@@ -205,7 +268,7 @@ public class TitleOdds {
     static Map<String, double[]> with(Map<String, double[]> base, League league, Map<String, List<String>> changed,
                                       Map<Integer, Map<String, Double>> projected){
         Map<String, double[]> out = new HashMap<>(base);
-        changed.forEach((m, roster) -> out.put(m, teamMeans(league, roster, projected)));
+        changed.forEach((m, roster) -> out.put(m, liveWeek(league, m, teamMeans(league, roster, projected))));
         return out;
     }
 
@@ -251,13 +314,17 @@ public class TitleOdds {
         int[] wins = new int[n];
         double[] points = new double[n];
         double spread = league.spread();
+        double[] firstWeek = new double[n];
+        for(int i = 0; i < n; i++){
+            firstWeek[i] = league.liveSpread(managers.get(i));
+        }
         for(int s = 0; s < sims; s++){
             System.arraycopy(baseWins, 0, wins, 0, n);
             System.arraycopy(basePoints, 0, points, 0, n);
             double[][] drawn = new double[league.weeks()][n];
             for(int w = 0; w < league.weeks(); w++){
                 for(int i = 0; i < n; i++){
-                    drawn[w][i] = mean[i][w] + spread * random.nextGaussian();
+                    drawn[w][i] = mean[i][w] + (w == 0 ? firstWeek[i] : spread) * random.nextGaussian();
                 }
             }
             for(int w = league.thisWeek(); w <= league.lastRegular(); w++){
@@ -407,6 +474,10 @@ public class TitleOdds {
         out.append(DataStamp.line()).append('\n');
         out.append(String.format("TITLE ODDS  %s  season %s from week %d, %d seasons drawn%n", LocalDate.now(), league.season(),
                 league.thisWeek(), sims));
+        if(!league.live().isEmpty()){
+            out.append(String.format("Week %d is under way: each team's week is what its starters have scored in games that have kicked off,%n"
+                    + "plus the projection of starters still to play, with the spread shrunk to the share still to play.%n", league.thisWeek()));
+        }
         out.append(String.format("Weeks %d-%d played out on Sleeper's projection for each week (byes and men ruled out leave the lineup),%n"
                 + "spread %.1f a week (SeasonOutlook's measurement)%s; six make it, seeds 1-2 skip week %d, a fixed bracket after.%n",
                 league.thisWeek(), league.lastWeek(), league.spread(), league.medianGame() ? ", a median game every regular week" : "",
