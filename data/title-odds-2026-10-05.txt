@@ -1,0 +1,22 @@
+data: projections 2026-10-05, player metadata 2026-10-05
+TITLE ODDS  2026-10-05  season 2026 from week 4, 20000 seasons drawn
+Weeks 4-17 played out on Sleeper's projection for each week (byes and men ruled out leave the lineup),
+spread 23.7 a week (SeasonOutlook's measurement), a median game every regular week; six make it, seeds 1-2 skip week 15, a fixed bracket after.
+'per pt' is how much his title odds move per point of weekly mean added to every week he has left.
+
+MANAGER          WINS  THIS WK PLAYOFF      BYE   TITLE     per pt
+JFMarino            5    139.8   97.8%    72.9%   28.2%     +1.59pp
+justinb314          5    134.3   94.8%    53.0%   21.0%     +1.81pp   <- you
+JakeSK              4    129.4   86.3%    27.9%   14.7%     +1.74pp
+itsabust            2    122.9   67.6%    11.3%   10.7%     +1.54pp
+d0ddi               3    126.0   74.8%    17.3%    9.5%     +1.40pp
+patekxwater         4    125.3   60.2%     8.7%    7.5%     +1.21pp
+jerem9604           2    120.4   38.0%     3.2%    3.1%     +0.65pp
+KevinDA             4    114.5   40.9%     3.9%    3.0%     +0.66pp
+Hamrliks            2    120.6   24.2%     1.4%    1.9%     +0.57pp
+Renteez             2     97.5    5.4%     0.1%    0.2%     +0.09pp
+tommyrads           2    114.2    7.6%     0.2%    0.2%     +0.10pp
+BHier               1    112.0    2.3%     0.0%    0.0%     +0.02pp
+
+Not modelled: injuries yet to happen, waiver moves, other trades. A team this calls out of it has
+less upside than the dice here give it only if nobody around it gets hurt.
