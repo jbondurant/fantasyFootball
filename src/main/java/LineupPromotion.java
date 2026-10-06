@@ -80,21 +80,26 @@ public class LineupPromotion {
                 "sleeperMatchups" + leagueID + "w" + week);
     }
 
-    /** One roster in one week: who was on it, and who was started. */
+    /** One roster in one week: who was on it, who was started, and the points the league recorded. */
     public record RosterWeek(int rosterID, int week, List<String> roster,
-                             List<String> started){}
+                             List<String> started, double points){}
 
     public static List<RosterWeek> week(String leagueID, int week){
+        return weekFrom(matchupsRaw(leagueID, week), week);
+    }
+
+    /** The same parse over any read of the matchups feed - a finished week's frozen file or a live day's. */
+    public static List<RosterWeek> weekFrom(String body, int week){
         List<RosterWeek> rows = new ArrayList<>();
-        JsonArray array = JsonParser.parseString(matchupsRaw(leagueID, week))
-                .getAsJsonArray();
+        JsonArray array = JsonParser.parseString(body).getAsJsonArray();
         for(JsonElement element : array){
             JsonObject row = element.getAsJsonObject();
             if(!row.has("roster_id") || row.get("roster_id").isJsonNull()){
                 continue;
             }
             rows.add(new RosterWeek(row.get("roster_id").getAsInt(), week,
-                    ids(row, "players"), ids(row, "starters")));
+                    ids(row, "players"), ids(row, "starters"),
+                    row.has("points") && !row.get("points").isJsonNull() ? row.get("points").getAsDouble() : 0));
         }
         return rows;
     }

@@ -1,0 +1,92 @@
+FAAB DEMAND  2026-09-22  (1207 settled contests over 5 seasons 2021-2025; 10198 free men at 80 big runs; features as the market saw them)
+
+== 1. THE RUN: contests and dollars by the weekday they cleared (league zone), regular-season legs 2-18 ==
+day        contests   share  dollars   share contested  median     p75     p90   P(win) at $1 $3 $5 $8 $13 $20
+MONDAY            9      1%        3      0%        0%       0       0       3     89%  94% 100% 100% 100% 100%
+WEDNESDAY       544     48%     2948     76%       49%       3       7      13     38%  53%  67%  79%  90%  95%
+THURSDAY        148     13%      241      6%       18%       0       2       5     70%  81%  89%  95%  99%  99%
+FRIDAY           91      8%      161      4%       16%       0       1       6     75%  82%  87%  95%  97%  98%
+SATURDAY        119     11%      208      5%       18%       0       1       4     72%  88%  93%  96%  97%  99%
+SUNDAY          214     19%      293      8%       27%       0       2       4     69%  85%  92%  96% 100% 100%
+the big run is WEDNESDAY: the ladder to bid into on that day is its row, not the pooled one the page uses today.
+
+== 2. THE DEMAND OVER THE WHOLE WIRE: P(any bid) at the big run, leave-one-season-out ==
+10198 free skill men who played, at the big run after their week; 8.1% drew a bid, 2.7% two or more.
+feature       r any bid  r bidders   mean, claimed vs not
+snap share       +0.070     +0.061   0.50 vs 0.43
+snap jump        -0.005     +0.027   0.11 vs 0.11
+touches          +0.248     +0.298   5.34 vs 2.95
+points           +0.200     +0.201   8.92 vs 4.58
+ppg so far       +0.194     +0.166   7.66 vs 4.48
+log ADP          -0.189     -0.146   5.46 vs 5.63
+dropped          +0.193     +0.152   0.16 vs 0.02
+RB               +0.076     +0.096   0.32 vs 0.20
+WR               +0.002     +0.001   0.37 vs 0.36
+TE               -0.065     -0.066   0.18 vs 0.29
+QB               -0.008     -0.029   0.13 vs 0.14
+
+held-out log loss 0.2234 vs base rate's 0.2796: gain +0.0562 +- 0.0048 over 5 seasons  <- real
+decile       men   mean p   claimed   2+ bids   by predicted P(any bid), held out
+1           1019     0.6%      1.8%      0.1%
+2           1020     1.5%      1.1%      0.2%
+3           1020     2.1%      1.3%      0.2%
+4           1020     2.7%      2.6%      0.8%
+5           1020     3.5%      3.0%      0.7%
+6           1019     4.5%      3.1%      0.7%
+7           1020     6.1%      6.1%      1.2%
+8           1020     8.9%      8.8%      2.0%
+9           1020    14.5%     17.5%      5.8%
+10          1020    36.8%     35.1%     15.1%
+all-season fit, log-odds per sd: snap share -0.11 snap jump -0.11 touches +0.38 points +0.23 ppg so far +1.19 log ADP -0.35 dropped +0.37 RB +0.39 WR +0.23 TE +0.09 QB -0.90
+
+== 2b. THE PRICE BY QUALITY, among the claimed at the big run (priced contests only) ==
+band                     n  median     p75     p90   P(win) at $1 $3 $5 $8 $13 $20
+ADP 1-100               22       5      10      12     23%  32%  48%  73%  91%  95%
+ADP 101-200            141       2       7      11     41%  57%  66%  79%  92%  96%
+ADP 200+ or undrafted     365       2       6      12     43%  58%  71%  83%  91%  95%
+ppg < 5                173       1       5      11     48%  65%  77%  86%  92%  94%
+5-10                   233       2       6      11     39%  56%  69%  82%  94%  97%
+10-15                   54       5      12      17     29%  34%  47%  64%  80%  93%
+15+                     68       2       6      12     44%  56%  66%  83%  92%  97%
+r of the price with log ADP -0.041, with ppg so far +0.031, with the snap jump +0.141 (n 528)
+
+== 3. THIS WEEK: every free skill man who played, P(any bid) at the big run, and the bid that wins 50 / 75 / 90% in his ADP band ==
+player                 pos   P(bid)    ADP share  jump  touch    pts    ppg dropped   bid to win 50 / 75 / 90 in his ADP band
+Terrance Ferguson      TE       92%    202   58%   +7%    9.0   14.4   14.4     yes   $3 / $8 / $13
+Cody White             WR       62%      -   11%   -5%    2.0   15.4   15.4           $3 / $8 / $13
+Tyler Shough           QB       44%    182  100%   +0%    9.0   23.4   26.3           $3 / $8 / $13
+Emanuel Wilson         RB       28%    266   41%  +35%   22.0    9.2    4.8           $3 / $8 / $13
+Ryan Miller            WR       26%      -   12%  +12%    1.0   14.2   14.2           $3 / $8 / $13
+Malik Willis           QB       24%    200  100%   +0%    2.0   14.5   15.6     yes   $3 / $8 / $13
+C.J. Stroud            QB       17%    204  100%   +0%    3.0   17.0   17.7           $3 / $8 / $13
+Cam Ward               QB       16%    228  100%   +0%    4.0   20.0   16.9           $3 / $8 / $13
+Bryce Young            QB       15%    235   94%   +4%    1.0   30.1   34.3           $3 / $8 / $13
+Kyle Juszczyk          RB       14%      -   44%   -7%    2.0    9.7    9.7           $3 / $8 / $13
+Nate Adkins            TE       12%      -   37%  +37%    4.0   11.3   11.3           $3 / $8 / $13
+Joshua Palmer          WR       12%      -   38%   +7%    3.0   10.8   10.4           $3 / $8 / $13
+Oronde Gadsden         TE       12%    180   44%  +26%    2.0    8.8    6.5           $3 / $8 / $13
+Germie Bernard         WR       12%    241   79%  +74%    8.0    5.5    5.5           $3 / $8 / $13
+Keon Coleman           WR       11%    242   74%  +24%    6.0    9.3    5.0           $3 / $8 / $13
+Darren Waller          TE       11%      -   44%   +9%    3.0   16.8   10.3           $3 / $8 / $13
+Tyquan Thornton        WR       11%      -   59%  +59%    4.0   10.6   10.6           $3 / $8 / $13
+Deshaun Watson         QB       11%      -  100%   +0%    7.0   23.7   19.9           $3 / $8 / $13
+Ted Hurst              WR       10%    240   74%   -2%    7.0    3.7    4.4           $3 / $8 / $13
+Kalif Raymond          WR       10%      -   62%   +2%    5.0    6.5    9.5           $3 / $8 / $13
+Samaje Perine          RB       10%      -   40%  +12%    3.0    2.7    4.6     yes   $3 / $8 / $13
+Justice Hill           RB        9%    223   47%   +1%    4.0    2.8    3.1           $3 / $8 / $13
+Darius Cooper          WR        9%      -   41%  +26%    3.0    9.6    9.6           $3 / $8 / $13
+Brenton Strange        TE        9%    165   83%  +15%    2.0    2.7    6.0           $3 / $8 / $13
+Kaytron Allen          RB        8%    234    8%   -2%    5.0    2.4    2.0           $3 / $8 / $13
+Cade Otton             TE        8%    246   89%   -9%    6.0    5.3    4.7           $3 / $8 / $13
+David Njoku            TE        8%    222   16%  -38%    3.0    1.4    4.9           $3 / $8 / $13
+Kirk Cousins           QB        7%      -  100%   +0%    4.0   27.2   24.5           $3 / $8 / $13
+Cooper Kupp            WR        7%    207   43%  -35%    2.0    3.0    3.8           $3 / $8 / $13
+Isaac TeSlaa           WR        7%    230   75%   +8%    5.0    3.6    3.6           $3 / $8 / $13
+the thirty free skill men the model expects a bid on; ADP is Sleeper's half-PPR today (the harvest used each
+season's FFC board). Worth is TuesdaySwap's column, and a bid above it is a loss whatever the ladder says.
+
+the run that already cleared on these features (2026-09-20): the skill men who drew a bid, with the model's P(bid) and rank among 165 free men
+   Xavier Hutchinson      WR  1 bidder, won at $2   model: 5%, rank 39
+   Bryce Young            QB  1 bidder, nobody won   model: 15%, rank 9
+   Kendrick Bourne        WR  1 bidder, won at $0   model: 4%, rank 47
+   Tyler Shough           QB  1 bidder, won at $0   model: 44%, rank 3

@@ -1,0 +1,95 @@
+TRADE MARKET  2026-09-28  (justinb314; projections: sleeper-remaining)
+Every size-balanced swap with all eleven rivals, both rosters priced on the same
+weekly-starter objective (240 drawn seasons). Only trades BOTH sides gain from are listed:
+an offer the other manager loses on is an offer he declines.
+THE TWO SIDES ARE PRICED DIFFERENTLY, on purpose. YOUR value is the season PLUS the best two
+keeper surpluses on your roster (a surplus being what a man is worth beyond the pick you spend to
+keep him, measured at HIS OWN position). HIS is LOSS-AVERSE on keepers: he takes no credit for one
+he receives and feels every point of one he gives up, which is how people here actually behave.
+So asking for another manager's keeper is HARD - the ask is priced at what it costs him - and
+paying anybody IN keepers buys you nothing. -Pkeepers=false prices you the same way he is.
+
+HOW EVERY ROSTER SCORES - the season points its starters are expected to score: 17 x the best legal
+lineup from whoever is healthy in a drawn week, the bench worth the weeks it covers, every slot floored at
+the waiver wire. On sleeper-remaining and on ros (the rest-of-season model moves on this season's results; Sleeper's
+season feed does not):
+  rank manager          sleeper-remaining   rank      ros
+  1    JakeSK             2007.8   2      2166.2
+  2    d0ddi              1979.9   4      2147.3
+  3    patekxwater        1971.1   9      2095.7
+  4    JFMarino           1950.8   1      2224.7
+  5    KevinDA            1918.0   7      2125.5
+  6    Hamrliks           1900.3   5      2139.3
+  7    justinb314         1892.3   6      2134.8   <- you
+  8    jerem9604          1886.5   3      2152.6
+  9    itsabust           1878.8   8      2098.6
+  10   Renteez            1795.3   11     2003.9
+  11   tommyrads          1745.4   10     2038.1
+  12   BHier              1725.0   12     1927.6
+
+51136 swaps searched, 117 good for both sides, 117 of those also good for 2026.
+A trade must stand up WITHOUT the keeper value as well - the plan is to win 2026, and
+keeper value is a tiebreak on a deal that already helps now, not a reason to get worse.
+0 offers were dropped for failing that. -PsellMode=true to see them.
+
+'his view' is the trade from HIS side on the two numbers he can check (TradeScreens): what he gets back
+of the draft value and of this season's points he gives, '-' where he gives none.
+YOU GIVE                     YOU GET                          you     him  season   SIMPLE   you:ros   him:ros     ADP g/g   his view   WITH / HOW IT READS
+Brock Purdy + Cam Skattebo + Malik Nabers Lamar Jackson + Ladd McConkey + Dalton Kincaid   +18.8    +0.5   +18.8    +15.9     +18.7      -1.4    28/35      96%/182%   Renteez  he loses on ros - a long shot - he gets back 96% of the draft value and 182% of the season's points he gives; 16 of 60 accepted sides here took as little (BHier, Hamrliks, JakeSK, KevinDA, itsabust, justinb314, patekxwater), never Renteez
+Brock Purdy + Malik Nabers + Mike Evans Lamar Jackson + Dalton Kincaid + Terry McLaurin   +15.0    +2.1   +15.0     -1.1      +1.3      +3.1    28/35      92%/247%   Renteez  holds on ros - a long shot - he gets back 92% of the draft value and 247% of the season's points he gives; 16 of 60 accepted sides here took as little (BHier, Hamrliks, JakeSK, KevinDA, itsabust, justinb314, patekxwater), never Renteez
+Brock Purdy + Mike Evans + Rhamondre Stevenson Lamar Jackson + Dalton Kincaid + Terry McLaurin   +14.4    +1.6   +14.4    +12.1     +30.9     -20.4    64/35      68%/247%   Renteez  he loses on ros - a long shot - he gets back 68% of the draft value and 247% of the season's points he gives; 12 of 60 accepted sides here took as little (BHier, Hamrliks, KevinDA, itsabust, justinb314, patekxwater), never Renteez
+Derrick Henry + Cam Skattebo + Mike Evans Ja'Marr Chase + Javonte Williams + Dalton Kincaid   +13.0    +2.9   +13.0     +3.9     -21.3     +28.0    15/3       95%/114%   Renteez  LOSES FOR YOU on ros - a long shot - he gets back 95% of the draft value and 114% of the season's points he gives; 9 of 60 accepted sides here took as little (BHier, Hamrliks, KevinDA, itsabust, patekxwater), never Renteez
+Derrick Henry + Cam Skattebo + Mike Evans Bijan Robinson + David Montgomery + Houston Texans   +12.1    +6.2   +12.1    +25.3     -40.6     +68.4    15/2      111%/110%   BHier  LOSES FOR YOU on ros - fair to him on draft value and on this season's points
+Malik Nabers + Mike Evans + Rhamondre Stevenson Ladd McConkey + Dalton Kincaid + Terry McLaurin   +10.9    +5.8   +10.9    +15.7      -2.0     +10.7    28/35      106%/38%   Renteez  LOSES FOR YOU on ros - a long shot - he gets back 106% of the draft value and 38% of the season's points he gives; 3 of 60 accepted sides here took as little (BHier, Hamrliks, itsabust), never Renteez
+Brock Purdy + Malik Nabers + Rhamondre Stevenson Lamar Jackson + Dalton Kincaid + Travis Etienne   +10.8    +4.3   +10.8     -0.1     +46.1     -33.2    28/35      77%/187%   Renteez  he loses on ros - a long shot - he gets back 77% of the draft value and 187% of the season's points he gives; 11 of 60 accepted sides here took as little (BHier, Hamrliks, KevinDA, itsabust, justinb314, patekxwater), never Renteez
+Cam Skattebo + Mike Evans + Rhamondre Stevenson Bijan Robinson + Travis Kelce + Houston Texans   +10.1    +2.5   +10.1    +28.8     +36.8      -7.5    36/2        88%/26%   BHier  he loses on ros - NO - behind on both numbers he can see: he gets back 88% of the draft value and 26% of the season's points he gives; 2 of 60 accepted sides here took as little (BHier, Hamrliks)
+Brock Purdy + Mike Evans + Rhamondre Stevenson Jayden Daniels + Bijan Robinson + Houston Texans    +9.5    +2.7    +9.5    +22.8     +31.6      +5.1    64/2        57%/88%   BHier  holds on ros - NO - behind on both numbers he can see: he gets back 57% of the draft value and 88% of the season's points he gives; 4 of 60 accepted sides here took as little (BHier, Hamrliks, patekxwater)
+Brock Purdy + Mike Evans + Rhamondre Stevenson Bijan Robinson + Sam Darnold + Houston Texans    +9.5    +2.7    +9.5    +22.8     +18.4     +10.7    64/2        65%/88%   BHier  holds on ros - NO - behind on both numbers he can see: he gets back 65% of the draft value and 88% of the season's points he gives; 4 of 60 accepted sides here took as little (BHier, Hamrliks, patekxwater)
+Brock Purdy + Cam Skattebo + Mike Evans Tyler Shough + Christian Watson + Breece Hall    +9.3    +1.9    +9.3     -9.3     +15.6     -14.3    36/33      106%/71%   KevinDA  he loses on ros - a long shot - he gets back 106% of the draft value and 71% of the season's points he gives; 6 of 60 accepted sides here took as little (BHier, Hamrliks, itsabust, patekxwater), never KevinDA
+Derrick Henry + Malik Nabers Amon-Ra St. Brown + Tee Higgins    +8.4    +0.2    +8.4     +7.3     -13.6      +9.0    15/7        95%/88%   d0ddi  LOSES FOR YOU on ros - NO - behind on both numbers he can see: he gets back 95% of the draft value and 88% of the season's points he gives; 5 of 60 accepted sides here took as little (BHier, Hamrliks, patekxwater), never d0ddi
+
+THE SHORT LIST - 0 of the 117: good for BOTH sides on BOTH pricings, you gaining at least the
+noise floor (6.8, ObjectiveStability's seed-to-seed spread) this season on each, AND fair to him on what he
+can see - he gets back at least the draft value and this season's points he gives (TradeScreens). Best first by
+the smaller of your two gains; 'trades/yr' is how often he has actually traded (TradePartners).
+  YOU GIVE                     YOU GET                           you  you:ros  him:ros   his view WITH             trades/yr
+  none. No trade that helps you on both pricings also looks fair to him on draft value and this season's points.
+
+LONG SHOTS - 0 more that pass both pricings and leave him ahead on ONE of the numbers he can see, with a
+precedent in this league (who is named). Not offers to lead with. 2 more were dropped: behind on both of his
+numbers, or as lopsided as no accepted side here ever took.
+
+WHAT YOUR SURPLUS IS WORTH - how many rivals could offer the same thing:
+  QB   you hold 2, start 1;  8 of 11 rivals also carry a spare -> INVENTORY, not a chip - the market is flooded
+  RB   you hold 5, start 2;  11 of 11 rivals also carry a spare -> INVENTORY, not a chip - the market is flooded
+  WR   you hold 6, start 3;  11 of 11 rivals also carry a spare -> INVENTORY, not a chip - the market is flooded
+  TE   you hold 2, start 1;  8 of 11 rivals also carry a spare -> INVENTORY, not a chip - the market is flooded
+  DEF  you hold 1, start 1;  1 of 11 rivals also carry a spare -> nothing to sell
+
+(The chain below is not filtered for 2026 - it is the ceiling of what the board
+offers, not a plan. Read the table above for what to actually send.)
+
+TRADING POWER - trade after trade, each re-searched on the board the last one left.
+Only trades worth more than 6.8 to you are taken: that is the objective's own
+seed-to-seed spread, so anything smaller is the yardstick moving and not the roster.
+
+   1. Brock Purdy + Cam Skattebo + Malik Nabers for Lamar Jackson + Ladd McConkey + Dalton Kincaid   +18.8  (him   +0.5)  running   +18.8
+   2. Mike Evans + Harold Fannin + Josh Downs for Ja'Marr Chase + Philadelphia Eagles + Rashod Bateman   +22.1  (him   +3.0)  running   +40.9
+
+  2 trades, +40.9 to you, +3.5 handed to the men opposite to make them take it.
+  Still going at 2 and stopped by -PchainDepth, not by the board. Raise it.
+  The first trade alone was +18.8, so the chain is worth 2.2x a single one -
+  which is what one-step searching leaves behind.
+
+  AND THE ANSWER TO 'CAN I JUST KEEP TRADING?' - no. Ignoring the floor entirely,
+  the chain runs 2 trades and +40.9, but everything past the 2 above is smaller than the
+  yardstick's own noise, and it starts churning: it reacquires men it gave away earlier.
+  Every trade has to improve BOTH rosters, so the league's total value only rises and is
+  bounded by the best possible allocation of a fixed set of players. It must stop, and it
+  does. Local maxima are NOT the problem here; the floor is.
+
+WHAT THIS CANNOT TELL YOU. Sleeper records only COMPLETED trades - 51 across five
+seasons of this league, and not one refusal - so there is no way to fit what a manager
+will ACCEPT. What stands in: his gain on the model, and 'his view' - the trade on the two
+numbers he can check, against every trade this league has accepted. A trade fair on both is
+one he can check and find fair; that is not the same as one he will take.

@@ -1,0 +1,27 @@
+TRADE STABILITY  2026-09-14  (240 scenarios, 3 seeds, top 8 trades)
+
+THIS MEASURES NOISE, NOT DESIRABILITY. It values both sides season-only and symmetric,
+because spread is what it is after, and keeper value is deterministic - it shifts a mean
+and adds no wobble. So the trades below are NOT recommendations: a row can look strong
+here and give away a man worth fifty points as a keeper next March. Rows that send one
+are marked. The board that recommends is the console, which prices keepers on both sides.
+
+The trades board applies no noise floor - it keeps anything above +0.05. This asks
+whether the numbers it prints survive re-drawing the seasons underneath them. Each
+column is one seed; the SAME trades are re-valued, never re-searched, and only
+MUTUALLY GOOD trades are measured - the ones that could actually be recommended.
+
+TRADE                                          YOUR GAIN BY SEED    SPREAD  VERDICT
+Mike Evans + Bhayshul Tuten -> Ja'Marr Chase     +34.7   +31.1   +34.8      3.7  clears 6.8 on every seed  [KEEPER]
+Mike Evans + Bhayshul Tuten + Rhamondre Steve…   +29.1   +26.3   +27.6      2.8  clears 6.8 on every seed  [KEEPER]
+Malik Nabers + Rhamondre Stevenson -> Ja'Marr…   +27.0   +25.8   +35.2      9.4  clears 6.8 on every seed
+Malik Nabers + Bhayshul Tuten -> Ja'Marr Chase   +25.0   +27.0   +31.7      6.7  clears 6.8 on every seed  [KEEPER]
+Bo Nix + Bhayshul Tuten -> Josh Allen            +23.6   +16.8   +24.3      7.5  clears 6.8 on every seed  [KEEPER]
+Malik Nabers + Mike Evans + Bhayshul Tuten ->…   +23.6   +26.2   +31.6      8.1  clears 6.8 on every seed  [KEEPER]
+Malik Nabers + Mike Evans + Bhayshul Tuten ->…   +23.4   +26.7   +20.6      6.0  clears 6.8 on every seed  [KEEPER]
+Mike Evans + Bhayshul Tuten + Rhamondre Steve…   +23.3    +6.5   +11.0     16.8  SPREAD EXCEEDS THE FLOOR - not a number  [KEEPER]
+
+worst seed-to-seed spread of a TRADE gain: 16.8 points
+ObjectiveStability measured 6.8 for a roster MARGINAL at 480 scenarios. This is a
+different quantity at a different scenario count, and the two should not be assumed
+equal - a trade moves two men in opposite directions and the errors need not cancel.

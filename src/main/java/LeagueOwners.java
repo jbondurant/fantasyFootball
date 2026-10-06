@@ -3,7 +3,9 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Who in the league holds each man right now - from the rosters endpoint, so
@@ -33,6 +35,36 @@ public class LeagueOwners {
             }
         }
         return owner;
+    }
+
+    /**
+     * The men on injured reserve, league-wide.
+     *
+     * Sleeper lists a reserve man in the roster's `players` array AND in its
+     * `reserve` array, so a join on `players` alone counts him as active: he was
+     * in every lineup, every swap search and every roster valuation until
+     * 2026-09-13, on four rivals' rosters. Policy, stated once: the lineup and the
+     * wire's droppable roster exclude him (he cannot start and does not hold an
+     * active spot); ownership keeps him (he is not a free agent); the trade board
+     * keeps him (he can be traded, and is valued on his projection).
+     */
+    static Set<String> reserveOf(String rostersJson){
+        Set<String> reserve = new HashSet<>();
+        for(JsonElement e : JsonParser.parseString(rostersJson).getAsJsonArray()){
+            JsonObject roster = e.getAsJsonObject();
+            if(roster.has("reserve") && roster.get("reserve").isJsonArray()){
+                for(JsonElement p : roster.getAsJsonArray("reserve")){
+                    if(!p.isJsonNull()){
+                        reserve.add(p.getAsString());
+                    }
+                }
+            }
+        }
+        return reserve;
+    }
+
+    public static Set<String> reserve(AAAConfiguration configuration){
+        return reserveOf(configuration.getTodaysRosterWebPageSerious());
     }
 
     /** Today's rosters and users, through the day's cache. */

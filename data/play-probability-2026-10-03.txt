@@ -1,0 +1,27 @@
+PLAY PROBABILITY  2026-10-03  (nflverse final injury reports 2018-2025, regular season, QB/RB/WR/TE,
+joined to Sleeper's stat rows: did he take a snap that week; men Sleeper projected for 5+ that week or the week
+before - the men a start/sit call is about; 4885 player-weeks)
+
+STATUS        PRACTICE   LISTED  PLAYED     RATE   95% interval
+Questionable  (any)        1137     935    82.2%   79.9-84.3%
+              Full          172     165    95.9%   91.8-98.0%
+              Limited       776     657    84.7%   82.0-87.0%
+              DNP           180     106    58.9%   51.6-65.8%
+              none            9       7    77.8%   45.3-93.7%
+Doubtful      (any)          91       2     2.2%   0.6-7.7%
+              Full            7       0     0.0%   0.0-35.4%
+              Limited        10       1    10.0%   1.8-40.4%
+              DNP            74       1     1.4%   0.2-7.3%
+Out           (any)         406       1     0.2%   0.0-1.4%
+              Full            2       0     0.0%   0.0-65.8%
+              Limited        11       0     0.0%   0.0-25.9%
+              DNP           390       0     0.0%   0.0-1.0%
+              none            3       1    33.3%   6.1-79.2%
+not listed    (any)        3250    3184    98.0%   97.4-98.4%
+              Full         2424    2401    99.1%   98.6-99.4%
+              Limited       521     513    98.5%   97.0-99.2%
+              DNP           303     269    88.8%   84.7-91.9%
+              none            2       1    50.0%   9.5-90.5%
+
+PRACTICE is his last practice line of the week. Sleeper's live feed has the status only, so NewsCheck shows
+the (any) row; a Friday 'Full' or 'DNP' moves it as the rows under it show.
