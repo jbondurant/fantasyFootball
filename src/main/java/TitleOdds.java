@@ -58,7 +58,11 @@ public class TitleOdds {
     public record League(String season, int thisWeek, int lastRegular, int playoffStart, int playoffTeams,
                          boolean medianGame, double spread, List<String> managers, Map<Integer, String> managerOf,
                          Map<String, Integer> wins, Map<String, Double> banked, Map<Integer, List<int[]>> schedule,
-                         Map<String, double[]> live) {
+                         Map<String, double[]> live, double teamSigma) {
+        /** The first week no game of which has started: the live week settles, the team error starts after it. */
+        int firstFuture(){
+            return live.isEmpty() ? 0 : 1;
+        }
         /**
          * THE WEEK IN PROGRESS (2026-10-05). Justin: "include week 4 results." On a
          * Monday Sleeper still names the week whose Monday game is unplayed, and the
@@ -176,8 +180,9 @@ public class TitleOdds {
             }
         }
         double spread = SeasonOutlook.measuredSpread(SeasonOutlook.measureSpread(configuration));
+        Map<String, double[]> live = live(leagueID, thisWeek, managerOf);
         return new League(LeagueWeek.season(), thisWeek, lastRegular, playoffStart, playoffTeams, medianGame, spread,
-                managers, managerOf, wins, banked, schedule, live(leagueID, thisWeek, managerOf));
+                managers, managerOf, wins, banked, schedule, live, TeamError.sigmaFrom(thisWeek + (live.isEmpty() ? 0 : 1), TeamError.table()));
     }
 
     /** Each manager's {scored, still to play} this week, from the lineups as set and the games that have kicked off. */
@@ -318,13 +323,24 @@ public class TitleOdds {
         for(int i = 0; i < n; i++){
             firstWeek[i] = league.liveSpread(managers.get(i));
         }
+        double[] effect = new double[n];
         for(int s = 0; s < sims; s++){
             System.arraycopy(baseWins, 0, wins, 0, n);
             System.arraycopy(basePoints, 0, points, 0, n);
+            // TEAM ERROR (TeamError): how far each roster's true strength sits from its
+            // projection for the rest of the season, drawn once per team per season
+            // and kept for every week not yet started - so a team the projection
+            // overrates stays overrated, which week-to-week noise alone never does
+            if(league.teamSigma() > 0){
+                for(int i = 0; i < n; i++){
+                    effect[i] = league.teamSigma() * random.nextGaussian();
+                }
+            }
             double[][] drawn = new double[league.weeks()][n];
             for(int w = 0; w < league.weeks(); w++){
                 for(int i = 0; i < n; i++){
-                    drawn[w][i] = mean[i][w] + (w == 0 ? firstWeek[i] : spread) * random.nextGaussian();
+                    drawn[w][i] = mean[i][w] + (w == 0 ? firstWeek[i] : spread) * random.nextGaussian()
+                            + (w >= league.firstFuture() ? effect[i] : 0);
                 }
             }
             for(int w = league.thisWeek(); w <= league.lastRegular(); w++){
@@ -478,6 +494,9 @@ public class TitleOdds {
             out.append(String.format("Week %d is under way: each team's week is what its starters have scored in games that have kicked off,%n"
                     + "plus the projection of starters still to play, with the spread shrunk to the share still to play.%n", league.thisWeek()));
         }
+        out.append(String.format("Each team's strength for the rest of the season is its projection plus a team error drawn once per season,%n"
+                + "sd %.1f a week (TeamError: how far this league's rosters landed from their projections from this point,%n"
+                + "2021-2025)%s.%n", league.teamSigma(), league.teamSigma() == 0 ? " - NO TABLE, so none drawn: run TeamError" : ""));
         out.append(String.format("Weeks %d-%d played out on Sleeper's projection for each week (byes and men ruled out leave the lineup),%n"
                 + "spread %.1f a week (SeasonOutlook's measurement)%s; six make it, seeds 1-2 skip week %d, a fixed bracket after.%n",
                 league.thisWeek(), league.lastWeek(), league.spread(), league.medianGame() ? ", a median game every regular week" : "",

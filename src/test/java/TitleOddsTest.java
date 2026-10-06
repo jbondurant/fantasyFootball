@@ -30,7 +30,7 @@ public class TitleOddsTest {
             wins.put(managers.get(i), 0);
         }
         Map<Integer, List<int[]>> schedule = Map.of(1, List.of(new int[]{1, 2}, new int[]{3, 4}, new int[]{5, 6}));
-        return new TitleOdds.League("2026", 1, 1, 2, 6, true, spread, managers, managerOf, wins, new TreeMap<>(), schedule, Map.of());
+        return new TitleOdds.League("2026", 1, 1, 2, 6, true, spread, managers, managerOf, wins, new TreeMap<>(), schedule, Map.of(), 0.0);
     }
 
     static Map<String, double[]> flat(double a){
@@ -76,7 +76,7 @@ public class TitleOddsTest {
         }
         live.put("B", new double[]{140, 0});         // B beat A, finished
         TitleOdds.League done = new TitleOdds.League("2026", 1, 1, 2, 6, true, 25, base.managers(), base.managerOf(),
-                base.wins(), base.banked(), base.schedule(), live);
+                base.wins(), base.banked(), base.schedule(), live, 0.0);
         assertEquals(0.0, done.liveSpread("A"), 1e-12, "nothing left to play, nothing left to draw");
         live.put("C", new double[]{50, 50});
         assertEquals(25 * Math.sqrt(0.5), done.liveSpread("C"), 1e-12, "half the lineup still to play: the spread of half a week");
@@ -87,6 +87,34 @@ public class TitleOddsTest {
         }
         assertEquals(140, means.get("B")[0], 1e-12, "this week's mean is what was scored plus what is still to play");
         assertEquals(100, means.get("B")[1], 1e-12, "and next week is still the projection");
+    }
+
+    /**
+     * A team error drawn once a season pulls a projected favourite back toward
+     * the field: a 20-point edge a week is a near-certain title when the
+     * projection is exactly right and much less so when it can be off by 15.
+     */
+    @Test
+    public void aTeamErrorPullsAFavouriteTowardTheField(){
+        TitleOdds.League sure = league(10);
+        TitleOdds.League unsure = new TitleOdds.League("2026", 1, 1, 2, 6, true, 10, sure.managers(), sure.managerOf(),
+                sure.wins(), sure.banked(), sure.schedule(), Map.of(), 15.0);
+        double certain = TitleOdds.play(sure, flat(120), 8_000, 3L).title("A");
+        double doubted = TitleOdds.play(unsure, flat(120), 8_000, 3L).title("A");
+        assertTrue(doubted < certain - 0.05, "a 15-point team error must cost the favourite: " + certain + " -> " + doubted);
+        assertTrue(doubted > 1.0 / 6, "and still leave him the favourite: " + doubted);
+    }
+
+    @Test
+    public void theTeamErrorTableIsReadFromTheNearestMeasuredWeek(){
+        java.util.TreeMap<Integer, Double> table = new java.util.TreeMap<>(Map.of(2, 7.9, 5, 8.3, 8, 10.6));
+        assertEquals(8.3, TeamError.sigmaFrom(5, table), 1e-12);
+        assertEquals(8.3, TeamError.sigmaFrom(6, table), 1e-12, "between measured weeks: the last one measured");
+        assertEquals(7.9, TeamError.sigmaFrom(1, table), 1e-12, "before the first: the first");
+        assertEquals(0.0, TeamError.sigmaFrom(5, new java.util.TreeMap<>()), 1e-12, "no table: no team error");
+        // twelve teams, misses of +-10 over 10 weeks with a 23.7 spread: (12/11)*100 - 56.2 = 52.9
+        assertEquals(Math.sqrt(12.0 / 11 * 100 - 23.7 * 23.7 / 10), TeamError.sigma(List.of(10.0, -10.0), 12, 10, 23.7), 1e-9);
+        assertEquals(0.0, TeamError.sigma(List.of(1.0, -1.0), 12, 10, 23.7), 1e-12, "noise alone explains it: floored at zero");
     }
 
     @Test
