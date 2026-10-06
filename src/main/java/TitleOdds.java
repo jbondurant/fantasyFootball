@@ -483,13 +483,75 @@ public class TitleOdds {
                 league.thisWeek(), league.lastWeek(), league.spread(), league.medianGame() ? ", a median game every regular week" : "",
                 league.playoffStart()));
         out.append("'per pt' is how much his title odds move per point of weekly mean added to every week he has left.\n\n");
-        out.append(String.format("%-14s %6s %8s %7s %8s %7s %10s%n", "MANAGER", "WINS", "THIS WK", "PLAYOFF", "BYE", "TITLE", "per pt"));
+        // THE RECORD AS SLEEPER KEEPS IT, and how strong each team projects from here.
+        // Justin, 2026-10-06: "I don't think i have that much ahead of jake and d0ddi,
+        // if I'm even ahead." He was not: 5-3 with both, fourth on points. The odds
+        // still favoured him, and the reason was not on the page - it is the weeks
+        // to come, so the table now shows the record and the projection beside them.
+        Map<String, String> record = new HashMap<>();
+        Map<String, Double> pointsFor = new HashMap<>();
+        for(JsonElement element : JsonParser.parseString(configuration.getTodaysRosterWebPageSerious()).getAsJsonArray()){
+            JsonObject roster = element.getAsJsonObject();
+            String m = league.managerOf().get(roster.get("roster_id").getAsInt());
+            JsonObject s = roster.getAsJsonObject("settings");
+            if(m != null && s != null){
+                record.put(m, s.get("wins").getAsInt() + "-" + s.get("losses").getAsInt());
+                pointsFor.put(m, s.get("fpts").getAsDouble() + (s.has("fpts_decimal") ? s.get("fpts_decimal").getAsDouble() / 100 : 0));
+            }
+        }
+        int firstFuture = league.live().isEmpty() ? 0 : 1;
+        int lastRegularIndex = league.lastRegular() - league.thisWeek();
+        // each manager's average projected weekly mean in the playoff weeks, and the
+        // average AHEAD of the opponents he still has to play in the regular season
+        Map<String, Double> ahead = new HashMap<>();
+        Map<String, Double> playoffWeeks = new HashMap<>();
+        for(String m : league.managers()){
+            double a = 0, p = 0;
+            int n = 0;
+            for(int k = firstFuture; k <= lastRegularIndex; k++){
+                a += means.get(m)[k];
+                n++;
+            }
+            for(int k = lastRegularIndex + 1; k < league.weeks(); k++){
+                p += means.get(m)[k];
+            }
+            ahead.put(m, n == 0 ? 0 : a / n);
+            playoffWeeks.put(m, p / Math.max(1, league.weeks() - lastRegularIndex - 1));
+        }
+        Map<String, double[]> schedule = new HashMap<>();
+        for(int w = league.thisWeek() + firstFuture; w <= league.lastRegular(); w++){
+            for(int[] g : league.schedule().getOrDefault(w, List.of())){
+                String a = league.managerOf().get(g[0]), b = league.managerOf().get(g[1]);
+                if(a != null && b != null){
+                    schedule.computeIfAbsent(a, k -> new double[2])[0] += ahead.getOrDefault(b, 0.0);
+                    schedule.get(a)[1]++;
+                    schedule.computeIfAbsent(b, k -> new double[2])[0] += ahead.getOrDefault(a, 0.0);
+                    schedule.get(b)[1]++;
+                }
+            }
+        }
+        out.append(String.format("RECORD and PF are Sleeper's own standings (median game included). AHEAD is each team's projected weekly%n"
+                + "score over the regular-season weeks still to start (%d-%d), P-WKS the same over the playoff weeks (%d-%d),%n"
+                + "OPP the average AHEAD of the opponents he still has to play, and LOW his weakest week ahead (byes): the%n"
+                + "odds are made of these and how they fall week by week - one bad bye week costs one game, an even sag costs several.%n%n",
+                league.thisWeek() + firstFuture, league.lastRegular(), league.playoffStart(), league.lastWeek()));
+        out.append(String.format("%-14s %6s %7s %7s %7s %7s %10s %8s %7s %7s %10s%n", "MANAGER", "RECORD", "PF", "AHEAD", "P-WKS", "OPP",
+                "LOW (wk)", "PLAYOFF", "BYE", "TITLE", "per pt"));
         List<String> order = new ArrayList<>(league.managers());
         order.sort(Comparator.comparingDouble((String m) -> -base.title(m)));
         for(String m : order){
             double perPoint = sensitivity(league, means, base, m, 3.0);
-            out.append(String.format("%-14s %6d %8.1f %6.1f%% %7.1f%% %6.1f%% %+9.2fpp%s%n", m, league.wins().getOrDefault(m, 0),
-                    means.get(m)[0], 100 * base.playoffs(m), 100 * base.bye(m), 100 * base.title(m), 100 * perPoint,
+            double[] opp = schedule.getOrDefault(m, new double[]{0, 1});
+            int low = firstFuture;
+            for(int k = firstFuture; k <= lastRegularIndex; k++){
+                if(means.get(m)[k] < means.get(m)[low]){
+                    low = k;
+                }
+            }
+            out.append(String.format("%-14s %6s %7.1f %7.1f %7.1f %7.1f %6.1f (%d) %7.1f%% %6.1f%% %6.1f%% %+9.2fpp%s%n", m, record.getOrDefault(m, "-"),
+                    pointsFor.getOrDefault(m, 0.0), ahead.get(m), playoffWeeks.get(m), opp[0] / Math.max(1, opp[1]),
+                    means.get(m)[low], league.thisWeek() + low,
+                    100 * base.playoffs(m), 100 * base.bye(m), 100 * base.title(m), 100 * perPoint,
                     m.equals(me) ? "   <- you" : ""));
         }
         out.append("\nNot modelled: injuries yet to happen, waiver moves, other trades. A team this calls out of it has\n");
