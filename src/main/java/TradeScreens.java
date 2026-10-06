@@ -735,6 +735,21 @@ public class TradeScreens {
         }
         out.append(String.format("  %-34s %-34s%n", String.format("starters %.1f", before.starters()),
                 String.format("starters %.1f", then.starters())));
+
+        // AND WHAT IT DOES TO THE TITLE (TitleOdds), for both managers, every man held
+        // counted - a man in an IR slot now is projected back when he is
+        List<String> myAfter = new ArrayList<>(mine);
+        myAfter.removeAll(mySend);
+        if(myReceive.size() > mySend.size()){
+            myAfter.remove(TradeMarket.worstOther(mine, mySend, remaining));
+        }
+        myAfter.addAll(myReceive);
+        TitleOdds.Stakes stakes = TitleOdds.stakes(configuration, TitleOdds.SIMS);
+        TitleOdds.Delta[] title = stakes.swap(me, myAfter, with, after);
+        out.append(String.format("%n  TITLE ODDS (TitleOdds, %d seasons, the same draws before and after):%n"
+                        + "    you   %5.1f%%  %+.2fpp (+-%.2f)%n    %-5s %5.1f%%  %+.2fpp (+-%.2f)   he is %s%n",
+                TitleOdds.SIMS, 100 * stakes.title(me), 100 * title[0].change(), 100 * title[0].se(),
+                with, 100 * stakes.title(with), 100 * title[1].change(), 100 * title[1].se(), stakes.state(with)));
         return out.toString();
     }
 
