@@ -79,6 +79,29 @@ import java.util.TreeSet;
 public class FaabDemand {
 
     static final ZoneId LEAGUE_ZONE = ZoneId.of("America/New_York");
+
+    /** Section 1's by-weekday table, saved for FaabRivals: day -> {contests, contested share, median, p75, p90, P(win) at $1 $3 $5 $8 $13 $20}. */
+    static final Path DAYS = Path.of("data", "faab-days.tsv");
+
+    static Map<DayOfWeek, double[]> days(){
+        Map<DayOfWeek, double[]> out = new TreeMap<>();
+        try {
+            for(String line : Files.readAllLines(DAYS, StandardCharsets.UTF_8)){
+                String[] c = line.split("\t");
+                if(c.length >= 12 && !c[0].equals("day")){
+                    double[] v = new double[11];
+                    for(int i = 0; i < 11; i++){
+                        v[i] = Double.parseDouble(c[i + 1]);
+                    }
+                    out.put(DayOfWeek.valueOf(c[0]), v);
+                }
+            }
+        }
+        catch(IOException | IllegalArgumentException missing){
+            // no table yet: FaabRivals says so
+        }
+        return out;
+    }
     static final double LAMBDA = 1.0;
     static final int[] LADDER = {0, 1, 2, 3, 5, 8, 13, 20, 35, 50};
     static final String[] FEATURES = {"snap share", "snap jump", "touches", "points", "ppg so far", "log ADP", "dropped", "RB", "WR", "TE", "QB",
@@ -597,6 +620,8 @@ public class FaabDemand {
                 "contested", "median", "p75", "p90", "P(win) at $1 $3 $5 $8 $13 $20"));
         DayOfWeek bigRun = null;
         int bigDollars = -1;
+        // the table, saved for FaabRivals: what a claim costs depends on the run it lands in
+        StringBuilder days = new StringBuilder("day\tcontests\tcontested\tmedian\tp75\tp90\twin1\twin3\twin5\twin8\twin13\twin20\n");
         for(Map.Entry<DayOfWeek, List<Contest>> e : byDay.entrySet()){
             List<Integer> prices = new ArrayList<>();
             int dollars = 0;
@@ -615,11 +640,16 @@ public class FaabDemand {
             out.append(String.format("%-10s %8d %6.0f%% %8d %6.0f%% %8.0f%% %7d %7d %7d   ", e.getKey(), prices.size(),
                     100.0 * prices.size() / totalContests, dollars, 100.0 * dollars / totalDollars,
                     100.0 * contested / prices.size(), quantile(prices, 0.5), quantile(prices, 0.75), quantile(prices, 0.9)));
+            days.append(String.format("%s\t%d\t%.4f\t%d\t%d\t%d", e.getKey(), prices.size(), (double) contested / prices.size(),
+                    quantile(prices, 0.5), quantile(prices, 0.75), quantile(prices, 0.9)));
             for(int bid : new int[]{1, 3, 5, 8, 13, 20}){
                 out.append(String.format(" %3.0f%%", 100 * winChance(prices, bid)));
+                days.append(String.format("\t%.4f", winChance(prices, bid)));
             }
             out.append('\n');
+            days.append('\n');
         }
+        Files.writeString(DAYS, days.toString(), StandardCharsets.UTF_8);
         out.append(String.format("the big run is %s: the ladder to bid into on that day is its row, not the pooled one the page uses today.%n", bigRun));
 
         // ---------------------------------------------------------------- 2. the demand, over the wire

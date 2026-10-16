@@ -75,6 +75,38 @@ public class FaabRivals {
         return out;
     }
 
+    /**
+     * The run a claim placed now clears in - the league's daily run at noon
+     * Eastern, today if before it, else tomorrow (a man just dropped clears a day
+     * later) - and what claims on that weekday have cost here, 2021-2025.
+     */
+    static String runNote(java.time.ZonedDateTime now, Map<java.time.DayOfWeek, double[]> days){
+        java.time.ZonedDateTime run = now.withHour(12).withMinute(0).withSecond(0).withNano(0);
+        if(!now.isBefore(run)){
+            run = run.plusDays(1);
+        }
+        java.time.DayOfWeek day = run.getDayOfWeek();
+        double[] d = days.get(day);
+        if(d == null){
+            return String.format("A claim placed now clears %s noon. (No by-day table yet: run FaabDemand.)%n", day);
+        }
+        java.time.DayOfWeek big = day;
+        double most = -1;
+        for(Map.Entry<java.time.DayOfWeek, double[]> e : days.entrySet()){
+            if(e.getValue()[0] > most){
+                most = e.getValue()[0];
+                big = e.getKey();
+            }
+        }
+        return String.format("A claim placed now clears %s noon%s. On %ss here, 2021-2025: %.0f%% of claims contested, median price $%.0f,%n"
+                        + "p75 $%.0f, p90 $%.0f; a bid of $1 won %.0f%%, $3 %.0f%%, $5 %.0f%%.%s%n",
+                day, day == big ? " - THE BIG RUN, the first after the games" : "", day.toString().charAt(0) + day.toString().substring(1).toLowerCase(),
+                100 * d[1], d[2], d[3], d[4], 100 * d[5], 100 * d[6], 100 * d[7],
+                day == big ? "" : String.format(" The %s run is where the money goes (%.0f%% contested, median $%.0f): 'need' is%n"
+                        + "who a man would help, and off that day it is a ceiling on competition, not a forecast of it.",
+                        big, 100 * days.get(big)[1], days.get(big)[2]));
+    }
+
     /** FAAB left per manager, from the rosters feed's own counter. */
     static Map<String, Integer> faabLeft(AAAConfiguration configuration, Map<Integer, String> managerOf, int budget){
         Map<String, Integer> left = new TreeMap<>();
@@ -147,6 +179,12 @@ public class FaabRivals {
         StringBuilder out = new StringBuilder();
         out.append(DataStamp.line()).append('\n');
         out.append(String.format("FAAB RIVALS  %s  (the waiver run as an auction; priced on %s, 480 drawn seasons)%n", LocalDate.now(), source));
+        // WHICH RUN THE CLAIM LANDS IN, first. Justin, 2026-10-16: "you overestimate
+        // bidding wars for non wednesday days. They almost never happen." FaabDemand
+        // measured it: the run after the games (Wednesday) holds three dollars in four
+        // and half its claims are contested; any other day a claim clears at a median
+        // of $0. Need below is who a man would help, not who will bid on a Saturday.
+        out.append(runNote(java.time.ZonedDateTime.now(FaabDemand.LEAGUE_ZONE), FaabDemand.days())).append('\n');
         out.append(String.format("Each target's gain to every manager: his active roster with the target in for his lowest-projected man,%n"
                 + "less as it stands. A sealed first-price auction is priced by the most motivated OTHER bidder, so the%n"
                 + "columns are the three rivals he helps most and the FAAB each has left. 'need' counts rivals he helps by%n"

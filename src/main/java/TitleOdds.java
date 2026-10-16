@@ -221,16 +221,49 @@ public class TitleOdds {
         return out;
     }
 
-    /** Sleeper's projection for every week left, today's read of each. */
+    /** Free agents counted at each position as the wire a manager would fill a hole from: enough for the flexes. */
+    static final Map<Position, Integer> WIRE_DEPTH = Map.of(Position.QB, 1, Position.RB, 4, Position.WR, 4, Position.TE, 2, Position.DEF, 1);
+    static final String WIRE = "WIRE:";
+
+    /**
+     * Sleeper's projection for every week left, today's read of each - and the
+     * WIRE (2026-10-16). The points objective floors every slot at the waiver
+     * wire; this did not, so an empty slot in some week read as a zero. Dropping
+     * a second defence showed -1.1pp of title odds for the Ravens' bye in week
+     * 13, where in life a defence is streamed for $0, and any quarterback add was
+     * credited for filling Purdy's week-8 bye from nothing. Each week now carries
+     * that week's best free agents at each position under WIRE: keys, and every
+     * lineup may start them: a hole costs the gap to the wire, not the slot.
+     */
     static Map<Integer, Map<String, Double>> projections(League league){
+        java.util.Set<String> owned = LeagueOwners.today(AAAConfiguration.getInstance()).keySet();
         Map<Integer, Map<String, Double>> out = new TreeMap<>();
         for(int w = league.thisWeek(); w <= league.lastWeek(); w++){
-            out.put(w, LeagueWeek.projected(league.season(), w));
+            Map<String, Double> week = new HashMap<>(LeagueWeek.projected(league.season(), w));
+            Map<Position, List<Double>> free = new HashMap<>();
+            week.forEach((id, points) -> {
+                Player p = owned.contains(id) ? null : Player.getPlayerFromSIDV2(id);
+                if(p != null && WIRE_DEPTH.containsKey(p.position)){
+                    free.computeIfAbsent(p.position, k -> new ArrayList<>()).add(points);
+                }
+            });
+            withWire(week, free);
+            out.put(w, week);
         }
         return out;
     }
 
-    /** One roster's best legal lineup on one week's projection: the men with a projection that week. */
+    /** Put each position's best free agents into a week's projection under WIRE:<position>:<rank> keys. */
+    static void withWire(Map<String, Double> week, Map<Position, List<Double>> free){
+        free.forEach((position, list) -> {
+            list.sort(java.util.Collections.reverseOrder());
+            for(int k = 0; k < Math.min(WIRE_DEPTH.get(position), list.size()); k++){
+                week.put(WIRE + position.name() + ":" + (k + 1), list.get(k));
+            }
+        });
+    }
+
+    /** One roster's best legal lineup on one week's projection: the men with a projection that week, and the wire behind them. */
     static double weekMean(List<String> roster, Map<String, Double> projection){
         List<TeamRankings.Man> men = new ArrayList<>();
         for(String id : roster){
@@ -240,6 +273,12 @@ public class TitleOdds {
                 men.add(new TeamRankings.Man(id, id, p.position.name(), p.team, points, false, 0, null));
             }
         }
+        projection.forEach((key, points) -> {
+            if(key.startsWith(WIRE)){
+                String position = key.substring(WIRE.length(), key.indexOf(':', WIRE.length()));
+                men.add(new TeamRankings.Man(key, key, position, "", points, false, 0, null));
+            }
+        });
         return TeamRankings.bestLineup(men).starters();
     }
 

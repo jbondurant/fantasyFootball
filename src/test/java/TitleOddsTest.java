@@ -117,6 +117,24 @@ public class TitleOddsTest {
         assertEquals(0.0, TeamError.sigma(List.of(1.0, -1.0), 12, 10, 23.7), 1e-12, "noise alone explains it: floored at zero");
     }
 
+    /** A hole in a lineup is filled from the wire, not left at zero - the points objective's floor, now the title's too. */
+    @Test
+    public void anEmptySlotIsFilledFromTheWire(){
+        Map<String, Double> week = new HashMap<>();
+        Map<Position, List<Double>> free = new HashMap<>();
+        free.put(Position.QB, new ArrayList<>(List.of(12.0, 15.0)));
+        free.put(Position.RB, new ArrayList<>(List.of(5.0, 6.0, 7.0, 8.0, 9.0)));
+        free.put(Position.WR, new ArrayList<>(List.of(4.0, 5.0, 6.0, 7.0)));
+        free.put(Position.TE, new ArrayList<>(List.of(3.0, 4.0)));
+        free.put(Position.DEF, new ArrayList<>(List.of(6.0)));
+        TitleOdds.withWire(week, free);
+        assertEquals(15.0, week.get("WIRE:QB:1"), 1e-12, "the best free quarterback");
+        assertFalse(week.containsKey("WIRE:QB:2"), "one quarterback is all a lineup starts");
+        assertFalse(week.containsKey("WIRE:RB:5"), "four backs cover both backs and the flexes");
+        // a roster of nobody starts the wire's best ten: QB 15, RB 9+8, WR 7+6+5, TE 4, FLEX 7 (RB) + 6 (RB), DEF 6
+        assertEquals(15 + 9 + 8 + 7 + 6 + 5 + 4 + 7 + 6 + 6, TitleOdds.weekMean(List.of(), week), 1e-9);
+    }
+
     @Test
     public void aTieGoesToTheHigherSeedAndTheMedianIsTheMiddle(){
         assertEquals(0, TitleOdds.winner(0, 1, new double[]{90, 90}));
@@ -161,6 +179,22 @@ public class TitleOddsTest {
         assertEquals(-40.0, needs.get(1).gain(), 1e-9, "B would cut a 90 for him");
         FaabRivals.Market market = new FaabRivals.Market("x", 5, needs);
         assertEquals(1, market.bidders(11.3));
+    }
+
+    /** A claim placed Friday afternoon clears Saturday noon, and the note reads Saturday's row, not Wednesday's. */
+    @Test
+    public void theRunNoteReadsTheDayTheClaimClears(){
+        Map<java.time.DayOfWeek, double[]> days = new TreeMap<>();
+        days.put(java.time.DayOfWeek.WEDNESDAY, new double[]{544, 0.49, 3, 7, 13, 0.38, 0.53, 0.67, 0.79, 0.90, 0.95});
+        days.put(java.time.DayOfWeek.SATURDAY, new double[]{119, 0.18, 0, 1, 4, 0.72, 0.88, 0.93, 0.96, 0.97, 0.99});
+        java.time.ZoneId et = java.time.ZoneId.of("America/New_York");
+        String friday = FaabRivals.runNote(java.time.ZonedDateTime.of(2026, 10, 16, 15, 0, 0, 0, et), days);
+        assertTrue(friday.startsWith("A claim placed now clears SATURDAY noon."), friday);
+        assertTrue(friday.contains("18% of claims contested") && friday.contains("ceiling on competition"), friday);
+        String tuesday = FaabRivals.runNote(java.time.ZonedDateTime.of(2026, 10, 20, 15, 0, 0, 0, et), days);
+        assertTrue(tuesday.contains("WEDNESDAY noon - THE BIG RUN"), tuesday);
+        String morning = FaabRivals.runNote(java.time.ZonedDateTime.of(2026, 10, 21, 9, 0, 0, 0, et), days);
+        assertTrue(morning.contains("WEDNESDAY noon"), "before noon it is today's run: " + morning);
     }
 
     // ------------------------------------------------------------------ PlayProbability
