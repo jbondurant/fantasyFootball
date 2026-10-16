@@ -399,8 +399,16 @@ public class LeagueConsole {
         // the pooled one bid a dollar where the run wanted three.
         List<Integer> bigRunPrices = faabReport == null ? List.of()
                 : FaabBid.readPrices(Files.readAllLines(faabReport), "BIGRUN");
-        FaabBid.Band allBand = new FaabBid.Band(bigRunPrices.isEmpty() ? "all" : "big run", 0, Double.MAX_VALUE,
-                bigRunPrices.isEmpty() ? allPrices : bigRunPrices);
+        // ...unless the claim clears on another day (2026-10-16, Justin: "you
+        // overestimate bidding wars for non wednesday days. They almost never
+        // happen"): a claim placed now clears at the next noon run, and if that is
+        // not the big run its prices are the off days' (FaabBid's PRICES OFFDAY)
+        List<Integer> offDayPrices = faabReport == null ? List.of()
+                : FaabBid.readPrices(Files.readAllLines(faabReport), "OFFDAY");
+        String bidRun = FaabRivals.clearsOnBigRun(java.time.ZonedDateTime.now(FaabDemand.LEAGUE_ZONE), FaabDemand.days())
+                || offDayPrices.isEmpty() ? (bigRunPrices.isEmpty() ? "all" : "big run") : "off day";
+        FaabBid.Band allBand = new FaabBid.Band(bidRun, 0, Double.MAX_VALUE,
+                bidRun.equals("off day") ? offDayPrices : bigRunPrices.isEmpty() ? allPrices : bigRunPrices);
         FaabBid.Band contestedBand = new FaabBid.Band("contested", 0, Double.MAX_VALUE, contestedPrices);
 
         // ---- WHO TO ADD, with the model doing the valuing.
@@ -1074,7 +1082,7 @@ public class LeagueConsole {
                         + "\"lineup\":%s,\"trades\":%s,\"supply\":%s,\"faab\":%s,"
                         + "\"faabAll\":%d,\"faabContested\":%d,\"faabFree\":%s,\"costs\":[1,1.5,2,3],"
                         + "\"budget\":%d,\"wire\":%s,\"swapFloor\":%s,\"wireScenarios\":%d,\"lookahead\":%d,\"chainDepth\":%d,\"chainPool\":%d,\"pool\":%d,\"batnaPool\":%d,\"dataStamp\":%s,\"losesToElsewhere\":%d,\"insideItsOwnNoise\":%d,\"errorSeeds\":%d,\"keepers2027\":%s,\"fairTrades\":%d,\"askTrades\":%d,\"mirage\":%s,\"opticsBar\":%s,\"winAll\":%s,\"winContested\":%s,"
-                        + "\"floorBasis\":%s,\"tradeFloor\":%s,\"wireBasis\":%s,\"wireUnits\":%s,\"wireHere\":%s}",
+                        + "\"floorBasis\":%s,\"tradeFloor\":%s,\"wireBasis\":%s,\"wireUnits\":%s,\"wireHere\":%s,\"bidRun\":%s}",
                 quote(season), week, quote(me), quote(LocalDate.now().toString()),
                 scenarios, withKeepers, num(lineup.starters()), lineup.starting().size(),
                 lineupJson, tradesJson, supplyJson, faabGrid(allBand, costs),
@@ -1082,7 +1090,7 @@ public class LeagueConsole {
                 num(allPrices.isEmpty() ? 0 : allPrices.stream().filter(p -> p == 0).count() * 100.0 / allPrices.size()),
                 budgetLeft, wireJson, num(swapFloor), wireScenarios, lookahead, chainDepth, chainPool, pool, batnaPool, quote(DataStamp.stamp()), losesToElsewhere, insideItsOwnNoise, errorSeeds, keepersJson, fairTrades, askTrades, mirageJson, num(looksGoodBar), winLadder(allBand), winLadder(contestedBand),
                 quote(measuredFloor.source() + " on " + measuredFloor.date()), num(tradeFloor), quote(TuesdaySwap.DEFAULT_SOURCE), quote(wireUnits.describe()),
-                num(wireUnits.fromHere(1.0)));
+                num(wireUnits.fromHere(1.0)), quote(allBand.label()));
 
         Path target = Path.of("data", "console-" + season + "-w" + week + ".html");
         Files.writeString(target, page(json), StandardCharsets.UTF_8);

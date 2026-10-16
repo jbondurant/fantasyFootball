@@ -339,7 +339,7 @@ public class FaabBid {
     }
 
     static String report(List<Contest> contests){
-        List<Integer> all = new ArrayList<>(), contested = new ArrayList<>(), bigRun = new ArrayList<>();
+        List<Integer> all = new ArrayList<>(), contested = new ArrayList<>(), bigRun = new ArrayList<>(), offDay = new ArrayList<>();
         java.time.DayOfWeek big = bigRun(contests);
         for(Contest contest : contests){
             all.add(contest.clearingBid());
@@ -349,10 +349,15 @@ public class FaabBid {
             if(big != null && contest.cleared() > 0 && FaabDemand.weekday(contest.cleared()) == big){
                 bigRun.add(contest.clearingBid());
             }
+            else if(big != null && contest.cleared() > 0){
+                offDay.add(contest.clearingBid());     // every other run: where a mid-week claim clears
+            }
         }
         all.sort(Comparator.naturalOrder());
         contested.sort(Comparator.naturalOrder());
         bigRun.sort(Comparator.naturalOrder());
+        offDay.sort(Comparator.naturalOrder());
+        Band offBand = new Band("off day", 0, Double.MAX_VALUE, offDay);
         Band allBand = new Band("all", 0, Double.MAX_VALUE, all);
         Band contestedBand = new Band("contested", 0, Double.MAX_VALUE, contested);
         Band bigBand = new Band("big run", 0, Double.MAX_VALUE, bigRun);
@@ -395,10 +400,16 @@ public class FaabBid {
         out.append("\n");
         out.append(String.format("%-12s", "big run"));
         for(int bid : ladder){ out.append(String.format(" %5.0f%%", 100 * bigBand.winChance(bid))); }
-        out.append("\nThe page bids from the big-run prices: a claim placed after the games clears into that market.");
+        out.append("\n");
+        out.append(String.format("%-12s", "off day"));
+        for(int bid : ladder){ out.append(String.format(" %5.0f%%", 100 * offBand.winChance(bid))); }
+        // 2026-10-16, Justin: "you overestimate bidding wars for non wednesday days. They
+        // almost never happen." The page bid every claim from the big run's prices.
+        out.append("\nThe page bids from the run the claim clears in: the big run's prices on that day, the off days' otherwise.");
         out.append("\n\nPRICES ALL\n");
         out.append(join(all)).append("\n\nPRICES CONTESTED\n").append(join(contested));
-        out.append("\n\nPRICES BIGRUN\n").append(join(bigRun)).append("\n");
+        out.append("\n\nPRICES BIGRUN\n").append(join(bigRun));
+        out.append("\n\nPRICES OFFDAY\n").append(join(offDay)).append("\n");
         return out.toString();
     }
 

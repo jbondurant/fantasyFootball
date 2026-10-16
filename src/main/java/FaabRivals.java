@@ -107,6 +107,26 @@ public class FaabRivals {
                         big, 100 * days.get(big)[1], days.get(big)[2]));
     }
 
+    /** Does a claim placed now clear in the big run (the weekday most claims clear)? True when there is no table to say. */
+    static boolean clearsOnBigRun(java.time.ZonedDateTime now, Map<java.time.DayOfWeek, double[]> days){
+        if(days.isEmpty()){
+            return true;
+        }
+        java.time.ZonedDateTime run = now.withHour(12).withMinute(0).withSecond(0).withNano(0);
+        if(!now.isBefore(run)){
+            run = run.plusDays(1);
+        }
+        java.time.DayOfWeek big = null;
+        double most = -1;
+        for(Map.Entry<java.time.DayOfWeek, double[]> e : days.entrySet()){
+            if(e.getValue()[0] > most){
+                most = e.getValue()[0];
+                big = e.getKey();
+            }
+        }
+        return run.getDayOfWeek() == big;
+    }
+
     /** FAAB left per manager, from the rosters feed's own counter. */
     static Map<String, Integer> faabLeft(AAAConfiguration configuration, Map<Integer, String> managerOf, int budget){
         Map<String, Integer> left = new TreeMap<>();

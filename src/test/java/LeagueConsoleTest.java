@@ -49,8 +49,16 @@ public class LeagueConsoleTest {
     }
 
     /** The comparator above, exercised on the order that would have broken it. */
-    /** The band the page bids from: the big run's prices, or every claim's on an older contests file. */
-    private static FaabBid.Band biddingBand(List<String> lines){
+    /**
+     * The band the page bids from: the one it names in bidRun (since 2026-10-16 the
+     * off days' prices when the claim clears off the big run), else the big run's
+     * prices, or every claim's on an older contests file.
+     */
+    private static FaabBid.Band biddingBand(List<String> lines, String page){
+        Matcher named = Pattern.compile("\"bidRun\":\"([^\"]+)\"").matcher(page);
+        if(named.find() && named.group(1).equals("off day")){
+            return new FaabBid.Band("off day", 0, Double.MAX_VALUE, FaabBid.readPrices(lines, "OFFDAY"));
+        }
         List<Integer> bigRun = FaabBid.readPrices(lines, "BIGRUN");
         return new FaabBid.Band(bigRun.isEmpty() ? "all" : "big run", 0, Double.MAX_VALUE,
                 bigRun.isEmpty() ? FaabBid.readPrices(lines, "ALL") : bigRun);
@@ -102,7 +110,7 @@ public class LeagueConsoleTest {
 
         Path prices = FaabBid.newestCurve();
         assertNotNull(prices, "the contest history the page priced from must be committed");
-        FaabBid.Band band = biddingBand(Files.readAllLines(prices));
+        FaabBid.Band band = biddingBand(Files.readAllLines(prices), page);
         double[] costs = {1.0, 1.5, 2.0, 3.0};
 
         int checked = 0;
@@ -133,7 +141,7 @@ public class LeagueConsoleTest {
         Path prices = FaabBid.newestCurve();
         assertNotNull(prices, "the contest history the page priced from must be committed");
         List<String> lines = Files.readAllLines(prices);
-        FaabBid.Band all = biddingBand(lines);
+        FaabBid.Band all = biddingBand(lines, page);
         FaabBid.Band contested = new FaabBid.Band("contested", 0, Double.MAX_VALUE,
                 FaabBid.readPrices(lines, "CONTESTED"));
 
@@ -285,7 +293,7 @@ public class LeagueConsoleTest {
 
         Path prices = FaabBid.newestCurve();
         assertNotNull(prices, "the contest history the page priced from must be committed");
-        FaabBid.Band band = biddingBand(Files.readAllLines(prices));
+        FaabBid.Band band = biddingBand(Files.readAllLines(prices), page);
 
         // THE BID IS ON THE FROM-HERE WORTH, not the seventeen-week one: the page
         // bid on the unscaled number until 2026-09-14 while the report beside it
