@@ -49,7 +49,12 @@ public class DefenceThisWeek {
 
     /** One defence this week: what it is projected, its form so far, and its preseason rank. */
     public record Defence(String id, String name, double preseasonAdp, Double form,
-                          int gamesSoFar, boolean mine, boolean free) {}
+                          int gamesSoFar, boolean mine, boolean free, boolean plays) {
+        /** A defence that plays this week - the shape before byes were read (2026-10-16). */
+        public Defence(String id, String name, double preseasonAdp, Double form, int gamesSoFar, boolean mine, boolean free){
+            this(id, name, preseasonAdp, form, gamesSoFar, mine, free, true);
+        }
+    }
 
     /**
      * The best defence Justin can START this week under the measured rule:
@@ -69,8 +74,11 @@ public class DefenceThisWeek {
      */
     static Defence pick(List<Defence> pool, int finishedWeeks, int lag){
         List<Defence> startable = new ArrayList<>();
+        // ...and only a defence that can play this week: on 2026-10-16 the tool said
+        // "claim and start Vikings (free)" for a Vikings Justin already held, in
+        // their bye week. A bye, or a game already kicked off, is not startable.
         for(Defence defence : pool){
-            if(defence.free() || defence.mine()){
+            if((defence.free() || defence.mine()) && defence.plays()){
                 startable.add(defence);
             }
         }
@@ -146,6 +154,10 @@ public class DefenceThisWeek {
         }
 
         Map<String, String> ownerOf = LeagueOwners.today(configuration);
+        // who can still play this week: a club on its bye cannot, nor one whose game has kicked off
+        java.util.Set<String> playing = TeamError.playing(season, week);
+        java.util.Set<String> started = NflverseGames.kickedOff(NflverseGames.games(), season, week,
+                java.time.LocalDateTime.now(java.time.ZoneId.of("America/New_York")));
         List<Defence> pool = new ArrayList<>();
         for(Map.Entry<String, Double> entry : new TreeMap<>(adp).entrySet()){
             String id = entry.getKey();
@@ -153,10 +165,12 @@ public class DefenceThisWeek {
             Double form = running == null || running[1] == 0 ? null : running[0] / running[1];
             String owner = ownerOf.get(id);
             pool.add(new Defence(id, nameOf.getOrDefault(id, id), entry.getValue(), form,
-                    running == null ? 0 : (int) running[1], me.equals(owner), owner == null));
+                    running == null ? 0 : (int) running[1], me.equals(owner), owner == null,
+                    playing.isEmpty() || playing.contains(id) && !started.contains(id)));
         }
         Defence policy = pick(pool, finished, lag);
-        Defence held = pool.stream().filter(Defence::mine).findFirst().orElse(null);
+        List<Defence> mine = pool.stream().filter(Defence::mine).toList();
+        Defence held = mine.stream().filter(Defence::plays).findFirst().orElse(mine.isEmpty() ? null : mine.get(0));
 
         StringBuilder out = new StringBuilder();
         out.append(String.format("DEFENCE FOR WEEK %d  %s  season %s  (%s)%n", week, LocalDate.now(), season, me));
@@ -169,16 +183,17 @@ public class DefenceThisWeek {
                         + "that exists yet - over the defences you can START: the free ones AND your own.%n%n", finished)
                 : String.format("%n%d finished week(s): the pick is by points per game over those weeks, again over the free%n"
                         + "defences AND your own. Nothing in this choice can see week %d.%n%n", finished, week));
-        out.append(String.format("%-16s %8s %8s %7s   %s%n", "DEFENCE", "ADP", "FORM", "GAMES", "WHO HOLDS HIM"));
+        out.append(String.format("%-16s %8s %8s %7s   %-14s %s%n", "DEFENCE", "ADP", "FORM", "GAMES", "WHO HOLDS HIM", "WEEK " + week));
         List<Defence> shown = new ArrayList<>(pool);
         shown.sort(finished < lag
                 ? Comparator.comparingDouble(Defence::preseasonAdp)
                 : Comparator.comparingDouble((Defence d) -> d.form() == null ? Double.MAX_VALUE : -d.form()));
         for(Defence defence : shown.subList(0, Math.min(12, shown.size()))){
-            out.append(String.format("%-16s %8.1f %8s %7d   %s%n", defence.name(), defence.preseasonAdp(),
+            out.append(String.format("%-16s %8.1f %8s %7d   %-14s %s%n", defence.name(), defence.preseasonAdp(),
                     defence.form() == null ? "-" : String.format("%.1f", defence.form()),
                     defence.gamesSoFar(),
-                    defence.mine() ? "YOU" : defence.free() ? "free" : ownerOf.getOrDefault(defence.id(), "?")));
+                    defence.mine() ? "YOU" : defence.free() ? "free" : ownerOf.getOrDefault(defence.id(), "?"),
+                    defence.plays() ? "plays" : !playing.contains(defence.id()) ? "BYE" : "kicked off"));
         }
         out.append("\n");
         if(policy == null){
@@ -188,17 +203,25 @@ public class DefenceThisWeek {
             out.append(String.format("You hold no defence. The policy says claim and start %s.%n", policy.name()));
             out.append("(With no defence of your own the choice set IS the free men, so this is the backtested rule exactly.)\n");
         }
-        else if(policy.id().equals(held.id())){
-            out.append(String.format("START %s - you already hold the best defence available to you%s.%n", held.name(),
+        else if(policy.mine()){
+            out.append(String.format("START %s - you already hold the best defence you can start this week%s.%n", policy.name(),
                     finished < lag ? " by preseason rank" : " on form"));
+            for(Defence other : mine){
+                if(!other.id().equals(policy.id())){
+                    out.append(String.format("(%s, also yours, %s.)%n", other.name(), other.plays() ? "is the worse start on form" : "is on its bye"));
+                }
+            }
         }
         else {
             out.append(String.format("THE POLICY SAYS: claim and start %s (free%s).%n", policy.name(),
                     policy.form() == null ? String.format(", preseason ADP %.1f", policy.preseasonAdp())
                             : String.format(", %.1f a game over %d", policy.form(), policy.gamesSoFar())));
-            out.append(String.format("YOU HOLD: %s (%s).%n", held.name(),
-                    held.form() == null ? String.format("preseason ADP %.1f", held.preseasonAdp())
-                            : String.format("%.1f a game over %d", held.form(), held.gamesSoFar())));
+            for(Defence d : mine){
+                out.append(String.format("YOU HOLD: %s (%s)%s.%n", d.name(),
+                        d.form() == null ? String.format("preseason ADP %.1f", d.preseasonAdp())
+                                : String.format("%.1f a game over %d", d.form(), d.gamesSoFar()),
+                        d.plays() ? "" : ", not playing this week"));
+            }
             out.append("\nRead this honestly. The 8.03 was measured for a manager who streams ALL SEASON and never\n");
             out.append("drafts a defence, choosing among UNDRAFTED men only. You drafted one, so the choice set here\n");
             out.append("is yours plus the free men - otherwise the rule would tell you to trade down to whatever the\n");

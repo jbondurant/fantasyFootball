@@ -61,4 +61,16 @@ public class DefenceThisWeekTest {
         assertNull(DefenceThisWeek.pick(List.of(def("Rams", 97.1, 9.0, false, false)), 3, 2),
                 "somebody else's defence is not a pick");
     }
+
+    /** A defence on its bye cannot be started, held or free - 2026-10-16, the Vikings. */
+    @org.junit.jupiter.api.Test
+    public void aDefenceOnItsByeIsNotAStart(){
+        List<DefenceThisWeek.Defence> pool = List.of(
+                new DefenceThisWeek.Defence("MIN", "Vikings", 155.8, 13.0, 5, true, false, false),
+                new DefenceThisWeek.Defence("BAL", "Ravens", 132.4, 6.0, 5, true, false, true),
+                new DefenceThisWeek.Defence("LV", "Raiders", 686.9, 12.0, 4, false, true, true));
+        assertEquals("Raiders", DefenceThisWeek.pick(pool, 5, 2).name(), "the Vikings sit; the best startable is the free Raiders");
+        assertEquals("Ravens", DefenceThisWeek.pick(List.of(pool.get(0), pool.get(1)), 5, 2).name(),
+                "with nothing free, start the held defence that plays");
+    }
 }
