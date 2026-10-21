@@ -41,21 +41,19 @@ one that makes the 58 sides made after week 1 read most even (mean |log ratio|):
   On that blend, what accepted sides got back: 10th percentile 52%, 25th 72%, median 102%. A trade that
   gives him less than the 10th percentile is a NO (Screens.noChance).
 
-THE TRADE - you give Derrick Henry,Bhayshul Tuten,Jakobi Meyers, you get Ja'Marr Chase,Jordan Love,Javonte Williams. From HIS side:
+THE TRADE - you give Derrick Henry,Bhayshul Tuten, you get Ja'Marr Chase,Javonte Williams. From HIS side:
   he gets  Derrick Henry            draft   90.0   points  182.5
   he gets  Bhayshul Tuten           draft   32.5   points   99.2
-  he gets  Jakobi Meyers            draft   11.1   points    8.9
   he gives Ja'Marr Chase            draft  107.3   points   91.0
-  he gives Jordan Love              draft    6.5   points    0.0
   he gives Javonte Williams         draft   54.2   points  146.2
-  totals: draft 133.6 for 168.0, points 290.6 for 237.2
-  fair to him - he gets back 101% of what he gives on what he can see (80% of the draft value, 122% of the season's points; draft counted as 10 games against 7 played)
+  totals: draft 122.5 for 161.5, points 281.6 for 237.2
+  a long shot - he gets back 98% of what he gives on what he can see (76% of the draft value, 119% of the season's points; draft counted as 10 games against 7 played); 29 of 60 accepted sides here took as little (BHier, Hamrliks, KevinDA, Renteez, itsabust, justinb314, patekxwater, tommyrads)
 
 WHAT THE OBJECTIVE SAYS - 17 x the best legal lineup, the bench as insurance, 240 drawn seasons - on each pricing, with Bo Nix already on your roster:
   pricing                  you   Renteez   his cut (if he takes more men)
-  sleeper                +42.1      -6.4   
-  sleeper-remaining      +34.9     -27.4   
-  ros                     +5.7     +15.5   
+  sleeper                +45.5     -45.8   
+  sleeper-remaining      +50.8     -68.1   
+  ros                    +10.9     -16.6   
 
   Renteez's best lineup on sleeper-remaining (Sleeper's weekly projections over the games left):
   BEFORE                             AFTER                             
@@ -63,14 +61,20 @@ WHAT THE OBJECTIVE SAYS - 17 x the best legal lineup, the bench as insurance, 24
   RB  Javonte Williams        190.4  RB  Derrick Henry           173.9 
   RB  Travis Etienne           91.2  RB  Bhayshul Tuten          133.7 
   WR  Ja'Marr Chase           182.4  WR  Ladd McConkey           113.5 
-  WR  Ladd McConkey           113.5  WR  Jakobi Meyers            99.1 
-  WR  Rashod Bateman           63.0  WR  Rashod Bateman           63.0 
+  WR  Ladd McConkey           113.5  WR  Rashod Bateman           63.0 
+  WR  Rashod Bateman           63.0  WR  Kayshon Boutte           52.3 
   TE  Dalton Kincaid           92.1  TE  Dalton Kincaid           92.1 
   DEF Cleveland Browns         70.5  DEF Cleveland Browns         70.5 
   RB  Mike Washington          60.0  RB  Travis Etienne           91.2 
   WR  Kayshon Boutte           52.3  RB  Mike Washington          60.0 
-  starters 1195.7                    starters 1177.3                   
+  starters 1195.7                    starters 1130.5                   
 
   TITLE ODDS (TitleOdds, 20000 seasons, the same draws before and after) - the claim alone moves you +0.00pp; the trade on top of it::
-    you     6.5%  +3.07pp (+-0.17)
-    Renteez   0.4%  -0.18pp (+-0.04)   he is out of it
+    you     6.5%  +3.61pp (+-0.17)
+    Renteez   0.4%  -0.27pp (+-0.04)   he is out of it
+
+  KEEPERS (2027) - your best two keepers' surplus over the picks they cost (TradeMarket's arithmetic):
+    today            77.7  Bhayshul Tuten (r11, +58.0) + Brock Purdy (r12, +19.7)
+    with the claim   90.8  Bhayshul Tuten (r11, +58.0) + Bo Nix (r15, +32.8)
+    after the trade  45.8  Bo Nix (r15, +32.8) + Javonte Williams (r4, +13.0)
+    the trade's keeper cost: -45.0

@@ -765,6 +765,51 @@ public class TradeScreens {
                         100 * claimOnly[0].change()),
                 100 * (stakes.title(me) + claimOnly[0].change()), 100 * (title[0].change() - claimOnly[0].change()), 100 * title[0].se(),
                 with, 100 * stakes.title(with), 100 * (title[1].change() - claimOnly[1].change()), 100 * title[1].se(), stakes.state(with)));
+        out.append(keepers(configuration, ownerOf, today, mine, myAfter, assumed));
+        return out.toString();
+    }
+
+    /**
+     * KEEPERS (2027), with TradeMarket's own arithmetic: each man's surplus over
+     * the pick his keeper round costs, priced on the season feed, and the best
+     * legal pair. Justin, 2026-10-20: "what about keeper value" - the Chase trade
+     * sent Tuten, his best keeper, and the single-trade check did not say so.
+     * An assumed claim is priced at the round this league's draft set for him.
+     */
+    static String keepers(AAAConfiguration configuration, Map<String, String> ownerOf, List<String> today,
+                          List<String> withClaims, List<String> afterTrade, List<String> assumed){
+        Map<String, Double> seasonFeed = ProjectionSources.resolve("sleeper");
+        Map<String, Position> positionOf = new HashMap<>();
+        java.util.Set<String> ids = new HashSet<>(ownerOf.keySet());
+        ids.addAll(assumed);
+        for(String id : ids){
+            Player p = Player.getPlayerFromSIDV2(id);
+            positionOf.put(id, p == null ? null : p.position);
+        }
+        Map<String, Position> everyPosition = TradeMarket.everyPosition(seasonFeed, positionOf);
+        Map<Position, java.util.TreeMap<Double, Double>> bestByAdp = TradeMarket.bestStillAvailable(seasonFeed, everyPosition);
+        Map<String, Integer> keeperRound = NextYearKeepers.roundsForThisLeague(configuration, ids);
+        Map<String, Integer> slotOfPlayer = TradeMarket.draftSlotOfPlayer(ownerOf, configuration);
+        Map<String, Double> surplus = new HashMap<>();
+        for(String id : keeperRound.keySet()){
+            surplus.put(id, TradeMarket.keeperPoints(keeperRound, seasonFeed, bestByAdp, everyPosition, configuration, slotOfPlayer, id));
+        }
+        java.util.function.Function<List<String>, String> pair = roster -> {
+            List<String> best = TradeMarket.bestKeeperPair(roster, surplus, everyPosition);
+            List<String> named = new ArrayList<>();
+            for(String id : best){
+                named.add(String.format("%s (r%s, %+.1f)", name(id), keeperRound.get(id), surplus.getOrDefault(id, 0.0)));
+            }
+            return String.format("%.1f  %s", TradeMarket.keeperValue(roster, surplus, everyPosition), String.join(" + ", named));
+        };
+        StringBuilder out = new StringBuilder(String.format("%n  KEEPERS (2027) - your best two keepers' surplus over the picks they cost (TradeMarket's arithmetic):%n"));
+        out.append(String.format("    today            %s%n", pair.apply(today)));
+        if(!assumed.isEmpty()){
+            out.append(String.format("    with the claim   %s%n", pair.apply(withClaims)));
+        }
+        out.append(String.format("    after the trade  %s%n", pair.apply(afterTrade)));
+        out.append(String.format("    the trade's keeper cost: %+.1f%n", TradeMarket.keeperValue(afterTrade, surplus, everyPosition)
+                - TradeMarket.keeperValue(withClaims, surplus, everyPosition)));
         return out.toString();
     }
 
