@@ -523,14 +523,24 @@ public class TuesdaySwap {
         // agent is priced as an add with nothing dropped. It is a rental: when he
         // comes off IR a man must go to activate him, and the swap table above is
         // that later choice.
-        if(!toIr.isEmpty()){
+        // AN EMPTY SPOT already on the roster (2026-10-20: fifteen active men in
+        // sixteen spots, two more Out with the IR slots full) is the same table:
+        // an add with nothing dropped
+        int activeSlots = 0;
+        for(com.google.gson.JsonElement slot : configuration.getLeagueJson().getAsJsonArray("roster_positions")){
+            activeSlots += "IR".equals(slot.getAsString()) ? 0 : 1;
+        }
+        boolean emptySpot = roster.size() < activeSlots;
+        if(!toIr.isEmpty() || emptySpot){
             List<String> named = new ArrayList<>();
             for(String id : toIr){
                 Player player = Player.getPlayerFromSIDV2(id);
                 named.add(player == null ? id : player.firstName + " " + player.lastName);
             }
             List<Map.Entry<String, Double>> open = openSpot(roster, candidates, ids -> value.of(ids));
-            out.append(String.format("OPEN SPOT - with %s on IR, each free agent added with NO drop:%n", String.join(", ", named)));
+            out.append(toIr.isEmpty()
+                    ? String.format("OPEN SPOT - %d active men in %d spots, so each free agent can be added with NO drop:%n", roster.size(), activeSlots)
+                    : String.format("OPEN SPOT - with %s on IR, each free agent added with NO drop:%n", String.join(", ", named)));
             out.append(String.format("%-22s %-4s %9s %9s %9s %8s%n", "ADD", "POS", units.gamesLeft() ? "left" : "17wk", "from here",
                     "alt here", "title"));
             for(Map.Entry<String, Double> e : open.subList(0, Math.min(8, open.size()))){
@@ -543,7 +553,8 @@ public class TuesdaySwap {
                         e.getValue(), units.fromHere(e.getValue()), altUnits.fromHere(altGain),
                         100 * stakes.one(me, titleRoster).change(), e.getValue() < floor ? "   <- inside the floor" : ""));
             }
-            out.append(String.format("A rental until %s is activated, when somebody must be dropped - read the swap table above for who.%n%n",
+            out.append(toIr.isEmpty() ? "\n"
+                    : String.format("A rental until %s is activated, when somebody must be dropped - read the swap table above for who.%n%n",
                     String.join(", ", named)));
         }
 

@@ -1,0 +1,75 @@
+data: projections 2026-10-16, player metadata 2026-10-20
+NEWS CHECK  2026-10-20  season 2026, week 7  (justinb314)
+IR here: 2 slots; a tag that may sit in one: COV, Doubtful, IR, Out, PUP (league settings)
+SNAP and TGT are his share of his team's offensive snaps and targets over its last three games,
+a game he missed counting as zero. LEFT is Sleeper's weekly projections summed over the games he
+has left (sleeper-remaining) - the number that moves last; '-' is a man projected for none.
+NEWS is the day Sleeper last had news on him. PLAYS is how often a man listed with his status played,
+2018-2025 (PlayProbability; Sleeper's feed carries no practice line, so this is the status base rate).
+
+YOUR ROSTER
+                         POS TEAM HELD BY          STATUS             PLAYS    DEPTH NEWS   BYE NEXT       SNAP   TGT IR    LEFT  ADDS
+Brock Purdy              QB  SF   you              -                  -        QB1   10-20    8 w7 @ATL    100%    0% -    299.5      
+Derrick Henry            RB  BAL  you              -                  -        RB1   10-19   13 w7 v CIN    58%    5% -    173.9      
+Bhayshul Tuten           RB  JAX  you              -                  -        RB1   10-18    7 w8 v IND    62%    9% -    133.7      
+Rhamondre Stevenson      RB  NE   you              -                  -        RB1   10-19   11 w7 @CHI     66%    8% -     99.3      
+Cam Skattebo             RB  NYG  you              -                  -        RB1   10-19    8 w7 @HOU     45%    3% -     33.0      
+Mike Evans               WR  SF   you              Out Achilles       0%       LWR1  10-20    8 w7 @ATL     54%   27% yes  158.5      
+Malik Nabers             WR  NYG  you              -                  -        LWR1  10-19    8 w7 @HOU     85%   34% -    127.3      
+Jakobi Meyers            WR  JAX  you              -                  -        RWR2  10-18    7 w8 v IND    80%   17% -     99.1      
+Josh Downs               WR  IND  you              -                  -        SWR1  10-18   13 w7 @MIN     83%   16% -     91.2      
+Jordan Addison           WR  MIN  you (IR)         Out Hamstring      0%       RWR6  10-11    6 w7 v IND    64%   17% yes   87.1      
+Khalil Shakir            WR  BUF  you              -                  -        SWR1  10-19    7 w8 v BAL    68%   22% -     77.9      
+Tre' Harris              WR  LAC  you (IR)         Out Hamstring      0%       RWR8  10-16    7 w8 @LAR     47%   10% yes   51.5      
+T.J. Hockenson           TE  MIN  you              Out Concussion     0%       TE1   10-12    6 w7 v IND    56%   21% yes   99.0      
+Harold Fannin            TE  CLE  you              -                  -        TE1   10-19   11 w7 @TEN     91%   13% -     97.1      
+Dalton Schultz           TE  HOU  you              -                  -        TE1   10-18    8 w7 v NYG    51%   13% -     74.2      
+Minnesota Vikings        DEF MIN  you              -                  -        -     -        6 w7 v IND      -     - -     87.7 503220
+Baltimore Ravens         DEF BAL  you              -                  -        -     -       13 w7 v CIN      -     - -     78.0      
+
+TRENDING ADDS ACROSS SLEEPER, LAST 48 HOURS (FREE = on this league's wire)
+                         POS TEAM HELD BY          STATUS             PLAYS    DEPTH NEWS   BYE NEXT       SNAP   TGT IR    LEFT  ADDS
+Omar Cooper              WR  NYJ  FREE             -                  -        SWR4  10-19   13 w7 v MIA    31%   10% -     85.6 5563640
+Cleveland Browns         DEF CLE  Renteez          -                  -        -     -       11 w7 @TEN       -     - -     70.5 1992984
+Konata Mumpfield         WR  LAR  FREE             -                  -        SWR2  10-20   11 w7 @LV      25%    4% -     31.0 1411101
+Kyler Murray             QB  MIN  FREE             -                  -        QB1   10-19    6 w7 v IND   100%    0% -    224.0 941208
+C.J. Stroud              QB  HOU  JakeSK           -                  -        QB1   10-18    8 w7 v NYG   100%    0% -    210.4 901901
+Michael Mayer            TE  LV   FREE             -                  -        TE2   10-19   13 w7 v LAR    79%   16% -     63.2 815679
+Tank Dell                WR  HOU  tommyrads (IR)   IR Knee - ACL + M~ -        SWR6  10-20    8 w7 v NYG     0%    0% yes   22.8 730160
+Roschon Johnson          RB  CHI  JakeSK           -                  -        RB2   10-19   10 w7 v NE     28%   10% -      6.0 671232
+Tre Tucker               WR  LV   patekxwater      -                  -        LWR1  10-19   13 w7 v LAR    70%   16% -     87.7 574572
+Tyrone Tracy             RB  NYG  FREE             -                  -        RB2   10-19    8 w7 @HOU     25%    5% -     85.9 570876
+Terrance Ferguson        TE  LAR  FREE             IR Ankle           -        TE5   10-20   11 w7 @LV       0%    0% yes   36.7 560728
+Kyle Pitts               TE  ATL  patekxwater      -                  -        TE1   10-19   11 w7 v SF     65%   19% -     68.3 544348
+Minnesota Vikings        DEF MIN  you              -                  -        -     -        6 w7 v IND      -     - -     87.7 503220
+New York Jets            DEF NYJ  FREE             -                  -        -     -       13 w7 v MIA      -     - -     60.1 432438
+Treylon Burks            WR  WAS  FREE             -                  -        RWR4  10-20    7 w8 v PHI    62%   15% -     22.1 406119
+Tanner McKee             QB  PHI  FREE             -                  -        QB1   10-20   10 w7 v DAL    34%    0% -    175.4 311080
+Ryan Flournoy            WR  DAL  BHier            -                  -        SWR3  10-20   14 w7 @PHI     77%   13% -     68.0 280824
+Pierre Strong            RB  GB   FREE             -                  -        RB2   10-19   11 w7 @DET     34%   10% -      9.2 277812
+J.J. McCarthy            QB  NYG  FREE             -                  -        QB3   10-20    8 w7 @HOU     15%    0% -      4.4 257664
+Keon Coleman             WR  BUF  KevinDA          -                  -        LWR2  10-19    7 w8 v BAL    78%   19% -     68.4 240759
+Tyler Higbee             TE  LAR  itsabust         -                  -        TE1   10-19   11 w7 @LV      71%   12% -     80.8 237519
+Blake Corum              RB  LAR  JakeSK           -                  -        RB2   10-19   11 w7 @LV      23%    6% -     71.9 231096
+Malik Washington         WR  MIA  JFMarino         -                  -        SWR1  10-20    6 w7 @NYJ     84%   29% -     96.0 222072
+Houston Texans           DEF HOU  BHier            -                  -        -     -        8 w7 v NYG      -     - -     85.4 213615
+Germie Bernard           WR  PIT  JakeSK           -                  -        RWR2  10-19    9 w7 @NO      75%   20% -     80.2 202589
+Jordan Mason             RB  MIN  BHier (IR)       IR Thumb           -        RB5   10-19    6 w7 v IND     0%    0% yes  101.4 189400
+Aaron Rodgers            QB  PIT  FREE             -                  -        QB1   10-20    9 w7 @NO      99%    0% -    198.3 183332
+Bo Nix                   QB  DEN  FREE             -                  -        QB1   10-19   10 w7 @ARI    100%    0% -    218.4 181950
+Kirk Cousins             QB  LV   patekxwater      -                  -        QB1   10-19   13 w7 v LAR    95%    0% -    225.7 169616
+Geno Smith               QB  NYJ  FREE             -                  -        QB1   10-20   13 w7 v MIA   100%    0% -    188.9 164876
+Rico Dowdle              RB  PIT  patekxwater      -                  -        RB2   10-19    9 w7 @NO      10%    4% -     71.9 163135
+Keenan Allen             WR  IND  KevinDA          -                  -        RWR2  10-19   13 w7 @MIN     41%   18% -     68.4 162336
+Dameon Pierce            RB  PHI  KevinDA          -                  -        RB1   10-19   10 w7 v DAL    58%    9% -     17.8 160464
+Ollie Gordon             RB  MIA  itsabust         Questionable Undi~ 82%      RB1   10-14    6 w7 @NYJ     71%    6% -    153.1 153545
+Samaje Perine            RB  CIN  itsabust         -                  -        RB2   10-19    6 w7 @BAL     39%    5% -     61.0 146452
+KC Concepcion            WR  CLE  tommyrads        -                  -        SWR2  10-19   11 w7 @TEN     62%   17% -     83.2 146421
+Corey Kiner              RB  NE   FREE             -                  -        RB3   10-19   11 w7 @CHI     13%    1% -     49.6 141054
+Caleb Douglas            WR  MIA  Hamrliks (IR)    Out Ankle          0%       RWR9  10-20    6 w7 @NYJ      0%    0% yes   70.9 138336
+Tyler Shough             QB  NO   KevinDA          -                  -        QB1   10-19    8 w7 v PIT    99%    0% -    218.0 137696
+Hunter Henry             TE  NE   BHier            -                  -        TE1   10-19   11 w7 @CHI     68%   14% -     82.0 135507
+Jaleel McLaughlin        RB  CLE  FREE             -                  -        RB1   10-20   11 w7 @TEN     28%    6% -     19.6 130190
+Josh Jacobs              RB  GB   jerem9604        NA Personal        -        RB4   10-20   11 w7 @DET      0%    0% -    139.4 128000
+Deshaun Watson           QB  CLE  FREE             -                  -        QB1   10-20   11 w7 @TEN    101%    0% -     68.1 123680
+Alvin Kamara             RB  NO   Hamrliks         Questionable Undi~ 82%      RB1   10-19    8 w7 v PIT    31%   13% -     58.4 123096

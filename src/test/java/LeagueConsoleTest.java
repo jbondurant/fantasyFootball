@@ -769,8 +769,12 @@ public class LeagueConsoleTest {
             double low = Double.parseDouble(row.group(2));
             double high = Double.parseDouble(row.group(3));
             assertTrue(high >= low - 1e-9, "a trade's range must not be inverted");
-            assertEquals(low <= 0, Boolean.parseBoolean(row.group(4)),
-                    "the noise tag must be exactly whether the gain crosses zero");
+            // the page prints two decimals: a low of +0.003 reads 0.00, and its sign -
+            // which the tag was decided on - cannot be read back (week 7, 2026-10-20)
+            if(Math.abs(low) >= 0.005){
+                assertEquals(low <= 0, Boolean.parseBoolean(row.group(4)),
+                        "the noise tag must be exactly whether the gain crosses zero");
+            }
             if(isFair){
                 assertTrue(low > 0,
                         "a trade in the default view has a gain of " + low + " on some seed;"

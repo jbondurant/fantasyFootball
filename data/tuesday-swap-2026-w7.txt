@@ -1,0 +1,59 @@
+data: projections 2026-10-20, player metadata 2026-10-20
+TUESDAY SWAP  2026-10-20  season 2026, waivers for week 7  (justinb314; priced on sleeper-remaining, with ros beside it)
+155 free agents searched against all 15 roster spots = 2325 pairs, on the weekly-starter
+objective (480 drawn seasons), which prices a bench man by how often he would actually start.
+Gains are points over the games left (12.0 weeks to week 18, sleeper-remaining's own totals); 8.0 of those
+weeks are the regular season, so a gain is worth 0.67 of itself from here.
+Nothing under 11.3 points is named: that is the yardstick's own worst seed-to-seed spread,
+measured on sleeper-remaining on 2026-09-29 (ObjectiveStability), so a smaller gain is the measurement moving
+and not the roster.
+
+ADD                    POS  -> drop                             left from here  alt here    title
+Kyler Murray           QB   -> drop Cam Skattebo               +12.0      +8.0     -10.6   +0.00   <- a loss on ros
+Tyrone Tracy           RB   -> drop Cam Skattebo               +10.8      +7.2      -7.2   +0.07   <- a loss on ros
+Omar Cooper            WR   -> drop Cam Skattebo                +9.8      +6.5      -8.1   +0.11   <- a loss on ros
+Bo Nix                 QB   -> drop Cam Skattebo                +9.7      +6.4      -2.9   +0.00   <- a loss on ros
+Mike Gesicki           TE   -> drop Cam Skattebo                +6.3      +4.2      -9.6   +0.00   <- a loss on ros
+DeMario Douglas        WR   -> drop Cam Skattebo                +5.4      +3.6     -10.6   +0.00   <- a loss on ros
+George Holani          RB   -> drop Cam Skattebo                +3.8      +2.5     -10.6   +0.00   <- a loss on ros
+Cade Otton             TE   -> drop Cam Skattebo                +3.5      +2.3      -9.0   +0.00   <- a loss on ros
+title is the change in your title odds in percentage points (TitleOdds, 20000 seasons, the same draws
+before and after); your odds now are 6.6%.
+alt here is the same move priced on ros and put in from-here points too, so the two columns
+read in one unit; ros is the rest-of-season model that has seen the results (RosModel),
+sleeper-remaining Sleeper's weekly projections for the games left, which drop a man ruled out.
+
+OPEN SPOT - 15 active men in 16 spots, so each free agent can be added with NO drop:
+ADD                    POS       left from here  alt here    title
+Kyler Murray           QB       +12.0      +8.0      +0.0   +0.00
+Tyrone Tracy           RB       +10.8      +7.2      +1.1   +0.07   <- inside the floor
+Omar Cooper            WR        +9.8      +6.5      +1.8   +0.11   <- inside the floor
+Bo Nix                 QB        +9.7      +6.4      +7.7   +0.00   <- inside the floor
+Mike Gesicki           TE        +6.3      +4.2      +0.2   +0.00   <- inside the floor
+DeMario Douglas        WR        +5.4      +3.6      +0.0   +0.00   <- inside the floor
+George Holani          RB        +3.8      +2.5      +0.0   +0.00   <- inside the floor
+Cade Otton             TE        +3.5      +2.3      +0.6   +0.00   <- inside the floor
+
+EVERY DROP FOR KYLER MURRAY - the same claim against each man you hold:
+   drop Cam Skattebo               +12.0
+   drop Baltimore Ravens           +12.0
+   drop Minnesota Vikings           +7.4
+   drop Dalton Schultz              +3.9
+   drop Khalil Shakir               -1.0
+   drop Harold Fannin              -11.5
+   drop Josh Downs                 -11.9
+   drop T.J. Hockenson             -15.9
+   drop Jakobi Meyers              -21.3
+   drop Rhamondre Stevenson        -24.2
+   drop Malik Nabers               -44.3
+   drop Bhayshul Tuten             -56.8
+   drop Brock Purdy                -66.0
+   drop Mike Evans                 -75.4
+   drop Derrick Henry              -90.7
+
+NOT CLAIMED: Kyler Murray for Cam Skattebo clears the floor at +12.0 on sleeper-remaining but is a loss of -10.6 from here on ros.
+A move that loses under either pricing is not a move.
+
+DO NOTHING. The best plan on the board is worth +12.0 (8.0 from here), inside the
+floor, so it is not a move - it is noise with a transaction attached. Waiting is free and
+buys another week of evidence.

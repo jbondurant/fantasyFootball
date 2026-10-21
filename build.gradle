@@ -276,7 +276,9 @@ tasks.register('run', JavaExec) {
      // TuesdaySwap: men you are moving to an IR slot; the spot they free is priced as an add with no drop
      'ir',
      // FaabRivals: free agents per position to read the room for
-     'faabTargets'].each { knob ->
+     'faabTargets',
+     // TradeScreens: free agents taken as already claimed before a trade is priced
+     'assume'].each { knob ->
         if (project.hasProperty(knob)) {
             systemProperty knob, project.property(knob)
         }

@@ -694,10 +694,19 @@ public class TradeScreens {
         Map<String, List<String>> rosters = new HashMap<>();
         ownerOf.forEach((id, m) -> rosters.computeIfAbsent(m, k -> new ArrayList<>()).add(id));
         String with = ownerOf.get(myReceive.get(0));
-        List<String> mine = rosters.get(me);
+        // -Passume="Kyler Murray": free agents taken as already claimed into Justin's
+        // roster before the trade is priced. Justin, 2026-10-20: "does trade make sense
+        // if I end up with kyler murray" - the trade is priced against the roster he
+        // would have, and the title odds as the change from that roster, not from today's
+        List<String> assumed = idsNamed(System.getProperty("assume", ""));
+        List<String> today = rosters.get(me);
+        List<String> mine = new ArrayList<>(today);
+        mine.addAll(assumed);
         List<String> his = rosters.get(with);
         StringBuilder out = new StringBuilder(String.format(
-                "%nWHAT THE OBJECTIVE SAYS - 17 x the best legal lineup, the bench as insurance, 240 drawn seasons - on each pricing:%n"));
+                "%nWHAT THE OBJECTIVE SAYS - 17 x the best legal lineup, the bench as insurance, 240 drawn seasons - on each pricing%s:%n",
+                assumed.isEmpty() ? "" : ", with " + String.join(", ", assumed.stream().map(TradeScreens::name).toList())
+                        + " already on your roster"));
         out.append(String.format("  %-18s %9s %9s   %s%n", "pricing", "you", with, "his cut (if he takes more men)"));
         Map<String, Double> remaining = null;
         for(String source : List.of("sleeper", "sleeper-remaining", "ros")){
@@ -746,10 +755,16 @@ public class TradeScreens {
         myAfter.addAll(myReceive);
         TitleOdds.Stakes stakes = TitleOdds.stakes(configuration, TitleOdds.SIMS);
         TitleOdds.Delta[] title = stakes.swap(me, myAfter, with, after);
-        out.append(String.format("%n  TITLE ODDS (TitleOdds, %d seasons, the same draws before and after):%n"
+        // with an assumed claim, the trade is the change FROM the roster with him: both
+        // read off the same draws, so the difference is the trade alone
+        TitleOdds.Delta[] claimOnly = assumed.isEmpty() ? new TitleOdds.Delta[]{new TitleOdds.Delta(0, 0), new TitleOdds.Delta(0, 0)}
+                : stakes.swap(me, mine, with, his);
+        out.append(String.format("%n  TITLE ODDS (TitleOdds, %d seasons, the same draws before and after)%s:%n"
                         + "    you   %5.1f%%  %+.2fpp (+-%.2f)%n    %-5s %5.1f%%  %+.2fpp (+-%.2f)   he is %s%n",
-                TitleOdds.SIMS, 100 * stakes.title(me), 100 * title[0].change(), 100 * title[0].se(),
-                with, 100 * stakes.title(with), 100 * title[1].change(), 100 * title[1].se(), stakes.state(with)));
+                TitleOdds.SIMS, assumed.isEmpty() ? "" : String.format(" - the claim alone moves you %+.2fpp; the trade on top of it:",
+                        100 * claimOnly[0].change()),
+                100 * (stakes.title(me) + claimOnly[0].change()), 100 * (title[0].change() - claimOnly[0].change()), 100 * title[0].se(),
+                with, 100 * stakes.title(with), 100 * (title[1].change() - claimOnly[1].change()), 100 * title[1].se(), stakes.state(with)));
         return out.toString();
     }
 
