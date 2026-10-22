@@ -56,7 +56,7 @@ public class TradeScreensTest {
         Map<String, Double> adp = Map.of("nabers", 28.6, "stevenson", 69.2, "chase", 3.9);
         Map<String, Double> points = Map.of("nabers", 0.0, "stevenson", 0.0, "chase", 131.5);
         TradeScreens.Screens seen = TradeScreens.screen(List.of("nabers", "stevenson"), List.of("chase"),
-                id -> chart.at(adp.get(id)), points::get, List.of(), "Renteez", 10, 3);
+                id -> chart.at(adp.get(id)), points::get, List.of(), "Renteez", TradeScreens.kForm(10), 3);
         assertTrue(seen.draftRatio() < 1, "he gives the most draft value: " + seen.draftRatio());
         assertEquals(0.0, seen.pointsRatio(), 1e-9, "and gets none of the season's points he gives");
         assertTrue(seen.blendedRatio() < 0.6, "blended, draft as ten games against three: " + seen.blendedRatio());
@@ -73,11 +73,12 @@ public class TradeScreensTest {
      */
     @Test
     public void draftValueFadesAsGamesArePlayed(){
-        assertEquals(100.0, TradeScreens.blend(100, 40, 10, 0), 1e-9, "before a game, draft value is all he has");
-        assertEquals((10 * 100 + 10 * 40) / 20.0, TradeScreens.blend(100, 40, 10, 10), 1e-9, "at k games, half and half");
+        java.util.function.DoubleUnaryOperator k10 = TradeScreens.kForm(10);
+        assertEquals(100.0, TradeScreens.blend(100, 40, k10.applyAsDouble(0)), 1e-9, "before a game, draft value is all he has");
+        assertEquals((10 * 100 + 10 * 40) / 20.0, TradeScreens.blend(100, 40, k10.applyAsDouble(10)), 1e-9, "at k games, half and half");
         // he gives a disappointing early pick for a later one who is producing: 80% of the draft value, 175% of the pace
-        TradeScreens.Screens week1 = new TradeScreens.Screens(80, 100, 70, 40, 10, 1, List.of(), 60, "x");
-        TradeScreens.Screens week9 = new TradeScreens.Screens(80, 100, 70, 40, 10, 9, List.of(), 60, "x");
+        TradeScreens.Screens week1 = new TradeScreens.Screens(80, 100, 70, 40, k10.applyAsDouble(1), 1, List.of(), 60, "x");
+        TradeScreens.Screens week9 = new TradeScreens.Screens(80, 100, 70, 40, k10.applyAsDouble(9), 9, List.of(), 60, "x");
         assertFalse(week1.fairToHim(), "a week in, the draft slot still dominates: " + week1.blendedRatio());
         assertTrue(week9.fairToHim(), "by week 9 the production carries it: " + week9.blendedRatio());
     }
@@ -90,17 +91,17 @@ public class TradeScreensTest {
         for(int i = 0; i < 19; i++){
             history.add(new TradeScreens.Precedent("2024", 1, "m" + i, "c", "d", 95, 100, 0, 0));    // preseason, 95%
         }
-        double k = 10;
+        java.util.function.DoubleUnaryOperator k = TradeScreens.kForm(10);
         assertEquals(38 * 10.0 / (100 * 10 + 50 * 5), history.get(0).blendedRatio(k), 1e-9);
         assertEquals(List.of("Hamrliks"), TradeScreens.precedents(0.5, k, history));
         assertEquals(20, TradeScreens.precedents(0.95, k, history).size());
 
-        TradeScreens.Screens lopsided = new TradeScreens.Screens(40, 100, 0, 60, k, 3,
+        TradeScreens.Screens lopsided = new TradeScreens.Screens(40, 100, 0, 60, k.applyAsDouble(3), 3,
                 TradeScreens.precedents(0.35, k, history), history.size(), "Renteez");
         assertTrue(lopsided.noChance(), "one side in twenty is under one in ten: " + lopsided.verdict());
         assertTrue(lopsided.verdict().startsWith("NO") && lopsided.verdict().contains("never Renteez"), lopsided.verdict());
 
-        TradeScreens.Screens close = new TradeScreens.Screens(95, 100, 0, 0, k, 3,
+        TradeScreens.Screens close = new TradeScreens.Screens(95, 100, 0, 0, k.applyAsDouble(3), 3,
                 TradeScreens.precedents(0.95, k, history), history.size(), "Renteez");
         assertTrue(close.worthAsking() && !close.fairToHim(), close.verdict());
         assertTrue(close.verdict().startsWith("a long shot"), close.verdict());
@@ -125,11 +126,11 @@ public class TradeScreensTest {
     /** Fair means not losing on the blend; a trade with nothing going either way on a screen reads on the other. */
     @Test
     public void fairMeansHeDoesNotLoseOnTheBlend(){
-        assertTrue(new TradeScreens.Screens(60, 50, 20, 20, 10, 3, List.of(), 60, "x").fairToHim());
-        assertFalse(new TradeScreens.Screens(40, 50, 20, 20, 10, 3, List.of(), 60, "x").fairToHim());
-        assertTrue(new TradeScreens.Screens(60, 50, 0, 0, 10, 3, List.of(), 60, "x").fairToHim(),
+        assertTrue(new TradeScreens.Screens(60, 50, 20, 20, 10 / 13.0, 3, List.of(), 60, "x").fairToHim());
+        assertFalse(new TradeScreens.Screens(40, 50, 20, 20, 10 / 13.0, 3, List.of(), 60, "x").fairToHim());
+        assertTrue(new TradeScreens.Screens(60, 50, 0, 0, 10 / 13.0, 3, List.of(), 60, "x").fairToHim(),
                 "no points either way: draft value decides");
-        assertEquals("120%/-=120%", new TradeScreens.Screens(60, 50, 0, 0, 10, 3, List.of(), 60, "x").ratios());
+        assertEquals("120%/-=120%", new TradeScreens.Screens(60, 50, 0, 0, 10 / 13.0, 3, List.of(), 60, "x").ratios());
     }
 
     /** The points screen: per-game points above the last starter's, at a season's pace; zero below the line or sidelined. */
@@ -184,5 +185,45 @@ public class TradeScreensTest {
         // cluster sums of (y - p): w1 = 0, w2 = 4; minus n_g * gap: -2, +2; sqrt(8 * 2/1) / 4
         assertEquals(Math.sqrt(16) / 4, c.se(), 1e-9);
         assertEquals(4, c.n());
+    }
+
+    /**
+     * The pace chart reads a pace as what it went on to be worth: on a season
+     * where every receiver's rest-of-season rate is halfway between his first
+     * three games and 10 a game, the hottest start is worth far less than his
+     * pace at 17 games, the chart never falls as pace rises, and a sidelined
+     * man is off the screen.
+     */
+    @Test
+    public void thePaceChartRegressesAHotStart(){
+        double[] early = {22, 18, 14, 10, 8, 6, 4};
+        List<Map<String, Double>> weekly = new ArrayList<>();
+        for(int w = 0; w < 10; w++){
+            Map<String, Double> week = new java.util.HashMap<>();
+            for(int i = 0; i < early.length; i++){
+                week.put("wr" + i, w < 3 ? early[i] : (early[i] + 10) / 2);
+            }
+            weekly.add(week);
+        }
+        Map<String, PlayerImportAndSetup.Position> positionOf = new java.util.HashMap<>();
+        for(int i = 0; i < early.length; i++){
+            positionOf.put("wr" + i, PlayerImportAndSetup.Position.WR);
+        }
+        EraBoards.Board board = new EraBoards.Board("2099", "ppr", List.of(), positionOf, Map.of(), weekly, 10, null);
+        Map<String, Map<String, PlayerImportAndSetup.Position>> positions = new java.util.HashMap<>(Map.of("2099", positionOf));
+        TradeScreens.Chart chart = TradeScreens.paceChart(List.of(board), positions, 3, 1, 0);
+
+        Map<String, Double> x = TradeScreens.aboveLine(TradeScreens.soFar(weekly.subList(0, 3)), positionOf, 3, 1, 0);
+        assertEquals(22 - 14, x.get("wr0"), 1e-9, "three receivers start: the line is the third-best start, 14 a game");
+        double hottest = chart.at(-x.get("wr0"));
+        assertTrue(hottest < TradeScreens.PACE * x.get("wr0") * 0.75, "regressed: " + hottest + " against a raw pace of "
+                + TradeScreens.PACE * x.get("wr0"));
+        for(double a = -10; a < 10; a += 0.5){
+            assertTrue(chart.at(-(a + 0.5)) >= chart.at(-a) - 1e-9, "never falls as pace rises, at " + a);
+        }
+        Map<String, Double> seen = TradeScreens.predicted(TradeScreens.soFar(weekly.subList(0, 3)), positionOf, 3, 1, 0, chart,
+                Set.of("wr1"));
+        assertFalse(seen.containsKey("wr1"), "sidelined");
+        assertEquals(hottest, seen.get("wr0"), 1e-9);
     }
 }

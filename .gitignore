@@ -42,3 +42,6 @@ check-*.log
 # Kalshi market reads (KalshiMarkets): raw, large, regenerable only at the moment they were taken - kept local
 data/kalshi/
 data/kalshi-history/
+
+# other leagues' trades, harvested by OtherLeagues (Sleeper public API); rebuildable
+data/other-leagues/

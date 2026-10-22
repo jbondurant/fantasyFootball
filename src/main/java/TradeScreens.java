@@ -20,6 +20,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
+import java.util.function.DoubleUnaryOperator;
 import java.util.function.ToDoubleFunction;
 
 /**
@@ -50,9 +52,13 @@ import java.util.function.ToDoubleFunction;
  *   against 129 a small one, and it adds across a package, so two men are not
  *   priced as their best one.
  *
- *   POINTS THIS SEASON - each man's points a game so far above the per-game
- *   points of the last starter at his position, at a season's pace, and zero
- *   for a man on IR. This is the number on the player card.
+ *   HIS PACE, READ AS WHAT IT PREDICTS - each man's points a game so far
+ *   above the per-game points of the last starter at his position (the
+ *   number on the player card, less the line), read off a chart of what men
+ *   that far above the line after that many games went on to be worth over
+ *   the rest of the season ({@link #paceChart}); zero for a man on IR. Until
+ *   2026-10-22 this screen was the raw pace at 17 games, which overstates a
+ *   hot start and made draft value look like it counted 73% at week 5.
  *
  * A trade is FAIR TO HIM when he does not lose on either. That is the bar for
  * sending it, and it is where the reputation Justin asked for comes from: the
@@ -224,6 +230,90 @@ public class TradeScreens {
         return out;
     }
 
+    /** Each man's points a game so far less the last starter's at his position (any man with a game), not floored. */
+    static Map<String, Double> aboveLine(Map<String, double[]> soFar, Map<String, Position> positionOf, int weeks, int teams, int flex){
+        int minGames = Math.max(1, (weeks + 1) / 2);
+        Map<String, Double> perGame = new HashMap<>();
+        soFar.forEach((id, s) -> {
+            if(s[1] >= minGames){
+                perGame.put(id, s[0] / s[1]);
+            }
+        });
+        Map<Position, Double> line = line(perGame, positionOf, teams, flex);
+        Map<String, Double> out = new HashMap<>();
+        soFar.forEach((id, s) -> {
+            Position p = positionOf.get(id);
+            if(skill(p) && s[1] > 0){
+                out.put(id, s[0] / s[1] - line.get(p));
+            }
+        });
+        return out;
+    }
+
+    /**
+     * WHAT A PACE IS WORTH, read the way the draft chart reads an ADP. Justin,
+     * 2026-10-22, of draft value counting 73% after five games: "no, there's no
+     * way draft weight is over 50% by week 5". He had a point the first fit
+     * could not see. The blend w x draft + (1 - w) x pace has one dial, and a
+     * hot five-game pace overstates the rest of a man's season - anyone sane
+     * regresses it. A manager who ignores the draft entirely but regresses
+     * pace could only be fitted by weight on draft value, which sits in the
+     * middle of the range and so stands in for "regress to the middle".
+     *
+     * So the pace screen is also read off a chart: after g games, what a man
+     * whose points a game sat x above the last starter's went on to be worth
+     * over the rest of the season - points above the last starter over the
+     * weeks left, scaled to 17, zero for a man who did not play them - fitted
+     * never to fall with x over every board season, exactly as the draft chart
+     * maps an ADP to what men drafted there were worth. Both screens are then
+     * the same thing, the season expected from one piece of evidence.
+     */
+    static Chart paceChart(Collection<EraBoards.Board> boards, Map<String, Map<String, Position>> positions,
+                           int g, int teams, int flex){
+        List<double[]> pairs = new ArrayList<>();
+        for(EraBoards.Board board : boards){
+            int weeks = board.weekly().size();
+            if(g >= weeks){
+                continue;
+            }
+            Map<String, Position> positionOf = positions.computeIfAbsent(board.season(), TradeScreens::positions);
+            Map<String, Double> x = aboveLine(soFar(board.weekly().subList(0, g)), positionOf, g, teams, flex);
+            Map<String, double[]> rest = soFar(board.weekly().subList(g, weeks));
+            Map<String, Double> restTotal = new HashMap<>();
+            rest.forEach((id, r) -> restTotal.put(id, r[0]));
+            Map<Position, Double> line = line(restTotal, positionOf, teams, flex);
+            double scale = (double) PACE / (weeks - g);
+            x.forEach((id, above) -> {
+                double[] r = rest.get(id);
+                double worth = r == null ? 0 : scale * Math.max(0, r[0] - line.get(positionOf.get(id)));
+                pairs.add(new double[]{-above, worth});      // the chart falls with its key; x rises
+            });
+        }
+        return fit(pairs);
+    }
+
+    /**
+     * The pace screen: each man's pace read off the pace chart for the games
+     * played ({@link #paceChart}), zero for a man with no game or sidelined.
+     */
+    static Map<String, Double> predicted(Map<String, double[]> soFar, Map<String, Position> positionOf, int games, int teams,
+                                         int flex, Chart paceChart, Set<String> sidelined){
+        Map<String, Double> out = new HashMap<>();
+        aboveLine(soFar, positionOf, games, teams, flex).forEach((id, x) -> {
+            if(!sidelined.contains(id)){
+                out.put(id, paceChart.at(-x));
+            }
+        });
+        return out;
+    }
+
+    /** Pace charts by games played, each fitted once on first use. */
+    static java.util.function.IntFunction<Chart> paceCharts(Collection<EraBoards.Board> boards, int teams, int flex){
+        Map<String, Map<String, Position>> positions = new HashMap<>();
+        Map<Integer, Chart> charts = new HashMap<>();
+        return g -> charts.computeIfAbsent(g, k -> paceChart(boards, positions, k, teams, flex));
+    }
+
     static double ratio(double in, double out){
         return out < NOTHING ? Double.POSITIVE_INFINITY : in / out;
     }
@@ -241,9 +331,10 @@ public class TradeScreens {
         public double games(){
             return Math.max(0, week - 1);
         }
-        /** Both screens as one, draft value counting as k games of this season's pace. */
-        public double blendedRatio(double k){
-            return ratio(blend(draftIn, pointsIn, k, games()), blend(draftOut, pointsOut, k, games()));
+        /** Both screens as one, draft value weighted as the curve says at this side's own week. */
+        public double blendedRatio(DoubleUnaryOperator weight){
+            double w = weight.applyAsDouble(games());
+            return ratio(blend(draftIn, pointsIn, w), blend(draftOut, pointsOut, w));
         }
     }
 
@@ -251,13 +342,28 @@ public class TradeScreens {
      * THE TWO SCREENS AS ONE, 2026-09-29. Justin: "what if draft value is
      * slightly less important, since obviously, people will sell low people who
      * are underperforming or injured, albeit perhaps not low enough." A man's
-     * value as the other manager sees it: his draft value weighted as k games,
-     * his pace this season weighted by the g games he has played. k is how long
-     * draft position holds out against results in this league's own trades
-     * ({@link #revealedK}), not a number chosen here.
+     * value as the other manager sees it: a share w of it is his draft value,
+     * the rest his pace this season.
+     *
+     * Since 2026-10-22, w after g games is MEASURED, one number per week of the
+     * season, on thousands of other leagues' accepted trades (DraftWeightCurve,
+     * data/draft-weight.tsv). Until then it was k/(k+g) with one k fitted to
+     * this league's sixty trade sides - a shape assumed, one number measured.
+     * Justin, on a rule of thumb for the shape: "no. try to make a curve that's
+     * not so wishy washy. I don't mind downloading data".
      */
-    static double blend(double draft, double pace, double k, double games){
-        return (k * draft + games * pace) / (k + games);
+    static double blend(double draft, double pace, double weight){
+        return weight * draft + (1 - weight) * pace;
+    }
+
+    /**
+     * The old one-number form: draft value counted as k games against the g
+     * played, a weight of k/(k+g) on draft. Kept for this league's own revealed
+     * k, printed beside the measured curve, and as the fallback when the curve
+     * has not been measured.
+     */
+    static DoubleUnaryOperator kForm(double k){
+        return games -> k / (k + Math.max(0, games));
     }
 
     /**
@@ -286,7 +392,7 @@ public class TradeScreens {
         int n = 0;
         for(Precedent p : sides){
             if(informs(p)){
-                total += Math.abs(Math.log(p.blendedRatio(k)));
+                total += Math.abs(Math.log(p.blendedRatio(kForm(k))));
                 n++;
             }
         }
@@ -306,7 +412,7 @@ public class TradeScreens {
      * screen, and who in this league ever took as little. `with` is the man
      * opposite, so a precedent can be told apart from his own.
      */
-    public record Screens(double draftIn, double draftOut, double pointsIn, double pointsOut, double k, double games,
+    public record Screens(double draftIn, double draftOut, double pointsIn, double pointsOut, double weight, double games,
                           List<String> takenBy, int sides, String with) {
 
         public double draftRatio(){
@@ -317,9 +423,9 @@ public class TradeScreens {
             return ratio(pointsIn, pointsOut);
         }
 
-        /** What he gets back on what he can see: both screens blended, draft value counted as k games against the g played. */
+        /** What he gets back on what he can see: both screens blended, a share `weight` of it draft value. */
         public double blendedRatio(){
-            return ratio(blend(draftIn, pointsIn, k, games), blend(draftOut, pointsOut, k, games));
+            return ratio(blend(draftIn, pointsIn, weight), blend(draftOut, pointsOut, weight));
         }
 
         /** Sides of accepted trades here that took as little on the blend, each read at its own week. */
@@ -370,8 +476,8 @@ public class TradeScreens {
 
         public String verdict(){
             String took = String.format("he gets back %s of what he gives on what he can see (%s of the draft value, %s of the"
-                    + " season's points; draft counted as %s games against %s played)", share(blendedRatio()), share(draftRatio()),
-                    share(pointsRatio()), fmt(k), fmt(games));
+                    + " season the paces predict; after %s games, draft value is %s of what a man is worth in other leagues' trades)",
+                    share(blendedRatio()), share(draftRatio()), share(pointsRatio()), fmt(games), share(weight));
             if(fairToHim()){
                 return "fair to him - " + took;
             }
@@ -390,10 +496,10 @@ public class TradeScreens {
     static final double ASK_SHARE = 0.10;
 
     /** The managers of the sides of accepted trades that took as little on the blend (each at its own week), one entry a side. */
-    static List<String> precedents(double blendedRatio, double k, List<Precedent> history){
+    static List<String> precedents(double blendedRatio, DoubleUnaryOperator weight, List<Precedent> history){
         List<String> out = new ArrayList<>();
         for(Precedent p : history){
-            if(p.blendedRatio(k) <= blendedRatio){
+            if(p.blendedRatio(weight) <= blendedRatio){
                 out.add(p.manager());
             }
         }
@@ -402,7 +508,8 @@ public class TradeScreens {
 
     /** One trade from HIS side: he receives hisIn and sends hisOut. */
     static Screens screen(List<String> hisIn, List<String> hisOut, ToDoubleFunction<String> draft,
-                          ToDoubleFunction<String> points, List<Precedent> history, String with, double k, double games){
+                          ToDoubleFunction<String> points, List<Precedent> history, String with, DoubleUnaryOperator weight,
+                          double games){
         double draftIn = 0, draftOut = 0, pointsIn = 0, pointsOut = 0;
         for(String id : hisIn){
             draftIn += draft.applyAsDouble(id);
@@ -412,15 +519,17 @@ public class TradeScreens {
             draftOut += draft.applyAsDouble(id);
             pointsOut += points.applyAsDouble(id);
         }
-        double blended = ratio(blend(draftIn, pointsIn, k, games), blend(draftOut, pointsOut, k, games));
-        return new Screens(draftIn, draftOut, pointsIn, pointsOut, k, games, precedents(blended, k, history),
+        double w = weight.applyAsDouble(games);
+        double blended = ratio(blend(draftIn, pointsIn, w), blend(draftOut, pointsOut, w));
+        return new Screens(draftIn, draftOut, pointsIn, pointsOut, w, games, precedents(blended, weight, history),
                 history.size(), with);
     }
 
     /** Every side of every completed player-for-player trade in the league's finished seasons, on both screens. */
     record History(List<Precedent> sides, int trades, int withPicks, int noBoard) {}
 
-    static History history(String leagueID, Map<String, EraBoards.Board> boards, Chart chart, int teams, int flex){
+    static History history(String leagueID, Map<String, EraBoards.Board> boards, Chart chart, int teams, int flex,
+                           java.util.function.IntFunction<Chart> paceCharts){
         List<Precedent> sides = new ArrayList<>();
         int trades = 0, withPicks = 0, noBoard = 0;
         for(LeagueTransactions.Year year : LeagueTransactions.completedSeasons(leagueID)){
@@ -448,8 +557,8 @@ public class TradeScreens {
                     }
                     int leg = row.has("leg") && !row.get("leg").isJsonNull() ? row.get("leg").getAsInt() : w;
                     int played = Math.max(0, Math.min(leg - 1, board.weekly().size()));
-                    Map<String, Double> production = productionAt.computeIfAbsent(played, k -> production(
-                            soFar(board.weekly().subList(0, k)), positionOf, k, teams, flex, Set.of()));
+                    Map<String, Double> production = productionAt.computeIfAbsent(played, k -> k == 0 ? Map.of() : predicted(
+                            soFar(board.weekly().subList(0, k)), positionOf, k, teams, flex, paceCharts.apply(k), Set.of()));
                     Map<Integer, List<String>> in = byRoster(row, "adds");
                     Map<Integer, List<String>> out = byRoster(row, "drops");
                     Set<Integer> rosters = new LinkedHashSet<>(in.keySet());
@@ -519,13 +628,22 @@ public class TradeScreens {
         return out.isEmpty() ? "nothing" : String.join(" + ", out);
     }
 
-    /** Everything a caller needs to put today's trades on both screens. */
+    /**
+     * Everything a caller needs to put today's trades on both screens. `weight`
+     * is the draft share by games played (DraftWeightCurve); `k` is this
+     * league's own revealed k, the old form, kept for the report.
+     */
     public record Context(Chart chart, History history, ToDoubleFunction<String> draft, ToDoubleFunction<String> points,
-                          int weeksPlayed, double k) {
+                          int weeksPlayed, DoubleUnaryOperator weight, double k) {
 
         /** A trade from his side: he receives what Justin gives and sends what Justin gets (and any man he must cut). */
         public Screens of(TradeMarket.Trade trade){
-            return screen(trade.give(), trade.hisOut(), draft, points, history.sides(), trade.withManager(), k, weeksPlayed);
+            return screen(trade.give(), trade.hisOut(), draft, points, history.sides(), trade.withManager(), weight, weeksPlayed);
+        }
+
+        /** The draft share today. */
+        public double weightNow(){
+            return weight.applyAsDouble(weeksPlayed);
         }
     }
 
@@ -534,12 +652,14 @@ public class TradeScreens {
         int flex = StartingLineup.flexSlotsPerTeam(configuration);
         Map<String, EraBoards.Board> boards = EraBoards.usable("ppr", EraIngest.MIN_RATE, EraIngest.minDepth());
         Chart chart = chart(boards.values(), teams, flex);
-        History history = history(configuration.getLeagueID(), boards, chart, teams, flex);
+        java.util.function.IntFunction<Chart> paceCharts = paceCharts(boards.values(), teams, flex);
+        History history = history(configuration.getLeagueID(), boards, chart, teams, flex, paceCharts);
 
         String season = LeagueWeek.season();
         int week = LeagueWeek.week();
+        int played = played(season, week);
         List<Map<String, Double>> weeks = new ArrayList<>();
-        for(int w = 1; w <= week; w++){
+        for(int w = 1; w <= played; w++){
             weeks.add(LeagueWeek.actualSoFar(season, w));
         }
         Map<String, double[]> sums = soFar(weeks);
@@ -555,13 +675,32 @@ public class TradeScreens {
                 sidelined.add(id);
             }
         }
-        Map<String, Double> production = production(sums, positionOf, week, teams, flex, sidelined);
+        Map<String, Double> production = played == 0 ? Map.of()
+                : predicted(sums, positionOf, played, teams, flex, paceCharts.apply(played), sidelined);
         ToDoubleFunction<String> draft = id -> {
             Player p = Player.getPlayerFromSIDV2(id);
             return p != null && skill(p.position) ? chart.at(SleeperProjections.adpOf(id)) : 0;
         };
-        return new Context(chart, history, draft, id -> production.getOrDefault(id, 0.0), week,
-                revealedK(history.sides(), K_GRID));
+        double k = revealedK(history.sides(), K_GRID);
+        DoubleUnaryOperator weight = DraftWeightCurve.curve();
+        if(weight == null){
+            System.err.println("TradeScreens: " + DraftWeightCurve.TABLE + " is missing, so draft value falls back to the old"
+                    + " k-games form (k = " + fmt(k) + "); run OtherLeagues and DraftWeightCurve");
+            weight = kForm(k);
+        }
+        return new Context(chart, history, draft, id -> production.getOrDefault(id, 0.0), played, weight, k);
+    }
+
+    /**
+     * Weeks of games finished now, from nflverse's schedule - Sleeper's week
+     * is the week being played (on 2026-10-22, before Thursday's game, it said
+     * 7 with six weeks played, and the screens had read 7 as games played),
+     * and the curve reads games played. Sleeper's week less one when the
+     * schedule does not carry the season.
+     */
+    static int played(String season, int sleeperWeek){
+        TreeMap<Integer, java.time.LocalDateTime> ends = DraftWeightCurve.weekEnds(NflverseGames.games()).get(season);
+        return ends == null ? Math.max(0, sleeperWeek - 1) : DraftWeightCurve.gamesPlayed(ends, System.currentTimeMillis());
     }
 
     /** Today's men with these full names (a team, so a retired namesake is not picked up), in order. */
@@ -642,9 +781,16 @@ public class TradeScreens {
         out.append(String.format("%n  revealed k = %s games (90%% bootstrap over sides: %s to %s). Draft position counts as that many%n"
                         + "  games of results; k = 1000 is draft value alone, k = 0.25 is this season's pace alone.%n",
                 fmt(k), fmt(boot.get(50)), fmt(boot.get(949))));
+        out.append(String.format("%nTHE WEIGHT THE SCREENS USE, measured week by week on other leagues' accepted trades (DraftWeightCurve):%n"
+                + "  games played: draft value's share (this league's k = %s, the old form, would say)%n  ", fmt(k)));
+        for(int g = 1; g <= 12; g++){
+            out.append(String.format("%d: %.0f%% (%.0f%%)  ", g, 100 * context.weight().applyAsDouble(g),
+                    100 * kForm(k).applyAsDouble(g)));
+        }
+        out.append('\n');
         List<Double> blended = new ArrayList<>();
         for(Precedent p : sides){
-            blended.add(p.blendedRatio(k));
+            blended.add(p.blendedRatio(context.weight()));
         }
         blended.sort(Double::compare);
         out.append(String.format("  On that blend, what accepted sides got back: 10th percentile %s, 25th %s, median %s. A trade that%n"
@@ -659,17 +805,17 @@ public class TradeScreens {
             List<String> hisOut = idsNamed(get);
             Map<String, String> ownerOf = LeagueOwners.today(configuration);
             Screens s = screen(hisIn, hisOut, context.draft(), context.points(), sides,
-                    hisOut.isEmpty() ? null : ownerOf.get(hisOut.get(0)), context.k(), context.weeksPlayed());
+                    hisOut.isEmpty() ? null : ownerOf.get(hisOut.get(0)), context.weight(), context.weeksPlayed());
             out.append(String.format("%nTHE TRADE - you give %s, you get %s. From HIS side:%n", give, get));
             for(String id : hisIn){
-                out.append(String.format("  he gets  %-24s draft %6.1f   points %6.1f%n", name(id), context.draft().applyAsDouble(id),
+                out.append(String.format("  he gets  %-24s draft %6.1f   pace %6.1f%n", name(id), context.draft().applyAsDouble(id),
                         context.points().applyAsDouble(id)));
             }
             for(String id : hisOut){
-                out.append(String.format("  he gives %-24s draft %6.1f   points %6.1f%n", name(id), context.draft().applyAsDouble(id),
+                out.append(String.format("  he gives %-24s draft %6.1f   pace %6.1f%n", name(id), context.draft().applyAsDouble(id),
                         context.points().applyAsDouble(id)));
             }
-            out.append(String.format("  totals: draft %.1f for %.1f, points %.1f for %.1f%n  %s%n", s.draftIn(), s.draftOut(),
+            out.append(String.format("  totals: draft %.1f for %.1f, pace %.1f for %.1f%n  %s%n", s.draftIn(), s.draftOut(),
                     s.pointsIn(), s.pointsOut(), s.verdict()));
             out.append(objective(configuration, ownerOf, hisIn, hisOut));
         }

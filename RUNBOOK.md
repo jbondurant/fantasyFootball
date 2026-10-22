@@ -165,9 +165,13 @@ week, the bench worth the weeks it covers - on Sleeper's weekly projections for
 the games left (`sleeper-remaining`, which drops a man Sleeper has ruled out) and
 on the rest-of-season model, with your rank on each. Then every mutually good
 trade carries both pricings and **his view**: the trade from HIS side on the two
-numbers he can check, draft value and this season's points, blended with
-draft value counted as the games of results this league's own trades reveal
-(about ten, 2026-09-29) (`TradeScreens`).
+numbers he can check, draft value and his pace (read as what that pace after
+that many games has gone on to be worth), blended by how much draft value still
+counts after the games played - measured on 3,758 accepted trades in 809 other
+Sleeper leagues: 59% after one game, 48% after five, 32% after ten
+(`DraftWeightCurve`, 2026-10-22). A first fit on the raw pace said 73% at week
+5; Justin would not have it, and he was right - a hot start overstates a
+season, and the fit had put the regression on draft value.
 **THE SHORT LIST** names only trades good for both sides on both pricings, you
 clearing the 6.8 noise floor on each, AND fair to him on both of his numbers.
 Long shots - trades some manager here once accepted something as lopsided as -
@@ -192,6 +196,13 @@ manager's lineup before and after:
 
     ./gradlew run -Pmain=TradeScreens -Psend="Malik Nabers,Rhamondre Stevenson" -Preceive="Ja'Marr Chase"
     ./gradlew run -Pmain=TradeCheck -Pplayers="Malik Nabers,Ja'Marr Chase"   # points by week, ADP, every projection, and Sleeper's weekly sums by date
+
+Once a season, after it ends and `EraBoards.LAST_SEASON` has moved to it, add it
+to the draft-weight curve (about an hour of downloading the first time, minutes
+after; cached and gitignored):
+
+    ./gradlew run -Pmain=OtherLeagues -PotherSeasons=2021,2022,2023,2024,2025,2026 -PotherLeagues=1440
+    ./gradlew run -Pmain=DraftWeightCurve
 
 ## What never to trade
 

@@ -278,7 +278,9 @@ tasks.register('run', JavaExec) {
      // FaabRivals: free agents per position to read the room for
      'faabTargets',
      // TradeScreens: free agents taken as already claimed before a trade is priced
-     'assume'].each { knob ->
+     'assume',
+     // OtherLeagues: how many league-seasons like this one to harvest, and from which seasons
+     'otherLeagues', 'otherSeasons', 'otherUsers'].each { knob ->
         if (project.hasProperty(knob)) {
             systemProperty knob, project.property(knob)
         }
