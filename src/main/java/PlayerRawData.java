@@ -182,7 +182,20 @@ public class PlayerRawData {
             System.out.println(missing ? "player metadata missing, downloading"
                     : "player metadata from " + fetched + " is stale ("
                             + (inSeason ? "daily in season" : "weekly out of season") + "), refreshing");
-            downloadRawPlayerMetaData();
+            try {
+                downloadRawPlayerMetaData();
+            }
+            catch(RuntimeException unreachable){
+                // A FEED BEING DOWN MUST NOT KILL THE TOOL (the InOutUtilities rule). On
+                // 2026-10-21 the Java client's TLS handshake to /players/nfl failed twice
+                // while curl fetched it, and every tool died on the daily refresh. A
+                // day-old copy is far better than nothing; a missing one is still fatal.
+                if(missing){
+                    throw unreachable;
+                }
+                System.out.println("COULD NOT REFRESH player metadata (" + unreachable.getMessage()
+                        + "); using the copy from " + fetched);
+            }
         }
     }
 
