@@ -173,6 +173,14 @@ clearing the 6.8 noise floor on each, AND fair to him on both of his numbers.
 Long shots - trades some manager here once accepted something as lopsided as -
 are listed apart, with who took them; trades nobody here ever took are dropped.
 
+**Justin's rule for every trade (2026-10-22):** "even though it's allowed, I don't
+want tanking for one team that gets a keeper for next year. I want my trades to be
+generally equitable with and without keeper involvement, but I'm also fine with
+keeper value inequity, as long as rest of season is equitable." So the other side's
+rest of season may not fall by more than the noise floor on either pricing, whatever
+he gains in keepers. The trade finder lists what it left out under LEFT OUT AS
+TANKING, and the page marks those trades NO.
+
 **Retracted, 2026-09-28:** the 27 September report put Nabers + Stevenson for
 Ja'Marr Chase first on the short list. It was priced on the season feed, which
 had not heard that Jaxson Dart was out, and on the games left it costs you 3.8;

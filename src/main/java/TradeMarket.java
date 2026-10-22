@@ -445,6 +445,20 @@ public class TradeMarket {
         };
     }
 
+    /**
+     * JUSTIN'S RULE, 2026-10-22: "even though it's allowed, I don't want tanking for
+     * one team that gets a keeper for next year. I want my trades to be generally
+     * equitable with and without keeper involvement, but I'm also fine with keeper
+     * value inequity, as long as rest of season is equitable." So the other side's
+     * rest of season - his raw season gain, unweighted by how much his season is
+     * worth to him - may not fall by more than the noise floor on either pricing.
+     * A team out of it giving up this season for a keeper is exactly what this
+     * refuses; a lopsided keeper split with an even season is allowed.
+     */
+    static boolean equitableSeason(double hisSeason, double hisSeasonAlt, double floor){
+        return hisSeason >= -floor && hisSeasonAlt >= -floor;
+    }
+
     /** Every rival's Side from one TitleOdds simulation; without keepers, his season gain alone, weighted. */
     static Map<String, Side> rivalSides(java.util.function.ToDoubleFunction<List<String>> season, Map<String, Double> surplus,
                                         Map<String, Position> positionOf, TitleOdds.Stakes stakes, boolean withKeepers){
@@ -903,10 +917,18 @@ public class TradeMarket {
         List<Short> shortList = new ArrayList<>();
         List<Short> longShots = new ArrayList<>();
         int noChance = 0;
+        int tanks = 0;
         for(Trade trade : good){
             double seasonOnly = season.applyAsDouble(swap(rosters.get(me), trade.give(), trade.get()))
                     - season.applyAsDouble(rosters.get(me));
             double[] other = onOther(trade, rosters, me, altValue, scoreAlt);
+            List<String> his = rosters.get(trade.withManager());
+            double hisSeason = season.applyAsDouble(swap(his, trade.hisOut(), trade.give())) - season.applyAsDouble(his);
+            if(seasonOnly >= tradeFloor && other[0] >= tradeFloor && trade.theirGain() > 0
+                    && !equitableSeason(hisSeason, other[1], tradeFloor)){
+                tanks++;
+                continue;
+            }
             if(seasonOnly >= tradeFloor && other[0] >= tradeFloor && trade.theirGain() > 0 && other[1] > 0){
                 TradeScreens.Screens seen = screens.of(trade);
                 Short s = new Short(trade, seasonOnly, other[0], other[1], seen, seen.worthAsking() ? titleOf.apply(trade) : null);
@@ -942,6 +964,10 @@ public class TradeMarket {
         if(shortList.isEmpty()){
             out.append("  none. No trade that helps you on both pricings also looks fair to him on what he can see.\n");
         }
+        out.append(String.format("%nLEFT OUT AS TANKING - %d trades that help you but cost the other side more than the noise floor (%.1f) of%n"
+                + "THIS season on either pricing, whatever they gain in keepers. Justin, 2026-10-22: \"I don't want tanking for one%n"
+                + "team that gets a keeper for next year\" - keeper value may be lopsided, the rest of the season may not.%n",
+                tanks, tradeFloor));
         out.append(String.format("%nLONG SHOTS - %d more that pass both pricings but give him less than he gives on what he can see, though%n"
                 + "at least one accepted side in ten here took as little (who is named). Not offers to lead with. %d more were%n"
                 + "dropped: fewer than one accepted side in ten here ever took that little.%n", longShots.size(), noChance));

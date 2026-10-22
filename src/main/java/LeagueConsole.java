@@ -854,6 +854,10 @@ public class LeagueConsole {
             // leaves him worse on a number he can check, and ASK is labelled as
             // a long shot rather than a fair deal.
             boolean safeForMe = thins == null && !hole && trade.myGain() > 0;
+            // and EQUITABLE FOR THE REST OF HIS SEASON (TradeMarket.equitableSeason,
+            // Justin 2026-10-22): no team gives up this season for a keeper. The page
+            // reads his season on one pricing, so it applies the floor to that one.
+            boolean seasonFair = TradeMarket.equitableSeason(himSeason, himSeason, tradeFloor);
             boolean visiblyGoodForHim = himSimple > 0 && !himHole;
             // ...but never one that guts HIS lineup. Three ASK rows offered him a
             // trade whose simple reading is -106 because it takes his only
@@ -880,7 +884,7 @@ public class LeagueConsole {
             // projections that also liked Chase for Nabers. Now: he comes out
             // ahead on draft value or on this season's points.
             boolean aStoryHeCanTell = !himHole && screens.worthAsking();
-            String tier = !safeForMe || !screens.worthAsking() ? "no"
+            String tier = !safeForMe || !screens.worthAsking() || !seasonFair ? "no"
                     : !noise && visiblyGoodForHim && screens.fairToHim() ? "send"
                     : aStoryHeCanTell ? "ask" : "no";
             boolean fair = tier.equals("send");

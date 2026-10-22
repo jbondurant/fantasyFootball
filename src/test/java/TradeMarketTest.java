@@ -518,4 +518,13 @@ public class TradeMarketTest {
         assertEquals(0.0, him.gain(List.of("qbA", "qbB", "rbC"), List.of("qbB"), List.of("plain")), 1e-9,
                 "the second quarterback was never in the pair; sending him costs nothing next March");
     }
+
+    /** Justin's rule: the other side's rest of season may not fall beyond the noise, whatever the keepers do. */
+    @Test
+    public void aTradeMustLeaveHisSeasonEven(){
+        assertTrue(TradeMarket.equitableSeason(3.9, 3.0, 6.8), "BHier's Bijan deal: his season about even");
+        assertFalse(TradeMarket.equitableSeason(-29.3, 4.7, 6.8), "the Chase deal: Renteez gives up 29 points of this season for Tuten");
+        assertTrue(TradeMarket.equitableSeason(-6.0, -1.0, 6.8), "inside the noise either way is even");
+        assertFalse(TradeMarket.equitableSeason(2.0, -8.0, 6.8), "a loss on either pricing counts");
+    }
 }
