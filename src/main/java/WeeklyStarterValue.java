@@ -144,6 +144,11 @@ public class WeeklyStarterValue implements RosterValue {
     private final int scenarios;
     private final Map<String, Draw[]> byPlayer = new HashMap<>();
     private final Map<Position, Double> wirePerWeek;
+
+    /** What the wire supplies at each position, a week, in this objective's units (the replacement man's total / 17). */
+    public Map<Position, Double> wire(){
+        return java.util.Collections.unmodifiableMap(wirePerWeek);
+    }
     private final Map<String, Position> positionOf;
 
     /**

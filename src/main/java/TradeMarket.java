@@ -632,7 +632,7 @@ public class TradeMarket {
     static String target(String me, String with, String mustGet, String mustGive, String exclude,
                          Map<String, List<String>> rosters, Map<String, String> nameOf, Map<String, Double> points,
                          Side mySide, Side hisSide, java.util.function.ToDoubleFunction<List<String>> season,
-                         WeeklyStarterValue altValue, Map<String, Double> scoreAlt, TradeScreens.Context screens,
+                         RosterValue altValue, Map<String, Double> scoreAlt, TradeScreens.Context screens,
                          TitleOdds.Stakes stakes, double floor, double hisFloor, double hisFloorAlt, String source, String alt)
             throws java.io.IOException {
         List<String> mine = rosters.get(me);
@@ -762,6 +762,85 @@ public class TradeMarket {
         return out.toString();
     }
 
+    /**
+     * THE WIRE THIS ASSUMES. Justin, 2026-10-23: "do these trade finders assume i
+     * have any of the top waiver wires that are available (except for wednesday
+     * waivers where there is competition. I.e. I can assume i have aaron rogers
+     * when purdy is on bye". They do assume a wire, but not that one: every slot
+     * is floored at the projection of the man at a fixed rank on the whole board
+     * (InsuranceTest.replacementRanks - one past what this league drafts at the
+     * position), which stands in for "the best man nobody drafted". TitleOdds,
+     * by contrast, lets every lineup start that week's actual best free agents.
+     * This prints the stand-in beside the best man actually free today, both on
+     * the pricing in use, so the gap between the assumption and the wire is seen.
+     * Neither treats Wednesday's contested run differently from any other day.
+     */
+    static String wireNote(AAAConfiguration configuration, WeeklyStarterValue value, Map<String, Double> points,
+                           Map<String, String> ownerOf, Map<String, String> nameOf, String source){
+        Map<Position, Integer> rank = InsuranceTest.replacementRanks(configuration);
+        Map<Position, List<String>> board = new java.util.EnumMap<>(Position.class);
+        points.forEach((id, p) -> {
+            Player player = Player.getPlayerFromSIDV2(id);
+            if(player != null && value.wire().containsKey(player.position)){
+                board.computeIfAbsent(player.position, k -> new ArrayList<>()).add(id);
+            }
+        });
+        StringBuilder out = new StringBuilder(String.format("THE WIRE THIS ASSUMES - any slot can be filled from waivers at the level of the man at a fixed rank on%n"
+                + "the whole board (one past what this league drafts there), not at the best man actually free. On %s, games left:%n", source));
+        out.append(String.format("  %-4s %-34s %8s   %-34s %8s%n", "pos", "assumed (rank on the board)", "points", "best actually free today", "points"));
+        for(Position position : List.of(Position.QB, Position.RB, Position.WR, Position.TE, Position.DEF)){
+            List<String> ids = board.getOrDefault(position, List.of());
+            if(ids.isEmpty()){
+                continue;
+            }
+            ids.sort(Comparator.comparingDouble((String id) -> -points.get(id)));
+            int r = rank.getOrDefault(position, position == Position.DEF ? 13 : 24);
+            String at = ids.get(Math.min(Math.max(0, r - 1), ids.size() - 1));
+            String free = ids.stream().filter(id -> !ownerOf.containsKey(id)).findFirst().orElse(null);
+            out.append(String.format("  %-4s %-34s %8.1f   %-34s %8s%n", position,
+                    String.format("%s (%s%d)", name(at, nameOf), position, r), points.get(at)
+                            * (position == Position.DEF ? WeeklyStarterValue.DEF_STREAM_OVER_HOLD : 1),
+                    free == null ? "-" : String.format("%s (%s%d)", name(free, nameOf), position, ids.indexOf(free) + 1),
+                    free == null ? "-" : String.format("%.1f", points.get(free))));
+        }
+        out.append(String.format("(The defence's assumed level is the held man's times %.3f, the measured edge of streaming on form.)%n%n",
+                WeeklyStarterValue.DEF_STREAM_OVER_HOLD));
+        return out.toString();
+    }
+
+    /** The wire the weekly objective uses: each week's best free agents, here for the next few weeks. */
+    static String weeklyWireNote(WeeklyLineupValue value, String source){
+        StringBuilder out = new StringBuilder(String.format("THE WIRE THIS ASSUMES - each week's best free agents are in every lineup's pool, a pickup costing%n"
+                + "no roster spot (Justin, 2026-10-23: \"let's do it with no roster space required\"). On %s, points that week:%n", source));
+        List<Integer> weeks = value.weeks();
+        out.append(String.format("  %-6s", "week"));
+        for(Position position : List.of(Position.QB, Position.RB, Position.WR, Position.TE, Position.DEF)){
+            out.append(String.format(" %-24s", position + (TitleOdds.WIRE_DEPTH.get(position) > 1 ? " (best " + TitleOdds.WIRE_DEPTH.get(position) + ")" : "")));
+        }
+        out.append('\n');
+        for(int w : weeks.subList(0, Math.min(4, weeks.size()))){
+            out.append(String.format("  %-6d", w));
+            for(Position position : List.of(Position.QB, Position.RB, Position.WR, Position.TE, Position.DEF)){
+                StringBuilder cell = new StringBuilder();
+                for(double p : value.wire(w, position)){
+                    cell.append(cell.length() == 0 ? "" : "/").append(String.format("%.1f", p));
+                }
+                out.append(String.format(" %-24s", cell));
+            }
+            out.append('\n');
+        }
+        out.append('\n');
+        return out.toString();
+    }
+
+    static String name(String id, Map<String, String> nameOf){
+        if(nameOf.containsKey(id)){
+            return nameOf.get(id);
+        }
+        Player p = Player.getPlayerFromSIDV2(id);
+        return p == null ? id : p.firstName + " " + p.lastName;
+    }
+
     /** The lowest-projected man on a roster who is not part of the deal. */
     static String worstOther(List<String> roster, List<String> exclude, Map<String, Double> points){
         String worst = null;
@@ -851,7 +930,7 @@ public class TradeMarket {
      * his gain}. His side takes his cut on the two-for-one (Trade.hisOut) - the
      * same accounting as every other rebuild of his roster (TRAPS #144).
      */
-    static double[] onOther(Trade trade, Map<String, List<String>> rosters, String me, WeeklyStarterValue other,
+    static double[] onOther(Trade trade, Map<String, List<String>> rosters, String me, RosterValue other,
                             Map<String, Double> baseOnOther){
         List<String> mine = rosters.get(me);
         List<String> his = rosters.get(trade.withManager());
@@ -881,14 +960,20 @@ public class TradeMarket {
         // -Pprojections=sleeper is the season feed, which does not move on news.
         String source = System.getProperty("projections", "sleeper-remaining");
         Map<String, Double> points = ProjectionSources.resolve(source);
-        WeeklyStarterValue value = WeeklyStarterValue.forCurrentBoard(configuration, points, scenarios, 424_242L);
+        // THE OBJECTIVE (2026-10-23): each week's best lineup with that week's best free agents in the pool
+        // (WeeklyLineupValue). -Pobjective=drawn prices on the old one, WeeklyStarterValue's drawn seasons with
+        // one wire level a position, for comparison.
+        boolean drawn = "drawn".equals(System.getProperty("objective", "weekly"));
+        RosterValue value = drawn ? WeeklyStarterValue.forCurrentBoard(configuration, points, scenarios, 424_242L)
+                : WeeklyLineupValue.forSource(configuration, source);
         // THE OTHER PRICING, beside it - the swap report's rule (TRAPS #146) brought
         // to trades. Sleeper's season feed does not move on results (TRAPS #136);
         // the rest-of-season model does (RosModel). Every listed trade is re-priced
         // on the other one, and the short list names only trades that hold on both.
         String alt = source.equals("ros") ? "sleeper-remaining" : "ros";
         Map<String, Double> altPoints = ProjectionSources.resolve(alt);
-        WeeklyStarterValue altValue = WeeklyStarterValue.forCurrentBoard(configuration, altPoints, scenarios, 424_242L);
+        RosterValue altValue = drawn ? WeeklyStarterValue.forCurrentBoard(configuration, altPoints, scenarios, 424_242L)
+                : WeeklyLineupValue.forSource(configuration, alt);
         double tradeFloor = Double.parseDouble(System.getProperty("tradeFloor", "6.8"));
         // Justin's tanking line is on Sleeper's projections; the rest-of-season model keeps the noise floor
         double hisFloor = source.equals("ros") ? tradeFloor : tankFloor();
@@ -953,9 +1038,10 @@ public class TradeMarket {
 
         StringBuilder out = new StringBuilder();
         out.append(String.format("TRADE MARKET  %s  (%s; projections: %s)%n", LocalDate.now(), me, source));
-        out.append(String.format("Every size-balanced swap with all eleven rivals, both rosters priced on the same%n"
-                + "weekly-starter objective (%d drawn seasons). Only trades BOTH sides gain from are listed:%n"
-                + "an offer the other manager loses on is an offer he declines.%n", scenarios));
+        out.append(String.format("Every size-balanced swap with all eleven rivals, both rosters priced on the same objective: %s.%n"
+                + "Only trades BOTH sides gain from are listed: an offer the other manager loses on is an offer he declines.%n",
+                drawn ? "the drawn-season weekly-starter objective (" + scenarios + " drawn seasons, -Pobjective=drawn)"
+                        : value.label() + " - each week's best lineup, that week's best free agents in the pool for nothing"));
         out.append(withKeepers
                 ? String.format("THE TWO SIDES ARE PRICED DIFFERENTLY, on purpose. YOUR value is the season PLUS the best two%n"
                         + "keeper surpluses on your roster (a surplus being what a man is worth beyond the pick you spend to%n"
@@ -977,6 +1063,8 @@ public class TradeMarket {
         byOn.sort(Comparator.comparingDouble((String m) -> -scoreOn.get(m)));
         List<String> byAlt = new ArrayList<>(rosters.keySet());
         byAlt.sort(Comparator.comparingDouble((String m) -> -scoreAlt.get(m)));
+        out.append(drawn ? wireNote(configuration, (WeeklyStarterValue) value, points, ownerOf, nameOf, source)
+                : weeklyWireNote((WeeklyLineupValue) value, source));
         out.append(String.format("HOW EVERY ROSTER SCORES - the season points its starters are expected to score: 17 x the best legal%n"
                 + "lineup from whoever is healthy in a drawn week, the bench worth the weeks it covers, every slot floored at%n"
                 + "the waiver wire. On %s and on %s (the rest-of-season model moves on this season's results; Sleeper's%n"
@@ -1270,7 +1358,8 @@ public class TradeMarket {
         String fixedDraft = System.getProperty("draftWeight", "");
         Path target = Path.of("data", "trades-" + LocalDate.now()
                 + "-" + source.replace(':', '_').replace(',', '_')
-                + (fixedDraft.isBlank() ? "" : "-draft" + Math.round(100 * Double.parseDouble(fixedDraft))) + ".txt");
+                + (fixedDraft.isBlank() ? "" : "-draft" + Math.round(100 * Double.parseDouble(fixedDraft)))
+                + ("drawn".equals(System.getProperty("objective", "weekly")) ? "-drawn" : "") + ".txt");
         Files.writeString(target, out.toString(), StandardCharsets.UTF_8);
         System.out.println("written to " + target);
     }
