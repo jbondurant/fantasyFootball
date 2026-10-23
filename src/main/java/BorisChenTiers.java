@@ -101,7 +101,22 @@ public class BorisChenTiers {
 
     /** The full feed: every tiered player valued on Sleeper's points curve. */
     public static Map<String, Double> leaguePointsBySleeperID(){
-        Map<String, Double> sleeper = SleeperProjections.parseTodaysWebPage();
+        return onCurve(SleeperProjections.parseTodaysWebPage());
+    }
+
+    /**
+     * In season the same files are WEEKLY tiers - Brock Purdy in the top QB
+     * tier on 2026-09-25 is a week-3 call, not a season one - so a season curve
+     * turns a weekly rank into a season number. This values the day's tiers on
+     * Sleeper's projections for the NFL's current week instead: borischen-week
+     * in the archive.
+     */
+    public static Map<String, Double> weekPointsBySleeperID(){
+        return onCurve(LeagueWeek.projected(LeagueWeek.season(), LeagueWeek.week()));
+    }
+
+    /** Every tiered player valued on the curve of {@code sleeper}'s points at his position. */
+    static Map<String, Double> onCurve(Map<String, Double> sleeper){
         Map<String, Double> out = new HashMap<>();
         for(Map.Entry<Position, List<List<Player>>> entry : tiers().entrySet()){
             List<Double> curve = new ArrayList<>();

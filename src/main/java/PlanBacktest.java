@@ -93,7 +93,7 @@ public class PlanBacktest {
         STRATEGIES.put("best-nine (Model A)",
                 "RB WR RB WR WR WR TE QB QB QB QB QB QB DEF");
         // A STRAWMAN, kept only because every number on record was measured
-        // against it. RUNBOOK.md:77 makes the round-10 quarterback conditional
+        // against it. RUNBOOK.md "The committed plan (laptop-dies fallback)" makes the round-10 quarterback conditional
         // ("if there - else RB/WR"), :78 says round 11 is "anything you want",
         // and :79 offers round 14 as the ALTERNATIVE to that stash, not an
         // addition. This string takes both conditionals as certain and adds a

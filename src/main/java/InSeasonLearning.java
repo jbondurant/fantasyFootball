@@ -207,10 +207,15 @@ public class InSeasonLearning {
      * evidence, which is the whole mechanism here, so it has to be right.
      */
     static double scale(List<Man> season, Position position){
+        return scale(season, position, CAP);
+    }
+
+    /** The same over a caller's own roster depth - the study's CAP, or RosModel's wider board. */
+    static double scale(List<Man> season, Position position, Map<Position, Integer> cap){
         double sum = 0;
         int count = 0;
         for(Man man : season){
-            if(man.position() == position && man.rank() <= CAP.get(position)
+            if(man.position() == position && man.rank() <= cap.get(position)
                     && man.games() >= MIN_GAMES){
                 sum += man.ppg();
                 count++;
@@ -231,9 +236,15 @@ public class InSeasonLearning {
      */
     static Map<Position, double[]> priorTable(Map<String, List<Man>> harvest,
                                               String excludeA, String excludeB){
+        return priorTable(harvest, excludeA, excludeB, CAP);
+    }
+
+    static Map<Position, double[]> priorTable(Map<String, List<Man>> harvest,
+                                              String excludeA, String excludeB,
+                                              Map<Position, Integer> depth){
         Map<Position, double[]> table = new EnumMap<>(Position.class);
         for(Position position : POSITIONS){
-            int cap = CAP.get(position);
+            int cap = depth.get(position);
             double[] prior = new double[cap + 1];
             for(int rank = 1; rank <= cap; rank++){
                 double sum = 0;
@@ -242,7 +253,7 @@ public class InSeasonLearning {
                     if(entry.getKey().equals(excludeA) || entry.getKey().equals(excludeB)){
                         continue;
                     }
-                    double level = scale(entry.getValue(), position);
+                    double level = scale(entry.getValue(), position, depth);
                     for(Man man : entry.getValue()){
                         if(man.position() == position && man.games() >= MIN_GAMES
                                 && Math.abs(man.rank() - rank) <= SMOOTH){
@@ -283,6 +294,11 @@ public class InSeasonLearning {
                  int men){}
 
     static Map<Position, Kappa> fitKappa(Map<String, List<Man>> harvest, String heldOut){
+        return fitKappa(harvest, heldOut, CAP);
+    }
+
+    static Map<Position, Kappa> fitKappa(Map<String, List<Man>> harvest, String heldOut,
+                                         Map<Position, Integer> depth){
         Map<Position, Kappa> out = new EnumMap<>(Position.class);
         for(Position position : POSITIONS){
             double withinNumerator = 0;
@@ -291,9 +307,9 @@ public class InSeasonLearning {
                 if(entry.getKey().equals(heldOut)){
                     continue;
                 }
-                double level = scale(entry.getValue(), position);
+                double level = scale(entry.getValue(), position, depth);
                 for(Man man : entry.getValue()){
-                    if(man.position() != position || man.rank() > CAP.get(position)
+                    if(man.position() != position || man.rank() > depth.get(position)
                             || man.games() < MIN_GAMES){
                         continue;
                     }
@@ -317,10 +333,10 @@ public class InSeasonLearning {
                 // the prior this man is measured against must not have seen his
                 // own season either, or the residual is shrunk toward himself
                 Map<Position, double[]> table =
-                        priorTable(harvest, heldOut, entry.getKey());
-                double level = scale(entry.getValue(), position);
+                        priorTable(harvest, heldOut, entry.getKey(), depth);
+                double level = scale(entry.getValue(), position, depth);
                 for(Man man : entry.getValue()){
-                    if(man.position() != position || man.rank() > CAP.get(position)
+                    if(man.position() != position || man.rank() > depth.get(position)
                             || man.games() < MIN_GAMES){
                         continue;
                     }
@@ -361,10 +377,14 @@ public class InSeasonLearning {
      * reversed findings in this repo twice.
      */
     static double levelThrough(List<Man> season, Position position, int seen){
+        return levelThrough(season, position, seen, CAP);
+    }
+
+    static double levelThrough(List<Man> season, Position position, int seen, Map<Position, Integer> depth){
         double sum = 0;
         int count = 0;
         for(Man man : season){
-            if(man.position() == position && man.rank() <= CAP.get(position)
+            if(man.position() == position && man.rank() <= depth.get(position)
                     && man.gamesThrough(seen) >= 1){
                 sum += man.pointsThrough(seen) / man.gamesThrough(seen);
                 count++;

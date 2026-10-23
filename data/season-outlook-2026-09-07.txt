@@ -1,0 +1,28 @@
+data: projections 2026-09-07, player metadata 2026-09-07
+SEASON OUTLOOK  2026-09-07  after week 0, 20000 sims
+
+Six of twelve make the playoffs; weeks 1-14 decide it. Each team's weekly score is
+drawn around its best legal ten with a spread of 24.9 - MEASURED over 840 real team-weeks
+in five completed seasons of this league, not assumed.
+
+MANAGER            A WEEK     WINS  PLAYOFFS
+JakeSK              115.1      7.9     70.8%
+KevinDA             112.7      7.5     62.4%
+itsabust            112.7      7.4     59.5%
+jerem9604           111.2      7.2     55.3%
+Hamrliks            110.6      7.1     53.0%
+d0ddi               109.9      7.0     50.1%
+BHier               109.9      7.0     49.9%
+justinb314          109.2      6.9     48.2%   <- you
+patekxwater         109.2      6.8     46.2%
+tommyrads           109.1      6.8     45.6%
+Renteez             106.3      6.3     33.2%
+JFMarino            103.9      6.0     25.7%
+
+48% to make the playoffs - but only 0 of 14 weeks are played, and the sell-for-keepers
+decision is a HALFWAY one. Too early to act on this; it is here to be watched.
+
+NOT modelled: byes, injuries arriving, waiver improvement, anybody trading. Every one of
+those makes the season MORE uncertain, which pushes each number toward 50% - so a team this
+calls dead is dead by a margin that survives the omissions, and a team it calls alive may
+only be alive. That asymmetry is the right direction for a rule about when to give up.

@@ -485,7 +485,14 @@ arise on the pool's own path at all. The same switch widens the pool from 1466 s
 7. **DONE 2026-09-02, with a caveat - Run `AdpSnapshot` daily for real.** A launchd agent cannot read `~/Documents` (TRAPS #63), so in draft season it runs with the `/today` brief; the launchd version is in `tools/launchd/` for when access is granted. It ran on five of the last eight days;
    the movers report is only as good as the history. A scheduled task, not a
    memory.
-8. **Set up the season-outcome check now.** Bench is worth zero in the objective
+8. **DONE 2026-09-05 - the season-outcome check exists and its bar is frozen.**
+   `SeasonLedger -Panchor` wrote `data/season-anchor-2026.txt` before a single game:
+   Justin 9th of 12 by projected best-ten starters, and the pre-registered reading -
+   the bench PAID at 6th or better by points actually scored, PAID NOTHING at 9th or
+   worse, NULL between, with the share of his points from men outside the frozen ten
+   as the mechanism check so a good rank with no promotions is called a hot roster
+   rather than a vindicated bench. The file is never rewritten. Weekly rows append
+   from week 1 (`SeasonLedger`, append-only, finished weeks only). Original: Bench is worth zero in the objective
    and Justin finished 1st by bench, 9th by starters. Only actual results can say
    whether that trade was right; `LeagueActuals` and `TeamRankings` against
    December standings is the measurement. Start collecting from week 1.

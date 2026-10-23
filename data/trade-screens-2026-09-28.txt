@@ -1,0 +1,60 @@
+TRADE SCREENS  2026-09-28  (what the man opposite sees; season 2026, week 3)
+
+THE DRAFT-VALUE CHART - season points above the last starter at his position, for a man drafted at each ADP
+(every board EraBoards joins to outcomes, fitted to fall with ADP):
+  1:114  4:107  8:98  12:93  18:83  24:60  29:54  36:52  48:42  60:32  72:23  96:21  120:16  150:10  180:7  
+  So pick 4 against pick 29 is 107 against 54, and pick 104 against 129 is 20 against 13 -
+  the same 25 picks, which the old straight-line check could not tell apart.
+
+THIS LEAGUE'S ACCEPTED TRADES on the same screens: 51 completed trades in its finished seasons; 21 carried
+a draft pick or FAAB (on neither screen, so left out) and 0 fell in a season with no joined board.
+That leaves 60 sides. Each side: what it got back on each screen, over what it gave.
+  season wk   manager           draft   points   GOT  <-  GAVE
+  2025   6    Hamrliks            38%       0%   Drake Maye  <-  Garrett Wilson
+  2025   8    BHier               46%      40%   Kimani Vidal + George Kittle + Christian Watson  <-  Justin Jefferson + Jaylen Warren
+  2025   10   BHier               46%       0%   Josh Downs  <-  George Kittle
+  2022   12   patekxwater         15%      58%   David Njoku + Joshua Palmer  <-  Deebo Samuel + Nico Collins
+  2024   12   KevinDA             43%      89%   Malik Nabers  <-  Amari Cooper + Isiah Pacheco
+  2021   2    Hamrliks            90%      67%   Ezekiel Elliott + Miles Sanders  <-  Mike Davis + Derrick Henry + Mike Williams
+  2024   8    itsabust            77%      95%   DeAndre Hopkins + A.J. Brown  <-  DeVonta Smith + Jahmyr Gibbs
+  2021   3    itsabust            60%     101%   Chris Carson  <-  Stefon Diggs
+  2022   2    itsabust           105%       0%   Derrick Henry + Justin Fields  <-  Dalvin Cook + Treylon Burks
+  2022   4    tommyrads          106%      77%   Tyler Boyd + Justin Jefferson  <-  Amari Cooper + D'Andre Swift
+  2022   4    Hamrliks           110%       0%   Darnell Mooney  <-  Robbie Chosen + Devin Singletary
+  2024   6    KevinDA             88%     113%   CeeDee Lamb  <-  Marvin Harrison + Najee Harris
+  2024   6    JFMarino           113%      89%   Marvin Harrison + Najee Harris  <-  CeeDee Lamb
+  2021   9    itsabust           129%      63%   Daniel Jones + Jonathan Taylor + Laviska Shenault  <-  Dak Prescott + CeeDee Lamb + Elijah Mitchell
+  2024   8    Hamrliks           129%     106%   DeVonta Smith + Jahmyr Gibbs  <-  DeAndre Hopkins + A.J. Brown
+  2022   4    justinb314          95%     130%   Amari Cooper + D'Andre Swift  <-  Tyler Boyd + Justin Jefferson
+  2023   6    BHier               19%     132%   Adam Thielen + Raheem Mostert  <-  Stefon Diggs + Tee Higgins
+  2024   4    BHier               32%     141%   Tre Tucker + Derek Carr  <-  Amari Cooper
+  2021   10   justinb314          54%     145%   Diontae Johnson  <-  Odell Beckham + Corey Davis + Michael Gallup + Jalen Hurts
+  2021   2    itsabust           111%     150%   Mike Davis + Derrick Henry + Mike Williams  <-  Ezekiel Elliott + Miles Sanders
+  (the twenty most lopsided against the side named, by the better of its two screens)
+
+THE TRADE - you give Malik Nabers,Rhamondre Stevenson, you get Ja'Marr Chase. From HIS side:
+  he gets  Malik Nabers             draft   54.7   points    0.0
+  he gets  Rhamondre Stevenson      draft   28.7   points    0.0
+  he gives Ja'Marr Chase            draft  107.3   points  131.5
+  totals: draft 83.4 for 107.3, points 0.0 for 131.5
+  NO - behind on both numbers he can see: he gets back 78% of the draft value and 0% of the season's points he gives; 2 of 60 accepted sides here took as little (BHier, Hamrliks), never Renteez
+
+WHAT THE OBJECTIVE SAYS - 17 x the best legal lineup, the bench as insurance, 240 drawn seasons - on each pricing:
+  pricing                  you   Renteez   his cut (if he takes more men)
+  sleeper                +30.2      +6.8   AJ Dillon
+  sleeper-remaining       -3.8     +34.9   Dylan Sampson
+  ros                    +16.6     +10.9   AJ Dillon
+
+  Renteez's best lineup on sleeper-remaining (Sleeper's weekly projections over the games left):
+  BEFORE                             AFTER                             
+  QB  Lamar Jackson           359.9  QB  Lamar Jackson           359.9 
+  RB  Javonte Williams        202.0  RB  Javonte Williams        202.0 
+  RB  Travis Etienne          142.2  RB  Rhamondre Stevenson     150.7 
+  WR  Ja'Marr Chase           209.0  WR  Ladd McConkey           176.9 
+  WR  Ladd McConkey           176.9  WR  Malik Nabers            157.6 
+  WR  Terry McLaurin          141.7  WR  Terry McLaurin          141.7 
+  TE  Dalton Kincaid          156.8  TE  Dalton Kincaid          156.8 
+  DEF Philadelphia Eagles     116.1  DEF Philadelphia Eagles     116.1 
+  WR  Kayshon Boutte           89.9  RB  Travis Etienne          142.2 
+  WR  Rashod Bateman           80.1  WR  Kayshon Boutte           89.9 
+  starters 1674.6                    starters 1693.9                   

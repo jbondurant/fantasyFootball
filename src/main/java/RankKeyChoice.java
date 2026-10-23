@@ -31,7 +31,7 @@ import java.util.TreeMap;
  * his rank band in the OTHER seasons, and see which key predicts better.
  * Leave-one-season-out, so no key is scored on a season it learned from.
  *
- *   ./gradlew run -Pmain=RankKeyChoice [-Pdepth=48] [-Pband=12]
+ *   ./gradlew run -Pmain=RankKeyChoice [-PrankDepth=48] [-Pband=12]
  *
  * `depth` is how far down each position to judge (the pool's first four tiers
  * by default); `band` is the tier width, 12 as WeeklyStarterValue.TIER.
@@ -154,7 +154,11 @@ public class RankKeyChoice {
 
     public static void main(String[] args) throws Exception {
         AAAConfiguration configuration = AAAConfiguration.getInstance();
-        int depth = Integer.getInteger("depth", 48);
+        // 'rankDepth', not 'depth'. That property name is owned by something in
+        // the forked JVM and reads back 0 (BoardValue.LOOKAHEAD documents it,
+        // LeagueConsole was bitten by it on 2026-09-06), and a depth of 0 here
+        // would silently judge nothing at all.
+        int depth = Integer.getInteger("rankDepth", 48);
         int band = Integer.getInteger("band", WeeklyStarterValue.TIER);
         int thisSeason = Integer.parseInt(configuration.getSeason());
 

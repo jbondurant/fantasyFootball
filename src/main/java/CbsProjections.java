@@ -9,17 +9,48 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * CBS Sports season projections - server-rendered stat-line tables, one page
- * per position, scored under league settings by the shared scorer. Column
- * layouts are fixed per position and were verified against the live pages;
- * the parse sanity-checks itself (a top QB must project four-digit passing
- * yards) so a silent CBS redesign fails loudly instead of feeding garbage.
+ * CBS Sports projections - server-rendered stat-line tables, one page per
+ * position, scored under league settings by the shared scorer. Column layouts
+ * are fixed per position and were verified against the live pages; the parse
+ * sanity-checks itself (the top QB must project a starter's points per game)
+ * so a silent CBS redesign fails loudly instead of feeding garbage.
+ *
+ * Two timeframes. "season" is the preseason board. Once games are played CBS
+ * serves its CURRENT WEEK at that address - the page titled "Week 3 Proj" came
+ * back for the season URL on 2026-09-11 and 09-25 - and the old guard threw
+ * on it, which took the whole projection archive down with it for three weeks
+ * (TRAPS #147). So the page's title is read and a week page refused by name,
+ * and in season the archive reads "restofseason", which CBS still serves with
+ * the same columns (gp is the games left).
  */
 public class CbsProjections {
 
     static String url(String position, String season){
+        return url(position, season, "season");
+    }
+
+    static String url(String position, String season, String timeframe){
         return "https://www.cbssports.com/fantasy/football/stats/" + position + "/" + season
-                + "/season/projections/ppr/";
+                + "/" + timeframe + "/projections/ppr/";
+    }
+
+    private static final Pattern TITLE = Pattern.compile("<title>([^<]*)</title>");
+
+    /**
+     * Refuses a page that is not the timeframe asked for: "2026 Projections ..."
+     * for the season, "Rest of Season Proj ..." for the rest of it. CBS answers
+     * the season address with its week page in season, and a week's numbers
+     * archived as a season's are wrong by a factor of fifteen.
+     */
+    static void checkServed(String html, String timeframe, String position){
+        Matcher title = TITLE.matcher(html);
+        String served = title.find() ? title.group(1).trim() : "(no title)";
+        boolean right = timeframe.equals("restofseason") ? served.startsWith("Rest of Season")
+                : served.matches("\\d{4} Projections.*");
+        if(!right){
+            throw new IllegalStateException("CBS served \"" + served + "\" for its " + timeframe + " " + position
+                    + " page - in season the season address serves the current week; the rest of the season is cbs-ros");
+        }
     }
 
     private static final Pattern ROW =
@@ -30,14 +61,20 @@ public class CbsProjections {
             "CellPlayerName--long[^>]*>(?:\\s*<[^>]*>)*\\s*([^<]+)", Pattern.DOTALL);
 
     public static HashMap<String, Double> leaguePointsBySleeperID(){
+        return leaguePointsBySleeperID("season");
+    }
+
+    /** "season" or "restofseason", league-scored, by Sleeper id. */
+    public static HashMap<String, Double> leaguePointsBySleeperID(String timeframe){
         String season = AAAConfiguration.getInstance().getSeason();
         LeagueScoringSettings scoring =
                 SleeperLeague.getSeriousLeague().league.leagueScoringSettings;
         HashMap<String, Double> out = new HashMap<>();
         for(String position : new String[]{"QB", "RB", "WR", "TE"}){
-            String html = InOutUtilities.getTodaysWebPage(url(position, season),
-                    "cbsProjections_" + position + "_" + season);
-            double best = 0;
+            String html = InOutUtilities.getTodaysWebPage(url(position, season, timeframe),
+                    (timeframe.equals("season") ? "cbsProjections_" : "cbsRosProjections_") + position + "_" + season);
+            checkServed(html, timeframe, position);
+            double bestPerGame = 0;
             Matcher rows = ROW.matcher(html);
             while(rows.find()){
                 List<String> raw = new ArrayList<>();
@@ -60,11 +97,16 @@ public class CbsProjections {
                 }
                 double points = SleeperProjections.scoreStatLine(stats, scoring);
                 out.put(player.sleeperIDString, points);
-                best = Math.max(best, points);
+                double games = stats.get("gp").getAsDouble();
+                if(games > 0){
+                    bestPerGame = Math.max(bestPerGame, points / games);
+                }
             }
-            if(position.equals("QB") && best < 250){
+            // per game, so the check holds for a season page and for the rest
+            // of one in December alike: a starting QB scores 15+ a game here
+            if(position.equals("QB") && bestPerGame < 15){
                 throw new IllegalStateException("CBS QB parse looks broken - best QB scored "
-                        + best + "; the page layout has probably changed");
+                        + bestPerGame + " a game; the page layout has probably changed");
             }
         }
         return out;
@@ -83,6 +125,7 @@ public class CbsProjections {
         }
         JsonObject stats = new JsonObject();
         try {
+            stats.addProperty("gp", values.get(0));
             switch(position){
                 // gp, att, cmp, passYds, y/g, passTD, INT, rating, rushAtt,
                 // rushYds, avg, rushTD, FL, fpts, fppg

@@ -1,0 +1,69 @@
+TRADE SCREENS  2026-09-29  (what the man opposite sees; season 2026, week 4)
+
+THE DRAFT-VALUE CHART - season points above the last starter at his position, for a man drafted at each ADP
+(every board EraBoards joins to outcomes, fitted to fall with ADP):
+  1:114  4:107  8:98  12:93  18:83  24:60  29:54  36:52  48:42  60:32  72:23  96:21  120:16  150:10  180:7  
+  So pick 4 against pick 29 is 107 against 54, and pick 104 against 129 is 20 against 13 -
+  the same 25 picks, which the old straight-line check could not tell apart.
+
+THIS LEAGUE'S ACCEPTED TRADES on the same screens: 51 completed trades in its finished seasons; 21 carried
+a draft pick or FAAB (on neither screen, so left out) and 0 fell in a season with no joined board.
+That leaves 60 sides. Each side: what it got back on each screen, over what it gave.
+  season wk   manager           draft   points   GOT  <-  GAVE
+  2025   6    Hamrliks            38%       0%   Drake Maye  <-  Garrett Wilson
+  2025   8    BHier               46%      40%   Kimani Vidal + George Kittle + Christian Watson  <-  Justin Jefferson + Jaylen Warren
+  2025   10   BHier               46%       0%   Josh Downs  <-  George Kittle
+  2022   12   patekxwater         15%      58%   David Njoku + Joshua Palmer  <-  Deebo Samuel + Nico Collins
+  2024   12   KevinDA             43%      89%   Malik Nabers  <-  Amari Cooper + Isiah Pacheco
+  2021   2    Hamrliks            90%      67%   Ezekiel Elliott + Miles Sanders  <-  Mike Davis + Derrick Henry + Mike Williams
+  2024   8    itsabust            77%      95%   DeAndre Hopkins + A.J. Brown  <-  DeVonta Smith + Jahmyr Gibbs
+  2021   3    itsabust            60%     101%   Chris Carson  <-  Stefon Diggs
+  2022   2    itsabust           105%       0%   Derrick Henry + Justin Fields  <-  Dalvin Cook + Treylon Burks
+  2022   4    tommyrads          106%      77%   Tyler Boyd + Justin Jefferson  <-  Amari Cooper + D'Andre Swift
+  2022   4    Hamrliks           110%       0%   Darnell Mooney  <-  Robbie Chosen + Devin Singletary
+  2024   6    KevinDA             88%     113%   CeeDee Lamb  <-  Marvin Harrison + Najee Harris
+  2024   6    JFMarino           113%      89%   Marvin Harrison + Najee Harris  <-  CeeDee Lamb
+  2021   9    itsabust           129%      63%   Daniel Jones + Jonathan Taylor + Laviska Shenault  <-  Dak Prescott + CeeDee Lamb + Elijah Mitchell
+  2024   8    Hamrliks           129%     106%   DeVonta Smith + Jahmyr Gibbs  <-  DeAndre Hopkins + A.J. Brown
+  2022   4    justinb314          95%     130%   Amari Cooper + D'Andre Swift  <-  Tyler Boyd + Justin Jefferson
+  2023   6    BHier               19%     132%   Adam Thielen + Raheem Mostert  <-  Stefon Diggs + Tee Higgins
+  2024   4    BHier               32%     141%   Tre Tucker + Derek Carr  <-  Amari Cooper
+  2021   10   justinb314          54%     145%   Diontae Johnson  <-  Odell Beckham + Corey Davis + Michael Gallup + Jalen Hurts
+  2021   2    itsabust           111%     150%   Mike Davis + Derrick Henry + Mike Williams  <-  Ezekiel Elliott + Miles Sanders
+  (the twenty most lopsided against the side named, by the better of its two screens)
+
+HOW LONG DRAFT POSITION HOLDS OUT AGAINST RESULTS, in this league's accepted trades. Each side's value
+is (k x draft value + g x this season's pace) / (k + g), g the games played when the trade was made; k is the
+one that makes the 58 sides made after week 1 read most even (mean |log ratio|):
+  k=0.25:Infinity  k=0.5:Infinity  k=1:Infinity  k=1.5:0.764  k=2:0.685  k=3:0.580  k=4:0.523  k=5:0.486  k=6:0.465  k=8:0.456  k=10:0.456  k=12:0.456  k=16:0.461  k=20:0.477  k=30:0.514  k=50:0.572  k=100:0.649  k=1000:0.747  
+  revealed k = 10 games (90% bootstrap over sides: 6 to 16). Draft position counts as that many
+  games of results; k = 1000 is draft value alone, k = 0.25 is this season's pace alone.
+  On that blend, what accepted sides got back: 10th percentile 52%, 25th 72%, median 102%. A trade that
+  gives him less than the 10th percentile is a NO (Screens.noChance).
+
+THE TRADE - you give Malik Nabers,Rhamondre Stevenson, you get Ja'Marr Chase. From HIS side:
+  he gets  Malik Nabers             draft   54.7   points    0.0
+  he gets  Rhamondre Stevenson      draft   28.7   points    0.0
+  he gives Ja'Marr Chase            draft  107.3   points  131.5
+  totals: draft 83.4 for 107.3, points 0.0 for 131.5
+  a long shot - he gets back 52% of what he gives on what he can see (78% of the draft value, 0% of the season's points; draft counted as 10 games against 4 played); 7 of 60 accepted sides here took as little (BHier, Hamrliks, itsabust, patekxwater), never Renteez
+
+WHAT THE OBJECTIVE SAYS - 17 x the best legal lineup, the bench as insurance, 240 drawn seasons - on each pricing:
+  pricing                  you   Renteez   his cut (if he takes more men)
+  sleeper                +30.2      +6.8   AJ Dillon
+  sleeper-remaining       +1.5     +37.8   Dylan Sampson
+  ros                    +48.3     -10.2   AJ Dillon
+
+  Renteez's best lineup on sleeper-remaining (Sleeper's weekly projections over the games left):
+  BEFORE                             AFTER                             
+  QB  Lamar Jackson           366.2  QB  Lamar Jackson           366.2 
+  RB  Javonte Williams        209.5  RB  Javonte Williams        209.5 
+  RB  Travis Etienne          125.8  RB  Rhamondre Stevenson     163.2 
+  WR  Ja'Marr Chase           208.9  WR  Ladd McConkey           162.2 
+  WR  Ladd McConkey           162.2  WR  Malik Nabers            141.0 
+  WR  Terry McLaurin          140.5  WR  Terry McLaurin          140.5 
+  TE  Dalton Kincaid          160.2  TE  Dalton Kincaid          160.2 
+  DEF Philadelphia Eagles     107.5  DEF Philadelphia Eagles     107.5 
+  WR  Kayshon Boutte           83.4  RB  Travis Etienne          125.8 
+  WR  Rashod Bateman           78.7  WR  Kayshon Boutte           83.4 
+  starters 1642.9                    starters 1659.6                   

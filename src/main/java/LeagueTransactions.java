@@ -52,10 +52,34 @@ public class LeagueTransactions {
     /** One add/drop. `week` is Sleeper's leg; `bid` is 0 outside FAAB waivers. */
     public record Move(String season, int week, String type, String status,
                        Map<String, Integer> adds, Map<String, Integer> drops,
-                       int bid){
+                       int bid, List<Integer> rosterIDs){
+        /** The shape before roster_ids were carried; tests still build it. */
+        public Move(String season, int week, String type, String status,
+                    Map<String, Integer> adds, Map<String, Integer> drops, int bid){
+            this(season, week, type, status, adds, drops, bid, List.of());
+        }
+
         public boolean complete(){
             return "complete".equals(status);
         }
+    }
+
+    /**
+     * Sleeper's own list of the rosters a transaction touched. A trade of FAAB
+     * alone, or of draft picks alone, has empty adds and drops and is still a
+     * trade between two managers - the 2025 week-11 itsabust/justinb314 deal was
+     * exactly that, and the trade count read 50 where the log holds 51.
+     */
+    static List<Integer> rosterIDs(JsonObject row){
+        List<Integer> ids = new ArrayList<>();
+        if(row.has("roster_ids") && row.get("roster_ids").isJsonArray()){
+            for(JsonElement e : row.getAsJsonArray("roster_ids")){
+                if(!e.isJsonNull()){
+                    ids.add(e.getAsInt());
+                }
+            }
+        }
+        return ids;
     }
 
     static String leagueRaw(String leagueID){
@@ -64,8 +88,14 @@ public class LeagueTransactions {
                 "sleeperLeagueMeta" + leagueID);
     }
 
+    // A quiet week really has no transactions, and week 18 of a finished season
+    // never will - so an empty answer here is an answer, not a question asked
+    // too early (TRAPS #85).
     static String transactionsRaw(String leagueID, int week){
-        return InOutUtilities.getCachedForever(
+        if(leagueID.equals(AAAConfiguration.getInstance().getLeagueID())){
+            return LeagueWeek.transactions(leagueID, week);   // the season in progress: its live week moves
+        }
+        return InOutUtilities.getCachedForeverAllowingEmpty(
                 "https://api.sleeper.app/v1/league/" + leagueID + "/transactions/" + week,
                 "sleeperTxns" + leagueID + "w" + week);
     }
@@ -123,7 +153,7 @@ public class LeagueTransactions {
                                 ? row.get("leg").getAsInt() : week,
                         text(row, "type"), text(row, "status"),
                         idToRoster(row, "adds"), idToRoster(row, "drops"),
-                        bid(row)));
+                        bid(row), rosterIDs(row)));
             }
         }
         return moves;
