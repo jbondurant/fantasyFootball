@@ -527,4 +527,13 @@ public class TradeMarketTest {
         assertTrue(TradeMarket.equitableSeason(-6.0, -1.0, 6.8), "inside the noise either way is even");
         assertFalse(TradeMarket.equitableSeason(2.0, -8.0, 6.8), "a loss on either pricing counts");
     }
+
+    /** Justin, 2026-10-23: "tanking would be an over 20 drop" on Sleeper's projections; the other pricing keeps the noise floor. */
+    @Test
+    public void tankingIsADropOfOverTwentyOnSleepersProjections(){
+        assertEquals(20.0, TradeMarket.TANK_FLOOR, 1e-9);
+        assertTrue(TradeMarket.equitableSeason(-19.0, TradeMarket.TANK_FLOOR, 3.0, 6.8), "19 down on Sleeper's projections is not tanking");
+        assertFalse(TradeMarket.equitableSeason(-29.6, TradeMarket.TANK_FLOOR, 27.2, 6.8), "the Chase deal still is");
+        assertFalse(TradeMarket.equitableSeason(-5.0, TradeMarket.TANK_FLOOR, -8.0, 6.8), "the rest-of-season model keeps 6.8");
+    }
 }

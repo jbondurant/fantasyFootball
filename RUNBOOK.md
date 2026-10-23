@@ -184,10 +184,15 @@ are listed apart, with who took them; trades nobody here ever took are dropped.
 **Justin's rule for every trade (2026-10-22):** "even though it's allowed, I don't
 want tanking for one team that gets a keeper for next year. I want my trades to be
 generally equitable with and without keeper involvement, but I'm also fine with
-keeper value inequity, as long as rest of season is equitable." So the other side's
-rest of season may not fall by more than the noise floor on either pricing, whatever
-he gains in keepers. The trade finder lists what it left out under LEFT OUT AS
-TANKING, and the page marks those trades NO.
+keeper value inequity, as long as rest of season is equitable." And 2026-10-23:
+"tanking would be an over 20 drop" - on Sleeper's projections over the games left,
+which move on every news item and can disagree with the rest-of-season model by tens
+of points. So the other side's rest of season may not fall by more than 20 there
+(`TradeMarket.TANK_FLOOR`, -PtankFloor) or by more than the noise floor (6.8) on the
+rest-of-season model, whatever he gains in keepers. The trade finder lists what it
+left out under LEFT OUT AS TANKING, shows the ones past the line on Sleeper's
+projections only under PAST THE LINE, and the page marks those trades NO.
+-Pexclude="Jordan Love" keeps named men out of every trade.
 
 **Retracted, 2026-09-28:** the 27 September report put Nabers + Stevenson for
 Ja'Marr Chase first on the short list. It was priced on the season feed, which

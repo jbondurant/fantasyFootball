@@ -456,7 +456,26 @@ public class TradeMarket {
      * refuses; a lopsided keeper split with an even season is allowed.
      */
     static boolean equitableSeason(double hisSeason, double hisSeasonAlt, double floor){
-        return hisSeason >= -floor && hisSeasonAlt >= -floor;
+        return equitableSeason(hisSeason, floor, hisSeasonAlt, floor);
+    }
+
+    /** The same with a floor per pricing: his season may fall by up to `floor` on one and `floorAlt` on the other. */
+    static boolean equitableSeason(double hisSeason, double floor, double hisSeasonAlt, double floorAlt){
+        return hisSeason >= -floor && hisSeasonAlt >= -floorAlt;
+    }
+
+    /**
+     * HOW FAR IS TANKING, on Sleeper's projections over the games left. Justin,
+     * 2026-10-23, after the Chase deal read -29.6 for Renteez there and +27.2 on
+     * the rest-of-season model: "tanking would be an over 20 drop". Sleeper's
+     * projections move on every news item and the two pricings can disagree by
+     * tens of points, so the noise floor (6.8) was too strict a line there. The
+     * rest-of-season model keeps the noise floor. -PtankFloor overrides.
+     */
+    static final double TANK_FLOOR = 20;
+
+    static double tankFloor(){
+        return Double.parseDouble(System.getProperty("tankFloor", String.valueOf(TANK_FLOOR)));
     }
 
     /** Every rival's Side from one TitleOdds simulation; without keepers, his season gain alone, weighted. */
@@ -725,6 +744,9 @@ public class TradeMarket {
         Map<String, Double> altPoints = ProjectionSources.resolve(alt);
         WeeklyStarterValue altValue = WeeklyStarterValue.forCurrentBoard(configuration, altPoints, scenarios, 424_242L);
         double tradeFloor = Double.parseDouble(System.getProperty("tradeFloor", "6.8"));
+        // Justin's tanking line is on Sleeper's projections; the rest-of-season model keeps the noise floor
+        double hisFloor = source.equals("ros") ? tradeFloor : tankFloor();
+        double hisFloorAlt = source.equals("ros") ? tankFloor() : tradeFloor;
         boolean withKeepers = Boolean.parseBoolean(System.getProperty("keepers", "true"));
         Map<String, String> ownerOf = LeagueOwners.today(configuration);
         Map<String, List<String>> rosters = new TreeMap<>();
@@ -856,7 +878,18 @@ public class TradeMarket {
                 season.applyAsDouble(swap(rosters.get(me), trade.give(), trade.get()))
                         - season.applyAsDouble(rosters.get(me));
         boolean sellMode = Boolean.getBoolean("sellMode");
-        List<Trade> good = sellMode ? mutuallyGood : alsoGoodThisSeason(mutuallyGood, seasonGain);
+        List<Trade> good = new ArrayList<>(sellMode ? mutuallyGood : alsoGoodThisSeason(mutuallyGood, seasonGain));
+        // -Pexclude="Jordan Love": men to keep out of every trade, either way. Justin, 2026-10-23, of the Chase
+        // deal: "taking love would barely benefit me and really hurt renteez".
+        String excludeNames = System.getProperty("exclude", "");
+        int excluded = 0;
+        if(!excludeNames.isBlank()){
+            Set<String> barred = new java.util.HashSet<>(TradeScreens.idsNamed(excludeNames));
+            int before = good.size();
+            good.removeIf(t -> t.give().stream().anyMatch(barred::contains) || t.get().stream().anyMatch(barred::contains)
+                    || t.hisOut().stream().anyMatch(barred::contains));
+            excluded = before - good.size();
+        }
         out.append(String.format("%d swaps searched, %d good for both sides, %d of those also good for 2026.%n",
                 all.size(), mutuallyGood.size(), good.size()));
         out.append(sellMode
@@ -918,6 +951,7 @@ public class TradeMarket {
         List<Short> longShots = new ArrayList<>();
         int noChance = 0;
         int tanks = 0;
+        List<Short> pastTheLine = new ArrayList<>();
         for(Trade trade : good){
             double seasonOnly = season.applyAsDouble(swap(rosters.get(me), trade.give(), trade.get()))
                     - season.applyAsDouble(rosters.get(me));
@@ -925,8 +959,12 @@ public class TradeMarket {
             List<String> his = rosters.get(trade.withManager());
             double hisSeason = season.applyAsDouble(swap(his, trade.hisOut(), trade.give())) - season.applyAsDouble(his);
             if(seasonOnly >= tradeFloor && other[0] >= tradeFloor && trade.theirGain() > 0
-                    && !equitableSeason(hisSeason, other[1], tradeFloor)){
+                    && !equitableSeason(hisSeason, hisFloor, other[1], hisFloorAlt)){
                 tanks++;
+                // past the line on this pricing only, even on the other: shown apart, for the record
+                if(other[1] >= -hisFloorAlt){
+                    pastTheLine.add(new Short(trade, seasonOnly, other[0], other[1], screens.of(trade), null));
+                }
                 continue;
             }
             if(seasonOnly >= tradeFloor && other[0] >= tradeFloor && trade.theirGain() > 0 && other[1] > 0){
@@ -966,10 +1004,27 @@ public class TradeMarket {
         if(shortList.isEmpty()){
             out.append("  none. No trade that helps you on both pricings also looks fair to him on what he can see.\n");
         }
-        out.append(String.format("%nLEFT OUT AS TANKING - %d trades that help you but cost the other side more than the noise floor (%.1f) of%n"
-                + "THIS season on either pricing, whatever they gain in keepers. Justin, 2026-10-22: \"I don't want tanking for one%n"
-                + "team that gets a keeper for next year\" - keeper value may be lopsided, the rest of the season may not.%n",
-                tanks, tradeFloor));
+        out.append(String.format("%nLEFT OUT AS TANKING - %d trades that help you but cost the other side more than %.1f of THIS season on%n"
+                + "%s or %.1f on %s, whatever they gain in keepers. Justin, 2026-10-22: \"I don't want tanking for one%n"
+                + "team that gets a keeper for next year\"; 2026-10-23: \"tanking would be an over 20 drop\".%n",
+                tanks, hisFloor, source, hisFloorAlt, alt));
+        if(excluded > 0){
+            out.append(String.format("%d trades moving %s were left out (-Pexclude).%n", excluded, excludeNames));
+        }
+        // the ones over the line on this pricing but not on the other, best for you first
+        pastTheLine.sort(Comparator.comparingDouble((Short s) -> -(s.season() + s.seasonAlt())));
+        out.append(String.format("%nPAST THE LINE ON %s ONLY - %d of those cost him more than %.1f there but not more than %.1f on %s.%n"
+                + "Tanking by Justin's definition; shown because he asked to see them. Best for you first:%n",
+                source.toUpperCase(), pastTheLine.size(), hisFloor, hisFloorAlt, alt));
+        out.append(String.format("  %-28s %-28s %8s %8s %8s %8s %10s %-16s%n", "YOU GIVE", "YOU GET", "you", "you:" + alt, "him",
+                "him:" + alt, "his view", "WITH"));
+        for(Short s : pastTheLine.subList(0, Math.min(8, pastTheLine.size()))){
+            List<String> his = rosters.get(s.trade().withManager());
+            double hisSeason = season.applyAsDouble(swap(his, s.trade().hisOut(), s.trade().give())) - season.applyAsDouble(his);
+            out.append(String.format("  %-28s %-28s %+8.1f %+8.1f %+8.1f %+8.1f %10s %-16s%n", label(s.trade().give(), nameOf),
+                    label(s.trade().get(), nameOf), s.season(), s.seasonAlt(), hisSeason, s.hisAlt(), s.seen().ratios(),
+                    s.trade().withManager()));
+        }
         out.append(String.format("%nLONG SHOTS - %d more that pass both pricings but give him less than he gives on what he can see, though%n"
                 + "at least one accepted side in ten here took as little (who is named). Not offers to lead with. %d more were%n"
                 + "dropped: fewer than one accepted side in ten here ever took that little.%n", longShots.size(), noChance));

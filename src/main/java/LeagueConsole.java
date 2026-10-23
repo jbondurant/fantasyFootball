@@ -857,7 +857,7 @@ public class LeagueConsole {
             // and EQUITABLE FOR THE REST OF HIS SEASON (TradeMarket.equitableSeason,
             // Justin 2026-10-22): no team gives up this season for a keeper. The page
             // reads his season on one pricing, so it applies the floor to that one.
-            boolean seasonFair = TradeMarket.equitableSeason(himSeason, himSeason, tradeFloor);
+            boolean seasonFair = TradeMarket.equitableSeason(himSeason, TradeMarket.tankFloor(), himSeason, TradeMarket.tankFloor());
             boolean visiblyGoodForHim = himSimple > 0 && !himHole;
             // ...but never one that guts HIS lineup. Three ASK rows offered him a
             // trade whose simple reading is -106 because it takes his only
