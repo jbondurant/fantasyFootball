@@ -864,6 +864,14 @@ public class TradeScreens {
         };
         double k = revealedK(history.sides(), K_GRID);
         DoubleUnaryOperator weight = DraftWeightCurve.curve();
+        // -PdraftWeight=0.05: draft value's share fixed after the first game, in place of the measured curve.
+        // Justin, 2026-10-22, asking for the trades both ways: "assume both like 30 ish percent draft and 5%
+        // draft" - "two seperate list of trades". A what-if, printed as one: the curve is the measurement.
+        String fixed = System.getProperty("draftWeight");
+        if(fixed != null && !fixed.isBlank()){
+            double share = Double.parseDouble(fixed);
+            weight = g -> g <= 0 ? 1 : share;
+        }
         if(weight == null){
             System.err.println("TradeScreens: " + DraftWeightCurve.TABLE + " has no three-screen curve (curve3) to read, so"
                     + " draft value falls back to the old k-games form (k = " + fmt(k) + "); run OtherLeagues and DraftWeightCurve");

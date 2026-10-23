@@ -1,0 +1,38 @@
+data: projections 2026-10-22, player metadata 2026-10-22
+FAAB RIVALS  2026-10-22  (the waiver run as an auction; priced on sleeper-remaining, 480 drawn seasons)
+A claim placed now clears FRIDAY noon. On Fridays here, 2021-2025: 16% of claims contested, median price $0,
+p75 $1, p90 $6; a bid of $1 won 75%, $3 82%, $5 87%. The WEDNESDAY run is where the money goes (49% contested, median $3): 'need' is
+who a man would help, and off that day it is a ceiling on competition, not a forecast of it.
+
+Each target's gain to every manager: his active roster with the target in for his lowest-projected man,
+less as it stands. A sealed first-price auction is priced by the most motivated OTHER bidder, so the
+columns are the three rivals he helps most and the FAAB each has left. 'need' counts rivals he helps by
+more than the noise floor (11.3). This is need, not hype: FaabDemand measures who draws a bid at all.
+
+TARGET                 POS      you  need   rival 1 (gain, $ left)     rival 2                    rival 3                   
+Terry McLaurin         WR     +13.2    11   Renteez +47.5 $35          BHier +43.0 $80            KevinDA +38.6 $32         
+Darren Waller          TE      +2.4     4   Renteez +24.8 $35          KevinDA +21.4 $32          JFMarino +17.4 $65        
+Pat Bryant             WR      +1.2     2   Renteez +18.0 $35          BHier +13.6 $80            Hamrliks +10.1 $42        
+Quentin Johnston       WR      +1.0     2   Renteez +16.9 $35          BHier +12.9 $80            Hamrliks +10.5 $42        
+Rashod Bateman         WR      +1.5     2   Renteez +15.1 $35          BHier +11.7 $80            Hamrliks +10.4 $42        
+Elic Ayomanor          WR      +1.4     2   Renteez +12.7 $35          BHier +11.5 $80            Hamrliks +7.2 $42         
+Kalif Raymond          WR      +1.2     0   Renteez +11.1 $35          BHier +9.6 $80             KevinDA +6.6 $32          
+George Holani          RB      +2.0     0   KevinDA +11.0 $32          JakeSK +8.0 $56            Renteez +6.3 $35          
+Cade Otton             TE      +0.6     0   Renteez +10.7 $35          KevinDA +8.2 $32           Hamrliks +6.9 $42         
+Demarcus Robinson      WR      +0.9     0   BHier +10.6 $80            Renteez +10.2 $35          Hamrliks +6.8 $42         
+Justice Hill           RB      +2.6     0   KevinDA +10.3 $32          JakeSK +7.4 $56            Renteez +6.6 $35          
+Jauan Jennings         WR      +0.5     0   BHier +10.0 $80            Renteez +9.7 $35           Hamrliks +6.2 $42         
+MarShawn Lloyd         RB      +1.2     0   KevinDA +8.6 $32           JakeSK +5.6 $56            Renteez +4.3 $35          
+Devin Singletary       RB      +1.7     0   KevinDA +8.4 $32           JakeSK +8.1 $56            Hamrliks +3.6 $42         
+Sam Darnold            QB      +8.1     0   Hamrliks +7.3 $42          jerem9604 +6.1 $58         patekxwater +5.8 $70      
+Ty Johnson             RB      +1.8     0   KevinDA +7.1 $32           JakeSK +6.1 $56            Hamrliks +3.4 $42         
+Greg Dulcich           TE      +0.8     0   KevinDA +6.9 $32           Hamrliks +5.5 $42          Renteez +5.2 $35          
+Malik Willis           QB      +4.5     0   Hamrliks +6.6 $42          d0ddi +6.0 $89             patekxwater +5.8 $70      
+Darnell Washington     TE      +0.5     0   KevinDA +3.7 $32           Hamrliks +2.8 $42          Renteez +2.7 $35          
+Gunnar Helm            TE      -0.2     0   KevinDA +3.2 $32           Hamrliks +2.0 $42          Renteez +1.2 $35          
+Noah Fant              TE      +0.1     0   Hamrliks +2.9 $42          KevinDA +2.7 $32           JakeSK +1.4 $56           
+Evan Engram            TE      +0.4     0   Hamrliks +1.5 $42          Renteez +1.5 $35           JFMarino +1.4 $65         
+
+Your FAAB left: $100. Read a row as: if 'need' is 0 nobody else gains beyond the noise and a small bid
+should do; if a rival with money left gains more than you do, you are bidding against his need, not the
+league's average price.

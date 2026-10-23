@@ -280,7 +280,9 @@ tasks.register('run', JavaExec) {
      // TradeScreens: free agents taken as already claimed before a trade is priced
      'assume',
      // OtherLeagues: how many league-seasons like this one to harvest, and from which seasons
-     'otherLeagues', 'otherSeasons', 'otherUsers'].each { knob ->
+     'otherLeagues', 'otherSeasons', 'otherUsers',
+     // TradeScreens: draft value's share fixed after the first game, a what-if in place of DraftWeightCurve's curve
+     'draftWeight'].each { knob ->
         if (project.hasProperty(knob)) {
             systemProperty knob, project.property(knob)
         }

@@ -949,10 +949,12 @@ public class TradeMarket {
         longShots.sort(best);
         out.append(String.format("%nTHE SHORT LIST - %d of the %d: good for BOTH sides on BOTH pricings, you gaining at least the%n"
                 + "noise floor (%.1f, ObjectiveStability's seed-to-seed spread) this season on each, AND fair to him on what he%n"
-                + "can see - at least what he gives, with draft value %s of a man's worth after %d games (the share other%n"
-                + "leagues' accepted trades reveal, DraftWeightCurve). Best first by the change in your title odds ('title', in%n"
-                + "percentage points, +- its standard error); 'trades/yr' is how often he has actually traded (TradePartners).%n",
-                shortList.size(), good.size(), tradeFloor, TradeScreens.Screens.share(screens.weightNow()), screens.weeksPlayed()));
+                + "can see - at least what he gives, with draft value %s of a man's worth after %d games (%s). Best first by%n"
+                + "the change in your title odds ('title', in percentage points, +- its standard error); 'trades/yr' is how%n"
+                + "often he has actually traded (TradePartners).%n",
+                shortList.size(), good.size(), tradeFloor, TradeScreens.Screens.share(screens.weightNow()), screens.weeksPlayed(),
+                System.getProperty("draftWeight", "").isBlank() ? "the share other leagues' accepted trades reveal, DraftWeightCurve"
+                        : "a WHAT-IF set by -PdraftWeight, not the measured curve"));
         out.append(String.format("  %-28s %-28s %8s %8s %8s %13s %10s %-16s %9s%n", "YOU GIVE", "YOU GET", "you", "you:" + alt, "him:" + alt,
                 "title", "his view", "WITH", "trades/yr"));
         for(Short s : shortList.subList(0, Math.min(10, shortList.size()))){
@@ -1047,8 +1049,10 @@ public class TradeMarket {
         // the pricing is always in the name: the default moved from the season
         // feed to sleeper-remaining on 2026-09-28, and a bare trades-<date>.txt
         // would no longer say which one it was priced on
+        String fixedDraft = System.getProperty("draftWeight", "");
         Path target = Path.of("data", "trades-" + LocalDate.now()
-                + "-" + source.replace(':', '_').replace(',', '_') + ".txt");
+                + "-" + source.replace(':', '_').replace(',', '_')
+                + (fixedDraft.isBlank() ? "" : "-draft" + Math.round(100 * Double.parseDouble(fixedDraft))) + ".txt");
         Files.writeString(target, out.toString(), StandardCharsets.UTF_8);
         System.out.println("written to " + target);
     }
