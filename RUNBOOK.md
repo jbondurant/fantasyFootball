@@ -194,6 +194,16 @@ left out under LEFT OUT AS TANKING, shows the ones past the line on Sleeper's
 projections only under PAST THE LINE, and the page marks those trades NO.
 -Pexclude="Jordan Love" keeps named men out of every trade.
 
+To ask about one man - "nothing where I get Chase and give Henry or Tuten?" - the
+targeted search prices EVERY package that answers it (one to three men a side), not
+just the board's top-eight packages, and says which rule each one breaks:
+
+    ./gradlew run -Pmain=TradeMarket -Pwith=Renteez -PmustGet="Ja'Marr Chase" -PmustGive="Derrick Henry,Bhayshul Tuten" -Pexclude="Jordan Love"
+
+Check what comes back for injured men: Sleeper projects a man on IR to return, so a
+package can lean on Travis Etienne Jr. (IR since 1 October) the way the wire leaned on
+Terry McLaurin. -Pexclude him and rerun.
+
 **Retracted, 2026-09-28:** the 27 September report put Nabers + Stevenson for
 Ja'Marr Chase first on the short list. It was priced on the season feed, which
 had not heard that Jaxson Dart was out, and on the games left it costs you 3.8;

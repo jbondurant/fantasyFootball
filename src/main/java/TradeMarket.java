@@ -616,6 +616,152 @@ public class TradeMarket {
         return trades;
     }
 
+    /**
+     * EVERY PACKAGE THAT ANSWERS ONE QUESTION: with one manager, he sends every
+     * man named in mustGet (comma-separated) plus up to two more of his, you
+     * send at least one of the men named in mustGive (comma-separated, any of
+     * them; blank for any) plus up to two more of yours, one to three men a
+     * side and at most one more man one way than the other - the side receiving
+     * more cuts its lowest-projected other man, as {@link #unbalanced} does.
+     * Each is priced as the board prices it and judged by the board's rules:
+     * you gain the floor on both pricings, he gains overall and on the other
+     * pricing, his season stays inside Justin's tanking line (20 on Sleeper's
+     * projections, the floor on the other), and what he can see. Every package
+     * is listed, best for you first, with the first rule it breaks.
+     */
+    static String target(String me, String with, String mustGet, String mustGive, String exclude,
+                         Map<String, List<String>> rosters, Map<String, String> nameOf, Map<String, Double> points,
+                         Side mySide, Side hisSide, java.util.function.ToDoubleFunction<List<String>> season,
+                         WeeklyStarterValue altValue, Map<String, Double> scoreAlt, TradeScreens.Context screens,
+                         TitleOdds.Stakes stakes, double floor, double hisFloor, double hisFloorAlt, String source, String alt)
+            throws java.io.IOException {
+        List<String> mine = rosters.get(me);
+        List<String> theirs = rosters.get(with);
+        if(theirs == null){
+            throw new IllegalArgumentException("-Pwith=" + with + " is not a manager here: " + rosters.keySet());
+        }
+        List<String> want = TradeScreens.idsNamed(mustGet);
+        Set<String> offer = mustGive.isBlank() ? Set.of() : new java.util.HashSet<>(TradeScreens.idsNamed(mustGive));
+        Set<String> barred = exclude.isBlank() ? Set.of() : new java.util.HashSet<>(TradeScreens.idsNamed(exclude));
+        List<String> hisOthers = new ArrayList<>(theirs);
+        hisOthers.removeAll(want);
+        hisOthers.removeAll(barred);
+        List<String> myOthers = new ArrayList<>(mine);
+        myOthers.removeAll(barred);
+        List<List<String>> gets = new ArrayList<>();
+        for(int extra = 0; extra <= 2; extra++){
+            for(List<String> more : extra == 0 ? List.of(List.<String>of()) : combinations(hisOthers, extra)){
+                List<String> get = new ArrayList<>(want);
+                get.addAll(more);
+                gets.add(get);
+            }
+        }
+        List<List<String>> gives = new ArrayList<>();
+        for(int size = 1; size <= 3; size++){
+            for(List<String> give : combinations(myOthers, size)){
+                if(offer.isEmpty() || give.stream().anyMatch(offer::contains)){
+                    gives.add(give);
+                }
+            }
+        }
+        record Row(Trade trade, double you, double youAlt, double him, double himAlt, String broke, TradeScreens.Screens seen){}
+        List<Row> rows = new ArrayList<>();
+        for(List<String> give : gives){
+            for(List<String> get : gets){
+                if(Math.abs(give.size() - get.size()) > 1){
+                    continue;
+                }
+                Trade trade;
+                if(give.size() > get.size()){
+                    String cut = worstOther(theirs, get, points);           // he receives more: he cuts
+                    if(cut == null){
+                        continue;
+                    }
+                    List<String> hisOut = new ArrayList<>(get);
+                    hisOut.add(cut);
+                    trade = new Trade(with, give, get, mySide.gain(mine, give, get), hisSide.gain(theirs, hisOut, give), List.of(cut));
+                }
+                else if(get.size() > give.size()){
+                    String cut = worstOther(mine, give, points);            // you receive more: you cut
+                    if(cut == null || get.contains(cut)){
+                        continue;
+                    }
+                    List<String> myOut = new ArrayList<>(give);
+                    myOut.add(cut);
+                    trade = new Trade(with, myOut, get, mySide.gain(mine, myOut, get), hisSide.gain(theirs, get, give));
+                }
+                else{
+                    trade = new Trade(with, give, get, mySide.gain(mine, give, get), hisSide.gain(theirs, get, give));
+                }
+                double you = season.applyAsDouble(swap(mine, trade.give(), trade.get())) - season.applyAsDouble(mine);
+                double[] other = onOther(trade, rosters, me, altValue, scoreAlt);
+                List<String> his = rosters.get(with);
+                double him = season.applyAsDouble(swap(his, trade.hisOut(), trade.give())) - season.applyAsDouble(his);
+                TradeScreens.Screens seen = screens.of(trade);
+                String broke = you < floor ? "you gain under " + floor + " on " + source
+                        : other[0] < floor ? "you gain under " + floor + " on " + alt
+                        : !equitableSeason(him, hisFloor, other[1], hisFloorAlt) ? "TANKING: he loses more than the line"
+                        : trade.theirGain() <= 0 ? "he loses overall (season and keepers, weighted)"
+                        : other[1] <= 0 ? "he loses on " + alt
+                        : seen.fairToHim() ? "PASSES - fair to him"
+                        : seen.worthAsking() ? "passes - a long shot on what he can see"
+                        : "NO on what he can see";
+                rows.add(new Row(trade, you, other[0], him, other[1], broke, seen));
+            }
+        }
+        rows.sort(Comparator.comparingDouble((Row r) -> -Math.min(r.you(), r.youAlt())));
+        StringBuilder out = new StringBuilder(String.format("TARGETED SEARCH with %s: he sends %s%s, you send %s%s - %d packages,%n"
+                        + "one to three men a side; a side receiving one more man cuts its lowest-projected other man.%n"
+                        + "Rules as the board: you gain %.1f on %s and on %s; he gains overall and on %s; his season falls by at most%n"
+                        + "%.1f on %s and %.1f on %s (Justin's tanking line); then what he can see. Best for you first (the lower of\n"
+                        + "your two gains):%n",
+                with, mustGet, " (+ up to two more of his)", mustGive.isBlank() ? "anything" : "at least one of " + mustGive,
+                " (+ up to two more of yours)", rows.size(), floor, source, alt, alt, hisFloor, source, hisFloorAlt, alt));
+        Map<String, Integer> byReason = new TreeMap<>();
+        for(Row r : rows){
+            byReason.merge(r.broke(), 1, Integer::sum);
+        }
+        byReason.forEach((reason, n) -> out.append(String.format("  %5d  %s%n", n, reason)));
+        // and for each man you named, how his packages fare - "nothing where I give Henry?" is answered here
+        for(String id : offer){
+            Map<String, Integer> his = new TreeMap<>();
+            rows.stream().filter(r -> r.trade().give().contains(id)).forEach(r -> his.merge(r.broke(), 1, Integer::sum));
+            out.append(String.format("  sending %s:%n", nameOf.getOrDefault(id, id)));
+            his.forEach((reason, n) -> out.append(String.format("    %5d  %s%n", n, reason)));
+        }
+        out.append(String.format("%n  %-40s %-40s %7s %8s %7s %8s  %s%n", "YOU GIVE", "YOU GET", "you", "you:" + alt, "him",
+                "him:" + alt, "verdict / his view"));
+        for(Row r : rows.subList(0, Math.min(25, rows.size()))){
+            out.append(String.format("  %-40s %-40s %+7.1f %+8.1f %+7.1f %+8.1f  %s; he sees %s%n", label(r.trade().give(), nameOf),
+                    label(r.trade().get(), nameOf) + (r.trade().hisCut().isEmpty() ? "" : " (he cuts " + label(r.trade().hisCut(), nameOf) + ")"),
+                    r.you(), r.youAlt(), r.him(), r.himAlt(), r.broke(), r.seen().ratios()));
+        }
+        // title odds for the best few that pass, the thing the season is for
+        java.util.function.Function<Trade, TitleOdds.Delta[]> titleOf = trade -> stakes.swap(me,
+                swap(rosters.get(me), trade.give(), trade.get()), trade.withManager(),
+                swap(rosters.get(trade.withManager()), trade.hisOut(), trade.give()));
+        List<Row> passing = rows.stream().filter(r -> r.broke().toLowerCase().startsWith("passes")).toList();
+        out.append(String.format("%nTHE %d THAT PASS - best for you first, then best for each man you named; his season on both pricings,%n"
+                + "what he can see, and your title odds (TitleOdds on Sleeper's weekly projections):%n", passing.size()));
+        out.append(String.format("  %-40s %-40s %7s %8s %7s %8s %13s  %s%n", "YOU GIVE", "YOU GET", "you", "you:" + alt, "him",
+                "him:" + alt, "title", "his view"));
+        List<Row> shown = new ArrayList<>(passing.subList(0, Math.min(6, passing.size())));
+        for(String id : offer){
+            passing.stream().filter(r -> r.trade().give().contains(id) && !shown.contains(r)).limit(3).forEach(shown::add);
+        }
+        for(Row r : shown){
+            TitleOdds.Delta[] title = titleOf.apply(r.trade());
+            out.append(String.format("  %-40s %-40s %+7.1f %+8.1f %+7.1f %+8.1f %+6.1f+-%-4.1f  %s; %d of %d accepted sides here took as little%s%n",
+                    label(r.trade().give(), nameOf), label(r.trade().get(), nameOf), r.you(), r.youAlt(), r.him(), r.himAlt(),
+                    100 * title[0].change(), 100 * title[0].se(), r.seen().ratios(), r.seen().precedents(), r.seen().sides(),
+                    r.seen().his() == 0 ? ", never " + with : ""));
+        }
+        if(passing.isEmpty()){
+            out.append("  none.\n");
+        }
+        return out.toString();
+    }
+
     /** The lowest-projected man on a roster who is not part of the deal. */
     static String worstOther(List<String> roster, List<String> exclude, Map<String, Double> points){
         String worst = null;
@@ -862,6 +1008,23 @@ public class TradeMarket {
                     stakes.weight().get(m), stakes.state(m), m.equals(me) ? "   <- you" : ""));
         }
         out.append('\n');
+
+        // A TARGETED SEARCH. Justin, 2026-10-23: "nothing where i get chase and give either henry or tuten?"
+        // The board prices every one-for-one, but two- and three-man packages only among each side's eight most
+        // valuable men, so a question about one man gets every package that answers it, priced and judged like
+        // the board and printed whether it passes or not, with why.
+        if(!System.getProperty("mustGet", "").isBlank()){
+            String report = target(me, System.getProperty("with", ""), System.getProperty("mustGet"),
+                    System.getProperty("mustGive", ""), System.getProperty("exclude", ""), rosters, nameOf, points,
+                    mySide, rivalSide.getOrDefault(System.getProperty("with", ""), theirSide), season, altValue, scoreAlt,
+                    screens, stakes, tradeFloor, hisFloor, hisFloorAlt, source, alt);
+            out.append(report);
+            System.out.print(out);
+            Path target = Path.of("data", "trade-target-" + LocalDate.now() + ".txt");
+            Files.writeString(target, out.toString(), StandardCharsets.UTF_8);
+            System.out.println("written to " + target);
+            return;
+        }
 
         List<Trade> all = new ArrayList<>();
         for(Map.Entry<String, List<String>> entry : rosters.entrySet()){

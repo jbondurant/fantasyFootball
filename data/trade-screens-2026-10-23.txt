@@ -45,40 +45,41 @@ THE WEIGHT THE SCREENS USE, measured week by week on other leagues' accepted tra
   On that blend, what accepted sides got back: 10th percentile 71%, 25th 79%, median 101%. A trade that
   gives him less than the 10th percentile is a NO (Screens.noChance).
 
-THE TRADE - you give Derrick Henry,Jakobi Meyers,Bhayshul Tuten, you get Ja'Marr Chase,Javonte Williams. From HIS side:
-  he gets  Derrick Henry            draft   90.0   season  105.7
-  he gets  Jakobi Meyers            draft   11.2   season   22.3
+THE TRADE - you give Bhayshul Tuten,Josh Downs,Jordan Addison, you get Ja'Marr Chase,Jacoby Brissett,Dalton Kincaid. From HIS side:
   he gets  Bhayshul Tuten           draft   32.5   season   58.4
+  he gets  Josh Downs               draft   17.7   season   14.2
+  he gets  Jordan Addison           draft   20.0   season   19.1
   he gives Ja'Marr Chase            draft  107.3   season   73.5
-  he gives Javonte Williams         draft   53.8   season   89.6
-  totals: draft 133.6 for 161.1, season 186.4 for 163.1
-  fair to him - he gets back 104% of what he gives on what he can see (83% of the draft value, 114% of the season screen - pace and Sleeper's projection; after 6 games, draft value is 32% of what a man is worth in other leagues' trades)
+  he gives Jacoby Brissett          draft    6.5   season    3.7
+  he gives Dalton Kincaid           draft   21.0   season   21.6
+  totals: draft 70.2 for 134.8, season 91.7 for 98.9
+  a long shot - he gets back 77% of what he gives on what he can see (52% of the draft value, 93% of the season screen - pace and Sleeper's projection; after 6 games, draft value is 32% of what a man is worth in other leagues' trades); 11 of 60 accepted sides here took as little (BHier, Hamrliks, KevinDA, Renteez, itsabust, justinb314, patekxwater)
 
 WHAT THE OBJECTIVE SAYS - 17 x the best legal lineup, the bench as insurance, 240 drawn seasons - on each pricing:
   pricing                  you   Renteez   his cut (if he takes more men)
-  sleeper                +39.1      +7.6   Kendre Miller
-  sleeper-remaining      +33.4     -23.9   Will Shipley
-  ros                    -13.3     +41.4   Kendre Miller
+  sleeper                +75.1     -29.7   
+  sleeper-remaining      +28.1      -8.4   
+  ros                    +36.9     +13.4   
 
   Renteez's best lineup on sleeper-remaining (Sleeper's weekly projections over the games left):
   BEFORE                             AFTER                             
   QB  Lamar Jackson           277.7  QB  Lamar Jackson           277.7 
-  RB  Javonte Williams        189.5  RB  Derrick Henry           172.9 
+  RB  Javonte Williams        189.5  RB  Javonte Williams        189.5 
   RB  Travis Etienne Jr.       91.2  RB  Bhayshul Tuten          134.0 
   WR  Ja'Marr Chase           182.7  WR  Ladd McConkey           108.3 
-  WR  Ladd McConkey           108.3  WR  Jakobi Meyers            98.9 
-  WR  Ja'Kobi Lane             56.2  WR  Ja'Kobi Lane             56.2 
-  TE  Dalton Kincaid           92.2  TE  Dalton Kincaid           92.2 
+  WR  Ladd McConkey           108.3  WR  Josh Downs               91.1 
+  WR  Ja'Kobi Lane             56.2  WR  Jordan Addison           86.9 
+  TE  Dalton Kincaid           92.2  TE  Mike Gesicki             78.8 
   DEF Cleveland Browns         70.1  DEF Cleveland Browns         70.1 
   TE  Mike Gesicki             78.8  RB  Travis Etienne Jr.       91.2 
-  TE  Michael Mayer            62.8  TE  Mike Gesicki             78.8 
-  starters 1209.5                    starters 1180.3                   
+  TE  Michael Mayer            62.8  TE  Michael Mayer            62.8 
+  starters 1209.5                    starters 1190.4                   
 
   TITLE ODDS (TitleOdds, 20000 seasons, the same draws before and after):
-    you     7.8%  +2.67pp (+-0.16)
-    Renteez   0.2%  -0.04pp (+-0.02)   he is out of it
+    you     7.8%  +2.66pp (+-0.14)
+    Renteez   0.2%  -0.06pp (+-0.02)   he is out of it
 
   KEEPERS (2027) - your best two keepers' surplus over the picks they cost (TradeMarket's arithmetic):
     today            77.7  Bhayshul Tuten (r11, +58.0) + Brock Purdy (r12, +19.7)
-    after the trade  32.7  Brock Purdy (r12, +19.7) + Javonte Williams (r4, +13.0)
-    the trade's keeper cost: -45.0
+    after the trade  22.8  Brock Purdy (r12, +19.7) + T.J. Hockenson (r16, +3.1)
+    the trade's keeper cost: -54.9

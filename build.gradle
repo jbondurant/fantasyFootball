@@ -284,7 +284,9 @@ tasks.register('run', JavaExec) {
      // TradeScreens: draft value's share fixed after the first game, a what-if in place of DraftWeightCurve's curve
      'draftWeight',
      // TradeMarket: men kept out of every trade; how far the other side's season may fall on Sleeper's projections
-     'exclude', 'tankFloor'].each { knob ->
+     'exclude', 'tankFloor',
+     // TradeMarket targeted search: the manager, the men he must send, the men you send at least one of
+     'with', 'mustGet', 'mustGive'].each { knob ->
         if (project.hasProperty(knob)) {
             systemProperty knob, project.property(knob)
         }
