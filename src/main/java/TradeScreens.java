@@ -60,6 +60,14 @@ import java.util.function.ToDoubleFunction;
  *   2026-10-22 this screen was the raw pace at 17 games, which overstates a
  *   hot start and made draft value look like it counted 73% at week 5.
  *
+ *   SLEEPER'S PROJECTION - since 2026-10-22, each man's league-scored
+ *   projection for his next game, read off its own chart
+ *   ({@link #projectionChart}). It has moved on news neither other screen
+ *   carries (Justin: "cam skateboo reduced usage due to fumble loss of trust
+ *   from coaches"). Pace and projection together are THIS SEASON's screen
+ *   ({@link #seasonScreen}), in the ratio other leagues' trades put between
+ *   them; draft value's share of the whole is DraftWeightCurve's.
+ *
  * A trade is FAIR TO HIM when he does not lose on either. That is the bar for
  * sending it, and it is where the reputation Justin asked for comes from: the
  * man opposite can check both numbers himself.
@@ -270,6 +278,99 @@ public class TradeScreens {
      */
     static Chart paceChart(Collection<EraBoards.Board> boards, Map<String, Map<String, Position>> positions,
                            int g, int teams, int flex){
+        return signalChart(boards, positions, g, teams, flex,
+                (board, positionOf) -> aboveLine(soFar(board.weekly().subList(0, g)), positionOf, g, teams, flex));
+    }
+
+    /**
+     * SLEEPER'S PROJECTION AS A THIRD SCREEN. Justin, 2026-10-22, of draft
+     * value still counting 48% at week 5: "I honestly think the draft value's
+     * share is wrong at this point compared to sleeper weekly projections
+     * which have adapted (i.e. cam skateboo reduced usage due to fumble loss
+     * of trust from coaches)." The man opposite sees Sleeper's projection on
+     * every player card, and it has already moved on news that neither a draft
+     * slot nor a pace carries - a back benched for fumbles, a new quarterback.
+     * With only two screens, everything expectation-like had nowhere to go but
+     * draft value.
+     *
+     * The projection for a man's next game after g weeks: week g+1, or g+2 if
+     * he has none in g+1 (a bye, or a week out), in this league's points
+     * (LeagueWeek.projected; a man with no projection either week is off the
+     * screen). Read, like the other two, off a chart of what men projected
+     * that far above the last starter's projection went on to be worth over
+     * the rest of the season, every season Sleeper's week projections cover
+     * from {@link #FIRST_PROJECTED}. One leak, small and stated: for a man
+     * without a week-g+1 projection, the g+2 projection was published after
+     * week g+1's games.
+     */
+    static Chart projectionChart(Collection<EraBoards.Board> boards, Map<String, Map<String, Position>> positions,
+                                 int g, int teams, int flex, int span){
+        return signalChart(boards, positions, g, teams, flex,
+                (board, positionOf) -> Integer.parseInt(board.season()) < FIRST_PROJECTED ? Map.of()
+                        : projectedAboveLine(board.season(), g, positionOf, teams, flex, span));
+    }
+
+    /** The first season whose week projections the projection chart reads (RosModel's span; all cached). */
+    static final int FIRST_PROJECTED = 2018;
+
+    /** Sleeper's projection for each man's next game after g weeks: week g+1, else g+2, in this league's points. */
+    static Map<String, Double> nextGame(String season, int g){
+        Map<String, Double> out = new HashMap<>();
+        if(g + 2 <= EraActuals.weeks(season)){
+            out.putAll(LeagueWeek.projected(season, g + 2));
+        }
+        if(g + 1 <= EraActuals.weeks(season)){
+            out.putAll(LeagueWeek.projected(season, g + 1));
+        }
+        return out;
+    }
+
+    /**
+     * The mean of each man's projections over weeks g+1 to g+span where he has
+     * one - span 1 is {@link #nextGame}. A SENSITIVITY CHECK ONLY: a projection
+     * for week g+2 or later was published after the games that followed the
+     * trade, so it knows news the man opposite did not. It is here to ask how
+     * much of one week's matchup noise was holding the projection's weight down.
+     */
+    static Map<String, Double> nextGames(String season, int g, int span){
+        if(span <= 1){
+            return nextGame(season, g);
+        }
+        Map<String, double[]> sum = new HashMap<>();
+        for(int w = g + 1; w <= Math.min(g + span, EraActuals.weeks(season)); w++){
+            LeagueWeek.projected(season, w).forEach((id, p) -> {
+                double[] s = sum.computeIfAbsent(id, k -> new double[2]);
+                s[0] += p;
+                s[1]++;
+            });
+        }
+        Map<String, Double> out = new HashMap<>();
+        sum.forEach((id, s) -> out.put(id, s[0] / s[1]));
+        return out;
+    }
+
+    /** Each man's next-game projection less the last starter's projection at his position (skill men only). */
+    static Map<String, Double> projectedAboveLine(String season, int g, Map<String, Position> positionOf, int teams, int flex){
+        return projectedAboveLine(season, g, positionOf, teams, flex, 1);
+    }
+
+    static Map<String, Double> projectedAboveLine(String season, int g, Map<String, Position> positionOf, int teams, int flex,
+                                                  int span){
+        Map<String, Double> next = nextGames(season, g, span);
+        Map<Position, Double> line = line(next, positionOf, teams, flex);
+        Map<String, Double> out = new HashMap<>();
+        next.forEach((id, p) -> {
+            Position position = positionOf.get(id);
+            if(skill(position)){
+                out.put(id, p - line.get(position));
+            }
+        });
+        return out;
+    }
+
+    /** The chart under both: a signal above the line after g games -> what those men were worth over the weeks left. */
+    static Chart signalChart(Collection<EraBoards.Board> boards, Map<String, Map<String, Position>> positions, int g, int teams,
+                             int flex, java.util.function.BiFunction<EraBoards.Board, Map<String, Position>, Map<String, Double>> signal){
         List<double[]> pairs = new ArrayList<>();
         for(EraBoards.Board board : boards){
             int weeks = board.weekly().size();
@@ -277,19 +378,33 @@ public class TradeScreens {
                 continue;
             }
             Map<String, Position> positionOf = positions.computeIfAbsent(board.season(), TradeScreens::positions);
-            Map<String, Double> x = aboveLine(soFar(board.weekly().subList(0, g)), positionOf, g, teams, flex);
-            Map<String, double[]> rest = soFar(board.weekly().subList(g, weeks));
-            Map<String, Double> restTotal = new HashMap<>();
-            rest.forEach((id, r) -> restTotal.put(id, r[0]));
-            Map<Position, Double> line = line(restTotal, positionOf, teams, flex);
-            double scale = (double) PACE / (weeks - g);
-            x.forEach((id, above) -> {
-                double[] r = rest.get(id);
-                double worth = r == null ? 0 : scale * Math.max(0, r[0] - line.get(positionOf.get(id)));
-                pairs.add(new double[]{-above, worth});      // the chart falls with its key; x rises
-            });
+            Map<String, Double> worth = restWorth(board, positionOf, g, teams, flex);
+            signal.apply(board, positionOf).forEach((id, above) ->
+                    pairs.add(new double[]{-above, worth.getOrDefault(id, 0.0)}));      // the chart falls with its key; x rises
         }
         return fit(pairs);
+    }
+
+    /**
+     * What each man went on to be worth after g weeks: his points over the
+     * weeks left above the last starter's at his position, scaled to 17 games,
+     * zero for a man who did not play them (absent from the map).
+     */
+    static Map<String, Double> restWorth(EraBoards.Board board, Map<String, Position> positionOf, int g, int teams, int flex){
+        int weeks = board.weekly().size();
+        Map<String, double[]> rest = soFar(board.weekly().subList(g, weeks));
+        Map<String, Double> restTotal = new HashMap<>();
+        rest.forEach((id, r) -> restTotal.put(id, r[0]));
+        Map<Position, Double> line = line(restTotal, positionOf, teams, flex);
+        double scale = (double) PACE / (weeks - g);
+        Map<String, Double> out = new HashMap<>();
+        rest.forEach((id, r) -> {
+            Position p = positionOf.get(id);
+            if(skill(p)){
+                out.put(id, scale * Math.max(0, r[0] - line.get(p)));
+            }
+        });
+        return out;
     }
 
     /**
@@ -307,6 +422,40 @@ public class TradeScreens {
         return out;
     }
 
+    /** A signal read off its chart: each man's value, the men the signal does not cover left out. */
+    static Map<String, Double> readOff(Map<String, Double> aboveLine, Chart chart){
+        Map<String, Double> out = new HashMap<>();
+        aboveLine.forEach((id, x) -> out.put(id, chart.at(-x)));
+        return out;
+    }
+
+    /** Projection charts by games played, each fitted once on first use. */
+    static java.util.function.IntFunction<Chart> projectionCharts(Collection<EraBoards.Board> boards, int teams, int flex){
+        return projectionCharts(boards, teams, flex, 1);
+    }
+
+    static java.util.function.IntFunction<Chart> projectionCharts(Collection<EraBoards.Board> boards, int teams, int flex, int span){
+        Map<String, Map<String, Position>> positions = new HashMap<>();
+        Map<Integer, Chart> charts = new HashMap<>();
+        return g -> charts.computeIfAbsent(g, k -> projectionChart(boards, positions, k, teams, flex, span));
+    }
+
+    /**
+     * THIS SEASON'S SCREEN: pace and Sleeper's next-game projection, each read
+     * off its own chart, blended in the ratio other leagues' trades put between
+     * them at this many games (DraftWeightCurve's three-screen fit, pace's share
+     * of the two). A man on neither reads nothing.
+     */
+    static Map<String, Double> seasonScreen(Map<String, Double> pace, Map<String, Double> projection, double paceShare){
+        Set<String> ids = new HashSet<>(pace.keySet());
+        ids.addAll(projection.keySet());
+        Map<String, Double> out = new HashMap<>();
+        for(String id : ids){
+            out.put(id, paceShare * pace.getOrDefault(id, 0.0) + (1 - paceShare) * projection.getOrDefault(id, 0.0));
+        }
+        return out;
+    }
+
     /** Pace charts by games played, each fitted once on first use. */
     static java.util.function.IntFunction<Chart> paceCharts(Collection<EraBoards.Board> boards, int teams, int flex){
         Map<String, Map<String, Position>> positions = new HashMap<>();
@@ -320,16 +469,27 @@ public class TradeScreens {
 
     /** One side of one accepted trade in this league, on both screens. */
     public record Precedent(String season, int week, String manager, String gets, String gives,
-                            double draftIn, double draftOut, double pointsIn, double pointsOut) {
+                            double draftIn, double draftOut, double pointsIn, double pointsOut, int played) {
+
+        /** A side whose games played are the weeks before its leg (Sleeper's count; tests and old callers). */
+        public Precedent(String season, int week, String manager, String gets, String gives,
+                         double draftIn, double draftOut, double pointsIn, double pointsOut){
+            this(season, week, manager, gets, gives, draftIn, draftOut, pointsIn, pointsOut, Math.max(0, week - 1));
+        }
         public double draftRatio(){
             return ratio(draftIn, draftOut);
         }
         public double pointsRatio(){
             return ratio(pointsIn, pointsOut);
         }
-        /** Games each man had played when it was made: the weeks before its own. */
+        /**
+         * Games each man had played when it was made - counted from the clock
+         * by history(), the count its season screen was priced at, so the draft
+         * weight is read at the same week (the 2026-10-22 review: a Tuesday
+         * trade's leg is one short of the games played).
+         */
         public double games(){
-            return Math.max(0, week - 1);
+            return played;
         }
         /** Both screens as one, draft value weighted as the curve says at this side's own week. */
         public double blendedRatio(DoubleUnaryOperator weight){
@@ -476,7 +636,7 @@ public class TradeScreens {
 
         public String verdict(){
             String took = String.format("he gets back %s of what he gives on what he can see (%s of the draft value, %s of the"
-                    + " season the paces predict; after %s games, draft value is %s of what a man is worth in other leagues' trades)",
+                    + " season screen - pace and Sleeper's projection; after %s games, draft value is %s of what a man is worth in other leagues' trades)",
                     share(blendedRatio()), share(draftRatio()), share(pointsRatio()), fmt(games), share(weight));
             if(fairToHim()){
                 return "fair to him - " + took;
@@ -529,7 +689,9 @@ public class TradeScreens {
     record History(List<Precedent> sides, int trades, int withPicks, int noBoard) {}
 
     static History history(String leagueID, Map<String, EraBoards.Board> boards, Chart chart, int teams, int flex,
-                           java.util.function.IntFunction<Chart> paceCharts){
+                           java.util.function.IntFunction<Chart> paceCharts, java.util.function.IntFunction<Chart> projectionCharts,
+                           DoubleUnaryOperator paceShare){
+        Map<String, TreeMap<Integer, java.time.LocalDateTime>> ends = DraftWeightCurve.weekEnds(NflverseGames.games());
         List<Precedent> sides = new ArrayList<>();
         int trades = 0, withPicks = 0, noBoard = 0;
         for(LeagueTransactions.Year year : LeagueTransactions.completedSeasons(leagueID)){
@@ -556,9 +718,15 @@ public class TradeScreens {
                         continue;
                     }
                     int leg = row.has("leg") && !row.get("leg").isJsonNull() ? row.get("leg").getAsInt() : w;
-                    int played = Math.max(0, Math.min(leg - 1, board.weekly().size()));
-                    Map<String, Double> production = productionAt.computeIfAbsent(played, k -> k == 0 ? Map.of() : predicted(
-                            soFar(board.weekly().subList(0, k)), positionOf, k, teams, flex, paceCharts.apply(k), Set.of()));
+                    // games played from the clock when the schedule and the row allow it, as DraftWeightCurve counts them
+                    int played = Math.max(0, Math.min(ends.containsKey(season) && row.has("created")
+                            ? DraftWeightCurve.gamesPlayed(ends.get(season), row.get("created").getAsLong()) : leg - 1,
+                            board.weekly().size()));
+                    Map<String, Double> production = productionAt.computeIfAbsent(played, k -> k == 0 ? Map.of() : seasonScreen(
+                            predicted(soFar(board.weekly().subList(0, k)), positionOf, k, teams, flex, paceCharts.apply(k), Set.of()),
+                            Integer.parseInt(season) < FIRST_PROJECTED ? Map.of()
+                                    : readOff(projectedAboveLine(season, k, positionOf, teams, flex), projectionCharts.apply(k)),
+                            paceShare.applyAsDouble(k)));
                     Map<Integer, List<String>> in = byRoster(row, "adds");
                     Map<Integer, List<String>> out = byRoster(row, "drops");
                     Set<Integer> rosters = new LinkedHashSet<>(in.keySet());
@@ -571,7 +739,7 @@ public class TradeScreens {
                         ToDoubleFunction<String> points = id -> production.getOrDefault(id, 0.0);
                         sides.add(new Precedent(season, leg, managerOf.getOrDefault(roster, "roster " + roster),
                                 named(gets, nameOf), named(gives, nameOf),
-                                sum(gets, draft), sum(gives, draft), sum(gets, points), sum(gives, points)));
+                                sum(gets, draft), sum(gives, draft), sum(gets, points), sum(gives, points), played));
                     }
                 }
             }
@@ -653,7 +821,10 @@ public class TradeScreens {
         Map<String, EraBoards.Board> boards = EraBoards.usable("ppr", EraIngest.MIN_RATE, EraIngest.minDepth());
         Chart chart = chart(boards.values(), teams, flex);
         java.util.function.IntFunction<Chart> paceCharts = paceCharts(boards.values(), teams, flex);
-        History history = history(configuration.getLeagueID(), boards, chart, teams, flex, paceCharts);
+        java.util.function.IntFunction<Chart> projectionCharts = projectionCharts(boards.values(), teams, flex);
+        DoubleUnaryOperator measuredShare = DraftWeightCurve.paceShare();
+        DoubleUnaryOperator paceShare = measuredShare == null ? g -> 1.0 : measuredShare;
+        History history = history(configuration.getLeagueID(), boards, chart, teams, flex, paceCharts, projectionCharts, paceShare);
 
         String season = LeagueWeek.season();
         int week = LeagueWeek.week();
@@ -675,8 +846,18 @@ public class TradeScreens {
                 sidelined.add(id);
             }
         }
-        Map<String, Double> production = played == 0 ? Map.of()
-                : predicted(sums, positionOf, played, teams, flex, paceCharts.apply(played), sidelined);
+        // Sleeper's projection for each man's next game, today's feed, in this league's points
+        Map<String, Position> projectedOf = new HashMap<>(positionOf);
+        for(String id : nextGame(season, played).keySet()){
+            Player p = Player.getPlayerFromSIDV2(id);
+            if(p != null && p.position != null){
+                projectedOf.putIfAbsent(id, p.position);
+            }
+        }
+        Map<String, Double> production = played == 0 ? Map.of() : seasonScreen(
+                predicted(sums, positionOf, played, teams, flex, paceCharts.apply(played), sidelined),
+                readOff(projectedAboveLine(season, played, projectedOf, teams, flex), projectionCharts.apply(played)),
+                paceShare.applyAsDouble(played));
         ToDoubleFunction<String> draft = id -> {
             Player p = Player.getPlayerFromSIDV2(id);
             return p != null && skill(p.position) ? chart.at(SleeperProjections.adpOf(id)) : 0;
@@ -684,8 +865,8 @@ public class TradeScreens {
         double k = revealedK(history.sides(), K_GRID);
         DoubleUnaryOperator weight = DraftWeightCurve.curve();
         if(weight == null){
-            System.err.println("TradeScreens: " + DraftWeightCurve.TABLE + " is missing, so draft value falls back to the old"
-                    + " k-games form (k = " + fmt(k) + "); run OtherLeagues and DraftWeightCurve");
+            System.err.println("TradeScreens: " + DraftWeightCurve.TABLE + " has no three-screen curve (curve3) to read, so"
+                    + " draft value falls back to the old k-games form (k = " + fmt(k) + "); run OtherLeagues and DraftWeightCurve");
             weight = kForm(k);
         }
         return new Context(chart, history, draft, id -> production.getOrDefault(id, 0.0), played, weight, k);
@@ -696,9 +877,13 @@ public class TradeScreens {
      * is the week being played (on 2026-10-22, before Thursday's game, it said
      * 7 with six weeks played, and the screens had read 7 as games played),
      * and the curve reads games played. Sleeper's week less one when the
-     * schedule does not carry the season.
+     * schedule does not carry the season, or when -Pweek asks for an earlier
+     * week (the screens as they stood before that week's games).
      */
     static int played(String season, int sleeperWeek){
+        if(Integer.getInteger("week") != null){
+            return Math.max(0, sleeperWeek - 1);     // -Pweek=N: the screens as they stood before week N's games
+        }
         TreeMap<Integer, java.time.LocalDateTime> ends = DraftWeightCurve.weekEnds(NflverseGames.games()).get(season);
         return ends == null ? Math.max(0, sleeperWeek - 1) : DraftWeightCurve.gamesPlayed(ends, System.currentTimeMillis());
     }
@@ -808,14 +993,14 @@ public class TradeScreens {
                     hisOut.isEmpty() ? null : ownerOf.get(hisOut.get(0)), context.weight(), context.weeksPlayed());
             out.append(String.format("%nTHE TRADE - you give %s, you get %s. From HIS side:%n", give, get));
             for(String id : hisIn){
-                out.append(String.format("  he gets  %-24s draft %6.1f   pace %6.1f%n", name(id), context.draft().applyAsDouble(id),
+                out.append(String.format("  he gets  %-24s draft %6.1f   season %6.1f%n", name(id), context.draft().applyAsDouble(id),
                         context.points().applyAsDouble(id)));
             }
             for(String id : hisOut){
-                out.append(String.format("  he gives %-24s draft %6.1f   pace %6.1f%n", name(id), context.draft().applyAsDouble(id),
+                out.append(String.format("  he gives %-24s draft %6.1f   season %6.1f%n", name(id), context.draft().applyAsDouble(id),
                         context.points().applyAsDouble(id)));
             }
-            out.append(String.format("  totals: draft %.1f for %.1f, pace %.1f for %.1f%n  %s%n", s.draftIn(), s.draftOut(),
+            out.append(String.format("  totals: draft %.1f for %.1f, season %.1f for %.1f%n  %s%n", s.draftIn(), s.draftOut(),
                     s.pointsIn(), s.pointsOut(), s.verdict()));
             out.append(objective(configuration, ownerOf, hisIn, hisOut));
         }

@@ -77,11 +77,27 @@ public class DraftWeightCurve {
     /** One trade from side A: what A received and what B received, on both screens. */
     record Trade(String season, String league, int type, double rec, int games,
                  double draftA, double draftB, double paceA, double paceB, boolean samePosition, boolean allProducing,
-                 String gotA, String gotB) {
+                 String gotA, String gotB, double projA, double projB, boolean allProjected) {
 
         Trade(String season, String league, int type, double rec, int games,
               double draftA, double draftB, double paceA, double paceB){
-            this(season, league, type, rec, games, draftA, draftB, paceA, paceB, false, false, "", "");
+            this(season, league, type, rec, games, draftA, draftB, paceA, paceB, false, false, "", "", 0, 0, false);
+        }
+
+        /** What A received at weights (draft, pace) and the rest on Sleeper's projection. */
+        double a3(double wd, double wp){
+            return wd * draftA + wp * paceA + (1 - wd - wp) * projA;
+        }
+        double b3(double wd, double wp){
+            return wd * draftB + wp * paceB + (1 - wd - wp) * projB;
+        }
+        double uneven3(double wd, double wp){
+            double a = a3(wd, wp), b = b3(wd, wp);
+            return a + b <= 0 ? 0 : Math.abs(a - b) / (a + b);
+        }
+        /** Value on all three screens. */
+        boolean informs3(){
+            return informs() && projA + projB >= TradeScreens.NOTHING;
         }
 
         double a(double w){
@@ -159,12 +175,25 @@ public class DraftWeightCurve {
 
     /** Every harvested trade priced on both screens. */
     static List<Trade> trades(TradeScreens.Chart chart, Map<String, EraBoards.Board> boards, int teams, int flex) throws IOException {
-        return trades(chart, boards, teams, flex, null);
+        return trades(chart, boards, teams, flex, null, null);
+    }
+
+    static List<Trade> trades(TradeScreens.Chart chart, Map<String, EraBoards.Board> boards, int teams, int flex,
+                              java.util.function.IntFunction<TradeScreens.Chart> paceCharts) throws IOException {
+        return trades(chart, boards, teams, flex, paceCharts, null);
     }
 
     /** The same, with each man's pace read off the pace chart for his games ({@link #paceChart}) when one is given. */
     static List<Trade> trades(TradeScreens.Chart chart, Map<String, EraBoards.Board> boards, int teams, int flex,
-                              java.util.function.IntFunction<TradeScreens.Chart> paceCharts) throws IOException {
+                              java.util.function.IntFunction<TradeScreens.Chart> paceCharts,
+                              java.util.function.IntFunction<TradeScreens.Chart> projectionCharts) throws IOException {
+        return trades(chart, boards, teams, flex, paceCharts, projectionCharts, 1);
+    }
+
+    static List<Trade> trades(TradeScreens.Chart chart, Map<String, EraBoards.Board> boards, int teams, int flex,
+                              java.util.function.IntFunction<TradeScreens.Chart> paceCharts,
+                              java.util.function.IntFunction<TradeScreens.Chart> projectionCharts, int span) throws IOException {
+        Map<String, Map<Integer, Map<String, Double>>> projected = new HashMap<>();
         Map<String, TreeMap<Integer, LocalDateTime>> ends = weekEnds(NflverseGames.games());
         Map<String, Map<String, Position>> positions = new HashMap<>();
         Map<String, Map<String, String>> names = new HashMap<>();
@@ -202,11 +231,23 @@ public class DraftWeightCurve {
                 }
                 Set<Position> moved = new java.util.HashSet<>();
                 two.forEach(side -> side.forEach(id -> moved.add(positionOf.get(id))));
+                java.util.function.ToDoubleFunction<String> projection = id -> 0;
+                java.util.function.Predicate<String> isProjected = id -> false;
+                if(projectionCharts != null){
+                    Map<String, Double> worth = projected.computeIfAbsent(league.season(), k -> new HashMap<>()).computeIfAbsent(g,
+                            k -> TradeScreens.readOff(TradeScreens.projectedAboveLine(league.season(), k, positionOf, teams, flex, span),
+                                    projectionCharts.apply(k)));
+                    projection = id -> worth.getOrDefault(id, 0.0);
+                    isProjected = worth::containsKey;
+                }
+                java.util.function.Predicate<String> hasProjection = isProjected;
                 out.add(new Trade(league.season(), league.id(), league.type(), league.rec(), g,
                         TradeScreens.sum(two.get(0), draft), TradeScreens.sum(two.get(1), draft),
                         TradeScreens.sum(two.get(0), points), TradeScreens.sum(two.get(1), points), moved.size() == 1,
                         two.stream().allMatch(side -> side.stream().allMatch(id -> raw.applyAsDouble(id) > 0)),
-                        TradeScreens.named(two.get(0), nameOf), TradeScreens.named(two.get(1), nameOf)));
+                        TradeScreens.named(two.get(0), nameOf), TradeScreens.named(two.get(1), nameOf),
+                        TradeScreens.sum(two.get(0), projection), TradeScreens.sum(two.get(1), projection),
+                        two.stream().allMatch(side -> side.stream().allMatch(hasProjection))));
             }
         }
         return out;
@@ -244,7 +285,7 @@ public class DraftWeightCurve {
         for(Trade t : trades){
             Trade other = trades.get(random.nextInt(trades.size()));
             out.add(new Trade(t.season(), t.league(), t.type(), t.rec(), t.games(), t.draftA(), other.draftB(), t.paceA(), other.paceB(),
-                    false, false, t.gotA(), other.gotB()));
+                    false, false, t.gotA(), other.gotB(), t.projA(), other.projB(), t.allProjected() && other.allProjected()));
         }
         return out;
     }
@@ -322,17 +363,30 @@ public class DraftWeightCurve {
         return out;
     }
 
-    /** The committed curve: games played -> weight on draft value. Empty when it has not been measured. */
-    public static TreeMap<Integer, Double> table(){
-        TreeMap<Integer, Double> out = new TreeMap<>();
+    /** One week's weights as TradeScreens reads them: draft's share, and pace's share of the rest (the projection has the remainder). */
+    public record Weights(double draft, double paceShare) {}
+
+    /** The committed curve: games played -> weights. Empty when it has not been measured. */
+    public static TreeMap<Integer, Weights> table(){
+        TreeMap<Integer, Weights> out = new TreeMap<>();
         if(!Files.exists(TABLE)){
             return out;
         }
         try {
-            for(String line : Files.readAllLines(TABLE, StandardCharsets.UTF_8)){
+            List<String> lines = Files.readAllLines(TABLE, StandardCharsets.UTF_8);
+            List<String> header = List.of(lines.get(0).split("\t"));
+            int games = header.indexOf("games"), curve = header.indexOf("curve3"), pace = header.indexOf("pace3"),
+                    projection = header.indexOf("projection3");
+            if(curve < 0){
+                return out;
+            }
+            for(String line : lines.subList(1, lines.size())){
                 String[] c = line.split("\t");
-                if(c.length >= 7 && !c[0].equals("games")){
-                    out.put(Integer.parseInt(c[0]), Double.parseDouble(c[6]));
+                double draft = Double.parseDouble(c[curve]);
+                double p = Double.parseDouble(c[pace]), j = Double.parseDouble(c[projection]);
+                if(!Double.isNaN(draft)){
+                    // a week fitted all-draft has no pace/projection split: keep its draft weight, leave the split to its neighbours
+                    out.put(Integer.parseInt(c[games]), new Weights(draft, !Double.isNaN(p) && p + j > 0 ? p / (p + j) : Double.NaN));
                 }
             }
         }
@@ -344,19 +398,36 @@ public class DraftWeightCurve {
 
     /** The measured curve as a function of games played, or null when it has not been measured. */
     public static java.util.function.DoubleUnaryOperator curve(){
-        TreeMap<Integer, Double> table = table();
-        return table.isEmpty() ? null : games -> at(table, games);
+        TreeMap<Integer, Double> draft = new TreeMap<>();
+        table().forEach((g, w) -> draft.put(g, w.draft()));
+        return draft.isEmpty() ? null : games -> at(draft, games, 1);
+    }
+
+    /** Pace's share of the season screen (the projection has the rest) by games played, or null when not measured. */
+    public static java.util.function.DoubleUnaryOperator paceShare(){
+        TreeMap<Integer, Double> pace = new TreeMap<>();
+        table().forEach((g, w) -> {
+            if(!Double.isNaN(w.paceShare())){
+                pace.put(g, w.paceShare());
+            }
+        });
+        return pace.isEmpty() ? null : games -> at(pace, games, pace.firstEntry().getValue());
     }
 
     /** All draft value before a game; the measured weeks joined by straight lines; flat after the last. */
     static double at(TreeMap<Integer, Double> table, double games){
+        return at(table, games, 1);
+    }
+
+    /** The table read at games played: `before` before a game, straight lines between measured weeks, flat after the last. */
+    static double at(TreeMap<Integer, Double> table, double games, double before){
         if(games <= 0){
-            return 1;
+            return before;
         }
         Map.Entry<Integer, Double> below = table.floorEntry((int) Math.floor(games));
         Map.Entry<Integer, Double> above = table.ceilingEntry((int) Math.ceil(games));
         double x0 = below == null ? 0 : below.getKey();
-        double y0 = below == null ? 1 : below.getValue();
+        double y0 = below == null ? before : below.getValue();
         if(above == null){
             return y0;
         }
@@ -384,12 +455,14 @@ public class DraftWeightCurve {
             }
         }
         Random random = new Random(20261022L);
+        Map<Integer, double[]> three = new TreeMap<>();
+        String threeReport = threeScreens(chart, boards, teams, flex, random, three);
         int bins = byBin.size();
         int[] g = new int[bins];
         double[] w = new double[bins], n = new double[bins];
         StringBuilder rows = new StringBuilder();
         StringBuilder tsv = new StringBuilder("games\ttrades\tleagues\tweight\tlow90\thigh90\tcurve\tuneven\tshuffled\tdraftOnly\tpaceOnly"
-                + "\tsideP10\tsideP25\tsideP50\n");
+                + "\tsideP10\tsideP25\tsideP50\tdraft3\tpace3\tprojection3\ttrades3\tcurve3\tforecastDraft\tforecastPace\tforecastProjection\n");
         int i = 0;
         List<double[]> stats = new ArrayList<>();
         for(Map.Entry<Integer, List<Trade>> e : byBin.entrySet()){
@@ -418,8 +491,10 @@ public class DraftWeightCurve {
             double[] s = stats.get(i);
             double[] side = sides(binned.get(i), curve[i]);
             String label = g[i] == LAST_BIN ? LAST_BIN + "+" : String.valueOf(g[i]);
-            tsv.append(String.format("%d\t%d\t%d\t%.2f\t%.2f\t%.2f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f%n",
-                    g[i], (int) n[i], (int) s[0], w[i], s[1], s[2], curve[i], s[3], s[4], s[5], s[6], side[0], side[1], side[2]));
+            double[] t3 = three.getOrDefault(g[i], new double[]{Double.NaN, Double.NaN, Double.NaN, 0, Double.NaN, Double.NaN, Double.NaN, Double.NaN});
+            tsv.append(String.format("%d\t%d\t%d\t%.2f\t%.2f\t%.2f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%d\t%.3f\t%.3f\t%.3f\t%.3f%n",
+                    g[i], (int) n[i], (int) s[0], w[i], s[1], s[2], curve[i], s[3], s[4], s[5], s[6], side[0], side[1], side[2],
+                    t3[0], t3[1], t3[2], (int) t3[3], t3[4], t3[5], t3[6], t3[7]));
             envelope.append(String.format("%5s %7d     %4.0f%%     %4.0f%%     %4.0f%%%n", g[i] == LAST_BIN ? LAST_BIN + "+" : String.valueOf(g[i]),
                     2 * (int) n[i], 100 * side[0], 100 * side[1], 100 * side[2]));
             rows.append(String.format("%5s %7d %6d   %4.0f%%  %4.0f-%3.0f%%   %4.0f%%    %.3f  %.3f  %.3f  %.3f   %5s    %5s %5s   %5s %5s   %5s (%d)   %5s (%d)%n",
@@ -433,10 +508,12 @@ public class DraftWeightCurve {
                         + "(OtherLeagues; %s). %d more had value on only one screen and cannot inform the weight.%n"
                         + "Both sides priced as TradeScreens prices them, in this league's scoring.%n%n",
                 all.size() - uninformative, leagues, seasons(all), uninformative));
+        out.append(threeReport);
+        out.append(String.format("TWO SCREENS - draft value and pace alone, the fit before Sleeper's projection was a screen (2026-10-22):%n"));
         out.append("games  trades  leagues  weight  90% range   CURVE    uneven  random  draft  pace   vs-rnd    redraft keeper  half  full   same pos     above line\n");
         out.append(rows);
         out.append(String.format("%nweight: the share of a man's value that is draft value, the rest his pace, that makes that week's trades%n"
-                + "most even. CURVE: the same, never rising with games played - what TradeScreens uses. uneven: mean |A-B|/(A+B)%n"
+                + "most even. CURVE: the same, never rising with games played. uneven: mean |A-B|/(A+B)%n"
                 + "at that weight; random: the same sides paired at random, 20 shuffles (real trades should be far more even);%n"
                 + "draft and pace: unevenness on either screen alone. vs-rnd: the check - the weight where real trades beat random%n"
                 + "pairs by the most. redraft..full refit the weight on one kind of league. same pos: refit on trades where every%n"
@@ -501,6 +578,221 @@ public class DraftWeightCurve {
             }
             out.append(row).append('\n');
         }
+        return out.toString();
+    }
+
+    /** Weights (draft, pace, projection) on a simplex grid of this step that make the trades most even. */
+    static double[] best3(List<Trade> trades, double step){
+        double[] best = {1, 0, 0};
+        double lowest = Double.MAX_VALUE;
+        int n = (int) Math.round(1 / step);
+        for(int i = 0; i <= n; i++){
+            for(int j = 0; i + j <= n; j++){
+                double wd = i * step, wp = j * step;
+                double total = 0;
+                for(Trade t : trades){
+                    total += t.uneven3(wd, wp);
+                }
+                if(total < lowest - 1e-9){
+                    lowest = total;
+                    best = new double[]{wd, wp, 1 - wd - wp};
+                }
+            }
+        }
+        return best;
+    }
+
+    static double loss3(List<Trade> trades, double[] w){
+        double total = 0;
+        for(Trade t : trades){
+            total += t.uneven3(w[0], w[1]);
+        }
+        return trades.isEmpty() ? 0 : total / trades.size();
+    }
+
+    /** 90% ranges for each of the three weights, whole leagues resampled. */
+    static double[][] interval3(List<Trade> trades, int reps, Random random){
+        Map<String, List<Trade>> byLeague = new TreeMap<>();
+        for(Trade t : trades){
+            byLeague.computeIfAbsent(t.season() + "-" + t.league(), k -> new ArrayList<>()).add(t);
+        }
+        List<List<Trade>> clusters = new ArrayList<>(byLeague.values());
+        double[][] w = new double[3][reps];
+        for(int r = 0; r < reps; r++){
+            List<Trade> sample = new ArrayList<>();
+            for(int i = 0; i < clusters.size(); i++){
+                sample.addAll(clusters.get(random.nextInt(clusters.size())));
+            }
+            double[] b = best3(sample, 0.05);
+            for(int k = 0; k < 3; k++){
+                w[k][r] = b[k];
+            }
+        }
+        double[][] out = new double[3][2];
+        for(int k = 0; k < 3; k++){
+            java.util.Arrays.sort(w[k]);
+            out[k] = new double[]{w[k][(int) Math.floor(0.05 * (reps - 1))], w[k][(int) Math.ceil(0.95 * (reps - 1))]};
+        }
+        return out;
+    }
+
+    /** Least squares with the columns of x (the first a column of ones for an intercept). */
+    static double[] ols(List<double[]> x, List<Double> y){
+        int k = x.get(0).length;
+        double[][] a = new double[k][k + 1];
+        for(int r = 0; r < x.size(); r++){
+            double[] row = x.get(r);
+            for(int i = 0; i < k; i++){
+                for(int j = 0; j < k; j++){
+                    a[i][j] += row[i] * row[j];
+                }
+                a[i][k] += row[i] * y.get(r);
+            }
+        }
+        for(int c = 0; c < k; c++){
+            int pivot = c;
+            for(int r = c + 1; r < k; r++){
+                if(Math.abs(a[r][c]) > Math.abs(a[pivot][c])){
+                    pivot = r;
+                }
+            }
+            double[] swap = a[c];
+            a[c] = a[pivot];
+            a[pivot] = swap;
+            for(int r = 0; r < k; r++){
+                if(r != c && a[c][c] != 0){
+                    double f = a[r][c] / a[c][c];
+                    for(int j = c; j <= k; j++){
+                        a[r][j] -= f * a[c][j];
+                    }
+                }
+            }
+        }
+        double[] b = new double[k];
+        for(int i = 0; i < k; i++){
+            b[i] = a[i][k] / a[i][i];
+        }
+        return b;
+    }
+
+    /**
+     * WHAT THE THREE SCREENS DESERVE - a forecaster's weights, to set the
+     * managers' against. The review of 2026-10-22 asked the question Justin's
+     * objection turns on: is a draft share of a third at week 5 managers stuck
+     * on the draft, or what the draft slot is still worth knowing? For every
+     * man on a board with a game by week g and a next-game projection, every
+     * season Sleeper projects ({@link TradeScreens#FIRST_PROJECTED} on), his
+     * rest-of-season worth regressed on his three screen values with an
+     * intercept, the three coefficients scaled to sum to one. A manager who
+     * uses each screen exactly as much as it predicts would show these
+     * weights; managers anchored on the draft would show more on draft.
+     */
+    static double[] forecast(Map<String, EraBoards.Board> boards, TradeScreens.Chart chart,
+                             java.util.function.IntFunction<TradeScreens.Chart> paceCharts,
+                             java.util.function.IntFunction<TradeScreens.Chart> projectionCharts,
+                             Map<String, Map<String, Position>> positions, int g, int teams, int flex){
+        List<double[]> x = new ArrayList<>();
+        List<Double> y = new ArrayList<>();
+        for(EraBoards.Board board : boards.values()){
+            if(Integer.parseInt(board.season()) < TradeScreens.FIRST_PROJECTED || g >= board.weekly().size()){
+                continue;
+            }
+            Map<String, Position> positionOf = positions.computeIfAbsent(board.season(), TradeScreens::positions);
+            Map<String, Double> pace = TradeScreens.predicted(TradeScreens.soFar(board.weekly().subList(0, g)), positionOf, g,
+                    teams, flex, paceCharts.apply(g), Set.of());
+            Map<String, Double> projection = TradeScreens.readOff(TradeScreens.projectedAboveLine(board.season(), g, positionOf,
+                    teams, flex), projectionCharts.apply(g));
+            Map<String, Double> worth = TradeScreens.restWorth(board, positionOf, g, teams, flex);
+            for(String id : board.ids()){
+                if(TradeScreens.skill(positionOf.get(id)) && pace.containsKey(id) && projection.containsKey(id)){
+                    x.add(new double[]{1, chart.at(board.adp().get(id)), pace.get(id), projection.get(id)});
+                    y.add(worth.getOrDefault(id, 0.0));
+                }
+            }
+        }
+        if(x.size() < 10){
+            return new double[]{Double.NaN, Double.NaN, Double.NaN, 0};
+        }
+        double[] b = ols(x, y);
+        double sum = b[1] + b[2] + b[3];
+        return new double[]{b[1] / sum, b[2] / sum, b[3] / sum, x.size()};
+    }
+
+    /**
+     * THREE SCREENS - WHAT TRADESCREENS USES. Justin, 2026-10-22: "I honestly
+     * think the draft value's share is wrong at this point compared to sleeper
+     * weekly projections which have adapted (i.e. cam skateboo reduced usage
+     * due to fumble loss of trust from coaches)." Draft value, pace and
+     * Sleeper's projection for each man's next game, each read off its own
+     * chart, and the three weights that make each week's accepted trades most
+     * even - fitted on trades where every man moved has a next-game
+     * projection, because a man out with an injury reads zero on that screen
+     * while his draft value and pace stand, which leans the fit toward draft
+     * (the review measured about 3 points). Beside it: the same fit on every
+     * trade, the forecaster's weights ({@link #forecast}), and the fit with
+     * projections averaged over three weeks (less matchup noise, but it knows
+     * news the man opposite did not - a check, not a screen).
+     */
+    static String threeScreens(TradeScreens.Chart chart, Map<String, EraBoards.Board> boards, int teams, int flex,
+                               Random random, Map<Integer, double[]> fitted) throws IOException {
+        java.util.function.IntFunction<TradeScreens.Chart> paceCharts = TradeScreens.paceCharts(boards.values(), teams, flex);
+        java.util.function.IntFunction<TradeScreens.Chart> projectionCharts = TradeScreens.projectionCharts(boards.values(), teams, flex);
+        List<Trade> all = trades(chart, boards, teams, flex, paceCharts, projectionCharts);
+        List<Trade> smoothed = trades(chart, boards, teams, flex, paceCharts,
+                TradeScreens.projectionCharts(boards.values(), teams, flex, 3), 3);
+        Map<Integer, List<Trade>> everyBin = new TreeMap<>(), healthyBin = new TreeMap<>(), smoothBin = new TreeMap<>();
+        for(Trade t : all){
+            if(t.informs3()){
+                everyBin.computeIfAbsent(bin(t.games()), k -> new ArrayList<>()).add(t);
+                if(t.allProjected()){
+                    healthyBin.computeIfAbsent(bin(t.games()), k -> new ArrayList<>()).add(t);
+                }
+            }
+        }
+        for(Trade t : smoothed){
+            if(t.informs3() && t.allProjected()){
+                smoothBin.computeIfAbsent(bin(t.games()), k -> new ArrayList<>()).add(t);
+            }
+        }
+        Map<String, Map<String, Position>> positions = new HashMap<>();
+        StringBuilder out = new StringBuilder(String.format("THREE SCREENS - WHAT TRADESCREENS USES. Draft value, pace, and Sleeper's projection for each man's next%n"
+                + "game (Justin: \"compared to sleeper weekly projections which have adapted\"), each read off its own chart; the%n"
+                + "weights that make each week's accepted trades most even, on trades where every man moved has a projection%n"
+                + "(step 0.02; 90%% ranges resample leagues at step 0.05). CURVE: draft's weight never rising with games played.%n"
+                + "games  trades    draft (90%%)      pace (90%%)     projection (90%%)   CURVE  uneven  | all trades | forecaster: draft pace proj | 3-wk: draft%n"));
+        for(Map.Entry<Integer, List<Trade>> e : healthyBin.entrySet()){
+            List<Trade> trades = e.getValue();
+            double[] w = best3(trades, 0.02);
+            fitted.put(e.getKey(), new double[]{w[0], w[1], w[2], trades.size()});
+        }
+        double[] draft = new double[fitted.size()], n = new double[fitted.size()];
+        int i = 0;
+        for(double[] f : fitted.values()){
+            draft[i] = f[0];
+            n[i++] = f[3];
+        }
+        double[] curve = nonIncreasing(draft, n);
+        i = 0;
+        for(Map.Entry<Integer, List<Trade>> e : healthyBin.entrySet()){
+            List<Trade> trades = e.getValue();
+            double[] w = fitted.get(e.getKey());
+            double[][] range = interval3(trades, 150, random);
+            double[] every = best3(everyBin.getOrDefault(e.getKey(), List.of()), 0.02);
+            double[] smooth = best3(smoothBin.getOrDefault(e.getKey(), List.of()), 0.02);
+            double[] f = forecast(boards, chart, paceCharts, projectionCharts, positions, e.getKey(), teams, flex);
+            fitted.put(e.getKey(), new double[]{w[0], w[1], w[2], w[3], curve[i], f[0], f[1], f[2]});
+            out.append(String.format("%5s %7d   %4.0f%% (%2.0f-%3.0f)   %4.0f%% (%2.0f-%3.0f)   %4.0f%% (%2.0f-%3.0f)   %4.0f%%   %.3f  |    %4.0f%%    |   %4.0f%%  %4.0f%%  %4.0f%%     |   %4.0f%%%n",
+                    e.getKey() == LAST_BIN ? LAST_BIN + "+" : String.valueOf(e.getKey()), trades.size(),
+                    100 * w[0], 100 * range[0][0], 100 * range[0][1], 100 * w[1], 100 * range[1][0], 100 * range[1][1],
+                    100 * w[2], 100 * range[2][0], 100 * range[2][1], 100 * curve[i], loss3(trades, w),
+                    100 * every[0], 100 * f[0], 100 * f[1], 100 * f[2], 100 * smooth[0]));
+            i++;
+        }
+        out.append(String.format("all trades: draft's weight with injured men's trades kept (they read zero on the projection). forecaster: the%n"
+                + "weights a forecaster would put on the three screens, from what each predicted of the rest of the season%n"
+                + "(board men 2018 on, least squares, scaled to sum to one) - managers anchored on the draft would sit above it.%n"
+                + "3-wk: draft's weight with projections averaged over the next three weeks (knows news the trade did not).%n"
+                + "TradeScreens blends draft (CURVE) with this season's screen: pace and projection in that week's fitted ratio.%n%n"));
         return out.toString();
     }
 

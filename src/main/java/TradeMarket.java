@@ -867,7 +867,7 @@ public class TradeMarket {
                         mutuallyGood.size() - good.size()));
 
         out.append(String.format("'his view' is the trade from HIS side on the two numbers he can check (TradeScreens): what he gets back%n"
-                + "of the draft value and of the season his men's paces predict, '-' where he gives none. 'title' is the change in%n"
+                + "of the draft value and of the season screen (pace and Sleeper's projection), '-' where he gives none. 'title' is the change in%n"
                 + "your title odds and his, in percentage points (TitleOdds, the same %d seasons before and after).%n", TitleOdds.SIMS));
         java.util.function.Function<Trade, TitleOdds.Delta[]> titleOf = trade -> stakes.swap(me,
                 swap(rosters.get(me), trade.give(), trade.get()), trade.withManager(),

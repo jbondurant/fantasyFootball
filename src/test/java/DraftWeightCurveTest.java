@@ -131,4 +131,48 @@ public class DraftWeightCurveTest {
                 + "\"drops\":{\"a\":2,\"b\":3,\"c\":1}}").getAsJsonObject();
         assertNull(DraftWeightCurve.sides(three, positionOf), "three rosters have no two sides");
     }
+
+    /** Trades even at planted weights on three screens: the simplex search finds them. */
+    @Test
+    public void thePlantedThreeWayWeightsAreTheOnesFound(){
+        double wd = 0.30, wp = 0.40, wj = 0.30;
+        Random random = new Random(9);
+        List<DraftWeightCurve.Trade> trades = new ArrayList<>();
+        while(trades.size() < 60){
+            double draftA = 10 + 90 * random.nextDouble(), draftB = 10 + 90 * random.nextDouble();
+            double paceA = 10 + 90 * random.nextDouble(), paceB = 10 + 90 * random.nextDouble();
+            double projB = 10 + 90 * random.nextDouble();
+            double projA = (wd * (draftB - draftA) + wp * (paceB - paceA) + wj * projB) / wj;   // even at the planted weights
+            if(projA >= 0){
+                trades.add(new DraftWeightCurve.Trade("2024", "x", 0, 0.5, 5, draftA, draftB, paceA, paceB, false, false, "", "",
+                        projA, projB, true));
+            }
+        }
+        double[] w = DraftWeightCurve.best3(trades, 0.02);
+        assertEquals(wd, w[0], 0.0201);
+        assertEquals(wp, w[1], 0.0201);
+        assertEquals(wj, w[2], 0.0201);
+    }
+
+    /** The forecaster's regression: exact data, exact coefficients, intercept included. */
+    @Test
+    public void leastSquaresRecoversAnExactLine(){
+        List<double[]> x = new ArrayList<>();
+        List<Double> y = new ArrayList<>();
+        Random random = new Random(4);
+        for(int i = 0; i < 50; i++){
+            double a = random.nextDouble(), b = random.nextDouble(), c = random.nextDouble();
+            x.add(new double[]{1, a, b, c});
+            y.add(5 + 2 * a + 3 * b - c);
+        }
+        assertArrayEquals(new double[]{5, 2, 3, -1}, DraftWeightCurve.ols(x, y), 1e-9);
+    }
+
+    /** Pace's share is read flat before the first measured week, not as all-draft. */
+    @Test
+    public void aShareTableIsReadFlatBeforeItsFirstWeek(){
+        TreeMap<Integer, Double> pace = new TreeMap<>(Map.of(1, 0.8, 5, 0.5));
+        assertEquals(0.8, DraftWeightCurve.at(pace, 0, 0.8), 1e-9);
+        assertEquals(0.65, DraftWeightCurve.at(pace, 3, 0.8), 1e-9);
+    }
 }

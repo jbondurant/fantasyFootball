@@ -226,4 +226,25 @@ public class TradeScreensTest {
         assertFalse(seen.containsKey("wr1"), "sidelined");
         assertEquals(hottest, seen.get("wr0"), 1e-9);
     }
+
+    /** This season's screen blends pace and Sleeper's projection in the week's ratio; a man on one reads only it. */
+    @Test
+    public void theSeasonScreenBlendsPaceAndProjection(){
+        Map<String, Double> season = TradeScreens.seasonScreen(Map.of("a", 40.0, "b", 10.0), Map.of("a", 20.0, "c", 30.0), 0.5);
+        assertEquals(30.0, season.get("a"), 1e-9);
+        assertEquals(5.0, season.get("b"), 1e-9, "no projection: half his pace");
+        assertEquals(15.0, season.get("c"), 1e-9, "no game yet: half his projection");
+    }
+
+    /** A precedent's draft weight is read at the games its season screen was priced at, not at its leg. */
+    @Test
+    public void aPrecedentReadsTheDraftWeightAtItsOwnGamesPlayed(){
+        // proposed on the Tuesday after week 1's games: leg 1 by Sleeper, one game played by the clock
+        TradeScreens.Precedent tuesday = new TradeScreens.Precedent("2025", 1, "m", "a", "b", 100, 50, 0, 60, 1);
+        java.util.function.DoubleUnaryOperator half = g -> g <= 0 ? 1 : 0.5;
+        assertEquals(1.0, tuesday.games(), 1e-9);
+        assertEquals(50.0 / (25 + 30), tuesday.blendedRatio(half), 1e-9, "blended at one game, not all-draft");
+        assertEquals(4.0, new TradeScreens.Precedent("2025", 5, "m", "a", "b", 1, 1, 1, 1).games(), 1e-9,
+                "without a clock count, the weeks before its leg");
+    }
 }

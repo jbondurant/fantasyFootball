@@ -165,13 +165,17 @@ week, the bench worth the weeks it covers - on Sleeper's weekly projections for
 the games left (`sleeper-remaining`, which drops a man Sleeper has ruled out) and
 on the rest-of-season model, with your rank on each. Then every mutually good
 trade carries both pricings and **his view**: the trade from HIS side on the two
-numbers he can check, draft value and his pace (read as what that pace after
-that many games has gone on to be worth), blended by how much draft value still
-counts after the games played - measured on 3,758 accepted trades in 809 other
-Sleeper leagues: 59% after one game, 48% after five, 32% after ten
-(`DraftWeightCurve`, 2026-10-22). A first fit on the raw pace said 73% at week
-5; Justin would not have it, and he was right - a hot start overstates a
-season, and the fit had put the regression on draft value.
+numbers he can check: draft value, and this season - his pace and Sleeper's
+projection for his next game, which has moved on news like a back benched for
+fumbles. They are blended by how much draft value still counts after the games
+played, measured on 3,758 accepted trades in 809 other Sleeper leagues: 52%
+after one game, 40% to week 4, 32% to week 7, 30% at 8-9, 20% at 10, about 10%
+after (`DraftWeightCurve`, 2026-10-22). Through week 9 that is what a forecaster
+would put on the draft slot; after it managers drop the draft faster than it
+deserves. Justin pushed it down twice - from 73% (raw pace overstated hot
+starts) and from 48% (Sleeper's adapted projections were missing) - and was
+right both times; his under-10% at week 5 is not what managers do or what
+predicts.
 **THE SHORT LIST** names only trades good for both sides on both pricings, you
 clearing the 6.8 noise floor on each, AND fair to him on both of his numbers.
 Long shots - trades some manager here once accepted something as lopsided as -
