@@ -1,7 +1,6 @@
 TRADE MARKET  2026-10-23  (justinb314; projections: sleeper-remaining)
-Every size-balanced swap with all eleven rivals, both rosters priced on the same
-weekly-starter objective (240 drawn seasons). Only trades BOTH sides gain from are listed:
-an offer the other manager loses on is an offer he declines.
+Every size-balanced swap with all eleven rivals, both rosters priced on the same objective: weekly lineups on sleeper-remaining, weeks 7-17 - each week's best lineup, that week's best free agents in the pool for nothing.
+Only trades BOTH sides gain from are listed: an offer the other manager loses on is an offer he declines.
 THE TWO SIDES ARE PRICED DIFFERENTLY, on purpose. YOUR value is the season PLUS the best two
 keeper surpluses on your roster (a surplus being what a man is worth beyond the pick you spend to
 keep him, measured at HIS OWN position). HIS is LOSS-AVERSE on keepers: he takes no credit for one
@@ -9,102 +8,95 @@ he receives and feels every point of one he gives up, which is how people here a
 So asking for another manager's keeper is HARD - the ask is priced at what it costs him - and
 paying anybody IN keepers buys you nothing. -Pkeepers=false prices you the same way he is.
 
-HOW EVERY ROSTER SCORES - the season points its starters are expected to score: 17 x the best legal
-lineup from whoever is healthy in a drawn week, the bench worth the weeks it covers, every slot floored at
-the waiver wire. On sleeper-remaining and on ros (the rest-of-season model moves on this season's results; Sleeper's
-season feed does not):
+THE WIRE THIS ASSUMES - each week's best free agents are in every lineup's pool, a pickup costing
+no roster spot (Justin, 2026-10-23: "let's do it with no roster space required"). On sleeper-remaining, points that week:
+  week   QB                       RB (best 4)              WR (best 4)              TE (best 2)              DEF                     
+  7      21.5                     5.6/5.2/4.9/4.6          5.9/5.3/5.0/4.9          7.8/6.2                  8.2                     
+  8      20.0                     5.8/5.2/5.0/4.7          5.8/5.3/5.1/5.1          6.9/6.3                  9.8                     
+  9      23.0                     5.1/4.7/4.6/4.6          6.2/5.8/5.0/4.9          8.1/6.7                  7.3                     
+  10     21.1                     6.0/5.5/5.4/5.0          6.4/5.6/5.2/5.2          8.0/6.2                  8.1                     
+
+HOW EVERY ROSTER SCORES - the points its best lineup is projected to score in every week left (weekly lineups on sleeper-remaining, weeks 7-17),
+each week's best free agents in the pool. On sleeper-remaining and on ros (the rest-of-season model moves on this season's
+results; Sleeper's projections move on news):
   rank manager          sleeper-remaining   rank      ros
-  1    itsabust           1680.6   2      2215.2
-  2    JakeSK             1646.7   1      2309.6
-  3    d0ddi              1546.6   3      2210.5
-  4    JFMarino           1507.4   4      2162.0
-  5    justinb314         1498.1   7      2081.4   <- you
-  6    jerem9604          1488.6   10     1957.7
-  7    patekxwater        1481.0   8      2058.5
-  8    Hamrliks           1461.8   5      2129.1
-  9    tommyrads          1435.6   6      2126.6
-  10   KevinDA            1402.3   9      2056.7
-  11   BHier              1356.9   11     1838.9
-  12   Renteez            1313.2   12     1752.1
+  1    itsabust           1495.3   2      1383.0
+  2    JakeSK             1474.1   1      1396.5
+  3    d0ddi              1408.5   3      1327.3
+  4    JFMarino           1387.7   4      1323.5
+  5    patekxwater        1364.0   5      1300.8
+  6    jerem9604          1350.8   9      1246.0
+  7    Hamrliks           1350.0   6      1291.5
+  8    justinb314         1340.4   10     1215.5   <- you
+  9    KevinDA            1308.7   8      1257.9
+  10   tommyrads          1276.4   7      1259.3
+  11   BHier              1237.4   12     1160.0
+  12   Renteez            1236.3   11     1180.4
 
 THE SEASON EACH RIVAL IS IN (TitleOdds, 20000 seasons from week 7). 'weight' is what a point of season
 value is worth to him against the league average; a rival's gain below is his season gain times it, less any
 keeper he gives up, plus (1 - his playoff odds) of any keeper he receives.
   manager          playoffs   title  weight  state
   JakeSK              93.9%   24.1%    1.95  contender
-  itsabust            86.4%   21.6%    1.96  contender
-  JFMarino            89.1%   16.5%    1.85  contender
-  patekxwater         56.1%    8.4%    1.22  bubble
-  justinb314          61.0%    7.8%    1.24  contender   <- you
-  d0ddi               55.6%    6.7%    1.07  bubble
-  Hamrliks            62.3%    6.7%    0.96  contender
+  itsabust            86.4%   21.6%    1.95  contender
+  JFMarino            89.1%   16.5%    1.84  contender
+  patekxwater         56.1%    8.4%    1.23  bubble
+  justinb314          61.0%    7.7%    1.22  contender   <- you
+  d0ddi               55.6%    6.7%    1.08  bubble
+  Hamrliks            62.3%    6.7%    0.97  contender
   tommyrads           49.4%    3.3%    0.65  bubble
   KevinDA             31.9%    3.2%    0.57  bubble
   jerem9604           11.4%    1.6%    0.43  out of it
   Renteez              2.0%    0.2%    0.06  out of it
   BHier                0.8%    0.1%    0.04  out of it
 
-TARGETED SEARCH with Renteez: he sends Ja'Marr Chase (+ up to two more of his), you send at least one of Derrick Henry,Bhayshul Tuten (+ up to two more of yours) - 30783 packages,
+TARGETED SEARCH with Renteez: he sends Ja'Marr Chase (+ up to two more of his), you send at least one of Derrick Henry,Bhayshul Tuten (+ up to two more of yours) - 27061 packages,
 one to three men a side; a side receiving one more man cuts its lowest-projected other man.
 Rules as the board: you gain 6.8 on sleeper-remaining and on ros; he gains overall and on ros; his season falls by at most
 20.0 on sleeper-remaining and 6.8 on ros (Justin's tanking line); then what he can see. Best for you first (the lower of
 your two gains):
-    135  NO on what he can see
-   6336  TANKING: he loses more than the line
-     64  he loses on ros
-     42  he loses overall (season and keepers, weighted)
-   1117  passes - a long shot on what he can see
-   3037  you gain under 6.8 on ros
-  20052  you gain under 6.8 on sleeper-remaining
+  10201  TANKING: he loses more than the line
+      6  he loses overall (season and keepers, weighted)
+    352  you gain under 6.8 on ros
+  16502  you gain under 6.8 on sleeper-remaining
   sending Bhayshul Tuten:
-      135  NO on what he can see
-     5044  TANKING: he loses more than the line
-       64  he loses on ros
-     1117  passes - a long shot on what he can see
-     2172  you gain under 6.8 on ros
-     7820  you gain under 6.8 on sleeper-remaining
+     8339  TANKING: he loses more than the line
+       17  you gain under 6.8 on ros
+     6075  you gain under 6.8 on sleeper-remaining
   sending Derrick Henry:
-     1318  TANKING: he loses more than the line
-       42  he loses overall (season and keepers, weighted)
-     1037  you gain under 6.8 on ros
-    13955  you gain under 6.8 on sleeper-remaining
+     2033  TANKING: he loses more than the line
+        6  he loses overall (season and keepers, weighted)
+      352  you gain under 6.8 on ros
+    12040  you gain under 6.8 on sleeper-remaining
 
   YOU GIVE                                 YOU GET                                      you  you:ros     him  him:ros  verdict / his view
-  Bhayshul Tuten + Baltimore Ravens + Dalton Schultz Ja'Marr Chase + Lamar Jackson + Javonte Williams  +153.9   +171.1  -203.7   -186.6  TANKING: he loses more than the line; he sees 18%/37%=30%
-  Bhayshul Tuten + Baltimore Ravens + Tre' Harris Ja'Marr Chase + Lamar Jackson + Javonte Williams  +153.9   +172.1  -203.9   -203.4  TANKING: he loses more than the line; he sees 18%/33%=28%
-  Bhayshul Tuten + Dalton Schultz + Tre' Harris Ja'Marr Chase + Lamar Jackson + Javonte Williams  +153.2   +170.7  -189.9   -162.3  TANKING: he loses more than the line; he sees 21%/39%=33%
-  Bhayshul Tuten + Baltimore Ravens + Khalil Shakir Ja'Marr Chase + Lamar Jackson + Javonte Williams  +151.8   +170.5  -191.8   -179.0  TANKING: he loses more than the line; he sees 20%/37%=31%
-  Bhayshul Tuten + Khalil Shakir + Dalton Schultz Ja'Marr Chase + Lamar Jackson + Javonte Williams  +151.6   +169.6  -177.3   -138.5  TANKING: he loses more than the line; he sees 23%/44%=37%
-  Bhayshul Tuten + Khalil Shakir + Tre' Harris Ja'Marr Chase + Lamar Jackson + Javonte Williams  +151.4   +170.2  -179.4   -161.6  TANKING: he loses more than the line; he sees 23%/40%=34%
-  Bhayshul Tuten + Jordan Addison + Baltimore Ravens Ja'Marr Chase + Lamar Jackson + Javonte Williams  +151.1   +168.7  -183.1   -175.7  TANKING: he loses more than the line; he sees 25%/40%=35%
-  Bhayshul Tuten + Jordan Addison + Tre' Harris Ja'Marr Chase + Lamar Jackson + Javonte Williams  +150.3   +168.2  -171.4   -158.4  TANKING: he loses more than the line; he sees 28%/42%=37%
-  Bhayshul Tuten + Minnesota Vikings + Baltimore Ravens Ja'Marr Chase + Lamar Jackson + Javonte Williams  +149.9   +172.4  -214.2   -226.2  TANKING: he loses more than the line; he sees 15%/30%=25%
-  Bhayshul Tuten + Josh Downs + Baltimore Ravens Ja'Marr Chase + Lamar Jackson + Javonte Williams  +149.8   +169.1  -180.6   -174.5  TANKING: he loses more than the line; he sees 24%/37%=33%
-  Bhayshul Tuten + Jordan Addison + Dalton Schultz Ja'Marr Chase + Lamar Jackson + Javonte Williams  +149.7   +167.5  -169.7   -135.3  TANKING: he loses more than the line; he sees 28%/47%=40%
-  Bhayshul Tuten + Minnesota Vikings + Dalton Schultz Ja'Marr Chase + Lamar Jackson + Javonte Williams  +149.6   +171.1  -199.4   -186.6  TANKING: he loses more than the line; he sees 18%/37%=30%
-  Bhayshul Tuten + Minnesota Vikings + Tre' Harris Ja'Marr Chase + Lamar Jackson + Javonte Williams  +149.5   +172.1  -199.6   -203.4  TANKING: he loses more than the line; he sees 18%/33%=28%
-  Bhayshul Tuten + Baltimore Ravens + Dalton Schultz Ja'Marr Chase + Javonte Williams + Ladd McConkey  +149.2   +167.8  -219.6   -239.3  TANKING: he loses more than the line; he sees 18%/38%=31%
-  Bhayshul Tuten + Josh Downs + Tre' Harris Ja'Marr Chase + Lamar Jackson + Javonte Williams  +149.2   +169.0  -169.2   -158.0  TANKING: he loses more than the line; he sees 27%/40%=35%
-  Bhayshul Tuten + Baltimore Ravens + Tre' Harris Ja'Marr Chase + Javonte Williams + Ladd McConkey  +149.1   +168.3  -217.7   -252.1  TANKING: he loses more than the line; he sees 18%/34%=29%
-  Bhayshul Tuten + Dalton Schultz + Tre' Harris Ja'Marr Chase + Javonte Williams + Ladd McConkey  +148.7   +167.6  -202.6   -212.5  TANKING: he loses more than the line; he sees 21%/41%=34%
-  Bhayshul Tuten + Josh Downs + Dalton Schultz Ja'Marr Chase + Lamar Jackson + Javonte Williams  +148.6   +168.6  -167.3   -134.9  TANKING: he loses more than the line; he sees 27%/44%=38%
-  Bhayshul Tuten + Baltimore Ravens + Khalil Shakir Ja'Marr Chase + Javonte Williams + Ladd McConkey  +148.5   +168.0  -204.3   -228.2  TANKING: he loses more than the line; he sees 20%/39%=32%
-  Bhayshul Tuten + Baltimore Ravens + Cam Skattebo Ja'Marr Chase + Lamar Jackson + Javonte Williams  +151.8   +148.3  -214.5   -169.5  TANKING: he loses more than the line; he sees 40%/36%=37%
-  Bhayshul Tuten + Baltimore Ravens + Cam Skattebo Ja'Marr Chase + Lamar Jackson + Javonte Williams  +151.8   +148.3  -214.5   -169.5  TANKING: he loses more than the line; he sees 40%/36%=37%
-  Bhayshul Tuten + Khalil Shakir + Dalton Schultz Ja'Marr Chase + Javonte Williams + Ladd McConkey  +148.2   +166.9  -189.7   -188.6  TANKING: he loses more than the line; he sees 23%/46%=38%
-  Bhayshul Tuten + Khalil Shakir + Tre' Harris Ja'Marr Chase + Javonte Williams + Ladd McConkey  +148.2   +167.6  -188.5   -205.6  TANKING: he loses more than the line; he sees 23%/42%=35%
-  Bhayshul Tuten + Jordan Addison + Baltimore Ravens Ja'Marr Chase + Javonte Williams + Ladd McConkey  +148.1   +168.1  -196.2   -224.1  TANKING: he loses more than the line; he sees 25%/42%=36%
-  Bhayshul Tuten + Tre' Harris + Cam Skattebo Ja'Marr Chase + Lamar Jackson + Javonte Williams  +151.4   +148.0  -200.7   -147.1  TANKING: he loses more than the line; he sees 43%/39%=40%
+  Bhayshul Tuten + Jakobi Meyers + Josh Downs Ja'Marr Chase + Javonte Williams + Ladd McConkey  +138.2   +129.8  -138.6   -137.0  TANKING: he loses more than the line; he sees 29%/51%=43%
+  Bhayshul Tuten + Jakobi Meyers + Khalil Shakir Ja'Marr Chase + Javonte Williams + Ladd McConkey  +139.0   +129.8  -151.6   -140.1  TANKING: he loses more than the line; he sees 25%/51%=42%
+  Bhayshul Tuten + Jakobi Meyers + Dalton Schultz Ja'Marr Chase + Javonte Williams + Ladd McConkey  +139.0   +129.8  -159.1   -143.2  TANKING: he loses more than the line; he sees 24%/50%=41%
+  Bhayshul Tuten + Jakobi Meyers + Tre' Harris Ja'Marr Chase + Javonte Williams + Ladd McConkey  +139.0   +129.8  -161.2   -145.5  TANKING: he loses more than the line; he sees 24%/46%=38%
+  Bhayshul Tuten + Josh Downs + Khalil Shakir Ja'Marr Chase + Javonte Williams + Ladd McConkey  +142.7   +129.8  -157.7   -142.3  TANKING: he loses more than the line; he sees 28%/47%=40%
+  Bhayshul Tuten + Josh Downs + Dalton Schultz Ja'Marr Chase + Javonte Williams + Ladd McConkey  +142.7   +129.8  -165.6   -145.5  TANKING: he loses more than the line; he sees 27%/46%=39%
+  Bhayshul Tuten + Josh Downs + Tre' Harris Ja'Marr Chase + Javonte Williams + Ladd McConkey  +142.7   +129.8  -167.4   -147.8  TANKING: he loses more than the line; he sees 27%/42%=36%
+  Bhayshul Tuten + Khalil Shakir + Dalton Schultz Ja'Marr Chase + Javonte Williams + Ladd McConkey  +143.0   +129.8  -178.4   -148.5  TANKING: he loses more than the line; he sees 23%/46%=38%
+  Bhayshul Tuten + Khalil Shakir + Tre' Harris Ja'Marr Chase + Javonte Williams + Ladd McConkey  +143.0   +129.8  -180.2   -150.8  TANKING: he loses more than the line; he sees 23%/42%=35%
+  Bhayshul Tuten + Dalton Schultz + Tre' Harris Ja'Marr Chase + Javonte Williams + Ladd McConkey  +143.0   +129.8  -189.3   -154.7  TANKING: he loses more than the line; he sees 21%/41%=34%
+  Bhayshul Tuten + Jakobi Meyers + Cam Skattebo Ja'Marr Chase + Javonte Williams + Ladd McConkey  +139.0   +129.5  -162.0   -136.4  TANKING: he loses more than the line; he sees 45%/50%=48%
+  Bhayshul Tuten + Josh Downs + Cam Skattebo Ja'Marr Chase + Javonte Williams + Ladd McConkey  +142.7   +129.5  -168.5   -138.7  TANKING: he loses more than the line; he sees 48%/46%=46%
+  Bhayshul Tuten + Khalil Shakir + Cam Skattebo Ja'Marr Chase + Javonte Williams + Ladd McConkey  +143.0   +129.5  -181.3   -141.7  TANKING: he loses more than the line; he sees 44%/46%=45%
+  Bhayshul Tuten + Dalton Schultz + Cam Skattebo Ja'Marr Chase + Javonte Williams + Ladd McConkey  +143.0   +129.5  -192.4   -147.1  TANKING: he loses more than the line; he sees 43%/45%=44%
+  Bhayshul Tuten + Tre' Harris + Cam Skattebo Ja'Marr Chase + Javonte Williams + Ladd McConkey  +143.0   +129.5  -192.2   -147.9  TANKING: he loses more than the line; he sees 43%/41%=41%
+  Bhayshul Tuten + Cam Skattebo + Tre' Harris Ja'Marr Chase + Javonte Williams + Ladd McConkey  +143.0   +129.5  -192.2   -147.9  TANKING: he loses more than the line; he sees 43%/41%=41%
+  Bhayshul Tuten + Jakobi Meyers + Cam Skattebo Ja'Marr Chase + Javonte Williams + Ladd McConkey  +139.0   +129.5  -162.0   -136.4  TANKING: he loses more than the line; he sees 45%/50%=48%
+  Bhayshul Tuten + Josh Downs + Cam Skattebo Ja'Marr Chase + Javonte Williams + Ladd McConkey  +142.7   +129.5  -168.5   -138.7  TANKING: he loses more than the line; he sees 48%/46%=46%
+  Bhayshul Tuten + Khalil Shakir + Cam Skattebo Ja'Marr Chase + Javonte Williams + Ladd McConkey  +143.0   +129.5  -181.3   -141.7  TANKING: he loses more than the line; he sees 44%/46%=45%
+  Bhayshul Tuten + Dalton Schultz + Cam Skattebo Ja'Marr Chase + Javonte Williams + Ladd McConkey  +143.0   +129.5  -192.4   -147.1  TANKING: he loses more than the line; he sees 43%/45%=44%
+  Bhayshul Tuten + Tre' Harris + Cam Skattebo Ja'Marr Chase + Javonte Williams + Ladd McConkey  +143.0   +129.5  -192.2   -147.9  TANKING: he loses more than the line; he sees 43%/41%=41%
+  Bhayshul Tuten + Jakobi Meyers + T.J. Hockenson Ja'Marr Chase + Javonte Williams + Ladd McConkey  +135.6   +129.5  -144.3   -139.6  TANKING: he loses more than the line; he sees 24%/51%=42%
+  Bhayshul Tuten + T.J. Hockenson + Josh Downs Ja'Marr Chase + Javonte Williams + Ladd McConkey  +139.3   +129.5  -150.8   -141.8  TANKING: he loses more than the line; he sees 27%/47%=40%
+  Bhayshul Tuten + T.J. Hockenson + Khalil Shakir Ja'Marr Chase + Javonte Williams + Ladd McConkey  +140.1   +129.5  -163.6   -144.9  TANKING: he loses more than the line; he sees 23%/47%=39%
+  Bhayshul Tuten + T.J. Hockenson + Tre' Harris Ja'Marr Chase + Javonte Williams + Ladd McConkey  +140.1   +129.5  -174.5   -151.0  TANKING: he loses more than the line; he sees 21%/42%=35%
 
-THE 1117 THAT PASS - best for you first, then best for each man you named; his season on both pricings,
+THE 0 THAT PASS - best for you first, then best for each man you named; his season on both pricings,
 what he can see, and your title odds (TitleOdds on Sleeper's weekly projections):
   YOU GIVE                                 YOU GET                                      you  you:ros     him  him:ros         title  his view
-  Bhayshul Tuten + Jordan Addison + Khalil Shakir Ja'Marr Chase + Jacoby Brissett + Dalton Kincaid   +30.5    +40.7   -18.5    +11.3   +3.0+-0.1   47%/93%=75%; 10 of 60 accepted sides here took as little, never Renteez
-  Bhayshul Tuten + Josh Downs + Khalil Shakir Ja'Marr Chase + Jacoby Brissett + Dalton Kincaid   +29.1    +41.7   -15.7    +11.3   +2.6+-0.1   45%/88%=71%; 6 of 60 accepted sides here took as little, never Renteez
-  Bhayshul Tuten + Khalil Shakir + Tre' Harris Ja'Marr Chase + Mike Washington Jr. + Kaelon Black   +28.2    +28.1   -15.2     +1.8   +2.5+-0.1   38%/94%=70%; 6 of 60 accepted sides here took as little, never Renteez
-  Bhayshul Tuten + Josh Downs + Jordan Addison Ja'Marr Chase + Jacoby Brissett + Dalton Kincaid   +28.1    +36.9    -8.4    +13.4   +2.7+-0.1   52%/93%=77%; 11 of 60 accepted sides here took as little
-  Bhayshul Tuten + Jordan Addison + Khalil Shakir Ja'Marr Chase + Dalton Kincaid + Kaelon Black   +27.7    +42.3   -19.8     +8.7   +2.8+-0.1   46%/93%=75%; 10 of 60 accepted sides here took as little, never Renteez
-  Bhayshul Tuten + Khalil Shakir + Tre' Harris Ja'Marr Chase + Jacoby Brissett + Mike Washington Jr.   +31.6    +27.6   -15.6     +7.1   +2.5+-0.1   38%/94%=71%; 6 of 60 accepted sides here took as little, never Renteez
-  Bhayshul Tuten + Khalil Shakir + Tre' Harris Ja'Marr Chase + Mike Washington Jr. + Kayshon Boutte   +27.9    +27.6   -16.1     +7.1   +2.5+-0.1   38%/95%=71%; 6 of 60 accepted sides here took as little, never Renteez
-  Bhayshul Tuten + Jakobi Meyers + Dalton Schultz Ja'Marr Chase + Jacoby Brissett + Dalton Kincaid   +27.6    +36.1   -19.5    +11.3   +2.0+-0.1   37%/95%=72%; 10 of 60 accepted sides here took as little, never Renteez
-  Bhayshul Tuten + Jordan Addison + Tre' Harris Ja'Marr Chase + Jacoby Brissett + Mike Washington Jr.   +29.3    +27.4    -6.3     +9.9   +2.5+-0.1   46%/100%=77%; 11 of 60 accepted sides here took as little
+  none.

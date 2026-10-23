@@ -374,19 +374,40 @@ public class RosModel {
     }
 
     /** The {@code -Pprojections=ros} source: Sleeper's season numbers with every played skill man replaced by his blended rate over the objective's games. */
-    public static Map<String, Double> season(AAAConfiguration configuration){
-        Map<String, EraBoards.Board> boards = EraBoards.usable("ppr", EraIngest.MIN_RATE, EraIngest.minDepth());
-        Map<String, List<InSeasonLearning.Man>> harvest = InSeasonLearning.harvest(boards);
-        List<String> seasons = new ArrayList<>(harvest.keySet());
-        Map<String, Map<Position, double[]>> priors = new TreeMap<>();
-        Map<String, Map<Position, InSeasonLearning.Kappa>> kappas = new TreeMap<>();
-        for(String season : seasons){
-            priors.put(season, InSeasonLearning.priorTable(harvest, season, null, DEPTH));
-            kappas.put(season, InSeasonLearning.fitKappa(harvest, season, DEPTH));
+    /** This season's blended reads, every skill man with an ADP and a played game; fitted once a run. */
+    private static Map<String, Ros> blended;
+
+    static synchronized Map<String, Ros> blend(){
+        if(blended == null){
+            Map<String, EraBoards.Board> boards = EraBoards.usable("ppr", EraIngest.MIN_RATE, EraIngest.minDepth());
+            Map<String, List<InSeasonLearning.Man>> harvest = InSeasonLearning.harvest(boards);
+            List<String> seasons = new ArrayList<>(harvest.keySet());
+            Map<String, Map<Position, double[]>> priors = new TreeMap<>();
+            Map<String, Map<Position, InSeasonLearning.Kappa>> kappas = new TreeMap<>();
+            for(String season : seasons){
+                priors.put(season, InSeasonLearning.priorTable(harvest, season, null, DEPTH));
+                kappas.put(season, InSeasonLearning.fitKappa(harvest, season, DEPTH));
+            }
+            List<Case> cases = cases(harvest, seasons, priors, kappas, new ArrayList<>(), Map.of());
+            blended = thisSeason(harvest, cases);
         }
-        List<Case> cases = cases(harvest, seasons, priors, kappas, new ArrayList<>(), Map.of());
+        return blended;
+    }
+
+    /**
+     * Each blended man's rate per PLAYED game - the ros pricing before it is
+     * multiplied by his weeks. WeeklyLineupValue lays it out week by week, in
+     * the weeks Sleeper projects him to play.
+     */
+    public static Map<String, Double> rates(){
+        Map<String, Double> out = new HashMap<>();
+        blend().forEach((id, r) -> out.put(id, r.rate()));
+        return out;
+    }
+
+    public static Map<String, Double> season(AAAConfiguration configuration){
         Map<String, Double> out = new java.util.LinkedHashMap<>(SleeperProjections.parseTodaysWebPage());
-        Map<String, Ros> ros = thisSeason(harvest, cases);
+        Map<String, Ros> ros = blend();
         // A SEASON TOTAL INCLUDES THE GAMES HE MISSES. The objective reads it that
         // way - it scales a man against historical full-season totals, missed
         // weeks and all - and every man this source does not touch keeps Sleeper's

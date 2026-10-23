@@ -194,6 +194,16 @@ left out under LEFT OUT AS TANKING, shows the ones past the line on Sleeper's
 projections only under PAST THE LINE, and the page marks those trades NO.
 -Pexclude="Jordan Love" keeps named men out of every trade.
 
+**The trade finder's objective (2026-10-23):** each week's best legal lineup through
+the fantasy playoffs, on that week's projection, with that week's best free agents
+(1 QB, 4 RB, 4 WR, 2 TE, 1 DEF) in every lineup's pool and no roster spot charged for
+them (`WeeklyLineupValue`; Justin: "assume best available replacements for each week
+are on roster ... with no roster space required"). It replaced the drawn-season
+objective, whose single wire level a position sat 11.5 below the best free back and
+16.4 below the best free receiver and so overvalued spare depth - on both sides of a
+trade. -Pobjective=drawn prices on the old one; the single-trade check prints both
+(rows 'weekly:sleeper' and 'weekly:ros' are what the short list is decided on).
+
 To ask about one man - "nothing where I get Chase and give Henry or Tuten?" - the
 targeted search prices EVERY package that answers it (one to three men a side), not
 just the board's top-eight packages, and says which rule each one breaks:

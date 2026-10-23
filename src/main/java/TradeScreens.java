@@ -1068,6 +1068,28 @@ public class TradeScreens {
             double hisGain = value.of(TradeMarket.swap(his, hisSends, mySend)) - value.of(his);
             out.append(String.format("  %-18s %+9.1f %+9.1f   %s%n", source, myGain, hisGain, cut == null ? "" : name(cut)));
         }
+        // THE TRADE FINDER'S OBJECTIVE since 2026-10-23 (WeeklyLineupValue): each week's best lineup, that week's
+        // best free agents in the pool for nothing - the rows TradeMarket's short list is decided on
+        for(String source : List.of("sleeper-remaining", "ros")){
+            Map<String, Double> points = ProjectionSources.resolve(source);
+            WeeklyLineupValue weekly = WeeklyLineupValue.forSource(configuration, source);
+            List<String> mySends = new ArrayList<>(mySend);
+            List<String> hisSends = new ArrayList<>(myReceive);
+            String cut = null;
+            if(mySend.size() > myReceive.size()){
+                cut = TradeMarket.worstOther(his, myReceive, points);
+                hisSends.add(cut);
+            }
+            if(myReceive.size() > mySend.size()){
+                mySends.add(TradeMarket.worstOther(mine, mySend, points));
+            }
+            double myGain = weekly.of(TradeMarket.swap(mine, mySends, myReceive)) - weekly.of(mine);
+            double hisGain = weekly.of(TradeMarket.swap(his, hisSends, mySend)) - weekly.of(his);
+            out.append(String.format("  %-18s %+9.1f %+9.1f   %s%n", "weekly:" + (source.equals("ros") ? "ros" : "sleeper"),
+                    myGain, hisGain, cut == null ? "" : name(cut)));
+        }
+        out.append(String.format("  (weekly rows: the trade finder's objective - each week's best lineup through the playoffs, that week's best%n"
+                + "  free agents in the pool for nothing; the rows above are the drawn-season objective it replaced)%n"));
         out.append(String.format("%n  %s's best lineup on sleeper-remaining (Sleeper's weekly projections over the games left):%n", with));
         List<String> after = new ArrayList<>(his);
         after.removeAll(myReceive);

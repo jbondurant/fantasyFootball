@@ -60,6 +60,10 @@ WHAT THE OBJECTIVE SAYS - 17 x the best legal lineup, the bench as insurance, 24
   sleeper                +75.1     -29.7   
   sleeper-remaining      +28.1      -8.4   
   ros                    +36.9     +13.4   
+  weekly:sleeper         +36.6     -31.3   
+  weekly:ros             +41.6     -33.2   
+  (weekly rows: the trade finder's objective - each week's best lineup through the playoffs, that week's best
+  free agents in the pool for nothing; the rows above are the drawn-season objective it replaced)
 
   Renteez's best lineup on sleeper-remaining (Sleeper's weekly projections over the games left):
   BEFORE                             AFTER                             
@@ -76,7 +80,7 @@ WHAT THE OBJECTIVE SAYS - 17 x the best legal lineup, the bench as insurance, 24
   starters 1209.5                    starters 1190.4                   
 
   TITLE ODDS (TitleOdds, 20000 seasons, the same draws before and after):
-    you     7.8%  +2.66pp (+-0.14)
+    you     7.7%  +2.63pp (+-0.14)
     Renteez   0.2%  -0.06pp (+-0.02)   he is out of it
 
   KEEPERS (2027) - your best two keepers' surplus over the picks they cost (TradeMarket's arithmetic):

@@ -286,7 +286,9 @@ tasks.register('run', JavaExec) {
      // TradeMarket: men kept out of every trade; how far the other side's season may fall on Sleeper's projections
      'exclude', 'tankFloor',
      // TradeMarket targeted search: the manager, the men he must send, the men you send at least one of
-     'with', 'mustGet', 'mustGive'].each { knob ->
+     'with', 'mustGet', 'mustGive',
+     // TradeMarket: 'drawn' prices on the old drawn-season objective instead of weekly lineups with the wire
+     'objective'].each { knob ->
         if (project.hasProperty(knob)) {
             systemProperty knob, project.property(knob)
         }

@@ -1065,10 +1065,14 @@ public class TradeMarket {
         byAlt.sort(Comparator.comparingDouble((String m) -> -scoreAlt.get(m)));
         out.append(drawn ? wireNote(configuration, (WeeklyStarterValue) value, points, ownerOf, nameOf, source)
                 : weeklyWireNote((WeeklyLineupValue) value, source));
-        out.append(String.format("HOW EVERY ROSTER SCORES - the season points its starters are expected to score: 17 x the best legal%n"
+        out.append(drawn
+                ? String.format("HOW EVERY ROSTER SCORES - the season points its starters are expected to score: 17 x the best legal%n"
                 + "lineup from whoever is healthy in a drawn week, the bench worth the weeks it covers, every slot floored at%n"
                 + "the waiver wire. On %s and on %s (the rest-of-season model moves on this season's results; Sleeper's%n"
-                + "season feed does not):%n", source, alt));
+                + "season feed does not):%n", source, alt)
+                : String.format("HOW EVERY ROSTER SCORES - the points its best lineup is projected to score in every week left (%s),%n"
+                + "each week's best free agents in the pool. On %s and on %s (the rest-of-season model moves on this season's%n"
+                + "results; Sleeper's projections move on news):%n", value.label(), source, alt));
         out.append(String.format("  %-4s %-16s %8s   %-4s %8s%n", "rank", "manager", source, "rank", alt));
         for(int i = 0; i < byOn.size(); i++){
             String m = byOn.get(i);
