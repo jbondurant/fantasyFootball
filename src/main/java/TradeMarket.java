@@ -841,6 +841,104 @@ public class TradeMarket {
         return p == null ? id : p.firstName + " " + p.lastName;
     }
 
+    /**
+     * THE TITLE LADDER: for each target rise in Justin's title odds and each
+     * rival, the trades that reach it while costing the rival the least of his
+     * season. Justin, 2026-10-24: "what are, for 1.0, 1.5, 2.0, 2.5, 3.0 % increase
+     * in my title odds, the top 4 trades per other member that lead to the least
+     * tanking for them".
+     *
+     * Every trade the board builds (one-for-one with every man, two- and three-
+     * man packages among each side's top -Ppool) is priced on the season both
+     * ways. Title odds are a 20,000-season simulation a trade, too dear for all
+     * fifty thousand, so a trade is simulated only if it gains Justin at least
+     * -PladderMinGain (5) points of season, far below what a one-point rise in
+     * title odds takes; then, per rival, from the trade that costs him least to
+     * the trade that costs him most, until every target has its trades or
+     * -PladderCap simulations are spent. "Least tanking" is his season change on
+     * Sleeper's projections, the pricing Justin's 20-point line is drawn on; the
+     * rest-of-season model and his own title odds are printed beside it. A trade
+     * that clears a higher target also counts for every lower one.
+     */
+    static String titleLadder(String me, List<Trade> all, Map<String, List<String>> rosters, Map<String, String> nameOf,
+                              java.util.function.ToDoubleFunction<List<String>> season, RosterValue altValue,
+                              Map<String, Double> scoreAlt, TradeScreens.Context screens, TitleOdds.Stakes stakes,
+                              double hisFloor, double hisFloorAlt, String source, String alt){
+        List<Double> targets = new ArrayList<>();
+        for(String t : System.getProperty("titleLadder").split(",")){
+            targets.add(Double.parseDouble(t.trim()));
+        }
+        targets.sort(Double::compare);
+        int perRival = Integer.getInteger("perRival", 4);
+        int cap = Integer.getInteger("ladderCap", 400);
+        double minGain = Double.parseDouble(System.getProperty("ladderMinGain", "5"));
+        List<String> mine = rosters.get(me);
+        double myBase = season.applyAsDouble(mine);
+        record Row(Trade trade, double you, double him, double[] title){}
+        StringBuilder out = new StringBuilder(String.format("THE TITLE LADDER - for each rise in your title odds (%s percentage points) and each rival, the %d%n"
+                        + "trades that reach it costing him the least of his season on %s (least tanking first). Title odds: TitleOdds,%n"
+                        + "%d seasons, the same draws before and after. A trade is simulated only if it gains you %.1f+ on %s; per rival at%n"
+                        + "most %d simulations, from the trade that costs him least. TANKING marks a loss past Justin's line (%.1f on %s,%n"
+                        + "%.1f on %s).%n",
+                targets.stream().map(t -> String.format("%.1f", t)).collect(java.util.stream.Collectors.joining(", ")), perRival,
+                source, TitleOdds.SIMS, minGain, source, cap, hisFloor, source, hisFloorAlt, alt));
+        Map<String, List<Trade>> byRival = new TreeMap<>();
+        for(Trade t : all){
+            byRival.computeIfAbsent(t.withManager(), k -> new ArrayList<>()).add(t);
+        }
+        for(Map.Entry<String, List<Trade>> e : byRival.entrySet()){
+            String rival = e.getKey();
+            List<String> his = rosters.get(rival);
+            double hisBase = season.applyAsDouble(his);
+            List<Row> candidates = new ArrayList<>();
+            for(Trade t : e.getValue()){
+                double you = season.applyAsDouble(swap(mine, t.give(), t.get())) - myBase;
+                if(you >= minGain){
+                    candidates.add(new Row(t, you, season.applyAsDouble(swap(his, t.hisOut(), t.give())) - hisBase, null));
+                }
+            }
+            candidates.sort(Comparator.comparingDouble((Row r) -> -r.him()));
+            Map<Double, List<Row>> found = new TreeMap<>();
+            targets.forEach(t -> found.put(t, new ArrayList<>()));
+            int simulated = 0;
+            for(Row r : candidates){
+                if(simulated >= cap || found.values().stream().allMatch(l -> l.size() >= perRival)){
+                    break;
+                }
+                TitleOdds.Delta[] d = stakes.swap(me, swap(mine, r.trade().give(), r.trade().get()), rival,
+                        swap(his, r.trade().hisOut(), r.trade().give()));
+                simulated++;
+                Row priced = new Row(r.trade(), r.you(), r.him(), new double[]{d[0].change(), d[0].se(), d[1].change()});
+                for(double t : targets){
+                    if(100 * d[0].change() >= t && found.get(t).size() < perRival){
+                        found.get(t).add(priced);
+                    }
+                }
+            }
+            out.append(String.format("%n=== %s (%s; title now %.1f%%) - %d trades gain you %.1f+, %d simulated%s%n", rival,
+                    stakes.state(rival), 100 * stakes.title(rival), candidates.size(), minGain, simulated,
+                    simulated >= cap ? " (cap reached: a target short of trades may have more past it)" : ""));
+            out.append(String.format("  %-6s %-40s %-40s %7s %8s %7s %8s %11s %8s  %s%n", "target", "YOU GIVE", "YOU GET", "you",
+                    "you:" + alt, "him", "him:" + alt, "your title", "his", "his view"));
+            for(double t : targets){
+                List<Row> rows = found.get(t);
+                if(rows.isEmpty()){
+                    out.append(String.format("  +%-5.1f none found%n", t));
+                }
+                for(Row r : rows){
+                    double[] other = onOther(r.trade(), rosters, me, altValue, scoreAlt);
+                    boolean tanking = !equitableSeason(r.him(), hisFloor, other[1], hisFloorAlt);
+                    out.append(String.format("  +%-5.1f %-40s %-40s %+7.1f %+8.1f %+7.1f %+8.1f %+6.1f+-%-3.1f %+7.1f  %s%s%n", t,
+                            label(r.trade().give(), nameOf), label(r.trade().get(), nameOf)
+                                    + (r.trade().hisCut().isEmpty() ? "" : " (he cuts " + label(r.trade().hisCut(), nameOf) + ")"),
+                            r.you(), other[0], r.him(), other[1], 100 * r.title()[0], 100 * r.title()[1], 100 * r.title()[2],
+                            screens.of(r.trade()).ratios(), tanking ? "  TANKING" : ""));
+                }
+            }
+        }
+        return out.toString();
+    }
+
     /** The lowest-projected man on a roster who is not part of the deal. */
     static String worstOther(List<String> roster, List<String> exclude, Map<String, Double> points){
         String worst = null;
@@ -1127,6 +1225,24 @@ public class TradeMarket {
             all.addAll(between(me, entry.getKey(), rosters.get(me), entry.getValue(), mySide, his, pool));
             all.addAll(unbalanced(me, entry.getKey(), rosters.get(me), entry.getValue(),
                     mySide, his, pool, points));
+        }
+        // THE TITLE LADDER (2026-10-24). Justin: "what are, for 1.0, 1.5, 2.0, 2.5, 3.0 % increase in my title
+        // odds, the top 4 trades per other member that lead to the least tanking for them". -PtitleLadder lists
+        // the targets; see titleLadder.
+        if(!System.getProperty("titleLadder", "").isBlank()){
+            if(!System.getProperty("exclude", "").isBlank()){
+                Set<String> barred = new java.util.HashSet<>(TradeScreens.idsNamed(System.getProperty("exclude")));
+                all.removeIf(t -> t.give().stream().anyMatch(barred::contains) || t.get().stream().anyMatch(barred::contains)
+                        || t.hisOut().stream().anyMatch(barred::contains));
+                out.append(String.format("Left out of the ladder: every trade moving %s (-Pexclude).%n%n", System.getProperty("exclude")));
+            }
+            out.append(titleLadder(me, all, rosters, nameOf, season, altValue, scoreAlt, screens, stakes,
+                    hisFloor, hisFloorAlt, source, alt));
+            System.out.print(out);
+            Path report = Path.of("data", "title-ladder-" + LocalDate.now() + ".txt");
+            Files.writeString(report, out.toString(), StandardCharsets.UTF_8);
+            System.out.println("written to " + report);
+            return;
         }
         List<Trade> mutuallyGood = mutual(all);
         java.util.function.ToDoubleFunction<Trade> seasonGain = trade ->

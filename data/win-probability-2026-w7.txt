@@ -1,0 +1,20 @@
+data: projections 2026-10-24, player metadata 2026-10-24
+WIN PROBABILITY  2026-10-24  week 7, justinb314 v BHier, 20000 weeks drawn
+Expected wins this week = P(beat BHier) + P(beat the league median). Each man is his projection plus a
+residual from the 200 nearest-projected player-weeks at his position, 2018-2025; men whose games have started
+score what they scored. Rivals as set in Sleeper. '-> in/out' is the change from the best lineup by projection.
+
+LINEUP                                              proj  E[wins]  vs best
+best by projection (as set)                        118.5    1.047   +0.000
+-> Cam Skattebo / Dalton Schultz                   116.1    1.011   -0.036 +-0.003
+-> Aaron Rodgers / Brock Purdy                     115.2    0.949   -0.098 +-0.005
+-> Cam Skattebo / T.J. Hockenson                   114.9    0.927   -0.120 +-0.004
+-> Cam Skattebo / Harold Fannin Jr.                113.8    0.925   -0.122 +-0.004
+-> Bhayshul Tuten / Dalton Schultz                 111.9    0.860   -0.187 +-0.003
+-> Jakobi Meyers / Dalton Schultz                  111.9    0.860   -0.187 +-0.003
+-> Khalil Shakir / Dalton Schultz                  111.9    0.860   -0.187 +-0.003
+
+Your lineup as set in Sleeper: E[wins] 1.047, +0.000 against the best by projection.
+
+The best by projection scores 118.5. A change is worth making when it beats it by more than twice its
+standard error; anything smaller is the draws, not the lineup.

@@ -288,7 +288,9 @@ tasks.register('run', JavaExec) {
      // TradeMarket targeted search: the manager, the men he must send, the men you send at least one of
      'with', 'mustGet', 'mustGive',
      // TradeMarket: 'drawn' prices on the old drawn-season objective instead of weekly lineups with the wire
-     'objective'].each { knob ->
+     'objective',
+     // TradeMarket title ladder: the title-odds rises, trades per rival, the simulations per rival, the season gain to simulate
+     'titleLadder', 'perRival', 'ladderCap', 'ladderMinGain'].each { knob ->
         if (project.hasProperty(knob)) {
             systemProperty knob, project.property(knob)
         }
