@@ -928,15 +928,32 @@ public class TradeMarket {
                 for(Row r : rows){
                     double[] other = onOther(r.trade(), rosters, me, altValue, scoreAlt);
                     boolean tanking = !equitableSeason(r.him(), hisFloor, other[1], hisFloorAlt);
-                    out.append(String.format("  +%-5.1f %-40s %-40s %+7.1f %+8.1f %+7.1f %+8.1f %+6.1f+-%-3.1f %+7.1f  %s%s%n", t,
+                    out.append(String.format("  +%-5.1f %-40s %-40s %+7.1f %+8.1f %+7.1f %+8.1f %+6.1f+-%-3.1f %+7.1f  %s%s%s%n", t,
                             label(r.trade().give(), nameOf), label(r.trade().get(), nameOf)
                                     + (r.trade().hisCut().isEmpty() ? "" : " (he cuts " + label(r.trade().hisCut(), nameOf) + ")"),
                             r.you(), other[0], r.him(), other[1], 100 * r.title()[0], 100 * r.title()[1], 100 * r.title()[2],
-                            screens.of(r.trade()).ratios(), tanking ? "  TANKING" : ""));
+                            screens.of(r.trade()).ratios(), tanking ? "  TANKING" : "", hurt(r.trade().get(), nameOf)));
                 }
             }
         }
         return out.toString();
+    }
+
+    /**
+     * The men a trade brings Justin who are hurt today - IR, Out, Doubtful, PUP or
+     * suspended. Sleeper projects such a man back, so a trade can lean on him the
+     * way the wire leaned on Terry McLaurin (2026-10-22) and a package on Travis
+     * Etienne Jr. (2026-10-23): the row says so instead of a reader finding out.
+     */
+    static String hurt(List<String> incoming, Map<String, String> nameOf){
+        List<String> out = new ArrayList<>();
+        for(String id : incoming){
+            String status = SleeperProjections.injuryStatusOf(id);
+            if(status != null && Set.of("IR", "Out", "Doubtful", "PUP", "Sus").contains(status)){
+                out.add(name(id, nameOf) + " " + status);
+            }
+        }
+        return out.isEmpty() ? "" : "  [hurt: " + String.join(", ", out) + "]";
     }
 
     /** The lowest-projected man on a roster who is not part of the deal. */

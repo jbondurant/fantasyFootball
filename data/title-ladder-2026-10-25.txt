@@ -1,0 +1,306 @@
+TRADE MARKET  2026-10-24  (justinb314; projections: sleeper-remaining)
+Every size-balanced swap with all eleven rivals, both rosters priced on the same objective: weekly lineups on sleeper-remaining, weeks 7-17 - each week's best lineup, that week's best free agents in the pool for nothing.
+Only trades BOTH sides gain from are listed: an offer the other manager loses on is an offer he declines.
+THE TWO SIDES ARE PRICED DIFFERENTLY, on purpose. YOUR value is the season PLUS the best two
+keeper surpluses on your roster (a surplus being what a man is worth beyond the pick you spend to
+keep him, measured at HIS OWN position). HIS is LOSS-AVERSE on keepers: he takes no credit for one
+he receives and feels every point of one he gives up, which is how people here actually behave.
+So asking for another manager's keeper is HARD - the ask is priced at what it costs him - and
+paying anybody IN keepers buys you nothing. -Pkeepers=false prices you the same way he is.
+
+THE WIRE THIS ASSUMES - each week's best free agents are in every lineup's pool, a pickup costing
+no roster spot (Justin, 2026-10-23: "let's do it with no roster space required"). On sleeper-remaining, points that week:
+  week   QB                       RB (best 4)              WR (best 4)              TE (best 2)              DEF                     
+  7      19.3                     6.4/5.9/5.8/4.6          8.0/7.5/6.9/5.7          7.8/6.5                  8.1                     
+  8      21.9                     5.8/5.2/5.0/4.7          5.8/5.3/5.1/5.1          6.9/6.3                  9.8                     
+  9      23.0                     5.1/4.7/4.6/4.6          6.2/5.8/5.0/4.9          8.1/6.7                  7.3                     
+  10     21.1                     6.0/5.5/5.4/5.0          6.4/5.6/5.2/5.2          8.0/6.2                  8.1                     
+
+HOW EVERY ROSTER SCORES - the points its best lineup is projected to score in every week left (weekly lineups on sleeper-remaining, weeks 7-17),
+each week's best free agents in the pool. On sleeper-remaining and on ros (the rest-of-season model moves on this season's
+results; Sleeper's projections move on news):
+  rank manager          sleeper-remaining   rank      ros
+  1    itsabust           1495.6   2      1388.3
+  2    JakeSK             1475.3   1      1400.0
+  3    d0ddi              1407.0   4      1321.5
+  4    JFMarino           1389.2   3      1325.4
+  5    patekxwater        1362.2   5      1300.0
+  6    jerem9604          1354.0   9      1259.3
+  7    Hamrliks           1349.4   6      1294.8
+  8    justinb314         1343.8   10     1216.4   <- you
+  9    KevinDA            1313.3   8      1264.2
+  10   tommyrads          1277.3   7      1268.6
+  11   BHier              1243.5   12     1162.5
+  12   Renteez            1239.4   11     1169.5
+
+THE SEASON EACH RIVAL IS IN (TitleOdds, 20000 seasons from week 7). 'weight' is what a point of season
+value is worth to him against the league average; a rival's gain below is his season gain times it, less any
+keeper he gives up, plus (1 - his playoff odds) of any keeper he receives.
+  manager          playoffs   title  weight  state
+  JakeSK              94.0%   23.9%    1.95  contender
+  itsabust            87.4%   21.9%    1.83  contender
+  JFMarino            89.6%   16.7%    1.81  contender
+  patekxwater         54.0%    8.1%    1.23  bubble
+  justinb314          61.0%    7.6%    1.26  contender   <- you
+  d0ddi               55.5%    6.7%    1.09  bubble
+  Hamrliks            61.6%    6.5%    0.96  contender
+  KevinDA             33.5%    3.4%    0.63  bubble
+  tommyrads           48.9%    3.3%    0.68  bubble
+  jerem9604           12.4%    1.7%    0.46  out of it
+  Renteez              1.2%    0.1%    0.05  out of it
+  BHier                0.9%    0.1%    0.05  out of it
+
+Left out of the ladder: every trade moving Travis Etienne Jr. (-Pexclude).
+
+THE TITLE LADDER - for each rise in your title odds (2.5, 3.0, 3.5, 4.0, 4.5 percentage points) and each rival, the 4
+trades that reach it costing him the least of his season on sleeper-remaining (least tanking first). Title odds: TitleOdds,
+20000 seasons, the same draws before and after. A trade is simulated only if it gains you 12.0+ on sleeper-remaining; per rival at
+most 800 simulations, from the trade that costs him least. TANKING marks a loss past Justin's line (20.0 on sleeper-remaining,
+6.8 on ros).
+
+=== BHier (out of it; title now 0.1%) - 1366 trades gain you 12.0+, 583 simulated
+  target YOU GIVE                                 YOU GET                                      you  you:ros     him  him:ros  your title      his  his view
+  +2.5   Derrick Henry + Jakobi Meyers            Bijan Robinson (he cuts Jayden Reed)       +38.7    +28.5   -24.4    -20.8   +2.8+-0.2    -0.0  79%/82%=81%  TANKING
+  +2.5   Derrick Henry + Jakobi Meyers            Bijan Robinson + Jayden Daniels            +38.7    +28.5   -25.5    -35.1   +2.8+-0.2    -0.0  78%/74%=75%  TANKING
+  +2.5   Malik Nabers + Bhayshul Tuten            Bijan Robinson (he cuts Jayden Reed)       +41.2    +33.2   -27.7    -25.5   +2.7+-0.2    -0.0  68%/73%=72%  TANKING
+  +2.5   Brock Purdy + Bhayshul Tuten + Jakobi Meyers Bijan Robinson + Bo Nix + Brenton Strange   +38.3    +52.5   -27.8    -58.5   +2.5+-0.2    -0.0  43%/70%=63%  TANKING
+  +3.0   Derrick Henry + T.J. Hockenson + Jakobi Meyers Bijan Robinson + Jayden Daniels + Brenton Strange   +46.7    +28.2   -34.0    -35.1   +3.5+-0.2    -0.0  79%/75%=76%  TANKING
+  +3.0   Derrick Henry + Jakobi Meyers            Bijan Robinson + Jordan Mason              +46.0    +39.9   -34.0    -35.9   +3.1+-0.2    -0.0  78%/66%=69%  TANKING
+  +3.0   Aaron Rodgers + Derrick Henry + Jakobi Meyers Bijan Robinson + Jayden Daniels + Jordan Mason   +46.0    +39.9   -35.1    -49.3   +3.1+-0.2    -0.0  71%/67%=68%  TANKING
+  +3.0   Malik Nabers + Bhayshul Tuten            Bijan Robinson + Jordan Mason              +47.7    +44.7   -36.5    -40.8   +3.0+-0.2    -0.0  68%/59%=61%  TANKING
+  +3.5   Derrick Henry + T.J. Hockenson + Jakobi Meyers Bijan Robinson + Jayden Daniels + Brenton Strange   +46.7    +28.2   -34.0    -35.1   +3.5+-0.2    -0.0  79%/75%=76%  TANKING
+  +3.5   Malik Nabers + Bhayshul Tuten + T.J. Hockenson Bijan Robinson + Jayden Daniels + Brenton Strange   +48.9    +32.9   -36.9    -39.7   +3.5+-0.2    -0.0  69%/68%=68%  TANKING
+  +3.5   Derrick Henry + Jakobi Meyers            Bijan Robinson + Brenton Strange           +48.9    +28.8   -38.5    -20.8   +3.8+-0.2    -0.0  89%/73%=77%  TANKING
+  +3.5   Derrick Henry + T.J. Hockenson + Jakobi Meyers Bijan Robinson + Bo Nix + Brenton Strange   +46.7    +28.2   -39.2    -20.8   +3.5+-0.2    -0.0  83%/75%=77%  TANKING
+  +4.0   Mike Evans + T.J. Hockenson              Bijan Robinson (he cuts Jayden Reed)       +57.1    +83.8   -44.3    -79.5   +4.1+-0.2    -0.0  30%/27%=28%  TANKING
+  +4.0   Derrick Henry + Jakobi Meyers            Bijan Robinson + David Montgomery          +57.6    +41.5   -45.1    -36.2   +4.1+-0.2    -0.0  65%/77%=73%  TANKING  [hurt: David Montgomery Out]
+  +4.0   Mike Evans + T.J. Hockenson              Bijan Robinson + Jayden Daniels            +57.1    +83.8   -45.4    -93.8   +4.1+-0.2    -0.0  30%/24%=26%  TANKING
+  +4.0   Aaron Rodgers + Derrick Henry + Jakobi Meyers Bijan Robinson + Jayden Daniels + David Montgomery   +57.6    +41.5   -46.2    -49.7   +4.1+-0.2    -0.0  60%/77%=72%  TANKING  [hurt: David Montgomery Out]
+  +4.5   Derrick Henry + T.J. Hockenson + Jakobi Meyers Bijan Robinson + Jayden Daniels + Travis Kelce   +63.7    +43.1   -50.5    -51.6   +4.7+-0.2    -0.0  71%/70%=70%  TANKING
+  +4.5   Malik Nabers + Jakobi Meyers             Bijan Robinson (he cuts Jayden Reed)       +67.7    +66.9   -53.3    -56.8   +5.0+-0.2    -0.0  51%/48%=49%  TANKING
+  +4.5   Malik Nabers + Bhayshul Tuten + T.J. Hockenson Bijan Robinson + Jayden Daniels + Travis Kelce   +66.1    +47.9   -53.4    -56.2   +4.6+-0.2    -0.0  62%/63%=63%  TANKING
+  +4.5   Derrick Henry + T.J. Hockenson + Jakobi Meyers Bijan Robinson + Brenton Strange + David Montgomery   +61.0    +41.3   -53.7    -36.1   +4.7+-0.2    -0.0  66%/77%=74%  TANKING  [hurt: David Montgomery Out]
+
+=== Hamrliks (contender; title now 6.5%) - 2064 trades gain you 12.0+, 800 simulated (cap reached: a target short of trades may have more past it)
+  target YOU GIVE                                 YOU GET                                      you  you:ros     him  him:ros  your title      his  his view
+  +2.5   Brock Purdy + T.J. Hockenson             Drake Maye + Ashton Jeanty                 +32.9    +61.8   -29.8    -59.4   +2.8+-0.2    -2.1  16%/61%=45%  TANKING
+  +2.5   Derrick Henry + Bhayshul Tuten + Jakobi Meyers Ashton Jeanty + Jaylen Warren + Tetairoa McMillan   +36.7    +46.1   -32.7    -44.9   +2.6+-0.1    -1.9  80%/92%=88%  TANKING
+  +2.5   Derrick Henry + Malik Nabers + Bhayshul Tuten Justin Jefferson + Ashton Jeanty + Jaylen Warren   +38.0    +23.5   -34.3    -21.9   +2.8+-0.2    -2.0  85%/100%=95%  TANKING
+  +2.5   Malik Nabers + Bhayshul Tuten + Jakobi Meyers Justin Jefferson + Jaylen Warren + Chris Godwin Jr.   +41.7    +47.3   -35.2    -45.3   +2.5+-0.1    -1.6  67%/82%=77%  TANKING
+  +3.0   Derrick Henry + T.J. Hockenson + Jakobi Meyers Ashton Jeanty + Jaylen Warren + Chris Godwin Jr.   +42.7    +40.9   -36.0    -39.9   +3.4+-0.2    -2.1  78%/85%=83%  TANKING
+  +3.0   Derrick Henry + T.J. Hockenson + Jakobi Meyers Ashton Jeanty + Jaylen Warren + RJ Harvey   +41.1    +40.8   -37.2    -47.1   +3.2+-0.2    -2.1  78%/81%=81%  TANKING
+  +3.0   Derrick Henry + Jakobi Meyers            Ashton Jeanty + Jaylen Warren              +40.2    +37.1   -38.6    -37.2   +3.4+-0.2    -2.4  87%/85%=86%  TANKING
+  +3.0   T.J. Hockenson + Jakobi Meyers           Jaylen Warren (he cuts Tyreek Hill)        +45.6    +55.4   -39.6    -52.9   +3.6+-0.2    -2.1  46%/47%=47%  TANKING
+  +3.5   T.J. Hockenson + Jakobi Meyers           Jaylen Warren (he cuts Tyreek Hill)        +45.6    +55.4   -39.6    -52.9   +3.6+-0.2    -2.1  46%/47%=47%  TANKING
+  +3.5   Brock Purdy + Bhayshul Tuten + Jakobi Meyers Drake Maye + Ashton Jeanty + Jaylen Warren   +45.3    +81.7   -43.0    -80.0   +3.5+-0.2    -2.6  37%/72%=61%  TANKING
+  +3.5   Aaron Rodgers + Derrick Henry + Jakobi Meyers Ashton Jeanty + Jaylen Warren + Chris Godwin Jr.   +45.4    +41.5   -43.1    -42.1   +3.7+-0.2    -2.6  78%/84%=82%  TANKING
+  +3.5   T.J. Hockenson + Jakobi Meyers           Chase Brown (he cuts Tyreek Hill)          +49.2    +48.7   -43.5    -46.9   +3.9+-0.2    -2.2  19%/74%=48%  TANKING
+  +4.0   Derrick Henry + T.J. Hockenson           Ashton Jeanty + Jaylen Warren              +46.6    +37.1   -44.3    -35.5   +4.2+-0.2    -2.7  83%/80%=81%  TANKING
+  +4.0   Rhamondre Stevenson                      Jaylen Warren                              +50.1    +40.5   -47.1    -39.2   +4.4+-0.2    -2.7  92%/36%=45%  TANKING
+  +4.0   Brock Purdy + Bhayshul Tuten + T.J. Hockenson Drake Maye + Ashton Jeanty + Jaylen Warren   +52.1    +81.8   -47.3    -78.2   +4.1+-0.2    -2.8  34%/68%=58%  TANKING
+  +4.0   Bhayshul Tuten + T.J. Hockenson + Jakobi Meyers Ashton Jeanty + Tetairoa McMillan + RJ Harvey   +53.7    +82.0   -47.8    -81.2   +4.0+-0.2    -2.4  32%/66%=54%  TANKING
+  +4.5   T.J. Hockenson + Jakobi Meyers           Ashton Jeanty (he cuts Tyreek Hill)        +52.8    +61.6   -48.5    -59.9   +5.0+-0.2    -2.8  19%/54%=41%  TANKING
+  +4.5   Derrick Henry + T.J. Hockenson + Jakobi Meyers Justin Jefferson + Ashton Jeanty + RJ Harvey   +54.2    +54.3   -48.8    -53.7   +4.6+-0.2    -2.7  54%/87%=75%  TANKING
+  +4.5   Harold Fannin Jr.                        Jaylen Warren                              +51.7    +49.9   -48.9    -47.4   +4.7+-0.2    -2.9  70%/25%=32%  TANKING
+
+=== JFMarino (contender; title now 16.7%) - 1966 trades gain you 12.0+, 491 simulated
+  target YOU GIVE                                 YOU GET                                      you  you:ros     him  him:ros  your title      his  his view
+  +2.5   Harold Fannin Jr.                        Davante Adams                              +18.5    +15.2   -16.8    -14.8   +2.8+-0.1    -3.8  63%/-=179%  TANKING  [hurt: Davante Adams IR]
+  +2.5   Brock Purdy + Malik Nabers + T.J. Hockenson Josh Allen + Matthew Stafford + Chris Olave   +22.7    +38.5   -20.4    -38.1   +2.6+-0.2    -3.1  49%/73%=66%  TANKING
+  +2.5   Josh Downs                               Davante Adams                              +22.4    +22.7   -21.1    -23.4   +3.2+-0.2    -4.2  52%/-=137%  TANKING  [hurt: Davante Adams IR]
+  +2.5   T.J. Hockenson                           Davante Adams                              +22.2    +22.0   -21.3    -22.1   +2.9+-0.2    -3.8  19%/-=108%  TANKING  [hurt: Davante Adams IR]
+  +3.0   Josh Downs                               Davante Adams                              +22.4    +22.7   -21.1    -23.4   +3.2+-0.2    -4.2  52%/-=137%  TANKING  [hurt: Davante Adams IR]
+  +3.0   Brock Purdy + Malik Nabers               Josh Allen + Chris Olave                   +27.8    +38.2   -27.6    -39.5   +3.1+-0.2    -3.8  52%/72%=66%  TANKING
+  +3.0   Brock Purdy + Aaron Rodgers + Malik Nabers Josh Allen + Matthew Stafford + Chris Olave   +27.6    +39.5   -27.6    -39.5   +3.1+-0.2    -3.8  49%/72%=65%  TANKING
+  +3.0   Khalil Shakir                            Davante Adams                              +25.7    +22.9   -27.7    -23.7   +3.4+-0.2    -4.6  29%/-=114%  TANKING  [hurt: Davante Adams IR]
+  +3.5   Brock Purdy + Bhayshul Tuten + T.J. Hockenson Josh Allen + Matthew Stafford + CeeDee Lamb   +32.9    +55.7   -34.8    -55.9   +4.0+-0.2    -4.9  27%/70%=55%  TANKING
+  +3.5   Brock Purdy + Bhayshul Tuten + T.J. Hockenson Josh Allen + Matthew Stafford + Chuba Hubbard   +38.2    +55.7   -35.9    -56.5   +3.6+-0.2    -3.9  44%/68%=62%  TANKING
+  +3.5   Brock Purdy + Bhayshul Tuten + Jakobi Meyers Josh Allen + CeeDee Lamb + Aaron Jones Sr.   +37.5    +86.8   -35.9    -89.7   +3.6+-0.2    -4.4  30%/62%=52%  TANKING
+  +3.5   Brock Purdy + Aaron Rodgers + Bhayshul Tuten Josh Allen + Chris Olave + Aaron Jones Sr.   +34.4    +73.0   -38.1    -78.4   +3.7+-0.2    -4.9  35%/64%=56%  TANKING
+  +4.0   Brock Purdy + Bhayshul Tuten + T.J. Hockenson Josh Allen + Matthew Stafford + CeeDee Lamb   +32.9    +55.7   -34.8    -55.9   +4.0+-0.2    -4.9  27%/70%=55%  TANKING
+  +4.0   Brock Purdy + Derrick Henry + Jakobi Meyers Josh Allen + Chris Olave + Trey McBride    +31.2    +33.0   -38.2    -38.8   +4.1+-0.2    -5.2  61%/90%=81%  TANKING
+  +4.0   Brock Purdy + Malik Nabers               Josh Allen + CeeDee Lamb                   +38.7    +52.3   -40.1    -53.8   +4.0+-0.2    -4.8  40%/63%=55%  TANKING
+  +4.0   Brock Purdy + Aaron Rodgers + Malik Nabers Josh Allen + Matthew Stafford + CeeDee Lamb   +38.4    +53.6   -40.1    -53.8   +4.0+-0.2    -4.8  39%/64%=55%  TANKING
+  +4.5   Brock Purdy + Derrick Henry + T.J. Hockenson Josh Allen + Chris Olave + Trey McBride    +36.0    +33.3   -40.8    -37.1   +4.6+-0.2    -5.5  59%/86%=78%  TANKING
+  +4.5   Brock Purdy + T.J. Hockenson + Jakobi Meyers Josh Allen + Matthew Stafford + Trey McBride   +45.1    +62.7   -42.6    -63.2   +5.0+-0.2    -5.7  20%/62%=47%  TANKING
+  +4.5   Brock Purdy + T.J. Hockenson + Jakobi Meyers Josh Allen + Trey McBride + Malik Washington   +47.5    +61.7   -47.3    -63.6   +5.2+-0.2    -5.8  22%/62%=49%  TANKING
+  +4.5   Brock Purdy + Mike Evans + Jakobi Meyers Josh Allen + Chris Olave + Trey McBride    +43.2    +90.3   -49.9    -96.3   +4.5+-0.2    -6.2  30%/50%=44%  TANKING
+
+=== JakeSK (contender; title now 23.9%) - 2550 trades gain you 12.0+, 586 simulated
+  target YOU GIVE                                 YOU GET                                      you  you:ros     him  him:ros  your title      his  his view
+  +2.5   Minnesota Vikings                        Isaiah Likely                              +23.8    +24.8   -22.1    -21.7   +2.6+-0.1    -3.8  0%/0%=0%  TANKING
+  +2.5   Jordan Addison                           Isaiah Likely                              +24.0    +22.5   -22.4    -22.6   +2.6+-0.1    -3.9  103%/43%=54%  TANKING
+  +2.5   Khalil Shakir                            Isaiah Likely                              +24.3    +25.7   -22.5    -22.6   +2.6+-0.1    -3.9  52%/32%=36%  TANKING
+  +2.5   Aaron Rodgers                            Isaiah Likely                              +24.7    +25.7   -23.0    -22.6   +2.7+-0.1    -3.9  33%/31%=31%  TANKING
+  +3.0   T.J. Hockenson + Jakobi Meyers           Isaiah Likely + Jaylen Waddle              +36.1    +44.8   -32.3    -39.8   +3.1+-0.2    -4.3  27%/50%=43%  TANKING
+  +3.0   Aaron Rodgers + Bhayshul Tuten           Jalen Coker + Isaiah Likely                +31.5    +24.7   -33.0    -20.3   +3.0+-0.1    -4.7  129%/70%=77%  TANKING
+  +3.0   Bhayshul Tuten + Cam Skattebo            Jalen Coker + Isaiah Likely                +31.5    +20.9   -33.0    -20.3   +3.0+-0.1    -4.7  279%/69%=94%  TANKING
+  +3.0   Derrick Henry + Jakobi Meyers            Puka Nacua + Isaiah Likely                 +35.9    +30.4   -35.0    -28.8   +3.1+-0.2    -4.1  83%/74%=76%  TANKING
+  +3.5   Aaron Rodgers + Jakobi Meyers            Isaiah Likely + Jaylen Waddle              +38.9    +45.2   -35.9    -40.5   +3.6+-0.2    -4.8  27%/48%=42%  TANKING
+  +3.5   Jakobi Meyers + Cam Skattebo             Isaiah Likely + Jaylen Waddle              +38.9    +43.4   -35.9    -40.4   +3.6+-0.2    -4.8  98%/46%=62%  TANKING
+  +3.5   Rhamondre Stevenson                      Jalen Coker                                +41.0    +19.4   -38.8    -19.1   +3.8+-0.2    -5.2  271%/46%=64%  TANKING
+  +3.5   Derrick Henry + T.J. Hockenson           Puka Nacua + Isaiah Likely                 +41.1    +30.7   -40.2    -28.2   +3.8+-0.2    -5.0  79%/70%=72%  TANKING
+  +4.0   T.J. Hockenson + Jakobi Meyers           Carnell Tate + Isaiah Likely               +44.4    +41.3   -40.7    -36.1   +4.2+-0.2    -5.9  40%/51%=49%  TANKING
+  +4.0   Aaron Rodgers + T.J. Hockenson           Isaiah Likely + Jaylen Waddle              +42.0    +45.3   -42.8    -40.6   +4.0+-0.2    -5.8  20%/39%=33%  TANKING
+  +4.0   T.J. Hockenson + Cam Skattebo            Isaiah Likely + Jaylen Waddle              +42.0    +43.6   -42.8    -39.8   +4.0+-0.2    -5.8  90%/37%=53%  TANKING
+  +4.0   Aaron Rodgers + T.J. Hockenson + Jakobi Meyers C.J. Stroud + Carnell Tate + Isaiah Likely   +44.4    +41.3   -43.4    -36.1   +4.2+-0.2    -6.0  48%/58%=56%  TANKING
+  +4.5   Bhayshul Tuten + T.J. Hockenson + Jakobi Meyers Jalen Coker + Carnell Tate + Isaiah Likely   +51.0    +39.6   -50.4    -34.2   +4.7+-0.2    -6.4  91%/73%=76%  TANKING
+  +4.5   Aaron Rodgers + T.J. Hockenson           Carnell Tate + Isaiah Likely               +50.0    +41.8   -51.1    -36.9   +4.9+-0.2    -7.2  30%/40%=38%  TANKING
+  +4.5   T.J. Hockenson + Cam Skattebo            Carnell Tate + Isaiah Likely               +50.0    +40.2   -51.1    -36.1   +4.9+-0.2    -7.2  133%/38%=60%  TANKING
+  +4.5   Mike Evans + T.J. Hockenson              Puka Nacua + Isaiah Likely                 +55.2    +88.4   -52.2    -84.8   +4.7+-0.2    -6.0  32%/24%=26%  TANKING
+
+=== KevinDA (bubble; title now 3.4%) - 1760 trades gain you 12.0+, 629 simulated
+  target YOU GIVE                                 YOU GET                                      you  you:ros     him  him:ros  your title      his  his view
+  +2.5   Aaron Rodgers + Jakobi Meyers            Garrett Wilson (he cuts De'Zhaun Stribling)   +38.5    +47.8   -36.7    -47.6   +2.6+-0.2    -1.2  28%/55%=47%  TANKING
+  +2.5   Rhamondre Stevenson                      Garrett Wilson                             +37.1    +31.7   -37.3    -30.7   +2.6+-0.2    -1.3  66%/43%=49%  TANKING
+  +2.5   Aaron Rodgers + Jakobi Meyers            Kyler Murray + Garrett Wilson              +38.5    +47.8   -37.5    -47.6   +2.6+-0.2    -1.3  32%/53%=47%  TANKING
+  +2.5   Jakobi Meyers                            Garrett Wilson                             +38.5    +47.8   -38.3    -47.8   +2.6+-0.2    -1.2  25%/34%=32%  TANKING
+  +3.0   Brock Purdy + Derrick Henry + Jakobi Meyers Tyler Shough + Christian McCaffrey + Christian Watson   +40.6    +51.5   -40.9    -52.7   +3.3+-0.2    -1.4  78%/75%=76%  TANKING
+  +3.0   Brock Purdy + Malik Nabers + Bhayshul Tuten Tyler Shough + Christian McCaffrey + Christian Watson   +43.8    +57.2   -41.7    -57.7   +3.2+-0.2    -1.4  69%/69%=69%  TANKING
+  +3.0   Aaron Rodgers + T.J. Hockenson           Garrett Wilson (he cuts De'Zhaun Stribling)   +42.7    +47.5   -43.8    -48.7   +3.2+-0.2    -1.5  21%/45%=37%  TANKING
+  +3.0   Aaron Rodgers + T.J. Hockenson           Kyler Murray + Garrett Wilson              +42.7    +47.5   -44.6    -48.7   +3.2+-0.2    -1.5  24%/43%=37%  TANKING
+  +3.5   Brock Purdy + Derrick Henry + T.J. Hockenson Tyler Shough + Christian McCaffrey + Christian Watson   +44.6    +51.3   -48.0    -53.8   +4.0+-0.2    -1.6  75%/72%=73%  TANKING
+  +3.5   Bhayshul Tuten + T.J. Hockenson + Jakobi Meyers Kyler Murray + Christian Watson + Breece Hall   +49.8    +66.6   -48.4    -68.6   +3.7+-0.2    -1.4  53%/62%=60%  TANKING
+  +3.5   T.J. Hockenson + Jakobi Meyers           Christian Watson (he cuts De'Zhaun Stribling)   +52.4    +60.8   -50.2    -61.7   +4.5+-0.2    -1.7  35%/38%=38%  TANKING
+  +3.5   Derrick Henry + Bhayshul Tuten + T.J. Hockenson Kyler Murray + Christian McCaffrey + Christian Watson   +49.6    +34.4   -50.4    -35.5   +3.8+-0.2    -1.5  86%/80%=82%  TANKING
+  +4.0   T.J. Hockenson + Jakobi Meyers           Christian Watson (he cuts De'Zhaun Stribling)   +52.4    +60.8   -50.2    -61.7   +4.5+-0.2    -1.7  35%/38%=38%  TANKING
+  +4.0   T.J. Hockenson + Jakobi Meyers           Kyler Murray + Christian Watson            +52.4    +60.8   -51.1    -61.7   +4.5+-0.2    -1.7  42%/37%=38%  TANKING
+  +4.0   T.J. Hockenson + Jakobi Meyers           Tyler Shough + Christian Watson            +52.4    +60.8   -53.2    -64.5   +4.5+-0.2    -1.9  46%/34%=35%  TANKING
+  +4.0   Aaron Rodgers + T.J. Hockenson + Jakobi Meyers Kyler Murray + Tyler Shough + Christian Watson   +52.4    +60.8   -53.2    -62.5   +4.5+-0.2    -1.9  49%/45%=46%  TANKING
+  +4.5   Brock Purdy + T.J. Hockenson + Jakobi Meyers Tyler Shough + Christian Watson + Garrett Wilson   +52.0    +86.2   -53.9    -89.8   +4.5+-0.2    -1.9  37%/49%=47%  TANKING
+  +4.5   Aaron Rodgers + Jakobi Meyers            Christian Watson (he cuts De'Zhaun Stribling)   +57.5    +61.7   -55.6    -62.1   +5.0+-0.2    -1.9  35%/37%=36%  TANKING
+  +4.5   Rhamondre Stevenson                      Christian Watson                           +56.0    +45.8   -56.2    -44.8   +5.2+-0.2    -1.9  91%/29%=37%  TANKING
+  +4.5   Aaron Rodgers + Jakobi Meyers            Kyler Murray + Christian Watson            +57.5    +61.7   -56.4    -62.1   +5.0+-0.2    -1.9  42%/36%=37%  TANKING
+
+=== Renteez (out of it; title now 0.1%) - 964 trades gain you 12.0+, 398 simulated
+  target YOU GIVE                                 YOU GET                                      you  you:ros     him  him:ros  your title      his  his view
+  +2.5   Brock Purdy + Bhayshul Tuten + T.J. Hockenson Lamar Jackson + Jordan Love + Javonte Williams   +31.8    +31.9   -18.3    -26.2   +2.7+-0.2    -0.0  46%/81%=72%  TANKING  [hurt: Lamar Jackson Out]
+  +2.5   Brock Purdy + Bhayshul Tuten + T.J. Hockenson Lamar Jackson + Javonte Williams + Mike Gesicki   +29.1    +31.7   -18.8    -27.0   +2.7+-0.2    -0.0  46%/80%=71%  TANKING  [hurt: Lamar Jackson Out]
+  +2.5   Bhayshul Tuten + Jakobi Meyers           Javonte Williams (he cuts Will Shipley)    +40.4    +35.0   -24.7    -28.4   +2.9+-0.2    -0.0  72%/88%=84%  TANKING
+  +2.5   Bhayshul Tuten + Jakobi Meyers           Javonte Williams + Mike Gesicki            +40.4    +35.0   -26.0    -29.3   +2.9+-0.2    -0.0  72%/68%=69%  TANKING
+  +3.0   Bhayshul Tuten + T.J. Hockenson + Jakobi Meyers Javonte Williams + Dalton Kincaid + Mike Gesicki   +41.8    +37.8   -26.3    -33.3   +3.0+-0.2    -0.0  61%/69%=68%  TANKING
+  +3.0   Bhayshul Tuten + T.J. Hockenson + Jakobi Meyers Jordan Love + Javonte Williams + Dalton Kincaid   +41.8    +37.8   -29.7    -33.2   +3.0+-0.2    -0.0  61%/70%=68%  TANKING
+  +3.0   Bhayshul Tuten + T.J. Hockenson          Javonte Williams (he cuts Will Shipley)    +46.6    +35.1   -33.1    -29.5   +3.6+-0.2    -0.0  64%/81%=77%  TANKING
+  +3.0   Bhayshul Tuten + T.J. Hockenson          Javonte Williams + Mike Gesicki            +46.9    +35.6   -33.5    -30.2   +3.6+-0.2    -0.0  64%/63%=63%  TANKING
+  +3.5   Bhayshul Tuten + T.J. Hockenson          Javonte Williams (he cuts Will Shipley)    +46.6    +35.1   -33.1    -29.5   +3.6+-0.2    -0.0  64%/81%=77%  TANKING
+  +3.5   Bhayshul Tuten + T.J. Hockenson          Javonte Williams + Mike Gesicki            +46.9    +35.6   -33.5    -30.2   +3.6+-0.2    -0.0  64%/63%=63%  TANKING
+  +3.5   Aaron Rodgers + Bhayshul Tuten + T.J. Hockenson Jordan Love + Javonte Williams + Mike Gesicki   +46.9    +35.6   -36.6    -31.0   +3.6+-0.2    -0.0  68%/61%=62%  TANKING
+  +3.5   Bhayshul Tuten + T.J. Hockenson          Jordan Love + Javonte Williams             +46.6    +35.1   -37.8    -30.2   +3.6+-0.2    -0.0  64%/63%=64%  TANKING
+  +4.0   Bhayshul Tuten + T.J. Hockenson + Jakobi Meyers Javonte Williams + Ladd McConkey + Mike Gesicki   +56.0    +56.0   -42.6    -51.4   +4.4+-0.2    -0.1  44%/68%=61%  TANKING  [hurt: Ladd McConkey Out]
+  +4.0   Bhayshul Tuten + T.J. Hockenson + Jakobi Meyers Jordan Love + Javonte Williams + Ladd McConkey   +55.7    +55.5   -46.9    -51.4   +4.4+-0.2    -0.1  44%/68%=62%  TANKING  [hurt: Ladd McConkey Out]
+  +4.0   Bhayshul Tuten                           Javonte Williams                           +51.8    +36.0   -50.4    -36.6   +4.1+-0.2    -0.1  60%/64%=63%  TANKING
+  +4.0   Aaron Rodgers + Bhayshul Tuten           Javonte Williams (he cuts Will Shipley)    +51.8    +36.0   -50.4    -36.6   +4.1+-0.2    -0.1  64%/79%=76%  TANKING
+  +4.5   T.J. Hockenson + Jakobi Meyers           Ja'Marr Chase (he cuts Will Shipley)       +65.4    +75.0   -53.7    -70.4   +4.9+-0.2    -0.1  16%/49%=35%  TANKING
+  +4.5   T.J. Hockenson + Jakobi Meyers           Ja'Marr Chase + Mike Gesicki               +65.7    +75.5   -54.2    -71.2   +4.9+-0.2    -0.1  16%/37%=29%  TANKING
+  +4.5   Brock Purdy + Bhayshul Tuten + T.J. Hockenson Lamar Jackson + Javonte Williams + Ladd McConkey   +47.2    +52.0   -56.8    -56.3   +4.5+-0.2    -0.1  33%/82%=65%  TANKING  [hurt: Lamar Jackson Out, Ladd McConkey Out]
+  +4.5   Aaron Rodgers + T.J. Hockenson + Jakobi Meyers Jordan Love + Ja'Marr Chase + Mike Gesicki   +65.7    +75.5   -57.3    -72.0   +4.9+-0.2    -0.1  20%/40%=34%  TANKING
+
+=== d0ddi (bubble; title now 6.7%) - 2565 trades gain you 12.0+, 800 simulated (cap reached: a target short of trades may have more past it)
+  target YOU GIVE                                 YOU GET                                      you  you:ros     him  him:ros  your title      his  his view
+  +2.5   Aaron Rodgers + Bhayshul Tuten           Zay Flowers (he cuts Brian Thomas Jr.)     +33.1    +16.4   -21.1    -10.7   +2.7+-0.2    -1.3  54%/97%=83%  TANKING
+  +2.5   Derrick Henry + T.J. Hockenson + Jakobi Meyers Zay Flowers + Sam LaPorta + Luther Burden III   +31.5    +17.6   -21.2    -11.1   +2.5+-0.1    -1.1  94%/92%=93%  TANKING
+  +2.5   Bhayshul Tuten                           Zay Flowers                                +33.1    +16.4   -22.8    -11.8   +2.7+-0.2    -1.3  65%/84%=79%  TANKING
+  +2.5   Aaron Rodgers + Derrick Henry + Jakobi Meyers Zay Flowers + Sam LaPorta + Luther Burden III   +33.6    +17.7   -25.0    -10.0   +2.8+-0.2    -1.6  94%/91%=92%  TANKING
+  +3.0   Aaron Rodgers + Bhayshul Tuten           Amon-Ra St. Brown (he cuts Brian Thomas Jr.)   +41.9    +47.9   -29.1    -41.7   +3.1+-0.2    -1.5  32%/71%=57%  TANKING
+  +3.0   Bhayshul Tuten                           Amon-Ra St. Brown                          +41.9    +47.9   -30.8    -42.8   +3.1+-0.2    -1.5  33%/60%=51%  TANKING
+  +3.0   Bhayshul Tuten + Jakobi Meyers           Zay Flowers + Stefon Diggs                 +41.8    +28.1   -31.3    -20.5   +3.1+-0.2    -1.6  63%/73%=71%  TANKING
+  +3.0   Aaron Rodgers + Derrick Henry + T.J. Hockenson Zay Flowers + Sam LaPorta + Luther Burden III   +36.4    +17.8   -32.2    -10.0   +3.2+-0.2    -2.1  90%/87%=88%  TANKING
+  +3.5   Bhayshul Tuten + Jakobi Meyers           Zay Flowers + Luther Burden III            +46.3    +36.1   -35.5    -28.5   +4.0+-0.2    -2.0  53%/79%=72%  TANKING
+  +3.5   Brock Purdy + T.J. Hockenson + Jakobi Meyers Dak Prescott + Zay Flowers + Luther Burden III   +39.4    +54.9   -35.9    -46.3   +3.6+-0.2    -2.3  29%/76%=62%  TANKING
+  +3.5   Bhayshul Tuten + Jakobi Meyers           Zay Flowers + Sam LaPorta                  +47.8    +46.0   -37.2    -38.7   +3.6+-0.2    -1.9  53%/68%=65%  TANKING
+  +3.5   Brock Purdy + Aaron Rodgers + Jakobi Meyers Dak Prescott + Zay Flowers + Luther Burden III   +41.7    +54.5   -37.9    -46.3   +3.9+-0.2    -2.4  29%/75%=61%  TANKING
+  +4.0   Bhayshul Tuten + Jakobi Meyers           Zay Flowers + Luther Burden III            +46.3    +36.1   -35.5    -28.5   +4.0+-0.2    -2.0  53%/79%=72%  TANKING
+  +4.0   Aaron Rodgers + Bhayshul Tuten + Jakobi Meyers Dak Prescott + Zay Flowers + Luther Burden III   +50.0    +36.1   -39.5    -33.1   +4.2+-0.2    -2.4  48%/84%=73%  TANKING
+  +4.5   none found
+
+=== itsabust (contender; title now 21.9%) - 2770 trades gain you 12.0+, 350 simulated
+  target YOU GIVE                                 YOU GET                                      you  you:ros     him  him:ros  your title      his  his view
+  +2.5   Brock Purdy + T.J. Hockenson + Jakobi Meyers Trevor Lawrence + Bryce Young + A.J. Brown   +14.7    +25.0   -14.3     -8.4   +2.5+-0.1    -4.2  28%/79%=63%  TANKING
+  +2.5   Brock Purdy + Jakobi Meyers              Trevor Lawrence + A.J. Brown               +19.1    +24.9   -17.5     -8.9   +2.9+-0.1    -4.6  24%/97%=68%  TANKING
+  +2.5   Brock Purdy + Aaron Rodgers + Jakobi Meyers Trevor Lawrence + Bryce Young + A.J. Brown   +19.9    +25.9   -17.5     -8.9   +2.9+-0.1    -4.6  28%/78%=62%  TANKING
+  +2.5   Brock Purdy + Aaron Rodgers + Derrick Henry Trevor Lawrence + Drake London + Ollie Gordon II   +21.3    +13.3   -18.3     +4.9   +2.7+-0.2    -3.8  115%/107%=109%
+  +3.0   Brock Purdy + T.J. Hockenson             Trevor Lawrence + A.J. Brown               +23.8    +24.7   -19.6     -9.3   +3.6+-0.2    -4.7  19%/88%=60%  TANKING
+  +3.0   Brock Purdy + Aaron Rodgers + T.J. Hockenson Trevor Lawrence + Bryce Young + A.J. Brown   +24.5    +25.8   -19.6     -9.3   +3.6+-0.2    -4.7  24%/72%=57%  TANKING
+  +3.0   Brock Purdy + Malik Nabers + T.J. Hockenson Trevor Lawrence + Ollie Gordon II + A.J. Brown   +29.8    +37.0   -22.7    -20.4   +3.1+-0.2    -4.1  69%/92%=85%  TANKING
+  +3.0   Brock Purdy + Aaron Rodgers              Trevor Lawrence + A.J. Brown               +25.5    +25.4   -23.2     -9.8   +4.0+-0.2    -5.3  19%/85%=59%  TANKING
+  +3.5   Brock Purdy + T.J. Hockenson             Trevor Lawrence + A.J. Brown               +23.8    +24.7   -19.6     -9.3   +3.6+-0.2    -4.7  19%/88%=60%  TANKING
+  +3.5   Brock Purdy + Aaron Rodgers + T.J. Hockenson Trevor Lawrence + Bryce Young + A.J. Brown   +24.5    +25.8   -19.6     -9.3   +3.6+-0.2    -4.7  24%/72%=57%  TANKING
+  +3.5   Brock Purdy + Aaron Rodgers              Trevor Lawrence + A.J. Brown               +25.5    +25.4   -23.2     -9.8   +4.0+-0.2    -5.3  19%/85%=59%  TANKING
+  +3.5   Brock Purdy + Cam Skattebo               Trevor Lawrence + A.J. Brown               +27.1    +23.4   -23.2     -9.8   +4.0+-0.2    -5.3  64%/84%=76%  TANKING
+  +4.0   Brock Purdy + Aaron Rodgers              Trevor Lawrence + A.J. Brown               +25.5    +25.4   -23.2     -9.8   +4.0+-0.2    -5.3  19%/85%=59%  TANKING
+  +4.0   Brock Purdy + Cam Skattebo               Trevor Lawrence + A.J. Brown               +27.1    +23.4   -23.2     -9.8   +4.0+-0.2    -5.3  64%/84%=76%  TANKING
+  +4.0   Brock Purdy + Aaron Rodgers + Bhayshul Tuten Trevor Lawrence + Ollie Gordon II + A.J. Brown   +34.5    +41.6   -30.6    -25.4   +4.2+-0.2    -5.6  48%/98%=83%  TANKING
+  +4.0   Brock Purdy + Malik Nabers + T.J. Hockenson Trevor Lawrence + Drake London + A.J. Brown   +37.1    +36.7   -33.1    -21.2   +4.4+-0.2    -5.7  44%/84%=69%  TANKING
+  +4.5   Brock Purdy + T.J. Hockenson             Trevor Lawrence + Ollie Gordon II          +40.2    +42.1   -34.8    -27.0   +4.8+-0.2    -6.1  72%/70%=71%  TANKING
+  +4.5   Brock Purdy + Aaron Rodgers + T.J. Hockenson Trevor Lawrence + Bryce Young + Ollie Gordon II   +41.0    +43.1   -34.8    -27.0   +4.8+-0.2    -6.1  77%/62%=64%  TANKING
+  +4.5   Brock Purdy + Aaron Rodgers + Malik Nabers Trevor Lawrence + Drake London + A.J. Brown   +38.5    +37.3   -36.7    -21.7   +4.7+-0.2    -6.2  44%/83%=68%  TANKING
+  +4.5   Brock Purdy + T.J. Hockenson + Jakobi Meyers Trevor Lawrence + Bryce Young + Drake London   +38.7    +42.4   -37.7    -25.2   +4.8+-0.2    -7.1  32%/62%=55%  TANKING
+
+=== jerem9604 (out of it; title now 1.7%) - 2084 trades gain you 12.0+, 721 simulated
+  target YOU GIVE                                 YOU GET                                      you  you:ros     him  him:ros  your title      his  his view
+  +2.5   Aaron Rodgers + Jakobi Meyers            DJ Moore (he cuts Tank Bigsby)             +30.6    +15.5   -29.0    -16.3   +2.6+-0.1    -0.6  35%/89%=69%  TANKING  [hurt: DJ Moore Out]
+  +2.5   Jakobi Meyers                            DJ Moore                                   +30.6    +15.5   -30.6    -16.3   +2.6+-0.1    -0.6  28%/55%=46%  TANKING  [hurt: DJ Moore Out]
+  +2.5   Derrick Henry + Bhayshul Tuten           Jonathan Taylor + Josh Jacobs              +32.0    +16.8   -32.7    -16.3   +2.7+-0.2    -0.7  88%/129%=115%  TANKING
+  +2.5   Brock Purdy + Mike Evans + Jakobi Meyers Patrick Mahomes + Jonathan Taylor + DJ Moore   +31.6    +60.4   -33.2    -62.5   +2.5+-0.2    -0.6  35%/61%=53%  TANKING  [hurt: DJ Moore Out]
+  +3.0   T.J. Hockenson + Jakobi Meyers           Brock Bowers (he cuts Tank Bigsby)         +42.0    +52.7   -38.0    -51.8   +3.6+-0.2    -0.7  25%/43%=38%  TANKING
+  +3.0   Harold Fannin Jr.                        Josh Jacobs                                +36.3    +41.7   -38.1    -42.9   +3.1+-0.2    -0.7  60%/84%=74%  TANKING
+  +3.0   Josh Downs                               DJ Moore                                   +36.8    +15.7   -38.6    -19.5   +3.2+-0.2    -0.8  45%/36%=39%  TANKING  [hurt: DJ Moore Out]
+  +3.0   Brock Purdy + Bhayshul Tuten + Jakobi Meyers Patrick Mahomes + Jonathan Taylor + George Pickens   +40.4    +62.4   -38.7    -62.3   +3.1+-0.2    -0.8  32%/87%=67%  TANKING
+  +3.5   T.J. Hockenson + Jakobi Meyers           Brock Bowers (he cuts Tank Bigsby)         +42.0    +52.7   -38.0    -51.8   +3.6+-0.2    -0.7  25%/43%=38%  TANKING
+  +3.5   Brock Purdy + Derrick Henry + T.J. Hockenson Patrick Mahomes + Jonathan Taylor + Brock Bowers   +45.0    +43.4   -44.7    -45.3   +4.2+-0.2    -0.9  60%/82%=76%  TANKING
+  +3.5   Derrick Henry + Bhayshul Tuten + Jakobi Meyers Jonathan Taylor + Josh Jacobs + George Pickens   +44.7    +44.3   -44.7    -44.4   +3.6+-0.2    -0.8  68%/116%=98%  TANKING
+  +3.5   Brock Purdy + T.J. Hockenson + Jakobi Meyers Patrick Mahomes + Brock Bowers + DJ Moore   +45.7    +52.3   -45.4    -55.9   +4.2+-0.2    -0.9  26%/62%=51%  TANKING  [hurt: DJ Moore Out]
+  +4.0   Brock Purdy + Derrick Henry + T.J. Hockenson Patrick Mahomes + Jonathan Taylor + Brock Bowers   +45.0    +43.4   -44.7    -45.3   +4.2+-0.2    -0.9  60%/82%=76%  TANKING
+  +4.0   Brock Purdy + T.J. Hockenson + Jakobi Meyers Patrick Mahomes + Brock Bowers + DJ Moore   +45.7    +52.3   -45.4    -55.9   +4.2+-0.2    -0.9  26%/62%=51%  TANKING  [hurt: DJ Moore Out]
+  +4.0   Rhamondre Stevenson                      Brock Bowers                               +45.3    +38.4   -48.5    -39.1   +4.2+-0.2    -0.8  47%/32%=36%  TANKING
+  +4.0   Harold Fannin Jr.                        Brock Bowers                               +49.1    +48.5   -49.6    -48.5   +4.6+-0.2    -0.8  36%/23%=26%  TANKING
+  +4.5   Harold Fannin Jr.                        Brock Bowers                               +49.1    +48.5   -49.6    -48.5   +4.6+-0.2    -0.8  36%/23%=26%  TANKING
+  +4.5   Bhayshul Tuten + Jakobi Meyers           Jonathan Taylor (he cuts Tank Bigsby)      +53.5    +49.9   -50.1    -47.2   +4.5+-0.2    -0.8  39%/80%=66%  TANKING
+  +4.5   Aaron Rodgers + T.J. Hockenson           Brock Bowers (he cuts Tank Bigsby)         +52.3    +54.0   -52.0    -56.0   +4.7+-0.2    -0.9  18%/34%=29%  TANKING
+  +4.5   Derrick Henry + T.J. Hockenson + Jakobi Meyers Brock Bowers + Josh Jacobs + DJ Moore      +49.3    +34.1   -53.2    -38.2   +4.6+-0.2    -1.0  77%/94%=88%  TANKING  [hurt: DJ Moore Out]
+
+=== patekxwater (bubble; title now 8.1%) - 2062 trades gain you 12.0+, 660 simulated
+  target YOU GIVE                                 YOU GET                                      you  you:ros     him  him:ros  your title      his  his view
+  +2.5   Brock Purdy + Bhayshul Tuten + Jakobi Meyers Kirk Cousins + Parker Washington + D'Andre Swift   +15.7    +32.1   -13.3    -29.2   +2.8+-0.2    -2.1  69%/85%=82%  TANKING
+  +2.5   Brock Purdy + Bhayshul Tuten + T.J. Hockenson Kirk Cousins + James Cook III + Michael Wilson   +17.4    +50.6   -18.6    -48.1   +2.6+-0.1    -2.0  42%/88%=74%  TANKING
+  +2.5   Brock Purdy + Aaron Rodgers              Kirk Cousins + Parker Washington           +12.5    +18.2   -19.3    -15.5   +2.6+-0.1    -2.0  51%/81%=75%  TANKING
+  +2.5   Brock Purdy + Cam Skattebo               Kirk Cousins + Parker Washington           +14.1    +16.5   -19.3    -15.5   +2.6+-0.1    -2.0  170%/80%=97%  TANKING
+  +3.0   Brock Purdy + Bhayshul Tuten + T.J. Hockenson Kirk Cousins + Parker Washington + D'Andre Swift   +20.6    +31.7   -20.5    -29.3   +3.5+-0.2    -2.4  63%/81%=77%  TANKING
+  +3.0   Brock Purdy + Malik Nabers + T.J. Hockenson Kirk Cousins + Parker Washington + D'Andre Swift   +17.6    +27.8   -21.0    -27.1   +3.0+-0.2    -2.5  90%/75%=78%  TANKING
+  +3.0   Brock Purdy + Aaron Rodgers + Derrick Henry Kirk Cousins + James Cook III + Parker Washington   +13.6    +17.2   -23.4    -16.1   +3.2+-0.2    -2.7  81%/96%=92%  TANKING
+  +3.0   Derrick Henry + Jakobi Meyers            Parker Washington + D'Andre Swift          +24.5     -2.3   -25.5     +3.5   +3.3+-0.2    -2.3  133%/90%=99%  TANKING
+  +3.5   Brock Purdy + Aaron Rodgers + Bhayshul Tuten Kirk Cousins + Parker Washington + D'Andre Swift   +22.3    +32.4   -27.5    -29.9   +3.8+-0.2    -2.9  63%/80%=76%  TANKING
+  +3.5   Derrick Henry + T.J. Hockenson + Jakobi Meyers Parker Washington + D'Andre Swift + Juwan Johnson   +27.5     +2.2   -29.6     -0.8   +3.6+-0.2    -2.4  130%/85%=94%  TANKING
+  +3.5   Derrick Henry + Malik Nabers + Bhayshul Tuten James Cook III + Parker Washington + D'Andre Swift   +29.4     +3.4   -31.6     -6.0   +4.0+-0.2    -2.9  102%/91%=94%  TANKING
+  +3.5   Brock Purdy + T.J. Hockenson             Kirk Cousins + James Cook III              +28.4    +69.2   -31.8    -67.9   +3.7+-0.2    -2.9  19%/58%=46%  TANKING
+  +4.0   Brock Purdy + Bhayshul Tuten + Jakobi Meyers Kirk Cousins + James Cook III + D'Andre Swift   +31.6    +83.7   -34.5    -81.7   +4.5+-0.2    -3.3  38%/70%=61%  TANKING
+  +4.0   Aaron Rodgers + Derrick Henry            Parker Washington + D'Andre Swift          +32.1     -2.0   -38.6     +2.9   +4.2+-0.2    -3.2  127%/84%=93%  TANKING
+  +4.0   Brock Purdy + Malik Nabers + T.J. Hockenson Kirk Cousins + Nico Collins + Parker Washington   +38.1    +36.5   -39.4    -34.0   +4.1+-0.2    -2.9  74%/75%=75%  TANKING
+  +4.0   Rhamondre Stevenson                      D'Andre Swift                              +39.6    +34.9   -39.5    -34.9   +4.4+-0.2    -2.9  66%/37%=43%  TANKING
+  +4.5   Brock Purdy + Bhayshul Tuten + Jakobi Meyers Kirk Cousins + James Cook III + D'Andre Swift   +31.6    +83.7   -34.5    -81.7   +4.5+-0.2    -3.3  38%/70%=61%  TANKING
+  +4.5   Brock Purdy + Bhayshul Tuten + T.J. Hockenson Kirk Cousins + James Cook III + D'Andre Swift   +38.2    +83.6   -40.1    -81.8   +5.3+-0.2    -3.6  35%/67%=58%  TANKING
+  +4.5   Brock Purdy + T.J. Hockenson + Jakobi Meyers Kirk Cousins + James Cook III + DeVonta Smith   +38.6   +104.3   -41.4   -102.2   +4.5+-0.2    -3.3  20%/55%=43%  TANKING  [hurt: DeVonta Smith Out]
+  +4.5   Brock Purdy + Bhayshul Tuten + Jakobi Meyers Kirk Cousins + James Cook III + Parker Washington   +45.5    +64.1   -43.8    -61.1   +5.9+-0.2    -3.8  42%/76%=66%  TANKING
+
+=== tommyrads (bubble; title now 3.3%) - 1263 trades gain you 12.0+, 642 simulated
+  target YOU GIVE                                 YOU GET                                      you  you:ros     him  him:ros  your title      his  his view
+  +2.5   Harold Fannin Jr.                        Matthew Golden                             +28.6    +31.4   -30.4    -31.9   +2.7+-0.1    -1.0  136%/32%=44%  TANKING
+  +2.5   Josh Downs                               Matthew Golden                             +33.7    +38.4   -33.9    -35.1   +3.0+-0.2    -1.1  111%/24%=34%  TANKING
+  +2.5   T.J. Hockenson                           Matthew Golden                             +32.3    +37.7   -34.9    -35.2   +2.7+-0.1    -1.1  40%/25%=26%  TANKING
+  +2.5   Aaron Rodgers + T.J. Hockenson           Matthew Golden (he cuts Dohnte Meyers)     +32.3    +37.7   -34.9    -35.2   +2.7+-0.1    -1.1  57%/44%=46%  TANKING
+  +3.0   Jordan Addison                           Matthew Golden                             +35.6    +36.1   -41.7    -32.7   +3.2+-0.2    -1.3  123%/32%=42%  TANKING
+  +3.0   Khalil Shakir                            Matthew Golden                             +35.1    +38.4   -42.0    -36.1   +3.1+-0.2    -1.3  62%/23%=28%  TANKING
+  +3.0   Minnesota Vikings                        Matthew Golden                             +34.7    +37.5   -43.1    -36.0   +3.2+-0.2    -1.3  0%/0%=0%  TANKING
+  +3.0   Dalton Schultz                           Matthew Golden                             +35.6    +38.4   -43.4    -36.7   +3.2+-0.2    -1.3  40%/20%=22%  TANKING
+  +3.5   Brock Purdy + Derrick Henry + Jakobi Meyers Jared Goff + Kenneth Walker III + Matthew Golden   +43.2    +64.7   -46.6    -61.3   +3.6+-0.2    -1.2  101%/77%=82%  TANKING
+  +3.5   Derrick Henry                            Kenneth Walker III                         +50.7    +35.1   -50.1    -34.3   +3.8+-0.2    -1.3  106%/84%=90%  TANKING
+  +3.5   Aaron Rodgers + Derrick Henry            Kenneth Walker III (he cuts Dohnte Meyers)   +50.7    +35.1   -50.1    -34.3   +3.8+-0.2    -1.3  105%/92%=96%  TANKING
+  +3.5   Brock Purdy + Bhayshul Tuten + T.J. Hockenson Jared Goff + Kenneth Walker III + Caleb Williams   +50.3    +71.6   -50.6    -71.7   +4.0+-0.2    -1.5  44%/68%=63%  TANKING
+  +4.0   Brock Purdy + Bhayshul Tuten + T.J. Hockenson Jared Goff + Kenneth Walker III + Caleb Williams   +50.3    +71.6   -50.6    -71.7   +4.0+-0.2    -1.5  44%/68%=63%  TANKING
+  +4.0   Brock Purdy + Bhayshul Tuten             Jared Goff + Kenneth Walker III            +52.0    +72.5   -55.4    -73.1   +4.1+-0.2    -1.5  47%/67%=63%  TANKING
+  +4.0   Brock Purdy + Aaron Rodgers + Bhayshul Tuten Jared Goff + Kenneth Walker III + Caleb Williams   +55.5    +72.5   -55.4    -73.1   +4.4+-0.2    -1.5  44%/68%=62%  TANKING
+  +4.0   Derrick Henry + T.J. Hockenson           Kenneth Walker III + Emeka Egbuka          +56.9    +56.7   -57.7    -54.0   +4.0+-0.2    -1.5  72%/79%=77%  TANKING  [hurt: Emeka Egbuka Out]
+  +4.5   Brock Purdy + Bhayshul Tuten + T.J. Hockenson Jared Goff + Kenneth Walker III + Tony Pollard   +62.1    +86.9   -65.5    -84.9   +4.7+-0.2    -1.6  44%/63%=59%  TANKING
+  +4.5   Brock Purdy + Aaron Rodgers + Bhayshul Tuten Jared Goff + Kenneth Walker III + DK Metcalf   +59.9    +91.3   -69.6    -90.4   +4.6+-0.2    -1.7  44%/63%=59%  TANKING
+  +4.5   Brock Purdy + Aaron Rodgers + Bhayshul Tuten Jared Goff + Kenneth Walker III + Omarion Hampton   +57.9   +103.8   -70.6   -103.1   +4.6+-0.2    -1.8  28%/66%=54%  TANKING
+  +4.5   Brock Purdy + Aaron Rodgers + Bhayshul Tuten Jared Goff + Kenneth Walker III + Emeka Egbuka   +62.2    +94.9   -71.6    -92.7   +4.8+-0.2    -1.8  36%/64%=57%  TANKING  [hurt: Emeka Egbuka Out]
