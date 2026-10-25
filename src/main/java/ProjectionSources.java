@@ -204,6 +204,11 @@ public class ProjectionSources {
 
     /** The horizon of today's sleeper-remaining. A season the schedule does not carry counts the current week whole, as sleeperRemaining does. */
     static Horizon remainingHorizon(int lastRegularWeek){
+        return remainingHorizon(WeeklyActuals.WEEKS, lastRegularWeek);
+    }
+
+    /** The same to a given last week - the weekly objective's runs to the last week of the fantasy playoffs. */
+    static Horizon remainingHorizon(int lastWeek, int lastRegularWeek){
         String season = LeagueWeek.season();
         int current = LeagueWeek.week();
         double share = 0;
@@ -216,7 +221,7 @@ public class ProjectionSources {
             waiting.removeAll(started);
             share = playing.isEmpty() ? 1.0 : (double) waiting.size() / playing.size();
         }
-        return Horizon.of(current, share, WeeklyActuals.WEEKS, lastRegularWeek);
+        return Horizon.of(current, share, lastWeek, lastRegularWeek);
     }
 
     /** A man's club today; a defence's id is its club. */

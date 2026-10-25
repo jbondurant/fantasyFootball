@@ -426,7 +426,13 @@ public class LeagueConsole {
         // that source's units (TuesdaySwap.Units) and its noise floor is the one
         // measured on it (ObjectiveStability.floorFor, TRAPS #151).
         Map<String, Double> wirePoints = ProjectionSources.resolve(TuesdaySwap.DEFAULT_SOURCE);
-        TuesdaySwap.Units wireUnits = TuesdaySwap.units(TuesdaySwap.DEFAULT_SOURCE, week);
+        // THE OBJECTIVE (2026-10-24), as TuesdaySwap and TradeMarket: each week's best lineup with that week's best
+        // free agents in the pool for nothing, a claim priced against the wire without him (WeeklyLineupValue).
+        // -Pobjective=drawn: the drawn-season objective it replaced.
+        boolean drawnObjective = "drawn".equals(System.getProperty("objective", "weekly"));
+        WeeklyLineupValue weekly = drawnObjective ? null : WeeklyLineupValue.forSource(configuration, TuesdaySwap.DEFAULT_SOURCE);
+        TuesdaySwap.Units wireUnits = drawnObjective ? TuesdaySwap.units(TuesdaySwap.DEFAULT_SOURCE, week)
+                : TuesdaySwap.weeklyUnits(TuesdaySwap.DEFAULT_SOURCE, TuesdaySwap.lastWeekOf(weekly));
         Set<String> owned = new java.util.HashSet<>(ownerOf.keySet());
         Map<Position, List<String>> freeByPosition = new java.util.EnumMap<>(Position.class);
         for(Map.Entry<String, Double> entry : wirePoints.entrySet()){
@@ -460,15 +466,16 @@ public class LeagueConsole {
         // over 240 is a noisier number, and comparing it to that floor would be
         // asking whether one population clears another population's yardstick.
         int wireScenarios = Integer.getInteger("wireScenarios", 480);
-        WeeklyStarterValue wireValue = WeeklyStarterValue.forCurrentBoard(configuration, wirePoints, wireScenarios, 424_242L);
+        RosterValue wireValue = drawnObjective
+                ? WeeklyStarterValue.forCurrentBoard(configuration, wirePoints, wireScenarios, 424_242L) : weekly;
+        TuesdaySwap.Objective wireObjective = TuesdaySwap.Objective.of(wireValue);
         // the ACTIVE roster, as TuesdaySwap prices it: a man in an IR slot holds no
         // spot and cannot be the drop. Until 2026-10-03 this read every man held, so
         // the day Mike Evans went to IR the page priced each drop with him still
         // active and the ladder check against TuesdaySwap failed - rightly
         List<String> myRoster = new ArrayList<>(rosters.getOrDefault(me, List.of()));
         myRoster.removeAll(reserve);
-        List<TuesdaySwap.Swap> swaps = TuesdaySwap.search(myRoster, candidates, nameOf, positionOf,
-                ids -> wireValue.of(ids));
+        List<TuesdaySwap.Swap> swaps = TuesdaySwap.search(myRoster, candidates, nameOf, positionOf, wireObjective);
         // the yardstick measured on the wire's own pricing (TRAPS #151)
         ObjectiveStability.Floor measuredFloor = ObjectiveStability.floorFor(TuesdaySwap.DEFAULT_SOURCE);
         double swapFloor = measuredFloor.points();
@@ -481,7 +488,7 @@ public class LeagueConsole {
         // names the CLAIM ranked the same board differently and named different
         // best adds from the same feeds.
         List<TuesdaySwap.Priced> priced = TuesdaySwap.price(swaps, myRoster, candidates,
-                nameOf, positionOf, wirePoints, ids -> wireValue.of(ids));
+                nameOf, positionOf, wirePoints, wireObjective);
         for(TuesdaySwap.Priced row : priced){
             TuesdaySwap.Swap swap = row.swap();
             TuesdaySwap.Swap free = row.free();
@@ -512,7 +519,7 @@ public class LeagueConsole {
                     continue;
                 }
                 TuesdaySwap.Completion whole = TuesdaySwap.complete(myRoster, rung, candidates,
-                        nameOf, positionOf, wirePoints, ids -> wireValue.of(ids));
+                        nameOf, positionOf, wirePoints, wireObjective);
                 ladder.append(rungs++ == 0 ? "" : ",").append(String.format(
                         "{\"drop\":%s,\"gain\":%s,\"thenAdd\":%s,\"thenDrop\":%s,\"whole\":%s}",
                         quote(rung.dropName()), num(rung.gain()),
@@ -585,7 +592,8 @@ public class LeagueConsole {
         // zero. The wire above prices on the same map, resolved once, so a kickoff
         // between two reads cannot put the wire and the trades on different boards.
         Map<String, Double> tradePoints = wirePoints;
-        WeeklyStarterValue tradeValue = WeeklyStarterValue.forCurrentBoard(configuration, tradePoints, scenarios, 424_242L);
+        RosterValue tradeValue = drawnObjective
+                ? WeeklyStarterValue.forCurrentBoard(configuration, tradePoints, scenarios, 424_242L) : weekly;
         for(List<String> roster : rosters.values()){
             roster.sort(Comparator.comparingDouble((String id) -> -tradePoints.getOrDefault(id, 0.0)));
         }
@@ -708,8 +716,9 @@ public class LeagueConsole {
         // how a number inside the noise gets sent as a recommendation.
         int errorSeeds = Integer.getInteger("errorSeeds", 3);
         long[] otherSeeds = {7L, 99L, 2026L, 31_337L};
+        // the weekly objective draws nothing, so it has no seed to shake: its range is the number itself
         List<WeeklyStarterValue> shakes = new ArrayList<>();
-        for(int i = 0; i < errorSeeds - 1; i++){
+        for(int i = 0; drawnObjective && i < errorSeeds - 1; i++){
             shakes.add(WeeklyStarterValue.forCurrentBoard(configuration, tradePoints, scenarios,
                     otherSeeds[i % otherSeeds.length]));
         }
@@ -951,7 +960,9 @@ public class LeagueConsole {
             if(tier.equals("ask")){
                 askTrades++;
             }
-            if(hisEdge < 0){
+            // below half the printed precision: an exact tie (the weekly objective makes them) leaves a residue
+            // of 1e-13 that the page prints as -0.00 and must not count as a loss the rows do not show
+            if(hisEdge < -0.005){
                 losesToElsewhere++;
             }
         }
@@ -1271,7 +1282,7 @@ document.querySelectorAll("#t-wire tr.clickable").forEach(tr=>{ tr.onclick=()=>{
   box.hidden = !box.hidden;
   tr.querySelector(".caret").innerHTML = box.hidden ? "&#9656;" : "&#9662;"; }; });
 document.getElementById("add-note").innerHTML =
-  `<b>Worth to you</b> is computed, not asked for. For every free agent the model builds your roster with him and without the man he would displace, values both over ${D.wireScenarios} drawn seasons, and reports the difference &mdash; so the recommendation is the <i>pairing</i>, never the add on its own. <b>Instead of</b> is the cheapest drop that still fills all ten slots. Cutting someone you cannot replace &mdash; your only defence, say &mdash; is not a drop, it is the first half of a plan: your roster is full, so fielding a defence again costs another spot. Those show underneath priced as the WHOLE plan, both adds and both drops, never as the half that looks good on its own. The wire is priced on <code>${D.wireBasis}</code>, Sleeper's weekly projections summed over the games left, so a man Sleeper has ruled out is off the board and a worth is ${D.wireUnits}. <b>From here</b> is the share of that in the regular season (${D.wireHere.toFixed(2)} of it), and the bid is on THAT. The bid follows from the from-here worth and the <b>$${D.budget} you actually have</b>, read off the rosters feed rather than typed in.<br><br>`
+  `<b>Worth to you</b> is computed, not asked for. For every free agent the model builds your roster with him and without the man he would displace, values both week by week through the fantasy playoffs &mdash; each week's best lineup, that week's best free agents in the pool for nothing, and the man claimed gone from that pool in both &mdash; and reports the difference, so the recommendation is the <i>pairing</i>, never the add on its own, and a claim is worth what he adds over the wire he leaves behind (since 2026-10-24). <b>Instead of</b> is the cheapest drop that still fills all ten slots. Cutting someone you cannot replace &mdash; your only defence, say &mdash; is not a drop, it is the first half of a plan: your roster is full, so fielding a defence again costs another spot. Those show underneath priced as the WHOLE plan, both adds and both drops, never as the half that looks good on its own. The wire is priced on <code>${D.wireBasis}</code>, Sleeper's weekly projections summed over the games left, so a man Sleeper has ruled out is off the board and a worth is ${D.wireUnits}. <b>From here</b> is the share of that in the regular season (${D.wireHere.toFixed(2)} of it), and the bid is on THAT. The bid follows from the from-here worth and the <b>$${D.budget} you actually have</b>, read off the rosters feed rather than typed in.<br><br>`
   + `A gain under <b>${D.swapFloor.toFixed(1)}</b> points is inside the objective's own seed-to-seed spread (ObjectiveStability, measured on ${D.floorBasis}: a floor belongs to the pricing it was measured on), so it is the yardstick moving and not the roster improving &mdash; those rows are greyed and the headline counts only the men above it. That floor was measured over ${D.wireScenarios} drawn seasons, which is why this search runs at ${D.wireScenarios} and not the ${D.scenarios} the rest of the page uses: a noisier number does not get judged against a quieter number's yardstick. This is the same search <code>TuesdaySwap</code> runs in the terminal &mdash; the page calls <code>TuesdaySwap.search</code> itself rather than reimplementing it, over the same forty men per position &mdash; so the two agree to the decimal.`;
 
 const csel = document.getElementById("c");

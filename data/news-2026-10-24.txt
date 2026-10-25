@@ -1,0 +1,78 @@
+data: projections 2026-10-23, player metadata 2026-10-24
+NEWS CHECK  2026-10-24  season 2026, week 7  (justinb314)
+IR here: 2 slots; a tag that may sit in one: COV, Doubtful, IR, Out, PUP (league settings)
+SNAP and TGT are his share of his team's offensive snaps and targets over its last three games,
+a game he missed counting as zero. LEFT is Sleeper's weekly projections summed over the games he
+has left (sleeper-remaining) - the number that moves last; '-' is a man projected for none.
+NEWS is the day Sleeper last had news on him. PLAYS is how often a man listed with his status played,
+2018-2025 (PlayProbability; Sleeper's feed carries no practice line, so this is the status base rate).
+
+YOUR ROSTER
+                         POS TEAM HELD BY          STATUS             PLAYS    DEPTH NEWS   BYE NEXT       SNAP   TGT IR    LEFT  ADDS
+Brock Purdy              QB  SF   you              -                  -        QB1   10-24    8 w7 @ATL    100%    0% -    297.7      
+Aaron Rodgers            QB  PIT  you              -                  -        QB1   10-23    9 w7 @NO      99%    0% -    200.3 92064
+Derrick Henry            RB  BAL  you              -                  -        RB1   10-24   13 w7 v CIN    58%    5% -    171.7      
+Bhayshul Tuten           RB  JAX  you              -                  -        RB1   10-18    7 w8 v IND    62%    9% -    134.0      
+Rhamondre Stevenson      RB  NE   you              -                  -        RB1   10-23   11 w8 @MIA     66%    9% -     92.6      
+Cam Skattebo             RB  NYG  you              -                  -        RB1   10-23    8 w7 @HOU     45%    3% -     61.0      
+Mike Evans               WR  SF   you              Out Achilles       0%       LWR5  10-23    8 w7 @ATL     54%   27% yes  157.3      
+Malik Nabers             WR  NYG  you              -                  -        LWR1  10-23    8 w7 @HOU     85%   34% -    135.3      
+Jakobi Meyers            WR  JAX  you              -                  -        RWR2  10-18    7 w8 v IND    80%   17% -     98.9      
+Josh Downs               WR  IND  you              -                  -        SWR2  10-24   13 w7 @MIN     83%   16% -     91.1      
+Jordan Addison           WR  MIN  you              -                  -        RWR2  10-23    6 w7 v IND    64%   17% -     86.9 99729
+Khalil Shakir            WR  BUF  you              -                  -        SWR1  10-19    7 w8 v BAL    68%   22% -     78.0      
+Tre' Harris              WR  LAC  you (IR)         Out Hamstring      0%       RWR8  10-16    7 w8 @LAR     47%   10% yes   61.2      
+T.J. Hockenson           TE  MIN  you              -                  -        TE1   10-23    6 w7 v IND    56%   21% -     99.1      
+Harold Fannin Jr.        TE  CLE  you              -                  -        TE1   10-19   11 w7 @TEN     91%   13% -     96.6      
+Dalton Schultz           TE  HOU  you              -                  -        TE1   10-24    8 w7 v NYG    51%   13% -     74.3      
+Minnesota Vikings        DEF MIN  you              -                  -        -     -        6 w7 v IND      -     - -     87.6      
+
+TRENDING ADDS ACROSS SLEEPER, LAST 48 HOURS (FREE = on this league's wire)
+                         POS TEAM HELD BY          STATUS             PLAYS    DEPTH NEWS   BYE NEXT       SNAP   TGT IR    LEFT  ADDS
+Seth McGowan             RB  IND  KevinDA          -                  -        RB2   10-24   13 w7 @MIN     26%    3% -     31.5 795256
+Konata Mumpfield         WR  LAR  Hamrliks         -                  -        SWR2  10-24   11 w7 @LV      25%    4% -     31.0 792270
+Tyler Higbee             TE  LAR  FREE             -                  -        TE1   10-24   11 w7 @LV      71%   12% -     80.9 528660
+Chris Godwin Jr.         WR  TB   Hamrliks         -                  -        SWR1  10-23   10 w7 @CAR     89%   20% -     90.5 325302
+Emanuel Wilson           RB  SEA  Hamrliks         -                  -        RB1   10-24   11 w7 v KC     48%    8% -     32.7 312408
+Michael Mayer            TE  LV   Renteez          -                  -        TE2   10-23   13 w7 v LAR    79%   16% -     62.9 233604
+Ted Hurst III            WR  TB   BHier            -                  -        RWR2  10-24   10 w7 @CAR     45%   10% -     48.7 204510
+Zonovan Knight           RB  ARI  BHier            -                  -        RB2   10-24   14 w7 v DEN    18%    2% -     22.4 190986
+Justice Hill             RB  BAL  FREE             -                  -        RB2   10-20   13 w7 v CIN    42%   11% -     59.4 160794
+Brandin Cooks            WR  SF   itsabust         -                  -        LWR3  10-24    8 w7 @ATL     34%    6% -     11.4 160636
+Kyler Murray             QB  MIN  KevinDA          -                  -        QB1   10-23    6 w7 v IND   100%    0% -    223.0 157912
+Malik Washington         WR  MIA  JFMarino         -                  -        SWR1  10-24    6 w7 @NYJ     84%   29% -     95.8 145096
+Ryan Flournoy            WR  DAL  BHier            -                  -        SWR3  10-24   14 w7 @PHI     77%   13% -     67.9 143904
+Tyler Allgeier           RB  ARI  d0ddi            -                  -        RB1   10-24   14 w7 v DEN    51%    5% -     66.4 141075
+Cleveland Browns         DEF CLE  Renteez          -                  -        -     -       11 w7 @TEN       -     - -     70.1 140028
+C.J. Stroud              QB  HOU  JakeSK           -                  -        QB1   10-24    8 w7 v NYG   100%    0% -    211.6 127960
+Xavier Worthy            WR  KC   jerem9604        -                  -        RWR1  10-23    5 w7 @SEA     80%   20% -    102.8 119556
+Darius Cooper            WR  PHI  FREE             -                  -        RWR2  10-24   10 w7 v DAL    79%   11% -     30.9 119308
+Adonai Mitchell          WR  NYJ  jerem9604        -                  -        RWR3  10-24   13 w7 v MIA     0%    0% -     42.0 108672
+Jordan Watkins           WR  SF   Renteez          -                  -        RWR2  10-24    8 w7 @ATL     50%    1% -      7.7 108372
+Bo Nix                   QB  DEN  BHier            -                  -        QB1   10-24   10 w7 @ARI    100%    0% -    218.4 104532
+Caleb Douglas            WR  MIA  Hamrliks (IR)    -                  -        RWR2  10-24    6 w7 @NYJ      0%    0% -     71.9 103536
+KC Concepcion Jr.        WR  CLE  tommyrads        -                  -        SWR2  10-24   11 w7 @TEN     62%   17% -     82.8 102375
+Colby Parkinson          TE  LAR  FREE             -                  -        TE2   10-24   11 w7 @LV      40%    6% -     46.1 101148
+Jordan Addison           WR  MIN  you              -                  -        RWR2  10-23    6 w7 v IND    64%   17% -     86.9 99729
+Omar Cooper Jr.          WR  NYJ  Hamrliks         -                  -        SWR2  10-24   13 w7 v MIA    31%   10% -     84.7 97400
+Tre Tucker               WR  LV   patekxwater      -                  -        LWR1  10-23   13 w7 v LAR    70%   16% -     87.1 95304
+Courtland Sutton         WR  DEN  jerem9604        -                  -        LWR2  10-24   10 w7 @ARI     77%   14% -     76.2 92718
+Aaron Rodgers            QB  PIT  you              -                  -        QB1   10-23    9 w7 @NO      99%    0% -    200.3 92064
+Keenan Allen             WR  IND  KevinDA          -                  -        RWR1  10-24   13 w7 @MIN     41%   18% -     81.2 91972
+Kyle Pitts Sr.           TE  ATL  patekxwater      -                  -        TE1   10-24   11 w7 v SF     65%   19% -     72.8 88018
+Treylon Burks            WR  WAS  FREE             -                  -        RWR4  10-20    7 w8 v PHI    62%   15% -     50.7 86737
+Tanner McKee             QB  PHI  FREE             -                  -        QB1   10-24   10 w7 v DAL    34%    0% -    176.5 75216
+Devaughn Vele            WR  NO   Renteez          -                  -        SWR2  10-24    8 w7 v PIT    92%   21% -     48.7 74823
+Geno Smith               QB  NYJ  FREE             -                  -        QB1   10-24   13 w7 v MIA   100%    0% -    189.8 74068
+Roschon Johnson          RB  CHI  JakeSK           -                  -        RB2   10-23   10 w8 @SEA     32%    9% -      2.4 71624
+Kirk Cousins             QB  LV   patekxwater      -                  -        QB1   10-23   13 w7 v LAR    95%    0% -    223.0 70280
+Tank Dell                WR  HOU  tommyrads (IR)   -                  -        SWR6  10-24    8 w7 v NYG     0%    0% -     22.4 69648
+Cade Otton               TE  TB   FREE             -                  -        TE1   10-23   10 w7 @CAR     95%   13% -     69.5 66198
+Mike Gesicki             TE  CIN  Renteez          -                  -        TE1   10-23    6 w7 @BAL     53%    8% -     78.8 61704
+Will Mallory             TE  IND  FREE             -                  -        TE1   10-24   13 w7 @MIN     20%    5% -      7.1 61281
+Dameon Pierce            RB  PHI  KevinDA          -                  -        RB2   10-24   10 w7 v DAL    58%    9% -     18.8 60072
+Mark Andrews             TE  BAL  Hamrliks         -                  -        TE1   10-24   13 w7 v CIN    68%   16% -     82.7 59193
+Makai Lemon              WR  PHI  FREE             -                  -        SWR1  10-24   10 w7 v DAL    79%   18% -     48.3 59176
+Samaje Perine            RB  CIN  itsabust         -                  -        RB2   10-24    6 w7 @BAL     39%    5% -     61.5 57828
+Alvin Kamara             RB  NO   Hamrliks         -                  -        RB2   10-23    8 w7 v PIT    31%   13% -     28.2 55032
+New York Jets            DEF NYJ  patekxwater      -                  -        -     -       13 w7 v MIA      -     - -     60.0 52748

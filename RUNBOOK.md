@@ -203,6 +203,13 @@ objective, whose single wire level a position sat 11.5 below the best free back 
 16.4 below the best free receiver and so overvalued spare depth - on both sides of a
 trade. -Pobjective=drawn prices on the old one; the single-trade check prints both
 (rows 'weekly:sleeper' and 'weekly:ros' are what the short list is decided on).
+Since 2026-10-24 the waiver tool, FAAB rivals and the console price on it too, and a
+CLAIM is priced against the wire WITHOUT the man claimed: with the week's best free
+agents free for every lineup, the best of them is already "yours", so a claim is worth
+what he adds over the wire he leaves behind (if you do not take him, assume somebody
+does). Title odds count the same way: a man held is never also on his own wire, and a
+claim's title change is priced with him gone from everyone's wire. With the wire this
+strong, claims are worth a few points at most - stream, do not hoard.
 
 To ask about one man - "nothing where I get Chase and give Henry or Tuten?" - the
 targeted search prices EVERY package that answers it (one to three men a side), not

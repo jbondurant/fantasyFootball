@@ -27,9 +27,11 @@ import java.util.TreeMap;
  * ideas serious tools use: "let's do all of what you'd build."
  *
  * Every manager's gain from a target is priced on the same objective as the
- * wire (WeeklyStarterValue on sleeper-remaining): his active roster with the
- * target in and his lowest-projected active man out, less as it stands. A gain
- * over the noise floor is a manager the target genuinely helps.
+ * wire (WeeklyLineupValue on sleeper-remaining since 2026-10-24: each week's best
+ * lineup with that week's best free agents in the pool): his active roster with
+ * the target in and his lowest-projected active man out, less as it stands with
+ * the target gone from the wire. A gain over the noise floor is a manager the
+ * target genuinely helps.
  *
  * What it does not know is how a manager decides. People bid on box scores and
  * headlines as much as on need (FaabDemand measures that side: who gets any bid
@@ -151,7 +153,11 @@ public class FaabRivals {
         int perPosition = Integer.getInteger("faabTargets", 8);
         String source = TuesdaySwap.DEFAULT_SOURCE;
         Map<String, Double> points = ProjectionSources.resolve(source);
-        WeeklyStarterValue value = WeeklyStarterValue.forCurrentBoard(configuration, points, 480, 424_242L);
+        // each week's best lineup with that week's best free agents in the pool, a claim priced against the wire
+        // without the man claimed (WeeklyLineupValue, 2026-10-24); -Pobjective=drawn prices on the old objective
+        RosterValue value = "drawn".equals(System.getProperty("objective", "weekly"))
+                ? WeeklyStarterValue.forCurrentBoard(configuration, points, 480, 424_242L)
+                : WeeklyLineupValue.forSource(configuration, source);
         double floor = ObjectiveStability.floorFor(source).points();
         Map<String, String> ownerOf = LeagueOwners.today(configuration);
         Set<String> reserve = LeagueOwners.reserve(configuration);
@@ -178,7 +184,10 @@ public class FaabRivals {
         for(List<String> men : free.values()){
             men.sort(Comparator.comparingDouble((String id) -> -points.get(id)));
             for(String id : men.subList(0, Math.min(perPosition, men.size()))){
-                List<Need> all = needs(id, active, points, value::of, base);
+                // each manager as he stands, with the target gone from the wire: what the target adds over the wire he leaves
+                Map<String, Double> without = new HashMap<>();
+                active.forEach((m, roster) -> without.put(m, value.of(roster, List.of(id))));
+                List<Need> all = needs(id, active, points, roster -> value.of(roster), without);
                 double mine = 0;
                 List<Need> rivals = new ArrayList<>();
                 for(Need n : all){
@@ -198,7 +207,8 @@ public class FaabRivals {
 
         StringBuilder out = new StringBuilder();
         out.append(DataStamp.line()).append('\n');
-        out.append(String.format("FAAB RIVALS  %s  (the waiver run as an auction; priced on %s, 480 drawn seasons)%n", LocalDate.now(), source));
+        out.append(String.format("FAAB RIVALS  %s  (the waiver run as an auction; priced on %s)%n", LocalDate.now(),
+                value.label()));
         // WHICH RUN THE CLAIM LANDS IN, first. Justin, 2026-10-16: "you overestimate
         // bidding wars for non wednesday days. They almost never happen." FaabDemand
         // measured it: the run after the games (Wednesday) holds three dollars in four

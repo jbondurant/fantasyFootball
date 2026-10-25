@@ -1241,7 +1241,8 @@ public class TradeMarket {
         shortList.sort(best);
         longShots.sort(best);
         out.append(String.format("%nTHE SHORT LIST - %d of the %d: good for BOTH sides on BOTH pricings, you gaining at least the%n"
-                + "noise floor (%.1f, ObjectiveStability's seed-to-seed spread) this season on each, AND fair to him on what he%n"
+                + "line (%.1f - the drawn-season objective's seed-to-seed spread, kept as the size a gain must reach) this season%n"
+                + "on each, AND fair to him on what he%n"
                 + "can see - at least what he gives, with draft value %s of a man's worth after %d games (%s). Best first by%n"
                 + "the change in your title odds ('title', in percentage points, +- its standard error); 'trades/yr' is how%n"
                 + "often he has actually traded (TradePartners).%n",

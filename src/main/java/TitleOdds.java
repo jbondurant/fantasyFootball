@@ -240,31 +240,81 @@ public class TitleOdds {
         Map<Integer, Map<String, Double>> out = new TreeMap<>();
         for(int w = league.thisWeek(); w <= league.lastWeek(); w++){
             Map<String, Double> week = new HashMap<>(LeagueWeek.projected(league.season(), w));
-            Map<Position, List<Double>> free = new HashMap<>();
+            Map<Position, List<Map.Entry<String, Double>>> free = new HashMap<>();
             week.forEach((id, points) -> {
                 Player p = owned.contains(id) ? null : Player.getPlayerFromSIDV2(id);
                 if(p != null && WIRE_DEPTH.containsKey(p.position)){
-                    free.computeIfAbsent(p.position, k -> new ArrayList<>()).add(points);
+                    free.computeIfAbsent(p.position, k -> new ArrayList<>()).add(Map.entry(id, points));
                 }
             });
-            withWire(week, free);
+            withNamedWire(week, free);
             out.put(w, week);
         }
         return out;
     }
 
-    /** Put each position's best free agents into a week's projection under WIRE:<position>:<rank> keys. */
+    /** Free agents kept past each position's depth, so a lineup that rosters one of the best still finds the next. */
+    static final int WIRE_SPARE = 3;
+
+    /** The same with nobody named: each position's best free agents as points alone (WIRE:<position>:<rank>:?<rank>). */
     static void withWire(Map<String, Double> week, Map<Position, List<Double>> free){
+        Map<Position, List<Map.Entry<String, Double>>> named = new HashMap<>();
         free.forEach((position, list) -> {
-            list.sort(java.util.Collections.reverseOrder());
-            for(int k = 0; k < Math.min(WIRE_DEPTH.get(position), list.size()); k++){
-                week.put(WIRE + position.name() + ":" + (k + 1), list.get(k));
+            List<Map.Entry<String, Double>> entries = new ArrayList<>();
+            for(int k = 0; k < list.size(); k++){
+                entries.add(Map.entry("?" + position.name() + k, list.get(k)));
+            }
+            named.put(position, entries);
+        });
+        withNamedWire(week, named);
+    }
+
+    /**
+     * Put each position's best free agents into a week's projection under
+     * WIRE:<position>:<rank>:<id> keys - the depth a lineup starts and a few
+     * spare. Named since 2026-10-24: a man claimed onto a roster was also still
+     * on that roster's wire, so a claim could count him twice; weekMean now
+     * skips a wire man the lineup already holds, and one taken off the wire.
+     */
+    static void withNamedWire(Map<String, Double> week, Map<Position, List<Map.Entry<String, Double>>> free){
+        free.forEach((position, list) -> {
+            List<Map.Entry<String, Double>> sorted = new ArrayList<>(list);
+            sorted.sort((a, b) -> Double.compare(b.getValue(), a.getValue()));
+            for(int k = 0; k < Math.min(WIRE_DEPTH.get(position) + WIRE_SPARE, sorted.size()); k++){
+                week.put(WIRE + position.name() + ":" + (k + 1) + ":" + sorted.get(k).getKey(), sorted.get(k).getValue());
             }
         });
     }
 
+    /** The points of the wire men a lineup may start at a position, best first: the depth, skipping men it holds or that are gone. */
+    static List<Double> wireAt(Map<String, Double> projection, String position, java.util.Set<String> gone){
+        java.util.TreeMap<Integer, Map.Entry<String, Double>> byRank = new java.util.TreeMap<>();
+        String prefix = WIRE + position + ":";
+        projection.forEach((key, points) -> {
+            if(key.startsWith(prefix)){
+                String[] parts = key.substring(prefix.length()).split(":", 2);
+                byRank.put(Integer.parseInt(parts[0]), Map.entry(parts.length > 1 ? parts[1] : "", points));
+            }
+        });
+        List<Double> out = new ArrayList<>();
+        int depth = WIRE_DEPTH.getOrDefault(Position.valueOf(position), 0);
+        for(Map.Entry<String, Double> man : byRank.values()){
+            if(out.size() < depth && !gone.contains(man.getKey())){
+                out.add(man.getValue());
+            }
+        }
+        return out;
+    }
+
     /** One roster's best legal lineup on one week's projection: the men with a projection that week, and the wire behind them. */
     static double weekMean(List<String> roster, Map<String, Double> projection){
+        return weekMean(roster, projection, List.of());
+    }
+
+    /** The same with these free agents gone from the wire as well as every man the roster holds. */
+    static double weekMean(List<String> roster, Map<String, Double> projection, java.util.Collection<String> offWire){
+        java.util.Set<String> gone = new java.util.HashSet<>(roster);
+        gone.addAll(offWire);
         List<TeamRankings.Man> men = new ArrayList<>();
         for(String id : roster){
             Double points = projection.get(id);
@@ -273,20 +323,27 @@ public class TitleOdds {
                 men.add(new TeamRankings.Man(id, id, p.position.name(), p.team, points, false, 0, null));
             }
         }
-        projection.forEach((key, points) -> {
-            if(key.startsWith(WIRE)){
-                String position = key.substring(WIRE.length(), key.indexOf(':', WIRE.length()));
-                men.add(new TeamRankings.Man(key, key, position, "", points, false, 0, null));
+        for(Position position : WIRE_DEPTH.keySet()){
+            List<Double> wire = wireAt(projection, position.name(), gone);
+            for(int k = 0; k < wire.size(); k++){
+                String key = WIRE + position.name() + ":" + (k + 1);
+                men.add(new TeamRankings.Man(key, key, position.name(), "", wire.get(k), false, 0, null));
             }
-        });
+        }
         return TeamRankings.bestLineup(men).starters();
     }
 
     /** Each manager's mean in every week left, index 0 being this week. */
     static Map<String, double[]> means(League league, Map<String, List<String>> rosters, Map<Integer, Map<String, Double>> projected){
+        return means(league, rosters, projected, List.of());
+    }
+
+    /** The same with these free agents gone from every team's wire (a man claimed is gone for everyone). */
+    static Map<String, double[]> means(League league, Map<String, List<String>> rosters, Map<Integer, Map<String, Double>> projected,
+                                       java.util.Collection<String> offWire){
         Map<String, double[]> out = new HashMap<>();
         for(Map.Entry<String, List<String>> e : rosters.entrySet()){
-            out.put(e.getKey(), liveWeek(league, e.getKey(), teamMeans(league, e.getValue(), projected)));
+            out.put(e.getKey(), liveWeek(league, e.getKey(), teamMeans(league, e.getValue(), projected, offWire)));
         }
         return out;
     }
@@ -301,9 +358,14 @@ public class TitleOdds {
     }
 
     static double[] teamMeans(League league, List<String> roster, Map<Integer, Map<String, Double>> projected){
+        return teamMeans(league, roster, projected, List.of());
+    }
+
+    static double[] teamMeans(League league, List<String> roster, Map<Integer, Map<String, Double>> projected,
+                              java.util.Collection<String> offWire){
         double[] m = new double[league.weeks()];
         for(int w = league.thisWeek(); w <= league.lastWeek(); w++){
-            m[w - league.thisWeek()] = weekMean(roster, projected.getOrDefault(w, Map.of()));
+            m[w - league.thisWeek()] = weekMean(roster, projected.getOrDefault(w, Map.of()), offWire);
         }
         return m;
     }
@@ -460,7 +522,8 @@ public class TitleOdds {
      * to the league average (`weight`) and his playoff odds.
      */
     public record Stakes(League league, Map<Integer, Map<String, Double>> projected, Map<String, double[]> means,
-                         Outcomes base, Map<String, Double> weight, Map<String, Double> playoffs) {
+                         Outcomes base, Map<String, Double> weight, Map<String, Double> playoffs,
+                         Map<String, List<String>> rosters) {
 
         /** The title-odds change for two managers when their rosters become these. */
         public Delta[] swap(String a, List<String> aAfter, String b, List<String> bAfter){
@@ -477,6 +540,23 @@ public class TitleOdds {
             return TitleOdds.title(base, after, a);
         }
 
+        /**
+         * The same for a CLAIM: the men claimed are gone from every team's wire
+         * both before and after, so the claim is priced against the wire he
+         * leaves behind - as the waiver tools price it (WeeklyLineupValue) - and
+         * not against a "before" in which every lineup could already start him.
+         */
+        public Delta one(String a, List<String> aAfter, List<String> claimed){
+            if(claimed.isEmpty()){
+                return one(a, aAfter);
+            }
+            Map<String, double[]> before = TitleOdds.means(league, rosters, projected, claimed);
+            Outcomes was = play(league, before, base.champion().length, SEED);
+            Map<String, double[]> then = new HashMap<>(before);
+            then.put(a, liveWeek(league, a, teamMeans(league, aAfter, projected, claimed)));
+            return TitleOdds.title(was, play(league, then, base.champion().length, SEED), a);
+        }
+
         public double title(String manager){
             return base.title(manager);
         }
@@ -491,7 +571,8 @@ public class TitleOdds {
     static Stakes stakes(AAAConfiguration configuration, int sims){
         League league = league(configuration);
         Map<Integer, Map<String, Double>> projected = projections(league);
-        Map<String, double[]> means = means(league, rosters(configuration), projected);
+        Map<String, List<String>> rosters = rosters(configuration);
+        Map<String, double[]> means = means(league, rosters, projected);
         Outcomes base = play(league, means, sims, SEED);
         Map<String, Double> raw = new HashMap<>();
         double total = 0;
@@ -507,7 +588,7 @@ public class TitleOdds {
             weight.put(m, average <= 0 ? 1.0 : raw.get(m) / average);
             playoffs.put(m, base.playoffs(m));
         }
-        return new Stakes(league, projected, means, base, weight, playoffs);
+        return new Stakes(league, projected, means, base, weight, playoffs, rosters);
     }
 
     /** Every manager's roster: every man held, IR slots included - a man on IR now is projected back when he is. */

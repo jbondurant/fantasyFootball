@@ -1,0 +1,32 @@
+data: projections 2026-10-23, player metadata 2026-10-24
+TITLE ODDS  2026-10-24  season 2026 from week 7, 20000 seasons drawn
+Week 7 is under way: each team's week is what its starters have scored in games that have kicked off,
+plus the projection of starters still to play, with the spread shrunk to the share still to play.
+Each team's strength for the rest of the season is its projection plus a team error drawn once per season,
+sd 10.6 a week (TeamError: how far this league's rosters landed from their projections from this point,
+2021-2025).
+Weeks 7-17 played out on Sleeper's projection for each week (byes and men ruled out leave the lineup),
+spread 23.7 a week (SeasonOutlook's measurement), a median game every regular week; six make it, seeds 1-2 skip week 15, a fixed bracket after.
+'per pt' is how much his title odds move per point of weekly mean added to every week he has left.
+
+RECORD and PF are Sleeper's own standings (median game included). AHEAD is each team's projected weekly
+score over the regular-season weeks still to start (8-14), P-WKS the same over the playoff weeks (15-17),
+OPP the average AHEAD of the opponents he still has to play, and LOW his weakest week ahead (byes): the
+odds are made of these and how they fall week by week - one bad bye week costs one game, an even sag costs several.
+
+MANAGER        RECORD      PF   AHEAD   P-WKS     OPP   LOW (wk)  PLAYOFF     BYE   TITLE     per pt
+JakeSK            9-3   776.2   133.1   136.7   120.0  128.2 (11)    94.0%   59.8%   23.9%     +1.36pp
+itsabust          7-5   710.9   134.8   138.8   123.2  114.7 (11)    87.4%   38.0%   21.9%     +1.28pp
+JFMarino         10-2   827.8   123.9   134.1   121.8  116.6 (14)    89.6%   45.7%   16.7%     +1.27pp
+patekxwater       7-5   676.0   123.8   129.6   122.7  115.7 (10)    54.0%    9.5%    8.1%     +0.86pp
+justinb314        7-5   722.2   122.3   126.9   122.1  110.0 (8)    61.0%   12.5%    7.6%     +0.88pp   <- you
+d0ddi             5-7   707.3   128.3   127.2   121.7  119.8 (13)    55.5%    9.2%    6.7%     +0.76pp
+Hamrliks          7-5   687.3   121.7   125.1   123.0  115.1 (13)    61.6%   13.1%    6.5%     +0.67pp
+KevinDA           6-6   641.4   117.5   123.1   123.4  109.7 (8)    33.5%    3.6%    3.4%     +0.44pp
+tommyrads         8-4   715.4   115.7   117.9   124.5  110.9 (10)    48.9%    8.4%    3.3%     +0.47pp
+jerem9604         3-9   583.5   122.9   125.9   121.9  106.4 (13)    12.4%    0.3%    1.7%     +0.32pp
+Renteez          2-10   599.2   112.2   114.4   122.8  103.8 (14)     1.2%    0.0%    0.1%     +0.04pp
+BHier            1-11   512.0   112.9   114.0   121.9  104.4 (11)     0.9%    0.0%    0.1%     +0.03pp
+
+Not modelled: injuries yet to happen, waiver moves, other trades. A team this calls out of it has
+less upside than the dice here give it only if nobody around it gets hurt.

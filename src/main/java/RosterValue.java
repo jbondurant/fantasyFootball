@@ -19,6 +19,16 @@ public interface RosterValue {
 
     double of(Collection<String> roster);
 
+    /**
+     * The roster's worth with these free agents taken off the waiver wire too -
+     * how a claim is priced when the objective lets every lineup start the
+     * wire's best (WeeklyLineupValue). Objectives without a wire of named men
+     * ignore it.
+     */
+    default double of(Collection<String> roster, Collection<String> offWire){
+        return of(roster);
+    }
+
     /** A short name for output, so a table can say which rule produced it. */
     String label();
 }

@@ -128,9 +128,9 @@ public class TitleOddsTest {
         free.put(Position.TE, new ArrayList<>(List.of(3.0, 4.0)));
         free.put(Position.DEF, new ArrayList<>(List.of(6.0)));
         TitleOdds.withWire(week, free);
-        assertEquals(15.0, week.get("WIRE:QB:1"), 1e-12, "the best free quarterback");
-        assertFalse(week.containsKey("WIRE:QB:2"), "one quarterback is all a lineup starts");
-        assertFalse(week.containsKey("WIRE:RB:5"), "four backs cover both backs and the flexes");
+        assertEquals(List.of(15.0), TitleOdds.wireAt(week, "QB", java.util.Set.of()), "the best free quarterback, and one is all a lineup starts");
+        assertEquals(List.of(9.0, 8.0, 7.0, 6.0), TitleOdds.wireAt(week, "RB", java.util.Set.of()),
+                "four backs cover both backs and the flexes");
         // a roster of nobody starts the wire's best ten: QB 15, RB 9+8, WR 7+6+5, TE 4, FLEX 7 (RB) + 6 (RB), DEF 6
         assertEquals(15 + 9 + 8 + 7 + 6 + 5 + 4 + 7 + 6 + 6, TitleOdds.weekMean(List.of(), week), 1e-9);
     }
@@ -141,6 +141,22 @@ public class TitleOddsTest {
         assertEquals(1, TitleOdds.winner(0, 1, new double[]{90, 91}));
         assertEquals(2.5, TitleOdds.median(new double[]{4, 1, 3, 2}), 1e-12);
         assertEquals(3.0, TitleOdds.median(new double[]{5, 1, 3}), 1e-12);
+    }
+
+    /**
+     * A man on the roster is never also on its wire, and a man claimed is gone
+     * from it: the next free agent steps up. 2026-10-24 - before, a claimed man
+     * was still on his new roster's wire and could be counted twice.
+     */
+    @Test
+    public void aManHeldIsNotAlsoOnTheWire(){
+        Map<String, Double> week = new HashMap<>();
+        Map<Position, List<Map.Entry<String, Double>>> free = new HashMap<>();
+        free.put(Position.QB, new ArrayList<>(List.of(Map.entry("star", 20.0), Map.entry("next", 14.0), Map.entry("third", 11.0))));
+        TitleOdds.withNamedWire(week, free);
+        assertEquals(List.of(20.0), TitleOdds.wireAt(week, "QB", java.util.Set.of()));
+        assertEquals(List.of(14.0), TitleOdds.wireAt(week, "QB", java.util.Set.of("star")), "held or claimed: the next man is the wire");
+        assertEquals(List.of(11.0), TitleOdds.wireAt(week, "QB", java.util.Set.of("star", "next")));
     }
 
     /** A rival out of it weighs season points at nothing and feels a keeper he receives; a keeper he gives up costs him all of it. */

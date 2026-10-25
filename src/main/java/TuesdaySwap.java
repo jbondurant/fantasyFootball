@@ -62,22 +62,61 @@ public class TuesdaySwap {
     public record Swap(String addId, String addName, Position addPosition,
                        String dropId, String dropName, double gain) {}
 
+    /**
+     * A roster's worth with named free agents taken off the waiver wire. Under the
+     * weekly objective (WeeklyLineupValue, 2026-10-24) every lineup may start the
+     * week's best free agents, so a claim is priced against a "before" with the
+     * men claimed gone from the wire - what he adds over the wire he leaves - and
+     * not against one in which the roster could already start him. An objective
+     * without a named wire ignores the men (the drawn-season one, and the tests').
+     */
+    interface Objective {
+        double of(List<String> roster, List<String> offWire);
+
+        static Objective of(java.util.function.ToDoubleFunction<List<String>> value){
+            return (roster, offWire) -> value.applyAsDouble(roster);
+        }
+
+        static Objective of(RosterValue value){
+            return value::of;
+        }
+    }
+
+    /**
+     * Two gains the same to within rounding. The weekly objective is exact, so
+     * ties are real - three men who never start in any week cost the same to drop
+     * - and the drawn one never produced them. A tie is broken by name, the same
+     * way everywhere, so the page and this report list tied men in one order.
+     */
+    static boolean tied(double a, double b){
+        return Math.abs(a - b) < 1e-9;
+    }
+
+    /** Best gain first; a tie by the man dropped, then the man added, by name. */
+    static final Comparator<Swap> BEST_SWAP_FIRST = (a, b) -> !tied(a.gain(), b.gain()) ? Double.compare(b.gain(), a.gain())
+            : a.dropName().compareTo(b.dropName()) != 0 ? a.dropName().compareTo(b.dropName()) : a.addName().compareTo(b.addName());
+
     /** Every legal pair, best first. A swap must keep the roster at its size. */
     static List<Swap> search(List<String> roster, List<String> candidates,
                              Map<String, String> nameOf, Map<String, Position> positionOf,
                              java.util.function.ToDoubleFunction<List<String>> value){
-        double base = value.applyAsDouble(roster);
+        return search(roster, candidates, nameOf, positionOf, Objective.of(value));
+    }
+
+    static List<Swap> search(List<String> roster, List<String> candidates,
+                             Map<String, String> nameOf, Map<String, Position> positionOf, Objective value){
         List<Swap> swaps = new ArrayList<>();
         for(String add : candidates){
+            double base = value.of(roster, List.of(add));     // the roster as it is, the man claimed gone from the wire
             for(String drop : roster){
                 List<String> after = new ArrayList<>(roster);
                 after.remove(drop);
                 after.add(add);
                 swaps.add(new Swap(add, nameOf.getOrDefault(add, add), positionOf.get(add),
-                        drop, nameOf.getOrDefault(drop, drop), value.applyAsDouble(after) - base));
+                        drop, nameOf.getOrDefault(drop, drop), value.of(after, List.of()) - base));
             }
         }
-        swaps.sort(Comparator.comparingDouble(Swap::gain).reversed());
+        swaps.sort(BEST_SWAP_FIRST);
         return swaps;
     }
 
@@ -110,6 +149,12 @@ public class TuesdaySwap {
                                Map<String, String> nameOf, Map<String, Position> positionOf,
                                Map<String, Double> points,
                                java.util.function.ToDoubleFunction<List<String>> value){
+        return complete(roster, swap, replacements, nameOf, positionOf, points, Objective.of(value));
+    }
+
+    static Completion complete(List<String> roster, Swap swap, List<String> replacements,
+                               Map<String, String> nameOf, Map<String, Position> positionOf,
+                               Map<String, Double> points, Objective value){
         int required = TradeMarket.slotsFilled(roster, points, positionOf);
         List<String> after = new ArrayList<>(roster);
         after.remove(swap.dropId());
@@ -118,12 +163,12 @@ public class TuesdaySwap {
             return null;                      // nothing was emptied; the swap stands
         }
         Position emptied = positionOf.get(swap.dropId());
-        double base = value.applyAsDouble(roster);
         Completion best = null;
         for(String replacement : replacements){
             if(positionOf.get(replacement) != emptied || replacement.equals(swap.addId())){
                 continue;
             }
+            double base = value.of(roster, List.of(swap.addId(), replacement));   // both men claimed gone from the wire
             for(String second : after){
                 if(second.equals(swap.addId())){
                     continue;                 // the man just claimed is not the man to cut
@@ -134,7 +179,7 @@ public class TuesdaySwap {
                 if(TradeMarket.slotsFilled(completed, points, positionOf) < required){
                     continue;                 // still short; not a plan either
                 }
-                double gain = value.applyAsDouble(completed) - base;
+                double gain = value.of(completed, List.of()) - base;
                 if(best == null || gain > best.gain()){
                     best = new Completion(swap, replacement,
                             nameOf.getOrDefault(replacement, replacement),
@@ -172,6 +217,12 @@ public class TuesdaySwap {
                               Map<String, String> nameOf, Map<String, Position> positionOf,
                               Map<String, Double> points,
                               java.util.function.ToDoubleFunction<List<String>> value){
+        return price(swaps, roster, candidates, nameOf, positionOf, points, Objective.of(value));
+    }
+
+    static List<Priced> price(List<Swap> swaps, List<String> roster, List<String> candidates,
+                              Map<String, String> nameOf, Map<String, Position> positionOf,
+                              Map<String, Double> points, Objective value){
         int slotsNow = TradeMarket.slotsFilled(roster, points, positionOf);
         Map<String, Swap> keepsSlots = new java.util.LinkedHashMap<>();
         Map<String, Swap> unconstrained = new java.util.LinkedHashMap<>();
@@ -202,7 +253,8 @@ public class TuesdaySwap {
             priced.add(new Priced(swap, free, hole, completion,
                     hole && completion != null ? completion.gain() : swap.gain(), altGain));
         }
-        priced.sort(Comparator.comparingDouble(Priced::worth).reversed());
+        priced.sort((a, b) -> tied(a.worth(), b.worth()) ? BEST_SWAP_FIRST.compare(a.swap(), b.swap())
+                : Double.compare(b.worth(), a.worth()));
         return priced;
     }
 
@@ -258,8 +310,10 @@ public class TuesdaySwap {
         /** What a gain in these units is, in words. */
         String describe(){
             return gamesLeft
-                    ? String.format("points over the games left (%.1f weeks to week %d, %s's own totals)",
-                            spanWeeks, WeeklyActuals.WEEKS, source)
+                    ? source.contains(" week by week ")
+                            ? String.format("points over the weeks left (%.1f weeks, %s)", spanWeeks, source)
+                            : String.format("points over the games left (%.1f weeks to week %d, %s's own totals)",
+                                    spanWeeks, WeeklyActuals.WEEKS, source)
                     : "the objective's seventeen-week units (" + source + " carries season totals)";
         }
 
@@ -277,6 +331,30 @@ public class TuesdaySwap {
         return DEFAULT_SOURCE.equals(source)
                 ? Units.gamesLeft(source, ProjectionSources.remainingHorizon(LAST_REGULAR_WEEK))
                 : Units.season(source, week);
+    }
+
+    /** The last week a weekly objective prices (the fantasy playoffs' last); 17 for anything else. */
+    static int lastWeekOf(RosterValue value){
+        if(value instanceof WeeklyLineupValue weekly && !weekly.weeks().isEmpty()){
+            List<Integer> weeks = weekly.weeks();
+            return weeks.get(weeks.size() - 1);
+        }
+        return 17;
+    }
+
+    /** The weekly objective's units: points over every week left through the last of the fantasy playoffs, on either pricing. */
+    static Units weeklyUnits(String source, int lastWeek){
+        ProjectionSources.Horizon horizon = ProjectionSources.remainingHorizon(lastWeek, LAST_REGULAR_WEEK);
+        return new Units(source + " week by week to week " + lastWeek, true, horizon.weeks(), horizon.regularWeeks());
+    }
+
+    /** The free agents a plan claims: the add, and the completion's add when the plan has one. */
+    static List<String> claimed(Priced row){
+        List<String> out = new ArrayList<>(List.of(row.swap().addId()));
+        if(row.completion() != null){
+            out.add(row.completion().addId());
+        }
+        return out;
     }
 
     /** The roster after a whole plan: the add and drop, and the completion's add and drop when it empties a slot. */
@@ -311,21 +389,26 @@ public class TuesdaySwap {
             without.remove(id);
             out.add(Map.entry(id, base - value.applyAsDouble(without)));
         }
-        out.sort(Comparator.comparingDouble(Map.Entry::getValue));
+        out.sort((a, b) -> tied(a.getValue(), b.getValue()) ? a.getKey().compareTo(b.getKey())
+                : Double.compare(a.getValue(), b.getValue()));
         return out;
     }
 
     /** Every free agent as an add with nothing dropped, best first: the value of the roster with him, less without. */
     static List<Map.Entry<String, Double>> openSpot(List<String> roster, List<String> candidates,
                                                     java.util.function.ToDoubleFunction<List<String>> value){
-        double base = value.applyAsDouble(roster);
+        return openSpot(roster, candidates, Objective.of(value));
+    }
+
+    static List<Map.Entry<String, Double>> openSpot(List<String> roster, List<String> candidates, Objective value){
         List<Map.Entry<String, Double>> out = new ArrayList<>();
         for(String id : candidates){
             List<String> with = new ArrayList<>(roster);
             with.add(id);
-            out.add(Map.entry(id, value.applyAsDouble(with) - base));
+            out.add(Map.entry(id, value.of(with, List.of()) - value.of(roster, List.of(id))));
         }
-        out.sort(Comparator.comparingDouble((Map.Entry<String, Double> e) -> -e.getValue()));
+        out.sort((a, b) -> tied(a.getValue(), b.getValue()) ? a.getKey().compareTo(b.getKey())
+                : Double.compare(b.getValue(), a.getValue()));
         return out;
     }
 
@@ -348,11 +431,16 @@ public class TuesdaySwap {
         // most news (TRAPS #136, #151).
         String source = System.getProperty("projections", DEFAULT_SOURCE);
         Map<String, Double> points = ProjectionSources.resolve(source);
-        Units units = units(source, week);
         // the yardstick measured on THIS pricing, never another's converted
         ObjectiveStability.Floor measured = ObjectiveStability.floorFor(source);
         double floor = measured.points();
-        WeeklyStarterValue value = WeeklyStarterValue.forCurrentBoard(configuration, points, scenarios, 424_242L);
+        // THE OBJECTIVE (2026-10-24): each week's best lineup with that week's best free agents in the pool for
+        // nothing, a claim priced against the wire without him (WeeklyLineupValue). -Pobjective=drawn: the old one.
+        boolean drawn = "drawn".equals(System.getProperty("objective", "weekly"));
+        RosterValue value = drawn ? WeeklyStarterValue.forCurrentBoard(configuration, points, scenarios, 424_242L)
+                : WeeklyLineupValue.forSource(configuration, source);
+        Objective objective = Objective.of(value);
+        Units units = drawn ? units(source, week) : weeklyUnits(source, lastWeekOf(value));
         Map<String, String> ownerOf = LeagueOwners.today(configuration);
 
         List<String> roster = new ArrayList<>();
@@ -406,9 +494,8 @@ public class TuesdaySwap {
             positionOf.put(id, player == null ? null : player.position);
         }
 
-        List<Swap> swaps = search(roster, candidates, nameOf, positionOf, ids -> value.of(ids));
-        List<Priced> priced = price(swaps, roster, candidates, nameOf, positionOf, points,
-                ids -> value.of(ids));
+        List<Swap> swaps = search(roster, candidates, nameOf, positionOf, objective);
+        List<Priced> priced = price(swaps, roster, candidates, nameOf, positionOf, points, objective);
         Priced best = recommend(priced, floor);
 
         // THE OTHER PRICING, BESIDE EVERY LISTED ROW. On 2026-09-25 a +3.1 claim of
@@ -418,16 +505,15 @@ public class TuesdaySwap {
         // number that could not see the results. Both are printed now, and a
         // CLAIM is named only when the move is not a loss under either (TRAPS #146).
         String altSource = altOf(source);
-        Units altUnits = units(altSource, week);
-        WeeklyStarterValue alt = WeeklyStarterValue.forCurrentBoard(configuration,
-                ProjectionSources.resolve(altSource), scenarios, 424_242L);
-        double altBase = alt.of(roster);
+        RosterValue alt = drawn ? WeeklyStarterValue.forCurrentBoard(configuration,
+                ProjectionSources.resolve(altSource), scenarios, 424_242L) : WeeklyLineupValue.forSource(configuration, altSource);
+        Units altUnits = drawn ? units(altSource, week) : weeklyUnits(altSource, lastWeekOf(alt));
         Map<Priced, Double> altWorth = new HashMap<>();
         for(Priced row : priced.subList(0, Math.min(8, priced.size()))){
-            altWorth.put(row, alt.of(planAfter(roster, row)) - altBase);
+            altWorth.put(row, alt.of(planAfter(roster, row)) - alt.of(roster, claimed(row)));
         }
         if(best != null){
-            altWorth.computeIfAbsent(best, row -> alt.of(planAfter(roster, row)) - altBase);
+            altWorth.computeIfAbsent(best, row -> alt.of(planAfter(roster, row)) - alt.of(roster, claimed(row)));
         }
         Priced blocked = null;
         if(best != null && altWorth.get(best) < 0){
@@ -439,15 +525,21 @@ public class TuesdaySwap {
         out.append(DataStamp.line()).append("\n");
         out.append(String.format("TUESDAY SWAP  %s  season %s, waivers for week %d  (%s; priced on %s, with %s beside it)%n",
                 LocalDate.now(), season, week, me, source, altSource));
-        out.append(String.format("%d free agents searched against all %d roster spots = %d pairs, on the weekly-starter%n",
-                candidates.size(), roster.size(), swaps.size()));
-        out.append(String.format("objective (%d drawn seasons), which prices a bench man by how often he would actually start.%n", scenarios));
+        out.append(String.format("%d free agents searched against all %d roster spots = %d pairs, on %s.%n",
+                candidates.size(), roster.size(), swaps.size(), drawn
+                        ? "the weekly-starter objective (" + scenarios + " drawn seasons, -Pobjective=drawn)"
+                        : value.label() + ": each week's best lineup, that week's best free agents in the pool for nothing.\n"
+                        + "A claim is priced against the wire WITHOUT him - what he adds over the wire he leaves behind"));
         out.append(String.format("Gains are %s; %.1f of those%n"
                 + "weeks are the regular season, so a gain is worth %.2f of itself from here.%n",
                 units.describe(), units.regularWeeks(), units.fromHere(1.0)));
-        out.append(String.format("Nothing under %.1f points is named: that is the yardstick's own worst seed-to-seed spread,%n"
+        out.append(drawn
+                ? String.format("Nothing under %.1f points is named: that is the yardstick's own worst seed-to-seed spread,%n"
                 + "measured on %s on %s (ObjectiveStability), so a smaller gain is the measurement moving%n"
-                + "and not the roster.%n%n", floor, measured.source(), measured.date()));
+                + "and not the roster.%n%n", floor, measured.source(), measured.date())
+                : String.format("Nothing under %.1f points is named. The weekly objective draws nothing, so this is not its noise: it is the%n"
+                + "line the drawn-season objective's worst seed-to-seed spread set (%s, %s), kept as the size a claim must%n"
+                + "reach to be worth a transaction.%n%n", floor, measured.source(), measured.date()));
 
         // THE COMPLETED PLAN, which is the number you can collect. A row whose
         // drop empties a slot is priced at what refilling it costs, and it is
@@ -472,7 +564,7 @@ public class TuesdaySwap {
             titleRoster.addAll(away);
             out.append(String.format("%-22s %-4s -> drop %-22s %+9.1f %+9.1f %+9.1f %+7.2f%s%s%n", swap.addName(),
                     swap.addPosition(), swap.dropName(), row.worth(), units.fromHere(row.worth()),
-                    altUnits.fromHere(altWorth.get(row)), 100 * stakes.one(me, titleRoster).change(),
+                    altUnits.fromHere(altWorth.get(row)), 100 * stakes.one(me, titleRoster, claimed(row)).change(),
                     row.hole() ? "   <- and refill the slot" : "",
                     altWorth.get(row) < 0 && row.worth() > 0 ? "   <- a loss on " + altSource : ""));
         }
@@ -537,7 +629,7 @@ public class TuesdaySwap {
                 Player player = Player.getPlayerFromSIDV2(id);
                 named.add(player == null ? id : player.firstName + " " + player.lastName);
             }
-            List<Map.Entry<String, Double>> open = openSpot(roster, candidates, ids -> value.of(ids));
+            List<Map.Entry<String, Double>> open = openSpot(roster, candidates, objective);
             out.append(toIr.isEmpty()
                     ? String.format("OPEN SPOT - %d active men in %d spots, so each free agent can be added with NO drop:%n", roster.size(), activeSlots)
                     : String.format("OPEN SPOT - with %s on IR, each free agent added with NO drop:%n", String.join(", ", named)));
@@ -546,12 +638,12 @@ public class TuesdaySwap {
             for(Map.Entry<String, Double> e : open.subList(0, Math.min(8, open.size()))){
                 List<String> with = new ArrayList<>(roster);
                 with.add(e.getKey());
-                double altGain = alt.of(with) - altBase;
+                double altGain = alt.of(with) - alt.of(roster, List.of(e.getKey()));
                 List<String> titleRoster = new ArrayList<>(with);
                 titleRoster.addAll(away);
                 out.append(String.format("%-22s %-4s %+9.1f %+9.1f %+9.1f %+7.2f%s%n", nameOf.get(e.getKey()), positionOf.get(e.getKey()),
                         e.getValue(), units.fromHere(e.getValue()), altUnits.fromHere(altGain),
-                        100 * stakes.one(me, titleRoster).change(), e.getValue() < floor ? "   <- inside the floor" : ""));
+                        100 * stakes.one(me, titleRoster, List.of(e.getKey())).change(), e.getValue() < floor ? "   <- inside the floor" : ""));
             }
             out.append(toIr.isEmpty() ? "\n"
                     : String.format("A rental until %s is activated, when somebody must be dropped - read the swap table above for who.%n%n",
@@ -575,8 +667,7 @@ public class TuesdaySwap {
                 }
             }
             for(Swap swap : ladder){
-                Completion completion = complete(roster, swap, candidates, nameOf, positionOf,
-                        points, ids -> value.of(ids));
+                Completion completion = complete(roster, swap, candidates, nameOf, positionOf, points, objective);
                 out.append(String.format("   drop %-24s %+7.1f%s%n", swap.dropName(), swap.gain(),
                         completion == null ? ""
                                 : String.format("   <- empties a slot; the whole plan (then add %s,"
