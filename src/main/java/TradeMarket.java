@@ -940,6 +940,171 @@ public class TradeMarket {
     }
 
     /**
+     * THE TRADE EXPLORER. Justin, 2026-10-27: "let's make a new output for trades,
+     * instead of simply no tanking. I want to avoid tanking, and want to avoid
+     * trading with teams out of contention, but those are things I'll establish
+     * subjectively after you give me the whole data of best trades per manager per
+     * title winning 0.5 odds boost. Make the output a website so i can filter easily
+     * per manager, per odds boost, and have it sorted in terms of least worse for the
+     * other team".
+     *
+     * So nothing here decides for him: no tanking line, no contention gate, no
+     * fairness screen. For each rival, every trade on the board that gains Justin
+     * -PexplorerMinGain (3) or more on Sleeper's projections is taken from the one
+     * that costs the rival least to the one that costs him most, and its title-odds
+     * change simulated (TitleOdds, 20,000 seasons, the same draws before and after);
+     * a trade is kept in its half-point bucket of Justin's rise (+0.5, +1.0, ... up
+     * to -PexplorerTop and above) while that bucket holds fewer than
+     * -PexplorerPerBucket trades. Because the walk goes least worse first, the trades
+     * a bucket holds are the least worse in it. A simulation costs about a quarter
+     * of a second, so once a rival's lower buckets are full, a trade whose gain
+     * cannot plausibly reach an open bucket (twice the rate seen so far, plus a
+     * point) is skipped; -PexplorerCap bounds the simulations per rival, and each
+     * rival's counts say whether it was reached. Everything Justin would judge on
+     * rides along: both pricings for both sides, both title changes, keeper value,
+     * his view, the tanking line as a fact, and any hurt man moving.
+     */
+    static String explorer(String me, List<Trade> all, Map<String, List<String>> rosters, Map<String, String> nameOf,
+                           java.util.function.ToDoubleFunction<List<String>> season, RosterValue altValue,
+                           Map<String, Double> scoreAlt, TradeScreens.Context screens, TitleOdds.Stakes stakes,
+                           double hisFloor, double hisFloorAlt, Map<String, Double> surplus, Map<String, Position> everyPosition,
+                           String source, String alt){
+        double step = 0.5;
+        double top = Double.parseDouble(System.getProperty("explorerTop", "6.0"));
+        int buckets = (int) Math.round((top - step) / step) + 1;          // +0.5 ... +top, the last open-ended
+        int perBucket = Integer.getInteger("explorerPerBucket", 8);
+        int cap = Integer.getInteger("explorerCap", 1500);
+        double minGain = Double.parseDouble(System.getProperty("explorerMinGain", "3"));
+        List<String> mine = rosters.get(me);
+        double myBase = season.applyAsDouble(mine);
+        double myKeepBase = keeperValue(mine, surplus, everyPosition);
+        record Cand(Trade trade, double you, double him){}
+        Map<String, List<Trade>> byRival = new TreeMap<>();
+        for(Trade t : all){
+            byRival.computeIfAbsent(t.withManager(), k -> new ArrayList<>()).add(t);
+        }
+        StringBuilder rows = new StringBuilder();
+        StringBuilder rivals = new StringBuilder();
+        int written = 0;
+        for(Map.Entry<String, List<Trade>> e : byRival.entrySet()){
+            String rival = e.getKey();
+            List<String> his = rosters.get(rival);
+            double hisBase = season.applyAsDouble(his);
+            double hisKeepBase = keeperValue(his, surplus, everyPosition);
+            List<Cand> cands = new ArrayList<>();
+            for(Trade t : e.getValue()){
+                double you = season.applyAsDouble(swap(mine, t.give(), t.get())) - myBase;
+                if(you >= minGain){
+                    cands.add(new Cand(t, you, season.applyAsDouble(swap(his, t.hisOut(), t.give())) - hisBase));
+                }
+            }
+            cands.sort(Comparator.comparingDouble((Cand c) -> -c.him()));
+            int[] count = new int[buckets];
+            int sims = 0, skipped = 0, kept = 0;
+            double sumRise = 0, sumYou = 0;
+            for(Cand c : cands){
+                if(sims >= cap || java.util.Arrays.stream(count).allMatch(n -> n >= perBucket)){
+                    break;
+                }
+                double rate = sumYou > 0 ? Math.max(0.02, sumRise / sumYou) : 0.1;
+                int reach = (int) Math.floor((2 * rate * c.you() + 1.0) / step) - 1;
+                boolean open = false;
+                for(int b = 0; b <= Math.min(reach, buckets - 1); b++){
+                    open |= count[b] < perBucket;
+                }
+                if(!open){
+                    skipped++;
+                    continue;
+                }
+                List<String> myAfter = swap(mine, c.trade().give(), c.trade().get());
+                List<String> hisAfter = swap(his, c.trade().hisOut(), c.trade().give());
+                TitleOdds.Delta[] d = stakes.swap(me, myAfter, rival, hisAfter);
+                sims++;
+                double rise = 100 * d[0].change();
+                sumRise += Math.max(0, rise);
+                sumYou += c.you();
+                if(rise < step){
+                    continue;
+                }
+                int b = Math.min(buckets - 1, (int) Math.floor((rise - step) / step + 1e-9));
+                if(count[b] >= perBucket){
+                    continue;
+                }
+                count[b]++;
+                kept++;
+                double[] other = onOther(c.trade(), rosters, me, altValue, scoreAlt);
+                TradeScreens.Screens seen = screens.of(c.trade());
+                boolean tanking = !equitableSeason(c.him(), hisFloor, other[1], hisFloorAlt);
+                rows.append(written++ == 0 ? "" : ",\n").append(String.format(java.util.Locale.ROOT,
+                        "{\"m\":%s,\"give\":%s,\"get\":%s,\"cut\":%s,\"rise\":%.2f,\"se\":%.2f,\"hisTitle\":%.2f,"
+                                + "\"you\":%.1f,\"youAlt\":%.1f,\"him\":%.1f,\"himAlt\":%.1f,\"myKeep\":%.1f,\"hisKeep\":%.1f,"
+                                + "\"draft\":%s,\"seasonView\":%s,\"blend\":%s,\"fair\":%b,\"asking\":%b,\"prec\":%d,"
+                                + "\"tank\":%b,\"hurtIn\":%s,\"hurtOut\":%s}",
+                        jsonString(rival), jsonNames(c.trade().give(), nameOf), jsonNames(c.trade().get(), nameOf),
+                        jsonNames(c.trade().hisCut(), nameOf), rise, 100 * d[0].se(), 100 * d[1].change(),
+                        c.you(), other[0], c.him(), other[1],
+                        keeperValue(myAfter, surplus, everyPosition) - myKeepBase,
+                        keeperValue(hisAfter, surplus, everyPosition) - hisKeepBase,
+                        jsonRatio(seen.draftRatio()), jsonRatio(seen.pointsRatio()), jsonRatio(seen.blendedRatio()),
+                        seen.fairToHim(), seen.worthAsking(), seen.precedents(), tanking,
+                        jsonHurt(c.trade().get(), nameOf), jsonHurt(c.trade().give(), nameOf)));
+            }
+            rivals.append(rivals.length() == 0 ? "" : ",\n").append(String.format(java.util.Locale.ROOT,
+                    "{\"m\":%s,\"state\":%s,\"title\":%.2f,\"playoffs\":%.1f,\"candidates\":%d,\"simulated\":%d,"
+                            + "\"skipped\":%d,\"kept\":%d,\"capReached\":%b}",
+                    jsonString(rival), jsonString(stakes.state(rival)), 100 * stakes.title(rival),
+                    100 * stakes.playoffs().getOrDefault(rival, 0.0), cands.size(), sims, skipped, kept, sims >= cap));
+            System.out.printf("explorer: %s - %d candidates, %d simulated, %d skipped, %d kept%n", rival, cands.size(), sims, skipped, kept);
+        }
+        return String.format(java.util.Locale.ROOT,
+                "{\"generated\":%s,\"season\":%s,\"weeksPlayed\":%d,\"me\":%s,\"myTitle\":%.2f,\"myPlayoffs\":%.1f,"
+                        + "\"pricing\":%s,\"alt\":%s,\"step\":%.1f,\"top\":%.1f,\"perBucket\":%d,\"cap\":%d,\"minGain\":%.1f,"
+                        + "\"tankLine\":%.1f,\"tankLineAlt\":%.1f,\"sims\":%d,\"draftWeight\":%.2f,"
+                        + "\"rivals\":[%s],\n\"trades\":[%s]}",
+                jsonString(LocalDate.now().toString()), jsonString(LeagueWeek.season()), screens.weeksPlayed(), jsonString(me),
+                100 * stakes.title(me), 100 * stakes.playoffs().getOrDefault(me, 0.0), jsonString(source), jsonString(alt),
+                step, top, perBucket, cap, minGain, hisFloor, hisFloorAlt, TitleOdds.SIMS, screens.weightNow(), rivals, rows);
+    }
+
+    static String jsonString(String s){
+        StringBuilder out = new StringBuilder("\"");
+        for(char ch : s.toCharArray()){
+            switch(ch){
+                case '"' -> out.append("\\\"");
+                case '\\' -> out.append("\\\\");
+                case '<' -> out.append("\\u003c");       // never close the page's script early
+                default -> out.append(ch < 0x20 ? String.format("\\u%04x", (int) ch) : String.valueOf(ch));
+            }
+        }
+        return out.append('"').toString();
+    }
+
+    static String jsonNames(List<String> ids, Map<String, String> nameOf){
+        List<String> out = new ArrayList<>();
+        for(String id : ids){
+            out.add(jsonString(name(id, nameOf)));
+        }
+        return "[" + String.join(",", out) + "]";
+    }
+
+    /** A ratio on one of his screens; nothing given on it is "everything back", which JSON has no word for: null. */
+    static String jsonRatio(double r){
+        return Double.isFinite(r) ? String.format(java.util.Locale.ROOT, "%.3f", r) : "null";
+    }
+
+    /** The hurt men among these, each "name (status)", as a JSON list. */
+    static String jsonHurt(List<String> ids, Map<String, String> nameOf){
+        List<String> out = new ArrayList<>();
+        for(String id : ids){
+            String status = SleeperProjections.injuryStatusOf(id);
+            if(status != null && Set.of("IR", "Out", "Doubtful", "PUP", "Sus", "Questionable").contains(status)){
+                out.add(jsonString(name(id, nameOf) + " (" + status + ")"));
+            }
+        }
+        return "[" + String.join(",", out) + "]";
+    }
+
+    /**
      * The men a trade brings Justin who are hurt today - IR, Out, Doubtful, PUP or
      * suspended. Sleeper projects such a man back, so a trade can lean on him the
      * way the wire leaned on Terry McLaurin (2026-10-22) and a package on Travis
@@ -1243,6 +1408,28 @@ public class TradeMarket {
             all.addAll(unbalanced(me, entry.getKey(), rosters.get(me), entry.getValue(),
                     mySide, his, pool, points));
         }
+        // THE TRADE EXPLORER (2026-10-27): every bucket of title-odds rise, every rival, least worse for him
+        // first, as data and as a page to filter. -PtradeExplorer=true; see explorer.
+        if(Boolean.getBoolean("tradeExplorer")){
+            if(!System.getProperty("exclude", "").isBlank()){
+                Set<String> barred = new java.util.HashSet<>(TradeScreens.idsNamed(System.getProperty("exclude")));
+                all.removeIf(t -> t.give().stream().anyMatch(barred::contains) || t.get().stream().anyMatch(barred::contains)
+                        || t.hisOut().stream().anyMatch(barred::contains));
+            }
+            String json = explorer(me, all, rosters, nameOf, season, altValue, scoreAlt, screens, stakes,
+                    hisFloor, hisFloorAlt, surplus, everyPosition, source, alt);
+            Path data = Path.of("data", "trade-explorer-" + LocalDate.now() + ".json");
+            Files.writeString(data, json, StandardCharsets.UTF_8);
+            String template;
+            try(java.io.InputStream in = TradeMarket.class.getResourceAsStream("/trade-explorer.html")){
+                template = new String(in.readAllBytes(), StandardCharsets.UTF_8);
+            }
+            Path page = Path.of("data", "trade-explorer.html");
+            Files.writeString(page, template.replace("/*TRADE_DATA*/null", json), StandardCharsets.UTF_8);
+            System.out.println("written to " + data + " and " + page);
+            return;
+        }
+
         // THE TITLE LADDER (2026-10-24). Justin: "what are, for 1.0, 1.5, 2.0, 2.5, 3.0 % increase in my title
         // odds, the top 4 trades per other member that lead to the least tanking for them". -PtitleLadder lists
         // the targets; see titleLadder.

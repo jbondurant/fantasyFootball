@@ -290,7 +290,9 @@ tasks.register('run', JavaExec) {
      // TradeMarket: 'drawn' prices on the old drawn-season objective instead of weekly lineups with the wire
      'objective',
      // TradeMarket title ladder: the title-odds rises, trades per rival, the simulations per rival, the season gain to simulate
-     'titleLadder', 'perRival', 'ladderCap', 'ladderMinGain'].each { knob ->
+     'titleLadder', 'perRival', 'ladderCap', 'ladderMinGain',
+     // TradeMarket trade explorer: on, the top bucket, trades per bucket, simulations per rival, the season gain to simulate
+     'tradeExplorer', 'explorerTop', 'explorerPerBucket', 'explorerCap', 'explorerMinGain'].each { knob ->
         if (project.hasProperty(knob)) {
             systemProperty knob, project.property(knob)
         }

@@ -211,6 +211,17 @@ does). Title odds count the same way: a man held is never also on his own wire, 
 claim's title change is priced with him gone from everyone's wire. With the wire this
 strong, claims are worth a few points at most - stream, do not hoard.
 
+**The trade explorer (2026-10-27)** - the whole picture, for Justin to judge:
+every trade on the board that raises his title odds by half a point or more, for
+each manager, in half-point buckets, sorted least worse for the other team. Nothing
+is filtered for tanking or contention (Justin: "those are things I'll establish
+subjectively"); they are columns and optional filters on the page. About an hour of
+title simulations, then publish the page to the same link:
+
+    ./gradlew run -Pmain=TradeMarket -PtradeExplorer=true
+    # writes data/trade-explorer-<date>.json and data/trade-explorer.html
+    # publish data/trade-explorer.html to https://claude.ai/artifact/Lt8wxdiaT7X1YJHvYnHueN
+
 To ask about one man - "nothing where I get Chase and give Henry or Tuten?" - the
 targeted search prices EVERY package that answers it (one to three men a side), not
 just the board's top-eight packages, and says which rule each one breaks:

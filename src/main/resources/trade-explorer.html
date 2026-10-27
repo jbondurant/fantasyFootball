@@ -1,0 +1,317 @@
+<title>Keeper League Trade Explorer</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a scoreboard header, a strip of managers to pick from, a sticky filter bar, then the trades as a table that turns into cards on a phone. */
+:root {
+  --bg: #f3f5f1;
+  --panel: #ffffff;
+  --ink: #18201b;
+  --muted: #5c675f;
+  --line: #d9ded7;
+  --field: #1f6b45;
+  --field-soft: #e2efe7;
+  --warn: #9a5b00;
+  --warn-soft: #fbefd9;
+  --bad: #b3261e;
+  --bad-soft: #fbe3e0;
+  --good: #1f6b45;
+  --chip: #eef1ec;
+  --display: "Barlow Condensed", "Arial Narrow", system-ui, sans-serif;
+  --body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111613; --panel: #18201b; --ink: #e6ece7; --muted: #9aa69d; --line: #2c3730;
+    --field: #5fc28f; --field-soft: #1d3326; --warn: #e3a64a; --warn-soft: #33270f;
+    --bad: #ff8a80; --bad-soft: #3a1b18; --good: #5fc28f; --chip: #222b25; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111613; --panel: #18201b; --ink: #e6ece7; --muted: #9aa69d; --line: #2c3730;
+  --field: #5fc28f; --field-soft: #1d3326; --warn: #e3a64a; --warn-soft: #33270f;
+  --bad: #ff8a80; --bad-soft: #3a1b18; --good: #5fc28f; --chip: #222b25; color-scheme: dark;
+}
+body { background: var(--bg); color: var(--ink); font-family: var(--body); line-height: 1.45; }
+.wrap { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 48px; max-width: 1400px; margin: 0 auto; display: grid; gap: 18px; }
+h1, h2 { font-family: var(--display); font-weight: 700; letter-spacing: 0.01em; text-wrap: balance; margin: 0; }
+h1 { font-size: 2.2rem; line-height: 1.05; }
+h2 { font-size: 1.25rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+.lede { margin: 6px 0 0; color: var(--muted); max-width: 70ch; }
+.score { display: flex; flex-wrap: wrap; gap: 10px 26px; align-items: baseline; margin-top: 12px; font-family: var(--mono); font-size: 0.85rem; color: var(--muted); }
+.score b { font-family: var(--display); font-size: 1.6rem; color: var(--ink); font-weight: 600; margin-right: 4px; }
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+.managers { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.mgr { text-align: left; border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 8px; padding: 8px 10px; cursor: pointer; display: grid; gap: 2px; font: inherit; }
+.mgr:hover { border-color: var(--field); }
+.mgr:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible, summary:focus-visible { outline: 2px solid var(--field); outline-offset: 2px; }
+.mgr[aria-pressed="true"] { border-color: var(--field); background: var(--field-soft); }
+.mgr .name { font-weight: 600; overflow-wrap: anywhere; }
+.mgr .meta { font-family: var(--mono); font-size: 0.75rem; color: var(--muted); }
+.pill { display: inline-block; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; border-radius: 999px; padding: 1px 7px; background: var(--chip); color: var(--muted); white-space: nowrap; }
+.pill.contender { background: var(--field-soft); color: var(--field); }
+.pill.bubble { background: var(--warn-soft); color: var(--warn); }
+.pill.out { background: var(--chip); color: var(--muted); }
+.pill.tank { background: var(--bad-soft); color: var(--bad); }
+.pill.fair { background: var(--field-soft); color: var(--field); }
+.pill.hurt { background: var(--warn-soft); color: var(--warn); text-transform: none; letter-spacing: 0; font-weight: 500; }
+
+.filters { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); padding-block: 10px; border-bottom: 1px solid var(--line); display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: end; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+.field { display: grid; gap: 3px; font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+select, input[type="search"] { font: inherit; font-size: 0.9rem; text-transform: none; letter-spacing: 0; color: var(--ink); background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; min-width: 0; }
+.checks { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 0.85rem; }
+.checks label { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
+.count { margin-left: auto; font-family: var(--mono); font-size: 0.85rem; color: var(--muted); }
+
+.tablewrap { overflow-x: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; }
+table { border-collapse: collapse; width: 100%; font-size: 0.86rem; }
+th, td { padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; text-align: left; }
+th { font-family: var(--display); font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); position: sticky; top: 0; background: var(--panel); white-space: nowrap; }
+th small { display: block; font-family: var(--body); text-transform: none; letter-spacing: 0; font-weight: 400; }
+td.n { font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; text-align: right; }
+td .sub { display: block; font-size: 0.75rem; color: var(--muted); }
+.men { display: grid; gap: 2px; min-width: 150px; }
+.men .cut { font-size: 0.75rem; color: var(--muted); }
+.neg { color: var(--bad); }
+.pos { color: var(--good); }
+.soft { color: var(--muted); }
+.rise { font-family: var(--display); font-size: 1.15rem; font-weight: 600; }
+.empty { padding: 28px; text-align: center; color: var(--muted); }
+
+details { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; }
+summary { cursor: pointer; font-weight: 600; }
+details p, details li { max-width: 75ch; color: var(--ink); }
+details ul { padding-left: 1.2em; }
+
+@media (max-width: 760px) {
+  table, thead, tbody, tr, td { display: block; }
+  thead { display: none; }
+  .tablewrap { background: transparent; border: 0; }
+  tr { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; margin-bottom: 10px; padding: 6px 4px; }
+  td { border: 0; padding: 4px 10px; }
+  td.n { text-align: left; }
+  td[data-k]::before { content: attr(data-k); display: block; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+}
+@media (prefers-reduced-motion: no-preference) { .mgr, select { transition: border-color 120ms ease; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Keeper League Trade Explorer</h1>
+    <p class="lede" id="lede">Every trade on the board that raises your title odds by at least half a point, for each manager, in half-point buckets, sorted by what it costs the other team. Nothing is hidden for tanking or contention: those are columns and optional filters, for you to judge.</p>
+    <div class="score" id="score"></div>
+  </header>
+
+  <section aria-labelledby="mgrs-h">
+    <h2 id="mgrs-h">Managers</h2>
+    <div class="managers" id="managers"></div>
+  </section>
+
+  <div class="filters" role="region" aria-label="Filters">
+    <label class="field" for="f-mgr">Manager
+      <select id="f-mgr"></select>
+    </label>
+    <label class="field" for="f-bucket">Your title rise
+      <select id="f-bucket"></select>
+    </label>
+    <label class="field" for="f-mode">Bucket
+      <select id="f-mode">
+        <option value="exact">exactly this half-point</option>
+        <option value="atleast">this or more</option>
+      </select>
+    </label>
+    <label class="field" for="f-sort">Sort
+      <select id="f-sort">
+        <option value="him">least worse for him (Sleeper)</option>
+        <option value="himAlt">least worse for him (rest of season)</option>
+        <option value="hisTitle">least worse for his title odds</option>
+        <option value="rise">biggest rise in your title odds</option>
+        <option value="you">most season points for you</option>
+        <option value="blend">most generous on what he sees</option>
+      </select>
+    </label>
+    <label class="field" for="f-q">Player
+      <input type="search" id="f-q" placeholder="any name">
+    </label>
+    <div class="checks">
+      <label><input type="checkbox" id="f-tank"> hide tanking</label>
+      <label><input type="checkbox" id="f-hurt"> hide hurt players</label>
+      <label><input type="checkbox" id="f-out"> hide teams out of it</label>
+    </div>
+    <div class="count" id="count" aria-live="polite"></div>
+  </div>
+
+  <div class="tablewrap">
+    <table>
+      <thead>
+        <tr>
+          <th>With</th>
+          <th>You give</th>
+          <th>You get</th>
+          <th>Your title<small>points of odds</small></th>
+          <th>His season<small>Sleeper · rest of season</small></th>
+          <th>His title<small>points of odds</small></th>
+          <th>Your season<small>Sleeper · rest of season</small></th>
+          <th>Keepers<small>you · him</small></th>
+          <th>His view<small>back of what he gives</small></th>
+          <th>Flags</th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <div class="empty" id="empty" hidden>No trades match. Widen the bucket to "this or more", pick all managers, or clear a filter.</div>
+  </div>
+
+  <details>
+    <summary>How to read this</summary>
+    <ul id="howto"></ul>
+  </details>
+</div>
+
+<script>
+const DATA = /*TRADE_DATA*/null;
+
+const $ = (id) => document.getElementById(id);
+const fmt = (v, d = 1) => (v > 0 ? "+" : "") + v.toFixed(d);
+const pct = (v) => v == null ? "all" : Math.round(v * 100) + "%";
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const stateClass = (s) => s === "contender" ? "contender" : s === "bubble" ? "bubble" : "out";
+
+function bucketOf(rise) {
+  return Math.min(DATA.top, Math.floor((rise - DATA.step) / DATA.step + 1e-9) * DATA.step + DATA.step);
+}
+
+function load(key, fallback) {
+  try { const v = localStorage.getItem("tradeExplorer." + key); return v == null ? fallback : JSON.parse(v); } catch (e) { return fallback; }
+}
+function save(key, value) {
+  try { localStorage.setItem("tradeExplorer." + key, JSON.stringify(value)); } catch (e) { /* storage blocked: filters just don't persist */ }
+}
+
+function init() {
+  if (!DATA) {
+    $("lede").textContent = "This copy of the page has no trade data. It is filled by: ./gradlew run -Pmain=TradeMarket -PtradeExplorer=true";
+    return;
+  }
+  const rivalOf = Object.fromEntries(DATA.rivals.map((r) => [r.m, r]));
+  DATA.trades.forEach((t) => { t.bucket = bucketOf(t.rise); t.state = rivalOf[t.m]?.state || ""; });
+
+  $("score").innerHTML =
+    `<span><b>${DATA.myTitle.toFixed(1)}%</b>your title odds</span>` +
+    `<span><b>${DATA.myPlayoffs.toFixed(0)}%</b>playoffs</span>` +
+    `<span><b>${DATA.trades.length}</b>trades</span>` +
+    `<span>${esc(DATA.generated)} · season ${esc(DATA.season)} after ${DATA.weeksPlayed} games · ${DATA.sims.toLocaleString()} simulated seasons a trade</span>`;
+
+  const byRival = {};
+  DATA.trades.forEach((t) => { byRival[t.m] = (byRival[t.m] || 0) + 1; });
+  const rivals = [...DATA.rivals].sort((a, b) => b.title - a.title);
+
+  const mgrSel = $("f-mgr");
+  mgrSel.innerHTML = `<option value="">All managers</option>` +
+    rivals.map((r) => `<option value="${esc(r.m)}">${esc(r.m)} (${r.state}, ${r.title.toFixed(1)}%)</option>`).join("");
+
+  $("managers").innerHTML = rivals.map((r) =>
+    `<button type="button" class="mgr" data-m="${esc(r.m)}" aria-pressed="false">
+       <span class="name">${esc(r.m)}</span>
+       <span><span class="pill ${stateClass(r.state)}">${esc(r.state)}</span></span>
+       <span class="meta">title ${r.title.toFixed(1)}% · playoffs ${r.playoffs.toFixed(0)}%</span>
+       <span class="meta">${byRival[r.m] || 0} trades${r.capReached ? " · search capped" : ""}</span>
+     </button>`).join("");
+
+  const bucketSel = $("f-bucket");
+  const opts = [`<option value="">any rise</option>`];
+  for (let b = DATA.step; b <= DATA.top + 1e-9; b += DATA.step) {
+    const label = b >= DATA.top - 1e-9 ? `+${b.toFixed(1)} or more` : `+${b.toFixed(1)} to +${(b + DATA.step).toFixed(1)}`;
+    opts.push(`<option value="${b.toFixed(1)}">${label}</option>`);
+  }
+  bucketSel.innerHTML = opts.join("");
+
+  const state = {
+    m: load("m", ""), bucket: load("bucket", ""), mode: load("mode", "exact"), sort: load("sort", "him"),
+    q: "", tank: load("tank", false), hurt: load("hurt", false), out: load("out", false)
+  };
+  const hashM = decodeURIComponent((location.hash || "").slice(1));
+  if (hashM && rivalOf[hashM]) state.m = hashM;
+  if (state.m && !rivalOf[state.m]) state.m = "";
+  mgrSel.value = state.m; bucketSel.value = state.bucket; $("f-mode").value = state.mode; $("f-sort").value = state.sort;
+  $("f-tank").checked = state.tank; $("f-hurt").checked = state.hurt; $("f-out").checked = state.out;
+
+  const bind = (id, key, prop = "value") => $(id).addEventListener(prop === "checked" ? "change" : "input", (e) => {
+    state[key] = e.target[prop]; if (key !== "q") save(key, state[key]); render();
+  });
+  bind("f-mgr", "m"); bind("f-bucket", "bucket"); bind("f-mode", "mode"); bind("f-sort", "sort"); bind("f-q", "q");
+  bind("f-tank", "tank", "checked"); bind("f-hurt", "hurt", "checked"); bind("f-out", "out", "checked");
+  $("managers").addEventListener("click", (e) => {
+    const b = e.target.closest(".mgr"); if (!b) return;
+    state.m = state.m === b.dataset.m ? "" : b.dataset.m; mgrSel.value = state.m; save("m", state.m); render();
+  });
+
+  $("howto").innerHTML = [
+    `<li><b>Your title</b> is the change in your title odds, in percentage points, from ${DATA.sims.toLocaleString()} simulated seasons with the same draws before and after, ± its standard error. Buckets are half a point wide: +1.0 to +1.5 holds rises from 1.0 up to 1.5.</li>`,
+    `<li><b>His season</b> is what the trade does to his roster over the rest of the season, in fantasy points: on Sleeper's weekly projections (${esc(DATA.pricing)}) and on the rest-of-season model (${esc(DATA.alt)}). Each week's best lineup counts, with that week's best free agents available to everyone. The default sort puts the trade that costs him least first.</li>`,
+    `<li><b>Tanking</b> marks a loss past your line: more than ${DATA.tankLine.toFixed(0)} points of his season on Sleeper's projections, or ${DATA.tankLineAlt.toFixed(1)} on the rest-of-season model. It is shown, not applied.</li>`,
+    `<li><b>Keepers</b> is the change in each side's best two keeper surpluses for 2027, in season points over the pick a keeper costs.</li>`,
+    `<li><b>His view</b> is what he gets back of what he gives on the numbers he can see: draft value and this season's screen (pace and Sleeper's projection), blended with draft value at ${Math.round(DATA.draftWeight * 100)}% after ${DATA.weeksPlayed} games. 100% or more reads fair to him.</li>`,
+    `<li><b>Hurt</b> names any player in the trade listed IR, Out, Doubtful, PUP, suspended or Questionable today. Sleeper projects an injured player back, so a trade that leans on one may be worth less than it reads.</li>`,
+    `<li>Coverage: every one-for-one, and two- and three-man packages among each side's most valuable players. For each manager, trades gaining you ${DATA.minGain} or more season points were simulated from least to most costly to him, keeping up to ${DATA.perBucket} per bucket, so each bucket holds the least costly trades in it. A manager marked "search capped" stopped at ${DATA.cap.toLocaleString()} simulations; a bucket short of trades there may have more.</li>`
+  ].join("");
+
+  function render() {
+    document.querySelectorAll(".mgr").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.m === state.m)));
+    const q = state.q.trim().toLowerCase();
+    const b = state.bucket === "" ? null : parseFloat(state.bucket);
+    let list = DATA.trades.filter((t) => {
+      if (state.m && t.m !== state.m) return false;
+      if (b != null && (state.mode === "exact" ? Math.abs(t.bucket - b) > 1e-9 : t.bucket < b - 1e-9)) return false;
+      if (state.tank && t.tank) return false;
+      if (state.hurt && (t.hurtIn.length || t.hurtOut.length)) return false;
+      if (state.out && t.state === "out of it") return false;
+      if (q && ![...t.give, ...t.get].some((n) => n.toLowerCase().includes(q))) return false;
+      return true;
+    });
+    const key = {
+      him: (t) => -t.him, himAlt: (t) => -t.himAlt, hisTitle: (t) => -t.hisTitle,
+      rise: (t) => -t.rise, you: (t) => -t.you, blend: (t) => -(t.blend ?? 9)
+    }[state.sort];
+    list.sort((x, y) => key(x) - key(y) || y.rise - x.rise);
+    $("count").textContent = `${list.length} of ${DATA.trades.length} trades`;
+    $("empty").hidden = list.length > 0;
+    $("rows").innerHTML = list.map(row).join("");
+  }
+
+  function names(arr, hurt) {
+    return arr.map((n) => {
+      const h = hurt.find((x) => x.startsWith(n + " ("));
+      return `<span>${esc(n)}${h ? ` <span class="pill hurt">${esc(h.slice(n.length + 1))}</span>` : ""}</span>`;
+    }).join("");
+  }
+
+  function row(t) {
+    const himCls = t.him <= -DATA.tankLine ? "neg" : t.him < 0 ? "" : "pos";
+    const himAltCls = t.himAlt <= -DATA.tankLineAlt ? "neg" : t.himAlt < 0 ? "" : "pos";
+    const flags = [
+      t.tank ? `<span class="pill tank">tanking</span>` : "",
+      t.fair ? `<span class="pill fair">fair to him</span>` : t.asking ? `<span class="pill">long shot</span>` : `<span class="pill">no on what he sees</span>`
+    ].join(" ");
+    return `<tr>
+      <td data-k="With"><b>${esc(t.m)}</b><span class="sub"><span class="pill ${stateClass(t.state)}">${esc(t.state)}</span></span></td>
+      <td data-k="You give"><div class="men">${names(t.give, t.hurtOut)}</div></td>
+      <td data-k="You get"><div class="men">${names(t.get, t.hurtIn)}${t.cut.length ? `<span class="cut">he cuts ${esc(t.cut.join(", "))}</span>` : ""}</div></td>
+      <td class="n" data-k="Your title"><span class="rise">${fmt(t.rise)}</span><span class="sub">± ${t.se.toFixed(1)}</span></td>
+      <td class="n" data-k="His season"><span class="${himCls}">${fmt(t.him)}</span><span class="sub ${himAltCls}">${fmt(t.himAlt)}</span></td>
+      <td class="n" data-k="His title">${fmt(t.hisTitle)}</td>
+      <td class="n" data-k="Your season">${fmt(t.you)}<span class="sub ${t.youAlt < 0 ? "neg" : ""}">${fmt(t.youAlt)}</span></td>
+      <td class="n" data-k="Keepers">${fmt(t.myKeep)}<span class="sub">${fmt(t.hisKeep)}</span></td>
+      <td class="n" data-k="His view">${pct(t.blend)}<span class="sub">draft ${pct(t.draft)} · season ${pct(t.seasonView)}</span></td>
+      <td data-k="Flags">${flags}</td>
+    </tr>`;
+  }
+
+  render();
+}
+init();
+</script>
