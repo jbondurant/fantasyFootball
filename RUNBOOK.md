@@ -222,6 +222,17 @@ title simulations, then publish the page to the same link:
     # writes data/trade-explorer-<date>.json and data/trade-explorer.html
     # publish data/trade-explorer.html to https://claude.ai/artifact/Lt8wxdiaT7X1YJHvYnHueN
 
+Before sending one, run TradeCheck on its men and read the FP ros column too.
+FantasyPros' consensus is what Justin compares against, and the explorer prices
+only on Sleeper and the model. On 2026-10-29 the explorer's Nabers + Stevenson for
+Justin Jefferson read +16.0 on Sleeper's projections and +1.2 on the model, but
+FantasyPros had Nabers WR7 and Jefferson WR12. Justin: "fantasy pros has nabers
+ahead of justin jefferson". It was not sent.
+
+**Offers out** (strike each when it is answered):
+- 2026-10-29, to d0ddi: Rhamondre Stevenson for Luther Burden III. Explorer: title
+  +1.3, you +16.9 / +2.5, him -4.9 / -1.3. FantasyPros: RB23 for WR20.
+
 To ask about one man - "nothing where I get Chase and give Henry or Tuten?" - the
 targeted search prices EVERY package that answers it (one to three men a side), not
 just the board's top-eight packages, and says which rule each one breaks:
@@ -242,7 +253,7 @@ To check one trade by hand - both screens, both pricings, and the other
 manager's lineup before and after:
 
     ./gradlew run -Pmain=TradeScreens -Psend="Malik Nabers,Rhamondre Stevenson" -Preceive="Ja'Marr Chase"
-    ./gradlew run -Pmain=TradeCheck -Pplayers="Malik Nabers,Ja'Marr Chase"   # points by week, ADP, every projection, and Sleeper's weekly sums by date
+    ./gradlew run -Pmain=TradeCheck -Pplayers="Malik Nabers,Ja'Marr Chase"   # points by week, ADP, every projection, FantasyPros' ROS rank, and Sleeper's weekly sums by date
 
 Once a season, after it ends and `EraBoards.LAST_SEASON` has moved to it, add it
 to the draft-weight curve (about an hour of downloading the first time, minutes

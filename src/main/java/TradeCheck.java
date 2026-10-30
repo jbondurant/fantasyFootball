@@ -34,6 +34,12 @@ import com.google.gson.JsonParser;
  * every day the repo saved all of those week files. Reads from before and
  * after an injury show whether Sleeper moved on it.
  *
+ * Justin, 2026-10-29, on Nabers + Stevenson for Justin Jefferson: "fantasy pros
+ * has nabers ahead of justin jefferson". The FP ros column is FantasyPros'
+ * rest-of-season expert consensus rank at the position (half-PPR pages), the
+ * view a man checking a trade outside Sleeper sees beside the two the trade
+ * tools price on.
+ *
  *     ./gradlew run -Pmain=TradeCheck -Pplayers="Malik Nabers,Ja'Marr Chase"
  */
 public class TradeCheck {
@@ -97,12 +103,16 @@ public class TradeCheck {
             LeagueWeek.projected(season, w);   // today's read of every future week, if the day has none yet
         }
         Map<String, Map<String, double[]>> byDate = weeklySumsByDate(season, week + 1, EraActuals.weeks(season));
+        Map<String, String> fpRos = new HashMap<>();
+        for(Rank r : InSeasonProjectionsFP.getRosRanking()){
+            fpRos.putIfAbsent(r.player.sleeperIDString, r.player.position.name() + r.rankNum);
+        }
         List<String> ids = new ArrayList<>();
         List<String> shown = new ArrayList<>();
         System.out.printf("TRADE CHECK  season %s, Sleeper on week %d (week %d is %s)%n%n", season, week, week,
                 LeagueWeek.finished(season, week) ? "finished" : "in progress - its points are partial");
-        System.out.printf("%-22s %-4s %-4s %-12s %-24s %7s %6s %6s %8s %7s %9s  %s%n", "player", "pos", "team", "owner",
-                "points by week", "ppg", "ADP", "pre", "season", "ros", "next wk", "injury");
+        System.out.printf("%-22s %-4s %-4s %-12s %-24s %7s %6s %6s %8s %7s %9s %7s  %s%n", "player", "pos", "team", "owner",
+                "points by week", "ppg", "ADP", "pre", "season", "ros", "next wk", "FP ros", "injury");
         for(String raw : names){
             String name = raw.trim();
             if(name.isEmpty()){
@@ -130,15 +140,16 @@ public class TradeCheck {
                 }
                 double adp = SleeperProjections.adpOf(id);
                 Double pre = preseasonAdp.get(id);
-                System.out.printf("%-22s %-4s %-4s %-12s %-24s %7.1f %6s %6s %8.1f %7.1f %9.1f  %s%n", name, ScreenData.text(p, "position"),
+                System.out.printf("%-22s %-4s %-4s %-12s %-24s %7.1f %6s %6s %8.1f %7.1f %9.1f %7s  %s%n", name, ScreenData.text(p, "position"),
                         ScreenData.text(p, "team"), ownerOf.getOrDefault(id, "free"), byWeek, games == 0 ? 0 : total / games,
                         adp > 1000 ? "-" : String.format("%.1f", adp), pre == null ? "-" : String.format("%.1f", pre),
-                        feed.getOrDefault(id, 0.0), ros.getOrDefault(id, 0.0), next.getOrDefault(id, 0.0),
+                        feed.getOrDefault(id, 0.0), ros.getOrDefault(id, 0.0), next.getOrDefault(id, 0.0), fpRos.getOrDefault(id, "-"),
                         SleeperProjections.injuryStatusOf(id) == null ? "" : SleeperProjections.injuryStatusOf(id));
             }
         }
         System.out.println("\nseason = Sleeper's season feed (what TradeMarket prices on by default); ros = the rest-of-season model;");
-        System.out.println("next wk = Sleeper's projection for next week. Points are this league's scoring.");
+        System.out.println("next wk = Sleeper's projection for next week; FP ros = FantasyPros' rest-of-season consensus rank at the");
+        System.out.println("position (half PPR). Points are this league's scoring.");
 
         System.out.printf("%nSLEEPER'S WEEKLY PROJECTIONS, weeks %d-%d summed, as read on each day the repo saved them all%n",
                 week + 1, EraActuals.weeks(season));
