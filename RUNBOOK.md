@@ -246,9 +246,11 @@ Justin Jefferson read +16.0 on Sleeper's projections and +1.2 on the model, but
 FantasyPros had Nabers WR7 and Jefferson WR12. Justin: "fantasy pros has nabers
 ahead of justin jefferson". It was not sent.
 
-**Offers out** (strike each when it is answered):
-- 2026-10-29, to d0ddi: Rhamondre Stevenson for Luther Burden III. Explorer: title
-  +1.3, you +16.9 / +2.5, him -4.9 / -1.3. FantasyPros: RB23 for WR20.
+**Offers out** (strike each when it is answered). One man may sit in several offers
+at once (Justin, 2026-10-30: "i don't mind one player being part of multiple offers"):
+- ~~2026-10-29, to d0ddi: Rhamondre Stevenson for Luther Burden III.~~ Rejected by
+  2026-10-30. Explorer: title +1.3, you +16.9 / +2.5, him -4.9 / -1.3. FantasyPros:
+  RB23 for WR20.
 
 To ask about one man - "nothing where I get Chase and give Henry or Tuten?" - the
 targeted search prices EVERY package that answers it (one to three men a side), not
