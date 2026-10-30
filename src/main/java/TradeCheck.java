@@ -149,7 +149,7 @@ public class TradeCheck {
         }
         System.out.println("\nseason = Sleeper's season feed (what TradeMarket prices on by default); ros = the rest-of-season model;");
         System.out.println("next wk = Sleeper's projection for next week; FP ros = FantasyPros' rest-of-season consensus rank at the");
-        System.out.println("position (half PPR). Points are this league's scoring.");
+        System.out.println("position (half PPR), the median of the last three days' pulls. Points are this league's scoring.");
 
         System.out.printf("%nSLEEPER'S WEEKLY PROJECTIONS, weeks %d-%d summed, as read on each day the repo saved them all%n",
                 week + 1, EraActuals.weeks(season));

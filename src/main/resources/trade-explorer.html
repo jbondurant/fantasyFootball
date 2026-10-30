@@ -81,6 +81,15 @@ td .sub { display: block; font-size: 0.75rem; color: var(--muted); }
 .soft { color: var(--muted); }
 .rise { font-family: var(--display); font-size: 1.15rem; font-weight: 600; }
 .empty { padding: 28px; text-align: center; color: var(--muted); }
+[hidden] { display: none !important; }
+.view { display: grid; gap: 18px; }
+.tabs { display: flex; gap: 6px; border-bottom: 1px solid var(--line); }
+.tab { font: inherit; font-family: var(--display); font-weight: 600; font-size: 1.05rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); background: none; border: 0; border-bottom: 3px solid transparent; padding: 6px 12px 8px; cursor: pointer; }
+.tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--field); }
+.tab:focus-visible { outline: 2px solid var(--field); outline-offset: 2px; }
+.mid { font-family: var(--display); font-size: 1.15rem; font-weight: 600; }
+.split { background: var(--warn-soft); color: var(--warn); }
+tr.mine td:first-child { box-shadow: inset 3px 0 0 var(--field); }
 
 details { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; }
 summary { cursor: pointer; font-weight: 600; }
@@ -102,10 +111,16 @@ details ul { padding-left: 1.2em; }
 <div class="wrap">
   <header>
     <h1>Keeper League Trade Explorer</h1>
-    <p class="lede" id="lede">Every trade on the board that raises your title odds by at least half a point, for each manager, in half-point buckets, sorted by what it costs the other team. Nothing is hidden for tanking or contention: those are columns and optional filters, for you to judge.</p>
+    <p class="lede" id="lede">Trades are found and ranked on Sleeper's projections, then FantasyPros' rankings throw out any it scores as a loss for you. Every trade here raises your title odds by at least half a point, grouped by manager in half-point buckets. Lopsided and tanking trades are left in and flagged, for you to judge.</p>
     <div class="score" id="score"></div>
   </header>
 
+  <div class="tabs" role="tablist" aria-label="View">
+    <button type="button" class="tab" role="tab" id="tab-trades" aria-selected="true" aria-controls="view-trades">Trades</button>
+    <button type="button" class="tab" role="tab" id="tab-players" aria-selected="false" aria-controls="view-players">Players</button>
+  </div>
+
+  <div id="view-trades" class="view" role="tabpanel" aria-labelledby="tab-trades">
   <section aria-labelledby="mgrs-h">
     <h2 id="mgrs-h">Managers</h2>
     <div class="managers" id="managers"></div>
@@ -127,10 +142,12 @@ details ul { padding-left: 1.2em; }
     <label class="field" for="f-sort">Sort
       <select id="f-sort">
         <option value="him">least worse for him (Sleeper)</option>
-        <option value="himAlt">least worse for him (rest of season)</option>
+        <option value="himAlt">least worse for him (model)</option>
+        <option value="himFp">least worse for him (FantasyPros)</option>
         <option value="hisTitle">least worse for his title odds</option>
         <option value="rise">biggest rise in your title odds</option>
-        <option value="you">most season points for you</option>
+        <option value="you">most season points for you (Sleeper)</option>
+        <option value="youMin">most for you on your weakest pricing</option>
         <option value="blend">most generous on what he sees</option>
       </select>
     </label>
@@ -141,6 +158,7 @@ details ul { padding-left: 1.2em; }
       <label><input type="checkbox" id="f-tank"> hide tanking</label>
       <label><input type="checkbox" id="f-hurt"> hide hurt players</label>
       <label><input type="checkbox" id="f-out"> hide teams out of it</label>
+      <label><input type="checkbox" id="f-model"> hide what the model calls a loss for you</label>
     </div>
     <div class="count" id="count" aria-live="polite"></div>
   </div>
@@ -153,9 +171,9 @@ details ul { padding-left: 1.2em; }
           <th>You give</th>
           <th>You get</th>
           <th>Your title<small>points of odds</small></th>
-          <th>His season<small>Sleeper · rest of season</small></th>
+          <th>His season<small class="pricings">Sleeper · model · FantasyPros</small></th>
           <th>His title<small>points of odds</small></th>
-          <th>Your season<small>Sleeper · rest of season</small></th>
+          <th>Your season<small class="pricings">Sleeper · model · FantasyPros</small></th>
           <th>Keepers<small>you · him</small></th>
           <th>His view<small>back of what he gives</small></th>
           <th>Flags</th>
@@ -164,6 +182,48 @@ details ul { padding-left: 1.2em; }
       <tbody id="rows"></tbody>
     </table>
     <div class="empty" id="empty" hidden>No trades match. Widen the bucket to "this or more", pick all managers, or clear a filter.</div>
+  </div>
+  </div>
+
+  <div id="view-players" class="view" role="tabpanel" aria-labelledby="tab-players" hidden>
+    <div class="filters" role="region" aria-label="Player filters">
+      <label class="field" for="p-pos">Position
+        <select id="p-pos"></select>
+      </label>
+      <label class="field" for="p-own">Owner
+        <select id="p-own"></select>
+      </label>
+      <label class="field" for="p-sort">Sort
+        <select id="p-sort">
+          <option value="mid">middle rank</option>
+          <option value="s">Sleeper rank</option>
+          <option value="r">model rank</option>
+          <option value="f">FantasyPros rank</option>
+          <option value="spread">most disagreement</option>
+        </select>
+      </label>
+      <label class="field" for="p-q">Player
+        <input type="search" id="p-q" placeholder="any name">
+      </label>
+      <div class="count" id="p-count" aria-live="polite"></div>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Player</th>
+            <th>Middle rank<small>of the three</small></th>
+            <th>Sleeper<small class="pts-from">rank · points left</small></th>
+            <th>Model<small class="pts-from">rank · points left</small></th>
+            <th>FantasyPros<small>its rank · as points</small></th>
+            <th>Spread<small>worst − best rank</small></th>
+            <th>Owner</th>
+          </tr>
+        </thead>
+        <tbody id="p-rows"></tbody>
+      </table>
+      <div class="empty" id="p-empty" hidden>No players match.</div>
+    </div>
   </div>
 
   <details>
@@ -181,6 +241,17 @@ const pct = (v) => v == null ? "all" : Math.round(v * 100) + "%";
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const stateClass = (s) => s === "contender" ? "contender" : s === "bubble" ? "bubble" : "out";
 
+function panelNote() {
+  const pages = Object.entries(DATA.fpPanel || {});
+  if (!pages.length) return "";
+  const first = pages[0][1];
+  const same = pages.every(([, p]) => p.experts === first.experts && p.names.join() === first.names.join());
+  const stalest = Math.max(...pages.map(([, p]) => p.stalestDays));
+  const who = same ? `${first.experts} of ${first.available} experts on every position page: ${esc(first.names.join(", "))}`
+    : pages.map(([page, p]) => `${esc(page.replace("Half", ""))} ${p.experts} of ${p.available}`).join(", ") + " experts";
+  return `<li><b>Whose FantasyPros consensus.</b> Today's rest-of-season ranks average ${who}. The stalest had updated ${stalest.toFixed(1)} days before the page. Which experts FantasyPros averages changes day to day, so each rank used is the median of the last three days' pulls. FantasyPros' own points convert the rank to points on standard scoring, so they aren't used.</li>`;
+}
+
 function bucketOf(rise) {
   return Math.min(DATA.top, Math.floor((rise - DATA.step) / DATA.step + 1e-9) * DATA.step + DATA.step);
 }
@@ -197,6 +268,15 @@ function init() {
     $("lede").textContent = "This copy of the page has no trade data. It is filled by: ./gradlew run -Pmain=TradeMarket -PtradeExplorer=true";
     return;
   }
+  const label = (src) => src === "fantasypros" ? "FantasyPros" : src === "ros" ? "model" : src.startsWith("sleeper") ? "Sleeper" : src;
+  const reject = DATA.reject || [];
+  if (DATA.reject && reject.join() !== "fantasypros") {
+    $("lede").textContent = reject.length
+      ? `Trades are found and ranked on ${label(DATA.pricing)}'s projections, then ${reject.map(label).join(" and ")} throw out any they score as a loss for you. Every trade here raises your title odds by at least half a point, grouped by manager in half-point buckets. Lopsided and tanking trades are left in and flagged.`
+      : `Trades found and ranked on ${label(DATA.pricing)}'s projections alone, nothing vetoing. Every trade here raises your title odds by at least half a point, grouped by manager in half-point buckets.`;
+  }
+  document.querySelectorAll(".pricings").forEach((el) => { el.textContent = `${label(DATA.pricing)} · ${label(DATA.alt)} · FantasyPros`; });
+  if (DATA.playersFrom) document.querySelectorAll(".pts-from").forEach((el) => { el.textContent = `rank · points, weeks ${DATA.playersFrom}+`; });
   const rivalOf = Object.fromEntries(DATA.rivals.map((r) => [r.m, r]));
   DATA.trades.forEach((t) => { t.bucket = bucketOf(t.rise); t.state = rivalOf[t.m]?.state || ""; });
 
@@ -232,19 +312,19 @@ function init() {
 
   const state = {
     m: load("m", ""), bucket: load("bucket", ""), mode: load("mode", "exact"), sort: load("sort", "him"),
-    q: "", tank: load("tank", false), hurt: load("hurt", false), out: load("out", false)
+    q: "", tank: load("tank", false), hurt: load("hurt", false), out: load("out", false), model: load("model", false)
   };
   const hashM = decodeURIComponent((location.hash || "").slice(1));
   if (hashM && rivalOf[hashM]) state.m = hashM;
   if (state.m && !rivalOf[state.m]) state.m = "";
   mgrSel.value = state.m; bucketSel.value = state.bucket; $("f-mode").value = state.mode; $("f-sort").value = state.sort;
-  $("f-tank").checked = state.tank; $("f-hurt").checked = state.hurt; $("f-out").checked = state.out;
+  $("f-tank").checked = state.tank; $("f-hurt").checked = state.hurt; $("f-out").checked = state.out; $("f-model").checked = state.model;
 
   const bind = (id, key, prop = "value") => $(id).addEventListener(prop === "checked" ? "change" : "input", (e) => {
     state[key] = e.target[prop]; if (key !== "q") save(key, state[key]); render();
   });
   bind("f-mgr", "m"); bind("f-bucket", "bucket"); bind("f-mode", "mode"); bind("f-sort", "sort"); bind("f-q", "q");
-  bind("f-tank", "tank", "checked"); bind("f-hurt", "hurt", "checked"); bind("f-out", "out", "checked");
+  bind("f-tank", "tank", "checked"); bind("f-hurt", "hurt", "checked"); bind("f-out", "out", "checked"); bind("f-model", "model", "checked");
   $("managers").addEventListener("click", (e) => {
     const b = e.target.closest(".mgr"); if (!b) return;
     state.m = state.m === b.dataset.m ? "" : b.dataset.m; mgrSel.value = state.m; save("m", state.m); render();
@@ -252,11 +332,15 @@ function init() {
 
   $("howto").innerHTML = [
     `<li><b>Your title</b> is the change in your title odds, in percentage points, from ${DATA.sims.toLocaleString()} simulated seasons with the same draws before and after, ± its standard error. Buckets are half a point wide: +1.0 to +1.5 holds rises from 1.0 up to 1.5.</li>`,
-    `<li><b>His season</b> is what the trade does to his roster over the rest of the season, in fantasy points: on Sleeper's weekly projections (${esc(DATA.pricing)}) and on the rest-of-season model (${esc(DATA.alt)}). Each week's best lineup counts, with that week's best free agents available to everyone. The default sort puts the trade that costs him least first.</li>`,
-    `<li><b>Tanking</b> marks a loss past your line: more than ${DATA.tankLine.toFixed(0)} points of his season on Sleeper's projections, or ${DATA.tankLineAlt.toFixed(1)} on the rest-of-season model. It is shown, not applied.</li>`,
+    `<li><b>The three pricings.</b> Sleeper's weekly projections; the rest-of-season model (a man's rate per game from this season's results, in the weeks Sleeper projects him to play); and FantasyPros' rest-of-season rankings. FantasyPros' own points use standard scoring, not this league's 6-point passing touchdowns, so the page uses its ranks instead. The player it ranks k-th at his position gets the k-th best points per game Sleeper projects at that position, in the weeks Sleeper has him playing. A player out for weeks reads a little low here, because FantasyPros' rank already counts the missed games.</li>`,
+    `<li><b>Which trades are here.</b> Trades that gain you at least ${DATA.minGain} season points on ${esc(label(DATA.pricing))}'s projections, minus any that ${esc(reject.map(label).join(" or ") || "nothing")} scores as a loss for you${DATA.rejectBelow ? ` of more than ${(-DATA.rejectBelow).toFixed(1)}` : ""}. No weighting needed: ${esc(label(DATA.pricing))} finds and ranks the trades, and the others can only veto. The model is shown, and you can hide what it calls a loss with the checkbox. Your title odds are simulated on ${esc(label(DATA.pricing))}'s projections.</li>`,
+    panelNote(),
+    `<li><b>Your season / His season</b> is what the trade does to each roster's points over the rest of the season, on ${esc(label(DATA.pricing))}, ${esc(label(DATA.alt))} and FantasyPros, top to bottom. Each week's best lineup counts, with that week's best free agents available to everyone. The default sort puts the trade that costs him least first.</li>`,
+    `<li><b>Tanking</b> marks a loss past your line: more than ${DATA.tankLine.toFixed(0)} points of his season on Sleeper's projections, or ${DATA.tankLineAlt.toFixed(1)} on the rest-of-season model. It is shown, not applied: lopsided trades stay in.</li>`,
     `<li><b>Keepers</b> is the change in each side's best two keeper surpluses for 2027, in season points over the pick a keeper costs.</li>`,
     `<li><b>His view</b> is what he gets back of what he gives on the numbers he can see: draft value and this season's screen (pace and Sleeper's projection), blended with draft value at ${Math.round(DATA.draftWeight * 100)}% after ${DATA.weeksPlayed} games. 100% or more reads fair to him.</li>`,
     `<li><b>Hurt</b> names any player in the trade listed IR, Out, Doubtful, PUP, suspended or Questionable today. Sleeper projects an injured player back, so a trade that leans on one may be worth less than it reads.</li>`,
+    `<li><b>Players tab.</b> Every rostered player, and every free agent near the top at his position on some pricing, ranked at his position three ways. The middle rank is the middle of the three, so two of the three rank him there or better and two rank him there or worse. No weights needed. Spread is how far apart they are: a big spread means the sources disagree. Sleeper and model points count from the week after this one, so a game already played this week doesn't skew them. A player with no Sleeper or model points left (out for the season) has no middle rank.</li>`,
     `<li>Coverage: every one-for-one, and two- and three-man packages among each side's most valuable players. For each manager, trades gaining you ${DATA.minGain} or more season points were simulated from least to most costly to him, keeping up to ${DATA.perBucket} per bucket, so each bucket holds the least costly trades in it. A manager marked "search capped" stopped at ${DATA.cap.toLocaleString()} simulations; a bucket short of trades there may have more.</li>`
   ].join("");
 
@@ -270,12 +354,14 @@ function init() {
       if (state.tank && t.tank) return false;
       if (state.hurt && (t.hurtIn.length || t.hurtOut.length)) return false;
       if (state.out && t.state === "out of it") return false;
+      if (state.model && t.youAlt < 0) return false;
       if (q && ![...t.give, ...t.get].some((n) => n.toLowerCase().includes(q))) return false;
       return true;
     });
     const key = {
-      him: (t) => -t.him, himAlt: (t) => -t.himAlt, hisTitle: (t) => -t.hisTitle,
-      rise: (t) => -t.rise, you: (t) => -t.you, blend: (t) => -(t.blend ?? 9)
+      him: (t) => -t.him, himAlt: (t) => -t.himAlt, himFp: (t) => -(t.himFp ?? 0), hisTitle: (t) => -t.hisTitle,
+      rise: (t) => -t.rise, you: (t) => -t.you, youMin: (t) => -Math.min(t.you, t.youAlt, t.youFp ?? t.you),
+      blend: (t) => -(t.blend ?? 9)
     }[state.sort];
     list.sort((x, y) => key(x) - key(y) || y.rise - x.rise);
     $("count").textContent = `${list.length} of ${DATA.trades.length} trades`;
@@ -302,9 +388,9 @@ function init() {
       <td data-k="You give"><div class="men">${names(t.give, t.hurtOut)}</div></td>
       <td data-k="You get"><div class="men">${names(t.get, t.hurtIn)}${t.cut.length ? `<span class="cut">he cuts ${esc(t.cut.join(", "))}</span>` : ""}</div></td>
       <td class="n" data-k="Your title"><span class="rise">${fmt(t.rise)}</span><span class="sub">± ${t.se.toFixed(1)}</span></td>
-      <td class="n" data-k="His season"><span class="${himCls}">${fmt(t.him)}</span><span class="sub ${himAltCls}">${fmt(t.himAlt)}</span></td>
+      <td class="n" data-k="His season"><span class="${himCls}">${fmt(t.him)}</span><span class="sub ${himAltCls}">${fmt(t.himAlt)}</span>${t.himFp == null ? "" : `<span class="sub ${t.himFp < 0 ? "" : "pos"}">${fmt(t.himFp)}</span>`}</td>
       <td class="n" data-k="His title">${fmt(t.hisTitle)}</td>
-      <td class="n" data-k="Your season">${fmt(t.you)}<span class="sub ${t.youAlt < 0 ? "neg" : ""}">${fmt(t.youAlt)}</span></td>
+      <td class="n" data-k="Your season">${fmt(t.you)}<span class="sub ${t.youAlt < 0 ? "neg" : ""}">${fmt(t.youAlt)}</span>${t.youFp == null ? "" : `<span class="sub ${t.youFp < 0 ? "neg" : ""}">${fmt(t.youFp)}</span>`}</td>
       <td class="n" data-k="Keepers">${fmt(t.myKeep)}<span class="sub">${fmt(t.hisKeep)}</span></td>
       <td class="n" data-k="His view">${pct(t.blend)}<span class="sub">draft ${pct(t.draft)} · season ${pct(t.seasonView)}</span></td>
       <td data-k="Flags">${flags}</td>
@@ -312,6 +398,65 @@ function init() {
   }
 
   render();
+
+  // THE PLAYERS TAB: each man at his position on the three pricings, ranked on the middle of the three
+  const players = (DATA.players || []).map((p) => {
+    const s = p.v[1], r = p.v[3], f = p.fpRank;
+    const ranks = [s, r, f].filter((x) => x != null).sort((a, b) => a - b);
+    // two of the three must rank him: a man Sleeper and the model price at nothing has no middle, whatever FantasyPros says
+    const mid = ranks.length === 3 ? ranks[1] : ranks.length === 2 ? (ranks[0] + ranks[1]) / 2 : 999;
+    return { ...p, s, r, f, mid, spread: ranks.length > 1 ? ranks[ranks.length - 1] - ranks[0] : 0 };
+  });
+  const posOrder = ["QB", "RB", "WR", "TE", "DEF"];
+  $("p-pos").innerHTML = `<option value="">All positions</option>` +
+    posOrder.filter((x) => players.some((p) => p.p === x)).map((x) => `<option value="${x}">${x}</option>`).join("");
+  const owners = [...new Set(players.map((p) => p.o).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+  $("p-own").innerHTML = `<option value="">Everyone</option><option value="${esc(DATA.me)}">You (${esc(DATA.me)})</option>` +
+    `<option value="-">Free agents</option>` + owners.filter((o) => o !== DATA.me).map((o) => `<option value="${esc(o)}">${esc(o)}</option>`).join("");
+  const pstate = { pos: load("p.pos", "WR"), own: load("p.own", ""), sort: load("p.sort", "mid"), q: "" };
+  if (![...$("p-pos").options].some((o) => o.value === pstate.pos)) pstate.pos = "";
+  if (![...$("p-own").options].some((o) => o.value === pstate.own)) pstate.own = "";
+  $("p-pos").value = pstate.pos; $("p-own").value = pstate.own; $("p-sort").value = pstate.sort;
+  const pbind = (id, key) => $(id).addEventListener("input", (e) => {
+    pstate[key] = e.target.value; if (key !== "q") save("p." + key, pstate[key]); renderPlayers();
+  });
+  pbind("p-pos", "pos"); pbind("p-own", "own"); pbind("p-sort", "sort"); pbind("p-q", "q");
+
+  const rk = (x) => x == null ? `<span class="soft">–</span>` : String(x);
+  function renderPlayers() {
+    const q = pstate.q.trim().toLowerCase();
+    const list = players.filter((p) => {
+      if (pstate.pos && p.p !== pstate.pos) return false;
+      if (pstate.own === "-" ? p.o : pstate.own && p.o !== pstate.own) return false;
+      if (q && !p.n.toLowerCase().includes(q)) return false;
+      return true;
+    });
+    const key = { mid: (p) => p.mid, s: (p) => p.s ?? 999, r: (p) => p.r ?? 999, f: (p) => p.f ?? 999, spread: (p) => -p.spread }[pstate.sort];
+    list.sort((a, b) => key(a) - key(b) || a.mid - b.mid || a.n.localeCompare(b.n));
+    $("p-count").textContent = `${list.length} of ${players.length} players`;
+    $("p-empty").hidden = list.length > 0;
+    $("p-rows").innerHTML = list.map((p) => `<tr class="${p.o === DATA.me ? "mine" : ""}">
+      <td data-k="Player"><b>${esc(p.n)}</b>${p.hurt ? ` <span class="pill hurt">${esc(p.hurt)}</span>` : ""}<span class="sub">${esc(p.p)} · ${esc(p.t)}</span></td>
+      <td class="n" data-k="Middle rank"><span class="mid">${p.mid === 999 ? "–" : esc(p.p) + (Number.isInteger(p.mid) ? p.mid : p.mid.toFixed(1))}</span></td>
+      <td class="n" data-k="Sleeper">${rk(p.s)}<span class="sub">${p.v[0].toFixed(1)}</span></td>
+      <td class="n" data-k="Model">${rk(p.r)}<span class="sub">${p.v[2].toFixed(1)}</span></td>
+      <td class="n" data-k="FantasyPros">${rk(p.f)}<span class="sub">${p.v[4].toFixed(1)}</span></td>
+      <td class="n" data-k="Spread"><span class="${p.spread >= 10 ? "pill split" : ""}">${p.spread}</span></td>
+      <td data-k="Owner">${p.o ? esc(p.o) : `<span class="soft">free agent</span>`}</td>
+    </tr>`).join("");
+  }
+  renderPlayers();
+
+  function showTab(which) {
+    const players = which === "players";
+    $("tab-trades").setAttribute("aria-selected", String(!players));
+    $("tab-players").setAttribute("aria-selected", String(players));
+    $("view-trades").hidden = players; $("view-players").hidden = !players;
+    save("tab", which);
+  }
+  $("tab-trades").addEventListener("click", () => showTab("trades"));
+  $("tab-players").addEventListener("click", () => showTab("players"));
+  showTab(!hashM && load("tab", "trades") === "players" ? "players" : "trades");
 }
 init();
 </script>

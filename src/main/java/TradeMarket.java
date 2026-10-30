@@ -961,12 +961,27 @@ public class TradeMarket {
      * cannot plausibly reach an open bucket (twice the rate seen so far, plus a
      * point) is skipped; -PexplorerCap bounds the simulations per rival, and each
      * rival's counts say whether it was reached. Everything Justin would judge on
-     * rides along: both pricings for both sides, both title changes, keeper value,
+     * rides along: every pricing for both sides, both title changes, keeper value,
      * his view, the tanking line as a fact, and any hurt man moving.
+     *
+     * SLEEPER FINDS, FANTASYPROS VETOES (2026-10-29). Justin, after FantasyPros ranked
+     * Nabers ahead of Justin Jefferson in a trade Sleeper's numbers liked: "i don't
+     * know how to weight each... perhaps only trades which pass both, and allow
+     * lobsided tanking ish trades?", then: "perhaps we use sleeper as base to find
+     * trades, and then fantasy pros as a second step filter to reject trades that
+     * disadvantage me". So the trades are found and ranked on Sleeper's projections
+     * as before (a gain of -PexplorerMinGain or more), and a trade is dropped if any
+     * pricing named in -PexplorerReject (default FantasyPros' order on Sleeper's
+     * scale) puts Justin below -PexplorerRejectBelow (default 0: any loss). No
+     * weights, and the veto runs before the simulations, which are the cost. The
+     * rest-of-season model is shown and does not veto unless named. What a trade does
+     * to the other team is shown on all three and never filtered: lopsided and
+     * tanking trades stay in, flagged.
      */
     static String explorer(String me, List<Trade> all, Map<String, List<String>> rosters, Map<String, String> nameOf,
                            java.util.function.ToDoubleFunction<List<String>> season, RosterValue altValue,
-                           Map<String, Double> scoreAlt, TradeScreens.Context screens, TitleOdds.Stakes stakes,
+                           Map<String, Double> scoreAlt, RosterValue fpValue, Set<String> reject, String players, int playersFrom,
+                           TradeScreens.Context screens, TitleOdds.Stakes stakes,
                            double hisFloor, double hisFloorAlt, Map<String, Double> surplus, Map<String, Position> everyPosition,
                            String source, String alt){
         double step = 0.5;
@@ -975,10 +990,13 @@ public class TradeMarket {
         int perBucket = Integer.getInteger("explorerPerBucket", 8);
         int cap = Integer.getInteger("explorerCap", 1500);
         double minGain = Double.parseDouble(System.getProperty("explorerMinGain", "3"));
+        double rejectBelow = Double.parseDouble(System.getProperty("explorerRejectBelow", "0"));
         List<String> mine = rosters.get(me);
         double myBase = season.applyAsDouble(mine);
+        double myAltBase = altValue.of(mine);
+        double myFpBase = fpValue.of(mine);
         double myKeepBase = keeperValue(mine, surplus, everyPosition);
-        record Cand(Trade trade, double you, double him){}
+        record Cand(Trade trade, double you, double him, double youAlt, double youFp){}
         Map<String, List<Trade>> byRival = new TreeMap<>();
         for(Trade t : all){
             byRival.computeIfAbsent(t.withManager(), k -> new ArrayList<>()).add(t);
@@ -990,13 +1008,23 @@ public class TradeMarket {
             String rival = e.getKey();
             List<String> his = rosters.get(rival);
             double hisBase = season.applyAsDouble(his);
+            double hisFpBase = fpValue.of(his);
             double hisKeepBase = keeperValue(his, surplus, everyPosition);
             List<Cand> cands = new ArrayList<>();
+            int failed = 0;
             for(Trade t : e.getValue()){
-                double you = season.applyAsDouble(swap(mine, t.give(), t.get())) - myBase;
-                if(you >= minGain){
-                    cands.add(new Cand(t, you, season.applyAsDouble(swap(his, t.hisOut(), t.give())) - hisBase));
+                List<String> myAfter = swap(mine, t.give(), t.get());
+                double you = season.applyAsDouble(myAfter) - myBase;
+                if(you < minGain){
+                    continue;
                 }
+                double youAlt = altValue.of(myAfter) - myAltBase;
+                double youFp = fpValue.of(myAfter) - myFpBase;
+                if(reject.contains(alt) && youAlt < rejectBelow || reject.contains(FANTASYPROS) && youFp < rejectBelow){
+                    failed++;
+                    continue;
+                }
+                cands.add(new Cand(t, you, season.applyAsDouble(swap(his, t.hisOut(), t.give())) - hisBase, youAlt, youFp));
             }
             cands.sort(Comparator.comparingDouble((Cand c) -> -c.him()));
             int[] count = new int[buckets];
@@ -1033,16 +1061,18 @@ public class TradeMarket {
                 count[b]++;
                 kept++;
                 double[] other = onOther(c.trade(), rosters, me, altValue, scoreAlt);
+                double himFp = fpValue.of(hisAfter) - hisFpBase;
                 TradeScreens.Screens seen = screens.of(c.trade());
                 boolean tanking = !equitableSeason(c.him(), hisFloor, other[1], hisFloorAlt);
                 rows.append(written++ == 0 ? "" : ",\n").append(String.format(java.util.Locale.ROOT,
                         "{\"m\":%s,\"give\":%s,\"get\":%s,\"cut\":%s,\"rise\":%.2f,\"se\":%.2f,\"hisTitle\":%.2f,"
-                                + "\"you\":%.1f,\"youAlt\":%.1f,\"him\":%.1f,\"himAlt\":%.1f,\"myKeep\":%.1f,\"hisKeep\":%.1f,"
+                                + "\"you\":%.1f,\"youAlt\":%.1f,\"youFp\":%.1f,\"him\":%.1f,\"himAlt\":%.1f,\"himFp\":%.1f,"
+                                + "\"myKeep\":%.1f,\"hisKeep\":%.1f,"
                                 + "\"draft\":%s,\"seasonView\":%s,\"blend\":%s,\"fair\":%b,\"asking\":%b,\"prec\":%d,"
                                 + "\"tank\":%b,\"hurtIn\":%s,\"hurtOut\":%s}",
                         jsonString(rival), jsonNames(c.trade().give(), nameOf), jsonNames(c.trade().get(), nameOf),
                         jsonNames(c.trade().hisCut(), nameOf), rise, 100 * d[0].se(), 100 * d[1].change(),
-                        c.you(), other[0], c.him(), other[1],
+                        c.you(), c.youAlt(), c.youFp(), c.him(), other[1], himFp,
                         keeperValue(myAfter, surplus, everyPosition) - myKeepBase,
                         keeperValue(hisAfter, surplus, everyPosition) - hisKeepBase,
                         jsonRatio(seen.draftRatio()), jsonRatio(seen.pointsRatio()), jsonRatio(seen.blendedRatio()),
@@ -1050,20 +1080,111 @@ public class TradeMarket {
                         jsonHurt(c.trade().get(), nameOf), jsonHurt(c.trade().give(), nameOf)));
             }
             rivals.append(rivals.length() == 0 ? "" : ",\n").append(String.format(java.util.Locale.ROOT,
-                    "{\"m\":%s,\"state\":%s,\"title\":%.2f,\"playoffs\":%.1f,\"candidates\":%d,\"simulated\":%d,"
+                    "{\"m\":%s,\"state\":%s,\"title\":%.2f,\"playoffs\":%.1f,\"candidates\":%d,\"failed\":%d,\"simulated\":%d,"
                             + "\"skipped\":%d,\"kept\":%d,\"capReached\":%b}",
                     jsonString(rival), jsonString(stakes.state(rival)), 100 * stakes.title(rival),
-                    100 * stakes.playoffs().getOrDefault(rival, 0.0), cands.size(), sims, skipped, kept, sims >= cap));
-            System.out.printf("explorer: %s - %d candidates, %d simulated, %d skipped, %d kept%n", rival, cands.size(), sims, skipped, kept);
+                    100 * stakes.playoffs().getOrDefault(rival, 0.0), cands.size(), failed, sims, skipped, kept, sims >= cap));
+            System.out.printf("explorer: %s - %d candidates (%d more vetoed by %s), %d simulated, %d skipped, %d kept%n",
+                    rival, cands.size(), failed, reject, sims, skipped, kept);
         }
         return String.format(java.util.Locale.ROOT,
                 "{\"generated\":%s,\"season\":%s,\"weeksPlayed\":%d,\"me\":%s,\"myTitle\":%.2f,\"myPlayoffs\":%.1f,"
-                        + "\"pricing\":%s,\"alt\":%s,\"step\":%.1f,\"top\":%.1f,\"perBucket\":%d,\"cap\":%d,\"minGain\":%.1f,"
+                        + "\"pricing\":%s,\"alt\":%s,\"reject\":%s,\"rejectBelow\":%.1f,\"fpPanel\":%s,\"step\":%.1f,\"top\":%.1f,\"perBucket\":%d,\"cap\":%d,\"minGain\":%.1f,"
                         + "\"tankLine\":%.1f,\"tankLineAlt\":%.1f,\"sims\":%d,\"draftWeight\":%.2f,"
-                        + "\"rivals\":[%s],\n\"trades\":[%s]}",
+                        + "\"rivals\":[%s],\n\"playersFrom\":%d,\"players\":[%s],\n\"trades\":[%s]}",
                 jsonString(LocalDate.now().toString()), jsonString(LeagueWeek.season()), screens.weeksPlayed(), jsonString(me),
                 100 * stakes.title(me), 100 * stakes.playoffs().getOrDefault(me, 0.0), jsonString(source), jsonString(alt),
-                step, top, perBucket, cap, minGain, hisFloor, hisFloorAlt, TitleOdds.SIMS, screens.weightNow(), rivals, rows);
+                "[" + String.join(",", reject.stream().map(TradeMarket::jsonString).toList()) + "]", rejectBelow, fpPanelJson(), step, top, perBucket, cap, minGain, hisFloor, hisFloorAlt,
+                TitleOdds.SIMS, screens.weightNow(), rivals, playersFrom, players, rows);
+    }
+
+    /** The third pricing's name (WeeklyLineupValue.forSource). */
+    static final String FANTASYPROS = "fantasypros";
+
+    /** Which experts each FantasyPros page averaged today, for the page to show (InSeasonProjectionsFP.panels). */
+    static String fpPanelJson(){
+        StringBuilder out = new StringBuilder();
+        InSeasonProjectionsFP.panels().forEach((page, panel) -> {
+            if(panel != null){
+                out.append(out.length() == 0 ? "" : ",").append(String.format(java.util.Locale.ROOT,
+                        "%s:{\"experts\":%d,\"available\":%d,\"stalestDays\":%.1f,\"names\":[%s]}", jsonString(page),
+                        panel.experts(), panel.available(), panel.stalestDays(),
+                        String.join(",", panel.names().stream().map(TradeMarket::jsonString).toList())));
+            }
+        });
+        return "{" + out + "}";
+    }
+
+    /**
+     * EVERY MAN RANKED THREE WAYS, for the explorer's Players tab. Justin, 2026-10-29:
+     * "rank players efficiently". Each man's points over the weeks left on each
+     * pricing and his rank at his position on each, with FantasyPros' own
+     * consensus rank beside them. The page ranks on the MIDDLE of his three ranks
+     * (Sleeper's, the model's, FantasyPros'), which needs no weights: two of the
+     * three put him there or better, and two put him there or worse. Listed: every
+     * man on a roster, and every free agent inside the top `depth` at his position
+     * on some pricing. Points and ranks count the weeks AFTER the one in progress:
+     * the pricings leave out a game once it kicks off, so on a Sunday the men who
+     * had played would rank lower than those who had not, and FantasyPros' rank,
+     * which has no such cut, would read as disagreeing with them.
+     */
+    static String playersJson(List<WeeklyLineupValue> pricings, Map<String, Integer> fpRank, Map<String, String> ownerOf,
+                              int depth){
+        List<Map<String, Integer>> ranks = new ArrayList<>();
+        int from = pricings.get(0).weeks().get(0) + 1;
+        Set<String> men = new java.util.HashSet<>(ownerOf.keySet());   // a rostered man with nothing projected is still listed
+        pricings.forEach(v -> men.addAll(v.men()));
+        Map<String, Position> positionOf = new HashMap<>();
+        for(String id : men){
+            Player p = Player.getPlayerFromSIDV2(id);
+            if(p != null && TitleOdds.WIRE_DEPTH.containsKey(p.position)){
+                positionOf.put(id, p.position);
+            }
+        }
+        for(WeeklyLineupValue v : pricings){
+            Map<String, Integer> rank = new HashMap<>();
+            Map<Position, List<String>> byPosition = new java.util.EnumMap<>(Position.class);
+            positionOf.forEach((id, p) -> {
+                if(v.total(id, from) > 0){
+                    byPosition.computeIfAbsent(p, k -> new ArrayList<>()).add(id);
+                }
+            });
+            byPosition.values().forEach(list -> {
+                list.sort(Comparator.comparingDouble((String id) -> -v.total(id, from)).thenComparing(id -> id));
+                for(int i = 0; i < list.size(); i++){
+                    rank.put(list.get(i), i + 1);
+                }
+            });
+            ranks.add(rank);
+        }
+        List<String> listed = new ArrayList<>();
+        for(String id : positionOf.keySet()){
+            boolean inside = ownerOf.containsKey(id);
+            for(Map<String, Integer> rank : ranks){
+                inside |= rank.getOrDefault(id, Integer.MAX_VALUE) <= depth;
+            }
+            if(inside){
+                listed.add(id);
+            }
+        }
+        listed.sort(Comparator.comparing((String id) -> positionOf.get(id)).thenComparing(id -> id));
+        StringBuilder out = new StringBuilder();
+        for(String id : listed){
+            Player p = Player.getPlayerFromSIDV2(id);
+            StringBuilder cells = new StringBuilder();
+            for(int i = 0; i < pricings.size(); i++){
+                Integer r = ranks.get(i).get(id);
+                cells.append(String.format(java.util.Locale.ROOT, "%.1f,%s,", pricings.get(i).total(id, from), r == null ? "null" : r));
+            }
+            String injury = SleeperProjections.injuryStatusOf(id);
+            out.append(out.length() == 0 ? "" : ",\n").append(String.format(java.util.Locale.ROOT,
+                    "{\"n\":%s,\"p\":%s,\"t\":%s,\"o\":%s,\"v\":[%s],\"fpRank\":%s,\"hurt\":%s}",
+                    jsonString(p.firstName + " " + p.lastName), jsonString(positionOf.get(id).name()),
+                    jsonString(String.valueOf(ProjectionSources.teamOf(id))), jsonString(ownerOf.getOrDefault(id, "")),
+                    cells.substring(0, cells.length() - 1), fpRank.containsKey(id) ? fpRank.get(id) : "null",
+                    injury == null ? "null" : jsonString(injury)));
+        }
+        return out.toString();
     }
 
     static String jsonString(String s){
@@ -1254,6 +1375,8 @@ public class TradeMarket {
         Map<String, Double> altPoints = ProjectionSources.resolve(alt);
         RosterValue altValue = drawn ? WeeklyStarterValue.forCurrentBoard(configuration, altPoints, scenarios, 424_242L)
                 : WeeklyLineupValue.forSource(configuration, alt);
+        // the explorer's third pricing, read at the same moment as the other two so all three leave out the same kicked-off games
+        WeeklyLineupValue fpValue = Boolean.getBoolean("tradeExplorer") ? WeeklyLineupValue.forSource(configuration, FANTASYPROS) : null;
         double tradeFloor = Double.parseDouble(System.getProperty("tradeFloor", "6.8"));
         // Justin's tanking line is on Sleeper's projections; the rest-of-season model keeps the noise floor
         double hisFloor = source.equals("ros") ? tradeFloor : tankFloor();
@@ -1416,7 +1539,32 @@ public class TradeMarket {
                 all.removeIf(t -> t.give().stream().anyMatch(barred::contains) || t.get().stream().anyMatch(barred::contains)
                         || t.hisOut().stream().anyMatch(barred::contains));
             }
-            String json = explorer(me, all, rosters, nameOf, season, altValue, scoreAlt, screens, stakes,
+            Set<String> reject = new java.util.LinkedHashSet<>();
+            for(String name : System.getProperty("explorerReject", FANTASYPROS).split(",")){
+                if(!name.isBlank()){
+                    reject.add(name.trim());
+                }
+            }
+            for(String name : reject){
+                if(!name.equals(alt) && !name.equals(FANTASYPROS)){
+                    // an unknown name would silently drop its veto while the page still says it ran
+                    throw new IllegalArgumentException("-PexplorerReject: '" + name + "' is neither " + alt + " nor " + FANTASYPROS);
+                }
+            }
+            // the Players tab in a fixed order, whatever -Pprojections says: Sleeper, the model, FantasyPros
+            List<WeeklyLineupValue> pricings = new ArrayList<>();
+            for(String name : List.of("sleeper-remaining", "ros")){
+                pricings.add(name.equals(source) && value instanceof WeeklyLineupValue w ? w
+                        : name.equals(alt) && altValue instanceof WeeklyLineupValue w ? w
+                        : WeeklyLineupValue.forSource(configuration, name));
+            }
+            pricings.add(fpValue);
+            // the wire each pricing assumes, side by side, so a pricing gone wrong shows before an hour of simulations
+            System.out.print(weeklyWireNote(pricings.get(0), "sleeper-remaining") + weeklyWireNote(fpValue, FANTASYPROS));
+            String players = playersJson(pricings, WeeklyLineupValue.fantasyProsRanks(), ownerOf,
+                    Integer.getInteger("explorerPlayerDepth", 40));
+            String json = explorer(me, all, rosters, nameOf, season, altValue, scoreAlt, fpValue, reject, players,
+                    fpValue.weeks().get(0) + 1, screens, stakes,
                     hisFloor, hisFloorAlt, surplus, everyPosition, source, alt);
             Path data = Path.of("data", "trade-explorer-" + LocalDate.now() + ".json");
             Files.writeString(data, json, StandardCharsets.UTF_8);

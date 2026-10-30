@@ -222,6 +222,23 @@ title simulations, then publish the page to the same link:
     # writes data/trade-explorer-<date>.json and data/trade-explorer.html
     # publish data/trade-explorer.html to https://claude.ai/artifact/Lt8wxdiaT7X1YJHvYnHueN
 
+Since 2026-10-29 Sleeper finds and FantasyPros vetoes. Justin: "we use sleeper as base
+to find trades, and then fantasy pros as a second step filter to reject trades that
+disadvantage me". Trades are found and ranked on Sleeper's projections (a gain of 3
+or more), and any that FantasyPros scores as a loss for you is dropped. FantasyPros
+publishes ranks, and its points are those ranks converted on standard scoring, so
+its rank is read onto Sleeper's points per game: the k-th ranked man at a position
+gets the k-th best rate a game, in the weeks Sleeper has him playing. Each rank is
+the median of the last three days' pulls, because the handful of experts FantasyPros
+averages (6 of 37 on 2026-10-29) changes from day to day. The page names that panel
+and how stale its stalest expert is. The model is shown, with a checkbox to hide
+what it calls a loss; `-PexplorerReject=ros,fantasypros` makes it veto too, and
+`-PexplorerRejectBelow=-2` tolerates a small loss. What it costs the other team is
+shown on all three and never filtered. The Players tab ranks every rostered man,
+plus the free agents near the top, at his position three ways and sorts on the
+middle rank. The run prints both wires first: if the FantasyPros wire is far off
+Sleeper's, stop it, because a mis-read pricing vetoes trades wrongly.
+
 Before sending one, run TradeCheck on its men and read the FP ros column too.
 FantasyPros' consensus is what Justin compares against, and the explorer prices
 only on Sleeper and the model. On 2026-10-29 the explorer's Nabers + Stevenson for

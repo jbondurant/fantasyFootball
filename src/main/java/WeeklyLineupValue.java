@@ -33,11 +33,31 @@ import java.util.TreeMap;
  * men not yet kicked off) through the last week of the fantasy playoffs, so a
  * gain is points over those weeks.
  *
- * Two pricings, as the trade tools always use:
+ * Three pricings:
  *   sleeper-remaining - Sleeper's league-scored projection for each week;
  *   ros - each man's rest-of-season rate per played game (RosModel.rates) in
  *         the weeks Sleeper projects him to play; a man the model does not
- *         read keeps Sleeper's number.
+ *         read keeps Sleeper's number;
+ *   fantasypros - FantasyPros' rest-of-season consensus ORDER on Sleeper's
+ *         SCALE (2026-10-29). Its pages carry points too (r2p_pts), but on its
+ *         own standard scoring, not this league's six-point passing touchdowns,
+ *         so the rank is what is read: the man it ranks k-th at his position is
+ *         given the k-th best points PER GAME Sleeper projects at that position
+ *         over the same weeks, in the weeks Sleeper projects him to play, in the
+ *         shape Sleeper gives them (matchups, a partial week). Per game and not
+ *         per season: the first version read the k-th largest TOTAL onto his
+ *         own, which crammed a season into the few weeks Sleeper has a man
+ *         starting - free agent Deshaun Watson, QB29, priced at 48 a week and
+ *         every roster's quarterback in weeks 8-10 (caught in review, before
+ *         it priced a trade). What this leaves: FantasyPros' rank folds in the
+ *         games a man will miss, and Sleeper's weeks count them again, so a man
+ *         out for weeks reads somewhat low here. Justin had found FantasyPros ranking Nabers
+ *         (WR7) ahead of Justin Jefferson (WR12) where Sleeper's numbers put
+ *         Jefferson ahead, and could not say how to weight the sources: "i
+ *         don't know how to weight each". The trade explorer finds trades on
+ *         Sleeper's numbers and lets this one veto a trade it calls a loss for
+ *         him, which needs no weights. A man FantasyPros does not rank, or whom Sleeper
+ *         projects to play no more, keeps Sleeper's numbers.
  *
  * A CLAIM is priced against the wire WITHOUT the man claimed (of with
  * offWire): with every free agent in every lineup's pool for nothing, the best
@@ -118,6 +138,27 @@ public class WeeklyLineupValue implements RosterValue {
         return label;
     }
 
+    /** A man's points over every week this prices, on its pricing (his game this week left out once it has kicked off). */
+    public double total(String id){
+        return total(id, projected.firstKey());
+    }
+
+    /** A man's points over the weeks this prices from `from` on. */
+    public double total(String id, int from){
+        double sum = 0;
+        for(Map<String, Double> week : projected.tailMap(from).values()){
+            sum += week.getOrDefault(id, 0.0);
+        }
+        return sum;
+    }
+
+    /** Every man this prices in some week. */
+    public Set<String> men(){
+        Set<String> out = new java.util.HashSet<>();
+        projected.values().forEach(week -> out.addAll(week.keySet()));
+        return out;
+    }
+
     /** The weeks this prices, first to last. */
     public List<Integer> weeks(){
         return new ArrayList<>(projected.keySet());
@@ -134,9 +175,9 @@ public class WeeklyLineupValue implements RosterValue {
     }
 
     /**
-     * The objective on one pricing ("sleeper-remaining" or "ros") for the weeks
-     * from the one in progress to the end of the fantasy playoffs, with every
-     * man rostered in the league today kept off the wire.
+     * The objective on one pricing ("sleeper-remaining", "ros" or "fantasypros")
+     * for the weeks from the one in progress to the end of the fantasy playoffs,
+     * with every man rostered in the league today kept off the wire.
      */
     public static WeeklyLineupValue forSource(AAAConfiguration configuration, String source){
         TitleOdds.League league = TitleOdds.league(configuration);
@@ -148,6 +189,14 @@ public class WeeklyLineupValue implements RosterValue {
             Player p = Player.getPlayerFromSIDV2(id);
             return p == null ? null : p.position;
         };
+        Map<String, Double> scale = Map.of();
+        if("fantasypros".equals(source)){
+            List<Map<String, Double>> weeks = new ArrayList<>();
+            for(int w = league.thisWeek(); w <= league.lastWeek(); w++){
+                weeks.add(LeagueWeek.projected(league.season(), w));   // every week priced, games under way included
+            }
+            scale = perGameScale(weeks, fantasyProsRanks(), positionOf);
+        }
         TreeMap<Integer, Map<String, Double>> projected = new TreeMap<>();
         TreeMap<Integer, Map<Position, List<Map.Entry<String, Double>>>> free = new TreeMap<>();
         for(int w = league.thisWeek(); w <= league.lastWeek(); w++){
@@ -156,13 +205,68 @@ public class WeeklyLineupValue implements RosterValue {
                 if(w == league.thisWeek() && started.contains(ProjectionSources.teamOf(e.getKey()))){
                     continue;           // his game this week is under way or over: a move now cannot reach it
                 }
-                week.put(e.getKey(), rates.getOrDefault(e.getKey(), e.getValue()));
+                week.put(e.getKey(), rates.getOrDefault(e.getKey(), e.getValue()) * scale.getOrDefault(e.getKey(), 1.0));
             }
             projected.put(w, week);
             free.put(w, freeAgents(week, owned, positionOf));
         }
         return new WeeklyLineupValue(projected, free, positionOf,
                 "weekly lineups on " + source + ", weeks " + league.thisWeek() + "-" + league.lastWeek());
+    }
+
+    /** FantasyPros' rest-of-season consensus rank of each man at his position (its half-PPR pages), by Sleeper id. */
+    public static Map<String, Integer> fantasyProsRanks(){
+        Map<String, Integer> out = new HashMap<>();
+        for(Rank r : InSeasonProjectionsFP.getRosRanking()){
+            if(r.player != null && r.player.sleeperIDString != null){
+                out.putIfAbsent(r.player.sleeperIDString, r.rankNum);
+            }
+        }
+        return out;
+    }
+
+    /** A ranking read onto Sleeper's points per projected game over these weeks (rankScale), as a factor on each man's weeks. */
+    static Map<String, Double> perGameScale(List<Map<String, Double>> weeks, Map<String, Integer> rank,
+                                            java.util.function.Function<String, Position> positionOf){
+        Map<String, Double> totals = new HashMap<>();
+        Map<String, Integer> games = new HashMap<>();
+        for(Map<String, Double> week : weeks){
+            week.forEach((id, pts) -> {
+                totals.merge(id, pts, Double::sum);
+                games.merge(id, 1, Integer::sum);
+            });
+        }
+        Map<String, Double> perGame = new HashMap<>();
+        totals.forEach((id, total) -> perGame.put(id, total / games.get(id)));
+        return rankScale(perGame, rank, positionOf);
+    }
+
+    /**
+     * A ranking read onto a scale: the man ranked k-th at his position is given
+     * the k-th largest value at that position (the last one, if the ranking runs
+     * deeper than the values), as a factor on his own value. A man the ranking
+     * leaves out, or whose own value is nothing, gets no factor. forSource passes
+     * points per projected game.
+     */
+    static Map<String, Double> rankScale(Map<String, Double> totals, Map<String, Integer> rank,
+                                         java.util.function.Function<String, Position> positionOf){
+        Map<Position, List<Double>> byPosition = new java.util.EnumMap<>(Position.class);
+        totals.forEach((id, total) -> {
+            Position p = positionOf.apply(id);
+            if(p != null && total > 0){
+                byPosition.computeIfAbsent(p, k -> new ArrayList<>()).add(total);
+            }
+        });
+        byPosition.values().forEach(list -> list.sort(java.util.Comparator.reverseOrder()));
+        Map<String, Double> out = new HashMap<>();
+        rank.forEach((id, k) -> {
+            double own = totals.getOrDefault(id, 0.0);
+            List<Double> scale = byPosition.get(positionOf.apply(id));
+            if(own > 0 && scale != null && k >= 1){
+                out.put(id, scale.get(Math.min(k, scale.size()) - 1) / own);
+            }
+        });
+        return out;
     }
 
     /** A week's free agents at each wire position, best first. */

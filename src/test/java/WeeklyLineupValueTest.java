@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 
 public class WeeklyLineupValueTest {
 
@@ -80,5 +81,48 @@ public class WeeklyLineupValueTest {
         assertEquals(20 + REST, after, 1e-9, "a man held is not also on the wire: no double count");
         assertEquals(10.0, after - v.of(List.of(), List.of("qbA")), 1e-9);
         assertEquals(0.0, after - v.of(List.of()), 1e-9, "against a wire that still has him, nothing");
+    }
+
+    /**
+     * FantasyPros' order on Sleeper's scale: the receiver it ranks first is given
+     * the largest receiver total Sleeper projects, the one it ranks second the
+     * second largest, whoever Sleeper gave them to. Ranked deeper than the totals
+     * run, a man takes the last one. A man FantasyPros leaves out, or with nothing
+     * left to play, keeps his own; a rank is read only against his own position.
+     */
+    @Test
+    public void aRankIsReadOntoTheTotalsAtItsPosition(){
+        Map<String, Double> totals = Map.of("a", 120.0, "b", 100.0, "c", 80.0, "gone", 0.0, "q", 300.0, "solo", 90.0);
+        Map<String, Position> at = Map.of("a", Position.WR, "b", Position.WR, "c", Position.WR, "gone", Position.WR,
+                "q", Position.QB, "solo", Position.WR);
+        Map<String, Integer> rank = Map.of("b", 1, "a", 2, "c", 9, "gone", 3, "q", 1);
+        Map<String, Double> scale = WeeklyLineupValue.rankScale(totals, rank, at::get);
+        assertEquals(120.0, 100.0 * scale.get("b"), 1e-9, "ranked first: the largest total at receiver");
+        assertEquals(100.0, 120.0 * scale.get("a"), 1e-9, "ranked second: the second largest");
+        assertEquals(80.0, 80.0 * scale.get("c"), 1e-9, "ranked ninth of four: the last total");
+        assertEquals(300.0, 300.0 * scale.get("q"), 1e-9, "a quarterback is read against quarterbacks only");
+        assertFalse(scale.containsKey("gone"), "nothing left to play: nothing to scale");
+        assertFalse(scale.containsKey("solo"), "unranked: Sleeper's own numbers");
+    }
+
+    /**
+     * Read per game, not per season. A quarterback Sleeper projects to start only
+     * two of four weeks, ranked second, gets the second best rate a game (15) in
+     * those two weeks: 30, not the second largest season total (60) crammed into
+     * them, which is how the first version priced free agent Deshaun Watson at 48
+     * a week (2026-10-29).
+     */
+    @Test
+    public void aRankIsReadPerGameInTheWeeksSleeperHasHimPlaying(){
+        Map<String, Position> at = Map.of("ace", Position.QB, "vet", Position.QB, "part", Position.QB);
+        List<Map<String, Double>> weeks = List.of(
+                Map.of("ace", 20.0, "vet", 15.0, "part", 10.0),
+                Map.of("ace", 20.0, "vet", 15.0, "part", 10.0),
+                Map.of("ace", 20.0, "vet", 15.0),
+                Map.of("ace", 20.0, "vet", 15.0));
+        Map<String, Double> scale = WeeklyLineupValue.perGameScale(weeks, Map.of("ace", 1, "part", 2, "vet", 3), at::get);
+        assertEquals(30.0, 2 * 10.0 * scale.get("part"), 1e-9, "two games at the second best rate a game");
+        assertEquals(10.0, 15.0 * scale.get("vet"), 1e-9, "ranked third: the third best rate a game");
+        assertEquals(1.0, scale.get("ace"), 1e-9);
     }
 }

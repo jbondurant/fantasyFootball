@@ -14,9 +14,14 @@ import com.google.gson.JsonParser;
 public class EcrDataExtractor {
 
     public static JsonObject extract(String entireHTML){
-        int marker = entireHTML.indexOf("var ecrData");
+        return extract(entireHTML, "var ecrData");
+    }
+
+    /** The object a page assigns to `variable` (e.g. "var expertGroupsData", whose expert_data says who each expert is). */
+    public static JsonObject extract(String entireHTML, String variable){
+        int marker = entireHTML.indexOf(variable);
         if(marker < 0){
-            throw new RuntimeException("no ecrData on page - FantasyPros changed their markup");
+            throw new RuntimeException("no " + variable + " on page - FantasyPros changed their markup");
         }
         int start = entireHTML.indexOf('{', marker);
         if(start < 0){

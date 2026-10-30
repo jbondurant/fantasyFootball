@@ -292,7 +292,10 @@ tasks.register('run', JavaExec) {
      // TradeMarket title ladder: the title-odds rises, trades per rival, the simulations per rival, the season gain to simulate
      'titleLadder', 'perRival', 'ladderCap', 'ladderMinGain',
      // TradeMarket trade explorer: on, the top bucket, trades per bucket, simulations per rival, the season gain to simulate
-     'tradeExplorer', 'explorerTop', 'explorerPerBucket', 'explorerCap', 'explorerMinGain'].each { knob ->
+     'tradeExplorer', 'explorerTop', 'explorerPerBucket', 'explorerCap', 'explorerMinGain',
+     // TradeMarket.explorer - the pricings that veto a trade (default fantasypros), the gain below which they do (default 0),
+     // and how deep the Players tab lists free agents.
+     'explorerReject', 'explorerRejectBelow', 'explorerPlayerDepth'].each { knob ->
         if (project.hasProperty(knob)) {
             systemProperty knob, project.property(knob)
         }
