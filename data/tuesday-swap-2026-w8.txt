@@ -1,6 +1,6 @@
-data: projections 2026-10-27, player metadata 2026-10-27
-TUESDAY SWAP  2026-10-27  season 2026, waivers for week 8  (justinb314; priced on sleeper-remaining, with ros beside it)
-154 free agents searched against all 16 roster spots = 2464 pairs, on weekly lineups on sleeper-remaining, weeks 8-17: each week's best lineup, that week's best free agents in the pool for nothing.
+data: projections 2026-10-29, player metadata 2026-10-29
+TUESDAY SWAP  2026-10-29  season 2026, waivers for week 8  (justinb314; priced on sleeper-remaining, with ros beside it)
+152 free agents searched against all 16 roster spots = 2432 pairs, on weekly lineups on sleeper-remaining, weeks 8-17: each week's best lineup, that week's best free agents in the pool for nothing.
 A claim is priced against the wire WITHOUT him - what he adds over the wire he leaves behind.
 Gains are points over the weeks left (10.0 weeks, sleeper-remaining week by week to week 17); 7.0 of those
 weeks are the regular season, so a gain is worth 0.70 of itself from here.
@@ -9,38 +9,38 @@ line the drawn-season objective's worst seed-to-seed spread set (sleeper-remaini
 reach to be worth a transaction.
 
 ADD                    POS  -> drop                             left from here  alt here    title
-Jacoby Brissett        QB   -> drop Aaron Rodgers               +2.9      +2.0      +3.8   +0.16
-Philadelphia Eagles    DEF  -> drop Aaron Rodgers               +2.8      +2.0      +2.0   +0.14
-Pat Bryant             WR   -> drop Aaron Rodgers               +2.2      +1.5      +0.0   +0.06
-Cincinnati Bengals     DEF  -> drop Aaron Rodgers               +1.0      +0.7      +0.7   +0.07
-Baltimore Ravens       DEF  -> drop Aaron Rodgers               +0.7      +0.5      +0.5   +0.12
-Green Bay Packers      DEF  -> drop Aaron Rodgers               +0.6      +0.4      +0.4   +0.06
-Jacksonville Jaguars   DEF  -> drop Aaron Rodgers               +0.4      +0.3      +0.3   +0.02
+Philadelphia Eagles    DEF  -> drop Aaron Rodgers               +2.8      +1.9      +1.9   +0.08
+Jacoby Brissett        QB   -> drop Aaron Rodgers               +2.2      +1.6      +2.5   +0.08
+Pat Bryant             WR   -> drop Aaron Rodgers               +1.4      +1.0      +0.0   +0.03
+Baltimore Ravens       DEF  -> drop Aaron Rodgers               +1.2      +0.8      +0.8   +0.10
+San Francisco 49ers    DEF  -> drop Aaron Rodgers               +0.5      +0.4      +0.4   +0.05
+Green Bay Packers      DEF  -> drop Aaron Rodgers               +0.4      +0.3      +0.3   +0.05
 AJ Dillon              RB   -> drop Aaron Rodgers               +0.0      +0.0      +0.0   +0.00
+Adam Randall           RB   -> drop Aaron Rodgers               +0.0      +0.0      +0.0   +0.00
 title is the change in your title odds in percentage points (TitleOdds, 20000 seasons, the same draws
-before and after); your odds now are 7.4%.
+before and after); your odds now are 7.2%.
 alt here is the same move priced on ros and put in from-here points too, so the two columns
 read in one unit; ros is the rest-of-season model that has seen the results (RosModel),
 sleeper-remaining Sleeper's weekly projections for the games left, which drop a man ruled out.
 
-EVERY DROP FOR JACOBY BRISSETT - the same claim against each man you hold:
-   drop Aaron Rodgers               +2.9
-   drop Cam Skattebo                +2.9
-   drop Dalton Schultz              +2.7
-   drop Minnesota Vikings           +2.7   <- empties a slot; the whole plan (then add Philadelphia Eagles, drop Cam Skattebo) is +5.6
-   drop Tyler Higbee                +2.7
-   drop Jordan Addison              +2.4
-   drop Khalil Shakir               +1.4
-   drop T.J. Hockenson              -3.8
-   drop Josh Downs                  -5.7
-   drop Harold Fannin Jr.           -7.0
-   drop Rhamondre Stevenson        -11.5
-   drop Jakobi Meyers              -13.3
-   drop Malik Nabers               -43.0
-   drop Bhayshul Tuten             -45.1
-   drop Brock Purdy                -45.5
-   drop Derrick Henry              -71.1
+EVERY DROP FOR PHILADELPHIA EAGLES - the same claim against each man you hold:
+   drop Aaron Rodgers               +2.8
+   drop Jordan Addison              +2.8
+   drop Tyler Higbee                +2.8
+   drop Minnesota Vikings           +2.6
+   drop Khalil Shakir               +2.4
+   drop Chris Godwin Jr.            -0.6
+   drop T.J. Hockenson              -1.6
+   drop Josh Downs                  -2.7
+   drop Cam Skattebo                -4.1
+   drop Harold Fannin Jr.           -4.4
+   drop Rhamondre Stevenson         -8.0
+   drop Jakobi Meyers               -9.7
+   drop Bhayshul Tuten             -38.8
+   drop Malik Nabers               -40.0
+   drop Brock Purdy                -42.3
+   drop Derrick Henry              -66.4
 
-DO NOTHING. The best plan on the board is worth +2.9 (2.0 from here), inside the
+DO NOTHING. The best plan on the board is worth +2.8 (1.9 from here), inside the
 floor, so it is not a move - it is noise with a transaction attached. Waiting is free and
 buys another week of evidence.

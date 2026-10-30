@@ -1,0 +1,132 @@
+TRADE MARKET  2026-10-29  (justinb314; projections: sleeper-remaining)
+Every size-balanced swap with all eleven rivals, both rosters priced on the same objective: weekly lineups on sleeper-remaining, weeks 8-17 - each week's best lineup, that week's best free agents in the pool for nothing.
+Only trades BOTH sides gain from are listed: an offer the other manager loses on is an offer he declines.
+THE TWO SIDES ARE PRICED DIFFERENTLY, on purpose. YOUR value is the season PLUS the best two
+keeper surpluses on your roster (a surplus being what a man is worth beyond the pick you spend to
+keep him, measured at HIS OWN position). HIS is LOSS-AVERSE on keepers: he takes no credit for one
+he receives and feels every point of one he gives up, which is how people here actually behave.
+So asking for another manager's keeper is HARD - the ask is priced at what it costs him - and
+paying anybody IN keepers buys you nothing. -Pkeepers=false prices you the same way he is.
+
+THE WIRE THIS ASSUMES - each week's best free agents are in every lineup's pool, a pickup costing
+no roster spot (Justin, 2026-10-23: "let's do it with no roster space required"). On sleeper-remaining, points that week:
+  week   QB                       RB (best 4)              WR (best 4)              TE (best 2)              DEF                     
+  8      22.6                     6.2/6.1/5.6/5.1          6.2/5.8/5.7/5.5          5.9/5.3                  6.4                     
+  9      22.9                     5.2/5.1/5.1/4.6          6.6/6.4/6.0/5.7          6.6/5.7                  8.5                     
+  10     21.1                     6.0/5.5/5.1/5.0          6.4/6.1/5.6/5.5          6.3/5.5                  7.5                     
+  11     21.9                     5.5/5.5/5.4/5.1          7.6/6.2/5.9/5.8          6.7/5.3                  8.1                     
+
+HOW EVERY ROSTER SCORES - the points its best lineup is projected to score in every week left (weekly lineups on sleeper-remaining, weeks 8-17),
+each week's best free agents in the pool. On sleeper-remaining and on ros (the rest-of-season model moves on this season's
+results; Sleeper's projections move on news):
+  rank manager          sleeper-remaining   rank      ros
+  1    itsabust           1353.6   2      1248.8
+  2    JakeSK             1340.8   1      1255.1
+  3    JFMarino           1311.6   4      1226.2
+  4    d0ddi              1285.8   3      1231.5
+  5    patekxwater        1257.1   5      1185.3
+  6    justinb314         1239.7   9      1137.9   <- you
+  7    jerem9604          1228.6   7      1153.5
+  8    Hamrliks           1208.6   6      1182.1
+  9    KevinDA            1192.5   10     1116.7
+  10   tommyrads          1169.2   8      1149.3
+  11   Renteez            1122.0   11     1070.4
+  12   BHier              1120.2   12     1042.5
+
+THE SEASON EACH RIVAL IS IN (TitleOdds, 20000 seasons from week 8). 'weight' is what a point of season
+value is worth to him against the league average; a rival's gain below is his season gain times it, less any
+keeper he gives up, plus (1 - his playoff odds) of any keeper he receives.
+  manager          playoffs   title  weight  state
+  JFMarino            96.9%   23.0%    1.82  contender
+  JakeSK              93.9%   21.5%    2.01  contender
+  itsabust            88.2%   21.2%    2.17  contender
+  d0ddi               64.1%    7.6%    1.22  contender
+  justinb314          59.8%    7.2%    1.06  bubble   <- you
+  patekxwater         45.7%    6.5%    1.18  bubble
+  Hamrliks            58.1%    5.2%    0.88  bubble
+  tommyrads           66.5%    4.5%    0.72  contender
+  KevinDA             17.8%    2.1%    0.54  out of it
+  jerem9604            7.9%    1.2%    0.36  out of it
+  Renteez              0.9%    0.1%    0.03  out of it
+  BHier                0.2%    0.0%    0.01  out of it
+
+51278 swaps searched, 445 good for both sides, 412 of those also good for 2026.
+A trade must stand up WITHOUT the keeper value as well - the plan is to win 2026, and
+keeper value is a tiebreak on a deal that already helps now, not a reason to get worse.
+33 offers were dropped for failing that. -PsellMode=true to see them.
+
+'his view' is the trade from HIS side on the two numbers he can check (TradeScreens): what he gets back
+of the draft value and of the season screen (pace and Sleeper's projection), '-' where he gives none. 'title' is the change in
+your title odds and his, in percentage points (TitleOdds, the same 20000 seasons before and after).
+YOU GIVE                     YOU GET                          you     him  season   SIMPLE   you:ros   him:ros     ADP g/g   his view   title y/h   WITH / HOW IT READS
+T.J. Hockenson               Bijan Robinson                 +97.7    +2.3   +97.7   +109.6     +75.5     -90.3   180/3     6%/17%=14%  +9.2/ -0.0   BHier  he loses on ros - NO - he gets back 14% of what he gives on what he can see (6% of the draft value, 17% of the season screen - pace and Sleeper's projection; after 7 games, draft value is 32% of what a man is worth in other leagues' trades); 0 of 60 accepted sides here took as little
+Aaron Rodgers + Bhayshul Tuten + Jakobi Meyers Javonte Williams + Ja'Marr Chase + Ladd McConkey   +71.1   +40.4  +116.1   +129.4    +105.3    -128.5    59/3     24%/43%=37% +11.4/ -0.1   Renteez  he loses on ros - NO - he gets back 37% of what he gives on what he can see (24% of the draft value, 43% of the season screen - pace and Sleeper's projection; after 7 games, draft value is 32% of what a man is worth in other leagues' trades); 1 of 60 accepted sides here took as little (BHier), never Renteez
+Aaron Rodgers + Bhayshul Tuten + Rhamondre Stevenson Javonte Williams + Ja'Marr Chase + Ladd McConkey   +68.8   +40.2  +113.8   +135.5     +97.7    -119.5    59/3     32%/49%=44% +11.5/ -0.1   Renteez  he loses on ros - NO - he gets back 44% of what he gives on what he can see (32% of the draft value, 49% of the season screen - pace and Sleeper's projection; after 7 games, draft value is 32% of what a man is worth in other leagues' trades); 1 of 60 accepted sides here took as little (BHier), never Renteez
+Aaron Rodgers + Bhayshul Tuten + Jakobi Meyers Jordan Love + Javonte Williams + Ja'Marr Chase   +67.9   +13.5  +104.2   +108.9     +98.6     -97.2    59/3     30%/44%=41%  +9.7/ -0.0   Renteez  (asking for a man worth keeping)  he loses on ros - NO - he gets back 41% of what he gives on what he can see (30% of the draft value, 44% of the season screen - pace and Sleeper's projection; after 7 games, draft value is 32% of what a man is worth in other leagues' trades); 1 of 60 accepted sides here took as little (BHier), never Renteez
+Aaron Rodgers + Bhayshul Tuten + Rhamondre Stevenson Jordan Love + Javonte Williams + Ja'Marr Chase   +65.3   +13.5  +101.7   +115.0     +83.1     -86.3    59/3     41%/51%=48%  +9.8/ -0.0   Renteez  (asking for a man worth keeping)  he loses on ros - NO - he gets back 48% of what he gives on what he can see (41% of the draft value, 51% of the season screen - pace and Sleeper's projection; after 7 games, draft value is 32% of what a man is worth in other leagues' trades); 2 of 60 accepted sides here took as little (BHier, Hamrliks), never Renteez
+Aaron Rodgers + Bhayshul Tuten + Rhamondre Stevenson Javonte Williams + Ja'Marr Chase + Travis Etienne Jr.   +65.3   +40.6  +110.3   +118.6     +97.7    -113.3    59/3     32%/51%=45% +10.5/ -0.1   Renteez  he loses on ros - NO - he gets back 45% of what he gives on what he can see (32% of the draft value, 51% of the season screen - pace and Sleeper's projection; after 7 games, draft value is 32% of what a man is worth in other leagues' trades); 1 of 60 accepted sides here took as little (BHier), never Renteez
+Bhayshul Tuten + Jakobi Meyers + Rhamondre Stevenson Javonte Williams + Ja'Marr Chase + Ladd McConkey   +64.5   +41.1  +109.5   +124.7     +96.8    -100.0    59/3     34%/53%=47% +10.6/ -0.0   Renteez  he loses on ros - NO - he gets back 47% of what he gives on what he can see (34% of the draft value, 53% of the season screen - pace and Sleeper's projection; after 7 games, draft value is 32% of what a man is worth in other leagues' trades); 2 of 60 accepted sides here took as little (BHier, Hamrliks), never Renteez
+Aaron Rodgers + Bhayshul Tuten + Jakobi Meyers Javonte Williams + Ja'Marr Chase + Travis Etienne Jr.   +64.5   +40.5  +109.5   +112.5    +104.0    -126.7    59/3     24%/45%=38% +10.1/ -0.1   Renteez  he loses on ros - NO - he gets back 38% of what he gives on what he can see (24% of the draft value, 45% of the season screen - pace and Sleeper's projection; after 7 games, draft value is 32% of what a man is worth in other leagues' trades); 1 of 60 accepted sides here took as little (BHier), never Renteez
+Aaron Rodgers + Bhayshul Tuten Javonte Williams + Ja'Marr Chase   +64.0   +40.6  +109.0   +119.7     +99.8    -114.8    59/3     24%/37%=33% +10.5/ -0.1   Renteez  he loses on ros - NO - he gets back 33% of what he gives on what he can see (24% of the draft value, 37% of the season screen - pace and Sleeper's projection; after 7 games, draft value is 32% of what a man is worth in other leagues' trades); 1 of 60 accepted sides here took as little (BHier), never Renteez
+Bhayshul Tuten + Tyler Higbee Javonte Williams + Ja'Marr Chase   +64.0   +40.6  +109.0   +119.7     +99.8    -108.4    59/3     24%/37%=33% +10.5/ -0.0   Renteez  he loses on ros - NO - he gets back 33% of what he gives on what he can see (24% of the draft value, 37% of the season screen - pace and Sleeper's projection; after 7 games, draft value is 32% of what a man is worth in other leagues' trades); 1 of 60 accepted sides here took as little (BHier), never Renteez
+Aaron Rodgers + Bhayshul Tuten + Jakobi Meyers Bijan Robinson + Rashee Rice + Travis Kelce   +63.4   +56.9  +118.3   +132.7     +77.8     -83.5    59/3     28%/47%=41% +11.3/ -0.0   BHier  he loses on ros - NO - he gets back 41% of what he gives on what he can see (28% of the draft value, 47% of the season screen - pace and Sleeper's projection; after 7 games, draft value is 32% of what a man is worth in other leagues' trades); 1 of 60 accepted sides here took as little (BHier)
+Aaron Rodgers + Bhayshul Tuten + Rhamondre Stevenson Bijan Robinson + Rashee Rice + Travis Kelce   +63.0   +56.7  +117.9   +138.8     +63.2     -80.3    59/3     38%/53%=49% +11.6/ -0.0   BHier  he loses on ros - NO - he gets back 49% of what he gives on what he can see (38% of the draft value, 53% of the season screen - pace and Sleeper's projection; after 7 games, draft value is 32% of what a man is worth in other leagues' trades); 2 of 60 accepted sides here took as little (BHier, Hamrliks)
+
+THE SHORT LIST - 0 of the 412: good for BOTH sides on BOTH pricings, you gaining at least the
+line (6.8 - the drawn-season objective's seed-to-seed spread, kept as the size a gain must reach) this season
+on each, AND fair to him on what he
+can see - at least what he gives, with draft value 32% of a man's worth after 7 games (the share other leagues' accepted trades reveal, DraftWeightCurve). Best first by
+the change in your title odds ('title', in percentage points, +- its standard error); 'trades/yr' is how
+often he has actually traded (TradePartners).
+  YOU GIVE                     YOU GET                           you  you:ros  him:ros         title   his view WITH             trades/yr
+  none. No trade that helps you on both pricings also looks fair to him on what he can see.
+
+LEFT OUT AS TANKING - 280 trades that help you but cost the other side more than 20.0 of THIS season on
+sleeper-remaining or 6.8 on ros, whatever they gain in keepers. Justin, 2026-10-22: "I don't want tanking for one
+team that gets a keeper for next year"; 2026-10-23: "tanking would be an over 20 drop".
+
+PAST THE LINE ON SLEEPER-REMAINING ONLY - 3 of those cost him more than 20.0 there but not more than 6.8 on ros.
+Tanking by Justin's definition; shown because he asked to see them. Best for you first:
+  YOU GIVE                     YOU GET                           you  you:ros      him  him:ros   his view WITH            
+  Bhayshul Tuten + Malik Nabers + Rhamondre Stevenson Bijan Robinson + Travis Kelce + David Montgomery    +57.2     +9.4    -49.6     -3.1 66%/73%=71% BHier           
+  Bhayshul Tuten + Jakobi Meyers + Rhamondre Stevenson Brock Bowers + Saquon Barkley + Xavier Worthy    +35.0     +7.1    -35.1     +0.1 43%/109%=81% jerem9604       
+  Derrick Henry + Bhayshul Tuten + Jakobi Meyers Jonathan Taylor + Brock Bowers + Xavier Worthy    +23.6     +8.6    -24.4     -1.6 76%/99%=91% jerem9604       
+
+LONG SHOTS - 0 more that pass both pricings but give him less than he gives on what he can see, though
+at least one accepted side in ten here took as little (who is named). Not offers to lead with. 0 more were
+dropped: fewer than one accepted side in ten here ever took that little.
+
+WHAT YOUR SURPLUS IS WORTH - how many rivals could offer the same thing:
+  QB   you hold 2, start 1;  7 of 11 rivals also carry a spare -> INVENTORY, not a chip - the market is flooded
+  RB   you hold 4, start 2;  11 of 11 rivals also carry a spare -> INVENTORY, not a chip - the market is flooded
+  WR   you hold 7, start 3;  11 of 11 rivals also carry a spare -> INVENTORY, not a chip - the market is flooded
+  TE   you hold 3, start 1;  10 of 11 rivals also carry a spare -> INVENTORY, not a chip - the market is flooded
+  DEF  you hold 1, start 1;  1 of 11 rivals also carry a spare -> nothing to sell
+
+(The chain below is not filtered for 2026 - it is the ceiling of what the board
+offers, not a plan. Read the table above for what to actually send.)
+
+TRADING POWER - trade after trade, each re-searched on the board the last one left.
+Only trades worth more than 6.8 to you are taken: that is the objective's own
+seed-to-seed spread, so anything smaller is the yardstick moving and not the roster.
+
+   1. Derrick Henry + Malik Nabers + Rhamondre Stevenson for Jayden Daniels + Bijan Robinson + Travis Kelce   +15.2  (him   +0.2)  running   +15.2
+   2. Cam Skattebo                       for Stefon Diggs                          +8.3  (him   +0.9)  running   +23.5
+
+  2 trades, +23.5 to you, +1.1 handed to the men opposite to make them take it.
+  Still going at 2 and stopped by -PchainDepth, not by the board. Raise it.
+  The first trade alone was +15.2, so the chain is worth 1.5x a single one -
+  which is what one-step searching leaves behind.
+
+  AND THE ANSWER TO 'CAN I JUST KEEP TRADING?' - no. Ignoring the floor entirely,
+  the chain runs 2 trades and +23.5, but everything past the 2 above is smaller than the
+  yardstick's own noise, and it starts churning: it reacquires men it gave away earlier.
+  Every trade has to improve BOTH rosters, so the league's total value only rises and is
+  bounded by the best possible allocation of a fixed set of players. It must stop, and it
+  does. Local maxima are NOT the problem here; the floor is.
+
+WHAT THIS CANNOT TELL YOU. Sleeper records only COMPLETED trades - 51 across five
+seasons of this league, and not one refusal - so there is no way to fit what a manager
+will ACCEPT. What stands in: his gain on the model, and 'his view' - the trade on the two
+numbers he can check, against every trade this league has accepted. A trade fair on both is
+one he can check and find fair; that is not the same as one he will take.
