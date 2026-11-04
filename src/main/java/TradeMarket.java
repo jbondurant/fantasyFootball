@@ -1098,6 +1098,95 @@ public class TradeMarket {
                 TitleOdds.SIMS, screens.weightNow(), rivals, playersFrom, players, rows);
     }
 
+    /**
+     * BUYING A MAN OUTRIGHT WITH FAAB. Justin, 2026-11-03: "my faab so far hasn't
+     * served a purpose yet". He had $97 of 100 with no claim on the wire clearing the
+     * floor, and FAAB expires with the season. But FAAB travels in trades here: 22 of
+     * the league's 52 completed trades carried it (WaiverLog), among them $48 for
+     * Jalen Hurts, $31 toward Tony Pollard and, the week before, $15 for J.K. Dobbins
+     * with no man coming back. Every other trade search leaves FAAB out, so this one
+     * prices the deal it cannot see: one man of his, for dollars and nobody back.
+     * Justin's roster is full, so the best man to cut is searched (IR men hold no
+     * active spot) and his keeper value counted. The rules are the explorer's: found
+     * on Sleeper's projections, a gain of -PexplorerMinGain, dropped if FantasyPros
+     * calls it a loss for him. It says what each man is worth and what the seller
+     * loses; it does not say what he costs, because a seller's price for a dollar
+     * cannot be read from the 22 trades.
+     */
+    static String faabBuys(String me, Map<String, List<String>> rosters, Map<String, String> nameOf,
+                           java.util.function.ToDoubleFunction<List<String>> season, RosterValue altValue, RosterValue fpValue,
+                           TitleOdds.Stakes stakes, Map<String, Double> surplus, Map<String, Position> everyPosition,
+                           Set<String> reserve, Map<String, Integer> faabLeft, String source, String alt){
+        double minGain = Double.parseDouble(System.getProperty("explorerMinGain", "3"));
+        List<String> mine = rosters.get(me);
+        double myBase = season.applyAsDouble(mine), myAltBase = altValue.of(mine), myFpBase = fpValue.of(mine);
+        double myKeepBase = keeperValue(mine, surplus, everyPosition);
+        record Buy(String rival, String man, String cut, double rise, double se, double hisTitle, double you, double youAlt, double youFp,
+                   double him, double himAlt, double himFp, double myKeep, double hisKeep, String hurt){}
+        List<Buy> buys = new ArrayList<>();
+        int vetoed = 0;
+        for(Map.Entry<String, List<String>> e : rosters.entrySet()){
+            if(e.getKey().equals(me)){
+                continue;
+            }
+            List<String> his = e.getValue();
+            double hisBase = season.applyAsDouble(his), hisAltBase = altValue.of(his), hisFpBase = fpValue.of(his);
+            double hisKeepBase = keeperValue(his, surplus, everyPosition);
+            for(String man : his){
+                String cut = null;
+                double you = Double.NEGATIVE_INFINITY;
+                for(String candidate : mine){
+                    if(reserve.contains(candidate)){
+                        continue;
+                    }
+                    double gain = season.applyAsDouble(swap(mine, List.of(candidate), List.of(man))) - myBase;
+                    if(gain > you || gain == you && name(candidate, nameOf).compareTo(name(cut, nameOf)) < 0){
+                        you = gain;
+                        cut = candidate;
+                    }
+                }
+                if(cut == null || you < minGain){
+                    continue;
+                }
+                List<String> myAfter = swap(mine, List.of(cut), List.of(man));
+                double youFp = fpValue.of(myAfter) - myFpBase;
+                if(youFp < 0){
+                    vetoed++;
+                    continue;
+                }
+                List<String> hisAfter = swap(his, List.of(man), List.of());
+                TitleOdds.Delta[] d = stakes.swap(me, myAfter, e.getKey(), hisAfter);
+                buys.add(new Buy(e.getKey(), man, cut, 100 * d[0].change(), 100 * d[0].se(), 100 * d[1].change(),
+                        you, altValue.of(myAfter) - myAltBase, youFp,
+                        season.applyAsDouble(hisAfter) - hisBase, altValue.of(hisAfter) - hisAltBase, fpValue.of(hisAfter) - hisFpBase,
+                        keeperValue(myAfter, surplus, everyPosition) - myKeepBase,
+                        keeperValue(hisAfter, surplus, everyPosition) - hisKeepBase, hurt(List.of(man), nameOf)));
+            }
+        }
+        buys.sort(Comparator.comparingDouble((Buy b) -> -b.rise()).thenComparing(b -> name(b.man(), nameOf)));
+        StringBuilder out = new StringBuilder(String.format(
+                "FAAB BUYS  %s  (%s; your title odds %.1f%%, playoffs %.0f%%, $%d left)%n"
+                        + "One man for dollars and nobody back, your best man to cut going to the wire. Found on %s (a gain of %.0f or more), %d more vetoed by%n"
+                        + "FantasyPros. you and him are season points on %s / %s / FantasyPros; 'title' is the change in your odds and his.%n%n",
+                LocalDate.now(), me, 100 * stakes.title(me), 100 * stakes.playoffs().getOrDefault(me, 0.0), faabLeft.getOrDefault(me, 0),
+                source, minGain, vetoed, source, alt));
+        java.util.function.BiConsumer<String, java.util.function.Predicate<Buy>> list = (title, keep) -> {
+            out.append(title).append('\n');
+            out.append(String.format("  %-24s %-12s %-9s %-4s %12s %22s %22s %13s  %s%n", "MAN", "FROM", "state", "$", "title y/h", "you", "him", "keep y/h", "CUT"));
+            buys.stream().filter(keep).limit(15).forEach(b -> out.append(String.format(
+                    "  %-24s %-12s %-9s $%-3d %+5.1f /%+5.1f   %+6.1f %+6.1f %+6.1f   %+6.1f %+6.1f %+6.1f  %+6.1f %+6.1f  %s%s%n",
+                    name(b.man(), nameOf), b.rival(), stakes.state(b.rival()), faabLeft.getOrDefault(b.rival(), 0), b.rise(), b.hisTitle(),
+                    b.you(), b.youAlt(), b.youFp(), b.him(), b.himAlt(), b.himFp(), b.myKeep(), b.hisKeep(), name(b.cut(), nameOf), b.hurt())));
+            out.append('\n');
+        };
+        java.util.function.Predicate<Buy> inIt = b -> !"out of it".equals(stakes.state(b.rival())) && b.hurt().isEmpty();
+        list.accept("MEN HE HARDLY NEEDS - from teams still in it, nobody hurt, he loses 10 or less on Sleeper's projections:", b -> inIt.test(b) && b.him() >= -10);
+        list.accept("THE BIGGEST RISES - from teams still in it, nobody hurt:", inIt);
+        list.accept("FROM TEAMS OUT OF IT - a dollar expires with the season, so a team out of it has little use for one:",
+                b -> "out of it".equals(stakes.state(b.rival())) && b.hurt().isEmpty());
+        return out.toString();
+    }
+
     /** The third pricing's name (WeeklyLineupValue.forSource). */
     static final String FANTASYPROS = "fantasypros";
 
@@ -1376,7 +1465,8 @@ public class TradeMarket {
         RosterValue altValue = drawn ? WeeklyStarterValue.forCurrentBoard(configuration, altPoints, scenarios, 424_242L)
                 : WeeklyLineupValue.forSource(configuration, alt);
         // the explorer's third pricing, read at the same moment as the other two so all three leave out the same kicked-off games
-        WeeklyLineupValue fpValue = Boolean.getBoolean("tradeExplorer") ? WeeklyLineupValue.forSource(configuration, FANTASYPROS) : null;
+        WeeklyLineupValue fpValue = Boolean.getBoolean("tradeExplorer") || Boolean.getBoolean("faabBuy")
+                ? WeeklyLineupValue.forSource(configuration, FANTASYPROS) : null;
         double tradeFloor = Double.parseDouble(System.getProperty("tradeFloor", "6.8"));
         // Justin's tanking line is on Sleeper's projections; the rest-of-season model keeps the noise floor
         double hisFloor = source.equals("ros") ? tradeFloor : tankFloor();
@@ -1517,6 +1607,17 @@ public class TradeMarket {
             System.out.print(out);
             Path target = Path.of("data", "trade-target-" + LocalDate.now() + ".txt");
             Files.writeString(target, out.toString(), StandardCharsets.UTF_8);
+            System.out.println("written to " + target);
+            return;
+        }
+
+        // BUYING A MAN OUTRIGHT WITH FAAB (2026-11-03). -PfaabBuy=true; see faabBuys.
+        if(Boolean.getBoolean("faabBuy")){
+            String report = faabBuys(me, rosters, nameOf, season, altValue, fpValue, stakes, surplus, everyPosition,
+                    LeagueOwners.reserve(configuration), FaabRivals.faabLeft(configuration), source, alt);
+            System.out.print(report);
+            Path target = Path.of("data", "faab-buys-" + LocalDate.now() + ".txt");
+            Files.writeString(target, report, StandardCharsets.UTF_8);
             System.out.println("written to " + target);
             return;
         }

@@ -116,6 +116,11 @@ spot. Price that spot before claiming:
 adds an OPEN SPOT table - every free agent added with nothing dropped. It is a
 rental: when he is activated somebody goes, and the swap table is that choice.
 
+When the report says DO NOTHING it means no man is worth holding over the wire, not
+that nobody needs claiming. Every number lets the lineup start the week's best free
+agent for nothing, so `TuesdaySwap` now lists those pickups week by week and what the
+lineup scores without them. They count only if the claim is really placed.
+
 Two things to respect:
 
 - a row tagged **inside the noise** is under the objective's own seed-to-seed
@@ -245,6 +250,15 @@ only on Sleeper and the model. On 2026-10-29 the explorer's Nabers + Stevenson f
 Justin Jefferson read +16.0 on Sleeper's projections and +1.2 on the model, but
 FantasyPros had Nabers WR7 and Jefferson WR12. Justin: "fantasy pros has nabers
 ahead of justin jefferson". It was not sent.
+
+**FAAB buys players here (2026-11-03).** Justin: "my faab so far hasn't served a
+purpose yet". 22 of the league's 52 completed trades carried FAAB (`WaiverLog` lists
+each), up to $48 for one man, and FAAB expires with the season, but the trade searches
+leave it out. `./gradlew run -Pmain=TradeMarket -PfaabBuy=true` prices each rival's men
+for dollars and nobody back, with your best man to cut, under the explorer's rules, and
+writes data/faab-buys-<date>.txt. It says what a man is worth and what the seller loses,
+not what he costs: the 22 trades are too few and too mixed to price a dollar. The trade
+deadline is week 12; after it FAAB is good only for claims.
 
 **Offers out** (strike each when it is answered). One man may sit in several offers
 at once (Justin, 2026-10-30: "i don't mind one player being part of multiple offers"):

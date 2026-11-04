@@ -117,6 +117,50 @@ public class WaiverLog {
                 .toLocalDateTime().toString().replace('T', ' ').substring(5, 16);
     }
 
+    /**
+     * EVERY TRADE THAT MOVED FAAB, ALL SEASONS. Justin, 2026-11-03: "my faab so far
+     * hasn't served a purpose yet". Sleeper lets FAAB travel in a trade, so a budget
+     * nobody can outbid is also currency. Each row says what moved, so what a dollar
+     * has bought here is read from what managers did, not assumed.
+     */
+    static String faabInTrades(String leagueID){
+        StringBuilder out = new StringBuilder("\n== FAAB IN TRADES, every season of this league ==\n");
+        int trades = 0, with = 0;
+        for(LeagueTransactions.Year year : LeagueTransactions.chain(leagueID)){
+            Map<Integer, String> managers = TradePartners.managersOf(year.leagueID());
+            for(int week = 1; week <= 18; week++){
+                for(JsonElement element : JsonParser.parseString(LeagueTransactions.transactionsRaw(year.leagueID(), week)).getAsJsonArray()){
+                    JsonObject row = element.getAsJsonObject();
+                    if(!"trade".equals(text(row, "type")) || !"complete".equals(text(row, "status"))){
+                        continue;
+                    }
+                    trades++;
+                    if(!TradeScreens.nonEmpty(row, "waiver_budget")){
+                        continue;
+                    }
+                    with++;
+                    List<String> money = new ArrayList<>();
+                    for(JsonElement m : row.getAsJsonArray("waiver_budget")){
+                        JsonObject move = m.getAsJsonObject();
+                        money.add(String.format("$%d %s -> %s", move.get("amount").getAsInt(),
+                                managers.getOrDefault(move.get("sender").getAsInt(), "?"),
+                                managers.getOrDefault(move.get("receiver").getAsInt(), "?")));
+                    }
+                    Map<String, List<String>> gets = new TreeMap<>();
+                    if(row.has("adds") && row.get("adds").isJsonObject()){
+                        row.getAsJsonObject("adds").entrySet().forEach(e -> gets.computeIfAbsent(
+                                managers.getOrDefault(e.getValue().getAsInt(), "?"), k -> new ArrayList<>()).add(name(e.getKey())));
+                    }
+                    int picks = TradeScreens.nonEmpty(row, "draft_picks") ? row.getAsJsonArray("draft_picks").size() : 0;
+                    out.append(String.format("%s w%-2d  %s  |  %s%s%n", year.season(), week, String.join(", ", money),
+                            gets.isEmpty() ? "no players" : gets.toString(), picks > 0 ? "  + " + picks + " draft pick(s)" : ""));
+                }
+            }
+        }
+        out.append(String.format("%d of %d completed trades carried FAAB.%n", with, trades));
+        return out.toString();
+    }
+
     public static void main(String[] args) throws IOException {
         AAAConfiguration configuration = AAAConfiguration.getInstance();
         String leagueID = configuration.getLeagueID();
@@ -233,6 +277,7 @@ public class WaiverLog {
         if(!any){
             out.append("none this season\n");
         }
+        out.append(faabInTrades(leagueID));
         out.append("\nA contest with one bid is uncontested: the winner paid what he chose, and a $0 there is the usual price.\n");
         out.append("The page's bid comes from FaabBid's ladder over five finished seasons; this log is the sixth as it happens.\n");
 

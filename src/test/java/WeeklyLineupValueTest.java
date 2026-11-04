@@ -84,6 +84,21 @@ public class WeeklyLineupValueTest {
     }
 
     /**
+     * The pickups the number takes for granted: a quarterback who outscores the wire
+     * starts himself; in his bye the best free one starts, and the week says what that
+     * pickup is worth against the men actually held.
+     */
+    @Test
+    public void theFillInsAreTheFreeAgentsTheLineupStarts(){
+        List<WeeklyLineupValue.WeekFill> weeks = value(week(15, 18.0), week(15, null)).fillIns(List.of("mine"));
+        assertFalse(weeks.get(0).fillIns().containsKey("qbA"), "18 beats the wire's 15");
+        assertEquals(15.0, weeks.get(1).fillIns().get("qbA"), 1e-9, "the bye week starts him");
+        assertEquals(18 + REST, weeks.get(0).withWire(), 1e-9);
+        assertEquals(18.0, weeks.get(0).ownMen(), 1e-9, "without the wire, only the man he holds");
+        assertEquals(0.0, weeks.get(1).ownMen(), 1e-9);
+    }
+
+    /**
      * FantasyPros' order on Sleeper's scale: the receiver it ranks first is given
      * the largest receiver total Sleeper projects, the one it ranks second the
      * second largest, whoever Sleeper gave them to. Ranked deeper than the totals

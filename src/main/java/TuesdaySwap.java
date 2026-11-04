@@ -416,6 +416,23 @@ public class TuesdaySwap {
         return priced.isEmpty() || priced.get(0).worth() < floor ? null : priced.get(0);
     }
 
+    /** The pickups the weekly objective assumes, week by week (WeeklyLineupValue.fillIns). */
+    static String fillInsReport(WeeklyLineupValue value, List<String> roster, Map<String, String> nameOf){
+        StringBuilder out = new StringBuilder(String.format("%nTHAT IS NOT 'TOUCH NOTHING'. Every number above lets your lineup start the week's best free agent for nothing.%n"
+                + "These are the pickups it assumes, and what each week scores without them:%n"
+                + "  %-5s %8s %8s %6s  %s%n", "week", "with", "your men", "gain", "starts off the wire"));
+        double total = 0;
+        for(WeeklyLineupValue.WeekFill week : value.fillIns(roster)){
+            List<String> names = new ArrayList<>();
+            week.fillIns().forEach((id, pts) -> names.add(String.format("%s %.1f", TradeMarket.name(id, nameOf), pts)));
+            total += week.withWire() - week.ownMen();
+            out.append(String.format("  %-5d %8.1f %8.1f %+6.1f  %s%n", week.week(), week.withWire(), week.ownMen(),
+                    week.withWire() - week.ownMen(), names.isEmpty() ? "nobody" : String.join(", ", names)));
+        }
+        out.append(String.format("  Together %+.1f points over the weeks left: real only if the claim is actually placed, each week.%n", total));
+        return out.toString();
+    }
+
     public static void main(String[] args) throws Exception {
         AAAConfiguration configuration = AAAConfiguration.getInstance();
         String season = LeagueWeek.season();
@@ -688,6 +705,9 @@ public class TuesdaySwap {
                     + "buys another week of evidence.%n",
                     priced.isEmpty() ? 0 : priced.get(0).worth(),
                     priced.isEmpty() ? 0 : units.fromHere(priced.get(0).worth())));
+            if(value instanceof WeeklyLineupValue weekly){
+                out.append(fillInsReport(weekly, roster, nameOf));
+            }
         }
         else {
             out.append(String.format("CLAIM %s, DROP %s: %+.1f %s, %+.1f from here.%s%n",

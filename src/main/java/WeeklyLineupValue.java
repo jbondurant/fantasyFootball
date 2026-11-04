@@ -109,6 +109,11 @@ public class WeeklyLineupValue implements RosterValue {
     /** One week's best legal lineup: the roster's men projected that week, and the best free agents still on the wire. */
     double week(Collection<String> roster, Map<String, Double> projection, Map<Position, List<Map.Entry<String, Double>>> wire,
                 Set<String> gone){
+        return lineup(roster, projection, wire, gone).starters();
+    }
+
+    private TeamRankings.Lineup lineup(Collection<String> roster, Map<String, Double> projection,
+                                       Map<Position, List<Map.Entry<String, Double>>> wire, Set<String> gone){
         List<TeamRankings.Man> men = new ArrayList<>();
         for(String id : roster){
             Double points = projection.get(id);
@@ -130,7 +135,36 @@ public class WeeklyLineupValue implements RosterValue {
                 }
             }
         });
-        return TeamRankings.bestLineup(men).starters();
+        return TeamRankings.bestLineup(men);
+    }
+
+    /** One week as the objective plays it: the lineup with the wire, the lineup of the men you hold, and who starts off the wire (id -> points). */
+    public record WeekFill(int week, double withWire, double ownMen, Map<String, Double> fillIns){}
+
+    /**
+     * THE CLAIMS THIS OBJECTIVE TAKES FOR GRANTED. Justin, 2026-11-03: "my faab so
+     * far hasn't served a purpose yet". Every lineup here starts a free agent
+     * whenever one beats the man he replaces, for nothing, so a claim only shows up
+     * as a gain if it beats the wire left behind it. That is the right way to judge
+     * holding a man and the wrong way to read the week: "do nothing" on the board
+     * does not mean the fill-in starts himself. These are the pickups the number
+     * assumes, week by week, and what each week's lineup loses without them.
+     */
+    public List<WeekFill> fillIns(Collection<String> roster){
+        Set<String> gone = new java.util.HashSet<>(roster);
+        List<WeekFill> out = new ArrayList<>();
+        for(Map.Entry<Integer, Map<String, Double>> week : projected.entrySet()){
+            TeamRankings.Lineup with = lineup(roster, week.getValue(), free.getOrDefault(week.getKey(), Map.of()), gone);
+            double own = lineup(roster, week.getValue(), Map.of(), gone).starters();
+            Map<String, Double> fills = new java.util.LinkedHashMap<>();
+            for(TeamRankings.Man man : with.starting()){
+                if(man.id().startsWith(TitleOdds.WIRE)){
+                    fills.put(man.name(), man.points());     // a wire man's name field carries his id (lineup)
+                }
+            }
+            out.add(new WeekFill(week.getKey(), with.starters(), own, fills));
+        }
+        return out;
     }
 
     @Override

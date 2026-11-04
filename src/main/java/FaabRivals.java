@@ -147,6 +147,12 @@ public class FaabRivals {
         return left;
     }
 
+    /** Each manager's FAAB left, off the rosters feed. */
+    static Map<String, Integer> faabLeft(AAAConfiguration configuration){
+        int budget = configuration.getLeagueJson().getAsJsonObject("settings").get("waiver_budget").getAsInt();
+        return faabLeft(configuration, SeasonLedger.managerByRoster(configuration), budget);
+    }
+
     public static void main(String[] args) throws Exception {
         AAAConfiguration configuration = AAAConfiguration.getInstance();
         String me = configuration.getUserIDToDisplayName().getOrDefault(configuration.getMyID(), configuration.getMyID());
