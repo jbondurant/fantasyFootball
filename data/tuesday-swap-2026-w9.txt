@@ -1,0 +1,60 @@
+data: projections 2026-11-03, player metadata 2026-11-03
+TUESDAY SWAP  2026-11-03  season 2026, waivers for week 9  (justinb314; priced on sleeper-remaining, with ros beside it)
+153 free agents searched against all 16 roster spots = 2448 pairs, on weekly lineups on sleeper-remaining, weeks 9-17: each week's best lineup, that week's best free agents in the pool for nothing.
+A claim is priced against the wire WITHOUT him - what he adds over the wire he leaves behind.
+Gains are points over the weeks left (9.0 weeks, sleeper-remaining week by week to week 17); 6.0 of those
+weeks are the regular season, so a gain is worth 0.67 of itself from here.
+Nothing under 11.3 points is named. The weekly objective draws nothing, so this is not its noise: it is the
+line the drawn-season objective's worst seed-to-seed spread set (sleeper-remaining, 2026-09-29), kept as the size a claim must
+reach to be worth a transaction.
+
+ADD                    POS  -> drop                             left from here  alt here    title
+Philadelphia Eagles    DEF  -> drop Aaron Rodgers               +2.8      +1.9      +1.9   +0.06
+Pat Bryant             WR   -> drop Aaron Rodgers               +1.4      +0.9      +0.0   -0.01
+Baltimore Ravens       DEF  -> drop Aaron Rodgers               +1.2      +0.8      +0.8   +0.11
+Green Bay Packers      DEF  -> drop Aaron Rodgers               +0.4      +0.3      +0.3   +0.03
+Chicago Bears          DEF  -> drop Aaron Rodgers               +0.4      +0.2      +0.2   +0.03
+AJ Dillon              RB   -> drop Aaron Rodgers               +0.0      +0.0      +0.0   +0.00
+Adam Randall           RB   -> drop Aaron Rodgers               +0.0      +0.0      +0.0   +0.00
+Adam Trautman          TE   -> drop Aaron Rodgers               +0.0      +0.0      +0.0   +0.00
+title is the change in your title odds in percentage points (TitleOdds, 20000 seasons, the same draws
+before and after); your odds now are 6.4%.
+alt here is the same move priced on ros and put in from-here points too, so the two columns
+read in one unit; ros is the rest-of-season model that has seen the results (RosModel),
+sleeper-remaining Sleeper's weekly projections for the games left, which drop a man ruled out.
+
+EVERY DROP FOR PHILADELPHIA EAGLES - the same claim against each man you hold:
+   drop Aaron Rodgers               +2.8
+   drop Jordan Addison              +2.8
+   drop Tyler Higbee                +2.8
+   drop Minnesota Vikings           +2.7
+   drop Khalil Shakir               +2.0
+   drop Chris Godwin Jr.            -0.2
+   drop Josh Downs                  -0.3
+   drop T.J. Hockenson              -0.6
+   drop Harold Fannin Jr.           -3.8
+   drop Cam Skattebo                -5.4
+   drop Jakobi Meyers               -9.5
+   drop Rhamondre Stevenson        -16.0
+   drop Bhayshul Tuten             -35.4
+   drop Malik Nabers               -42.6
+   drop Brock Purdy                -48.9
+   drop Derrick Henry              -51.4
+
+DO NOTHING. The best plan on the board is worth +2.8 (1.9 from here), inside the
+floor, so it is not a move - it is noise with a transaction attached. Waiting is free and
+buys another week of evidence.
+
+THAT IS NOT 'TOUCH NOTHING'. Every number above lets your lineup start the week's best free agent for nothing.
+These are the pickups it assumes, and what each week scores without them:
+  week      with your men   gain  starts off the wire
+  9        119.7    117.7   +2.0  Chicago Bears 8.4
+  10       127.6    126.4   +1.2  Baltimore Ravens 7.5
+  11       116.9    116.1   +0.8  Philadelphia Eagles 8.1
+  12       120.3    119.5   +0.8  Philadelphia Eagles 8.1
+  13       114.2    112.0   +2.2  Pat Bryant 8.3, Philadelphia Eagles 8.1
+  14       112.7    111.8   +0.8  Philadelphia Eagles 8.1
+  15       117.7    116.2   +1.5  Green Bay Packers 8.3
+  16       121.3    120.6   +0.7  Baltimore Ravens 8.4
+  17       121.7    121.7   +0.0  nobody
+  Together +10.1 points over the weeks left: real only if the claim is actually placed, each week.
