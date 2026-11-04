@@ -247,4 +247,13 @@ public class TradeScreensTest {
         assertEquals(4.0, new TradeScreens.Precedent("2025", 5, "m", "a", "b", 1, 1, 1, 1).games(), 1e-9,
                 "without a clock count, the weeks before its leg");
     }
+
+    /** From week 9 on a trade is judged on this season's numbers alone; before that the measured curve stands (Justin, 2026-11-04). */
+    @Test
+    public void draftValueHasNoShareOnceEightGamesArePlayed(){
+        java.util.function.DoubleUnaryOperator weight = TradeScreens.draftOffLate(g -> 0.3);
+        assertEquals(0.3, weight.applyAsDouble(7), 1e-12);
+        assertEquals(0.0, weight.applyAsDouble(8), 1e-12);
+        assertEquals(0.0, weight.applyAsDouble(14), 1e-12);
+    }
 }

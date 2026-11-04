@@ -155,6 +155,7 @@ public class FaabRivals {
 
     public static void main(String[] args) throws Exception {
         AAAConfiguration configuration = AAAConfiguration.getInstance();
+        TradeMarket.ON_IR = LeagueOwners.reserve(configuration);
         String me = configuration.getUserIDToDisplayName().getOrDefault(configuration.getMyID(), configuration.getMyID());
         int perPosition = Integer.getInteger("faabTargets", 8);
         String source = TuesdaySwap.DEFAULT_SOURCE;

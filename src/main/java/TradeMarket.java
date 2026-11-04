@@ -976,7 +976,8 @@ public class TradeMarket {
      * weights, and the veto runs before the simulations, which are the cost. The
      * rest-of-season model is shown and does not veto unless named. What a trade does
      * to the other team is shown on all three and never filtered: lopsided and
-     * tanking trades stay in, flagged.
+     * tanking trades stay in, flagged. Any trade he would read as fair is simulated
+     * first and kept outside the bucket counts.
      */
     static String explorer(String me, List<Trade> all, Map<String, List<String>> rosters, Map<String, String> nameOf,
                            java.util.function.ToDoubleFunction<List<String>> season, RosterValue altValue,
@@ -1027,16 +1028,28 @@ public class TradeMarket {
                 cands.add(new Cand(t, you, season.applyAsDouble(swap(his, t.hisOut(), t.give())) - hisBase, youAlt, youFp));
             }
             cands.sort(Comparator.comparingDouble((Cand c) -> -c.him()));
+            // A TRADE HE WOULD READ AS FAIR IS NEVER CAPPED OUT (2026-11-04). The buckets keep the eight that cost
+            // him least on Sleeper, which says nothing of what he can see, so with draft spot off the fair trades
+            // could fall outside every bucket. They are walked first and sit outside the count.
+            Set<Cand> fair = new java.util.HashSet<>();
+            for(Cand c : cands){
+                if(screens.of(c.trade()).fairToHim()){
+                    fair.add(c);
+                }
+            }
+            List<Cand> walk = new ArrayList<>(cands);
+            walk.sort(Comparator.comparing((Cand c) -> !fair.contains(c)));   // stable: least worse for him first within each
             int[] count = new int[buckets];
             int sims = 0, skipped = 0, kept = 0;
             double sumRise = 0, sumYou = 0;
-            for(Cand c : cands){
-                if(sims >= cap || java.util.Arrays.stream(count).allMatch(n -> n >= perBucket)){
+            for(Cand c : walk){
+                boolean isFair = fair.contains(c);
+                if(!isFair && (sims >= cap || java.util.Arrays.stream(count).allMatch(n -> n >= perBucket))){
                     break;
                 }
                 double rate = sumYou > 0 ? Math.max(0.02, sumRise / sumYou) : 0.1;
                 int reach = (int) Math.floor((2 * rate * c.you() + 1.0) / step) - 1;
-                boolean open = false;
+                boolean open = isFair;
                 for(int b = 0; b <= Math.min(reach, buckets - 1); b++){
                     open |= count[b] < perBucket;
                 }
@@ -1055,10 +1068,12 @@ public class TradeMarket {
                     continue;
                 }
                 int b = Math.min(buckets - 1, (int) Math.floor((rise - step) / step + 1e-9));
-                if(count[b] >= perBucket){
+                if(!isFair && count[b] >= perBucket){
                     continue;
                 }
-                count[b]++;
+                if(!isFair){
+                    count[b]++;
+                }
                 kept++;
                 double[] other = onOther(c.trade(), rosters, me, altValue, scoreAlt);
                 double himFp = fpValue.of(hisAfter) - hisFpBase;
@@ -1331,12 +1346,20 @@ public class TradeMarket {
         return out.isEmpty() ? "" : "  [hurt: " + String.join(", ", out) + "]";
     }
 
-    /** The lowest-projected man on a roster who is not part of the deal. */
+    /**
+     * Who sits on IR in this league, set once by each tool that builds trades. A man
+     * on IR holds no active spot, so cutting him makes no room: on 2026-11-04 five
+     * trades had itsabust cut Terrance Ferguson (IR) to fit a two-for-one, which
+     * Sleeper would refuse, and so read cheaper for him than they are.
+     */
+    static Set<String> ON_IR = Set.of();
+
+    /** The lowest-projected man on a roster who is not part of the deal, and not on IR. */
     static String worstOther(List<String> roster, List<String> exclude, Map<String, Double> points){
         String worst = null;
         double lowest = Double.MAX_VALUE;
         for(String id : roster){
-            if(exclude.contains(id)){
+            if(exclude.contains(id) || ON_IR.contains(id)){
                 continue;
             }
             double projected = points.getOrDefault(id, 0.0);
@@ -1431,6 +1454,7 @@ public class TradeMarket {
 
     public static void main(String[] args) throws Exception {
         AAAConfiguration configuration = AAAConfiguration.getInstance();
+        ON_IR = LeagueOwners.reserve(configuration);
         int scenarios = Integer.getInteger("scenarios", 240);
         int pool = Integer.getInteger("pool", DEFAULT_POOL);
         int top = Integer.getInteger("top", 12);
@@ -1816,8 +1840,9 @@ public class TradeMarket {
                 + "the change in your title odds ('title', in percentage points, +- its standard error); 'trades/yr' is how%n"
                 + "often he has actually traded (TradePartners).%n",
                 shortList.size(), good.size(), tradeFloor, TradeScreens.Screens.share(screens.weightNow()), screens.weeksPlayed(),
-                System.getProperty("draftWeight", "").isBlank() ? "the share other leagues' accepted trades reveal, DraftWeightCurve"
-                        : "a WHAT-IF set by -PdraftWeight, not the measured curve"));
+                !System.getProperty("draftWeight", "").isBlank() ? "a WHAT-IF set by -PdraftWeight, not the measured curve"
+                        : screens.weightNow() == 0 ? "none from this point: Justin's call, 2026-11-04"
+                        : "the share other leagues' accepted trades reveal, DraftWeightCurve"));
         out.append(String.format("  %-28s %-28s %8s %8s %8s %13s %10s %-16s %9s%n", "YOU GIVE", "YOU GET", "you", "you:" + alt, "him:" + alt,
                 "title", "his view", "WITH", "trades/yr"));
         for(Short s : shortList.subList(0, Math.min(10, shortList.size()))){

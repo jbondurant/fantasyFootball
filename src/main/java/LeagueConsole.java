@@ -233,6 +233,7 @@ public class LeagueConsole {
 
     public static void main(String[] args) throws Exception {
         AAAConfiguration configuration = AAAConfiguration.getInstance();
+        TradeMarket.ON_IR = LeagueOwners.reserve(configuration);
         String season = LeagueWeek.season();
         int week = LeagueWeek.week();
         int scenarios = Integer.getInteger("scenarios", 240);

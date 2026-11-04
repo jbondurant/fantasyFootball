@@ -536,4 +536,18 @@ public class TradeMarketTest {
         assertFalse(TradeMarket.equitableSeason(-29.6, TradeMarket.TANK_FLOOR, 27.2, 6.8), "the Chase deal still is");
         assertFalse(TradeMarket.equitableSeason(-5.0, TradeMarket.TANK_FLOOR, -8.0, 6.8), "the rest-of-season model keeps 6.8");
     }
+
+    /** A man on IR holds no active spot, so he is never the cut that makes room, however low his projection. */
+    @Test
+    public void aManOnIrIsNeverTheCut(){
+        Map<String, Double> points = Map.of("hurt", 0.0, "bench", 3.0, "star", 20.0);
+        try {
+            TradeMarket.ON_IR = Set.of("hurt");
+            assertEquals("bench", TradeMarket.worstOther(List.of("hurt", "bench", "star"), List.of(), points));
+        }
+        finally {
+            TradeMarket.ON_IR = Set.of();
+        }
+        assertEquals("hurt", TradeMarket.worstOther(List.of("hurt", "bench", "star"), List.of(), points));
+    }
 }

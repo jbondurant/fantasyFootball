@@ -877,7 +877,25 @@ public class TradeScreens {
                     + " draft value falls back to the old k-games form (k = " + fmt(k) + "); run OtherLeagues and DraftWeightCurve");
             weight = kForm(k);
         }
+        if(fixed == null || fixed.isBlank()){
+            weight = draftOffLate(weight);
+        }
         return new Context(chart, history, draft, id -> production.getOrDefault(id, 0.0), played, weight, k);
+    }
+
+    /**
+     * DRAFT VALUE HAS NO SHARE ONCE THIS MANY GAMES ARE PLAYED. Justin, 2026-11-04,
+     * week 9, after the best offers on the page read as fair only because of Cam
+     * Skattebo's draft spot (100% and 120% in all, 72% and 81% on this season's
+     * numbers): "draft spot should no longer matter at this point". The curve
+     * still measures 30% here in other leagues' accepted trades; this is his call
+     * about what a trade should be judged on, not a new measurement, and -PdraftWeight
+     * still overrides it for a what-if.
+     */
+    static final int DRAFT_OFF_AFTER_GAMES = 8;
+
+    static DoubleUnaryOperator draftOffLate(DoubleUnaryOperator measured){
+        return games -> games >= DRAFT_OFF_AFTER_GAMES ? 0 : measured.applyAsDouble(games);
     }
 
     /**
@@ -919,6 +937,7 @@ public class TradeScreens {
 
     public static void main(String[] args) throws Exception {
         AAAConfiguration configuration = AAAConfiguration.getInstance();
+        TradeMarket.ON_IR = LeagueOwners.reserve(configuration);
         Context context = load(configuration);
         History history = context.history();
         StringBuilder out = new StringBuilder();

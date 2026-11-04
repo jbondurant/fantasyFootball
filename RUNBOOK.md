@@ -244,6 +244,11 @@ plus the free agents near the top, at his position three ways and sorts on the
 middle rank. The run prints both wires first: if the FantasyPros wire is far off
 Sleeper's, stop it, because a mis-read pricing vetoes trades wrongly.
 
+From 8 games on, "his view" ignores draft spot (Justin, 2026-11-04: "draft spot should no
+longer matter at this point"); the curve still measures 30% there in other leagues, and
+-PdraftWeight still sets a what-if. Any trade he would read as fair stays on the page,
+outside the eight-a-bucket limit, and nobody on IR is ever the man cut to make room.
+
 Before sending one, run TradeCheck on its men and read the FP ros column too.
 FantasyPros' consensus is what Justin compares against, and the explorer prices
 only on Sleeper and the model. On 2026-10-29 the explorer's Nabers + Stevenson for
