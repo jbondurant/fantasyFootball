@@ -1,60 +1,60 @@
-data: projections 2026-11-05, player metadata 2026-11-05
-TUESDAY SWAP  2026-11-05  season 2026, waivers for week 9  (justinb314; priced on sleeper-remaining, with ros beside it)
-157 free agents searched against all 16 roster spots = 2512 pairs, on weekly lineups on sleeper-remaining, weeks 9-17: each week's best lineup, that week's best free agents in the pool for nothing.
+data: projections 2026-11-06, player metadata 2026-11-06
+TUESDAY SWAP  2026-11-06  season 2026, waivers for week 9  (justinb314; priced on sleeper-remaining, with ros beside it)
+156 free agents searched against all 16 roster spots = 2496 pairs, on weekly lineups on sleeper-remaining, weeks 9-17: each week's best lineup, that week's best free agents in the pool for nothing.
 A claim is priced against the wire WITHOUT him - what he adds over the wire he leaves behind.
-Gains are points over the weeks left (9.0 weeks, sleeper-remaining week by week to week 17); 6.0 of those
-weeks are the regular season, so a gain is worth 0.67 of itself from here.
+Gains are points over the weeks left (8.9 weeks, sleeper-remaining week by week to week 17); 5.9 of those
+weeks are the regular season, so a gain is worth 0.66 of itself from here.
 Nothing under 11.3 points is named. The weekly objective draws nothing, so this is not its noise: it is the
 line the drawn-season objective's worst seed-to-seed spread set (sleeper-remaining, 2026-09-29), kept as the size a claim must
 reach to be worth a transaction.
 
 ADD                    POS  -> drop                             left from here  alt here    title
-Philadelphia Eagles    DEF  -> drop Jordan Addison              +2.8      +1.9      +1.6   +0.06
-Baltimore Ravens       DEF  -> drop Jordan Addison              +1.1      +0.7      +0.5   +0.13
-Pat Bryant             WR   -> drop Jordan Addison              +0.7      +0.5      -0.3   -0.01   <- a loss on ros
-Green Bay Packers      DEF  -> drop Jordan Addison              +0.4      +0.3      -0.0   +0.02   <- a loss on ros
-AJ Dillon              RB   -> drop Jordan Addison              +0.0      +0.0      -0.3   +0.00
-Aaron Rodgers          QB   -> drop Jordan Addison              +0.0      +0.0      -0.3   +0.00
-Adam Trautman          TE   -> drop Jordan Addison              +0.0      +0.0      -0.3   +0.00
-Alec Ingold            RB   -> drop Jordan Addison              +0.0      +0.0      -0.3   +0.00
+Philadelphia Eagles    DEF  -> drop Jordan Addison              +2.1      +1.4      +0.7   +0.13
+Baltimore Ravens       DEF  -> drop Jordan Addison              +0.6      +0.4      -0.3   +0.07   <- a loss on ros
+Pittsburgh Steelers    DEF  -> drop Jordan Addison              +0.6      +0.4      -0.3   +0.08   <- a loss on ros
+Green Bay Packers      DEF  -> drop Jordan Addison              +0.5      +0.3      -0.3   +0.07   <- a loss on ros
+Aaron Rodgers          QB   -> drop Jordan Addison              +0.0      +0.0      -0.7   +0.00
+Adam Trautman          TE   -> drop Jordan Addison              +0.0      +0.0      -0.7   +0.00
+Alec Ingold            RB   -> drop Jordan Addison              +0.0      +0.0      -0.7   +0.00
+Ameer Abdullah         RB   -> drop Jordan Addison              +0.0      +0.0      -0.7   +0.00
 title is the change in your title odds in percentage points (TitleOdds, 20000 seasons, the same draws
-before and after); your odds now are 6.4%.
+before and after); your odds now are 5.9%.
 alt here is the same move priced on ros and put in from-here points too, so the two columns
 read in one unit; ros is the rest-of-season model that has seen the results (RosModel),
 sleeper-remaining Sleeper's weekly projections for the games left, which drop a man ruled out.
 
 EVERY DROP FOR PHILADELPHIA EAGLES - the same claim against each man you hold:
-   drop Jordan Addison              +2.8
-   drop Khalil Shakir               +2.8
-   drop Minnesota Vikings           +2.7
-   drop Chicago Bears               +2.1
-   drop Josh Downs                  +1.7
-   drop Chris Godwin Jr.            +1.0
-   drop T.J. Hockenson              +0.3
-   drop Harold Fannin Jr.           -2.7
-   drop Cam Skattebo                -4.5
-   drop Jakobi Meyers               -5.5
-   drop Rhamondre Stevenson        -14.9
-   drop Bhayshul Tuten             -34.1
-   drop Malik Nabers               -38.5
-   drop Brock Purdy                -49.1   <- empties a slot; the whole plan (then add Kyler Murray, drop Jordan Addison) is -49.1
-   drop Derrick Henry              -50.0
-   drop Mike Evans                 -64.0
+   drop Jordan Addison              +2.1
+   drop Minnesota Vikings           +2.1
+   drop Chris Godwin Jr.            +1.8
+   drop Chicago Bears               +1.4
+   drop Josh Downs                  +0.4
+   drop Khalil Shakir               -1.5
+   drop T.J. Hockenson              -2.0
+   drop Jakobi Meyers               -2.3
+   drop Harold Fannin Jr.           -7.7
+   drop Cam Skattebo               -10.3
+   drop Rhamondre Stevenson        -15.5
+   drop Brock Purdy                -35.7   <- empties a slot; the whole plan (then add Malik Willis, drop Jordan Addison) is -35.7
+   drop Bhayshul Tuten             -44.3
+   drop Malik Nabers               -47.3
+   drop Derrick Henry              -48.9
+   drop Mike Evans                 -58.5
 
-DO NOTHING. The best plan on the board is worth +2.8 (1.9 from here), inside the
+DO NOTHING. The best plan on the board is worth +2.1 (1.4 from here), inside the
 floor, so it is not a move - it is noise with a transaction attached. Waiting is free and
 buys another week of evidence.
 
 THAT IS NOT 'TOUCH NOTHING'. Every number above lets your lineup start the week's best free agent for nothing.
 These are the pickups it assumes, and what each week scores without them:
   week      with your men   gain  starts off the wire
-  9        125.5    125.5   +0.0  nobody
-  10       135.7    134.5   +1.2  Baltimore Ravens 7.5
-  11       123.7    122.8   +0.8  Philadelphia Eagles 8.1
-  12       127.8    126.9   +0.8  Philadelphia Eagles 8.1
-  13       122.7    121.1   +1.6  Philadelphia Eagles 8.1, Pat Bryant 8.3
-  14       120.0    119.2   +0.8  Philadelphia Eagles 8.1
-  15       125.7    124.2   +1.5  Green Bay Packers 8.3
-  16       128.3    127.6   +0.7  Baltimore Ravens 8.4
-  17       128.9    128.9   +0.0  nobody
-  Together +7.4 points over the weeks left: real only if the claim is actually placed, each week.
+  9        110.9    110.9   +0.0  nobody
+  10       136.4    134.7   +1.7  Green Bay Packers 7.9
+  11       127.6    127.2   +0.4  Pittsburgh Steelers 7.3
+  12       133.3    132.4   +0.8  Philadelphia Eagles 8.1
+  13       125.5    124.6   +0.8  Philadelphia Eagles 8.1
+  14       122.7    121.9   +0.8  Philadelphia Eagles 8.1
+  15       129.7    128.2   +1.5  Green Bay Packers 8.3
+  16       132.7    132.0   +0.7  Baltimore Ravens 8.4
+  17       134.2    133.8   +0.4  Pittsburgh Steelers 8.2
+  Together +7.2 points over the weeks left: real only if the claim is actually placed, each week.
