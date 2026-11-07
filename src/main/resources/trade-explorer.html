@@ -1,3 +1,4 @@
+<meta charset="utf-8">
 <title>Keeper League Trade Explorer</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -293,6 +294,7 @@ function init() {
     `<span><b>${DATA.myTitle.toFixed(1)}%</b>your title odds</span>` +
     `<span><b>${DATA.myPlayoffs.toFixed(0)}%</b>playoffs</span>` +
     `<span><b>${DATA.trades.length}</b>trades</span>` +
+    (DATA.searched ? `<span><b>${DATA.searched.toLocaleString()}</b>searched</span>` : "") +
     `<span>${esc(DATA.generated)} · season ${esc(DATA.season)} after ${DATA.weeksPlayed} games · ${DATA.sims.toLocaleString()} simulated seasons a trade</span>`;
 
   const byRival = {};
@@ -352,7 +354,7 @@ function init() {
       : `<li><b>His view</b> is what he gets back of what he gives on this season's numbers, shown three ways. Pace is his points per game so far. Proj is Sleeper's projection for his next game. Each is read as rest-of-season value above the last starter at his position. The top number is the two weighted ${Math.round((DATA.paceShare ?? 0) * 100)}% pace and ${Math.round((1 - (DATA.paceShare ?? 0)) * 100)}% projection, the split other leagues' accepted trades show at this point in the season, and 100% or more on it reads fair to him. Draft spot no longer counts after ${DATA.weeksPlayed} games.</li>`,
     `<li><b>Hurt</b> names any player in the trade listed IR, Out, Doubtful, PUP, suspended or Questionable today. Sleeper projects an injured player back, so a trade that leans on one may be worth less than it reads.</li>`,
     `<li><b>Players tab.</b> Every rostered player, and every free agent near the top at his position on some pricing, ranked at his position three ways. The middle rank is the middle of the three, so two of the three rank him there or better and two rank him there or worse. No weights needed. Spread is how far apart they are: a big spread means the sources disagree. Sleeper and model points count from the week after this one, so a game already played this week doesn't skew them. A player with no Sleeper or model points left (out for the season) has no middle rank.</li>`,
-    `<li>Coverage: every one-for-one, and two- and three-man packages among each side's most valuable players. For each manager, trades gaining you ${DATA.minGain} or more season points were simulated from least to most costly to him, keeping up to ${DATA.perBucket} per bucket, so each bucket holds the least costly trades in it, plus every trade that reads as fair to him or that gets ${Math.round((DATA.bothFloor ?? 0.85) * 100)}% or more on both pace and projection, however costly. So the "on both" box is complete from ${Math.round((DATA.bothFloor ?? 0.85) * 100)}% up; set it lower and some trades may be missing. A manager marked "search capped" stopped at ${DATA.cap.toLocaleString()} simulations; a bucket short of trades there may have more.</li>`
+    `<li><b>Coverage.</b> Every trade up to ${DATA.maxSide} players a side from both whole rosters, ${(DATA.searched || 0).toLocaleString()} in all, in any shape. A side that ends over the roster limit cuts its lowest-projected player who isn't on IR. Trades gaining you ${DATA.minGain} or more season points were sorted from least to most costly to him. Then, per half-point bucket and manager, the page keeps up to ${DATA.perBucket} of the least costly trades on each of these: any trade, fair to him, and 100%, 95%, 90% and ${Math.round((DATA.bothFloor ?? 0.85) * 100)}% on both pace and projection. So the "on both" box has trades to show at any number from ${Math.round((DATA.bothFloor ?? 0.85) * 100)}% up, but this is the least costly of them, not all of them; below that, it only shows what's already here. A manager marked "search capped" stopped at ${DATA.cap.toLocaleString()} simulations, so some buckets may be short.</li>`
   ].join("");
 
   function render() {
@@ -401,7 +403,7 @@ function init() {
     return `<tr>
       <td data-k="With"><b>${esc(t.m)}</b><span class="sub"><span class="pill ${stateClass(t.state)}">${esc(t.state)}</span></span></td>
       <td data-k="You give"><div class="men">${names(t.give, t.hurtOut)}</div></td>
-      <td data-k="You get"><div class="men">${names(t.get, t.hurtIn)}${t.cut.length ? `<span class="cut">he cuts ${esc(t.cut.join(", "))}</span>` : ""}</div></td>
+      <td data-k="You get"><div class="men">${names(t.get, t.hurtIn)}${t.cut.length ? `<span class="cut">he cuts ${esc(t.cut.join(", "))}</span>` : ""}${(t.myCut || []).length ? `<span class="cut">you cut ${esc(t.myCut.join(", "))}</span>` : ""}</div></td>
       <td class="n" data-k="Your title"><span class="rise">${fmt(t.rise)}</span><span class="sub">± ${t.se.toFixed(1)}</span></td>
       <td class="n" data-k="His season"><span class="${himCls}">${fmt(t.him)}</span><span class="sub ${himAltCls}">${fmt(t.himAlt)}</span>${t.himFp == null ? "" : `<span class="sub ${t.himFp < 0 ? "" : "pos"}">${fmt(t.himFp)}</span>`}</td>
       <td class="n" data-k="His title">${fmt(t.hisTitle)}</td>

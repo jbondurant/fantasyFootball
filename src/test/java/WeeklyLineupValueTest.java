@@ -140,4 +140,64 @@ public class WeeklyLineupValueTest {
         assertEquals(10.0, 15.0 * scale.get("vet"), 1e-9, "ranked third: the third best rate a game");
         assertEquals(1.0, scale.get("ace"), 1e-9);
     }
+
+    /**
+     * The search's fast objective is the objective: on hundreds of random rosters, with byes,
+     * deep and thin positions and a negative projection, the arrays give what of(roster) gives.
+     */
+    @Test
+    public void theTableIsTheSameObjective(){
+        Position[] positions = {Position.QB, Position.RB, Position.WR, Position.TE, Position.DEF, Position.OTHER};
+        List<String> men = new ArrayList<>();
+        Map<String, Position> at = new HashMap<>();
+        java.util.Random random = new java.util.Random(7);
+        for(int i = 0; i < 80; i++){
+            String id = "m" + i;
+            men.add(id);
+            at.put(id, positions[i % positions.length]);
+        }
+        TreeMap<Integer, Map<String, Double>> projected = new TreeMap<>();
+        TreeMap<Integer, Map<Position, List<Map.Entry<String, Double>>>> free = new TreeMap<>();
+        for(int w = 9; w <= 17; w++){
+            Map<String, Double> week = new HashMap<>();
+            for(String id : men){
+                if(random.nextDouble() < 0.85){
+                    week.put(id, random.nextDouble() * 30 - 1);
+                }
+            }
+            Map<Position, List<Map.Entry<String, Double>>> agents = new HashMap<>();
+            for(Position p : positions){
+                List<Map.Entry<String, Double>> list = new ArrayList<>();
+                for(int k = 0; k < (w == 12 ? 1 : 6); k++){
+                    String id = p + "free" + k;
+                    at.put(id, p);
+                    double points = random.nextDouble() * 9;
+                    week.put(id, points);
+                    list.add(Map.entry(id, points));
+                }
+                list.sort((a, b) -> Double.compare(b.getValue(), a.getValue()));
+                agents.put(p, list);
+            }
+            projected.put(w, week);
+            free.put(w, agents);
+        }
+        WeeklyLineupValue value = new WeeklyLineupValue(projected, free, at::get, "test");
+        WeeklyLineupValue.Table table = value.table(men);
+        double[][] scratch = table.scratch();
+        for(int trial = 0; trial < 500; trial++){
+            int size = 1 + random.nextInt(19);
+            List<String> roster = new ArrayList<>();
+            int[] indices = new int[size];
+            java.util.Set<Integer> used = new java.util.HashSet<>();
+            for(int i = 0; i < size; i++){
+                int pick;
+                do {
+                    pick = random.nextInt(men.size());
+                } while(!used.add(pick));
+                indices[i] = pick;
+                roster.add(men.get(pick));
+            }
+            assertEquals(value.of(roster), table.of(indices, size, scratch), 1e-9);
+        }
+    }
 }

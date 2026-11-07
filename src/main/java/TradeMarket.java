@@ -949,7 +949,7 @@ public class TradeMarket {
      * other team".
      *
      * So nothing here decides for him: no tanking line, no contention gate, no
-     * fairness screen. For each rival, every trade on the board that gains Justin
+     * fairness screen. For each rival, every trade that gains Justin
      * -PexplorerMinGain (3) or more on Sleeper's projections is taken from the one
      * that costs the rival least to the one that costs him most, and its title-odds
      * change simulated (TitleOdds, 20,000 seasons, the same draws before and after);
@@ -976,236 +976,145 @@ public class TradeMarket {
      * weights, and the veto runs before the simulations, which are the cost. The
      * rest-of-season model is shown and does not veto unless named. What a trade does
      * to the other team is shown on all three and never filtered: lopsided and
-     * tanking trades stay in, flagged. Any trade he would read as fair is simulated
-     * first and kept outside the bucket counts, and so is any at -PexplorerBothFloor
-     * (85%) or more on BOTH pace and projection, because the page filters on a number
-     * Justin sets (2026-11-06: "yes, checkbox with number i can change") and a filter
-     * cannot show a trade the walk threw away.
+     * tanking trades stay in, flagged.
+     *
+     * WHOLE ROSTERS SINCE 2026-11-06 (TradeSearch): every shape up to -PexplorerMaxSide men a
+     * side, from everyone on both rosters. Each manager's trades are held in lanes, so the
+     * page's number (Justin: "yes, checkbox with number i can change") always has something to
+     * filter: per half-point bucket, the least costly any trade, the least costly he would read
+     * as fair, and the least costly at each of 100%, 95%, 90% and 85% on both pace and projection.
      */
-    static String explorer(String me, List<Trade> all, Map<String, List<String>> rosters, Map<String, String> nameOf,
-                           java.util.function.ToDoubleFunction<List<String>> season, RosterValue altValue,
-                           Map<String, Double> scoreAlt, RosterValue fpValue, Set<String> reject, String players, int playersFrom,
-                           TradeScreens.Context screens, TitleOdds.Stakes stakes,
+    static String explorer(String me, Map<String, List<String>> rosters, Map<String, String> nameOf,
+                           java.util.function.ToDoubleFunction<List<String>> season, WeeklyLineupValue sleeper, WeeklyLineupValue altValue,
+                           WeeklyLineupValue fpValue, Set<String> reject, Set<String> barred, Map<String, Double> points, int activeLimit,
+                           String players, int playersFrom, TradeScreens.Context screens, TitleOdds.Stakes stakes,
                            double hisFloor, double hisFloorAlt, Map<String, Double> surplus, Map<String, Position> everyPosition,
                            String source, String alt){
         double step = 0.5;
         double top = Double.parseDouble(System.getProperty("explorerTop", "6.0"));
         int buckets = (int) Math.round((top - step) / step) + 1;          // +0.5 ... +top, the last open-ended
         int perBucket = Integer.getInteger("explorerPerBucket", 8);
-        int cap = Integer.getInteger("explorerCap", 1500);
+        int cap = Integer.getInteger("explorerCap", 2500);
+        int maxSide = Integer.getInteger("explorerMaxSide", 3);
         double minGain = Double.parseDouble(System.getProperty("explorerMinGain", "3"));
         double rejectBelow = Double.parseDouble(System.getProperty("explorerRejectBelow", "0"));
-        double bothFloor = Double.parseDouble(System.getProperty("explorerBothFloor", "0.85"));
-        List<String> mine = rosters.get(me);
-        double myBase = season.applyAsDouble(mine);
-        double myAltBase = altValue.of(mine);
-        double myFpBase = fpValue.of(mine);
-        double myKeepBase = keeperValue(mine, surplus, everyPosition);
-        record Cand(Trade trade, double you, double him, double youAlt, double youFp){}
-        Map<String, List<Trade>> byRival = new TreeMap<>();
-        for(Trade t : all){
-            byRival.computeIfAbsent(t.withManager(), k -> new ArrayList<>()).add(t);
+        List<String> universe = new ArrayList<>();
+        rosters.values().forEach(universe::addAll);
+        Map<String, Integer> index = new HashMap<>();
+        for(int i = 0; i < universe.size(); i++){
+            index.put(universe.get(i), i);
         }
+        boolean[] onIr = new boolean[universe.size()];
+        double[] projected = new double[universe.size()], draft = new double[universe.size()], pace = new double[universe.size()],
+                projection = new double[universe.size()], seasonScreen = new double[universe.size()];
+        for(int i = 0; i < universe.size(); i++){
+            String id = universe.get(i);
+            onIr[i] = ON_IR.contains(id);
+            projected[i] = points.getOrDefault(id, 0.0);
+            draft[i] = screens.draft().applyAsDouble(id);
+            pace[i] = screens.pace().applyAsDouble(id);
+            projection[i] = screens.projection().applyAsDouble(id);
+            seasonScreen[i] = screens.points().applyAsDouble(id);
+        }
+        TradeSearch.Prices prices = new TradeSearch.Prices(sleeper.table(universe), altValue.table(universe), fpValue.table(universe));
+        TradeSearch.Screen screen = new TradeSearch.Screen(draft, pace, projection, seasonScreen, screens.weightNow());
+        TradeSearch.Rules rules = new TradeSearch.Rules(maxSide, minGain, rejectBelow, reject.contains(FANTASYPROS), reject.contains(alt),
+                activeLimit, Integer.getInteger("explorerRetain", 400));
+        boolean[] locked = new boolean[universe.size()];
+        for(int i = 0; i < locked.length; i++){
+            locked[i] = barred.contains(universe.get(i));
+        }
+        java.util.function.Function<List<String>, int[]> indices = ids -> ids.stream().mapToInt(index::get).toArray();
+        List<String> mine = rosters.get(me);
+        int[] mineIndex = indices.apply(mine);
+        java.util.function.Function<int[], List<String>> names = men -> java.util.Arrays.stream(men).mapToObj(universe::get).toList();
+        // nanoTime, not the wall clock: a Mac asleep mid-run should not read as a slow search
+        record Run(String rival, TradeSearch.Found found, TradeSearch.Walked walked, double searchSeconds, double walkSeconds){}
+        long startedAt = System.nanoTime();
+        List<Run> runs = rosters.keySet().stream().filter(m -> !m.equals(me)).toList().parallelStream().map(rival -> {
+            long began = System.nanoTime();
+            List<String> his = rosters.get(rival);
+            TradeSearch.Found found = TradeSearch.search(mineIndex, indices.apply(his), onIr, locked, projected, prices, screen, rules);
+            long searched = System.nanoTime();
+            TradeSearch.Walked walked = Boolean.getBoolean("explorerSearchOnly") ? new TradeSearch.Walked(List.of(), 0, 0, false) : TradeSearch.walk(found, deal -> {
+                List<String> myOut = new ArrayList<>(names.apply(deal.give));
+                myOut.addAll(names.apply(deal.myCut));
+                List<String> hisOut = new ArrayList<>(names.apply(deal.get));
+                hisOut.addAll(names.apply(deal.hisCut));
+                TitleOdds.Delta[] d = stakes.swap(me, swap(mine, myOut, names.apply(deal.get)), rival, swap(his, hisOut, names.apply(deal.give)));
+                return new double[]{100 * d[0].change(), 100 * d[0].se(), 100 * d[1].change()};
+            }, step, buckets, perBucket, cap);
+            return new Run(rival, found, walked, (searched - began) / 1e9, (System.nanoTime() - searched) / 1e9);
+        }).toList();
+        System.out.printf("explorer: search and simulations took %.0f seconds awake, on %d threads%n", (System.nanoTime() - startedAt) / 1e9,
+                java.util.concurrent.ForkJoinPool.commonPool().getParallelism() + 1);
+
+        double myBase = season.applyAsDouble(mine), myAltBase = altValue.of(mine), myFpBase = fpValue.of(mine);
+        double myKeepBase = keeperValue(mine, surplus, everyPosition);
         StringBuilder rows = new StringBuilder();
         StringBuilder rivals = new StringBuilder();
-        int written = 0;
-        for(Map.Entry<String, List<Trade>> e : byRival.entrySet()){
-            String rival = e.getKey();
+        int written = 0, disagreements = 0;
+        long searched = 0;
+        for(Run run : runs){
+            String rival = run.rival();
             List<String> his = rosters.get(rival);
-            double hisBase = season.applyAsDouble(his);
-            double hisFpBase = fpValue.of(his);
+            double hisBase = season.applyAsDouble(his), hisAltBase = altValue.of(his), hisFpBase = fpValue.of(his);
             double hisKeepBase = keeperValue(his, surplus, everyPosition);
-            List<Cand> cands = new ArrayList<>();
-            int failed = 0;
-            for(Trade t : e.getValue()){
-                List<String> myAfter = swap(mine, t.give(), t.get());
-                double you = season.applyAsDouble(myAfter) - myBase;
-                if(you < minGain){
-                    continue;
+            searched += run.found().searched();
+            for(TradeSearch.Kept kept : run.walked().kept()){
+                TradeSearch.Deal deal = kept.deal();
+                List<String> give = names.apply(deal.give), get = names.apply(deal.get), myCut = names.apply(deal.myCut), hisCut = names.apply(deal.hisCut);
+                Trade trade = new Trade(rival, give, get, deal.you, deal.him, hisCut);
+                List<String> myOut = new ArrayList<>(give);
+                myOut.addAll(myCut);
+                List<String> myAfter = swap(mine, myOut, get);
+                List<String> hisAfter = swap(his, trade.hisOut(), give);
+                double you = season.applyAsDouble(myAfter) - myBase, him = season.applyAsDouble(hisAfter) - hisBase;
+                if(Math.abs(you - deal.you) > 0.01 || Math.abs(him - deal.him) > 0.01){
+                    disagreements++;      // the row prints the slow objective's number either way
                 }
-                double youAlt = altValue.of(myAfter) - myAltBase;
-                double youFp = fpValue.of(myAfter) - myFpBase;
-                if(reject.contains(alt) && youAlt < rejectBelow || reject.contains(FANTASYPROS) && youFp < rejectBelow){
-                    failed++;
-                    continue;
-                }
-                cands.add(new Cand(t, you, season.applyAsDouble(swap(his, t.hisOut(), t.give())) - hisBase, youAlt, youFp));
-            }
-            cands.sort(Comparator.comparingDouble((Cand c) -> -c.him()));
-            // A TRADE HE WOULD READ AS FAIR IS NEVER CAPPED OUT (2026-11-04). The buckets keep the eight that cost
-            // him least on Sleeper, which says nothing of what he can see, so with draft spot off the fair trades
-            // could fall outside every bucket. They are walked first and sit outside the count.
-            Set<Cand> fair = new java.util.HashSet<>();
-            for(Cand c : cands){
-                double[] both = screens.paceAndProjection(c.trade());
-                if(screens.of(c.trade()).fairToHim() || both[0] >= bothFloor && both[1] >= bothFloor){
-                    fair.add(c);
-                }
-            }
-            List<Cand> walk = new ArrayList<>(cands);
-            walk.sort(Comparator.comparing((Cand c) -> !fair.contains(c)));   // stable: least worse for him first within each
-            int[] count = new int[buckets];
-            int sims = 0, skipped = 0, kept = 0;
-            double sumRise = 0, sumYou = 0;
-            for(Cand c : walk){
-                boolean isFair = fair.contains(c);
-                if(!isFair && (sims >= cap || java.util.Arrays.stream(count).allMatch(n -> n >= perBucket))){
-                    break;
-                }
-                double rate = sumYou > 0 ? Math.max(0.02, sumRise / sumYou) : 0.1;
-                int reach = (int) Math.floor((2 * rate * c.you() + 1.0) / step) - 1;
-                boolean open = isFair;
-                for(int b = 0; b <= Math.min(reach, buckets - 1); b++){
-                    open |= count[b] < perBucket;
-                }
-                if(!open){
-                    skipped++;
-                    continue;
-                }
-                List<String> myAfter = swap(mine, c.trade().give(), c.trade().get());
-                List<String> hisAfter = swap(his, c.trade().hisOut(), c.trade().give());
-                TitleOdds.Delta[] d = stakes.swap(me, myAfter, rival, hisAfter);
-                sims++;
-                double rise = 100 * d[0].change();
-                sumRise += Math.max(0, rise);
-                sumYou += c.you();
-                if(rise < step){
-                    continue;
-                }
-                int b = Math.min(buckets - 1, (int) Math.floor((rise - step) / step + 1e-9));
-                if(!isFair && count[b] >= perBucket){
-                    continue;
-                }
-                if(!isFair){
-                    count[b]++;
-                }
-                kept++;
-                double[] other = onOther(c.trade(), rosters, me, altValue, scoreAlt);
-                double himFp = fpValue.of(hisAfter) - hisFpBase;
-                TradeScreens.Screens seen = screens.of(c.trade());
-                boolean tanking = !equitableSeason(c.him(), hisFloor, other[1], hisFloorAlt);
+                double youAlt = altValue.of(myAfter) - myAltBase, himAlt = altValue.of(hisAfter) - hisAltBase;
+                TradeScreens.Screens seen = screens.of(trade);
+                double[] both = screens.paceAndProjection(trade);
+                boolean tanking = !equitableSeason(him, hisFloor, himAlt, hisFloorAlt);
                 rows.append(written++ == 0 ? "" : ",\n").append(String.format(java.util.Locale.ROOT,
-                        "{\"m\":%s,\"give\":%s,\"get\":%s,\"cut\":%s,\"rise\":%.2f,\"se\":%.2f,\"hisTitle\":%.2f,"
+                        "{\"m\":%s,\"give\":%s,\"get\":%s,\"cut\":%s,\"myCut\":%s,\"rise\":%.2f,\"se\":%.2f,\"hisTitle\":%.2f,"
                                 + "\"you\":%.1f,\"youAlt\":%.1f,\"youFp\":%.1f,\"him\":%.1f,\"himAlt\":%.1f,\"himFp\":%.1f,"
                                 + "\"myKeep\":%.1f,\"hisKeep\":%.1f,"
                                 + "\"draft\":%s,\"paceView\":%s,\"projView\":%s,\"seasonView\":%s,\"blend\":%s,\"fair\":%b,\"asking\":%b,\"prec\":%d,"
                                 + "\"tank\":%b,\"hurtIn\":%s,\"hurtOut\":%s}",
-                        jsonString(rival), jsonNames(c.trade().give(), nameOf), jsonNames(c.trade().get(), nameOf),
-                        jsonNames(c.trade().hisCut(), nameOf), rise, 100 * d[0].se(), 100 * d[1].change(),
-                        c.you(), c.youAlt(), c.youFp(), c.him(), other[1], himFp,
+                        jsonString(rival), jsonNames(give, nameOf), jsonNames(get, nameOf), jsonNames(hisCut, nameOf), jsonNames(myCut, nameOf),
+                        kept.rise(), kept.se(), kept.hisTitle(), you, youAlt, fpValue.of(myAfter) - myFpBase, him, himAlt, fpValue.of(hisAfter) - hisFpBase,
                         keeperValue(myAfter, surplus, everyPosition) - myKeepBase,
                         keeperValue(hisAfter, surplus, everyPosition) - hisKeepBase,
-                        jsonRatio(seen.draftRatio()), jsonRatio(screens.paceAndProjection(c.trade())[0]), jsonRatio(screens.paceAndProjection(c.trade())[1]),
+                        jsonRatio(seen.draftRatio()), jsonRatio(both[0]), jsonRatio(both[1]),
                         jsonRatio(seen.pointsRatio()), jsonRatio(seen.blendedRatio()),
                         seen.fairToHim(), seen.worthAsking(), seen.precedents(), tanking,
-                        jsonHurt(c.trade().get(), nameOf), jsonHurt(c.trade().give(), nameOf)));
+                        jsonHurt(get, nameOf), jsonHurt(give, nameOf)));
             }
             rivals.append(rivals.length() == 0 ? "" : ",\n").append(String.format(java.util.Locale.ROOT,
-                    "{\"m\":%s,\"state\":%s,\"title\":%.2f,\"playoffs\":%.1f,\"candidates\":%d,\"failed\":%d,\"simulated\":%d,"
+                    "{\"m\":%s,\"state\":%s,\"title\":%.2f,\"playoffs\":%.1f,\"searched\":%d,\"candidates\":%d,\"failed\":%d,\"simulated\":%d,"
                             + "\"skipped\":%d,\"kept\":%d,\"capReached\":%b}",
                     jsonString(rival), jsonString(stakes.state(rival)), 100 * stakes.title(rival),
-                    100 * stakes.playoffs().getOrDefault(rival, 0.0), cands.size(), failed, sims, skipped, kept, sims >= cap));
-            System.out.printf("explorer: %s - %d candidates (%d more vetoed by %s), %d simulated, %d skipped, %d kept%n",
-                    rival, cands.size(), failed, reject, sims, skipped, kept);
+                    100 * stakes.playoffs().getOrDefault(rival, 0.0), run.found().searched(), run.found().passed(), run.found().vetoed(),
+                    run.walked().simulated(), run.walked().skipped(), run.walked().kept().size(), run.walked().capReached()));
+            System.out.printf("explorer: %s - %,d searched, %,d candidates (%,d more vetoed by %s), %d simulated, %d skipped, %d kept%s, search %.0fs, simulations %.0fs%n",
+                    rival, run.found().searched(), run.found().passed(), run.found().vetoed(), reject, run.walked().simulated(),
+                    run.walked().skipped(), run.walked().kept().size(), run.walked().capReached() ? " (cap reached)" : "", run.searchSeconds(), run.walkSeconds());
+        }
+        if(disagreements > 0){
+            System.out.printf("WARNING: the fast objective and the slow one disagreed by over 0.01 on %d of %d rows; the rows print the slow one%n",
+                    disagreements, written);
         }
         return String.format(java.util.Locale.ROOT,
                 "{\"generated\":%s,\"season\":%s,\"weeksPlayed\":%d,\"me\":%s,\"myTitle\":%.2f,\"myPlayoffs\":%.1f,"
                         + "\"pricing\":%s,\"alt\":%s,\"reject\":%s,\"rejectBelow\":%.1f,\"fpPanel\":%s,\"step\":%.1f,\"top\":%.1f,\"perBucket\":%d,\"cap\":%d,\"minGain\":%.1f,"
-                        + "\"tankLine\":%.1f,\"tankLineAlt\":%.1f,\"sims\":%d,\"draftWeight\":%.2f,\"paceShare\":%.2f,\"bothFloor\":%.2f,"
+                        + "\"tankLine\":%.1f,\"tankLineAlt\":%.1f,\"sims\":%d,\"draftWeight\":%.2f,\"paceShare\":%.2f,\"maxSide\":%d,\"searched\":%d,\"bothFloor\":%.2f,"
                         + "\"rivals\":[%s],\n\"playersFrom\":%d,\"players\":[%s],\n\"trades\":[%s]}",
                 jsonString(LocalDate.now().toString()), jsonString(LeagueWeek.season()), screens.weeksPlayed(), jsonString(me),
                 100 * stakes.title(me), 100 * stakes.playoffs().getOrDefault(me, 0.0), jsonString(source), jsonString(alt),
                 "[" + String.join(",", reject.stream().map(TradeMarket::jsonString).toList()) + "]", rejectBelow, fpPanelJson(), step, top, perBucket, cap, minGain, hisFloor, hisFloorAlt,
-                TitleOdds.SIMS, screens.weightNow(), screens.paceShare(), bothFloor, rivals, playersFrom, players, rows);
-    }
-
-    /**
-     * BUYING A MAN OUTRIGHT WITH FAAB. Justin, 2026-11-03: "my faab so far hasn't
-     * served a purpose yet". He had $97 of 100 with no claim on the wire clearing the
-     * floor, and FAAB expires with the season. But FAAB travels in trades here: 22 of
-     * the league's 52 completed trades carried it (WaiverLog), among them $48 for
-     * Jalen Hurts, $31 toward Tony Pollard and, the week before, $15 for J.K. Dobbins
-     * with no man coming back. Every other trade search leaves FAAB out, so this one
-     * prices the deal it cannot see: one man of his, for dollars and nobody back.
-     * Justin's roster is full, so the best man to cut is searched (IR men hold no
-     * active spot) and his keeper value counted. The rules are the explorer's: found
-     * on Sleeper's projections, a gain of -PexplorerMinGain, dropped if FantasyPros
-     * calls it a loss for him. It says what each man is worth and what the seller
-     * loses; it does not say what he costs, because a seller's price for a dollar
-     * cannot be read from the 22 trades.
-     */
-    static String faabBuys(String me, Map<String, List<String>> rosters, Map<String, String> nameOf,
-                           java.util.function.ToDoubleFunction<List<String>> season, RosterValue altValue, RosterValue fpValue,
-                           TitleOdds.Stakes stakes, Map<String, Double> surplus, Map<String, Position> everyPosition,
-                           Set<String> reserve, Map<String, Integer> faabLeft, String source, String alt){
-        double minGain = Double.parseDouble(System.getProperty("explorerMinGain", "3"));
-        List<String> mine = rosters.get(me);
-        double myBase = season.applyAsDouble(mine), myAltBase = altValue.of(mine), myFpBase = fpValue.of(mine);
-        double myKeepBase = keeperValue(mine, surplus, everyPosition);
-        record Buy(String rival, String man, String cut, double rise, double se, double hisTitle, double you, double youAlt, double youFp,
-                   double him, double himAlt, double himFp, double myKeep, double hisKeep, String hurt){}
-        List<Buy> buys = new ArrayList<>();
-        int vetoed = 0;
-        for(Map.Entry<String, List<String>> e : rosters.entrySet()){
-            if(e.getKey().equals(me)){
-                continue;
-            }
-            List<String> his = e.getValue();
-            double hisBase = season.applyAsDouble(his), hisAltBase = altValue.of(his), hisFpBase = fpValue.of(his);
-            double hisKeepBase = keeperValue(his, surplus, everyPosition);
-            for(String man : his){
-                String cut = null;
-                double you = Double.NEGATIVE_INFINITY;
-                for(String candidate : mine){
-                    if(reserve.contains(candidate)){
-                        continue;
-                    }
-                    double gain = season.applyAsDouble(swap(mine, List.of(candidate), List.of(man))) - myBase;
-                    if(gain > you || gain == you && name(candidate, nameOf).compareTo(name(cut, nameOf)) < 0){
-                        you = gain;
-                        cut = candidate;
-                    }
-                }
-                if(cut == null || you < minGain){
-                    continue;
-                }
-                List<String> myAfter = swap(mine, List.of(cut), List.of(man));
-                double youFp = fpValue.of(myAfter) - myFpBase;
-                if(youFp < 0){
-                    vetoed++;
-                    continue;
-                }
-                List<String> hisAfter = swap(his, List.of(man), List.of());
-                TitleOdds.Delta[] d = stakes.swap(me, myAfter, e.getKey(), hisAfter);
-                buys.add(new Buy(e.getKey(), man, cut, 100 * d[0].change(), 100 * d[0].se(), 100 * d[1].change(),
-                        you, altValue.of(myAfter) - myAltBase, youFp,
-                        season.applyAsDouble(hisAfter) - hisBase, altValue.of(hisAfter) - hisAltBase, fpValue.of(hisAfter) - hisFpBase,
-                        keeperValue(myAfter, surplus, everyPosition) - myKeepBase,
-                        keeperValue(hisAfter, surplus, everyPosition) - hisKeepBase, hurt(List.of(man), nameOf)));
-            }
-        }
-        buys.sort(Comparator.comparingDouble((Buy b) -> -b.rise()).thenComparing(b -> name(b.man(), nameOf)));
-        StringBuilder out = new StringBuilder(String.format(
-                "FAAB BUYS  %s  (%s; your title odds %.1f%%, playoffs %.0f%%, $%d left)%n"
-                        + "One man for dollars and nobody back, your best man to cut going to the wire. Found on %s (a gain of %.0f or more), %d more vetoed by%n"
-                        + "FantasyPros. you and him are season points on %s / %s / FantasyPros; 'title' is the change in your odds and his.%n%n",
-                LocalDate.now(), me, 100 * stakes.title(me), 100 * stakes.playoffs().getOrDefault(me, 0.0), faabLeft.getOrDefault(me, 0),
-                source, minGain, vetoed, source, alt));
-        java.util.function.BiConsumer<String, java.util.function.Predicate<Buy>> list = (title, keep) -> {
-            out.append(title).append('\n');
-            out.append(String.format("  %-24s %-12s %-9s %-4s %12s %22s %22s %13s  %s%n", "MAN", "FROM", "state", "$", "title y/h", "you", "him", "keep y/h", "CUT"));
-            buys.stream().filter(keep).limit(15).forEach(b -> out.append(String.format(
-                    "  %-24s %-12s %-9s $%-3d %+5.1f /%+5.1f   %+6.1f %+6.1f %+6.1f   %+6.1f %+6.1f %+6.1f  %+6.1f %+6.1f  %s%s%n",
-                    name(b.man(), nameOf), b.rival(), stakes.state(b.rival()), faabLeft.getOrDefault(b.rival(), 0), b.rise(), b.hisTitle(),
-                    b.you(), b.youAlt(), b.youFp(), b.him(), b.himAlt(), b.himFp(), b.myKeep(), b.hisKeep(), name(b.cut(), nameOf), b.hurt())));
-            out.append('\n');
-        };
-        java.util.function.Predicate<Buy> inIt = b -> !"out of it".equals(stakes.state(b.rival())) && b.hurt().isEmpty();
-        list.accept("MEN HE HARDLY NEEDS - from teams still in it, nobody hurt, he loses 10 or less on Sleeper's projections:", b -> inIt.test(b) && b.him() >= -10);
-        list.accept("THE BIGGEST RISES - from teams still in it, nobody hurt:", inIt);
-        list.accept("FROM TEAMS OUT OF IT - a dollar expires with the season, so a team out of it has little use for one:",
-                b -> "out of it".equals(stakes.state(b.rival())) && b.hurt().isEmpty());
-        return out.toString();
+                TitleOdds.SIMS, screens.weightNow(), screens.paceShare(), maxSide, searched, TradeSearch.BOTH[TradeSearch.BOTH.length - 1], rivals, playersFrom, players, rows);
     }
 
     /** The third pricing's name (WeeklyLineupValue.forSource). */
@@ -1294,6 +1203,95 @@ public class TradeMarket {
                     cells.substring(0, cells.length() - 1), fpRank.containsKey(id) ? fpRank.get(id) : "null",
                     injury == null ? "null" : jsonString(injury)));
         }
+        return out.toString();
+    }
+
+    /**
+     * BUYING A MAN OUTRIGHT WITH FAAB. Justin, 2026-11-03: "my faab so far hasn't
+     * served a purpose yet". He had $97 of 100 with no claim on the wire clearing the
+     * floor, and FAAB expires with the season. But FAAB travels in trades here: 22 of
+     * the league's 52 completed trades carried it (WaiverLog), among them $48 for
+     * Jalen Hurts, $31 toward Tony Pollard and, the week before, $15 for J.K. Dobbins
+     * with no man coming back. Every other trade search leaves FAAB out, so this one
+     * prices the deal it cannot see: one man of his, for dollars and nobody back.
+     * Justin's roster is full, so the best man to cut is searched (IR men hold no
+     * active spot) and his keeper value counted. The rules are the explorer's: found
+     * on Sleeper's projections, a gain of -PexplorerMinGain, dropped if FantasyPros
+     * calls it a loss for him. It says what each man is worth and what the seller
+     * loses; it does not say what he costs, because a seller's price for a dollar
+     * cannot be read from the 22 trades.
+     */
+    static String faabBuys(String me, Map<String, List<String>> rosters, Map<String, String> nameOf,
+                           java.util.function.ToDoubleFunction<List<String>> season, RosterValue altValue, RosterValue fpValue,
+                           TitleOdds.Stakes stakes, Map<String, Double> surplus, Map<String, Position> everyPosition,
+                           Set<String> reserve, Map<String, Integer> faabLeft, String source, String alt){
+        double minGain = Double.parseDouble(System.getProperty("explorerMinGain", "3"));
+        List<String> mine = rosters.get(me);
+        double myBase = season.applyAsDouble(mine), myAltBase = altValue.of(mine), myFpBase = fpValue.of(mine);
+        double myKeepBase = keeperValue(mine, surplus, everyPosition);
+        record Buy(String rival, String man, String cut, double rise, double se, double hisTitle, double you, double youAlt, double youFp,
+                   double him, double himAlt, double himFp, double myKeep, double hisKeep, String hurt){}
+        List<Buy> buys = new ArrayList<>();
+        int vetoed = 0;
+        for(Map.Entry<String, List<String>> e : rosters.entrySet()){
+            if(e.getKey().equals(me)){
+                continue;
+            }
+            List<String> his = e.getValue();
+            double hisBase = season.applyAsDouble(his), hisAltBase = altValue.of(his), hisFpBase = fpValue.of(his);
+            double hisKeepBase = keeperValue(his, surplus, everyPosition);
+            for(String man : his){
+                String cut = null;
+                double you = Double.NEGATIVE_INFINITY;
+                for(String candidate : mine){
+                    if(reserve.contains(candidate)){
+                        continue;
+                    }
+                    double gain = season.applyAsDouble(swap(mine, List.of(candidate), List.of(man))) - myBase;
+                    if(gain > you || gain == you && name(candidate, nameOf).compareTo(name(cut, nameOf)) < 0){
+                        you = gain;
+                        cut = candidate;
+                    }
+                }
+                if(cut == null || you < minGain){
+                    continue;
+                }
+                List<String> myAfter = swap(mine, List.of(cut), List.of(man));
+                double youFp = fpValue.of(myAfter) - myFpBase;
+                if(youFp < 0){
+                    vetoed++;
+                    continue;
+                }
+                List<String> hisAfter = swap(his, List.of(man), List.of());
+                TitleOdds.Delta[] d = stakes.swap(me, myAfter, e.getKey(), hisAfter);
+                buys.add(new Buy(e.getKey(), man, cut, 100 * d[0].change(), 100 * d[0].se(), 100 * d[1].change(),
+                        you, altValue.of(myAfter) - myAltBase, youFp,
+                        season.applyAsDouble(hisAfter) - hisBase, altValue.of(hisAfter) - hisAltBase, fpValue.of(hisAfter) - hisFpBase,
+                        keeperValue(myAfter, surplus, everyPosition) - myKeepBase,
+                        keeperValue(hisAfter, surplus, everyPosition) - hisKeepBase, hurt(List.of(man), nameOf)));
+            }
+        }
+        buys.sort(Comparator.comparingDouble((Buy b) -> -b.rise()).thenComparing(b -> name(b.man(), nameOf)));
+        StringBuilder out = new StringBuilder(String.format(
+                "FAAB BUYS  %s  (%s; your title odds %.1f%%, playoffs %.0f%%, $%d left)%n"
+                        + "One man for dollars and nobody back, your best man to cut going to the wire. Found on %s (a gain of %.0f or more), %d more vetoed by%n"
+                        + "FantasyPros. you and him are season points on %s / %s / FantasyPros; 'title' is the change in your odds and his.%n%n",
+                LocalDate.now(), me, 100 * stakes.title(me), 100 * stakes.playoffs().getOrDefault(me, 0.0), faabLeft.getOrDefault(me, 0),
+                source, minGain, vetoed, source, alt));
+        java.util.function.BiConsumer<String, java.util.function.Predicate<Buy>> list = (title, keep) -> {
+            out.append(title).append('\n');
+            out.append(String.format("  %-24s %-12s %-9s %-4s %12s %22s %22s %13s  %s%n", "MAN", "FROM", "state", "$", "title y/h", "you", "him", "keep y/h", "CUT"));
+            buys.stream().filter(keep).limit(15).forEach(b -> out.append(String.format(
+                    "  %-24s %-12s %-9s $%-3d %+5.1f /%+5.1f   %+6.1f %+6.1f %+6.1f   %+6.1f %+6.1f %+6.1f  %+6.1f %+6.1f  %s%s%n",
+                    name(b.man(), nameOf), b.rival(), stakes.state(b.rival()), faabLeft.getOrDefault(b.rival(), 0), b.rise(), b.hisTitle(),
+                    b.you(), b.youAlt(), b.youFp(), b.him(), b.himAlt(), b.himFp(), b.myKeep(), b.hisKeep(), name(b.cut(), nameOf), b.hurt())));
+            out.append('\n');
+        };
+        java.util.function.Predicate<Buy> inIt = b -> !"out of it".equals(stakes.state(b.rival())) && b.hurt().isEmpty();
+        list.accept("MEN HE HARDLY NEEDS - from teams still in it, nobody hurt, he loses 10 or less on Sleeper's projections:", b -> inIt.test(b) && b.him() >= -10);
+        list.accept("THE BIGGEST RISES - from teams still in it, nobody hurt:", inIt);
+        list.accept("FROM TEAMS OUT OF IT - a dollar expires with the season, so a team out of it has little use for one:",
+                b -> "out of it".equals(stakes.state(b.rival())) && b.hurt().isEmpty());
         return out.toString();
     }
 
@@ -1652,24 +1650,13 @@ public class TradeMarket {
             return;
         }
 
-        List<Trade> all = new ArrayList<>();
-        for(Map.Entry<String, List<String>> entry : rosters.entrySet()){
-            if(entry.getKey().equals(me)){
-                continue;
-            }
-            Side his = rivalSide.getOrDefault(entry.getKey(), theirSide);
-            all.addAll(between(me, entry.getKey(), rosters.get(me), entry.getValue(), mySide, his, pool));
-            all.addAll(unbalanced(me, entry.getKey(), rosters.get(me), entry.getValue(),
-                    mySide, his, pool, points));
-        }
         // THE TRADE EXPLORER (2026-10-27): every bucket of title-odds rise, every rival, least worse for him
-        // first, as data and as a page to filter. -PtradeExplorer=true; see explorer.
+        // first, as data and as a page to filter, searched over whole rosters. -PtradeExplorer=true; see explorer.
         if(Boolean.getBoolean("tradeExplorer")){
-            if(!System.getProperty("exclude", "").isBlank()){
-                Set<String> barred = new java.util.HashSet<>(TradeScreens.idsNamed(System.getProperty("exclude")));
-                all.removeIf(t -> t.give().stream().anyMatch(barred::contains) || t.get().stream().anyMatch(barred::contains)
-                        || t.hisOut().stream().anyMatch(barred::contains));
+            if(drawn){
+                throw new IllegalArgumentException("-PtradeExplorer searches on the weekly objective, not -Pobjective=drawn");
             }
+            Set<String> barred = new java.util.HashSet<>(TradeScreens.idsNamed(System.getProperty("exclude", "")));
             Set<String> reject = new java.util.LinkedHashSet<>();
             for(String name : System.getProperty("explorerReject", FANTASYPROS).split(",")){
                 if(!name.isBlank()){
@@ -1694,9 +1681,14 @@ public class TradeMarket {
             System.out.print(weeklyWireNote(pricings.get(0), "sleeper-remaining") + weeklyWireNote(fpValue, FANTASYPROS));
             String players = playersJson(pricings, WeeklyLineupValue.fantasyProsRanks(), ownerOf,
                     Integer.getInteger("explorerPlayerDepth", 40));
-            String json = explorer(me, all, rosters, nameOf, season, altValue, scoreAlt, fpValue, reject, players,
+            String json = explorer(me, rosters, nameOf, season, (WeeklyLineupValue) value, (WeeklyLineupValue) altValue, fpValue, reject, barred, points,
+                    configuration.getLeagueJson().getAsJsonArray("roster_positions").size(), players,
                     fpValue.weeks().get(0) + 1, screens, stakes,
                     hisFloor, hisFloorAlt, surplus, everyPosition, source, alt);
+            if(Boolean.getBoolean("explorerSearchOnly")){
+                System.out.println("-PexplorerSearchOnly: timing the search; no simulations, nothing written");
+                return;
+            }
             Path data = Path.of("data", "trade-explorer-" + LocalDate.now() + ".json");
             Files.writeString(data, json, StandardCharsets.UTF_8);
             String template;
@@ -1709,6 +1701,16 @@ public class TradeMarket {
             return;
         }
 
+        List<Trade> all = new ArrayList<>();
+        for(Map.Entry<String, List<String>> entry : rosters.entrySet()){
+            if(entry.getKey().equals(me)){
+                continue;
+            }
+            Side his = rivalSide.getOrDefault(entry.getKey(), theirSide);
+            all.addAll(between(me, entry.getKey(), rosters.get(me), entry.getValue(), mySide, his, pool));
+            all.addAll(unbalanced(me, entry.getKey(), rosters.get(me), entry.getValue(),
+                    mySide, his, pool, points));
+        }
         // THE TITLE LADDER (2026-10-24). Justin: "what are, for 1.0, 1.5, 2.0, 2.5, 3.0 % increase in my title
         // odds, the top 4 trades per other member that lead to the least tanking for them". -PtitleLadder lists
         // the targets; see titleLadder.

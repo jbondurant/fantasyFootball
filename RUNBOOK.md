@@ -249,7 +249,13 @@ longer matter at this point"); the curve still measures 30% there in other leagu
 -PdraftWeight still sets a what-if. Any trade he would read as fair stays on the page,
 outside the eight-a-bucket limit, and nobody on IR is ever the man cut to make room.
 His view shows pace, projection and the two weighted, and the page's "on both" box
-takes a number you set; it is complete from -PexplorerBothFloor (85%) up.
+takes a number you set.
+
+The explorer searches WHOLE ROSTERS since 2026-11-06 (`TradeSearch`), every shape up to
+three men a side (`-PexplorerMaxSide=4` for four). Justin, of the top-eight limit: "that's
+not an optimization i agree with". The terminal board and the console still use the top
+eight (`DEFAULT_POOL`): their Side functions are far slower, so the explorer's page is the
+one to read for what exists.
 
 Before sending one, run TradeCheck on its men and read the FP ros column too.
 FantasyPros' consensus is what Justin compares against, and the explorer prices

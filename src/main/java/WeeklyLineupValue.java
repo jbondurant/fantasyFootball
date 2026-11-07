@@ -193,6 +193,132 @@ public class WeeklyLineupValue implements RosterValue {
         return out;
     }
 
+    /**
+     * THE SAME OBJECTIVE AS ARRAYS, FOR SEARCHING WHOLE ROSTERS. Justin, 2026-11-06, of the
+     * trade search's top-eight limit: "that's not an optimization i agree with". Every man in
+     * `men` gets an index; of(men) is what of(roster) returns, to rounding (the test proves it),
+     * in about a microsecond instead of building records and maps and sorting nine times.
+     * Every man in `men` is held by somebody, so none is on the wire, and a trade among them
+     * cannot change the wire: each week's free agents are fixed up front.
+     */
+    public static final class Table {
+        static final double EMPTY = Double.NEGATIVE_INFINITY;
+        private static final int QB = 0, RB = 1, WR = 2, TE = 3, DEF = 4;
+        /** How many of each position a week can use: the fixed slots, and enough to fill both FLEX. */
+        private static final int[] KEEP = {1, 2 + TeamRankings.FLEX, 3 + TeamRankings.FLEX, 1 + TeamRankings.FLEX, 1};
+        private final double[][] points;     // week -> man -> points, NaN for no projection
+        private final byte[] slot;           // man -> position index, -1 for none
+        private final double[][][] wire;     // week -> position -> the week's best free agents, padded with EMPTY
+
+        private Table(double[][] points, byte[] slot, double[][][] wire){
+            this.points = points;
+            this.slot = slot;
+            this.wire = wire;
+        }
+
+        /** Working space for of; one per thread. */
+        public double[][] scratch(){
+            double[][] out = new double[KEEP.length][];
+            for(int i = 0; i < KEEP.length; i++){
+                out[i] = new double[KEEP[i]];
+            }
+            return out;
+        }
+
+        /** The first `count` men of `men` as a roster: the sum over every week of its best legal lineup. */
+        public double of(int[] men, int count, double[][] scratch){
+            double total = 0;
+            for(int w = 0; w < points.length; w++){
+                double[] week = points[w];
+                for(int i = 0; i < KEEP.length; i++){
+                    System.arraycopy(wire[w][i], 0, scratch[i], 0, KEEP[i]);
+                }
+                for(int i = 0; i < count; i++){
+                    int man = men[i];
+                    double p = week[man];
+                    int at = slot[man];
+                    if(at >= 0 && p == p){      // not NaN
+                        double[] top = scratch[at];
+                        int j = top.length - 1;
+                        if(p > top[j]){
+                            while(j > 0 && top[j - 1] < p){
+                                top[j] = top[j - 1];
+                                j--;
+                            }
+                            top[j] = p;
+                        }
+                    }
+                }
+                total += filled(scratch[QB], 1) + filled(scratch[RB], 2) + filled(scratch[WR], 3) + filled(scratch[TE], 1)
+                        + filled(scratch[DEF], 1);
+                double first = EMPTY, second = EMPTY;
+                for(int at = RB; at <= TE; at++){
+                    double[] top = scratch[at];
+                    for(int j = KEEP[at] - TeamRankings.FLEX; j < top.length; j++){
+                        double p = top[j];
+                        if(p > first){
+                            second = first;
+                            first = p;
+                        }
+                        else if(p > second){
+                            second = p;
+                        }
+                    }
+                }
+                total += (first == EMPTY ? 0 : first) + (second == EMPTY ? 0 : second);
+            }
+            return total;
+        }
+
+        private static double filled(double[] top, int slots){
+            double sum = 0;
+            for(int i = 0; i < slots; i++){
+                if(top[i] != EMPTY){
+                    sum += top[i];
+                }
+            }
+            return sum;
+        }
+    }
+
+    /** This pricing as a Table over these men, whose order is the table's index. */
+    public Table table(List<String> men){
+        Map<Position, Integer> at = Map.of(Position.QB, 0, Position.RB, 1, Position.WR, 2, Position.TE, 3, Position.DEF, 4);
+        Position[] order = {Position.QB, Position.RB, Position.WR, Position.TE, Position.DEF};
+        Set<String> held = new java.util.HashSet<>(men);
+        byte[] slot = new byte[men.size()];
+        for(int i = 0; i < slot.length; i++){
+            Position p = positionOf.apply(men.get(i));
+            slot[i] = p == null ? -1 : at.getOrDefault(p, -1).byteValue();
+        }
+        double[][] points = new double[projected.size()][men.size()];
+        double[][][] wire = new double[projected.size()][order.length][];
+        int w = 0;
+        for(Map.Entry<Integer, Map<String, Double>> week : projected.entrySet()){
+            for(int i = 0; i < slot.length; i++){
+                Double p = week.getValue().get(men.get(i));
+                points[w][i] = p == null ? Double.NaN : p;
+            }
+            Map<Position, List<Map.Entry<String, Double>>> agents = free.getOrDefault(week.getKey(), Map.of());
+            for(int i = 0; i < order.length; i++){
+                double[] top = new double[Table.KEEP[i]];
+                java.util.Arrays.fill(top, Table.EMPTY);
+                int taken = 0, depth = TitleOdds.WIRE_DEPTH.getOrDefault(order[i], 0);
+                for(Map.Entry<String, Double> man : agents.getOrDefault(order[i], List.of())){
+                    if(taken >= depth || taken >= top.length){
+                        break;
+                    }
+                    if(!held.contains(man.getKey())){
+                        top[taken++] = man.getValue();
+                    }
+                }
+                wire[w][i] = top;
+            }
+            w++;
+        }
+        return new Table(points, slot, wire);
+    }
+
     /** The weeks this prices, first to last. */
     public List<Integer> weeks(){
         return new ArrayList<>(projected.keySet());
