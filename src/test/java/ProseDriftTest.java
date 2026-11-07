@@ -14,6 +14,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -363,5 +364,31 @@ class ProseDriftTest {
             }
         }
         return false;
+    }
+
+    /**
+     * THE RUNBOOK NAMES TOOLS, AND TOOLS GET RENAMED.
+     *
+     * The in-season section tells Justin what to run each week. A command in it
+     * that no longer resolves is worse than no runbook: he will type it on a
+     * Sunday morning ninety minutes before kickoff and get a stack trace instead
+     * of a lineup. Every `-Pmain=X` it mentions must be a class that exists.
+     */
+    @Test
+    void everyToolTheRunbookTellsHimToRunExists() throws Exception {
+        String runbook = read(Path.of("RUNBOOK.md"));
+        Matcher named = Pattern.compile("-Pmain=([A-Za-z][A-Za-z0-9]*)").matcher(runbook);
+        Set<String> missing = new TreeSet<>();
+        Set<String> seen = new TreeSet<>();
+        while(named.find()){
+            String tool = named.group(1);
+            seen.add(tool);
+            if(!Files.exists(Path.of("src", "main", "java", tool + ".java"))){
+                missing.add(tool);
+            }
+        }
+        assertFalse(seen.isEmpty(), "the runbook names no tools at all, which cannot be right");
+        assertEquals(Set.of(), missing,
+                "the runbook tells him to run these and they do not exist: " + missing);
     }
 }

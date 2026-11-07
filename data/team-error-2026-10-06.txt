@@ -1,0 +1,21 @@
+TEAM ERROR  2026-10-06  (this league's completed seasons; 660 team-season-weeks)
+Each team's roster as it stood at week w, priced on what was projected then and carried forward with byes out,
+against what the team actually scored to the end of the regular season. The miss, centred across the season's
+teams, less the week-to-week noise (spread 23.7, over the weeks left), is the team error TitleOdds draws once per
+team per season. 90% interval by bootstrap over team-seasons.
+
+FROM WK       LEFT   sd(miss)    SIGMA  90% interval       teams
+2               13        9.8      7.9    5.8-9.5             60
+3               12       10.2      8.2    6.2-10.1            60
+4               11       10.2      8.0    5.3-10.1            60
+5               10       10.7      8.3    5.6-10.3            60
+6                9       11.6      9.2    6.8-11.2            60
+7                8       12.3      9.7    7.1-12.0            60
+8                7       13.3     10.6    7.6-13.4            60
+9                6       13.3     10.0    6.4-12.6            60
+10               5       13.0      8.5    4.0-11.4            60
+11               4       14.0      8.5    4.5-11.2            60
+12               3       13.7      4.2    0.0-8.8             60
+
+SIGMA is in points of weekly score: a team's true strength from week w is its projection plus or minus
+about that much for the rest of the season. Written to data/team-error.tsv for TitleOdds.

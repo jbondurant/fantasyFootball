@@ -1,0 +1,112 @@
+DRAFT WEIGHT BY GAMES PLAYED  2026-10-22
+3758 accepted player-for-player trades made after week 1's games, from 809 league-seasons like this one
+(OtherLeagues; 2021, 2022, 2023, 2024, 2025). 1 more had value on only one screen and cannot inform the weight.
+Both sides priced as TradeScreens prices them, in this league's scoring.
+
+THREE SCREENS - WHAT TRADESCREENS USES. Draft value, pace, and Sleeper's projection for each man's next
+game (Justin: "compared to sleeper weekly projections which have adapted"), each read off its own chart; the
+weights that make each week's accepted trades most even, on trades where every man moved has a projection
+(step 0.02; 90% ranges resample leagues at step 0.05). CURVE: draft's weight never rising with games played.
+games  trades    draft (90%)      pace (90%)     projection (90%)   CURVE  uneven  | all trades | forecaster: draft pace proj | 3-wk: draft
+    1     266     52% (45- 60)     38% (30- 40)     10% (-0- 25)     52%   0.148  |      56%    |     45%    18%    38%     |     52%
+    2     326     38% (30- 45)     36% (30- 40)     26% (20- 35)     40%   0.160  |      42%    |     41%    18%    41%     |     42%
+    3     387     38% (30- 45)     32% (25- 35)     30% (20- 45)     40%   0.156  |      40%    |     39%    18%    43%     |     34%
+    4     332     44% (35- 50)     32% (25- 35)     24% (15- 35)     40%   0.149  |      46%    |     42%    19%    39%     |     40%
+    5     274     30% (25- 35)     38% (30- 45)     32% (20- 40)     32%   0.163  |      30%    |     36%    27%    37%     |     28%
+    6     271     34% (25- 40)     34% (25- 45)     32% (15- 45)     32%   0.177  |      38%    |     39%    31%    30%     |     24%
+    7     226     32% (25- 40)     30% (25- 35)     38% (30- 50)     32%   0.182  |      36%    |     39%    27%    34%     |     30%
+    8     272     28% (20- 35)     44% (35- 50)     28% (20- 40)     30%   0.164  |      30%    |     33%    30%    36%     |     28%
+    9     238     32% (20- 40)     32% (25- 50)     36% (20- 45)     30%   0.171  |      36%    |     30%    22%    48%     |     28%
+   10     340     20% (10- 30)     38% (30- 50)     42% (30- 50)     20%   0.175  |      24%    |     34%    38%    28%     |     16%
+   11     116     12% ( 5- 40)     60% (40- 70)     28% (10- 35)     12%   0.179  |      22%    |     26%    29%    45%     |     16%
+  12+      65      8% ( 0- 25)     40% ( 0- 60)     52% (25-100)      8%   0.241  |      20%    |     32%    26%    42%     |     16%
+all trades: draft's weight with injured men's trades kept (they read zero on the projection). forecaster: the
+weights a forecaster would put on the three screens, from what each predicted of the rest of the season
+(board men 2018 on, least squares, scaled to sum to one) - managers anchored on the draft would sit above it.
+3-wk: draft's weight with projections averaged over the next three weeks (knows news the trade did not).
+TradeScreens blends draft (CURVE) with this season's screen: pace and projection in that week's fitted ratio.
+
+TWO SCREENS - draft value and pace alone, the fit before Sleeper's projection was a screen (2026-10-22):
+games  trades  leagues  weight  90% range   CURVE    uneven  random  draft  pace   vs-rnd    redraft keeper  half  full   same pos     above line
+    1     301    196     59%    55- 62%     59%    0.150  0.343  0.221  0.316     69%      59%   60%     61%   57%     59% (65)     45% (65)
+    2     371    256     58%    54- 62%     58%    0.174  0.338  0.263  0.342     64%      58%   59%     60%   58%     61% (67)     49% (92)
+    3     462    291     57%    53- 60%     58%    0.168  0.345  0.259  0.305     65%      56%   60%     57%   57%     60% (102)     53% (168)
+    4     424    274     59%    54- 63%     58%    0.165  0.346  0.237  0.265     68%      57%   63%     56%   61%     59% (85)     55% (159)
+    5     343    241     44%    40- 49%     48%    0.183  0.357  0.265  0.256     46%      42%   58%     43%   49%     48% (71)     42% (151)
+    6     324    241     50%    42- 56%     48%    0.189  0.364  0.267  0.278     53%      53%   41%     46%   54%     47% (64)     36% (127)
+    7     300    202     51%    46- 57%     48%    0.202  0.356  0.284  0.289     56%      48%   56%     57%   47%     49% (71)     46% (138)
+    8     328    233     44%    37- 49%     44%    0.180  0.361  0.288  0.248     48%      45%   19%     46%   42%     51% (62)     36% (141)
+    9     298    215     45%    36- 56%     44%    0.201  0.378  0.286  0.260     57%      45%   36%     47%   43%     57% (52)     39% (129)
+   10     399    267     31%    28- 37%     32%    0.198  0.354  0.307  0.236     31%      33%   26%     30%   31%     36% (67)     26% (192)
+   11     135     85     34%    23- 47%     32%    0.202  0.367  0.294  0.227     47%      40%   16%     33%   34%     23% (32)     16% (73)
+  12+      73     26     25%     7- 41%     25%    0.253  0.361  0.397  0.267     25%      24%     -       -   25%       - (29)     25% (42)
+
+weight: the share of a man's value that is draft value, the rest his pace, that makes that week's trades
+most even. CURVE: the same, never rising with games played. uneven: mean |A-B|/(A+B)
+at that weight; random: the same sides paired at random, 20 shuffles (real trades should be far more even);
+draft and pace: unevenness on either screen alone. vs-rnd: the check - the weight where real trades beat random
+pairs by the most. redraft..full refit the weight on one kind of league. same pos: refit on trades where every
+man is at one position (RB for RB, WR for WR), with their count - a need at a position cannot explain those.
+above line: refit on trades where every man moved is producing above the last starter, so the pace screen's
+floor at zero never bites - if the weight on draft fell a long way here, the floor was what kept it high.
+A refit on fewer than 30 trades is '-'.
+
+THE ROOM THE UNKNOWNS LEAVE - a positional need, an injury the box score has not caught up with, a
+projection, a friend: whatever made an accepted trade read uneven on the blend. At the curve's weight, each side's
+blended value back over value given; the share of sides that got back this little or less:
+games   sides    10%       25%       50%
+    1     602       59%       80%      100%
+    2     742       55%       77%      100%
+    3     924       57%       76%      100%
+    4     848       58%       78%      100%
+    5     686       55%       76%      100%
+    6     648       51%       76%      100%
+    7     600       48%       73%      100%
+    8     656       57%       77%      100%
+    9     596       53%       72%      100%
+   10     798       52%       72%      100%
+   11     270       53%       75%      100%
+  12+     146       35%       74%      100%
+So after a few games one accepted side in ten got back no more than the first column: an ask below it
+is asking for something nine in ten managers did not give.
+
+THE FIRST FIT, ON RAW PACE (a hot start at 17 games), beside this one. The better description of what
+managers accept is the one under which their trades read more even ('uneven', lower is better):
+games   raw pace: trades weight  uneven   |   predicted pace: weight  uneven
+    1              263    90%   0.170   |                     59%   0.150
+    2              335    84%   0.193   |                     58%   0.174
+    3              445    82%   0.191   |                     57%   0.168
+    4              393    82%   0.177   |                     59%   0.165
+    5              326    70%   0.210   |                     44%   0.183
+    6              302    74%   0.215   |                     50%   0.189
+    7              280    77%   0.230   |                     51%   0.202
+    8              299    68%   0.218   |                     44%   0.180
+    9              272    74%   0.236   |                     45%   0.201
+   10              376    75%   0.258   |                     31%   0.198
+   11              126    78%   0.251   |                     34%   0.202
+  12+               69    69%   0.325   |                     25%   0.253
+
+THE PACE CHART - rest-of-season worth (season points above the last starter, at 17 games) of a man this many
+points a game above (+) or below (-) the last starter at his position after g games, every board season; the
+draft chart for scale: ADP 1 114, 12 93, 36 52, 72 23.
+          -4     -2      0     +2     +4     +6    +10
+  g=1       13     18     23     26     34     36     42
+  g=3        5     12     17     26     33     50     70
+  g=5        5     10     16     33     38     46     89
+  g=8        4     10     20     32     47     55    109
+  g=12       4     11     23     33     50     64    125
+
+THE DATA BY EYE - trades drawn at random, each side's draft value and pace (season points above the
+last starter; pace read off the pace chart), what A received against what B received:
+  2021 after 2: A got Dalvin Cook (draft 108, pace 51)  B got Ty'Son Williams (draft 7, pace 33)
+  2023 after 2: A got Cooper Kupp (draft 100, pace 0)  B got Hunter Henry + Brian Robinson (draft 28, pace 118)
+  2022 after 2: A got Tyler Lockett + David Montgomery (draft 69, pace 52)  B got Tony Pollard + Jahan Dotson (draft 29, pace 78)
+  2023 after 2: A got Marquise Brown + Bijan Robinson (draft 119, pace 84)  B got Justin Jefferson + Najee Harris (draft 167, pace 68)
+  2025 after 4: A got Ja'Marr Chase (draft 112, pace 29)  B got Marvin Harrison + Travis Etienne (draft 71, pace 96)
+  2022 after 4: A got Dalvin Cook + CeeDee Lamb (draft 184, pace 70)  B got Stefon Diggs + Travis Etienne (draft 143, pace 104)
+  2025 after 4: A got Jalen Tolbert + Bijan Robinson (draft 115, pace 102)  B got Brian Thomas + RJ Harvey + Michael Pittman (draft 143, pace 82)
+  2025 after 4: A got Tetairoa McMillan (draft 38, pace 25)  B got Chase Brown (draft 76, pace 19)
+  2021 after 6: A got Michael Carter (draft 22, pace 12)  B got Brandin Cooks (draft 20, pace 45)
+  2021 after 6: A got Hunter Henry + Darrel Williams (draft 21, pace 39)  B got Saquon Barkley (draft 93, pace 30)
+  2022 after 6: A got Tyler Lockett + Diontae Johnson (draft 65, pace 51)  B got DJ Moore + Darrell Henderson (draft 71, pace 21)
+  2023 after 6: A got Jared Goff (draft 15, pace 36)  B got Kareem Hunt + Matthew Stafford + Gabe Davis (draft 38, pace 55)

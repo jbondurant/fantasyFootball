@@ -1,0 +1,28 @@
+WIRE SURVIVAL  2026-09-08
+
+1442 stretches on the wire across the completed seasons; 869 ended in a claim.
+A man is on the wire from the moment he is dropped until somebody adds him.
+
+THE QUESTION: does sitting unclaimed make a man LESS likely to be claimed? If demand is
+uniform the hazard below is flat. If some men are wanted by many and most by nobody, then
+surviving a day is evidence of the second kind, and the hazard falls.
+
+SAT FOR           AT RISK    CLAIMED    CLAIMED/DAY
+under a day          1442         27          1.87%
+1-2 days             1413         78          5.52%
+2-3 days             1333         51          3.83%
+3-7 days             1282        188          3.67%
+1-2 weeks            1085        175          2.30%
+2-8 weeks             904        319          0.77%
+
+the rate PEAKS at 1-2 days (5.52% a day) and falls to 0.77% a day by 2-8 weeks -
+a factor of 7. Waivers run on a schedule, so a man dropped today cannot be taken
+until the next run, which is why day zero is quiet rather than uneventful.
+
+SO: surviving the first waiver run IS evidence. A man still sitting after it is in the
+group nobody wanted, and the unconditional clearing-price distribution FaabBid uses does
+not know that - it averages him in with the Monday-morning handcuff everybody bid on.
+
+WHAT IT CANNOT SEE: men never rostered in this league have no drop to start a spell, so
+the least-wanted players are missing entirely. That censoring makes the real decline
+STEEPER than this shows - the omission runs with the argument, not against it.

@@ -1,0 +1,44 @@
+data: projections 2026-10-16, player metadata 2026-10-16
+TUESDAY SWAP  2026-10-16  season 2026, waivers for week 6  (justinb314; priced on sleeper-remaining, with ros beside it)
+155 free agents searched against all 14 roster spots = 2170 pairs, on the weekly-starter
+objective (480 drawn seasons), which prices a bench man by how often he would actually start.
+Gains are points over the games left (12.9 weeks to week 18, sleeper-remaining's own totals); 8.9 of those
+weeks are the regular season, so a gain is worth 0.69 of itself from here.
+Nothing under 11.3 points is named: that is the yardstick's own worst seed-to-seed spread,
+measured on sleeper-remaining on 2026-09-29 (ObjectiveStability), so a smaller gain is the measurement moving
+and not the roster.
+
+ADD                    POS  -> drop                             left from here  alt here    title
+T.J. Hockenson         TE   -> drop Minnesota Vikings          +13.1      +9.0      +3.9   -0.17
+Bo Nix                 QB   -> drop Minnesota Vikings           +8.8      +6.1      +5.6   -0.17
+Kyler Murray           QB   -> drop Minnesota Vikings           +6.1      +4.2      +0.0   -0.17
+Elic Ayomanor          WR   -> drop Minnesota Vikings           +4.2      +2.9      +0.0   -0.17
+Pat Bryant             WR   -> drop Minnesota Vikings           +3.9      +2.7      +0.4   -0.15
+Jaylin Noel            WR   -> drop Minnesota Vikings           +3.8      +2.6      +0.0   -0.17
+Quentin Johnston       WR   -> drop Minnesota Vikings           +3.7      +2.5      +2.7   -0.17
+Mike Gesicki           TE   -> drop Minnesota Vikings           +3.4      +2.3      +0.3   -0.17
+title is the change in your title odds in percentage points (TitleOdds, 20000 seasons, the same draws
+before and after); your odds now are 13.0%.
+alt here is the same move priced on ros and put in from-here points too, so the two columns
+read in one unit; ros is the rest-of-season model that has seen the results (RosModel),
+sleeper-remaining Sleeper's weekly projections for the games left, which drop a man ruled out.
+
+EVERY DROP FOR T.J. HOCKENSON - the same claim against each man you hold:
+   drop Minnesota Vikings          +13.1
+   drop Baltimore Ravens           +13.1
+   drop Dalton Schultz              +9.7
+   drop Khalil Shakir               +4.5
+   drop Jakobi Meyers               -1.7
+   drop Harold Fannin               -8.2
+   drop Josh Downs                  -9.2
+   drop Cam Skattebo               -33.0
+   drop Malik Nabers               -38.0
+   drop Bhayshul Tuten             -46.6
+   drop Rhamondre Stevenson        -47.3
+   drop Mike Evans                 -85.8
+   drop Derrick Henry              -87.9
+   drop Brock Purdy               -112.5   <- empties a slot; the whole plan (then add Kyler Murray, drop Minnesota Vikings) is -69.8
+
+CLAIM T.J. Hockenson, DROP Minnesota Vikings: +13.1 over the games left, +9.0 from here.
+This is worth a claim, not necessarily worth a big FAAB bid - what to pay is FaabBid's
+question, and it is a different one.

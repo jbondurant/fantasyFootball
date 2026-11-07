@@ -1,0 +1,92 @@
+WEEKLY FEED AUDIT  season 2026, Sleeper on week 1  (data: projections 2026-09-14, player metadata 2026-09-14)
+
+== 1. THE SUM: eighteen weekly projections against the season number, league-scored ==
+week       1     2     3     4     5     6     7     8     9    10    11    12    13    14    15    16    17    18
+rows     857   918   924   926   881   826   827   834   888   825   778   947   822   884   947   947   947   947
+
+pos     men     median        p10        p90     corr   the season number is the x, the sum the y
+QB       71      0.000      0.000      1.102    0.972
+RB      128      0.997      0.000      1.427    0.957
+WR      188      1.006      0.022      1.435    0.971
+TE      115      1.013      0.185      1.624    0.963
+DEF      32      1.310      1.251      1.375    0.968
+ratio = sum of his weekly projections / his season projection. weeks carrying a projection per man: 0:86 2:1 7:1 11:1 12:1 13:15 15:2 16:40 17:387
+(17 weeks is a full season with one bye; fewer is a man Sleeper has out for some of it; 0 is a man the season
+feed gives points to and the weekly feed never does)
+men with no weekly row at all, by position: QB 37 TE 9 WR 18 RB 22
+DEF: 32 of 32 sum above their season number. The two feeds' defence lines carry different categories -
+season DEF line: blk_kick def_fum_td def_kr_td fum_rec int pass_int_td pr_td sack yds_allow_0_100
+weekly DEF line adds: def_kr_yd def_pr_td def_pr_yd def_td ff pr_yd safe st_td tkl_loss yds_allow yds_allow_200_299 yds_allow_300_349 yds_allow_350_399 yds_allow_400_449
+(both are scored by Sleeper's own pts_half_ppr, a defence having no offensive line; a season line missing
+categories the league pays for is that much low everywhere the season feed prices a defence)
+
+biggest gaps, sum minus season:
+   Tua Tagovailoa           QB  ATL  season  111.0  sum  305.6   +194.6  weeks 16  Out (Oblique)
+   Michael Penix            QB  ATL  season  169.2  sum    0.0   -169.2  weeks  0  Out (Knee - ACL)
+   Josh Jacobs              RB  GB   season  127.9  sum    0.0   -127.9  weeks  0  NA (Personal)
+   Deshaun Watson           QB  CLE  season  118.1  sum  241.3   +123.3  weeks 17  
+   Jacoby Brissett          QB  ARI  season  190.0  sum  298.5   +108.5  weeks 17  
+   George Holani            RB  SEA  season   23.2  sum  118.1    +94.9  weeks 17  
+   Aaron Rodgers            QB  PIT  season  213.0  sum  297.6    +84.6  weeks 17  
+   Jahmyr Gibbs             RB  DET  season  299.9  sum  375.9    +76.0  weeks 17  
+   Kendre Miller            RB  NO   season    4.6  sum   79.3    +74.7  weeks 17  
+   Jacory Croskey-Merritt   RB  WAS  season  118.4  sum  186.6    +68.2  weeks 17  
+
+== 2. THE LEAN: does the week-2 projection carry the week-1 result? ==
+x = week-1 actual minus his pre-game week-1 projection (the last live read before kickoff, 2026-09-08).
+
+y = week-2 projection minus that SAME pre-game number. x holds it too, so its noise leans this slope
+positive by construction - printed so the bias is visible, not to be read:
+pos       men    slope       se     corr  honest   read
+QB         30   -0.032    0.044   -0.136   0.076   no lean the data can see; below the honest rule
+RB         70    0.079    0.030    0.302   0.146   a lean, below the honest rule
+WR        102    0.066    0.017    0.361   0.084   consistent with the honest rule
+TE         61   -0.001    0.021   -0.007   0.090   no lean the data can see; below the honest rule
+all       263    0.037    0.013    0.170   0.101   a lean, below the honest rule
+
+y = week-2 projection minus his season prior per game (season snapshot 2026-09-08 over 17 games), which x
+does not contain - the slope to believe:
+pos       men    slope       se     corr  honest   read
+QB         30   -0.003    0.069   -0.008   0.076   cannot tell zero from the honest rule
+RB         69    0.059    0.037    0.190   0.146   no lean the data can see; below the honest rule
+WR        102    0.072    0.023    0.294   0.084   consistent with the honest rule
+TE         61   -0.021    0.025   -0.109   0.090   no lean the data can see; below the honest rule
+all       262    0.034    0.019    0.112   0.101   no lean the data can see; below the honest rule
+
+the same, with the 3 men who played and have NO week-2 row restored at zero (removed by injury or demotion;
+conditioning on a week-2 row drops the largest reactions there are, so this is the other bound):
+pos       men    slope       se     corr  honest   read
+QB         31    0.128    0.090    0.254   0.076   cannot tell zero from the honest rule
+RB         69    0.059    0.037    0.190   0.146   no lean the data can see; below the honest rule
+WR        104    0.108    0.031    0.328   0.084   consistent with the honest rule
+TE         61   -0.021    0.025   -0.109   0.090   no lean the data can see; below the honest rule
+all       265    0.081    0.022    0.218   0.101   consistent with the honest rule
+'honest' is the share of a one-game surprise InSeasonLearning's rule keeps, 1/(kappa+1), refit here; the read compares
+the slope's two-standard-error bar to zero and to it. A slope near one chases the week.
+actuals: 324 men with a scored line (week 1 not finished - a partial read; a game may be in progress); a man who played without a scoring line is absent, not zero.
+
+== 3. DAY TO DAY: each live week's projection, every cached read against the next ==
+w1   2026-09-04 -> 2026-09-05:  866 shared,   0 moved 1+ pts, rows +0/-0
+w1   2026-09-05 -> 2026-09-06:  866 shared,   0 moved 1+ pts, rows +0/-0
+w1   2026-09-06 -> 2026-09-07:  866 shared,   0 moved 1+ pts, rows +0/-0
+w1   2026-09-07 -> 2026-09-08:  862 shared,   2 moved 1+ pts, rows +2/-4  Rhamondre Stevenson +3.0  Corey Kiner +1.2
+w1   2026-09-08 -> 2026-09-14:  809 shared,  81 moved 1+ pts, rows +48/-55  Michael Mayer +3.6  Patrick Mahomes -3.1  Daniel Jones -2.9  Jacoby Brissett -2.8
+w2   one read cached (2026-09-14); run again tomorrow for the before/after
+w3   one read cached (2026-09-14); run again tomorrow for the before/after
+w4   one read cached (2026-09-14); run again tomorrow for the before/after
+w5   one read cached (2026-09-14); run again tomorrow for the before/after
+w6   one read cached (2026-09-14); run again tomorrow for the before/after
+w7   one read cached (2026-09-14); run again tomorrow for the before/after
+w8   one read cached (2026-09-14); run again tomorrow for the before/after
+w9   one read cached (2026-09-14); run again tomorrow for the before/after
+w10  one read cached (2026-09-14); run again tomorrow for the before/after
+w11  one read cached (2026-09-14); run again tomorrow for the before/after
+w12  one read cached (2026-09-14); run again tomorrow for the before/after
+w13  one read cached (2026-09-14); run again tomorrow for the before/after
+w14  one read cached (2026-09-14); run again tomorrow for the before/after
+w15  one read cached (2026-09-14); run again tomorrow for the before/after
+w16  one read cached (2026-09-14); run again tomorrow for the before/after
+w17  one read cached (2026-09-14); run again tomorrow for the before/after
+w18  one read cached (2026-09-14); run again tomorrow for the before/after
+a live week is read through the day's cache, so each day on disk is one read; a finished week is frozen and has no days.
+the pair that straddles kickoff is the post-game read against the pre-game one.

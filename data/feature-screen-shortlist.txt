@@ -1,0 +1,4 @@
+# FeatureScreen shortlist - discovery 2026-09-25
+# protocol 39ac133050b33970
+# commit this file BEFORE running -Pstage=confirm; confirmation refuses a changed protocol
+feature,position,sign,z,p

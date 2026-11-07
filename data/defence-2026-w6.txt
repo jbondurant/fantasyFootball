@@ -1,0 +1,32 @@
+DEFENCE FOR WEEK 6  2026-10-16  season 2026  (justinb314)
+The policy WireRateStress measured: stream on form, react after week 2. At this lag it scored 8.03 a week
+against 7.21 for holding the best undrafted defence, both hindsight-free.
+
+5 finished week(s): the pick is by points per game over those weeks, again over the free
+defences AND your own. Nothing in this choice can see week 6.
+
+DEFENCE               ADP     FORM   GAMES   WHO HOLDS HIM  WEEK 6
+Vikings             155.8     13.0       5   YOU            BYE
+Raiders             686.9     12.0       4   free           plays
+Bengals             648.8     10.2       5   free           BYE
+Jaguars             157.6      9.0       5   free           plays
+49ers               216.4      9.0       5   d0ddi          plays
+Steelers            171.1      8.8       5   Hamrliks       plays
+Seahawks            115.1      8.8       5   JFMarino       kicked off
+Broncos             121.5      8.6       5   tommyrads      kicked off
+Jets                690.0      8.6       5   free           plays
+Patriots            134.8      8.4       5   jerem9604      plays
+Panthers            658.6      8.0       4   free           plays
+Texans              107.6      7.6       5   BHier          plays
+
+THE POLICY SAYS: claim and start Raiders (free, 12.0 a game over 4).
+YOU HOLD: Ravens (6.0 a game over 5).
+YOU HOLD: Vikings (13.0 a game over 5), not playing this week.
+
+Read this honestly. The 8.03 was measured for a manager who streams ALL SEASON and never
+drafts a defence, choosing among UNDRAFTED men only. You drafted one, so the choice set here
+is yours plus the free men - otherwise the rule would tell you to trade down to whatever the
+league happened to leave, which is what it did on the week-1 board before this was fixed.
+What IS measured is that over five seasons, choosing on form beat holding by 0.82 points a
+week - about 14 a season, against a weekly noise far larger. Treat it as a tilt, not an
+instruction, and never claim a defence at a real FAAB price on this margin alone.

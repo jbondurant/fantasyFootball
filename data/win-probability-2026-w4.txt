@@ -1,0 +1,20 @@
+data: projections 2026-10-03, player metadata 2026-10-03
+WIN PROBABILITY  2026-10-03  week 4, justinb314 v d0ddi, 20000 weeks drawn
+Expected wins this week = P(beat d0ddi) + P(beat the league median). Each man is his projection plus a
+residual from the 200 nearest-projected player-weeks at his position, 2018-2025; men whose games have started
+score what they scored. Rivals as set in Sleeper. '-> in/out' is the change from the best lineup by projection.
+
+LINEUP                                              proj  E[wins]  vs best
+best by projection                                 131.6    1.271   +0.000
+-> Jakobi Meyers / Malik Nabers                    128.3    1.222   -0.049 +-0.004
+-> Bo Nix / Brock Purdy                            129.4    1.205   -0.066 +-0.005
+-> Jakobi Meyers / Josh Downs                      128.1    1.195   -0.076 +-0.004
+-> Khalil Shakir / Malik Nabers                    126.7    1.177   -0.094 +-0.004
+-> Jakobi Meyers / Bhayshul Tuten                  127.9    1.172   -0.099 +-0.004
+-> Jakobi Meyers / Rhamondre Stevenson             128.2    1.171   -0.100 +-0.004
+-> Jakobi Meyers / Jordan Addison                  128.9    1.162   -0.109 +-0.004
+
+Your lineup as set in Sleeper is not a legal ten (an empty slot?) - set it.
+
+The best by projection scores 131.6. A change is worth making when it beats it by more than twice its
+standard error; anything smaller is the draws, not the lineup.

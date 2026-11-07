@@ -1,0 +1,37 @@
+MARKET MOVERS  2026-09-08 -> 2026-09-14  (3 cached days; 186 drafted players compared; league scoring (as the model scores))
+Sleeper half-PPR ADP: negative change = rising (drafted earlier). 'step' = the day carrying most of the move; a drift has no single day.
+
+== PROJECTION MOVERS (league points, |change| >= 3) ==
+player                   pos team held by         from      to  change   step           Sleeper's own data says
+A.J. Brown               WR  NE   itsabust       207.7   140.0   -67.7   step 09-14 100% injury healthy -> IR (Ankle); news 09-13
+Josh Jacobs              RB  GB   jerem9604       80.2   127.9   +47.7   step 09-14 100% na Personal; news 09-13
+Kaelon Black             RB  SF   Renteez         39.3    67.2   +27.9   step 09-14 100% news 09-14
+Brock Bowers             TE  LV   jerem9604      202.5   180.5   -22.0   step 09-14 100% injury healthy -> Out (Knee - Meniscus); news 09-14
+Ashton Jeanty            RB  LV   Hamrliks       211.4   228.7   +17.3   step 09-14 100% injury Questionable -> healthy; news 09-14
+
+== ADP MOVERS (ranked relatively; |change| >= 3 picks) ==
+player                   pos team held by         from      to  change    rel   step           Sleeper's own data says
+Josh Jacobs              RB  GB   jerem9604       47.3    52.1    +4.8   +10%   step 09-14 60% na Personal; news 09-13
+Oronde Gadsden           TE  LAC  free agent     175.3   188.9   +13.6    +8%   step 09-11 112% news 09-14
+Alvin Kamara             RB  NO   Hamrliks       159.1   165.2    +6.1    +4%   step 09-11 136% injury Questionable -> Out (Knee - MCL); news 09-13
+Kyle Monangai            RB  CHI  itsabust        97.8   100.8    +3.0    +3%   step 09-14 90% injury Questionable -> healthy; news 09-13
+Sam Darnold              QB  SEA  free agent     181.6   177.0    -4.6    -3%   step 09-14 91% injury healthy -> Out (Hip); news 09-14
+T.J. Hockenson           TE  MIN  itsabust       184.1   180.4    -3.7    -2%   drift          news 09-14
+
+== INJURY DESIGNATIONS TODAY (drafted pool, anything beyond Questionable) ==
+   A.J. Brown               WR  NE   itsabust     adp   19.2  IR (Ankle)
+   Brock Bowers             TE  LV   jerem9604    adp   23.5  Out (Knee - Meniscus)
+   Zay Flowers              WR  BAL  d0ddi        adp   39.7  Out (Hamstring)
+   Josh Jacobs              RB  GB   jerem9604    adp   52.1  NA (Personal)
+   TreVeyon Henderson       RB  NE   d0ddi        adp   59.1  Out (Ankle)
+   De'Zhaun Stribling       WR  SF   KevinDA      adp  111.4  Out (Ankle)
+   Jordyn Tyson             WR  NO   JFMarino     adp  119.9  IR (Hamstring)
+   Zach Charbonnet          RB  SEA  itsabust     adp  143.1  PUP (Knee - ACL)
+   Ja'Kobi Lane             WR  BAL  Renteez      adp  147.7  Out (Wrist)
+   Kyler Murray             QB  MIN  KevinDA      adp  150.4  Out (Concussion)
+   Alvin Kamara             RB  NO   Hamrliks     adp  165.2  Out (Knee - MCL)
+   Sam Darnold              QB  SEA  free agent   adp  177.0  Out (Hip)
+   Tank Dell                WR  HOU  tommyrads    adp  190.5  IR (Knee - ACL + MCL)
+   Dylan Sampson            RB  CLE  Renteez      adp  191.9  Out (Knee)
+   Isiah Pacheco            RB  DET  Hamrliks     adp  194.9  IR (Back)
+   Omar Cooper              WR  NYJ  JakeSK       adp  195.0  Out (Ankle)

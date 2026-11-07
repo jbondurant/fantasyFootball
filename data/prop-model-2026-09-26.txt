@@ -1,0 +1,35 @@
+PROP MODEL CALIBRATION  2026-09-26  (each season priced from the others; nearest 600 projections)
+For thresholds at a multiple of the projection, the mean predicted P(stat >= k) against the share that reached it,
+and the Brier score of the model against the base rate at that multiple (lower is better).
+
+pos  stat                 weeks   k = 0.5m / 0.75m / m / 1.25m / 1.5m : predicted vs actual
+QB   passing yards         3920    93.6/92.9   76.1/75.4   44.6/43.5   19.1/18.1    7.1/5.8   
+QB   passing TDs           3919    77.3/76.8   72.9/72.5   58.7/58.4   45.3/45.1   32.2/31.8  
+QB   completions           3920    95.9/95.2   82.4/81.8   50.6/49.5   21.1/19.9    7.2/5.6   
+QB   pass attempts         3921    96.9/96.3   83.3/82.8   48.9/47.6   17.0/15.8    4.8/3.4   
+QB   rushing yards         3913    59.5/61.3   48.9/50.9   39.8/41.2   32.1/33.2   26.3/26.3  
+RB   rushing yards        10938    61.5/61.7   50.0/50.3   39.1/39.3   29.9/30.1   23.1/23.0  
+RB   receiving yards      10774    48.0/48.4   40.7/40.9   33.7/33.9   28.3/28.5   23.3/23.2  
+RB   receptions           10750    60.8/61.1   54.1/54.5   46.1/46.3   38.3/38.6   31.3/31.4  
+RB   rush + rec yards     11078    66.9/67.0   53.7/54.0   40.8/40.9   30.1/30.2   22.4/22.3  
+WR   rushing yards         9169    13.3/13.5   12.6/12.8   11.8/12.0   11.2/11.3   10.6/10.7  
+WR   receiving yards      17536    58.7/58.8   47.8/47.9   37.5/37.6   29.0/29.0   22.5/22.4  
+WR   receptions           17535    70.1/70.2   60.6/60.7   48.6/48.7   36.9/36.9   27.5/27.5  
+WR   rush + rec yards     17538    59.8/59.9   48.7/48.9   38.2/38.3   29.5/29.6   22.8/22.8  
+TE   receiving yards       9730    53.5/53.9   44.5/45.0   36.2/36.5   29.8/29.9   24.4/24.8  
+TE   receptions            9728    63.5/63.9   56.5/57.0   47.9/48.3   39.3/39.5   31.6/31.6  
+TE   rush + rec yards      9777    53.8/54.3   44.7/45.2   36.5/36.7   30.0/30.0   24.6/24.9  
+
+largest gap between predicted and actual in any cell: 2.0 points
+
+Reliability, pooled over every stat and multiple (predicted P binned):
+  0.0-0.1  n  11475   predicted   5.9%   happened   5.8%
+  0.1-0.2  n  21099   predicted  15.6%   happened  16.2%
+  0.2-0.3  n  56544   predicted  25.8%   happened  26.0%
+  0.3-0.4  n  52946   predicted  34.6%   happened  34.2%
+  0.4-0.5  n  39495   predicted  44.4%   happened  44.0%
+  0.5-0.6  n  26700   predicted  54.6%   happened  54.9%
+  0.6-0.7  n  19071   predicted  64.2%   happened  63.6%
+  0.7-0.8  n  14924   predicted  74.9%   happened  75.1%
+  0.8-0.9  n   9958   predicted  84.2%   happened  84.0%
+  0.9-1.0  n   4728   predicted  94.9%   happened  92.3%

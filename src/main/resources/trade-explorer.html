@@ -1,0 +1,477 @@
+<title>Keeper League Trade Explorer</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a scoreboard header, a strip of managers to pick from, a sticky filter bar, then the trades as a table that turns into cards on a phone. */
+:root {
+  --bg: #f3f5f1;
+  --panel: #ffffff;
+  --ink: #18201b;
+  --muted: #5c675f;
+  --line: #d9ded7;
+  --field: #1f6b45;
+  --field-soft: #e2efe7;
+  --warn: #9a5b00;
+  --warn-soft: #fbefd9;
+  --bad: #b3261e;
+  --bad-soft: #fbe3e0;
+  --good: #1f6b45;
+  --chip: #eef1ec;
+  --display: "Barlow Condensed", "Arial Narrow", system-ui, sans-serif;
+  --body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111613; --panel: #18201b; --ink: #e6ece7; --muted: #9aa69d; --line: #2c3730;
+    --field: #5fc28f; --field-soft: #1d3326; --warn: #e3a64a; --warn-soft: #33270f;
+    --bad: #ff8a80; --bad-soft: #3a1b18; --good: #5fc28f; --chip: #222b25; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111613; --panel: #18201b; --ink: #e6ece7; --muted: #9aa69d; --line: #2c3730;
+  --field: #5fc28f; --field-soft: #1d3326; --warn: #e3a64a; --warn-soft: #33270f;
+  --bad: #ff8a80; --bad-soft: #3a1b18; --good: #5fc28f; --chip: #222b25; color-scheme: dark;
+}
+body { background: var(--bg); color: var(--ink); font-family: var(--body); line-height: 1.45; }
+.wrap { padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 48px; max-width: 1400px; margin: 0 auto; display: grid; gap: 18px; }
+h1, h2 { font-family: var(--display); font-weight: 700; letter-spacing: 0.01em; text-wrap: balance; margin: 0; }
+h1 { font-size: 2.2rem; line-height: 1.05; }
+h2 { font-size: 1.25rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
+.lede { margin: 6px 0 0; color: var(--muted); max-width: 70ch; }
+.score { display: flex; flex-wrap: wrap; gap: 10px 26px; align-items: baseline; margin-top: 12px; font-family: var(--mono); font-size: 0.85rem; color: var(--muted); }
+.score b { font-family: var(--display); font-size: 1.6rem; color: var(--ink); font-weight: 600; margin-right: 4px; }
+.num { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+.managers { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.mgr { text-align: left; border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 8px; padding: 8px 10px; cursor: pointer; display: grid; gap: 2px; font: inherit; }
+.mgr:hover { border-color: var(--field); }
+.mgr:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible, summary:focus-visible { outline: 2px solid var(--field); outline-offset: 2px; }
+.mgr[aria-pressed="true"] { border-color: var(--field); background: var(--field-soft); }
+.mgr .name { font-weight: 600; overflow-wrap: anywhere; }
+.mgr .meta { font-family: var(--mono); font-size: 0.75rem; color: var(--muted); }
+.pill { display: inline-block; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; border-radius: 999px; padding: 1px 7px; background: var(--chip); color: var(--muted); white-space: nowrap; }
+.pill.contender { background: var(--field-soft); color: var(--field); }
+.pill.bubble { background: var(--warn-soft); color: var(--warn); }
+.pill.out { background: var(--chip); color: var(--muted); }
+.pill.tank { background: var(--bad-soft); color: var(--bad); }
+.pill.fair { background: var(--field-soft); color: var(--field); }
+.pill.hurt { background: var(--warn-soft); color: var(--warn); text-transform: none; letter-spacing: 0; font-weight: 500; }
+
+.filters { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); padding-block: 10px; border-bottom: 1px solid var(--line); display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: end; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+.field { display: grid; gap: 3px; font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+select, input[type="search"], input[type="number"] { font: inherit; font-size: 0.9rem; text-transform: none; letter-spacing: 0; color: var(--ink); background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; min-width: 0; }
+.checks { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 0.85rem; }
+.checks label { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
+.bothgate { display: inline-flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.bothgate input[type="number"] { width: 4.6em; padding: 2px 6px; font-family: var(--mono); }
+.count { margin-left: auto; font-family: var(--mono); font-size: 0.85rem; color: var(--muted); }
+
+.tablewrap { overflow-x: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; }
+table { border-collapse: collapse; width: 100%; font-size: 0.86rem; }
+th, td { padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; text-align: left; }
+th { font-family: var(--display); font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); position: sticky; top: 0; background: var(--panel); white-space: nowrap; }
+th small { display: block; font-family: var(--body); text-transform: none; letter-spacing: 0; font-weight: 400; }
+td.n { font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; text-align: right; }
+td .sub { display: block; font-size: 0.75rem; color: var(--muted); }
+.men { display: grid; gap: 2px; min-width: 150px; }
+.men .cut { font-size: 0.75rem; color: var(--muted); }
+.neg { color: var(--bad); }
+.pos { color: var(--good); }
+.soft { color: var(--muted); }
+.rise { font-family: var(--display); font-size: 1.15rem; font-weight: 600; }
+.empty { padding: 28px; text-align: center; color: var(--muted); }
+[hidden] { display: none !important; }
+.view { display: grid; gap: 18px; }
+.tabs { display: flex; gap: 6px; border-bottom: 1px solid var(--line); }
+.tab { font: inherit; font-family: var(--display); font-weight: 600; font-size: 1.05rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); background: none; border: 0; border-bottom: 3px solid transparent; padding: 6px 12px 8px; cursor: pointer; }
+.tab[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--field); }
+.tab:focus-visible { outline: 2px solid var(--field); outline-offset: 2px; }
+.mid { font-family: var(--display); font-size: 1.15rem; font-weight: 600; }
+.split { background: var(--warn-soft); color: var(--warn); }
+tr.mine td:first-child { box-shadow: inset 3px 0 0 var(--field); }
+
+details { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; }
+summary { cursor: pointer; font-weight: 600; }
+details p, details li { max-width: 75ch; color: var(--ink); }
+details ul { padding-left: 1.2em; }
+
+@media (max-width: 760px) {
+  table, thead, tbody, tr, td { display: block; }
+  thead { display: none; }
+  .tablewrap { background: transparent; border: 0; }
+  tr { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; margin-bottom: 10px; padding: 6px 4px; }
+  td { border: 0; padding: 4px 10px; }
+  td.n { text-align: left; }
+  td[data-k]::before { content: attr(data-k); display: block; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+}
+@media (prefers-reduced-motion: no-preference) { .mgr, select { transition: border-color 120ms ease; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Keeper League Trade Explorer</h1>
+    <p class="lede" id="lede">Trades are found and ranked on Sleeper's projections, then FantasyPros' rankings throw out any it scores as a loss for you. Every trade here raises your title odds by at least half a point, grouped by manager in half-point buckets. Lopsided and tanking trades are left in and flagged, for you to judge.</p>
+    <div class="score" id="score"></div>
+  </header>
+
+  <div class="tabs" role="tablist" aria-label="View">
+    <button type="button" class="tab" role="tab" id="tab-trades" aria-selected="true" aria-controls="view-trades">Trades</button>
+    <button type="button" class="tab" role="tab" id="tab-players" aria-selected="false" aria-controls="view-players">Players</button>
+  </div>
+
+  <div id="view-trades" class="view" role="tabpanel" aria-labelledby="tab-trades">
+  <section aria-labelledby="mgrs-h">
+    <h2 id="mgrs-h">Managers</h2>
+    <div class="managers" id="managers"></div>
+  </section>
+
+  <div class="filters" role="region" aria-label="Filters">
+    <label class="field" for="f-mgr">Manager
+      <select id="f-mgr"></select>
+    </label>
+    <label class="field" for="f-bucket">Your title rise
+      <select id="f-bucket"></select>
+    </label>
+    <label class="field" for="f-mode">Bucket
+      <select id="f-mode">
+        <option value="exact">exactly this half-point</option>
+        <option value="atleast">this or more</option>
+      </select>
+    </label>
+    <label class="field" for="f-sort">Sort
+      <select id="f-sort">
+        <option value="him">least worse for him (Sleeper)</option>
+        <option value="himAlt">least worse for him (model)</option>
+        <option value="himFp">least worse for him (FantasyPros)</option>
+        <option value="hisTitle">least worse for his title odds</option>
+        <option value="rise">biggest rise in your title odds</option>
+        <option value="you">most season points for you (Sleeper)</option>
+        <option value="youMin">most for you on your weakest pricing</option>
+        <option value="blend">most generous on what he sees (weighted)</option>
+        <option value="paceView">most generous on pace</option>
+        <option value="projView">most generous on projection</option>
+      </select>
+    </label>
+    <label class="field" for="f-q">Player
+      <input type="search" id="f-q" placeholder="any name">
+    </label>
+    <div class="checks">
+      <label><input type="checkbox" id="f-tank"> hide tanking</label>
+      <label><input type="checkbox" id="f-hurt"> hide hurt players</label>
+      <label><input type="checkbox" id="f-out"> hide teams out of it</label>
+      <label><input type="checkbox" id="f-model"> hide what the model calls a loss for you</label>
+      <span class="bothgate">
+        <label><input type="checkbox" id="f-both"> at least</label>
+        <input type="number" id="f-bothN" min="0" max="300" step="5" value="100" aria-label="Minimum percent on both pace and projection">
+        <label for="f-both">% on both pace and projection</label>
+      </span>
+    </div>
+    <div class="count" id="count" aria-live="polite"></div>
+  </div>
+
+  <div class="tablewrap">
+    <table>
+      <thead>
+        <tr>
+          <th>With</th>
+          <th>You give</th>
+          <th>You get</th>
+          <th>Your title<small>points of odds</small></th>
+          <th>His season<small class="pricings">Sleeper · model · FantasyPros</small></th>
+          <th>His title<small>points of odds</small></th>
+          <th>Your season<small class="pricings">Sleeper · model · FantasyPros</small></th>
+          <th>Keepers<small>you · him</small></th>
+          <th>His view<small>weighted · pace · projection</small></th>
+          <th>Flags</th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+    <div class="empty" id="empty" hidden>No trades match. Widen the bucket to "this or more", pick all managers, or clear a filter.</div>
+  </div>
+  </div>
+
+  <div id="view-players" class="view" role="tabpanel" aria-labelledby="tab-players" hidden>
+    <div class="filters" role="region" aria-label="Player filters">
+      <label class="field" for="p-pos">Position
+        <select id="p-pos"></select>
+      </label>
+      <label class="field" for="p-own">Owner
+        <select id="p-own"></select>
+      </label>
+      <label class="field" for="p-sort">Sort
+        <select id="p-sort">
+          <option value="mid">middle rank</option>
+          <option value="s">Sleeper rank</option>
+          <option value="r">model rank</option>
+          <option value="f">FantasyPros rank</option>
+          <option value="spread">most disagreement</option>
+        </select>
+      </label>
+      <label class="field" for="p-q">Player
+        <input type="search" id="p-q" placeholder="any name">
+      </label>
+      <div class="count" id="p-count" aria-live="polite"></div>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Player</th>
+            <th>Middle rank<small>of the three</small></th>
+            <th>Sleeper<small class="pts-from">rank · points left</small></th>
+            <th>Model<small class="pts-from">rank · points left</small></th>
+            <th>FantasyPros<small>its rank · as points</small></th>
+            <th>Spread<small>worst − best rank</small></th>
+            <th>Owner</th>
+          </tr>
+        </thead>
+        <tbody id="p-rows"></tbody>
+      </table>
+      <div class="empty" id="p-empty" hidden>No players match.</div>
+    </div>
+  </div>
+
+  <details>
+    <summary>How to read this</summary>
+    <ul id="howto"></ul>
+  </details>
+</div>
+
+<script>
+const DATA = /*TRADE_DATA*/null;
+
+const $ = (id) => document.getElementById(id);
+const fmt = (v, d = 1) => (v > 0 ? "+" : "") + v.toFixed(d);
+const pct = (v) => v == null ? "all" : Math.round(v * 100) + "%";
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const stateClass = (s) => s === "contender" ? "contender" : s === "bubble" ? "bubble" : "out";
+
+function panelNote() {
+  const pages = Object.entries(DATA.fpPanel || {});
+  if (!pages.length) return "";
+  const first = pages[0][1];
+  const same = pages.every(([, p]) => p.experts === first.experts && p.names.join() === first.names.join());
+  const stalest = Math.max(...pages.map(([, p]) => p.stalestDays));
+  const who = same ? `${first.experts} of ${first.available} experts on every position page: ${esc(first.names.join(", "))}`
+    : pages.map(([page, p]) => `${esc(page.replace("Half", ""))} ${p.experts} of ${p.available}`).join(", ") + " experts";
+  return `<li><b>Whose FantasyPros consensus.</b> Today's rest-of-season ranks average ${who}. The stalest had updated ${stalest.toFixed(1)} days before the page. Which experts FantasyPros averages changes day to day, so each rank used is the median of the last three days' pulls. FantasyPros' own points convert the rank to points on standard scoring, so they aren't used.</li>`;
+}
+
+function bucketOf(rise) {
+  return Math.min(DATA.top, Math.floor((rise - DATA.step) / DATA.step + 1e-9) * DATA.step + DATA.step);
+}
+
+function load(key, fallback) {
+  try { const v = localStorage.getItem("tradeExplorer." + key); return v == null ? fallback : JSON.parse(v); } catch (e) { return fallback; }
+}
+function save(key, value) {
+  try { localStorage.setItem("tradeExplorer." + key, JSON.stringify(value)); } catch (e) { /* storage blocked: filters just don't persist */ }
+}
+
+function init() {
+  if (!DATA) {
+    $("lede").textContent = "This copy of the page has no trade data. It is filled by: ./gradlew run -Pmain=TradeMarket -PtradeExplorer=true";
+    return;
+  }
+  const label = (src) => src === "fantasypros" ? "FantasyPros" : src === "ros" ? "model" : src.startsWith("sleeper") ? "Sleeper" : src;
+  const reject = DATA.reject || [];
+  if (DATA.reject && reject.join() !== "fantasypros") {
+    $("lede").textContent = reject.length
+      ? `Trades are found and ranked on ${label(DATA.pricing)}'s projections, then ${reject.map(label).join(" and ")} throw out any they score as a loss for you. Every trade here raises your title odds by at least half a point, grouped by manager in half-point buckets. Lopsided and tanking trades are left in and flagged.`
+      : `Trades found and ranked on ${label(DATA.pricing)}'s projections alone, nothing vetoing. Every trade here raises your title odds by at least half a point, grouped by manager in half-point buckets.`;
+  }
+  document.querySelectorAll(".pricings").forEach((el) => { el.textContent = `${label(DATA.pricing)} · ${label(DATA.alt)} · FantasyPros`; });
+  if (DATA.playersFrom) document.querySelectorAll(".pts-from").forEach((el) => { el.textContent = `rank · points, weeks ${DATA.playersFrom}+`; });
+  const rivalOf = Object.fromEntries(DATA.rivals.map((r) => [r.m, r]));
+  DATA.trades.forEach((t) => { t.bucket = bucketOf(t.rise); t.state = rivalOf[t.m]?.state || ""; });
+
+  $("score").innerHTML =
+    `<span><b>${DATA.myTitle.toFixed(1)}%</b>your title odds</span>` +
+    `<span><b>${DATA.myPlayoffs.toFixed(0)}%</b>playoffs</span>` +
+    `<span><b>${DATA.trades.length}</b>trades</span>` +
+    `<span>${esc(DATA.generated)} · season ${esc(DATA.season)} after ${DATA.weeksPlayed} games · ${DATA.sims.toLocaleString()} simulated seasons a trade</span>`;
+
+  const byRival = {};
+  DATA.trades.forEach((t) => { byRival[t.m] = (byRival[t.m] || 0) + 1; });
+  const rivals = [...DATA.rivals].sort((a, b) => b.title - a.title);
+
+  const mgrSel = $("f-mgr");
+  mgrSel.innerHTML = `<option value="">All managers</option>` +
+    rivals.map((r) => `<option value="${esc(r.m)}">${esc(r.m)} (${r.state}, ${r.title.toFixed(1)}%)</option>`).join("");
+
+  $("managers").innerHTML = rivals.map((r) =>
+    `<button type="button" class="mgr" data-m="${esc(r.m)}" aria-pressed="false">
+       <span class="name">${esc(r.m)}</span>
+       <span><span class="pill ${stateClass(r.state)}">${esc(r.state)}</span></span>
+       <span class="meta">title ${r.title.toFixed(1)}% · playoffs ${r.playoffs.toFixed(0)}%</span>
+       <span class="meta">${byRival[r.m] || 0} trades${r.capReached ? " · search capped" : ""}</span>
+     </button>`).join("");
+
+  const bucketSel = $("f-bucket");
+  const opts = [`<option value="">any rise</option>`];
+  for (let b = DATA.step; b <= DATA.top + 1e-9; b += DATA.step) {
+    const label = b >= DATA.top - 1e-9 ? `+${b.toFixed(1)} or more` : `+${b.toFixed(1)} to +${(b + DATA.step).toFixed(1)}`;
+    opts.push(`<option value="${b.toFixed(1)}">${label}</option>`);
+  }
+  bucketSel.innerHTML = opts.join("");
+
+  const state = {
+    m: load("m", ""), bucket: load("bucket", ""), mode: load("mode", "exact"), sort: load("sort", "him"),
+    q: "", tank: load("tank", false), hurt: load("hurt", false), out: load("out", false), model: load("model", false), both: load("both", false), bothN: load("bothN", 100)
+  };
+  const hashM = decodeURIComponent((location.hash || "").slice(1));
+  if (hashM && rivalOf[hashM]) state.m = hashM;
+  if (state.m && !rivalOf[state.m]) state.m = "";
+  mgrSel.value = state.m; bucketSel.value = state.bucket; $("f-mode").value = state.mode; $("f-sort").value = state.sort;
+  $("f-tank").checked = state.tank; $("f-hurt").checked = state.hurt; $("f-out").checked = state.out; $("f-model").checked = state.model; $("f-both").checked = state.both; $("f-bothN").value = state.bothN;
+
+  const bind = (id, key, prop = "value") => $(id).addEventListener(prop === "checked" ? "change" : "input", (e) => {
+    state[key] = e.target[prop]; if (key !== "q") save(key, state[key]); render();
+  });
+  bind("f-mgr", "m"); bind("f-bucket", "bucket"); bind("f-mode", "mode"); bind("f-sort", "sort"); bind("f-q", "q");
+  bind("f-tank", "tank", "checked"); bind("f-hurt", "hurt", "checked"); bind("f-out", "out", "checked"); bind("f-model", "model", "checked"); bind("f-both", "both", "checked"); bind("f-bothN", "bothN");
+  $("managers").addEventListener("click", (e) => {
+    const b = e.target.closest(".mgr"); if (!b) return;
+    state.m = state.m === b.dataset.m ? "" : b.dataset.m; mgrSel.value = state.m; save("m", state.m); render();
+  });
+
+  $("howto").innerHTML = [
+    `<li><b>Your title</b> is the change in your title odds, in percentage points, from ${DATA.sims.toLocaleString()} simulated seasons with the same draws before and after, ± its standard error. Buckets are half a point wide: +1.0 to +1.5 holds rises from 1.0 up to 1.5.</li>`,
+    `<li><b>The three pricings.</b> Sleeper's weekly projections; the rest-of-season model (a man's rate per game from this season's results, in the weeks Sleeper projects him to play); and FantasyPros' rest-of-season rankings. FantasyPros' own points use standard scoring, not this league's 6-point passing touchdowns, so the page uses its ranks instead. The player it ranks k-th at his position gets the k-th best points per game Sleeper projects at that position, in the weeks Sleeper has him playing. A player out for weeks reads a little low here, because FantasyPros' rank already counts the missed games.</li>`,
+    `<li><b>Which trades are here.</b> Trades that gain you at least ${DATA.minGain} season points on ${esc(label(DATA.pricing))}'s projections, minus any that ${esc(reject.map(label).join(" or ") || "nothing")} scores as a loss for you${DATA.rejectBelow ? ` of more than ${(-DATA.rejectBelow).toFixed(1)}` : ""}. No weighting needed: ${esc(label(DATA.pricing))} finds and ranks the trades, and the others can only veto. The model is shown, and you can hide what it calls a loss with the checkbox. Your title odds are simulated on ${esc(label(DATA.pricing))}'s projections.</li>`,
+    panelNote(),
+    `<li><b>Your season / His season</b> is what the trade does to each roster's points over the rest of the season, on ${esc(label(DATA.pricing))}, ${esc(label(DATA.alt))} and FantasyPros, top to bottom. Each week's best lineup counts, with that week's best free agents available to everyone. The default sort puts the trade that costs him least first.</li>`,
+    `<li><b>Tanking</b> marks a loss past your line: more than ${DATA.tankLine.toFixed(0)} points of his season on Sleeper's projections, or ${DATA.tankLineAlt.toFixed(1)} on the rest-of-season model. It is shown, not applied: lopsided trades stay in.</li>`,
+    `<li><b>Keepers</b> is the change in each side's best two keeper surpluses for 2027, in season points over the pick a keeper costs.</li>`,
+    DATA.draftWeight > 0
+      ? `<li><b>His view</b> is what he gets back of what he gives on the numbers he can see: draft value and this season's screen (pace and Sleeper's projection), blended with draft value at ${Math.round(DATA.draftWeight * 100)}% after ${DATA.weeksPlayed} games. 100% or more reads fair to him.</li>`
+      : `<li><b>His view</b> is what he gets back of what he gives on this season's numbers, shown three ways. Pace is his points per game so far. Proj is Sleeper's projection for his next game. Each is read as rest-of-season value above the last starter at his position. The top number is the two weighted ${Math.round((DATA.paceShare ?? 0) * 100)}% pace and ${Math.round((1 - (DATA.paceShare ?? 0)) * 100)}% projection, the split other leagues' accepted trades show at this point in the season, and 100% or more on it reads fair to him. Draft spot no longer counts after ${DATA.weeksPlayed} games.</li>`,
+    `<li><b>Hurt</b> names any player in the trade listed IR, Out, Doubtful, PUP, suspended or Questionable today. Sleeper projects an injured player back, so a trade that leans on one may be worth less than it reads.</li>`,
+    `<li><b>Players tab.</b> Every rostered player, and every free agent near the top at his position on some pricing, ranked at his position three ways. The middle rank is the middle of the three, so two of the three rank him there or better and two rank him there or worse. No weights needed. Spread is how far apart they are: a big spread means the sources disagree. Sleeper and model points count from the week after this one, so a game already played this week doesn't skew them. A player with no Sleeper or model points left (out for the season) has no middle rank.</li>`,
+    `<li>Coverage: every one-for-one, and two- and three-man packages among each side's most valuable players. For each manager, trades gaining you ${DATA.minGain} or more season points were simulated from least to most costly to him, keeping up to ${DATA.perBucket} per bucket, so each bucket holds the least costly trades in it, plus every trade that reads as fair to him or that gets ${Math.round((DATA.bothFloor ?? 0.85) * 100)}% or more on both pace and projection, however costly. So the "on both" box is complete from ${Math.round((DATA.bothFloor ?? 0.85) * 100)}% up; set it lower and some trades may be missing. A manager marked "search capped" stopped at ${DATA.cap.toLocaleString()} simulations; a bucket short of trades there may have more.</li>`
+  ].join("");
+
+  function render() {
+    document.querySelectorAll(".mgr").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.m === state.m)));
+    const q = state.q.trim().toLowerCase();
+    const b = state.bucket === "" ? null : parseFloat(state.bucket);
+    let list = DATA.trades.filter((t) => {
+      if (state.m && t.m !== state.m) return false;
+      if (b != null && (state.mode === "exact" ? Math.abs(t.bucket - b) > 1e-9 : t.bucket < b - 1e-9)) return false;
+      if (state.tank && t.tank) return false;
+      if (state.hurt && (t.hurtIn.length || t.hurtOut.length)) return false;
+      if (state.out && t.state === "out of it") return false;
+      if (state.model && t.youAlt < 0) return false;
+      if (state.both) {
+        const least = (parseFloat(state.bothN) || 0) / 100;
+        if ((t.paceView ?? Infinity) < least || (t.projView ?? Infinity) < least) return false;
+      }
+      if (q && ![...t.give, ...t.get].some((n) => n.toLowerCase().includes(q))) return false;
+      return true;
+    });
+    const key = {
+      him: (t) => -t.him, himAlt: (t) => -t.himAlt, himFp: (t) => -(t.himFp ?? 0), hisTitle: (t) => -t.hisTitle,
+      rise: (t) => -t.rise, you: (t) => -t.you, youMin: (t) => -Math.min(t.you, t.youAlt, t.youFp ?? t.you),
+      blend: (t) => -(t.blend ?? 9), paceView: (t) => -(t.paceView ?? 9), projView: (t) => -(t.projView ?? 9)
+    }[state.sort];
+    list.sort((x, y) => key(x) - key(y) || y.rise - x.rise);
+    $("count").textContent = `${list.length} of ${DATA.trades.length} trades`;
+    $("empty").hidden = list.length > 0;
+    $("rows").innerHTML = list.map(row).join("");
+  }
+
+  function names(arr, hurt) {
+    return arr.map((n) => {
+      const h = hurt.find((x) => x.startsWith(n + " ("));
+      return `<span>${esc(n)}${h ? ` <span class="pill hurt">${esc(h.slice(n.length + 1))}</span>` : ""}</span>`;
+    }).join("");
+  }
+
+  function row(t) {
+    const himCls = t.him <= -DATA.tankLine ? "neg" : t.him < 0 ? "" : "pos";
+    const himAltCls = t.himAlt <= -DATA.tankLineAlt ? "neg" : t.himAlt < 0 ? "" : "pos";
+    const flags = [
+      t.tank ? `<span class="pill tank">tanking</span>` : "",
+      t.fair ? `<span class="pill fair">fair to him</span>` : t.asking ? `<span class="pill">long shot</span>` : `<span class="pill">no on what he sees</span>`
+    ].join(" ");
+    return `<tr>
+      <td data-k="With"><b>${esc(t.m)}</b><span class="sub"><span class="pill ${stateClass(t.state)}">${esc(t.state)}</span></span></td>
+      <td data-k="You give"><div class="men">${names(t.give, t.hurtOut)}</div></td>
+      <td data-k="You get"><div class="men">${names(t.get, t.hurtIn)}${t.cut.length ? `<span class="cut">he cuts ${esc(t.cut.join(", "))}</span>` : ""}</div></td>
+      <td class="n" data-k="Your title"><span class="rise">${fmt(t.rise)}</span><span class="sub">± ${t.se.toFixed(1)}</span></td>
+      <td class="n" data-k="His season"><span class="${himCls}">${fmt(t.him)}</span><span class="sub ${himAltCls}">${fmt(t.himAlt)}</span>${t.himFp == null ? "" : `<span class="sub ${t.himFp < 0 ? "" : "pos"}">${fmt(t.himFp)}</span>`}</td>
+      <td class="n" data-k="His title">${fmt(t.hisTitle)}</td>
+      <td class="n" data-k="Your season">${fmt(t.you)}<span class="sub ${t.youAlt < 0 ? "neg" : ""}">${fmt(t.youAlt)}</span>${t.youFp == null ? "" : `<span class="sub ${t.youFp < 0 ? "neg" : ""}">${fmt(t.youFp)}</span>`}</td>
+      <td class="n" data-k="Keepers">${fmt(t.myKeep)}<span class="sub">${fmt(t.hisKeep)}</span></td>
+      <td class="n" data-k="His view">${pct(t.blend)}<span class="sub">pace ${pct(t.paceView)}</span><span class="sub">proj ${pct(t.projView)}</span>${DATA.draftWeight > 0 ? `<span class="sub">draft ${pct(t.draft)}</span>` : ""}</td>
+      <td data-k="Flags">${flags}</td>
+    </tr>`;
+  }
+
+  render();
+
+  // THE PLAYERS TAB: each man at his position on the three pricings, ranked on the middle of the three
+  const players = (DATA.players || []).map((p) => {
+    const s = p.v[1], r = p.v[3], f = p.fpRank;
+    const ranks = [s, r, f].filter((x) => x != null).sort((a, b) => a - b);
+    // two of the three must rank him: a man Sleeper and the model price at nothing has no middle, whatever FantasyPros says
+    const mid = ranks.length === 3 ? ranks[1] : ranks.length === 2 ? (ranks[0] + ranks[1]) / 2 : 999;
+    return { ...p, s, r, f, mid, spread: ranks.length > 1 ? ranks[ranks.length - 1] - ranks[0] : 0 };
+  });
+  const posOrder = ["QB", "RB", "WR", "TE", "DEF"];
+  $("p-pos").innerHTML = `<option value="">All positions</option>` +
+    posOrder.filter((x) => players.some((p) => p.p === x)).map((x) => `<option value="${x}">${x}</option>`).join("");
+  const owners = [...new Set(players.map((p) => p.o).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+  $("p-own").innerHTML = `<option value="">Everyone</option><option value="${esc(DATA.me)}">You (${esc(DATA.me)})</option>` +
+    `<option value="-">Free agents</option>` + owners.filter((o) => o !== DATA.me).map((o) => `<option value="${esc(o)}">${esc(o)}</option>`).join("");
+  const pstate = { pos: load("p.pos", "WR"), own: load("p.own", ""), sort: load("p.sort", "mid"), q: "" };
+  if (![...$("p-pos").options].some((o) => o.value === pstate.pos)) pstate.pos = "";
+  if (![...$("p-own").options].some((o) => o.value === pstate.own)) pstate.own = "";
+  $("p-pos").value = pstate.pos; $("p-own").value = pstate.own; $("p-sort").value = pstate.sort;
+  const pbind = (id, key) => $(id).addEventListener("input", (e) => {
+    pstate[key] = e.target.value; if (key !== "q") save("p." + key, pstate[key]); renderPlayers();
+  });
+  pbind("p-pos", "pos"); pbind("p-own", "own"); pbind("p-sort", "sort"); pbind("p-q", "q");
+
+  const rk = (x) => x == null ? `<span class="soft">–</span>` : String(x);
+  function renderPlayers() {
+    const q = pstate.q.trim().toLowerCase();
+    const list = players.filter((p) => {
+      if (pstate.pos && p.p !== pstate.pos) return false;
+      if (pstate.own === "-" ? p.o : pstate.own && p.o !== pstate.own) return false;
+      if (q && !p.n.toLowerCase().includes(q)) return false;
+      return true;
+    });
+    const key = { mid: (p) => p.mid, s: (p) => p.s ?? 999, r: (p) => p.r ?? 999, f: (p) => p.f ?? 999, spread: (p) => -p.spread }[pstate.sort];
+    list.sort((a, b) => key(a) - key(b) || a.mid - b.mid || a.n.localeCompare(b.n));
+    $("p-count").textContent = `${list.length} of ${players.length} players`;
+    $("p-empty").hidden = list.length > 0;
+    $("p-rows").innerHTML = list.map((p) => `<tr class="${p.o === DATA.me ? "mine" : ""}">
+      <td data-k="Player"><b>${esc(p.n)}</b>${p.hurt ? ` <span class="pill hurt">${esc(p.hurt)}</span>` : ""}<span class="sub">${esc(p.p)} · ${esc(p.t)}</span></td>
+      <td class="n" data-k="Middle rank"><span class="mid">${p.mid === 999 ? "–" : esc(p.p) + (Number.isInteger(p.mid) ? p.mid : p.mid.toFixed(1))}</span></td>
+      <td class="n" data-k="Sleeper">${rk(p.s)}<span class="sub">${p.v[0].toFixed(1)}</span></td>
+      <td class="n" data-k="Model">${rk(p.r)}<span class="sub">${p.v[2].toFixed(1)}</span></td>
+      <td class="n" data-k="FantasyPros">${rk(p.f)}<span class="sub">${p.v[4].toFixed(1)}</span></td>
+      <td class="n" data-k="Spread"><span class="${p.spread >= 10 ? "pill split" : ""}">${p.spread}</span></td>
+      <td data-k="Owner">${p.o ? esc(p.o) : `<span class="soft">free agent</span>`}</td>
+    </tr>`).join("");
+  }
+  renderPlayers();
+
+  function showTab(which) {
+    const players = which === "players";
+    $("tab-trades").setAttribute("aria-selected", String(!players));
+    $("tab-players").setAttribute("aria-selected", String(players));
+    $("view-trades").hidden = players; $("view-players").hidden = !players;
+    save("tab", which);
+  }
+  $("tab-trades").addEventListener("click", () => showTab("trades"));
+  $("tab-players").addEventListener("click", () => showTab("players"));
+  showTab(!hashM && load("tab", "trades") === "players" ? "players" : "trades");
+}
+init();
+</script>

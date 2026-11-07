@@ -1,0 +1,222 @@
+FAAB DEMAND  2026-10-16  (1207 settled contests over 5 seasons 2021-2025; 10198 free men at 80 big runs; features as the market saw them)
+
+== 1. THE RUN: contests and dollars by the weekday they cleared (league zone), regular-season legs 2-18 ==
+day        contests   share  dollars   share contested  median     p75     p90   P(win) at $1 $3 $5 $8 $13 $20
+MONDAY            9      1%        3      0%        0%       0       0       3     89%  94% 100% 100% 100% 100%
+WEDNESDAY       544     48%     2948     76%       49%       3       7      13     38%  53%  67%  79%  90%  95%
+THURSDAY        148     13%      241      6%       18%       0       2       5     70%  81%  89%  95%  99%  99%
+FRIDAY           91      8%      161      4%       16%       0       1       6     75%  82%  87%  95%  97%  98%
+SATURDAY        119     11%      208      5%       18%       0       1       4     72%  88%  93%  96%  97%  99%
+SUNDAY          214     19%      293      8%       27%       0       2       4     69%  85%  92%  96% 100% 100%
+the big run is WEDNESDAY: the ladder to bid into on that day is its row, not the pooled one the page uses today.
+
+== 2. THE DEMAND OVER THE WHOLE WIRE: P(any bid) at the big run, leave-one-season-out ==
+10198 free skill men who played, at the big run after their week; 8.1% drew a bid, 2.7% two or more.
+feature       r any bid  r bidders   mean, claimed vs not
+snap share       +0.070     +0.061   0.50 vs 0.43
+snap jump        -0.005     +0.027   0.11 vs 0.11
+touches          +0.248     +0.298   5.34 vs 2.95
+points           +0.200     +0.201   8.92 vs 4.58
+ppg so far       +0.194     +0.166   7.66 vs 4.48
+log ADP          -0.189     -0.146   5.46 vs 5.63
+dropped          +0.193     +0.152   0.16 vs 0.02
+RB               +0.076     +0.096   0.32 vs 0.20
+WR               +0.002     +0.001   0.37 vs 0.36
+TE               -0.065     -0.066   0.18 vs 0.29
+QB               -0.008     -0.029   0.13 vs 0.14
+next man up      +0.041     +0.090   0.04 vs 0.02
+
+held-out log loss 0.2228 vs base rate's 0.2796: gain +0.0568 +- 0.0048 over 5 seasons  <- real
+decile       men   mean p   claimed   2+ bids   by predicted P(any bid), held out
+1           1019     0.6%      1.6%      0.0%
+2           1020     1.5%      1.3%      0.2%
+3           1020     2.1%      1.1%      0.2%
+4           1020     2.7%      3.0%      1.0%
+5           1020     3.4%      2.5%      0.4%
+6           1019     4.4%      2.9%      1.0%
+7           1020     6.0%      6.9%      1.0%
+8           1020     8.8%      8.9%      2.3%
+9           1020    14.5%     17.4%      5.8%
+10          1020    37.1%     34.9%     14.9%
+all-season fit, log-odds per sd: snap share -0.13 snap jump -0.14 touches +0.37 points +0.24 ppg so far +1.21 log ADP -0.36 dropped +0.37 RB +0.39 WR +0.24 TE +0.10 QB -0.91 next man up +0.32
+
+== 2a. THE NEXT MAN UP: his team's leader at his position went down in the week just played (NextManUp) ==
+225 of 10198 free men were the next man up; 15.6% of them drew a bid, against 7.9% of the rest.
+held-out log loss, the same men and seasons: gain from adding it +0.0007 +- 0.0003 over 5 seasons  <- not separated: noise on this evidence
+on the flagged men alone: +0.0315 +- 0.0123 a man (the whole-wire gain is this spread over 45 men per flag)
+
+THIS SEASON (2026), in no fit - the runs already cleared, scored by the fit on all 5 past seasons:
+log loss over 640 free men at 5 runs: 0.2416 with the feature, 0.2407 without (a check, not a test - one season)
+
+-- the run after week 1: 126 free men --
+next men up that week (leader who went down -> next man, and whether he was free):
+   Josh Jacobs            -> Chris Brooks           rostered, or no stat row
+   Fernando Mendoza       -> Kirk Cousins           free, no bid
+   Kyler Murray           -> Carson Wentz           free, no bid
+   Oronde Gadsden         -> David Njoku            free, no bid
+   Sam Darnold            -> Drew Lock              free, no bid
+   Zay Flowers            -> Rashod Bateman         4 bidders
+claimed man            pos  bidders    next up  with: P, rank        without
+Devin Singletary       RB         1                 66%,    2      68%,    2
+Antonio Williams       WR         3                 63%,    3      62%,    3
+Kalif Raymond          WR         1                 51%,    4      53%,    4
+Demarcus Robinson      WR         2                 28%,   13      29%,   11
+Samaje Perine          RB         1                 24%,   15      25%,   12
+Jack Bech              WR         1                 22%,   16      22%,   13
+Adonai Mitchell        WR         2                 12%,   21      13%,   23
+Mack Hollins           WR         2                  9%,   26      10%,   26
+Raheim Sanders         RB         1                  7%,   29       8%,   29
+DeMario Douglas        WR         2                  6%,   34       7%,   34
+Tre' Harris            WR         2                  5%,   43       6%,   41
+Roman Wilson           WR         1                  5%,   44       6%,   43
+Sione Vaki             RB         1                  4%,   50       4%,   50
+Rashod Bateman         WR         4        yes       2%,   83       1%,  120
+
+-- the run after week 2: 129 free men --
+next men up that week (leader who went down -> next man, and whether he was free):
+   Nico Collins           -> Xavier Hutchinson      rostered, or no stat row
+   Saquon Barkley         -> Will Shipley           free, no bid
+   Chig Okonkwo           -> Ben Sinnott            free, no bid
+   DJ Moore               -> Keon Coleman           5 bidders
+   Puka Nacua             -> Konata Mumpfield       free, no bid
+   RJ Harvey              -> Jonah Coleman          rostered, or no stat row
+   Jaxson Dart            -> Jameis Winston         free, no bid
+   Kyler Murray           -> Carson Wentz           free, no bid
+   A.J. Brown             -> Mack Hollins           rostered, or no stat row
+   Jordan Mason           -> Aaron Jones            rostered, or no stat row
+   Dallas Goedert         -> Johnny Mundt           free, no bid
+   Sam Darnold            -> Drew Lock              free, no bid
+   Zay Flowers            -> Rashod Bateman         rostered, or no stat row
+   Alec Pierce            -> Josh Downs             rostered, or no stat row
+claimed man            pos  bidders    next up  with: P, rank        without
+Terrance Ferguson      TE         2                 92%,    1      92%,    1
+Keon Coleman           WR         5        yes      25%,    7      11%,   24
+Darren Waller          TE         1                 24%,    8      24%,    9
+Emanuel Wilson         RB         6                 23%,   11      24%,    8
+Kalif Raymond          WR         1                 22%,   14      22%,   12
+C.J. Stroud            QB         1                 16%,   18      17%,   15
+Bryce Young            QB         3                 15%,   20      15%,   17
+Elic Ayomanor          WR         1                 13%,   23      13%,   20
+Oronde Gadsden         TE         4                 13%,   24      13%,   21
+Isaiah Williams        WR         1                  6%,   43       6%,   40
+Darnell Mooney         WR         1                  5%,   45       5%,   44
+DeeJay Dallas          RB         1                  4%,   56       4%,   52
+Darius Slayton         WR         1                  1%,  116       1%,  117
+
+-- the run after week 3: 131 free men --
+next men up that week (leader who went down -> next man, and whether he was free):
+   Caleb Williams         -> Tyson Bagent           rostered, or no stat row
+   Luther Burden          -> Rome Odunze            rostered, or no stat row
+   De'Von Achane          -> Ollie Gordon           5 bidders
+   D'Andre Swift          -> Kyle Monangai          rostered, or no stat row
+   DeVonta Smith          -> Makai Lemon            rostered, or no stat row
+   Colston Loveland       -> Sam Roush              free, no bid
+   Jayden Daniels         -> Marcus Mariota         free, no bid
+   Alec Pierce            -> Laquon Treadwell       free, no bid
+   Terrance Ferguson      -> Tyler Higbee           free, no bid
+   Jalen Hurts            -> Andy Dalton            free, no bid
+   Justin Jefferson       -> Jordan Addison         rostered, or no stat row
+claimed man            pos  bidders    next up  with: P, rank        without
+Keenan Allen           WR         6                 71%,    1      72%,    1
+Ollie Gordon           RB         5        yes      55%,    2      33%,    8
+Roman Wilson           WR         2                 54%,    3      53%,    2
+Tre' Harris            WR         1                 53%,    4      53%,    3
+Konata Mumpfield       WR         1                 39%,    7      39%,    5
+Kendre Miller          RB         3                 16%,   19      16%,   18
+Kirk Cousins           QB         1                 14%,   20      14%,   20
+Brenton Strange        TE         2                 13%,   24      13%,   23
+Najee Harris           RB         1                 13%,   27      13%,   25
+Sione Vaki             RB         1                  9%,   36      10%,   35
+Jordan Watkins         WR         1                  9%,   37       9%,   38
+Jaylen Wright          RB         2                  3%,   84       3%,   84
+Jalen McMillan         WR         1                  2%,   96       2%,   97
+Isaiah Davis           RB         2                  2%,  106       2%,  107
+
+-- the run after week 4: 128 free men --
+next men up that week (leader who went down -> next man, and whether he was free):
+   Jalen Nailor           -> Tre Tucker             rostered, or no stat row
+   Jadarian Price         -> Emanuel Wilson         rostered, or no stat row
+   Breece Hall            -> Braelon Allen          rostered, or no stat row
+   Rashee Rice            -> Xavier Worthy          rostered, or no stat row
+   Ja'Marr Chase          -> Dohnte Meyers          free, no bid
+   Terry McLaurin         -> Antonio Williams       rostered, or no stat row
+   Baker Mayfield         -> Jalon Daniels          free, no bid
+   Terrance Ferguson      -> Tyler Higbee           free, no bid
+   Travis Etienne         -> Alvin Kamara           rostered, or no stat row
+claimed man            pos  bidders    next up  with: P, rank        without
+Chris Rodriguez        RB         1                 72%,    1      72%,    1
+Kimani Vidal           RB         2                 36%,    7      37%,    6
+Quentin Johnston       WR         1                 31%,    9      31%,    7
+C.J. Stroud            QB         1                 19%,   14      19%,   12
+Jaylin Noel            WR         1                  9%,   31      10%,   30
+Jaleel McLaughlin      RB         1                  9%,   34       9%,   35
+Germie Bernard         WR         5                  4%,   64       4%,   65
+Kendrick Bourne        WR         3                  4%,   68       4%,   69
+
+-- the run after week 5: 126 free men --
+next men up that week (leader who went down -> next man, and whether he was free):
+   Marvin Harrison        -> Michael Wilson         rostered, or no stat row
+   DJ Moore               -> Keon Coleman           rostered, or no stat row
+   David Montgomery       -> Woody Marks            rostered, or no stat row
+   Kenyon Sadiq           -> Mason Taylor           free, no bid
+   T.J. Hockenson         -> Gavin Bartholomew      free, no bid
+   KC Concepcion          -> Denzel Boston          rostered, or no stat row
+   Ladd McConkey          -> Marquez Valdes-Scantling free, no bid
+   Lamar Jackson          -> Tyler Huntley          free, no bid
+   TreVeyon Henderson     -> Rhamondre Stevenson    rostered, or no stat row
+claimed man            pos  bidders    next up  with: P, rank        without
+Samaje Perine          RB         1                 32%,    5      33%,    5
+Cody White             WR         1                 16%,   20      16%,   18
+Brandin Cooks          WR         1                  9%,   33       9%,   32
+Corey Kiner            RB         1                  8%,   37       9%,   35
+
+== 2b. THE PRICE BY QUALITY, among the claimed at the big run (priced contests only) ==
+band                     n  median     p75     p90   P(win) at $1 $3 $5 $8 $13 $20
+ADP 1-100               22       5      10      12     23%  32%  48%  73%  91%  95%
+ADP 101-200            141       2       7      11     41%  57%  66%  79%  92%  96%
+ADP 200+ or undrafted     365       2       6      12     43%  58%  71%  83%  91%  95%
+ppg < 5                173       1       5      11     48%  65%  77%  86%  92%  94%
+5-10                   233       2       6      11     39%  56%  69%  82%  94%  97%
+10-15                   54       5      12      17     29%  34%  47%  64%  80%  93%
+15+                     68       2       6      12     44%  56%  66%  83%  92%  97%
+r of the price with log ADP -0.041, with ppg so far +0.031, with the snap jump +0.141 (n 528)
+
+== 3. THIS WEEK: every free skill man who played, P(any bid) at the big run, and the bid that wins 50 / 75 / 90% in his ADP band ==
+player                 pos   P(bid)    ADP share  jump  touch    pts    ppg dropped next up   bid to win 50 / 75 / 90 in his ADP band
+Rachaad White          RB       71%    124   60%  +60%    8.0    2.5    7.0     yes           $3 / $8 / $13
+Kimani Vidal           RB       57%    230   42%   +7%   10.0   12.1    8.4                   $3 / $8 / $13
+Chris Rodriguez        RB       53%    126   13%  -12%    3.0    1.6    4.9     yes           $3 / $8 / $13
+Teagan Quitoriano      TE       41%      -   41%  +41%    2.0   14.5   14.5                   $3 / $8 / $13
+Samaje Perine          RB       32%      -   51%  +15%   16.0   14.8    5.3                   $3 / $8 / $13
+Quentin Johnston       WR       31%    103    0%  -75%    0.0    0.0    3.7     yes           $3 / $8 / $13
+Justin Herbert         QB       29%     80  100%   +0%    6.0   11.2   12.9     yes           $8 / $13 / $13
+C.J. Stroud            QB       28%    210  100%   +0%    6.0   21.9   19.6                   $3 / $8 / $13
+Tyler Huntley          QB       23%      -  100%  +52%    6.0   28.0   16.1             yes   $3 / $8 / $13
+Justice Hill           RB       23%    219   46%   +9%    8.0    8.8    4.3                   $3 / $8 / $13
+Jaylin Noel            WR       23%      -   45%  -16%    6.0   12.7    7.6                   $3 / $8 / $13
+Mike Gesicki           TE       23%      -   45%  -17%    2.0    6.9   11.5                   $3 / $8 / $13
+Kendrick Bourne        WR       20%      -   49%  -14%    8.0    9.5    6.6                   $3 / $8 / $13
+Raheim Sanders         RB       20%      -   29%   -5%    4.0    1.8    3.4     yes           $3 / $8 / $13
+Tyler Higbee           TE       20%      -   67%   +2%    6.0   10.8    8.9                   $3 / $8 / $13
+DeMario Douglas        WR       20%      -   49%   +3%    5.0   20.5    6.6                   $3 / $8 / $13
+Ty Johnson             RB       18%      -   22%  -10%    4.0    9.2    6.1                   $3 / $8 / $13
+Germie Bernard         WR       17%    241   92%  +51%   10.0   11.4    5.2                   $3 / $8 / $13
+Kyle Williams          WR       16%      -   36%  +11%    3.0   16.6    7.3                   $3 / $8 / $13
+Josh Cameron           WR       16%      -   31%   -6%    6.0    5.8    6.9                   $3 / $8 / $13
+Cody White             WR       16%      -   62%   -0%    4.0    5.4    8.6                   $3 / $8 / $13
+Kyler Murray           QB       15%    150  100%   +0%   10.0   20.3   11.4                   $3 / $8 / $13
+Jameis Winston         QB       13%      -   94%   -6%    5.0   30.7   16.6                   $3 / $8 / $13
+Sean Tucker            RB       13%    249   10%   +5%    5.0    1.8    4.4                   $3 / $8 / $13
+Deshaun Watson         QB       13%      -  100%   +0%    6.0   11.2   17.8                   $3 / $8 / $13
+Treylon Burks          WR       12%      -   73%  +13%    5.0    3.6    7.7                   $3 / $8 / $13
+Malik Willis           QB       12%    192  100%   +0%    8.0   20.9   12.7                   $3 / $8 / $13
+Dylan Laube            RB       11%      -   38%  +30%    7.0   10.0    3.5                   $3 / $8 / $13
+Laquon Treadwell       WR       11%      -   80%   -5%    8.0    4.4    5.3                   $3 / $8 / $13
+Tyrone Tracy           RB       11%    152   19%   +1%    6.0    3.1    0.4                   $3 / $8 / $13
+the thirty free skill men the model expects a bid on; ADP is Sleeper's half-PPR preseason board (the harvest used
+each past season's FFC board). Worth is TuesdaySwap's column, and a bid above it is a loss whatever the ladder says.
+
+the run that already cleared on these features (2026-10-16): the skill men who drew a bid, with the model's P(bid) and rank among 160 free men
+   Chig Okonkwo           TE  1 bidder, nobody won   model: 9%, rank 33
+   Rachaad White          RB  1 bidder, won at $0   model: 71%, rank 1
+   Quentin Johnston       WR  1 bidder, nobody won   model: 31%, rank 6

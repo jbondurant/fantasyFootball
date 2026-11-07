@@ -1,0 +1,2437 @@
+import PlayerImportAndSetup.Position;
+
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+
+/**
+ * What a trade piece is actually WORTH, given who else could supply it.
+ *
+ * {@link TradeFinder} already enumerates single, double and triple swaps across
+ * every rival and already files them by how much they help the other side - "a
+ * trade nobody else wants is not a trade" is its own comment, and it predates
+ * this class by a long way. This does not repeat that. It adds the three things
+ * Justin asked for that it does not do:
+ *
+ *   1. both rosters priced on {@link WeeklyStarterValue} - the objective that
+ *      knows about a bench, a defence and an injury - rather than on projected
+ *      starters, so a man is worth what he is worth by how often he is actually
+ *      promoted into the lineup
+ *   2. the SUPPLY behind a piece: how many rivals could offer the same thing
+ *   3. trading POWER: what the roster can become two trades deep, which a
+ *      one-step search cannot see
+ *
+ * Every roster is priced by the same {@link WeeklyStarterValue} the keeper work
+ * used: seventeen weeks of the best legal ten, scored on drawn historical
+ * seasons, so a bench man is worth what he is worth by how often he is actually
+ * promoted. A trade is worth, to each side, that roster's value after minus
+ * before. Only trades where BOTH numbers are positive are ever shown - not out
+ * of politeness, but because an offer the other manager loses on is an offer he
+ * declines, and a list of those is a list of nothing.
+ *
+ *   ./gradlew run -Pmain=TradeMarket [-Pme=<name>] [-PchainDepth=2] [-Ptop=12] [-Pprojections=posterior]
+ *                                    [-Pscenarios=240] [-Ppool=8]
+ *
+ * WHAT IT DOES NOT DO, and cannot. Justin asked for a cost on unenticing offers -
+ * a model of what a manager will accept. Sleeper records only COMPLETED trades:
+ * 51 of them across this league's five seasons, and not one refusal. There is no
+ * record of what was turned down, so acceptance cannot be fitted, and a number
+ * invented for it would be exactly the signal-that-is-not-there this repo keeps
+ * catching (TRAPS #93, #94).
+ *
+ * WHAT STANDS IN FOR IT, since 2026-09-28 (TRAPS #150). "His gain on our model"
+ * alone put Nabers + Stevenson for Ja'Marr Chase at the top of the short list, in
+ * the week Chase averaged 15.2 a game to Nabers' 5.2 - Justin: "something is
+ * wrong if you thought it would have even the slightest chance." He judges an
+ * offer on what he can see, so {@link TradeScreens} reads every trade from his
+ * side on draft value and on this season's points, blended with draft value
+ * counted as the games of results this league's own trades reveal (about ten,
+ * 2026-09-29). The short list needs a trade fair to him on that; one that gives
+ * him less than nine accepted sides in ten ever took is dropped; the rest are
+ * listed apart as long shots.
+ * And the default pricing is Sleeper's weekly projections for the games left
+ * (sleeper-remaining), because the season feed does not move on injuries - on it
+ * that same trade read +30.2 for Justin, on the games left -3.8.
+ */
+public class TradeMarket {
+
+    /** One offer: what goes each way, and what each side gains. */
+    public record Trade(String withManager, List<String> give, List<String> get,
+                        double myGain, double theirGain, List<String> hisCut) {
+
+        /** A trade in which he cuts nobody: every balanced swap, and every deal that leaves him short. */
+        public Trade(String withManager, List<String> give, List<String> get, double myGain, double theirGain){
+            this(withManager, give, get, myGain, theirGain, List.of());
+        }
+
+        /**
+         * EVERY MAN WHO LEAVES HIS ROSTER: what he sends me, and the man he must
+         * cut when he receives more men than he gives. His gain was priced with
+         * the cut, so every place that rebuilds his roster after the trade must
+         * rebuild it with the cut too. Five places rebuilt it from {@link #get}
+         * alone and priced a seventeen-man roster nobody is allowed to hold,
+         * which put his full number ABOVE his season number on a two-for-one
+         * (jerem9604, 2026-09-25: 5.20 against 5.05). TRAPS #144.
+         */
+        public List<String> hisOut(){
+            if(hisCut.isEmpty()){
+                return get;
+            }
+            List<String> out = new ArrayList<>(get);
+            out.addAll(hisCut);
+            return out;
+        }
+
+        /** The smaller of the two gains - a trade is only as good as its weaker half. */
+        public double weaker(){
+            return Math.min(myGain, theirGain);
+        }
+    }
+
+    /**
+     * How many OTHER managers could offer a comparable man at this position -
+     * the supply behind a piece.
+     *
+     * Justin's point, and it is the difference between a trade tool and a
+     * calculator: his second quarterback is only worth something if quarterbacks
+     * are scarce. If nine other teams are also carrying a spare, the man is not
+     * a chip, he is inventory. A team counts as an alternative seller when it
+     * holds more men at that position than the lineup starts.
+     */
+    static int alternativeSellers(Map<String, List<String>> rosters, String me,
+                                  Map<String, Position> positionOf, Position position, int startersNeeded){
+        int sellers = 0;
+        for(Map.Entry<String, List<String>> entry : rosters.entrySet()){
+            if(entry.getKey().equals(me)){
+                continue;
+            }
+            int held = 0;
+            for(String id : entry.getValue()){
+                if(positionOf.get(id) == position){
+                    held++;
+                }
+            }
+            if(held > startersNeeded){
+                sellers++;
+            }
+        }
+        return sellers;
+    }
+
+    /**
+     * WHAT HE CAN GET INSTEAD OF DEALING WITH YOU.
+     *
+     * Justin, 2026-09-06: "many people could gain like a ton... That means, for
+     * example, that trades where I offer someone like Nix will not be as great,
+     * because people can easily make a two sided positive trade elsewhere."
+     *
+     * That is the hole in reading `him` as an acceptance signal. A gain of +9 to
+     * the man opposite sounds persuasive until you notice that six other
+     * managers are sitting on a spare quarterback and any of them can hand him
+     * +11 tomorrow. What decides whether he takes YOUR offer is not what it
+     * gains him, it is what it gains him ABOVE HIS BEST ALTERNATIVE - and a
+     * league of twelve rosters has a lot of alternatives.
+     *
+     * So: for each rival, the best gain he can get from a mutually-good trade
+     * with somebody who is not Justin. Both sides of those trades are priced by
+     * the rival objective, because a trade only counts as an alternative if the
+     * OTHER manager would also take it - an offer nobody accepts is not an
+     * outside option, it is a wish.
+     *
+     * Two honest limits. The search is size-balanced, so it cannot see the
+     * uneven deals Justin describes (two men for one, with the short side
+     * refilled off the wire); a manager who can build those has a BETTER outside
+     * option than this reports, which makes every edge here optimistic. And it
+     * runs at a reduced pool for cost, so it is a floor on his alternatives, not
+     * a ceiling. Both mean the same thing: if this says your offer barely beats
+     * what he can get elsewhere, it does not.
+     */
+    /**
+     * HOW OFTEN ANYBODY ACTUALLY TRADES, measured rather than assumed.
+     *
+     * Justin, 2026-09-06: "the other managers don't have the tools to find the
+     * perfect trades elsewhere." That is the second thing wrong with reading a
+     * rival's fallback as the BEST deal available to him, and unlike the
+     * recursion it cannot be fixed by computing harder - it is a fact about
+     * people, so it has to come from their record.
+     *
+     * This league's own log has it. Every completed trade in every finished
+     * season, over the twelve managers who could have made one: if a manager
+     * completes about one trade a season while the board offers him dozens that
+     * would help both sides, then he does not find his maximum, and a fallback
+     * computed as that maximum is an upper bound and should be read as one.
+     *
+     * Returns {trades, seasons} so the caller can divide by the league size
+     * itself rather than being handed a rate whose denominator is invisible.
+     */
+    static int[] realisedTrades(String leagueID){
+        int trades = 0, seasons = 0;
+        for(LeagueTransactions.Year year : LeagueTransactions.completedSeasons(leagueID)){
+            seasons++;
+            for(LeagueTransactions.Move move : LeagueTransactions.moves(year)){
+                if("trade".equals(move.type()) && move.complete()){
+                    trades++;
+                }
+            }
+        }
+        return new int[]{trades, seasons};
+    }
+
+    /**
+     * One rival-to-rival trade: who, what each side sends, and what each gains.
+     *
+     * The men are kept, not just the gains, because the same search answers two
+     * questions - what a manager's fallback is worth (which needs only the
+     * numbers) and what each individual player fetches on the open market (which
+     * needs to know who was in the deal).
+     */
+    record Alternative(String one, String two, List<String> oneGives, List<String> twoGives,
+                       double gainOne, double gainTwo) {}
+
+    /**
+     * Every mutually-good trade between two managers who are not Justin. The
+     * expensive half of the outside-option calculation, done once.
+     */
+    static List<Alternative> alternatives(String me, Map<String, List<String>> rosters,
+                                          Side rivalValue, int pool, Map<String, Double> points){
+        List<String> rivals = new ArrayList<>();
+        for(String manager : rosters.keySet()){
+            if(!manager.equals(me)){
+                rivals.add(manager);
+            }
+        }
+        List<Alternative> found = new ArrayList<>();
+        for(int i = 0; i < rivals.size(); i++){
+            for(int j = i + 1; j < rivals.size(); j++){
+                String one = rivals.get(i), two = rivals.get(j);
+                // BALANCED AND UNEVEN BOTH. A rival who can send two men for one
+                // has better alternatives than a balanced-only search credits
+                // him with, and every one of those is a thing Justin's offer has
+                // to beat. Leaving them out flattered his own board in exactly
+                // the column that decides whether an offer gets taken.
+                List<Trade> board = new ArrayList<>(between(one, two, rosters.get(one),
+                        rosters.get(two), rivalValue, rivalValue, pool));
+                board.addAll(unbalanced(one, two, rosters.get(one), rosters.get(two),
+                        rivalValue, rivalValue, pool, points));
+                for(Trade trade : mutual(board)){
+                    found.add(new Alternative(one, two, trade.give(), trade.get(),
+                            trade.myGain(), trade.theirGain()));
+                }
+            }
+        }
+        return found;
+    }
+
+    /**
+     * WHAT HE CAN GET INSTEAD OF DEALING WITH YOU.
+     *
+     * Justin, 2026-09-06: "their perfect trades also would need to be recursively
+     * limited by the ability of the other other manager to make a better trade."
+     *
+     * He is right, and the first two attempts at it were both wrong in
+     * instructive ways. Taking each rival's best mutually-good trade with anybody
+     * credits him with deals the man opposite would decline. Trying to fix that
+     * by ITERATING - keep only trades whose counterparty beats his own current
+     * fallback, recompute, repeat - does not converge, and cannot:
+     *
+     *   round 0: nobody has a fallback, so every trade counts, so each fallback
+     *            becomes that manager's naive MAXIMUM.
+     *   round 1: a trade counts for A only if it beats B's fallback. But B's
+     *            fallback is now the largest gain B can get anywhere, so NO
+     *            trade beats it - not even the one that produced it. Everything
+     *            drops to zero.
+     *   round 2: back to the maximum. A period-two cycle, forever.
+     *
+     * Reading the last round of a cycle as "settled" is how that shipped a page
+     * saying every rival's alternative was worth exactly 0.0 and every one of
+     * ninety-seven offers was competitive. The oscillation is not a numerical
+     * wobble to damp; the recursion simply has no fixed point in that form,
+     * because a manager's fallback was being defined in terms of a quantity that
+     * already contains it.
+     *
+     * The structure Justin is describing is a MATCHING. Managers pair off; a
+     * pair does the trade that maximises what there is to split; and what a
+     * rival can get instead of dealing with Justin is what he gets from the
+     * partner he would actually end up with - not the best partner he can name,
+     * because that partner has someone better in mind. Pairing greedily by joint
+     * surplus makes every manager's fallback a deal that a specific other
+     * manager is also taking, which is exactly the constraint the iteration was
+     * groping for and could not express.
+     */
+    static Map<String, Double> outsideOption(String me, Map<String, List<String>> rosters,
+                                             Side rivalValue, int pool, Map<String, Double> points){
+        return match(alternatives(me, rosters, rivalValue, pool, points), rosters.keySet(), me).fallback();
+    }
+
+    /**
+     * WHAT EACH MAN FETCHES ON THE OPEN MARKET, ONE AT A TIME.
+     *
+     * Justin, 2026-09-06: "find trades which are within range of what an owner
+     * can get in value from trading the players I want from them with other
+     * owners, not necessarily in the same pair, but could be each individually,
+     * or each as part of some bundle, but where their contributions are
+     * isolated."
+     *
+     * So: for every man on a rival's roster, the best gain his OWNER can get
+     * from a straight one-for-one that sends him to somebody who is not Justin.
+     * One-for-one is what makes the contribution isolated - in a two-for-two the
+     * gain belongs to the pair and splitting it between the men is a choice, not
+     * a measurement. Asking for two of a manager's players is then asking him to
+     * forgo two of these, and the offer has to be in range of their sum.
+     *
+     * It is a floor on what he could get, in two ways worth saying: bundles can
+     * be worth more than their parts, and the search runs at a reduced pool. A
+     * man priced at zero here has no one-for-one buyer, not no value.
+     */
+    static Map<String, Double> sellPrice(List<Alternative> alternatives){
+        Map<String, Double> price = new TreeMap<>();
+        for(Alternative alternative : alternatives){
+            if(alternative.oneGives().size() == 1){
+                price.merge(alternative.oneGives().get(0), alternative.gainOne(), Math::max);
+            }
+            if(alternative.twoGives().size() == 1){
+                price.merge(alternative.twoGives().get(0), alternative.gainTwo(), Math::max);
+            }
+        }
+        return price;
+    }
+
+    /** Who paired with whom, and what each of them got out of it. */
+    public record Market(Map<String, String> partner, Map<String, Double> fallback,
+                         Map<String, Double> naive) {}
+
+    /**
+     * Pair the rivals off and read each one's fallback out of the pairing.
+     *
+     * `naive` is kept alongside - each manager's best gain over ALL partners,
+     * ignoring whether that partner would have him - so the difference between
+     * the two is visible rather than asserted. It is always the larger.
+     */
+    static Market match(List<Alternative> alternatives, Set<String> managers, String me){
+        // the deal a pair would actually strike: the one with the most joint
+        // surplus to divide, which is the trade they would negotiate towards
+        Map<String, Alternative> bestForPair = new TreeMap<>();
+        Map<String, Double> naive = new TreeMap<>();
+        for(String manager : managers){
+            if(!manager.equals(me)){
+                naive.put(manager, 0.0);
+            }
+        }
+        for(Alternative alternative : alternatives){
+            naive.merge(alternative.one(), alternative.gainOne(), Math::max);
+            naive.merge(alternative.two(), alternative.gainTwo(), Math::max);
+            String key = alternative.one().compareTo(alternative.two()) < 0
+                    ? alternative.one() + "\u0000" + alternative.two()
+                    : alternative.two() + "\u0000" + alternative.one();
+            Alternative held = bestForPair.get(key);
+            if(held == null
+                    || alternative.gainOne() + alternative.gainTwo() > held.gainOne() + held.gainTwo()){
+                bestForPair.put(key, alternative);
+            }
+        }
+
+        List<Alternative> pairs = new ArrayList<>(bestForPair.values());
+        pairs.sort(Comparator.comparingDouble((Alternative a) -> a.gainOne() + a.gainTwo()).reversed());
+        Map<String, String> partner = new TreeMap<>();
+        Map<String, Double> fallback = new TreeMap<>();
+        for(String manager : naive.keySet()){
+            fallback.put(manager, 0.0);
+        }
+        for(Alternative alternative : pairs){
+            if(partner.containsKey(alternative.one()) || partner.containsKey(alternative.two())){
+                continue;                    // one of them is already spoken for
+            }
+            partner.put(alternative.one(), alternative.two());
+            partner.put(alternative.two(), alternative.one());
+            fallback.put(alternative.one(), alternative.gainOne());
+            fallback.put(alternative.two(), alternative.gainTwo());
+        }
+        // AN ODD NUMBER OF RIVALS LEAVES ONE OVER, and a leftover manager with a
+        // fallback of zero is plainly wrong: he is not barred from trading, he
+        // just has no partner in the greedy pairing. He can still break up a
+        // pair - if some matched manager would rather deal with HIM than with
+        // the partner he has, that is a blocking pair, and the deal it names is
+        // genuinely available to both. So one pass of that: an unmatched
+        // manager's fallback is the best trade he can offer somebody who would
+        // take it over what he currently holds. If nobody would, zero is right,
+        // and it is right for a reason rather than by omission.
+        for(String spare : fallback.keySet()){
+            if(partner.containsKey(spare)){
+                continue;
+            }
+            for(Alternative alternative : pairs){
+                String other = alternative.one().equals(spare) ? alternative.two()
+                        : alternative.two().equals(spare) ? alternative.one() : null;
+                if(other == null){
+                    continue;
+                }
+                double hisShare = alternative.one().equals(spare)
+                        ? alternative.gainTwo() : alternative.gainOne();
+                double mine = alternative.one().equals(spare)
+                        ? alternative.gainOne() : alternative.gainTwo();
+                if(hisShare > fallback.get(other)){
+                    fallback.merge(spare, mine, Math::max);   // he would break his pair for this
+                }
+            }
+        }
+        return new Market(partner, fallback, naive);
+    }
+
+    /** What a trade is worth to one manager: his roster before, what leaves, what arrives. */
+    public interface Side {
+        double gain(List<String> before, List<String> out, List<String> in);
+    }
+
+    /** A plain roster scorer, for a side that values a roster and not a transaction. */
+    static Side scoring(java.util.function.ToDoubleFunction<List<String>> value){
+        return (before, out, in) -> value.applyAsDouble(swap(before, out, in)) - value.applyAsDouble(before);
+    }
+
+    /**
+     * The other manager, as Justin describes him: he does not care about GAINING
+     * keeper value, and he cares deeply about LOSING it.
+     *
+     * That asymmetry is a ratchet, not a discount, and it points the opposite way
+     * from the first version of this. Treating him as simply indifferent to
+     * keepers made him a cheap seller of them - the model happily proposed buying
+     * other people's round-14 men for season points. He is not a cheap seller. He
+     * is somebody who will not feel the keeper he receives and will feel every
+     * point of the one he gives up. So: his season gain, minus what leaving costs
+     * his own best two, plus nothing at all for what arrives.
+     */
+    static Side lossAverseOnKeepers(java.util.function.ToDoubleFunction<List<String>> season,
+                                    Map<String, Double> surplus,
+                                    Map<String, Position> positionOf){
+        return (before, out, in) -> {
+            double seasonGain = season.applyAsDouble(swap(before, out, in)) - season.applyAsDouble(before);
+            List<String> keptBack = new ArrayList<>(before);
+            keptBack.removeAll(out);
+            double keeperLoss = keeperValue(before, surplus, positionOf)
+                    - keeperValue(keptBack, surplus, positionOf);
+            return seasonGain - keeperLoss;
+        };
+    }
+
+    /**
+     * EACH RIVAL BY HIS OWN SEASON (2026-10-03). In a keeper league a manager who
+     * is out of it sells this season for next, and a contender does the reverse;
+     * one Side for all eleven priced them all as if they were in the same race.
+     * Now a rival's season gain is weighted by what a point is worth to HIM -
+     * TitleOdds' change in his title odds per point of weekly mean, over the
+     * league average (about 1.7 for a contender, near 0 for a team out of it) -
+     * and a keeper he receives counts for (1 - his playoff odds) of its value: a
+     * contender does not feel it (Justin's loss-aversion rule, unchanged for him),
+     * a team out of it does. A keeper he gives up still costs him all of it.
+     */
+    static Side rivalSide(java.util.function.ToDoubleFunction<List<String>> season, Map<String, Double> surplus,
+                          Map<String, Position> positionOf, double weight, double future){
+        return (before, out, in) -> {
+            List<String> after = swap(before, out, in);
+            double seasonGain = season.applyAsDouble(after) - season.applyAsDouble(before);
+            List<String> keptBack = new ArrayList<>(before);
+            keptBack.removeAll(out);
+            double kept = keeperValue(keptBack, surplus, positionOf);
+            double keeperLoss = keeperValue(before, surplus, positionOf) - kept;
+            double keeperGain = Math.max(0, keeperValue(after, surplus, positionOf) - kept);
+            return weight * seasonGain - keeperLoss + future * keeperGain;
+        };
+    }
+
+    /**
+     * JUSTIN'S RULE, 2026-10-22: "even though it's allowed, I don't want tanking for
+     * one team that gets a keeper for next year. I want my trades to be generally
+     * equitable with and without keeper involvement, but I'm also fine with keeper
+     * value inequity, as long as rest of season is equitable." So the other side's
+     * rest of season - his raw season gain, unweighted by how much his season is
+     * worth to him - may not fall by more than the noise floor on either pricing.
+     * A team out of it giving up this season for a keeper is exactly what this
+     * refuses; a lopsided keeper split with an even season is allowed.
+     */
+    static boolean equitableSeason(double hisSeason, double hisSeasonAlt, double floor){
+        return equitableSeason(hisSeason, floor, hisSeasonAlt, floor);
+    }
+
+    /** The same with a floor per pricing: his season may fall by up to `floor` on one and `floorAlt` on the other. */
+    static boolean equitableSeason(double hisSeason, double floor, double hisSeasonAlt, double floorAlt){
+        return hisSeason >= -floor && hisSeasonAlt >= -floorAlt;
+    }
+
+    /**
+     * HOW FAR IS TANKING, on Sleeper's projections over the games left. Justin,
+     * 2026-10-23, after the Chase deal read -29.6 for Renteez there and +27.2 on
+     * the rest-of-season model: "tanking would be an over 20 drop". Sleeper's
+     * projections move on every news item and the two pricings can disagree by
+     * tens of points, so the noise floor (6.8) was too strict a line there. The
+     * rest-of-season model keeps the noise floor. -PtankFloor overrides.
+     */
+    static final double TANK_FLOOR = 20;
+
+    static double tankFloor(){
+        return Double.parseDouble(System.getProperty("tankFloor", String.valueOf(TANK_FLOOR)));
+    }
+
+    /** Every rival's Side from one TitleOdds simulation; without keepers, his season gain alone, weighted. */
+    static Map<String, Side> rivalSides(java.util.function.ToDoubleFunction<List<String>> season, Map<String, Double> surplus,
+                                        Map<String, Position> positionOf, TitleOdds.Stakes stakes, boolean withKeepers){
+        Map<String, Side> out = new HashMap<>();
+        for(String m : stakes.league().managers()){
+            double weight = stakes.weight().getOrDefault(m, 1.0);
+            double future = 1 - stakes.playoffs().getOrDefault(m, 0.0);
+            out.put(m, withKeepers ? rivalSide(season, surplus, positionOf, weight, future)
+                    : (before, outMen, in) -> weight * (season.applyAsDouble(swap(before, outMen, in)) - season.applyAsDouble(before)));
+        }
+        return out;
+    }
+
+    /**
+     * Every size-balanced swap between two rosters, each side priced BY ITS OWN
+     * LIGHTS - and each side's lights are a property of the TRADE, not just of
+     * the roster it ends with, because loss aversion cannot be written as a
+     * roster score.
+     */
+    /**
+     * HOW MANY MEN A SIDE OFFERS INTO A MULTI-PLAYER DEAL.
+     *
+     * One-for-ones search the whole roster; this bounds only the two-for-twos
+     * and three-for-threes, where the combinations explode. It lived as a
+     * literal default in two mains and they disagreed - this tool searched 8 and
+     * LeagueConsole, the artifact Justin actually reads, searched 6. Nothing
+     * said so. The page was therefore a strict subset of the terminal board, and
+     * blind to 101 of the 182 trades on its own roster: every top row involving
+     * his seventh and eighth men (Rhamondre Stevenson) or a rival's (CeeDee
+     * Lamb, Chuba Hubbard, Aaron Jones) simply was not searched.
+     *
+     * That is the wrong shape to under-search. Eleven of this league's 51
+     * completed trades moved four players and six moved five or more, so
+     * multi-player deals are what it actually accepts - and they are built out
+     * of exactly the depth these two picks apart were dropping.
+     *
+     * At 8 the console takes 2m41s, which is a Tuesday-morning cost.
+     */
+    static final int DEFAULT_POOL = 8;
+
+    static List<Trade> between(String me, String them, List<String> mine, List<String> theirs,
+                               Side myValue, Side theirValue, int pool){
+        List<Trade> trades = new ArrayList<>();
+        for(String give : mine){
+            for(String get : theirs){
+                trades.add(new Trade(them, List.of(give), List.of(get),
+                        myValue.gain(mine, List.of(give), List.of(get)),
+                        theirValue.gain(theirs, List.of(get), List.of(give))));
+            }
+        }
+        // two for two and three for three, among each side's most valuable few:
+        // the unrestricted search is 14,400 pairs a rival and almost all of it is
+        // noise. Three-man deals are real here - eleven of this league's 51
+        // completed trades moved four players and six moved five or more - so
+        // leaving them out was leaving out the shape it actually trades in.
+        List<String> myTop = mine.subList(0, Math.min(pool, mine.size()));
+        List<String> theirTop = theirs.subList(0, Math.min(pool, theirs.size()));
+        for(List<String> give : combinations(myTop, 2)){
+            for(List<String> get : combinations(theirTop, 2)){
+                trades.add(new Trade(them, give, get,
+                        myValue.gain(mine, give, get), theirValue.gain(theirs, get, give)));
+            }
+        }
+        for(List<String> give : combinations(myTop, 3)){
+            for(List<String> get : combinations(theirTop, 3)){
+                trades.add(new Trade(them, give, get,
+                        myValue.gain(mine, give, get), theirValue.gain(theirs, get, give)));
+            }
+        }
+        return trades;
+    }
+
+    /**
+     * TWO FOR ONE, AND ONE FOR TWO - with the roster arithmetic paid for.
+     *
+     * The balanced search cannot see the shape Justin most needs. He holds seven
+     * receivers and five backs at positions where every rival has a spare, so
+     * the trade that helps him is consolidation: send two men nobody starts,
+     * receive one who starts. `between` only ever offers same-size swaps, so
+     * that deal was not on the board at all.
+     *
+     * It also fixes an optimism. Every rival's outside option was computed over
+     * balanced swaps only, and a manager who can build uneven deals has better
+     * alternatives than that credits him with - so leaving these out made
+     * Justin's own offers look better than they are, in the column that decides
+     * whether they get taken.
+     *
+     * THE SIDE RECEIVING MORE MEN MUST DROP ONE, because rosters are full at
+     * sixteen. That is not a detail to wave through: it is the same "empties a
+     * slot" accounting the waiver board needed, and skipping it would price a
+     * seventeen-man roster nobody is allowed to hold. He drops his lowest
+     * projected man - a cheap rule, chosen over searching the drop because that
+     * would cost sixteen objective runs per candidate trade, and stated here
+     * rather than buried: a manager who would drop somebody smarter than his
+     * worst man does better than this says.
+     *
+     * The side SENDING more men simply ends a man short, which the objective
+     * already handles - an unfilled slot is refilled from the wire, and a
+     * fifteen-man roster is legal.
+     */
+    static List<Trade> unbalanced(String me, String them, List<String> mine, List<String> theirs,
+                                  Side myValue, Side theirValue, int pool,
+                                  Map<String, Double> points){
+        List<String> myTop = mine.subList(0, Math.min(pool, mine.size()));
+        List<String> theirTop = theirs.subList(0, Math.min(pool, theirs.size()));
+        List<Trade> trades = new ArrayList<>();
+
+        // I send two, receive one: I end at fifteen, he ends at seventeen and cuts
+        for(List<String> give : combinations(myTop, 2)){
+            for(String get : theirTop){
+                List<String> in = List.of(get);
+                String cut = worstOther(theirs, give, points);
+                if(cut == null){
+                    continue;
+                }
+                List<String> hisOut = new ArrayList<>(in);
+                hisOut.add(cut);
+                trades.add(new Trade(them, give, in,
+                        myValue.gain(mine, give, in), theirValue.gain(theirs, hisOut, give), List.of(cut)));
+            }
+        }
+        // I receive two, send one: I end at seventeen and cut, he ends at fifteen
+        for(String give : myTop){
+            for(List<String> get : combinations(theirTop, 2)){
+                List<String> out = List.of(give);
+                String cut = worstOther(mine, get, points);
+                if(cut == null){
+                    continue;
+                }
+                List<String> myOut = new ArrayList<>(out);
+                myOut.add(cut);
+                trades.add(new Trade(them, myOut, get,
+                        myValue.gain(mine, myOut, get), theirValue.gain(theirs, get, out)));
+            }
+        }
+        return trades;
+    }
+
+    /**
+     * EVERY PACKAGE THAT ANSWERS ONE QUESTION: with one manager, he sends every
+     * man named in mustGet (comma-separated) plus up to two more of his, you
+     * send at least one of the men named in mustGive (comma-separated, any of
+     * them; blank for any) plus up to two more of yours, one to three men a
+     * side and at most one more man one way than the other - the side receiving
+     * more cuts its lowest-projected other man, as {@link #unbalanced} does.
+     * Each is priced as the board prices it and judged by the board's rules:
+     * you gain the floor on both pricings, he gains overall and on the other
+     * pricing, his season stays inside Justin's tanking line (20 on Sleeper's
+     * projections, the floor on the other), and what he can see. Every package
+     * is listed, best for you first, with the first rule it breaks.
+     */
+    static String target(String me, String with, String mustGet, String mustGive, String exclude,
+                         Map<String, List<String>> rosters, Map<String, String> nameOf, Map<String, Double> points,
+                         Side mySide, Side hisSide, java.util.function.ToDoubleFunction<List<String>> season,
+                         RosterValue altValue, Map<String, Double> scoreAlt, TradeScreens.Context screens,
+                         TitleOdds.Stakes stakes, double floor, double hisFloor, double hisFloorAlt, String source, String alt)
+            throws java.io.IOException {
+        List<String> mine = rosters.get(me);
+        List<String> theirs = rosters.get(with);
+        if(theirs == null){
+            throw new IllegalArgumentException("-Pwith=" + with + " is not a manager here: " + rosters.keySet());
+        }
+        List<String> want = TradeScreens.idsNamed(mustGet);
+        Set<String> offer = mustGive.isBlank() ? Set.of() : new java.util.HashSet<>(TradeScreens.idsNamed(mustGive));
+        Set<String> barred = exclude.isBlank() ? Set.of() : new java.util.HashSet<>(TradeScreens.idsNamed(exclude));
+        List<String> hisOthers = new ArrayList<>(theirs);
+        hisOthers.removeAll(want);
+        hisOthers.removeAll(barred);
+        List<String> myOthers = new ArrayList<>(mine);
+        myOthers.removeAll(barred);
+        List<List<String>> gets = new ArrayList<>();
+        for(int extra = 0; extra <= 2; extra++){
+            for(List<String> more : extra == 0 ? List.of(List.<String>of()) : combinations(hisOthers, extra)){
+                List<String> get = new ArrayList<>(want);
+                get.addAll(more);
+                gets.add(get);
+            }
+        }
+        List<List<String>> gives = new ArrayList<>();
+        for(int size = 1; size <= 3; size++){
+            for(List<String> give : combinations(myOthers, size)){
+                if(offer.isEmpty() || give.stream().anyMatch(offer::contains)){
+                    gives.add(give);
+                }
+            }
+        }
+        record Row(Trade trade, double you, double youAlt, double him, double himAlt, String broke, TradeScreens.Screens seen){}
+        List<Row> rows = new ArrayList<>();
+        for(List<String> give : gives){
+            for(List<String> get : gets){
+                if(Math.abs(give.size() - get.size()) > 1){
+                    continue;
+                }
+                Trade trade;
+                if(give.size() > get.size()){
+                    String cut = worstOther(theirs, get, points);           // he receives more: he cuts
+                    if(cut == null){
+                        continue;
+                    }
+                    List<String> hisOut = new ArrayList<>(get);
+                    hisOut.add(cut);
+                    trade = new Trade(with, give, get, mySide.gain(mine, give, get), hisSide.gain(theirs, hisOut, give), List.of(cut));
+                }
+                else if(get.size() > give.size()){
+                    String cut = worstOther(mine, give, points);            // you receive more: you cut
+                    if(cut == null || get.contains(cut)){
+                        continue;
+                    }
+                    List<String> myOut = new ArrayList<>(give);
+                    myOut.add(cut);
+                    trade = new Trade(with, myOut, get, mySide.gain(mine, myOut, get), hisSide.gain(theirs, get, give));
+                }
+                else{
+                    trade = new Trade(with, give, get, mySide.gain(mine, give, get), hisSide.gain(theirs, get, give));
+                }
+                double you = season.applyAsDouble(swap(mine, trade.give(), trade.get())) - season.applyAsDouble(mine);
+                double[] other = onOther(trade, rosters, me, altValue, scoreAlt);
+                List<String> his = rosters.get(with);
+                double him = season.applyAsDouble(swap(his, trade.hisOut(), trade.give())) - season.applyAsDouble(his);
+                TradeScreens.Screens seen = screens.of(trade);
+                String broke = you < floor ? "you gain under " + floor + " on " + source
+                        : other[0] < floor ? "you gain under " + floor + " on " + alt
+                        : !equitableSeason(him, hisFloor, other[1], hisFloorAlt) ? "TANKING: he loses more than the line"
+                        : trade.theirGain() <= 0 ? "he loses overall (season and keepers, weighted)"
+                        : other[1] <= 0 ? "he loses on " + alt
+                        : seen.fairToHim() ? "PASSES - fair to him"
+                        : seen.worthAsking() ? "passes - a long shot on what he can see"
+                        : "NO on what he can see";
+                rows.add(new Row(trade, you, other[0], him, other[1], broke, seen));
+            }
+        }
+        rows.sort(Comparator.comparingDouble((Row r) -> -Math.min(r.you(), r.youAlt())));
+        StringBuilder out = new StringBuilder(String.format("TARGETED SEARCH with %s: he sends %s%s, you send %s%s - %d packages,%n"
+                        + "one to three men a side; a side receiving one more man cuts its lowest-projected other man.%n"
+                        + "Rules as the board: you gain %.1f on %s and on %s; he gains overall and on %s; his season falls by at most%n"
+                        + "%.1f on %s and %.1f on %s (Justin's tanking line); then what he can see. Best for you first (the lower of\n"
+                        + "your two gains):%n",
+                with, mustGet, " (+ up to two more of his)", mustGive.isBlank() ? "anything" : "at least one of " + mustGive,
+                " (+ up to two more of yours)", rows.size(), floor, source, alt, alt, hisFloor, source, hisFloorAlt, alt));
+        Map<String, Integer> byReason = new TreeMap<>();
+        for(Row r : rows){
+            byReason.merge(r.broke(), 1, Integer::sum);
+        }
+        byReason.forEach((reason, n) -> out.append(String.format("  %5d  %s%n", n, reason)));
+        // and for each man you named, how his packages fare - "nothing where I give Henry?" is answered here
+        for(String id : offer){
+            Map<String, Integer> his = new TreeMap<>();
+            rows.stream().filter(r -> r.trade().give().contains(id)).forEach(r -> his.merge(r.broke(), 1, Integer::sum));
+            out.append(String.format("  sending %s:%n", nameOf.getOrDefault(id, id)));
+            his.forEach((reason, n) -> out.append(String.format("    %5d  %s%n", n, reason)));
+        }
+        out.append(String.format("%n  %-40s %-40s %7s %8s %7s %8s  %s%n", "YOU GIVE", "YOU GET", "you", "you:" + alt, "him",
+                "him:" + alt, "verdict / his view"));
+        for(Row r : rows.subList(0, Math.min(25, rows.size()))){
+            out.append(String.format("  %-40s %-40s %+7.1f %+8.1f %+7.1f %+8.1f  %s; he sees %s%n", label(r.trade().give(), nameOf),
+                    label(r.trade().get(), nameOf) + (r.trade().hisCut().isEmpty() ? "" : " (he cuts " + label(r.trade().hisCut(), nameOf) + ")"),
+                    r.you(), r.youAlt(), r.him(), r.himAlt(), r.broke(), r.seen().ratios()));
+        }
+        // title odds for the best few that pass, the thing the season is for
+        java.util.function.Function<Trade, TitleOdds.Delta[]> titleOf = trade -> stakes.swap(me,
+                swap(rosters.get(me), trade.give(), trade.get()), trade.withManager(),
+                swap(rosters.get(trade.withManager()), trade.hisOut(), trade.give()));
+        List<Row> passing = rows.stream().filter(r -> r.broke().toLowerCase().startsWith("passes")).toList();
+        out.append(String.format("%nTHE %d THAT PASS - best for you first, then best for each man you named; his season on both pricings,%n"
+                + "what he can see, and your title odds (TitleOdds on Sleeper's weekly projections):%n", passing.size()));
+        out.append(String.format("  %-40s %-40s %7s %8s %7s %8s %13s  %s%n", "YOU GIVE", "YOU GET", "you", "you:" + alt, "him",
+                "him:" + alt, "title", "his view"));
+        List<Row> shown = new ArrayList<>(passing.subList(0, Math.min(6, passing.size())));
+        for(String id : offer){
+            passing.stream().filter(r -> r.trade().give().contains(id) && !shown.contains(r)).limit(3).forEach(shown::add);
+        }
+        for(Row r : shown){
+            TitleOdds.Delta[] title = titleOf.apply(r.trade());
+            out.append(String.format("  %-40s %-40s %+7.1f %+8.1f %+7.1f %+8.1f %+6.1f+-%-4.1f  %s; %d of %d accepted sides here took as little%s%n",
+                    label(r.trade().give(), nameOf), label(r.trade().get(), nameOf), r.you(), r.youAlt(), r.him(), r.himAlt(),
+                    100 * title[0].change(), 100 * title[0].se(), r.seen().ratios(), r.seen().precedents(), r.seen().sides(),
+                    r.seen().his() == 0 ? ", never " + with : ""));
+        }
+        if(passing.isEmpty()){
+            out.append("  none.\n");
+        }
+        return out.toString();
+    }
+
+    /**
+     * THE WIRE THIS ASSUMES. Justin, 2026-10-23: "do these trade finders assume i
+     * have any of the top waiver wires that are available (except for wednesday
+     * waivers where there is competition. I.e. I can assume i have aaron rogers
+     * when purdy is on bye". They do assume a wire, but not that one: every slot
+     * is floored at the projection of the man at a fixed rank on the whole board
+     * (InsuranceTest.replacementRanks - one past what this league drafts at the
+     * position), which stands in for "the best man nobody drafted". TitleOdds,
+     * by contrast, lets every lineup start that week's actual best free agents.
+     * This prints the stand-in beside the best man actually free today, both on
+     * the pricing in use, so the gap between the assumption and the wire is seen.
+     * Neither treats Wednesday's contested run differently from any other day.
+     */
+    static String wireNote(AAAConfiguration configuration, WeeklyStarterValue value, Map<String, Double> points,
+                           Map<String, String> ownerOf, Map<String, String> nameOf, String source){
+        Map<Position, Integer> rank = InsuranceTest.replacementRanks(configuration);
+        Map<Position, List<String>> board = new java.util.EnumMap<>(Position.class);
+        points.forEach((id, p) -> {
+            Player player = Player.getPlayerFromSIDV2(id);
+            if(player != null && value.wire().containsKey(player.position)){
+                board.computeIfAbsent(player.position, k -> new ArrayList<>()).add(id);
+            }
+        });
+        StringBuilder out = new StringBuilder(String.format("THE WIRE THIS ASSUMES - any slot can be filled from waivers at the level of the man at a fixed rank on%n"
+                + "the whole board (one past what this league drafts there), not at the best man actually free. On %s, games left:%n", source));
+        out.append(String.format("  %-4s %-34s %8s   %-34s %8s%n", "pos", "assumed (rank on the board)", "points", "best actually free today", "points"));
+        for(Position position : List.of(Position.QB, Position.RB, Position.WR, Position.TE, Position.DEF)){
+            List<String> ids = board.getOrDefault(position, List.of());
+            if(ids.isEmpty()){
+                continue;
+            }
+            ids.sort(Comparator.comparingDouble((String id) -> -points.get(id)));
+            int r = rank.getOrDefault(position, position == Position.DEF ? 13 : 24);
+            String at = ids.get(Math.min(Math.max(0, r - 1), ids.size() - 1));
+            String free = ids.stream().filter(id -> !ownerOf.containsKey(id)).findFirst().orElse(null);
+            out.append(String.format("  %-4s %-34s %8.1f   %-34s %8s%n", position,
+                    String.format("%s (%s%d)", name(at, nameOf), position, r), points.get(at)
+                            * (position == Position.DEF ? WeeklyStarterValue.DEF_STREAM_OVER_HOLD : 1),
+                    free == null ? "-" : String.format("%s (%s%d)", name(free, nameOf), position, ids.indexOf(free) + 1),
+                    free == null ? "-" : String.format("%.1f", points.get(free))));
+        }
+        out.append(String.format("(The defence's assumed level is the held man's times %.3f, the measured edge of streaming on form.)%n%n",
+                WeeklyStarterValue.DEF_STREAM_OVER_HOLD));
+        return out.toString();
+    }
+
+    /** The wire the weekly objective uses: each week's best free agents, here for the next few weeks. */
+    static String weeklyWireNote(WeeklyLineupValue value, String source){
+        StringBuilder out = new StringBuilder(String.format("THE WIRE THIS ASSUMES - each week's best free agents are in every lineup's pool, a pickup costing%n"
+                + "no roster spot (Justin, 2026-10-23: \"let's do it with no roster space required\"). On %s, points that week:%n", source));
+        List<Integer> weeks = value.weeks();
+        out.append(String.format("  %-6s", "week"));
+        for(Position position : List.of(Position.QB, Position.RB, Position.WR, Position.TE, Position.DEF)){
+            out.append(String.format(" %-24s", position + (TitleOdds.WIRE_DEPTH.get(position) > 1 ? " (best " + TitleOdds.WIRE_DEPTH.get(position) + ")" : "")));
+        }
+        out.append('\n');
+        for(int w : weeks.subList(0, Math.min(4, weeks.size()))){
+            out.append(String.format("  %-6d", w));
+            for(Position position : List.of(Position.QB, Position.RB, Position.WR, Position.TE, Position.DEF)){
+                StringBuilder cell = new StringBuilder();
+                for(double p : value.wire(w, position)){
+                    cell.append(cell.length() == 0 ? "" : "/").append(String.format("%.1f", p));
+                }
+                out.append(String.format(" %-24s", cell));
+            }
+            out.append('\n');
+        }
+        out.append('\n');
+        return out.toString();
+    }
+
+    static String name(String id, Map<String, String> nameOf){
+        if(nameOf.containsKey(id)){
+            return nameOf.get(id);
+        }
+        Player p = Player.getPlayerFromSIDV2(id);
+        return p == null ? id : p.firstName + " " + p.lastName;
+    }
+
+    /**
+     * THE TITLE LADDER: for each target rise in Justin's title odds and each
+     * rival, the trades that reach it while costing the rival the least of his
+     * season. Justin, 2026-10-24: "what are, for 1.0, 1.5, 2.0, 2.5, 3.0 % increase
+     * in my title odds, the top 4 trades per other member that lead to the least
+     * tanking for them".
+     *
+     * Every trade the board builds (one-for-one with every man, two- and three-
+     * man packages among each side's top -Ppool) is priced on the season both
+     * ways. Title odds are a 20,000-season simulation a trade, too dear for all
+     * fifty thousand, so a trade is simulated only if it gains Justin at least
+     * -PladderMinGain (5) points of season, far below what a one-point rise in
+     * title odds takes; then, per rival, from the trade that costs him least to
+     * the trade that costs him most, until every target has its trades or
+     * -PladderCap simulations are spent. "Least tanking" is his season change on
+     * Sleeper's projections, the pricing Justin's 20-point line is drawn on; the
+     * rest-of-season model and his own title odds are printed beside it. A trade
+     * that clears a higher target also counts for every lower one.
+     */
+    static String titleLadder(String me, List<Trade> all, Map<String, List<String>> rosters, Map<String, String> nameOf,
+                              java.util.function.ToDoubleFunction<List<String>> season, RosterValue altValue,
+                              Map<String, Double> scoreAlt, TradeScreens.Context screens, TitleOdds.Stakes stakes,
+                              double hisFloor, double hisFloorAlt, String source, String alt){
+        List<Double> targets = new ArrayList<>();
+        for(String t : System.getProperty("titleLadder").split(",")){
+            targets.add(Double.parseDouble(t.trim()));
+        }
+        targets.sort(Double::compare);
+        int perRival = Integer.getInteger("perRival", 4);
+        int cap = Integer.getInteger("ladderCap", 400);
+        double minGain = Double.parseDouble(System.getProperty("ladderMinGain", "5"));
+        List<String> mine = rosters.get(me);
+        double myBase = season.applyAsDouble(mine);
+        record Row(Trade trade, double you, double him, double[] title){}
+        StringBuilder out = new StringBuilder(String.format("THE TITLE LADDER - for each rise in your title odds (%s percentage points) and each rival, the %d%n"
+                        + "trades that reach it costing him the least of his season on %s (least tanking first). Title odds: TitleOdds,%n"
+                        + "%d seasons, the same draws before and after. A trade is simulated only if it gains you %.1f+ on %s; per rival at%n"
+                        + "most %d simulations, from the trade that costs him least. TANKING marks a loss past Justin's line (%.1f on %s,%n"
+                        + "%.1f on %s).%n",
+                targets.stream().map(t -> String.format("%.1f", t)).collect(java.util.stream.Collectors.joining(", ")), perRival,
+                source, TitleOdds.SIMS, minGain, source, cap, hisFloor, source, hisFloorAlt, alt));
+        Map<String, List<Trade>> byRival = new TreeMap<>();
+        for(Trade t : all){
+            byRival.computeIfAbsent(t.withManager(), k -> new ArrayList<>()).add(t);
+        }
+        for(Map.Entry<String, List<Trade>> e : byRival.entrySet()){
+            String rival = e.getKey();
+            List<String> his = rosters.get(rival);
+            double hisBase = season.applyAsDouble(his);
+            List<Row> candidates = new ArrayList<>();
+            for(Trade t : e.getValue()){
+                double you = season.applyAsDouble(swap(mine, t.give(), t.get())) - myBase;
+                if(you >= minGain){
+                    candidates.add(new Row(t, you, season.applyAsDouble(swap(his, t.hisOut(), t.give())) - hisBase, null));
+                }
+            }
+            candidates.sort(Comparator.comparingDouble((Row r) -> -r.him()));
+            Map<Double, List<Row>> found = new TreeMap<>();
+            targets.forEach(t -> found.put(t, new ArrayList<>()));
+            int simulated = 0;
+            for(Row r : candidates){
+                if(simulated >= cap || found.values().stream().allMatch(l -> l.size() >= perRival)){
+                    break;
+                }
+                TitleOdds.Delta[] d = stakes.swap(me, swap(mine, r.trade().give(), r.trade().get()), rival,
+                        swap(his, r.trade().hisOut(), r.trade().give()));
+                simulated++;
+                Row priced = new Row(r.trade(), r.you(), r.him(), new double[]{d[0].change(), d[0].se(), d[1].change()});
+                for(double t : targets){
+                    if(100 * d[0].change() >= t && found.get(t).size() < perRival){
+                        found.get(t).add(priced);
+                    }
+                }
+            }
+            out.append(String.format("%n=== %s (%s; title now %.1f%%) - %d trades gain you %.1f+, %d simulated%s%n", rival,
+                    stakes.state(rival), 100 * stakes.title(rival), candidates.size(), minGain, simulated,
+                    simulated >= cap ? " (cap reached: a target short of trades may have more past it)" : ""));
+            out.append(String.format("  %-6s %-40s %-40s %7s %8s %7s %8s %11s %8s  %s%n", "target", "YOU GIVE", "YOU GET", "you",
+                    "you:" + alt, "him", "him:" + alt, "your title", "his", "his view"));
+            for(double t : targets){
+                List<Row> rows = found.get(t);
+                if(rows.isEmpty()){
+                    out.append(String.format("  +%-5.1f none found%n", t));
+                }
+                for(Row r : rows){
+                    double[] other = onOther(r.trade(), rosters, me, altValue, scoreAlt);
+                    boolean tanking = !equitableSeason(r.him(), hisFloor, other[1], hisFloorAlt);
+                    out.append(String.format("  +%-5.1f %-40s %-40s %+7.1f %+8.1f %+7.1f %+8.1f %+6.1f+-%-3.1f %+7.1f  %s%s%s%n", t,
+                            label(r.trade().give(), nameOf), label(r.trade().get(), nameOf)
+                                    + (r.trade().hisCut().isEmpty() ? "" : " (he cuts " + label(r.trade().hisCut(), nameOf) + ")"),
+                            r.you(), other[0], r.him(), other[1], 100 * r.title()[0], 100 * r.title()[1], 100 * r.title()[2],
+                            screens.of(r.trade()).ratios(), tanking ? "  TANKING" : "", hurt(r.trade().get(), nameOf)));
+                }
+            }
+        }
+        return out.toString();
+    }
+
+    /**
+     * THE TRADE EXPLORER. Justin, 2026-10-27: "let's make a new output for trades,
+     * instead of simply no tanking. I want to avoid tanking, and want to avoid
+     * trading with teams out of contention, but those are things I'll establish
+     * subjectively after you give me the whole data of best trades per manager per
+     * title winning 0.5 odds boost. Make the output a website so i can filter easily
+     * per manager, per odds boost, and have it sorted in terms of least worse for the
+     * other team".
+     *
+     * So nothing here decides for him: no tanking line, no contention gate, no
+     * fairness screen. For each rival, every trade on the board that gains Justin
+     * -PexplorerMinGain (3) or more on Sleeper's projections is taken from the one
+     * that costs the rival least to the one that costs him most, and its title-odds
+     * change simulated (TitleOdds, 20,000 seasons, the same draws before and after);
+     * a trade is kept in its half-point bucket of Justin's rise (+0.5, +1.0, ... up
+     * to -PexplorerTop and above) while that bucket holds fewer than
+     * -PexplorerPerBucket trades. Because the walk goes least worse first, the trades
+     * a bucket holds are the least worse in it. A simulation costs about a quarter
+     * of a second, so once a rival's lower buckets are full, a trade whose gain
+     * cannot plausibly reach an open bucket (twice the rate seen so far, plus a
+     * point) is skipped; -PexplorerCap bounds the simulations per rival, and each
+     * rival's counts say whether it was reached. Everything Justin would judge on
+     * rides along: every pricing for both sides, both title changes, keeper value,
+     * his view, the tanking line as a fact, and any hurt man moving.
+     *
+     * SLEEPER FINDS, FANTASYPROS VETOES (2026-10-29). Justin, after FantasyPros ranked
+     * Nabers ahead of Justin Jefferson in a trade Sleeper's numbers liked: "i don't
+     * know how to weight each... perhaps only trades which pass both, and allow
+     * lobsided tanking ish trades?", then: "perhaps we use sleeper as base to find
+     * trades, and then fantasy pros as a second step filter to reject trades that
+     * disadvantage me". So the trades are found and ranked on Sleeper's projections
+     * as before (a gain of -PexplorerMinGain or more), and a trade is dropped if any
+     * pricing named in -PexplorerReject (default FantasyPros' order on Sleeper's
+     * scale) puts Justin below -PexplorerRejectBelow (default 0: any loss). No
+     * weights, and the veto runs before the simulations, which are the cost. The
+     * rest-of-season model is shown and does not veto unless named. What a trade does
+     * to the other team is shown on all three and never filtered: lopsided and
+     * tanking trades stay in, flagged. Any trade he would read as fair is simulated
+     * first and kept outside the bucket counts, and so is any at -PexplorerBothFloor
+     * (85%) or more on BOTH pace and projection, because the page filters on a number
+     * Justin sets (2026-11-06: "yes, checkbox with number i can change") and a filter
+     * cannot show a trade the walk threw away.
+     */
+    static String explorer(String me, List<Trade> all, Map<String, List<String>> rosters, Map<String, String> nameOf,
+                           java.util.function.ToDoubleFunction<List<String>> season, RosterValue altValue,
+                           Map<String, Double> scoreAlt, RosterValue fpValue, Set<String> reject, String players, int playersFrom,
+                           TradeScreens.Context screens, TitleOdds.Stakes stakes,
+                           double hisFloor, double hisFloorAlt, Map<String, Double> surplus, Map<String, Position> everyPosition,
+                           String source, String alt){
+        double step = 0.5;
+        double top = Double.parseDouble(System.getProperty("explorerTop", "6.0"));
+        int buckets = (int) Math.round((top - step) / step) + 1;          // +0.5 ... +top, the last open-ended
+        int perBucket = Integer.getInteger("explorerPerBucket", 8);
+        int cap = Integer.getInteger("explorerCap", 1500);
+        double minGain = Double.parseDouble(System.getProperty("explorerMinGain", "3"));
+        double rejectBelow = Double.parseDouble(System.getProperty("explorerRejectBelow", "0"));
+        double bothFloor = Double.parseDouble(System.getProperty("explorerBothFloor", "0.85"));
+        List<String> mine = rosters.get(me);
+        double myBase = season.applyAsDouble(mine);
+        double myAltBase = altValue.of(mine);
+        double myFpBase = fpValue.of(mine);
+        double myKeepBase = keeperValue(mine, surplus, everyPosition);
+        record Cand(Trade trade, double you, double him, double youAlt, double youFp){}
+        Map<String, List<Trade>> byRival = new TreeMap<>();
+        for(Trade t : all){
+            byRival.computeIfAbsent(t.withManager(), k -> new ArrayList<>()).add(t);
+        }
+        StringBuilder rows = new StringBuilder();
+        StringBuilder rivals = new StringBuilder();
+        int written = 0;
+        for(Map.Entry<String, List<Trade>> e : byRival.entrySet()){
+            String rival = e.getKey();
+            List<String> his = rosters.get(rival);
+            double hisBase = season.applyAsDouble(his);
+            double hisFpBase = fpValue.of(his);
+            double hisKeepBase = keeperValue(his, surplus, everyPosition);
+            List<Cand> cands = new ArrayList<>();
+            int failed = 0;
+            for(Trade t : e.getValue()){
+                List<String> myAfter = swap(mine, t.give(), t.get());
+                double you = season.applyAsDouble(myAfter) - myBase;
+                if(you < minGain){
+                    continue;
+                }
+                double youAlt = altValue.of(myAfter) - myAltBase;
+                double youFp = fpValue.of(myAfter) - myFpBase;
+                if(reject.contains(alt) && youAlt < rejectBelow || reject.contains(FANTASYPROS) && youFp < rejectBelow){
+                    failed++;
+                    continue;
+                }
+                cands.add(new Cand(t, you, season.applyAsDouble(swap(his, t.hisOut(), t.give())) - hisBase, youAlt, youFp));
+            }
+            cands.sort(Comparator.comparingDouble((Cand c) -> -c.him()));
+            // A TRADE HE WOULD READ AS FAIR IS NEVER CAPPED OUT (2026-11-04). The buckets keep the eight that cost
+            // him least on Sleeper, which says nothing of what he can see, so with draft spot off the fair trades
+            // could fall outside every bucket. They are walked first and sit outside the count.
+            Set<Cand> fair = new java.util.HashSet<>();
+            for(Cand c : cands){
+                double[] both = screens.paceAndProjection(c.trade());
+                if(screens.of(c.trade()).fairToHim() || both[0] >= bothFloor && both[1] >= bothFloor){
+                    fair.add(c);
+                }
+            }
+            List<Cand> walk = new ArrayList<>(cands);
+            walk.sort(Comparator.comparing((Cand c) -> !fair.contains(c)));   // stable: least worse for him first within each
+            int[] count = new int[buckets];
+            int sims = 0, skipped = 0, kept = 0;
+            double sumRise = 0, sumYou = 0;
+            for(Cand c : walk){
+                boolean isFair = fair.contains(c);
+                if(!isFair && (sims >= cap || java.util.Arrays.stream(count).allMatch(n -> n >= perBucket))){
+                    break;
+                }
+                double rate = sumYou > 0 ? Math.max(0.02, sumRise / sumYou) : 0.1;
+                int reach = (int) Math.floor((2 * rate * c.you() + 1.0) / step) - 1;
+                boolean open = isFair;
+                for(int b = 0; b <= Math.min(reach, buckets - 1); b++){
+                    open |= count[b] < perBucket;
+                }
+                if(!open){
+                    skipped++;
+                    continue;
+                }
+                List<String> myAfter = swap(mine, c.trade().give(), c.trade().get());
+                List<String> hisAfter = swap(his, c.trade().hisOut(), c.trade().give());
+                TitleOdds.Delta[] d = stakes.swap(me, myAfter, rival, hisAfter);
+                sims++;
+                double rise = 100 * d[0].change();
+                sumRise += Math.max(0, rise);
+                sumYou += c.you();
+                if(rise < step){
+                    continue;
+                }
+                int b = Math.min(buckets - 1, (int) Math.floor((rise - step) / step + 1e-9));
+                if(!isFair && count[b] >= perBucket){
+                    continue;
+                }
+                if(!isFair){
+                    count[b]++;
+                }
+                kept++;
+                double[] other = onOther(c.trade(), rosters, me, altValue, scoreAlt);
+                double himFp = fpValue.of(hisAfter) - hisFpBase;
+                TradeScreens.Screens seen = screens.of(c.trade());
+                boolean tanking = !equitableSeason(c.him(), hisFloor, other[1], hisFloorAlt);
+                rows.append(written++ == 0 ? "" : ",\n").append(String.format(java.util.Locale.ROOT,
+                        "{\"m\":%s,\"give\":%s,\"get\":%s,\"cut\":%s,\"rise\":%.2f,\"se\":%.2f,\"hisTitle\":%.2f,"
+                                + "\"you\":%.1f,\"youAlt\":%.1f,\"youFp\":%.1f,\"him\":%.1f,\"himAlt\":%.1f,\"himFp\":%.1f,"
+                                + "\"myKeep\":%.1f,\"hisKeep\":%.1f,"
+                                + "\"draft\":%s,\"paceView\":%s,\"projView\":%s,\"seasonView\":%s,\"blend\":%s,\"fair\":%b,\"asking\":%b,\"prec\":%d,"
+                                + "\"tank\":%b,\"hurtIn\":%s,\"hurtOut\":%s}",
+                        jsonString(rival), jsonNames(c.trade().give(), nameOf), jsonNames(c.trade().get(), nameOf),
+                        jsonNames(c.trade().hisCut(), nameOf), rise, 100 * d[0].se(), 100 * d[1].change(),
+                        c.you(), c.youAlt(), c.youFp(), c.him(), other[1], himFp,
+                        keeperValue(myAfter, surplus, everyPosition) - myKeepBase,
+                        keeperValue(hisAfter, surplus, everyPosition) - hisKeepBase,
+                        jsonRatio(seen.draftRatio()), jsonRatio(screens.paceAndProjection(c.trade())[0]), jsonRatio(screens.paceAndProjection(c.trade())[1]),
+                        jsonRatio(seen.pointsRatio()), jsonRatio(seen.blendedRatio()),
+                        seen.fairToHim(), seen.worthAsking(), seen.precedents(), tanking,
+                        jsonHurt(c.trade().get(), nameOf), jsonHurt(c.trade().give(), nameOf)));
+            }
+            rivals.append(rivals.length() == 0 ? "" : ",\n").append(String.format(java.util.Locale.ROOT,
+                    "{\"m\":%s,\"state\":%s,\"title\":%.2f,\"playoffs\":%.1f,\"candidates\":%d,\"failed\":%d,\"simulated\":%d,"
+                            + "\"skipped\":%d,\"kept\":%d,\"capReached\":%b}",
+                    jsonString(rival), jsonString(stakes.state(rival)), 100 * stakes.title(rival),
+                    100 * stakes.playoffs().getOrDefault(rival, 0.0), cands.size(), failed, sims, skipped, kept, sims >= cap));
+            System.out.printf("explorer: %s - %d candidates (%d more vetoed by %s), %d simulated, %d skipped, %d kept%n",
+                    rival, cands.size(), failed, reject, sims, skipped, kept);
+        }
+        return String.format(java.util.Locale.ROOT,
+                "{\"generated\":%s,\"season\":%s,\"weeksPlayed\":%d,\"me\":%s,\"myTitle\":%.2f,\"myPlayoffs\":%.1f,"
+                        + "\"pricing\":%s,\"alt\":%s,\"reject\":%s,\"rejectBelow\":%.1f,\"fpPanel\":%s,\"step\":%.1f,\"top\":%.1f,\"perBucket\":%d,\"cap\":%d,\"minGain\":%.1f,"
+                        + "\"tankLine\":%.1f,\"tankLineAlt\":%.1f,\"sims\":%d,\"draftWeight\":%.2f,\"paceShare\":%.2f,\"bothFloor\":%.2f,"
+                        + "\"rivals\":[%s],\n\"playersFrom\":%d,\"players\":[%s],\n\"trades\":[%s]}",
+                jsonString(LocalDate.now().toString()), jsonString(LeagueWeek.season()), screens.weeksPlayed(), jsonString(me),
+                100 * stakes.title(me), 100 * stakes.playoffs().getOrDefault(me, 0.0), jsonString(source), jsonString(alt),
+                "[" + String.join(",", reject.stream().map(TradeMarket::jsonString).toList()) + "]", rejectBelow, fpPanelJson(), step, top, perBucket, cap, minGain, hisFloor, hisFloorAlt,
+                TitleOdds.SIMS, screens.weightNow(), screens.paceShare(), bothFloor, rivals, playersFrom, players, rows);
+    }
+
+    /**
+     * BUYING A MAN OUTRIGHT WITH FAAB. Justin, 2026-11-03: "my faab so far hasn't
+     * served a purpose yet". He had $97 of 100 with no claim on the wire clearing the
+     * floor, and FAAB expires with the season. But FAAB travels in trades here: 22 of
+     * the league's 52 completed trades carried it (WaiverLog), among them $48 for
+     * Jalen Hurts, $31 toward Tony Pollard and, the week before, $15 for J.K. Dobbins
+     * with no man coming back. Every other trade search leaves FAAB out, so this one
+     * prices the deal it cannot see: one man of his, for dollars and nobody back.
+     * Justin's roster is full, so the best man to cut is searched (IR men hold no
+     * active spot) and his keeper value counted. The rules are the explorer's: found
+     * on Sleeper's projections, a gain of -PexplorerMinGain, dropped if FantasyPros
+     * calls it a loss for him. It says what each man is worth and what the seller
+     * loses; it does not say what he costs, because a seller's price for a dollar
+     * cannot be read from the 22 trades.
+     */
+    static String faabBuys(String me, Map<String, List<String>> rosters, Map<String, String> nameOf,
+                           java.util.function.ToDoubleFunction<List<String>> season, RosterValue altValue, RosterValue fpValue,
+                           TitleOdds.Stakes stakes, Map<String, Double> surplus, Map<String, Position> everyPosition,
+                           Set<String> reserve, Map<String, Integer> faabLeft, String source, String alt){
+        double minGain = Double.parseDouble(System.getProperty("explorerMinGain", "3"));
+        List<String> mine = rosters.get(me);
+        double myBase = season.applyAsDouble(mine), myAltBase = altValue.of(mine), myFpBase = fpValue.of(mine);
+        double myKeepBase = keeperValue(mine, surplus, everyPosition);
+        record Buy(String rival, String man, String cut, double rise, double se, double hisTitle, double you, double youAlt, double youFp,
+                   double him, double himAlt, double himFp, double myKeep, double hisKeep, String hurt){}
+        List<Buy> buys = new ArrayList<>();
+        int vetoed = 0;
+        for(Map.Entry<String, List<String>> e : rosters.entrySet()){
+            if(e.getKey().equals(me)){
+                continue;
+            }
+            List<String> his = e.getValue();
+            double hisBase = season.applyAsDouble(his), hisAltBase = altValue.of(his), hisFpBase = fpValue.of(his);
+            double hisKeepBase = keeperValue(his, surplus, everyPosition);
+            for(String man : his){
+                String cut = null;
+                double you = Double.NEGATIVE_INFINITY;
+                for(String candidate : mine){
+                    if(reserve.contains(candidate)){
+                        continue;
+                    }
+                    double gain = season.applyAsDouble(swap(mine, List.of(candidate), List.of(man))) - myBase;
+                    if(gain > you || gain == you && name(candidate, nameOf).compareTo(name(cut, nameOf)) < 0){
+                        you = gain;
+                        cut = candidate;
+                    }
+                }
+                if(cut == null || you < minGain){
+                    continue;
+                }
+                List<String> myAfter = swap(mine, List.of(cut), List.of(man));
+                double youFp = fpValue.of(myAfter) - myFpBase;
+                if(youFp < 0){
+                    vetoed++;
+                    continue;
+                }
+                List<String> hisAfter = swap(his, List.of(man), List.of());
+                TitleOdds.Delta[] d = stakes.swap(me, myAfter, e.getKey(), hisAfter);
+                buys.add(new Buy(e.getKey(), man, cut, 100 * d[0].change(), 100 * d[0].se(), 100 * d[1].change(),
+                        you, altValue.of(myAfter) - myAltBase, youFp,
+                        season.applyAsDouble(hisAfter) - hisBase, altValue.of(hisAfter) - hisAltBase, fpValue.of(hisAfter) - hisFpBase,
+                        keeperValue(myAfter, surplus, everyPosition) - myKeepBase,
+                        keeperValue(hisAfter, surplus, everyPosition) - hisKeepBase, hurt(List.of(man), nameOf)));
+            }
+        }
+        buys.sort(Comparator.comparingDouble((Buy b) -> -b.rise()).thenComparing(b -> name(b.man(), nameOf)));
+        StringBuilder out = new StringBuilder(String.format(
+                "FAAB BUYS  %s  (%s; your title odds %.1f%%, playoffs %.0f%%, $%d left)%n"
+                        + "One man for dollars and nobody back, your best man to cut going to the wire. Found on %s (a gain of %.0f or more), %d more vetoed by%n"
+                        + "FantasyPros. you and him are season points on %s / %s / FantasyPros; 'title' is the change in your odds and his.%n%n",
+                LocalDate.now(), me, 100 * stakes.title(me), 100 * stakes.playoffs().getOrDefault(me, 0.0), faabLeft.getOrDefault(me, 0),
+                source, minGain, vetoed, source, alt));
+        java.util.function.BiConsumer<String, java.util.function.Predicate<Buy>> list = (title, keep) -> {
+            out.append(title).append('\n');
+            out.append(String.format("  %-24s %-12s %-9s %-4s %12s %22s %22s %13s  %s%n", "MAN", "FROM", "state", "$", "title y/h", "you", "him", "keep y/h", "CUT"));
+            buys.stream().filter(keep).limit(15).forEach(b -> out.append(String.format(
+                    "  %-24s %-12s %-9s $%-3d %+5.1f /%+5.1f   %+6.1f %+6.1f %+6.1f   %+6.1f %+6.1f %+6.1f  %+6.1f %+6.1f  %s%s%n",
+                    name(b.man(), nameOf), b.rival(), stakes.state(b.rival()), faabLeft.getOrDefault(b.rival(), 0), b.rise(), b.hisTitle(),
+                    b.you(), b.youAlt(), b.youFp(), b.him(), b.himAlt(), b.himFp(), b.myKeep(), b.hisKeep(), name(b.cut(), nameOf), b.hurt())));
+            out.append('\n');
+        };
+        java.util.function.Predicate<Buy> inIt = b -> !"out of it".equals(stakes.state(b.rival())) && b.hurt().isEmpty();
+        list.accept("MEN HE HARDLY NEEDS - from teams still in it, nobody hurt, he loses 10 or less on Sleeper's projections:", b -> inIt.test(b) && b.him() >= -10);
+        list.accept("THE BIGGEST RISES - from teams still in it, nobody hurt:", inIt);
+        list.accept("FROM TEAMS OUT OF IT - a dollar expires with the season, so a team out of it has little use for one:",
+                b -> "out of it".equals(stakes.state(b.rival())) && b.hurt().isEmpty());
+        return out.toString();
+    }
+
+    /** The third pricing's name (WeeklyLineupValue.forSource). */
+    static final String FANTASYPROS = "fantasypros";
+
+    /** Which experts each FantasyPros page averaged today, for the page to show (InSeasonProjectionsFP.panels). */
+    static String fpPanelJson(){
+        StringBuilder out = new StringBuilder();
+        InSeasonProjectionsFP.panels().forEach((page, panel) -> {
+            if(panel != null){
+                out.append(out.length() == 0 ? "" : ",").append(String.format(java.util.Locale.ROOT,
+                        "%s:{\"experts\":%d,\"available\":%d,\"stalestDays\":%.1f,\"names\":[%s]}", jsonString(page),
+                        panel.experts(), panel.available(), panel.stalestDays(),
+                        String.join(",", panel.names().stream().map(TradeMarket::jsonString).toList())));
+            }
+        });
+        return "{" + out + "}";
+    }
+
+    /**
+     * EVERY MAN RANKED THREE WAYS, for the explorer's Players tab. Justin, 2026-10-29:
+     * "rank players efficiently". Each man's points over the weeks left on each
+     * pricing and his rank at his position on each, with FantasyPros' own
+     * consensus rank beside them. The page ranks on the MIDDLE of his three ranks
+     * (Sleeper's, the model's, FantasyPros'), which needs no weights: two of the
+     * three put him there or better, and two put him there or worse. Listed: every
+     * man on a roster, and every free agent inside the top `depth` at his position
+     * on some pricing. Points and ranks count the weeks AFTER the one in progress:
+     * the pricings leave out a game once it kicks off, so on a Sunday the men who
+     * had played would rank lower than those who had not, and FantasyPros' rank,
+     * which has no such cut, would read as disagreeing with them.
+     */
+    static String playersJson(List<WeeklyLineupValue> pricings, Map<String, Integer> fpRank, Map<String, String> ownerOf,
+                              int depth){
+        List<Map<String, Integer>> ranks = new ArrayList<>();
+        int from = pricings.get(0).weeks().get(0) + 1;
+        Set<String> men = new java.util.HashSet<>(ownerOf.keySet());   // a rostered man with nothing projected is still listed
+        pricings.forEach(v -> men.addAll(v.men()));
+        Map<String, Position> positionOf = new HashMap<>();
+        for(String id : men){
+            Player p = Player.getPlayerFromSIDV2(id);
+            if(p != null && TitleOdds.WIRE_DEPTH.containsKey(p.position)){
+                positionOf.put(id, p.position);
+            }
+        }
+        for(WeeklyLineupValue v : pricings){
+            Map<String, Integer> rank = new HashMap<>();
+            Map<Position, List<String>> byPosition = new java.util.EnumMap<>(Position.class);
+            positionOf.forEach((id, p) -> {
+                if(v.total(id, from) > 0){
+                    byPosition.computeIfAbsent(p, k -> new ArrayList<>()).add(id);
+                }
+            });
+            byPosition.values().forEach(list -> {
+                list.sort(Comparator.comparingDouble((String id) -> -v.total(id, from)).thenComparing(id -> id));
+                for(int i = 0; i < list.size(); i++){
+                    rank.put(list.get(i), i + 1);
+                }
+            });
+            ranks.add(rank);
+        }
+        List<String> listed = new ArrayList<>();
+        for(String id : positionOf.keySet()){
+            boolean inside = ownerOf.containsKey(id);
+            for(Map<String, Integer> rank : ranks){
+                inside |= rank.getOrDefault(id, Integer.MAX_VALUE) <= depth;
+            }
+            if(inside){
+                listed.add(id);
+            }
+        }
+        listed.sort(Comparator.comparing((String id) -> positionOf.get(id)).thenComparing(id -> id));
+        StringBuilder out = new StringBuilder();
+        for(String id : listed){
+            Player p = Player.getPlayerFromSIDV2(id);
+            StringBuilder cells = new StringBuilder();
+            for(int i = 0; i < pricings.size(); i++){
+                Integer r = ranks.get(i).get(id);
+                cells.append(String.format(java.util.Locale.ROOT, "%.1f,%s,", pricings.get(i).total(id, from), r == null ? "null" : r));
+            }
+            String injury = SleeperProjections.injuryStatusOf(id);
+            out.append(out.length() == 0 ? "" : ",\n").append(String.format(java.util.Locale.ROOT,
+                    "{\"n\":%s,\"p\":%s,\"t\":%s,\"o\":%s,\"v\":[%s],\"fpRank\":%s,\"hurt\":%s}",
+                    jsonString(p.firstName + " " + p.lastName), jsonString(positionOf.get(id).name()),
+                    jsonString(String.valueOf(ProjectionSources.teamOf(id))), jsonString(ownerOf.getOrDefault(id, "")),
+                    cells.substring(0, cells.length() - 1), fpRank.containsKey(id) ? fpRank.get(id) : "null",
+                    injury == null ? "null" : jsonString(injury)));
+        }
+        return out.toString();
+    }
+
+    static String jsonString(String s){
+        StringBuilder out = new StringBuilder("\"");
+        for(char ch : s.toCharArray()){
+            switch(ch){
+                case '"' -> out.append("\\\"");
+                case '\\' -> out.append("\\\\");
+                case '<' -> out.append("\\u003c");       // never close the page's script early
+                default -> out.append(ch < 0x20 ? String.format("\\u%04x", (int) ch) : String.valueOf(ch));
+            }
+        }
+        return out.append('"').toString();
+    }
+
+    static String jsonNames(List<String> ids, Map<String, String> nameOf){
+        List<String> out = new ArrayList<>();
+        for(String id : ids){
+            out.add(jsonString(name(id, nameOf)));
+        }
+        return "[" + String.join(",", out) + "]";
+    }
+
+    /** A ratio on one of his screens; nothing given on it is "everything back", which JSON has no word for: null. */
+    static String jsonRatio(double r){
+        return Double.isFinite(r) ? String.format(java.util.Locale.ROOT, "%.3f", r) : "null";
+    }
+
+    /** The hurt men among these, each "name (status)", as a JSON list. */
+    static String jsonHurt(List<String> ids, Map<String, String> nameOf){
+        List<String> out = new ArrayList<>();
+        for(String id : ids){
+            String status = SleeperProjections.injuryStatusOf(id);
+            if(status != null && Set.of("IR", "Out", "Doubtful", "PUP", "Sus", "Questionable").contains(status)){
+                out.add(jsonString(name(id, nameOf) + " (" + status + ")"));
+            }
+        }
+        return "[" + String.join(",", out) + "]";
+    }
+
+    /**
+     * The men a trade brings Justin who are hurt today - IR, Out, Doubtful, PUP or
+     * suspended. Sleeper projects such a man back, so a trade can lean on him the
+     * way the wire leaned on Terry McLaurin (2026-10-22) and a package on Travis
+     * Etienne Jr. (2026-10-23): the row says so instead of a reader finding out.
+     */
+    static String hurt(List<String> incoming, Map<String, String> nameOf){
+        List<String> out = new ArrayList<>();
+        for(String id : incoming){
+            String status = SleeperProjections.injuryStatusOf(id);
+            if(status != null && Set.of("IR", "Out", "Doubtful", "PUP", "Sus").contains(status)){
+                out.add(name(id, nameOf) + " " + status);
+            }
+        }
+        return out.isEmpty() ? "" : "  [hurt: " + String.join(", ", out) + "]";
+    }
+
+    /**
+     * Who sits on IR in this league, set once by each tool that builds trades. A man
+     * on IR holds no active spot, so cutting him makes no room: on 2026-11-04 five
+     * trades had itsabust cut Terrance Ferguson (IR) to fit a two-for-one, which
+     * Sleeper would refuse, and so read cheaper for him than they are.
+     */
+    static Set<String> ON_IR = Set.of();
+
+    /** The lowest-projected man on a roster who is not part of the deal, and not on IR. */
+    static String worstOther(List<String> roster, List<String> exclude, Map<String, Double> points){
+        String worst = null;
+        double lowest = Double.MAX_VALUE;
+        for(String id : roster){
+            if(exclude.contains(id) || ON_IR.contains(id)){
+                continue;
+            }
+            double projected = points.getOrDefault(id, 0.0);
+            if(projected < lowest){
+                lowest = projected;
+                worst = id;
+            }
+        }
+        return worst;
+    }
+
+    /** Every unordered choice of `size` men from `from`. */
+    static List<List<String>> combinations(List<String> from, int size){
+        List<List<String>> out = new ArrayList<>();
+        int n = from.size();
+        if(size > n){
+            return out;
+        }
+        int[] index = new int[size];
+        for(int i = 0; i < size; i++){ index[i] = i; }
+        while(true){
+            List<String> pick = new ArrayList<>();
+            for(int i : index){ pick.add(from.get(i)); }
+            out.add(pick);
+            int spot = size - 1;
+            while(spot >= 0 && index[spot] == n - size + spot){ spot--; }
+            if(spot < 0){
+                return out;
+            }
+            index[spot]++;
+            for(int i = spot + 1; i < size; i++){ index[i] = index[i - 1] + 1; }
+        }
+    }
+
+    static List<String> swap(List<String> roster, List<String> out, List<String> in){
+        List<String> after = new ArrayList<>(roster);
+        after.removeAll(out);
+        after.addAll(in);
+        return after;
+    }
+
+    /** Only the offers both sides gain from, best for us first. */
+    static List<Trade> mutual(List<Trade> trades){
+        List<Trade> good = new ArrayList<>();
+        for(Trade trade : trades){
+            if(trade.myGain() > 0 && trade.theirGain() > 0){
+                good.add(trade);
+            }
+        }
+        good.sort(Comparator.comparingDouble(Trade::myGain).reversed());
+        return good;
+    }
+
+    /**
+     * And it has to stand up WITHOUT the keeper value too - Justin's own
+     * requirement, and the reason for it showed up the moment the two sides were
+     * priced differently.
+     *
+     * Rivals here do not price keepers, so they will sell one cheaply; counting
+     * that on his side alone made the whole board keeper-buying, and the season
+     * column went negative. The best offer on it asked him to give up Derrick
+     * Henry for Chase Brown - seventeen points WORSE in 2026 - which is the fire
+     * sale he ruled out, in week 1, while stating that the plan is to win this
+     * year. Keeper value is a tiebreak on a trade that already helps now, not a
+     * reason to get worse. `-PsellMode=true` lifts this for a season that is
+     * already lost, which is the only time it should be lifted.
+     */
+    static List<Trade> alsoGoodThisSeason(List<Trade> trades,
+                                          java.util.function.ToDoubleFunction<Trade> seasonGain){
+        List<Trade> good = new ArrayList<>();
+        for(Trade trade : trades){
+            if(seasonGain.applyAsDouble(trade) > 0){
+                good.add(trade);
+            }
+        }
+        return good;
+    }
+
+    /**
+     * A trade re-priced on another objective, this season only: {your gain,
+     * his gain}. His side takes his cut on the two-for-one (Trade.hisOut) - the
+     * same accounting as every other rebuild of his roster (TRAPS #144).
+     */
+    static double[] onOther(Trade trade, Map<String, List<String>> rosters, String me, RosterValue other,
+                            Map<String, Double> baseOnOther){
+        List<String> mine = rosters.get(me);
+        List<String> his = rosters.get(trade.withManager());
+        double myGain = other.of(swap(mine, trade.give(), trade.get())) - baseOnOther.get(me);
+        double hisGain = other.of(swap(his, trade.hisOut(), trade.give())) - baseOnOther.get(trade.withManager());
+        return new double[]{myGain, hisGain};
+    }
+
+    public static void main(String[] args) throws Exception {
+        AAAConfiguration configuration = AAAConfiguration.getInstance();
+        ON_IR = LeagueOwners.reserve(configuration);
+        int scenarios = Integer.getInteger("scenarios", 240);
+        int pool = Integer.getInteger("pool", DEFAULT_POOL);
+        int top = Integer.getInteger("top", 12);
+        // 'chainDepth', not 'depth' - see BoardValue.LOOKAHEAD. That property is
+        // owned by something in this JVM and reads back 0, and 0 fails the
+        // `depth > 1` guard below, so the whole TRADING POWER section would
+        // silently not print. A flag that steals its own value is worse than a
+        // missing one: nothing errors, the section just is not there.
+        int depth = Integer.getInteger("chainDepth", 2);
+        String me = System.getProperty("me", configuration.getUserIDToDisplayName()
+                .getOrDefault(configuration.getMyID(), configuration.getMyID()));
+
+        // -Pprojections=posterior prices every man on Sleeper's number moved by the
+        // weeks already played at the measured rate (InSeasonPosterior). The
+        // default is Sleeper's weekly projections summed over the games each man
+        // has left (sleeper-remaining), which drop a man Sleeper has ruled out;
+        // -Pprojections=sleeper is the season feed, which does not move on news.
+        String source = System.getProperty("projections", "sleeper-remaining");
+        Map<String, Double> points = ProjectionSources.resolve(source);
+        // THE OBJECTIVE (2026-10-23): each week's best lineup with that week's best free agents in the pool
+        // (WeeklyLineupValue). -Pobjective=drawn prices on the old one, WeeklyStarterValue's drawn seasons with
+        // one wire level a position, for comparison.
+        boolean drawn = "drawn".equals(System.getProperty("objective", "weekly"));
+        RosterValue value = drawn ? WeeklyStarterValue.forCurrentBoard(configuration, points, scenarios, 424_242L)
+                : WeeklyLineupValue.forSource(configuration, source);
+        // THE OTHER PRICING, beside it - the swap report's rule (TRAPS #146) brought
+        // to trades. Sleeper's season feed does not move on results (TRAPS #136);
+        // the rest-of-season model does (RosModel). Every listed trade is re-priced
+        // on the other one, and the short list names only trades that hold on both.
+        String alt = source.equals("ros") ? "sleeper-remaining" : "ros";
+        Map<String, Double> altPoints = ProjectionSources.resolve(alt);
+        RosterValue altValue = drawn ? WeeklyStarterValue.forCurrentBoard(configuration, altPoints, scenarios, 424_242L)
+                : WeeklyLineupValue.forSource(configuration, alt);
+        // the explorer's third pricing, read at the same moment as the other two so all three leave out the same kicked-off games
+        WeeklyLineupValue fpValue = Boolean.getBoolean("tradeExplorer") || Boolean.getBoolean("faabBuy")
+                ? WeeklyLineupValue.forSource(configuration, FANTASYPROS) : null;
+        double tradeFloor = Double.parseDouble(System.getProperty("tradeFloor", "6.8"));
+        // Justin's tanking line is on Sleeper's projections; the rest-of-season model keeps the noise floor
+        double hisFloor = source.equals("ros") ? tradeFloor : tankFloor();
+        double hisFloorAlt = source.equals("ros") ? tankFloor() : tradeFloor;
+        boolean withKeepers = Boolean.parseBoolean(System.getProperty("keepers", "true"));
+        Map<String, String> ownerOf = LeagueOwners.today(configuration);
+        Map<String, List<String>> rosters = new TreeMap<>();
+        Map<String, String> nameOf = new HashMap<>();
+        Map<String, Position> positionOf = new HashMap<>();
+        for(Map.Entry<String, String> entry : ownerOf.entrySet()){
+            rosters.computeIfAbsent(entry.getValue(), u -> new ArrayList<>()).add(entry.getKey());
+            Player player = Player.getPlayerFromSIDV2(entry.getKey());
+            nameOf.put(entry.getKey(), player == null ? entry.getKey()
+                    : player.firstName + " " + player.lastName);
+            positionOf.put(entry.getKey(), player == null ? null : player.position);
+        }
+        for(List<String> roster : rosters.values()){
+            roster.sort(Comparator.comparingDouble((String id) -> -points.getOrDefault(id, 0.0)));
+        }
+
+        // WHAT EACH MAN IS WORTH TO KEEP, for every roster - a trade moves keeper
+        // value as surely as it moves this season's lineup
+        // Keeper surpluses stand in for NEXT season, so they stay on the season
+        // feed whatever this season is priced on: a man ruled out this year is
+        // absent from the games-left sum, and that must not zero his keeper value.
+        Map<String, Double> seasonFeed = source.equals("sleeper") ? points : ProjectionSources.resolve("sleeper");
+        Map<String, Position> everyPosition = everyPosition(seasonFeed, positionOf);
+        Map<Position, java.util.TreeMap<Double, Double>> bestByAdp =
+                bestStillAvailable(seasonFeed, everyPosition);
+        // PRICED OFF THIS SEASON'S DRAFT, like the console. KeeperChooser reads
+        // getPreviousDraftPicks - "every EARLIER draft" - which in 2026 means the
+        // 2025 board, so a man drafted this year takes the undrafted default and
+        // every keeper number here is answering the 2026 question that was
+        // settled in August. Fixed in LeagueConsole and left standing here,
+        // which is how the two tools came to disagree about the same roster.
+        // PRICED OFF THIS SEASON'S DRAFT, like the console.
+        //
+        // This read KeeperChooser.eligibleCandidates, which prices against
+        // getPreviousDraftPicks - "every EARLIER draft" - so in 2026 it uses the
+        // 2025 board and answers the keeper question that was settled last
+        // August. A man drafted this year was not in that draft and took the
+        // undrafted default of a tenth. LeagueConsole was fixed and this was
+        // not, which is how the page and the terminal tool came to disagree
+        // about the same roster on the same afternoon.
+        Map<String, Integer> keeperRound = NextYearKeepers.roundsForThisLeague(configuration, ownerOf.keySet());
+        Map<String, Integer> slotOfPlayer = draftSlotOfPlayer(ownerOf, configuration);
+        Map<String, Double> surplus = new HashMap<>();
+        for(String id : keeperRound.keySet()){
+            surplus.put(id, keeperPoints(keeperRound, seasonFeed, bestByAdp, everyPosition,
+                    configuration, slotOfPlayer, id));
+        }
+        java.util.function.ToDoubleFunction<List<String>> season = ids -> value.of(ids);
+        java.util.function.ToDoubleFunction<List<String>> both =
+                ids -> value.of(ids) + keeperValue(ids, surplus, everyPosition);
+        java.util.function.ToDoubleFunction<List<String>> scorer = withKeepers ? both : season;
+        Side mySide = scoring(scorer);
+        // POSITION-AWARE ON HIS SIDE TOO. ac62628 said the position-blind overload
+        // was deleted; it deleted keeperValue's and left this one, so the terminal
+        // board went on charging a rival two quarterback keepers where the page
+        // charged one. The overload is gone now, so the compiler is the reviewer.
+        Side theirSide = withKeepers ? lossAverseOnKeepers(season, surplus, everyPosition) : scoring(season);
+
+        StringBuilder out = new StringBuilder();
+        out.append(String.format("TRADE MARKET  %s  (%s; projections: %s)%n", LocalDate.now(), me, source));
+        out.append(String.format("Every size-balanced swap with all eleven rivals, both rosters priced on the same objective: %s.%n"
+                + "Only trades BOTH sides gain from are listed: an offer the other manager loses on is an offer he declines.%n",
+                drawn ? "the drawn-season weekly-starter objective (" + scenarios + " drawn seasons, -Pobjective=drawn)"
+                        : value.label() + " - each week's best lineup, that week's best free agents in the pool for nothing"));
+        out.append(withKeepers
+                ? String.format("THE TWO SIDES ARE PRICED DIFFERENTLY, on purpose. YOUR value is the season PLUS the best two%n"
+                        + "keeper surpluses on your roster (a surplus being what a man is worth beyond the pick you spend to%n"
+                        + "keep him, measured at HIS OWN position). HIS is LOSS-AVERSE on keepers: he takes no credit for one%n"
+                        + "he receives and feels every point of one he gives up, which is how people here actually behave.%n"
+                        + "So asking for another manager's keeper is HARD - the ask is priced at what it costs him - and%n"
+                        + "paying anybody IN keepers buys you nothing. -Pkeepers=false prices you the same way he is.%n%n")
+                : String.format("KEEPER VALUE IS OFF for both sides (-Pkeepers=true to count yours). This prices 2026 alone,%n"
+                        + "so giving up a cheap keeper looks free when it is not.%n%n"));
+
+        // HOW EVERY ROSTER SCORES: the objective itself, per team, on both pricings
+        Map<String, Double> scoreOn = new HashMap<>();
+        Map<String, Double> scoreAlt = new HashMap<>();
+        for(Map.Entry<String, List<String>> entry : rosters.entrySet()){
+            scoreOn.put(entry.getKey(), value.of(entry.getValue()));
+            scoreAlt.put(entry.getKey(), altValue.of(entry.getValue()));
+        }
+        List<String> byOn = new ArrayList<>(rosters.keySet());
+        byOn.sort(Comparator.comparingDouble((String m) -> -scoreOn.get(m)));
+        List<String> byAlt = new ArrayList<>(rosters.keySet());
+        byAlt.sort(Comparator.comparingDouble((String m) -> -scoreAlt.get(m)));
+        out.append(drawn ? wireNote(configuration, (WeeklyStarterValue) value, points, ownerOf, nameOf, source)
+                : weeklyWireNote((WeeklyLineupValue) value, source));
+        out.append(drawn
+                ? String.format("HOW EVERY ROSTER SCORES - the season points its starters are expected to score: 17 x the best legal%n"
+                + "lineup from whoever is healthy in a drawn week, the bench worth the weeks it covers, every slot floored at%n"
+                + "the waiver wire. On %s and on %s (the rest-of-season model moves on this season's results; Sleeper's%n"
+                + "season feed does not):%n", source, alt)
+                : String.format("HOW EVERY ROSTER SCORES - the points its best lineup is projected to score in every week left (%s),%n"
+                + "each week's best free agents in the pool. On %s and on %s (the rest-of-season model moves on this season's%n"
+                + "results; Sleeper's projections move on news):%n", value.label(), source, alt));
+        out.append(String.format("  %-4s %-16s %8s   %-4s %8s%n", "rank", "manager", source, "rank", alt));
+        for(int i = 0; i < byOn.size(); i++){
+            String m = byOn.get(i);
+            out.append(String.format("  %-4d %-16s %8.1f   %-4d %8.1f%s%n", i + 1, m, scoreOn.get(m), byAlt.indexOf(m) + 1, scoreAlt.get(m),
+                    m.equals(me) ? "   <- you" : ""));
+        }
+        out.append('\n');
+
+        Map<String, Double> tradesPerYear = new HashMap<>();
+        for(TradePartners.Record record : TradePartners.records(configuration.getLeagueID())){
+            tradesPerYear.put(record.manager(), record.rate());
+        }
+        TradeScreens.Context screens = TradeScreens.load(configuration);
+        // THE SEASON EACH MANAGER IS IN (TitleOdds): title odds, and what a point is worth to each
+        TitleOdds.Stakes stakes = TitleOdds.stakes(configuration, TitleOdds.SIMS);
+        Map<String, Side> rivalSide = rivalSides(season, surplus, everyPosition, stakes, withKeepers);
+        out.append(String.format("THE SEASON EACH RIVAL IS IN (TitleOdds, %d seasons from week %d). 'weight' is what a point of season%n"
+                + "value is worth to him against the league average; a rival's gain below is his season gain times it, less any%n"
+                + "keeper he gives up, plus (1 - his playoff odds) of any keeper he receives.%n", TitleOdds.SIMS, stakes.league().thisWeek()));
+        out.append(String.format("  %-16s %8s %7s %7s  %s%n", "manager", "playoffs", "title", "weight", "state"));
+        List<String> byTitle = new ArrayList<>(stakes.league().managers());
+        byTitle.sort(Comparator.comparingDouble((String m) -> -stakes.title(m)));
+        for(String m : byTitle){
+            out.append(String.format("  %-16s %7.1f%% %6.1f%% %7.2f  %s%s%n", m, 100 * stakes.playoffs().get(m), 100 * stakes.title(m),
+                    stakes.weight().get(m), stakes.state(m), m.equals(me) ? "   <- you" : ""));
+        }
+        out.append('\n');
+
+        // A TARGETED SEARCH. Justin, 2026-10-23: "nothing where i get chase and give either henry or tuten?"
+        // The board prices every one-for-one, but two- and three-man packages only among each side's eight most
+        // valuable men, so a question about one man gets every package that answers it, priced and judged like
+        // the board and printed whether it passes or not, with why.
+        if(!System.getProperty("mustGet", "").isBlank()){
+            String report = target(me, System.getProperty("with", ""), System.getProperty("mustGet"),
+                    System.getProperty("mustGive", ""), System.getProperty("exclude", ""), rosters, nameOf, points,
+                    mySide, rivalSide.getOrDefault(System.getProperty("with", ""), theirSide), season, altValue, scoreAlt,
+                    screens, stakes, tradeFloor, hisFloor, hisFloorAlt, source, alt);
+            out.append(report);
+            System.out.print(out);
+            Path target = Path.of("data", "trade-target-" + LocalDate.now() + ".txt");
+            Files.writeString(target, out.toString(), StandardCharsets.UTF_8);
+            System.out.println("written to " + target);
+            return;
+        }
+
+        // BUYING A MAN OUTRIGHT WITH FAAB (2026-11-03). -PfaabBuy=true; see faabBuys.
+        if(Boolean.getBoolean("faabBuy")){
+            String report = faabBuys(me, rosters, nameOf, season, altValue, fpValue, stakes, surplus, everyPosition,
+                    LeagueOwners.reserve(configuration), FaabRivals.faabLeft(configuration), source, alt);
+            System.out.print(report);
+            Path target = Path.of("data", "faab-buys-" + LocalDate.now() + ".txt");
+            Files.writeString(target, report, StandardCharsets.UTF_8);
+            System.out.println("written to " + target);
+            return;
+        }
+
+        List<Trade> all = new ArrayList<>();
+        for(Map.Entry<String, List<String>> entry : rosters.entrySet()){
+            if(entry.getKey().equals(me)){
+                continue;
+            }
+            Side his = rivalSide.getOrDefault(entry.getKey(), theirSide);
+            all.addAll(between(me, entry.getKey(), rosters.get(me), entry.getValue(), mySide, his, pool));
+            all.addAll(unbalanced(me, entry.getKey(), rosters.get(me), entry.getValue(),
+                    mySide, his, pool, points));
+        }
+        // THE TRADE EXPLORER (2026-10-27): every bucket of title-odds rise, every rival, least worse for him
+        // first, as data and as a page to filter. -PtradeExplorer=true; see explorer.
+        if(Boolean.getBoolean("tradeExplorer")){
+            if(!System.getProperty("exclude", "").isBlank()){
+                Set<String> barred = new java.util.HashSet<>(TradeScreens.idsNamed(System.getProperty("exclude")));
+                all.removeIf(t -> t.give().stream().anyMatch(barred::contains) || t.get().stream().anyMatch(barred::contains)
+                        || t.hisOut().stream().anyMatch(barred::contains));
+            }
+            Set<String> reject = new java.util.LinkedHashSet<>();
+            for(String name : System.getProperty("explorerReject", FANTASYPROS).split(",")){
+                if(!name.isBlank()){
+                    reject.add(name.trim());
+                }
+            }
+            for(String name : reject){
+                if(!name.equals(alt) && !name.equals(FANTASYPROS)){
+                    // an unknown name would silently drop its veto while the page still says it ran
+                    throw new IllegalArgumentException("-PexplorerReject: '" + name + "' is neither " + alt + " nor " + FANTASYPROS);
+                }
+            }
+            // the Players tab in a fixed order, whatever -Pprojections says: Sleeper, the model, FantasyPros
+            List<WeeklyLineupValue> pricings = new ArrayList<>();
+            for(String name : List.of("sleeper-remaining", "ros")){
+                pricings.add(name.equals(source) && value instanceof WeeklyLineupValue w ? w
+                        : name.equals(alt) && altValue instanceof WeeklyLineupValue w ? w
+                        : WeeklyLineupValue.forSource(configuration, name));
+            }
+            pricings.add(fpValue);
+            // the wire each pricing assumes, side by side, so a pricing gone wrong shows before an hour of simulations
+            System.out.print(weeklyWireNote(pricings.get(0), "sleeper-remaining") + weeklyWireNote(fpValue, FANTASYPROS));
+            String players = playersJson(pricings, WeeklyLineupValue.fantasyProsRanks(), ownerOf,
+                    Integer.getInteger("explorerPlayerDepth", 40));
+            String json = explorer(me, all, rosters, nameOf, season, altValue, scoreAlt, fpValue, reject, players,
+                    fpValue.weeks().get(0) + 1, screens, stakes,
+                    hisFloor, hisFloorAlt, surplus, everyPosition, source, alt);
+            Path data = Path.of("data", "trade-explorer-" + LocalDate.now() + ".json");
+            Files.writeString(data, json, StandardCharsets.UTF_8);
+            String template;
+            try(java.io.InputStream in = TradeMarket.class.getResourceAsStream("/trade-explorer.html")){
+                template = new String(in.readAllBytes(), StandardCharsets.UTF_8);
+            }
+            Path page = Path.of("data", "trade-explorer.html");
+            Files.writeString(page, template.replace("/*TRADE_DATA*/null", json), StandardCharsets.UTF_8);
+            System.out.println("written to " + data + " and " + page);
+            return;
+        }
+
+        // THE TITLE LADDER (2026-10-24). Justin: "what are, for 1.0, 1.5, 2.0, 2.5, 3.0 % increase in my title
+        // odds, the top 4 trades per other member that lead to the least tanking for them". -PtitleLadder lists
+        // the targets; see titleLadder.
+        if(!System.getProperty("titleLadder", "").isBlank()){
+            if(!System.getProperty("exclude", "").isBlank()){
+                Set<String> barred = new java.util.HashSet<>(TradeScreens.idsNamed(System.getProperty("exclude")));
+                all.removeIf(t -> t.give().stream().anyMatch(barred::contains) || t.get().stream().anyMatch(barred::contains)
+                        || t.hisOut().stream().anyMatch(barred::contains));
+                out.append(String.format("Left out of the ladder: every trade moving %s (-Pexclude).%n%n", System.getProperty("exclude")));
+            }
+            out.append(titleLadder(me, all, rosters, nameOf, season, altValue, scoreAlt, screens, stakes,
+                    hisFloor, hisFloorAlt, source, alt));
+            System.out.print(out);
+            Path report = Path.of("data", "title-ladder-" + LocalDate.now() + ".txt");
+            Files.writeString(report, out.toString(), StandardCharsets.UTF_8);
+            System.out.println("written to " + report);
+            return;
+        }
+        List<Trade> mutuallyGood = mutual(all);
+        java.util.function.ToDoubleFunction<Trade> seasonGain = trade ->
+                season.applyAsDouble(swap(rosters.get(me), trade.give(), trade.get()))
+                        - season.applyAsDouble(rosters.get(me));
+        boolean sellMode = Boolean.getBoolean("sellMode");
+        List<Trade> good = new ArrayList<>(sellMode ? mutuallyGood : alsoGoodThisSeason(mutuallyGood, seasonGain));
+        // -Pexclude="Jordan Love": men to keep out of every trade, either way. Justin, 2026-10-23, of the Chase
+        // deal: "taking love would barely benefit me and really hurt renteez".
+        String excludeNames = System.getProperty("exclude", "");
+        int excluded = 0;
+        if(!excludeNames.isBlank()){
+            Set<String> barred = new java.util.HashSet<>(TradeScreens.idsNamed(excludeNames));
+            int before = good.size();
+            good.removeIf(t -> t.give().stream().anyMatch(barred::contains) || t.get().stream().anyMatch(barred::contains)
+                    || t.hisOut().stream().anyMatch(barred::contains));
+            excluded = before - good.size();
+        }
+        out.append(String.format("%d swaps searched, %d good for both sides, %d of those also good for 2026.%n",
+                all.size(), mutuallyGood.size(), good.size()));
+        out.append(sellMode
+                ? String.format("SELL MODE: trades that only pay next year are INCLUDED. Use this when the season is gone.%n%n")
+                : String.format("A trade must stand up WITHOUT the keeper value as well - the plan is to win 2026, and%n"
+                        + "keeper value is a tiebreak on a deal that already helps now, not a reason to get worse.%n"
+                        + "%d offers were dropped for failing that. -PsellMode=true to see them.%n%n",
+                        mutuallyGood.size() - good.size()));
+
+        out.append(String.format("'his view' is the trade from HIS side on the two numbers he can check (TradeScreens): what he gets back%n"
+                + "of the draft value and of the season screen (pace and Sleeper's projection), '-' where he gives none. 'title' is the change in%n"
+                + "your title odds and his, in percentage points (TitleOdds, the same %d seasons before and after).%n", TitleOdds.SIMS));
+        java.util.function.Function<Trade, TitleOdds.Delta[]> titleOf = trade -> stakes.swap(me,
+                swap(rosters.get(me), trade.give(), trade.get()), trade.withManager(),
+                swap(rosters.get(trade.withManager()), trade.hisOut(), trade.give()));
+        out.append(String.format("%-28s %-28s %7s %7s %7s %8s %9s %9s %11s %10s %11s   %s%n",
+                "YOU GIVE", "YOU GET", "you", "him", "season", "SIMPLE", "you:" + alt, "him:" + alt, "ADP g/g", "his view", "title y/h",
+                "WITH / HOW IT READS"));
+        for(Trade trade : good.subList(0, Math.min(top, good.size()))){
+            // the same trade priced the OTHER way, so a deal that only works
+            // because of keepers - or only in spite of them - shows itself
+            double seasonOnly = season.applyAsDouble(swap(rosters.get(me), trade.give(), trade.get()))
+                    - season.applyAsDouble(rosters.get(me));
+            String verdict = trade.withManager()
+                    + (seasonOnly > 0 ? "" : "  NEXT YEAR ONLY");
+            // is this an ask for a man HE would want to keep? He does not price
+            // that, so the model says yes and the man across the table may not
+            double hisKeeper = 0;
+            for(String id : trade.get()){
+                hisKeeper = Math.max(hisKeeper, surplus.getOrDefault(id, 0.0));
+            }
+            if(asksForAKeeper(hisKeeper)){
+                verdict += "  (asking for a man worth keeping)";
+            }
+            Optics optics = optics(trade.give(), trade.get(), SleeperProjections::adpOf);
+            double simple = simpleStarters(swap(rosters.get(me), trade.give(), trade.get()), points, positionOf)
+                    - simpleStarters(rosters.get(me), points, positionOf);
+            double[] other = onOther(trade, rosters, me, altValue, scoreAlt);
+            verdict += other[0] > 0 && other[1] > 0 ? "  holds on " + alt
+                    : other[0] <= 0 ? "  LOSES FOR YOU on " + alt : "  he loses on " + alt;
+            TradeScreens.Screens seen = screens.of(trade);
+            TitleOdds.Delta[] title = titleOf.apply(trade);
+            out.append(String.format("%-28s %-28s %+7.1f %+7.1f %+7.1f %+8.1f %+9.1f %+9.1f %5.0f/%-5.0f %10s %+5.1f/%+5.1f   %s - %s%n",
+                    label(trade.give(), nameOf), label(trade.get(), nameOf),
+                    trade.myGain(), trade.theirGain(), seasonOnly, simple, other[0], other[1],
+                    optics.mine(), optics.theirs(), seen.ratios(), 100 * title[0].change(), 100 * title[1].change(),
+                    verdict, seen.verdict()));
+        }
+        if(good.isEmpty()){
+            out.append("Nothing. Every swap that helps you costs the other man more than it gives him,\n"
+                    + "which is what a league of twelve reasonable drafts usually looks like.\n");
+        }
+
+        // THE SHORT LIST: what to actually send - good for both on both pricings,
+        // AND fair to him on what he can see. Until 2026-09-28 the last clause was
+        // missing, and the list's top seven were all Ja'Marr Chase from Renteez.
+        record Short(Trade trade, double season, double seasonAlt, double hisAlt, TradeScreens.Screens seen, TitleOdds.Delta[] title){}
+        List<Short> shortList = new ArrayList<>();
+        List<Short> longShots = new ArrayList<>();
+        int noChance = 0;
+        int tanks = 0;
+        List<Short> pastTheLine = new ArrayList<>();
+        for(Trade trade : good){
+            double seasonOnly = season.applyAsDouble(swap(rosters.get(me), trade.give(), trade.get()))
+                    - season.applyAsDouble(rosters.get(me));
+            double[] other = onOther(trade, rosters, me, altValue, scoreAlt);
+            List<String> his = rosters.get(trade.withManager());
+            double hisSeason = season.applyAsDouble(swap(his, trade.hisOut(), trade.give())) - season.applyAsDouble(his);
+            if(seasonOnly >= tradeFloor && other[0] >= tradeFloor && trade.theirGain() > 0
+                    && !equitableSeason(hisSeason, hisFloor, other[1], hisFloorAlt)){
+                tanks++;
+                // past the line on this pricing only, even on the other: shown apart, for the record
+                if(other[1] >= -hisFloorAlt){
+                    pastTheLine.add(new Short(trade, seasonOnly, other[0], other[1], screens.of(trade), null));
+                }
+                continue;
+            }
+            if(seasonOnly >= tradeFloor && other[0] >= tradeFloor && trade.theirGain() > 0 && other[1] > 0){
+                TradeScreens.Screens seen = screens.of(trade);
+                Short s = new Short(trade, seasonOnly, other[0], other[1], seen, seen.worthAsking() ? titleOf.apply(trade) : null);
+                if(seen.fairToHim()){
+                    shortList.add(s);
+                }
+                else if(seen.worthAsking()){
+                    longShots.add(s);
+                }
+                else{
+                    noChance++;
+                }
+            }
+        }
+        // best first by what it does to YOUR TITLE ODDS, the thing the season is for
+        Comparator<Short> best = Comparator.comparingDouble((Short s) -> -s.title()[0].change());
+        shortList.sort(best);
+        longShots.sort(best);
+        out.append(String.format("%nTHE SHORT LIST - %d of the %d: good for BOTH sides on BOTH pricings, you gaining at least the%n"
+                + "line (%.1f - the drawn-season objective's seed-to-seed spread, kept as the size a gain must reach) this season%n"
+                + "on each, AND fair to him on what he%n"
+                + "can see - at least what he gives, with draft value %s of a man's worth after %d games (%s). Best first by%n"
+                + "the change in your title odds ('title', in percentage points, +- its standard error); 'trades/yr' is how%n"
+                + "often he has actually traded (TradePartners).%n",
+                shortList.size(), good.size(), tradeFloor, TradeScreens.Screens.share(screens.weightNow()), screens.weeksPlayed(),
+                !System.getProperty("draftWeight", "").isBlank() ? "a WHAT-IF set by -PdraftWeight, not the measured curve"
+                        : screens.weightNow() == 0 ? "none from this point: Justin's call, 2026-11-04"
+                        : "the share other leagues' accepted trades reveal, DraftWeightCurve"));
+        out.append(String.format("  %-28s %-28s %8s %8s %8s %13s %10s %-16s %9s%n", "YOU GIVE", "YOU GET", "you", "you:" + alt, "him:" + alt,
+                "title", "his view", "WITH", "trades/yr"));
+        for(Short s : shortList.subList(0, Math.min(10, shortList.size()))){
+            out.append(String.format("  %-28s %-28s %+8.1f %+8.1f %+8.1f %+6.1f+-%-4.1f %10s %-16s %9.2f%n", label(s.trade().give(), nameOf),
+                    label(s.trade().get(), nameOf), s.season(), s.seasonAlt(), s.hisAlt(), 100 * s.title()[0].change(),
+                    100 * s.title()[0].se(), s.seen().ratios(), s.trade().withManager(),
+                    tradesPerYear.getOrDefault(s.trade().withManager(), 0.0)));
+        }
+        if(shortList.isEmpty()){
+            out.append("  none. No trade that helps you on both pricings also looks fair to him on what he can see.\n");
+        }
+        out.append(String.format("%nLEFT OUT AS TANKING - %d trades that help you but cost the other side more than %.1f of THIS season on%n"
+                + "%s or %.1f on %s, whatever they gain in keepers. Justin, 2026-10-22: \"I don't want tanking for one%n"
+                + "team that gets a keeper for next year\"; 2026-10-23: \"tanking would be an over 20 drop\".%n",
+                tanks, hisFloor, source, hisFloorAlt, alt));
+        if(excluded > 0){
+            out.append(String.format("%d trades moving %s were left out (-Pexclude).%n", excluded, excludeNames));
+        }
+        // the ones over the line on this pricing but not on the other, best for you first
+        pastTheLine.sort(Comparator.comparingDouble((Short s) -> -(s.season() + s.seasonAlt())));
+        out.append(String.format("%nPAST THE LINE ON %s ONLY - %d of those cost him more than %.1f there but not more than %.1f on %s.%n"
+                + "Tanking by Justin's definition; shown because he asked to see them. Best for you first:%n",
+                source.toUpperCase(), pastTheLine.size(), hisFloor, hisFloorAlt, alt));
+        out.append(String.format("  %-28s %-28s %8s %8s %8s %8s %10s %-16s%n", "YOU GIVE", "YOU GET", "you", "you:" + alt, "him",
+                "him:" + alt, "his view", "WITH"));
+        for(Short s : pastTheLine.subList(0, Math.min(8, pastTheLine.size()))){
+            List<String> his = rosters.get(s.trade().withManager());
+            double hisSeason = season.applyAsDouble(swap(his, s.trade().hisOut(), s.trade().give())) - season.applyAsDouble(his);
+            out.append(String.format("  %-28s %-28s %+8.1f %+8.1f %+8.1f %+8.1f %10s %-16s%n", label(s.trade().give(), nameOf),
+                    label(s.trade().get(), nameOf), s.season(), s.seasonAlt(), hisSeason, s.hisAlt(), s.seen().ratios(),
+                    s.trade().withManager()));
+        }
+        out.append(String.format("%nLONG SHOTS - %d more that pass both pricings but give him less than he gives on what he can see, though%n"
+                + "at least one accepted side in ten here took as little (who is named). Not offers to lead with. %d more were%n"
+                + "dropped: fewer than one accepted side in ten here ever took that little.%n", longShots.size(), noChance));
+        for(Short s : longShots.subList(0, Math.min(5, longShots.size()))){
+            out.append(String.format("  %-28s %-28s %+8.1f %+8.1f  title %+5.1f+-%.1f  %s (%s): %s%n", label(s.trade().give(), nameOf),
+                    label(s.trade().get(), nameOf), s.season(), s.seasonAlt(), 100 * s.title()[0].change(), 100 * s.title()[0].se(),
+                    s.trade().withManager(), stakes.state(s.trade().withManager()), s.seen().verdict()));
+        }
+
+        // WHAT A PIECE IS ACTUALLY WORTH: the supply behind it
+        out.append("\nWHAT YOUR SURPLUS IS WORTH - how many rivals could offer the same thing:\n");
+        Map<Position, Integer> starts = Map.of(Position.QB, 1, Position.RB, 2,
+                Position.WR, 3, Position.TE, 1, Position.DEF, 1);
+        for(Map.Entry<Position, Integer> entry : new TreeMap<>(starts).entrySet()){
+            int mineHeld = 0;
+            for(String id : rosters.get(me)){
+                if(positionOf.get(id) == entry.getKey()){
+                    mineHeld++;
+                }
+            }
+            int sellers = alternativeSellers(rosters, me, positionOf, entry.getKey(), entry.getValue());
+            out.append(String.format("  %-4s you hold %d, start %d;  %d of 11 rivals also carry a spare -> %s%n",
+                    entry.getKey(), mineHeld, entry.getValue(), sellers,
+                    mineHeld <= entry.getValue() ? "nothing to sell"
+                            : sellers >= 6 ? "INVENTORY, not a chip - the market is flooded"
+                            : sellers <= 2 ? "SCARCE - this is where your leverage is"
+                            : "ordinary supply"));
+        }
+
+        // TRADING POWER: can he just keep trading and keep improving?
+        if(depth > 1){
+            List<Step> steps = chain(me, rosters, mySide, theirSide, depth, pool, tradeFloor);
+            List<Step> churn = chain(me, rosters, mySide, theirSide, depth, pool, 0.0);
+            out.append(String.format("%n(The chain below is not filtered for 2026 - it is the ceiling of what the board%n"
+                    + "offers, not a plan. Read the table above for what to actually send.)%n"));
+            out.append(String.format("%nTRADING POWER - trade after trade, each re-searched on the board the last one left.%n"));
+            out.append(String.format("Only trades worth more than %.1f to you are taken: that is the objective's own%n"
+                    + "seed-to-seed spread, so anything smaller is the yardstick moving and not the roster.%n%n", tradeFloor));
+            if(steps.isEmpty()){
+                out.append("  nothing at all - the board is already at a two-sided fixed point.\n");
+            }
+            double givenAway = 0;
+            for(int i = 0; i < steps.size(); i++){
+                Step step = steps.get(i);
+                givenAway += step.trade().theirGain();
+                out.append(String.format("  %2d. %-34s for %-34s %+7.1f  (him %+6.1f)  running %+7.1f%n",
+                        i + 1, label(step.trade().give(), nameOf), label(step.trade().get(), nameOf),
+                        step.trade().myGain(), step.trade().theirGain(), step.cumulative()));
+            }
+            if(!steps.isEmpty()){
+                double total = steps.get(steps.size() - 1).cumulative();
+                out.append(String.format("%n  %d trades, %+.1f to you, %+.1f handed to the men opposite to make them take it.%n",
+                        steps.size(), total, givenAway));
+                out.append(steps.size() < depth
+                        ? String.format("  IT RAN OUT after %d, short of the %d asked for: nothing left clears the floor.%n",
+                                steps.size(), depth)
+                        : String.format("  Still going at %d and stopped by -PchainDepth, not by the board. Raise it.%n", depth));
+                out.append(String.format("  The first trade alone was %+.1f, so the chain is worth %.1fx a single one -%n"
+                        + "  which is what one-step searching leaves behind.%n",
+                        steps.get(0).trade().myGain(), total / Math.max(0.1, steps.get(0).trade().myGain())));
+                out.append(String.format("%n  AND THE ANSWER TO 'CAN I JUST KEEP TRADING?' - no. Ignoring the floor entirely,%n"
+                        + "  the chain runs %d trades and %+.1f, but everything past the %d above is smaller than the%n"
+                        + "  yardstick's own noise, and it starts churning: it reacquires men it gave away earlier.%n"
+                        + "  Every trade has to improve BOTH rosters, so the league's total value only rises and is%n"
+                        + "  bounded by the best possible allocation of a fixed set of players. It must stop, and it%n"
+                        + "  does. Local maxima are NOT the problem here; the floor is.%n",
+                        churn.size(), churn.isEmpty() ? 0 : churn.get(churn.size() - 1).cumulative(), steps.size()));
+            }
+        }
+
+        out.append("\nWHAT THIS CANNOT TELL YOU. Sleeper records only COMPLETED trades - 51 across five\n");
+        out.append("seasons of this league, and not one refusal - so there is no way to fit what a manager\n");
+        out.append("will ACCEPT. What stands in: his gain on the model, and 'his view' - the trade on the two\n");
+        out.append("numbers he can check, against every trade this league has accepted. A trade fair on both is\n");
+        out.append("one he can check and find fair; that is not the same as one he will take.\n");
+        System.out.print(out);
+        // the pricing is always in the name: the default moved from the season
+        // feed to sleeper-remaining on 2026-09-28, and a bare trades-<date>.txt
+        // would no longer say which one it was priced on
+        String fixedDraft = System.getProperty("draftWeight", "");
+        Path target = Path.of("data", "trades-" + LocalDate.now()
+                + "-" + source.replace(':', '_').replace(',', '_')
+                + (fixedDraft.isBlank() ? "" : "-draft" + Math.round(100 * Double.parseDouble(fixedDraft)))
+                + ("drawn".equals(System.getProperty("objective", "weekly")) ? "-drawn" : "") + ".txt");
+        Files.writeString(target, out.toString(), StandardCharsets.UTF_8);
+        System.out.println("written to " + target);
+    }
+
+    /**
+     * How a trade LOOKS by draft position, which before the season is most of
+     * how it is judged.
+     *
+     * Justin: "before like the first week, the current adp matters, so even if a
+     * pick is advantageous for both parties, people will not like to trade their
+     * round n pick for my round m pick if my m is significantly > n." That is a
+     * third thing, distinct from either side's valuation: two men can both gain
+     * on the objective and the trade still be refused because one manager is
+     * visibly handing over the earlier pick.
+     *
+     * The anchor is the BEST man each way, not the sum, because that is what a
+     * trade gets named after - "he gave up Henry" - and because ADPs do not add:
+     * two men at 90 are not one man at 45. `theirs` is the earliest ADP among the
+     * men Justin receives, `mine` the earliest among those he sends. A negative
+     * gap means he is receiving the earlier pick and should expect resistance
+     * however good the arithmetic looks.
+     */
+    /**
+     * Is this an ask for a man the other manager would want to keep? One home
+     * for the rule: the console used to re-decide it in JavaScript, so tuning
+     * the number here would have stopped the terminal flagging trades the page
+     * kept flagging, with nothing failing.
+     */
+    static final double HIS_KEEPER_POINTS = 25;
+
+    static boolean asksForAKeeper(double hisKeeperSurplus){
+        return hisKeeperSurplus > HIS_KEEPER_POINTS;
+    }
+
+    public record Optics(double mine, double theirs, int menEachWay) {
+
+        /**
+         * Picks of draft position between the two headline men. A LOWER ADP is an
+         * EARLIER pick, so a POSITIVE gap means the man arriving was drafted
+         * earlier than the man leaving - Justin is asking for the better pick,
+         * which is the hard direction.
+         */
+        public double gap(){
+            return mine - theirs;
+        }
+
+        // There was a verdict() here that read this gap on a straight line - 25
+        // picks either way was "a grab" - and it called Nabers (28.6) for Ja'Marr
+        // Chase (3.9) "reads even on draft position". 25 picks between a first
+        // and a third-rounder are not the 25 between the tenth round and the
+        // twelfth. How a trade reads is TradeScreens' job now, on a chart that
+        // is steep where the draft is; this record only carries the two ADPs
+        // the tables print.
+    }
+
+    /** The earliest ADP on each side of a trade. */
+    static Optics optics(List<String> give, List<String> get,
+                         java.util.function.ToDoubleFunction<String> adpOf){
+        double mine = Double.MAX_VALUE, theirs = Double.MAX_VALUE;
+        for(String id : give){ mine = Math.min(mine, adpOf.applyAsDouble(id)); }
+        for(String id : get){ theirs = Math.min(theirs, adpOf.applyAsDouble(id)); }
+        return new Optics(mine, theirs, Math.max(give.size(), get.size()));
+    }
+
+    /**
+     * THE SIMPLE MODEL: what the best legal ten projects, and nothing else.
+     *
+     * Justin wants both numbers on the table, and the reason is social rather
+     * than statistical: "some league members have a preference for the simple,
+     * and other league members have a preference for the complex." The complex
+     * one - {@link WeeklyStarterValue} - prices a bench by how often it is
+     * promoted, draws whole historical seasons for injuries and boom-or-bust,
+     * and is the better number. It is also unarguable-with over a chat message.
+     * This one adds up the starters anybody can see, so a trade can be made the
+     * case for in the terms the other manager already uses.
+     *
+     * They will sometimes disagree, and when they do that IS the argument: a
+     * trade good on starters and bad on the full model is one where the bench or
+     * the injury risk is doing the work.
+     */
+    static double simpleStarters(List<String> roster, Map<String, Double> points,
+                                 Map<String, Position> positionOf){
+        return simpleLineup(roster, points, positionOf).starters();
+    }
+
+    /** How many of the ten slots this roster can actually fill. */
+    static int slotsFilled(List<String> roster, Map<String, Double> points,
+                           Map<String, Position> positionOf){
+        return simpleLineup(roster, points, positionOf).starting().size();
+    }
+
+    private static TeamRankings.Lineup simpleLineup(List<String> roster, Map<String, Double> points,
+                                                    Map<String, Position> positionOf){
+        List<TeamRankings.Man> men = new ArrayList<>();
+        for(String id : roster){
+            Position position = positionOf.get(id);
+            men.add(new TeamRankings.Man(id, id, position == null ? "?" : position.name(), "",
+                    points.getOrDefault(id, 0.0), false, 0, ""));
+        }
+        return TeamRankings.bestLineup(men);
+    }
+
+    /** One step of a chain: the trade taken, and where the roster stood after it. */
+    public record Step(Trade trade, double cumulative) {}
+
+    /**
+     * What a man is worth to KEEP next year, in this season's points.
+     *
+     * Justin's objection, and it is the right one: a trade priced only on this
+     * season cannot see that giving up Tuten gives up a round-12 keeper. The
+     * league's own surplus definition is in picks - {@link
+     * KeeperChooser#adpSurplus} is "the pick I would spend minus where the
+     * player actually goes" - and picks do not add to a roster value measured in
+     * points. So it is converted honestly: what he projects, minus what the pick
+     * you would spend on him actually buys, taken off the current board.
+     *
+     * Zero for a man the rules will not let you keep, and never negative: a
+     * keeper you would not declare costs nothing, you simply do not declare him.
+     *
+     * THE COMPARISON IS AT HIS OWN POSITION, and the first version was not.
+     * Measured against the whole board it made every quarterback a franchise
+     * keeper - Purdy read a surplus of 272 and Nix 208 - because this league
+     * pays 6 for a passing touchdown while the ADP it drafts against is
+     * calibrated for 4, so a quarterback's projection towers over a board sorted
+     * by draft position. The board even ran backwards: the man at pick 175
+     * "projected" 314.9 against 225.5 at pick 18. What a keeper saves is the
+     * pick, and what the pick buys is THE BEST MAN AT HIS POSITION STILL THERE -
+     * which is the quantity this compares him with.
+     */
+    /**
+     * Player id -> the draft slot of the manager holding him, so a rival's
+     * keeper is priced at HIS pick and not mine.
+     *
+     * `ownerOf` is keyed by display name, `draft_order` by user id, so the two
+     * are joined through the users feed. A man whose owner is not in the draft
+     * order - picked up by a manager who joined after it, or an id the feeds
+     * disagree about - is simply absent, and `keeperPickNumber` falls back to my
+     * slot for him.
+     */
+    static Map<String, Integer> draftSlotOfPlayer(Map<String, String> ownerOf,
+                                                  AAAConfiguration configuration){
+        Map<String, Integer> byUser = configuration.getDraftSlots();
+        Map<String, Integer> byName = new HashMap<>();
+        for(Map.Entry<String, String> entry : configuration.getUserIDToDisplayName().entrySet()){
+            Integer slot = byUser.get(entry.getKey());
+            if(slot != null){
+                byName.put(entry.getValue(), slot);
+            }
+        }
+        Map<String, Integer> byPlayer = new HashMap<>();
+        for(Map.Entry<String, String> entry : ownerOf.entrySet()){
+            Integer slot = byName.get(entry.getValue());
+            if(slot != null){
+                byPlayer.put(entry.getKey(), slot);
+            }
+        }
+        return byPlayer;
+    }
+
+    /**
+     * What the keeper round costs its owner, in overall picks.
+     *
+     * Every keeper in the league was priced at MY pick number until 2026-09-08.
+     * In a twelve-team snake that is wrong by up to eleven picks for a rival, in
+     * whichever direction the round runs - and it is systematically wrong,
+     * because my slot is fixed: a manager at the other end of the order has his
+     * early rounds read off my late picks and his late rounds off my early ones.
+     */
+    static int keeperPickNumber(AAAConfiguration configuration, Map<String, Integer> slotOfPlayer,
+                                int round, String id){
+        Integer slot = slotOfPlayer.get(id);
+        return slot == null ? configuration.pickNumberFor(round)
+                : configuration.pickNumberFor(round, slot);
+    }
+
+    static double keeperPoints(Map<String, Integer> keeperRound, Map<String, Double> points,
+                               Map<Position, java.util.TreeMap<Double, Double>> bestByAdp,
+                               Map<String, Position> positionOf, AAAConfiguration configuration,
+                               Map<String, Integer> slotOfPlayer, String id){
+        Integer round = keeperRound.get(id);
+        Position position = positionOf.get(id);
+        if(round == null || position == null){
+            return 0;
+        }
+        java.util.TreeMap<Double, Double> atPosition = bestByAdp.get(position);
+        if(atPosition == null){
+            return 0;
+        }
+        double pick = keeperPickNumber(configuration, slotOfPlayer, round, id);
+        // Nobody at his position has an ADP that late: everyone is gone by then,
+        // so the pick buys a waiver-level man and the keeper saves his whole
+        // projection. Falling back to the deepest entry instead would credit him
+        // with a replacement who does not exist.
+        Map.Entry<Double, Double> replacement = atPosition.ceilingEntry(pick);
+        double available = replacement == null ? 0 : replacement.getValue();
+        return Math.max(0, points.getOrDefault(id, 0.0) - available);
+    }
+
+    /**
+     * The same number WITHOUT the floor, which is how far a man is from being
+     * worth his keeper price.
+     *
+     * `keeperPoints` floors at zero because a keeper you would not keep is worth
+     * nothing, and that is right for valuing a roster. It is wrong for reading a
+     * table: a man forty points short of his price and one a single point short
+     * both print 0.0, so the ordering below the keepers carries no information
+     * and a near miss looks identical to a hopeless one. Skattebo at r3 and
+     * Tre' Harris at r16 are not the same distance from keepable.
+     */
+    static double keeperPointsRaw(Map<String, Integer> keeperRound, Map<String, Double> points,
+                                  Map<Position, java.util.TreeMap<Double, Double>> bestByAdp,
+                                  Map<String, Position> positionOf, AAAConfiguration configuration,
+                                  Map<String, Integer> slotOfPlayer, String id){
+        Integer round = keeperRound.get(id);
+        Position position = positionOf.get(id);
+        if(round == null || position == null){
+            return 0;
+        }
+        java.util.TreeMap<Double, Double> atPosition = bestByAdp.get(position);
+        if(atPosition == null){
+            return 0;
+        }
+        Map.Entry<Double, Double> replacement = atPosition.ceilingEntry(
+                (double) keeperPickNumber(configuration, slotOfPlayer, round, id));
+        return points.getOrDefault(id, 0.0) - (replacement == null ? 0 : replacement.getValue());
+    }
+
+    /**
+     * Per position, ADP -> the best projection still on the board at that ADP or
+     * later. Walked from the back so each entry is a running maximum: what the
+     * best man at this position is worth if you wait until this pick.
+     */
+    static Map<Position, java.util.TreeMap<Double, Double>> bestStillAvailable(
+            Map<String, Double> points, Map<String, Position> positionOf){
+        Map<Position, List<String>> byPosition = new java.util.EnumMap<>(Position.class);
+        for(String id : points.keySet()){
+            Position position = positionOf.get(id);
+            if(position != null && position != Position.OTHER){
+                byPosition.computeIfAbsent(position, u -> new ArrayList<>()).add(id);
+            }
+        }
+        Map<Position, java.util.TreeMap<Double, Double>> out = new java.util.EnumMap<>(Position.class);
+        for(Map.Entry<Position, List<String>> entry : byPosition.entrySet()){
+            List<String> men = entry.getValue();
+            men.sort(Comparator.comparingDouble(SleeperProjections::adpOf));
+            java.util.TreeMap<Double, Double> curve = new java.util.TreeMap<>();
+            double running = 0;
+            for(int i = men.size() - 1; i >= 0; i--){
+                running = Math.max(running, points.getOrDefault(men.get(i), 0.0));
+                curve.put(SleeperProjections.adpOf(men.get(i)), running);
+            }
+            out.put(entry.getKey(), curve);
+        }
+        return out;
+    }
+
+    /**
+     * A roster's keeper value: the best TWO surpluses on it, because two is all
+     * the league lets anybody keep. A third good keeper is worth nothing next
+     * March and must not be counted as though it were.
+     */
+    /** Positions the lineup starts exactly one of; a second there does not play. */
+    static final java.util.Set<Position> ONE_STARTER =
+            java.util.Set.of(Position.QB, Position.TE, Position.DEF);
+
+    /**
+     * The best PAIR he may keep, not the two biggest numbers.
+     *
+     * Justin, 2026-09-07: "but keeping purdy and nix would nerf one of the two."
+     * He is right and the old version could not see it - it sorted every
+     * surplus, took the top two and added them, with no reference to position at
+     * all. This league starts ONE quarterback. Keeping two means one of them
+     * spends the season on the bench, and his surplus - which was measured as
+     * what he is worth beyond his draft pick, in a starting slot - is very
+     * largely not collected.
+     *
+     * It was not hypothetical: with Tuten traded away the model's fallback pair
+     * was Bo Nix and Brock Purdy, two quarterbacks, valued at 52.5 as though
+     * both played. That understated what parting with Tuten costs, and it would
+     * have recommended the pair outright had he ever been moved.
+     *
+     * So: the best pair that does not put two men at a one-starter position.
+     * This is CONSERVATIVE rather than exact - a backup quarterback is not
+     * literally worthless, he is insurance worth something on the weeks the
+     * starter sits - and pricing that properly means running the objective,
+     * which is far too slow inside a trade loop. Erring toward not recommending
+     * two quarterbacks is the right direction to be wrong in.
+     */
+    static double keeperValue(List<String> roster, Map<String, Double> surplus,
+                              Map<String, Position> positionOf){
+        double total = 0;
+        for(String id : bestKeeperPair(roster, surplus, positionOf)){
+            total += surplus.getOrDefault(id, 0.0);
+        }
+        return total;
+    }
+
+    /**
+     * THE PAIR THE VALUE IS THE SUM OF - so the page can mark the two men it
+     * actually prices.
+     *
+     * The console marked KEEP on the top two surpluses regardless of position
+     * while every trade row on the same page charged the legal pair. Today the
+     * top two are an RB and a QB, so nothing showed; the day Tuten is traded the
+     * panel would have named Nix + Purdy while the rows charged Nix + the Ravens
+     * - the runbook's own sentence, contradicted by the page it describes.
+     * Zero, one or two ids; nobody with a surplus at or below zero is a keeper.
+     */
+    static List<String> bestKeeperPair(List<String> roster, Map<String, Double> surplus,
+                                       Map<String, Position> positionOf){
+        List<String> men = new ArrayList<>(roster);
+        men.sort(Comparator.comparingDouble((String id) -> -surplus.getOrDefault(id, 0.0)));
+        List<String> best = List.of();
+        double bestValue = 0;
+        for(int i = 0; i < men.size(); i++){
+            double one = surplus.getOrDefault(men.get(i), 0.0);
+            if(one <= 0){
+                break;                       // sorted, so nothing later helps
+            }
+            if(one > bestValue){             // keeping just the one is always legal
+                best = List.of(men.get(i));
+                bestValue = one;
+            }
+            Position first = positionOf.get(men.get(i));
+            for(int j = i + 1; j < men.size(); j++){
+                double two = surplus.getOrDefault(men.get(j), 0.0);
+                if(two <= 0){
+                    break;
+                }
+                Position second = positionOf.get(men.get(j));
+                if(first != null && first == second && ONE_STARTER.contains(first)){
+                    continue;                // two at a one-starter slot; one would sit
+                }
+                if(one + two > bestValue){
+                    best = List.of(men.get(i), men.get(j));
+                    bestValue = one + two;
+                }
+                break;                       // the next best legal partner is the best one
+            }
+        }
+        return best;
+    }
+
+    /**
+     * Every projected man's position, not just the rostered men's.
+     *
+     * The keeper replacement curve asks for the best man at a position still on
+     * the board at pick N. Built from the 192 rostered men it ends at the deepest
+     * rostered quarterback, and a keeper priced past that reads his whole
+     * projection as surplus - Bo Nix at 347.7. Three callers each carried this
+     * loop; TradeStability did not, and stayed wrong. One home.
+     */
+    static Map<String, Position> everyPosition(Map<String, Double> points,
+                                               Map<String, Position> positionOf){
+        Map<String, Position> every = new HashMap<>(positionOf);
+        for(String id : points.keySet()){
+            every.computeIfAbsent(id, u -> {
+                Player player = Player.getPlayerFromSIDV2(u);
+                return player == null ? null : player.position;
+            });
+        }
+        return every;
+    }
+
+    /**
+     * Trade after trade, each one re-searched on the board the last one left,
+     * until nothing mutually good is left.
+     *
+     * This is the question "can I just keep trading and keep improving?" asked
+     * properly. It has to terminate: every trade in the chain improves BOTH
+     * rosters on the same objective, so the total value held across the league
+     * strictly increases, and that total is bounded by the best possible
+     * allocation of a fixed set of players. The chain stops when no swap helps
+     * two sides at once - which is a real fixed point and not a search limit.
+     * What is worth knowing is how FAR away it is, and how much of the gain is
+     * his rather than given away to keep the trades acceptable.
+     */
+    /**
+     * WHAT A TRADE OPENS UP, not just what it is worth.
+     *
+     * Justin: "I'd prefer to do a +5 trade that opens up a total possibility of
+     * a chain of +80 trades, than a +20 trade that only opens up a chain of
+     * +45." That is a different question from the one the table answers, and
+     * the greedy chain cannot answer it either: `chain` always takes the biggest
+     * step available, so it finds the +20 and never learns what the +5 leads to.
+     *
+     * A first trade changes the board for everybody - it moves men onto and off
+     * two rosters - so the trades available afterwards are not the trades
+     * available now. This forces the given first move, then lets the greedy
+     * chain run from the board that move leaves, and returns the WHOLE sequence
+     * with the forced trade as step one. Its last cumulative is what the first
+     * trade is really worth.
+     *
+     * `chainPool` is DELIBERATELY SMALLER than the pool the headline table uses,
+     * and this is the honest trade-off rather than a corner cut quietly. One
+     * board search at pool 8 is about 4,200 candidate trades a rival, each
+     * costing two runs of the objective; a lookahead over twelve first moves at
+     * depth six is seventy-two of those searches, which is hours. At pool 4 it
+     * is roughly three hundred a rival - thirteen times cheaper - and the chain
+     * still sees every side's best few men, which is where chains come from.
+     * The page states the pool it used, so the number can be read for what it
+     * is: a floor on what the trade opens up, not a ceiling.
+     */
+    static List<Step> chainAfter(String me, Map<String, List<String>> rosters, Trade first,
+                                 Side myValue, Side theirValue,
+                                 int maxSteps, int chainPool, double floor){
+        Map<String, List<String>> board = new TreeMap<>();
+        for(Map.Entry<String, List<String>> entry : rosters.entrySet()){
+            board.put(entry.getKey(), new ArrayList<>(entry.getValue()));
+        }
+        board.put(me, swap(board.get(me), first.give(), first.get()));
+        board.put(first.withManager(), swap(board.get(first.withManager()), first.hisOut(), first.give()));
+
+        List<Step> steps = new ArrayList<>();
+        steps.add(new Step(first, first.myGain()));
+        for(Step step : chain(me, board, myValue, theirValue, maxSteps - 1, chainPool, floor)){
+            steps.add(new Step(step.trade(), first.myGain() + step.cumulative()));
+        }
+        return steps;
+    }
+
+    /** The total a first trade is worth once everything it unlocks is counted. */
+    static double reach(List<Step> chain){
+        return chain.isEmpty() ? 0 : chain.get(chain.size() - 1).cumulative();
+    }
+
+    static List<Step> chain(String me, Map<String, List<String>> rosters,
+                            Side myValue, Side theirValue,
+                            int maxSteps, int pool, double floor){
+        Map<String, List<String>> board = new TreeMap<>();
+        for(Map.Entry<String, List<String>> entry : rosters.entrySet()){
+            board.put(entry.getKey(), new ArrayList<>(entry.getValue()));
+        }
+        List<Step> steps = new ArrayList<>();
+        double cumulative = 0;
+        for(int step = 0; step < maxSteps; step++){
+            List<Trade> candidates = new ArrayList<>();
+            for(Map.Entry<String, List<String>> entry : board.entrySet()){
+                if(entry.getKey().equals(me)){
+                    continue;
+                }
+                candidates.addAll(between(me, entry.getKey(), board.get(me), entry.getValue(),
+                        myValue, theirValue, pool));
+            }
+            List<Trade> good = mutual(candidates);
+            // A TRADE UNDER THE FLOOR IS NOT A TRADE. The objective's own
+            // seed-to-seed spread is 6.8 points (ObjectiveStability), so a chain
+            // that keeps accepting +0.4 and +0.9 is not improving a roster, it is
+            // walking around inside the yardstick. Run without this the chain went
+            // twenty deep, and step 17 traded BACK for the man step 1 gave away.
+            if(good.isEmpty() || good.get(0).myGain() < floor){
+                break;
+            }
+            Trade best = good.get(0);
+            board.put(me, swap(board.get(me), best.give(), best.get()));
+            board.put(best.withManager(), swap(board.get(best.withManager()), best.hisOut(), best.give()));
+            cumulative += best.myGain();
+            steps.add(new Step(best, cumulative));
+        }
+        return steps;
+    }
+
+    static String label(List<String> ids, Map<String, String> nameOf){
+        List<String> names = new ArrayList<>();
+        for(String id : ids){
+            names.add(nameOf.getOrDefault(id, id));
+        }
+        return String.join(" + ", names);
+    }
+}

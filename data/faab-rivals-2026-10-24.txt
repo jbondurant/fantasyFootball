@@ -1,0 +1,34 @@
+data: projections 2026-10-23, player metadata 2026-10-24
+FAAB RIVALS  2026-10-24  (the waiver run as an auction; priced on sleeper-remaining, 480 drawn seasons)
+A claim placed now clears SUNDAY noon. On Sundays here, 2021-2025: 27% of claims contested, median price $0,
+p75 $2, p90 $4; a bid of $1 won 69%, $3 85%, $5 92%. The WEDNESDAY run is where the money goes (49% contested, median $3): 'need' is
+who a man would help, and off that day it is a ceiling on competition, not a forecast of it.
+
+Each target's gain to every manager: his active roster with the target in for his lowest-projected man,
+less as it stands. A sealed first-price auction is priced by the most motivated OTHER bidder, so the
+columns are the three rivals he helps most and the FAAB each has left. 'need' counts rivals he helps by
+more than the noise floor (11.3). This is need, not hype: FaabDemand measures who draws a bid at all.
+
+TARGET                 POS      you  need   rival 1 (gain, $ left)     rival 2                    rival 3                   
+Pat Bryant             WR      +1.4     0   BHier +10.1 $80            Renteez +8.7 $35           jerem9604 +3.2 $58        
+Tyler Higbee           TE      +0.4     0   Renteez +9.8 $35           KevinDA +5.6 $32           JFMarino +5.2 $65         
+Jacoby Brissett        QB      +1.9     0   KevinDA +5.1 $32           patekxwater +4.9 $70       BHier +3.8 $80            
+George Holani          RB      +0.0     0   Renteez +3.5 $35           KevinDA +1.9 $32           JakeSK +0.3 $56           
+Baker Mayfield         QB      +0.0     0   Hamrliks +3.2 $42          patekxwater +3.0 $70       KevinDA +1.0 $32          
+Philadelphia Eagles    DEF     +2.8     0   d0ddi +2.9 $87             Hamrliks +2.9 $42          KevinDA +2.9 $32          
+Sam Darnold            QB      +0.0     0   BHier +2.8 $80             KevinDA +2.8 $32           patekxwater +2.8 $70      
+Geno Smith             QB      +0.0     0   d0ddi +2.1 $87             patekxwater +1.5 $70       Hamrliks +1.2 $42         
+Cade Otton             TE      +0.0     0   Renteez +1.2 $35           itsabust +0.8 $7           JFMarino +0.5 $65         
+Cam Ward               QB      +0.0     0   KevinDA +1.2 $32           d0ddi +1.2 $87             BHier +1.0 $80            
+Quentin Johnston       WR      +0.0     0   Renteez +0.9 $35           BHier +0.4 $80             Hamrliks +0.0 $42         
+J.J. McCarthy          QB      +0.0     0   d0ddi +0.9 $87             KevinDA +0.5 $32           patekxwater +0.5 $70      
+Jaylin Noel            WR      +0.1     0   BHier +0.8 $80             Renteez +0.7 $35           tommyrads +0.6 $91        
+Demarcus Robinson      WR      +0.0     0   Renteez +0.8 $35           BHier +0.6 $80             Hamrliks +0.0 $42         
+Baltimore Ravens       DEF     +0.7     0   BHier +0.8 $80             Hamrliks +0.8 $42          JFMarino +0.8 $65         
+Cincinnati Bengals     DEF     +0.7     0   BHier +0.7 $80             KevinDA +0.7 $32           Renteez +0.7 $35          
+Green Bay Packers      DEF     +0.6     0   JFMarino +0.6 $65          BHier +0.6 $80             Renteez +0.6 $35          
+Justice Hill           RB      +0.5     0   JakeSK +0.4 $56            BHier +0.0 $80             Hamrliks +0.0 $42         
+
+Your FAAB left: $100. Read a row as: if 'need' is 0 nobody else gains beyond the noise and a small bid
+should do; if a rival with money left gains more than you do, you are bidding against his need, not the
+league's average price.

@@ -1,0 +1,29 @@
+PROP SHAPE  2026-09-26  (Sleeper/Rotowire weekly projected stat lines against the stat rows, played player-weeks 2018-2025)
+below = share of games the outcome fell below the projection (a line set at the projection: the under's hit rate);
+median ratio = the median outcome over the projection; mean ratio = mean outcome over mean projection (1.00 = the
+projection is an unbiased mean, and 'below' above 50% is then skew alone). Break-even on a -110 under: 52.38%.
+
+stat                     games    below    above  median ratio  mean ratio   below, by projection tercile
+passing yards             3855    56.7%    43.3%          0.95        0.96    54.0% (151-228)   55.0% (228-259)   61.1% (259-359)  
+passing TDs               3847    58.2%    41.8%          0.83        0.91    63.6% (1-1)   54.1% (1-2)   56.9% (2-3)  
+QB rushing yards          2440    59.4%    40.6%          0.80        0.98    60.7% (10-15)   59.5% (15-25)   58.0% (25-79)  
+rushing yards             5572    56.3%    43.7%          0.90        1.00    57.9% (25-44)   52.7% (44-62)   58.4% (62-121)  
+RB receiving yards        5654    62.8%    37.2%          0.70        0.94    61.4% (10-15)   63.1% (15-23)   63.8% (23-65)  
+RB rush + rec yards       5358    55.9%    44.1%          0.92        0.99    56.6% (40-63)   54.3% (63-84)   56.7% (84-159)  
+WR receiving yards       10173    59.3%    40.7%          0.84        0.96    60.8% (25-42)   58.7% (42-59)   58.3% (59-118)  
+WR receptions             9012    56.8%    43.2%          0.91        0.96    57.6% (3-4)   56.3% (4-5)   56.5% (5-9)  
+TE receiving yards        4036    59.1%    40.9%          0.82        0.97    59.0% (20-30)   60.7% (30-41)   57.7% (41-96)  
+TE receptions             3924    56.7%    43.3%          0.90        0.98    55.3% (2-3)   57.0% (3-4)   57.8% (4-8)  
+
+By season (receiving yards, WR), to see whether the shape is stable:
+   2018   1008 games  below  58.5%  median ratio 0.87
+   2019   1240 games  below  59.4%  median ratio 0.85
+   2020   1432 games  below  59.8%  median ratio 0.84
+   2021   1416 games  below  65.3%  median ratio 0.73
+   2022   1311 games  below  57.1%  median ratio 0.87
+   2023   1288 games  below  55.6%  median ratio 0.88
+   2024   1272 games  below  55.7%  median ratio 0.91
+   2025   1206 games  below  62.2%  median ratio 0.79
+
+The reading: where 'below' is well above 52.4%, an under at -110 against a line placed AT the projection wins money;
+whether any book places its line there is the question the prop-line archive has to answer (BETTING.md).

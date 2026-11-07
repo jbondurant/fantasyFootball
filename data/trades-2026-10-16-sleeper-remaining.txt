@@ -1,0 +1,114 @@
+TRADE MARKET  2026-10-16  (justinb314; projections: sleeper-remaining)
+Every size-balanced swap with all eleven rivals, both rosters priced on the same
+weekly-starter objective (240 drawn seasons). Only trades BOTH sides gain from are listed:
+an offer the other manager loses on is an offer he declines.
+THE TWO SIDES ARE PRICED DIFFERENTLY, on purpose. YOUR value is the season PLUS the best two
+keeper surpluses on your roster (a surplus being what a man is worth beyond the pick you spend to
+keep him, measured at HIS OWN position). HIS is LOSS-AVERSE on keepers: he takes no credit for one
+he receives and feels every point of one he gives up, which is how people here actually behave.
+So asking for another manager's keeper is HARD - the ask is priced at what it costs him - and
+paying anybody IN keepers buys you nothing. -Pkeepers=false prices you the same way he is.
+
+HOW EVERY ROSTER SCORES - the season points its starters are expected to score: 17 x the best legal
+lineup from whoever is healthy in a drawn week, the bench worth the weeks it covers, every slot floored at
+the waiver wire. On sleeper-remaining and on ros (the rest-of-season model moves on this season's results; Sleeper's
+season feed does not):
+  rank manager          sleeper-remaining   rank      ros
+  1    itsabust           1776.0   6      2130.0
+  2    JakeSK             1701.8   2      2276.4
+  3    justinb314         1689.2   4      2186.4   <- you
+  4    JFMarino           1681.8   1      2302.1
+  5    d0ddi              1671.2   3      2199.8
+  6    patekxwater        1633.3   9      2051.3
+  7    jerem9604          1618.9   8      2080.9
+  8    Hamrliks           1598.3   7      2085.3
+  9    tommyrads          1542.2   5      2146.9
+  10   KevinDA            1525.7   10     2029.3
+  11   BHier              1464.8   11     1923.1
+  12   Renteez            1442.1   12     1848.4
+
+THE SEASON EACH RIVAL IS IN (TitleOdds, 20000 seasons from week 6). 'weight' is what a point of season
+value is worth to him against the league average; a rival's gain below is his season gain times it, less any
+keeper he gives up, plus (1 - his playoff odds) of any keeper he receives.
+  manager          playoffs   title  weight  state
+  itsabust            86.0%   21.1%    1.91  contender
+  JFMarino            94.0%   17.7%    1.48  contender
+  JakeSK              83.1%   15.9%    1.71  contender
+  justinb314          80.8%   13.0%    1.50  contender   <- you
+  d0ddi               65.5%    9.7%    1.36  contender
+  patekxwater         51.3%    8.9%    1.24  bubble
+  Hamrliks            44.7%    5.2%    0.90  bubble
+  KevinDA             25.4%    2.6%    0.63  bubble
+  jerem9604           21.4%    2.6%    0.53  out of it
+  tommyrads           40.0%    2.5%    0.50  bubble
+  Renteez              5.3%    0.6%    0.17  out of it
+  BHier                2.6%    0.2%    0.07  out of it
+
+51168 swaps searched, 348 good for both sides, 316 of those also good for 2026.
+A trade must stand up WITHOUT the keeper value as well - the plan is to win 2026, and
+keeper value is a tiebreak on a deal that already helps now, not a reason to get worse.
+32 offers were dropped for failing that. -PsellMode=true to see them.
+
+'his view' is the trade from HIS side on the two numbers he can check (TradeScreens): what he gets back
+of the draft value and of this season's points he gives, '-' where he gives none. 'title' is the change in
+your title odds and his, in percentage points (TitleOdds, the same 20000 seasons before and after).
+YOU GIVE                     YOU GET                          you     him  season   SIMPLE   you:ros   him:ros     ADP g/g   his view   title y/h   WITH / HOW IT READS
+Bhayshul Tuten + Khalil Shakir Bijan Robinson + Rashee Rice   +87.0   +43.8  +140.9   +154.9    +196.5    -210.3    59/3     27%/23%=25% +14.1/ -0.2   BHier  he loses on ros - NO - he gets back 25% of what he gives on what he can see (27% of the draft value, 23% of the season's points; draft counted as 10 games against 6 played); 1 of 60 accepted sides here took as little (Hamrliks), never BHier
+Bhayshul Tuten + Khalil Shakir Javonte Williams + Ja'Marr Chase   +79.9   +13.9  +124.9   +129.2    +151.2    -165.6    59/3     26%/27%=27% +13.9/ -0.5   Renteez  he loses on ros - NO - he gets back 27% of what he gives on what he can see (26% of the draft value, 27% of the season's points; draft counted as 10 games against 6 played); 1 of 60 accepted sides here took as little (Hamrliks), never Renteez
+Bhayshul Tuten + Malik Nabers + Harold Fannin Bijan Robinson + Rashee Rice + Travis Kelce   +76.2   +47.2  +130.0   +152.5    +147.8    -145.7    29/3     60%/42%=51% +11.4/ -0.2   BHier  he loses on ros - a long shot - he gets back 51% of what he gives on what he can see (60% of the draft value, 42% of the season's points; draft counted as 10 games against 6 played); 6 of 60 accepted sides here took as little (BHier, Hamrliks, itsabust, patekxwater)
+Bhayshul Tuten + Khalil Shakir Bijan Robinson + Travis Kelce   +72.5   +47.1  +126.3   +128.0    +172.1    -167.1    59/3     33%/23%=27% +11.1/ -0.2   BHier  he loses on ros - NO - he gets back 27% of what he gives on what he can see (33% of the draft value, 23% of the season's points; draft counted as 10 games against 6 played); 1 of 60 accepted sides here took as little (Hamrliks), never BHier
+Bhayshul Tuten + Cam Skattebo + Harold Fannin Bijan Robinson + Rashee Rice + Travis Kelce   +72.3   +44.8  +126.1   +154.3    +153.4    -187.1    36/3     59%/25%=41% +11.3/ -0.2   BHier  he loses on ros - NO - he gets back 41% of what he gives on what he can see (59% of the draft value, 25% of the season's points; draft counted as 10 games against 6 played); 5 of 60 accepted sides here took as little (BHier, Hamrliks, itsabust, patekxwater)
+Bhayshul Tuten + Rhamondre Stevenson + Harold Fannin Bijan Robinson + Rashee Rice + Travis Kelce   +62.4   +45.7  +116.2   +141.4    +140.5    -173.1    59/3     46%/35%=40% +12.8/ -0.2   BHier  he loses on ros - NO - he gets back 40% of what he gives on what he can see (46% of the draft value, 35% of the season's points; draft counted as 10 games against 6 played); 5 of 60 accepted sides here took as little (BHier, Hamrliks, itsabust, patekxwater)
+Bhayshul Tuten + Harold Fannin Bijan Robinson + Travis Kelce   +58.7   +48.5  +112.6   +128.0    +159.8    -159.8    59/3     43%/25%=33% +11.0/ -0.2   BHier  he loses on ros - NO - he gets back 33% of what he gives on what he can see (43% of the draft value, 25% of the season's points; draft counted as 10 games against 6 played); 3 of 60 accepted sides here took as little (BHier, Hamrliks, itsabust)
+Bhayshul Tuten + Harold Fannin Bijan Robinson + Rashee Rice   +56.5   +44.8  +110.3   +130.7    +154.5    -217.0    59/3     34%/26%=30% +13.6/ -0.2   BHier  he loses on ros - NO - he gets back 30% of what he gives on what he can see (34% of the draft value, 26% of the season's points; draft counted as 10 games against 6 played); 2 of 60 accepted sides here took as little (Hamrliks, itsabust), never BHier
+Bhayshul Tuten + Malik Nabers + Harold Fannin Bijan Robinson + Rashee Rice + Brenton Strange   +53.2   +48.8  +107.0   +129.6    +122.4    -119.5    29/3     65%/49%=57% +10.5/ -0.2   BHier  he loses on ros - a long shot - he gets back 57% of what he gives on what he can see (65% of the draft value, 49% of the season's points; draft counted as 10 games against 6 played); 9 of 60 accepted sides here took as little (BHier, Hamrliks, itsabust, patekxwater)
+Bhayshul Tuten + Khalil Shakir Bijan Robinson + David Montgomery   +52.3   +47.5  +106.1   +101.0    +166.0    -172.8    59/3     27%/27%=27% +10.2/ -0.2   BHier  he loses on ros - NO - he gets back 27% of what he gives on what he can see (27% of the draft value, 27% of the season's points; draft counted as 10 games against 6 played); 1 of 60 accepted sides here took as little (Hamrliks), never BHier
+Bhayshul Tuten + Malik Nabers + Cam Skattebo Bijan Robinson + Rashee Rice + Travis Kelce   +52.1   +49.1  +105.9   +127.9    +113.3    -112.7    29/3     76%/42%=59%  +7.4/ -0.2   BHier  he loses on ros - a long shot - he gets back 59% of what he gives on what he can see (76% of the draft value, 42% of the season's points; draft counted as 10 games against 6 played); 9 of 60 accepted sides here took as little (BHier, Hamrliks, itsabust, patekxwater)
+Bhayshul Tuten + Khalil Shakir Bijan Robinson + Brenton Strange   +50.4   +48.6  +104.2   +105.0    +155.5    -139.5    59/3     37%/28%=32% +10.3/ -0.2   BHier  he loses on ros - NO - he gets back 32% of what he gives on what he can see (37% of the draft value, 28% of the season's points; draft counted as 10 games against 6 played); 3 of 60 accepted sides here took as little (BHier, Hamrliks, itsabust)
+
+THE SHORT LIST - 1 of the 316: good for BOTH sides on BOTH pricings, you gaining at least the
+noise floor (6.8, ObjectiveStability's seed-to-seed spread) this season on each, AND fair to him on what he
+can see - at least what he gives, with draft value counted as 10 games of this season's pace (the weight this
+league's accepted trades reveal, TradeScreens). Best first by the change in your title odds ('title', in
+percentage points, +- its standard error); 'trades/yr' is how often he has actually traded (TradePartners).
+  YOU GIVE                     YOU GET                           you  you:ros  him:ros         title   his view WITH             trades/yr
+  Jordan Addison               Dalton Kincaid                   +7.6     +8.2     +3.5   +0.3+-0.1  96%/-=157% Renteez               1.20
+
+LONG SHOTS - 0 more that pass both pricings but give him less than he gives on what he can see, though
+at least one accepted side in ten here took as little (who is named). Not offers to lead with. 0 more were
+dropped: fewer than one accepted side in ten here ever took that little.
+
+WHAT YOUR SURPLUS IS WORTH - how many rivals could offer the same thing:
+  QB   you hold 1, start 1;  7 of 11 rivals also carry a spare -> nothing to sell
+  RB   you hold 4, start 2;  11 of 11 rivals also carry a spare -> INVENTORY, not a chip - the market is flooded
+  WR   you hold 7, start 3;  11 of 11 rivals also carry a spare -> INVENTORY, not a chip - the market is flooded
+  TE   you hold 2, start 1;  7 of 11 rivals also carry a spare -> INVENTORY, not a chip - the market is flooded
+  DEF  you hold 2, start 1;  0 of 11 rivals also carry a spare -> SCARCE - this is where your leverage is
+
+(The chain below is not filtered for 2026 - it is the ceiling of what the board
+offers, not a plan. Read the table above for what to actually send.)
+
+TRADING POWER - trade after trade, each re-searched on the board the last one left.
+Only trades worth more than 6.8 to you are taken: that is the objective's own
+seed-to-seed spread, so anything smaller is the yardstick moving and not the roster.
+
+   1. Tre' Harris                        for Jordan Love                          +20.8  (him   +1.0)  running   +20.8
+   2. Brock Purdy + Rhamondre Stevenson + Malik Nabers for Bijan Robinson + Jayden Daniels + Travis Kelce   +26.9  (him   +4.2)  running   +47.7
+
+  2 trades, +47.7 to you, +5.2 handed to the men opposite to make them take it.
+  Still going at 2 and stopped by -PchainDepth, not by the board. Raise it.
+  The first trade alone was +20.8, so the chain is worth 2.3x a single one -
+  which is what one-step searching leaves behind.
+
+  AND THE ANSWER TO 'CAN I JUST KEEP TRADING?' - no. Ignoring the floor entirely,
+  the chain runs 2 trades and +47.7, but everything past the 2 above is smaller than the
+  yardstick's own noise, and it starts churning: it reacquires men it gave away earlier.
+  Every trade has to improve BOTH rosters, so the league's total value only rises and is
+  bounded by the best possible allocation of a fixed set of players. It must stop, and it
+  does. Local maxima are NOT the problem here; the floor is.
+
+WHAT THIS CANNOT TELL YOU. Sleeper records only COMPLETED trades - 51 across five
+seasons of this league, and not one refusal - so there is no way to fit what a manager
+will ACCEPT. What stands in: his gain on the model, and 'his view' - the trade on the two
+numbers he can check, against every trade this league has accepted. A trade fair on both is
+one he can check and find fair; that is not the same as one he will take.

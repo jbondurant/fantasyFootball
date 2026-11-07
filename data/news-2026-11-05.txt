@@ -1,0 +1,74 @@
+data: projections 2026-11-05, player metadata 2026-11-05
+NEWS CHECK  2026-11-05  season 2026, week 9  (justinb314)
+IR here: 2 slots; a tag that may sit in one: COV, Doubtful, IR, Out, PUP (league settings)
+SNAP and TGT are his share of his team's offensive snaps and targets over its last three games,
+a game he missed counting as zero. LEFT is Sleeper's weekly projections summed over the games he
+has left (sleeper-remaining) - the number that moves last; '-' is a man projected for none.
+NEWS is the day Sleeper last had news on him. PLAYS is how often a man listed with his status played,
+2018-2025 (PlayProbability; Sleeper's feed carries no practice line, so this is the status base rate).
+
+YOUR ROSTER
+                         POS TEAM HELD BY          STATUS             PLAYS    DEPTH NEWS   BYE NEXT       SNAP   TGT IR    LEFT  ADDS
+Brock Purdy              QB  SF   you              -                  -        QB1   10-26    8 w9 v LV    100%    0% -    271.6      
+Derrick Henry            RB  BAL  you              -                  -        RB1   11-04   13 w9 v JAX    51%    5% -    133.7      
+Bhayshul Tuten           RB  JAX  you              Questionable Ankle 82%      RB1   11-05    7 w9 @BAL     59%    9% -    122.7      
+Rhamondre Stevenson      RB  NE   you              -                  -        RB1   11-01   11 w9 v GB     68%   10% -     94.3      
+Cam Skattebo             RB  NYG  you              Questionable Hams~ 82%      RB1   11-04    8 w9 @PHI     43%    3% -     85.4      
+Mike Evans               WR  SF   you              Doubtful Achilles  2%       LWR1  11-05    8 w9 v LV     34%   16% yes  156.5      
+Malik Nabers             WR  NYG  you              -                  -        LWR1  11-05    8 w9 @PHI     84%   36% -    125.3      
+Jakobi Meyers            WR  JAX  you              -                  -        RWR2  11-05    7 w9 @BAL     73%   17% -     89.5      
+Jordan Addison           WR  MIN  you              -                  -        RWR2  11-01    6 w9 v BUF    55%   14% -     72.4      
+Chris Godwin Jr.         WR  TB   you              -                  -        SWR2  11-01   10 w9 @CHI     83%   25% -     72.2      
+Khalil Shakir            WR  BUF  you              -                  -        SWR2  11-02    7 w9 @MIN     65%   19% -     72.0 125397
+Josh Downs               WR  IND  you              -                  -        SWR1  11-02   13 w9 v DAL    84%   19% -     71.8      
+T.J. Hockenson           TE  MIN  you              -                  -        TE1   11-02    6 w9 v BUF    50%   14% -     83.0      
+Harold Fannin Jr.        TE  CLE  you              -                  -        TE1   11-01   11 w9 @NO      86%   24% -     79.8      
+Minnesota Vikings        DEF MIN  you              -                  -        -     -        6 w9 v BUF      -     - -     71.4      
+Chicago Bears            DEF CHI  you              -                  -        -     -       10 w9 v TB       -     - -     58.3 222157
+
+TRENDING ADDS ACROSS SLEEPER, LAST 48 HOURS (FREE = on this league's wire)
+                         POS TEAM HELD BY          STATUS             PLAYS    DEPTH NEWS   BYE NEXT       SNAP   TGT IR    LEFT  ADDS
+Adonai Mitchell          WR  NYJ  jerem9604        -                  -        RWR2  11-03   13 w9 @KC      35%   13% -     50.9 2409696
+Devin Singletary         RB  NYG  Hamrliks         -                  -        RB2   11-03    8 w9 @PHI     22%    3% -     62.4 1641375
+Tyler Allgeier           RB  ARI  d0ddi            -                  -        RB1   11-03   14 w9 @SEA     54%    8% -     56.1 1459230
+Chris Rodriguez Jr.      RB  JAX  d0ddi            -                  -        RB2   11-05    7 w9 @BAL     21%    3% -     52.0 1104327
+Emmett Johnson           RB  KC   patekxwater      -                  -        RB2   11-02    5 w9 v NYJ    25%   11% -     41.3 1087398
+Detroit Lions            DEF DET  jerem9604        -                  -        -     -        6 w9 @MIA       -     - -     68.3 1027269
+Gardner Minshew II       QB  ARI  FREE             -                  -        QB1   11-02   14 w9 @SEA     15%    0% -    132.8 896696
+Houston Texans           DEF HOU  BHier            -                  -        -     -        8 w9 @LAC       -     - -     76.2 831510
+Malik Willis             QB  MIA  FREE             -                  -        QB1   11-03    6 w9 v DET   100%    0% -    168.9 742602
+New Orleans Saints       DEF NO   d0ddi            -                  -        -     -        8 w9 v CLE      -     - -     60.4 682505
+Mike Gesicki             TE  CIN  Renteez          -                  -        TE1   11-03    6 w9 @ATL     52%    8% -     67.1 573240
+Joe Milton               QB  PHI  FREE             -                  -        QB1   11-04   10 w9 v NYG     0%    0% -     14.5 499252
+Jadarian Price           RB  SEA  Hamrliks         -                  -        RB2   11-04   11 w9 v ARI    14%    4% -     48.2 479853
+Ryan Flournoy            WR  DAL  BHier            -                  -        SWR3  11-03   14 w9 @IND     78%   16% -     56.9 475440
+Malik Washington         WR  MIA  JFMarino         -                  -        SWR1  11-03    6 w9 v DET    78%   22% -     80.4 428696
+Elijah Mitchell          RB  PHI  Renteez          -                  -        -     11-03   10 w9 v NYG    27%    9% -     10.4 412353
+Dylan Sampson            RB  CLE  d0ddi            -                  -        RB2   11-03   11 w9 @NO      35%   11% -     45.6 410475
+New York Giants          DEF NYG  FREE             -                  -        -     -        8 w9 @PHI       -     - -     64.1 389092
+Treylon Burks            WR  WAS  itsabust         Questionable Foot  82%      RWR3  11-04    7 w9 v LAR    65%   19% -     46.9 349804
+Sione Vaki               RB  DET  Hamrliks         -                  -        RB2   11-04    6 w9 @MIA     25%    1% -     38.5 320397
+Alvin Kamara             RB  NO   Hamrliks         Questionable Back  82%      RB1   11-04    8 w9 v CLE    36%   14% -     27.6 277096
+Kirk Cousins             QB  LV   patekxwater      -                  -        QB1   11-04   13 w9 @SF     100%    0% -    185.9 248176
+Keenan Allen             WR  IND  KevinDA          -                  -        RWR2  11-03   13 w9 v DAL    60%   24% -     67.8 240060
+Shedeur Sanders          QB  CLE  FREE             -                  -        QB1   11-04   11 w9 @NO       2%    0% -    122.3 229760
+Kenny Gainwell           RB  TB   jerem9604        Questionable Hip   82%      RB2   11-04   10 w9 @CHI     30%    4% -     51.2 225648
+Kaelon Black             RB  SF   Renteez          -                  -        RB2   11-02    8 w9 v LV     30%    4% -     47.0 223384
+Chicago Bears            DEF CHI  you              -                  -        -     -       10 w9 v TB       -     - -     58.3 222157
+Terrance Ferguson        TE  LAR  itsabust (IR)    IR Ankle           -        TE5   11-04   11 w9 @WAS      0%    0% yes   34.7 209424
+San Francisco 49ers      DEF SF   FREE             -                  -        -     -        8 w9 v LV       -     - -     65.6 203913
+Caleb Douglas            WR  MIA  Hamrliks         -                  -        RWR2  11-03    6 w9 v DET    51%   12% -     60.6 171000
+Chimere Dike             WR  TEN  FREE             -                  -        SWR4  11-02    9 w10 v JAX   45%    7% -     14.5 167706
+C.J. Stroud              QB  HOU  JakeSK           -                  -        QB1   10-26    8 w9 @LAC    100%    0% -    191.9 166341
+Seth McGowan             RB  IND  KevinDA          -                  -        RB2   11-02   13 w9 v DAL    27%    1% -     40.9 165848
+Jacksonville Jaguars     DEF JAX  KevinDA          -                  -        -     -        7 w9 @BAL       -     - -     72.1 163422
+Kendre Miller            RB  NO   Renteez          -                  -        RB2   10-28    8 w9 v CLE    39%    8% -     44.9 161850
+Carson Wentz             QB  MIN  FREE             -                  -        QB2   11-05    6 w9 v BUF     0%    0% -        - 157248
+Michael Mayer            TE  LV   FREE             -                  -        TE2   11-02   13 w9 @SF      80%   17% -     52.2 153873
+Mike Washington Jr.      RB  LV   Renteez          -                  -        RB2   11-04   13 w9 @SF      40%    2% -     51.6 145264
+J.J. McCarthy            QB  NYG  FREE             -                  -        QB1   11-03    8 w9 @PHI     42%    0% -    173.2 142716
+Sam Darnold              QB  SEA  FREE             Out Quadriceps     0%       QB2   11-05   11 w9 v ARI   100%    0% yes  143.3 142545
+Drew Lock                QB  SEA  FREE             Questionable Elbow 82%      QB1   11-04   11 w9 v ARI     0%    0% -     20.3 127097
+Khalil Shakir            WR  BUF  you              -                  -        SWR2  11-02    7 w9 @MIN     65%   19% -     72.0 125397
+Austin Ekeler            RB  WAS  KevinDA          -                  -        RB2   11-02    7 w9 v LAR    17%    4% -     32.7 122616
+Tampa Bay Buccaneers     DEF TB   BHier            -                  -        -     -       10 w9 @CHI       -     - -     53.3 112525

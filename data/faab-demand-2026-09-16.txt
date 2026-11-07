@@ -1,0 +1,102 @@
+FAAB DEMAND  2026-09-16  (1207 settled contests over 5 seasons 2021-2025; 10197 free men at 80 big runs; features as the market saw them)
+
+== 1. THE RUN: contests and dollars by the weekday they cleared (league zone), regular-season legs 2-18 ==
+day        contests   share  dollars   share contested  median     p75     p90   P(win) at $1 $3 $5 $8 $13 $20
+MONDAY            9      1%        3      0%        0%       0       0       3     89%  94% 100% 100% 100% 100%
+WEDNESDAY       544     48%     2948     76%       49%       3       7      13     38%  53%  67%  79%  90%  95%
+THURSDAY        148     13%      241      6%       18%       0       2       5     70%  81%  89%  95%  99%  99%
+FRIDAY           91      8%      161      4%       16%       0       1       6     75%  82%  87%  95%  97%  98%
+SATURDAY        119     11%      208      5%       18%       0       1       4     72%  88%  93%  96%  97%  99%
+SUNDAY          214     19%      293      8%       27%       0       2       4     69%  85%  92%  96% 100% 100%
+the big run is WEDNESDAY: the ladder to bid into on that day is its row, not the pooled one the page uses today.
+
+== 2. THE DEMAND OVER THE WHOLE WIRE: P(any bid) at the big run, leave-one-season-out ==
+10197 free skill men who played, at the big run after their week; 8.1% drew a bid, 2.7% two or more.
+feature       r any bid  r bidders   mean, claimed vs not
+snap share       +0.070     +0.061   0.50 vs 0.43
+snap jump        -0.005     +0.027   0.11 vs 0.11
+touches          +0.248     +0.298   5.34 vs 2.95
+points           +0.200     +0.201   8.92 vs 4.58
+ppg so far       +0.194     +0.166   7.66 vs 4.48
+log ADP          -0.189     -0.146   5.46 vs 5.63
+dropped          +0.193     +0.152   0.16 vs 0.02
+RB               +0.076     +0.096   0.32 vs 0.20
+WR               +0.002     +0.001   0.37 vs 0.36
+TE               -0.065     -0.066   0.18 vs 0.29
+QB               -0.008     -0.029   0.13 vs 0.14
+
+held-out log loss 0.2235 vs base rate's 0.2796: gain +0.0562 +- 0.0048 over 5 seasons  <- real
+decile       men   mean p   claimed   2+ bids   by predicted P(any bid), held out
+1           1019     0.6%      1.8%      0.1%
+2           1020     1.5%      1.1%      0.2%
+3           1020     2.1%      1.3%      0.2%
+4           1019     2.7%      2.6%      0.8%
+5           1020     3.5%      3.0%      0.7%
+6           1020     4.5%      3.1%      0.7%
+7           1019     6.1%      6.1%      1.2%
+8           1020     8.9%      8.8%      2.0%
+9           1020    14.5%     17.5%      5.8%
+10          1020    36.8%     35.2%     15.1%
+all-season fit, log-odds per sd: snap share -0.11 snap jump -0.11 touches +0.38 points +0.23 ppg so far +1.19 log ADP -0.35 dropped +0.37 RB +0.39 WR +0.23 TE +0.09 QB -0.90
+
+== 2b. THE PRICE BY QUALITY, among the claimed at the big run (priced contests only) ==
+band                     n  median     p75     p90   P(win) at $1 $3 $5 $8 $13 $20
+ADP 1-100               22       5      10      12     23%  32%  48%  73%  91%  95%
+ADP 101-200            141       2       7      11     41%  57%  66%  79%  92%  96%
+ADP 200+ or undrafted     365       2       6      12     43%  58%  71%  83%  91%  95%
+ppg < 5                173       1       5      11     48%  65%  77%  86%  92%  94%
+5-10                   233       2       6      11     39%  56%  69%  82%  94%  97%
+10-15                   54       5      12      17     29%  34%  47%  64%  80%  93%
+15+                     68       2       6      12     44%  56%  66%  83%  92%  97%
+r of the price with log ADP -0.041, with ppg so far +0.031, with the snap jump +0.141 (n 528)
+
+== 3. THIS WEEK: every free skill man who played, P(any bid) at the big run, and the bid that wins 50 / 75 / 90% in his ADP band ==
+player                 pos   P(bid)    ADP share  jump  touch    pts    ppg dropped   bid to win 50 / 75 / 90 in his ADP band
+Antonio Williams       WR       62%    238   37%  +37%    4.0   14.4   14.4           $3 / $8 / $13
+Mike Gesicki           TE       51%      -   33%  +33%    7.0   16.3   16.3           $3 / $8 / $13
+Brenton Strange        TE       49%    166   68%  +68%    3.0    9.3    9.3     yes   $3 / $8 / $13
+Devin Singletary       RB       45%      -   36%  +36%   10.0   11.8   11.8           $3 / $8 / $13
+Pat Freiermuth         TE       44%    230   73%  +73%    5.0   13.1   13.1           $3 / $8 / $13
+Kalif Raymond          WR       31%      -   60%  +60%    9.0   12.4   12.4           $3 / $8 / $13
+Kendre Miller          RB       24%      -   29%  +29%    9.0    9.0    9.0           $3 / $8 / $13
+Evan Engram            TE       23%      -    0%   +0%    5.0   12.3   12.3           $3 / $8 / $13
+Kendrick Bourne        WR       22%      -   67%  +67%    8.0   11.5   11.5           $3 / $8 / $13
+Tyler Shough           QB       20%    184  100% +100%    4.0   29.2   29.2           $3 / $8 / $13
+Noah Fant              TE       20%      -   41%  +41%    8.0   11.3   11.3           $3 / $8 / $13
+Oronde Gadsden         TE       18%    189   18%  +18%    2.0    4.2    4.2     yes   $3 / $8 / $13
+David Njoku            TE       18%    223   55%  +55%    5.0    8.3    8.3           $3 / $8 / $13
+Tre' Harris            WR       17%    228   75%  +75%    6.0    3.5    3.5     yes   $3 / $8 / $13
+Jacoby Brissett        QB       16%    251  100% +100%    6.0   18.5   18.5           $3 / $8 / $13
+Demarcus Robinson      WR       14%      -   63%  +63%    3.0   12.0   12.0           $3 / $8 / $13
+Adonai Mitchell        WR       13%    221   69%  +69%    3.0    7.5    7.5           $3 / $8 / $13
+Bryce Young            QB       13%    235   90%  +90%    2.0   38.4   38.4           $3 / $8 / $13
+C.J. Stroud            QB       12%    207  100% +100%    2.0   18.5   18.5           $3 / $8 / $13
+Samaje Perine          RB       11%      -   28%  +28%    8.0    6.5    6.5           $3 / $8 / $13
+Tyrone Tracy           RB       10%    153    3%   +3%    2.0   -1.6   -1.6     yes   $3 / $8 / $13
+Jack Bech              WR       10%      -   40%  +40%    4.0    9.8    9.8           $3 / $8 / $13
+Joshua Palmer          WR        9%      -   31%  +31%    2.0    9.9    9.9           $3 / $8 / $13
+Cole Kmet              TE        8%      -   57%  +57%    3.0   10.5   10.5           $3 / $8 / $13
+Josh Cameron           WR        7%      -   33%  +33%    2.0    9.0    9.0           $3 / $8 / $13
+Carson Wentz           QB        6%      -   83%  +83%    5.0   25.2   25.2           $3 / $8 / $13
+Kaytron Allen          RB        6%    234   10%  +10%    4.0    1.6    1.6           $3 / $8 / $13
+Chris Moore            WR        6%      -   37%  +37%    2.0    5.8    5.8           $3 / $8 / $13
+Ted Hurst              WR        6%    240   75%  +75%    3.0    5.1    5.1           $3 / $8 / $13
+Cooper Kupp            WR        6%    207   78%  +78%    3.0    4.5    4.5           $3 / $8 / $13
+the thirty free skill men the model expects a bid on; ADP is Sleeper's half-PPR today (the harvest used each
+season's FFC board). Worth is TuesdaySwap's column, and a bid above it is a loss whatever the ladder says.
+
+the run that already cleared on these features (2026-09-16): the skill men who drew a bid, with the model's P(bid) and rank among 162 free men
+   Rashod Bateman         WR  4 bidders, won at $0   model: 0%, rank 156
+   Antonio Williams       WR  3 bidders, won at $7   model: 62%, rank 1
+   Mack Hollins           WR  2 bidders, won at $2   model: 4%, rank 34
+   DeMario Douglas        WR  2 bidders, won at $8   model: 3%, rank 46
+   Demarcus Robinson      WR  2 bidders, won at $17   model: 14%, rank 16
+   Adonai Mitchell        WR  2 bidders, won at $5   model: 13%, rank 17
+   Tre' Harris            WR  2 bidders, won at $0   model: 17%, rank 14
+   Devin Singletary       RB  1 bidder, won at $3   model: 45%, rank 4
+   Raheim Sanders         RB  1 bidder, nobody won   model: 3%, rank 42
+   Jack Bech              WR  1 bidder, won at $2   model: 10%, rank 22
+   Sione Vaki             RB  1 bidder, nobody won   model: 2%, rank 57
+   Samaje Perine          RB  1 bidder, won at $0   model: 11%, rank 20
+   Roman Wilson           WR  1 bidder, won at $0   model: 2%, rank 52
+   Kalif Raymond          WR  1 bidder, nobody won   model: 31%, rank 6

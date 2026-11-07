@@ -62,7 +62,7 @@ public class AdpSnapshot {
                 }
                 if(cells[0].equals(today)){
                     System.out.println("today's ADP snapshot is already recorded");
-                    archiveProjections(today);
+                    exitOnFailure(archiveProjections(today));
                     return;
                 }
                 if(previousDate == null || cells[0].compareTo(previousDate) >= 0){
@@ -119,7 +119,15 @@ public class AdpSnapshot {
                         mover.to() - mover.from());
             }
         }
-        archiveProjections(today);
+        exitOnFailure(archiveProjections(today));
+    }
+
+    /** A feed that failed ends the run non-zero, after everything else has been written. */
+    static void exitOnFailure(List<String> failed){
+        if(!failed.isEmpty()){
+            System.err.println(failed.size() + " projection feed(s) failed to archive; the rest were written");
+            System.exit(1);
+        }
     }
 
     static final Path PROJECTIONS_CSV = Path.of("data", "projection-snapshots.csv");
@@ -127,48 +135,133 @@ public class AdpSnapshot {
     /**
      * The projection archive that makes a future accuracy shootout possible:
      * every available feed's league-scored numbers, one row per player per
-     * source per day. Sources only become comparable against actual results
+     * feed per day. Sources only become comparable against actual results
      * once seasons of this exist - which is why it rides along with the ADP
      * snapshot Justin already runs.
+     *
+     * Each feed is read, and written, on its own. The first version resolved
+     * all four and wrote once at the end, and checked "already recorded" by
+     * the date alone - so when CBS began serving its week page in season and
+     * its guard threw, nothing was written for anyone, on 11 and 25 September
+     * alike, while the ADP half of the same run succeeded and was committed
+     * (TRAPS #147). Now a feed that fails is named and the others land; a feed
+     * already recorded today is skipped, so a rerun after a fix fills in only
+     * what is missing; and the run exits non-zero when any feed failed, so the
+     * failure is seen the day it happens rather than three weeks later.
+     *
+     * Rows are each feed's OWN men (ProjectionSources.own), never the planner's
+     * map merged over Sleeper (TRAPS #139); the rows of espn, cbs and borischen
+     * archived before 2026-09-25 are that merged map, and the "sleeper" rows'
+     * defences before then are the season feed's four-category stub
+     * (TRAPS #138). In season the feeds are the ones ProjectionSources
+     * .archiveFeeds names for what they now serve.
      */
-    static void archiveProjections(String today) throws IOException {
-        if(Files.exists(PROJECTIONS_CSV)){
-            for(String line : Files.readAllLines(PROJECTIONS_CSV, StandardCharsets.UTF_8)){
-                if(line.startsWith(today + ",")){
-                    System.out.println("today's projection archive is already recorded");
-                    return;
-                }
-            }
-        }
-        List<String> sources = new ArrayList<>(ProjectionSources.automaticSources());
+    static List<String> archiveProjections(String today) throws IOException {
+        List<String> lines = Files.exists(PROJECTIONS_CSV)
+                ? Files.readAllLines(PROJECTIONS_CSV, StandardCharsets.UTF_8) : List.of();
+        boolean inSeason = LeagueWeek.inSeason();
+        List<String> feeds = new ArrayList<>(ProjectionSources.archiveFeeds(inSeason));
         if(Files.isDirectory(ProjectionBridge.EXTERNAL)){
             for(Path file : Files.list(ProjectionBridge.EXTERNAL).sorted().toList()){
                 String name = file.getFileName().toString();
                 if(name.endsWith(".csv")){
-                    sources.add(name.substring(0, name.length() - 4));
+                    feeds.add(name.substring(0, name.length() - 4));
                 }
             }
         }
-        StringBuilder out = new StringBuilder();
+        // this week's projections at the positions the league starts - the
+        // weekly feed also projects kickers, which nobody here rosters
+        Map<String, Double> thisWeek = new HashMap<>();
+        if(inSeason){
+            LeagueWeek.projected(LeagueWeek.season(), LeagueWeek.week()).forEach((id, points) -> {
+                Player player = Player.getPlayerFromSIDV2(id);
+                if(player != null && player.position != null && (StartingLineup.isSkillPosition(player.position)
+                        || player.position == PlayerImportAndSetup.Position.DEF)){
+                    thisWeek.put(id, points);
+                }
+            });
+        }
         if(!Files.exists(PROJECTIONS_CSV)){
-            out.append("date,source,sleeper_id,league_points\n");
+            Files.createDirectories(PROJECTIONS_CSV.getParent());
+            Files.writeString(PROJECTIONS_CSV, "date,source,sleeper_id,league_points\n", StandardCharsets.UTF_8);
         }
-        int rows = 0;
-        for(String source : sources){
-            for(Map.Entry<String, Double> entry : ProjectionSources.resolve(source).entrySet()){
-                if(SleeperProjections.adpOf(entry.getKey()) > 250){
-                    continue;
-                }
-                out.append(String.join(",", today, source, entry.getKey(),
-                        String.format("%.1f", entry.getValue()))).append("\n");
-                rows++;
+        List<String> failed = archive(today, feeds, recordedOn(lines, today), ProjectionSources::own,
+                id -> kept(inSeason, SleeperProjections.adpOf(id), thisWeek.get(id)),
+                rows -> {
+                    try {
+                        Files.writeString(PROJECTIONS_CSV, rows, StandardCharsets.UTF_8, StandardOpenOption.APPEND);
+                    }
+                    catch(IOException unwritable){
+                        throw new java.io.UncheckedIOException(unwritable);
+                    }
+                });
+        for(String failure : failed){
+            System.out.println("FAILED " + failure);
+        }
+        return failed;
+    }
+
+    /** The feeds already archived on {@code day}. */
+    static java.util.Set<String> recordedOn(List<String> lines, String day){
+        java.util.Set<String> out = new java.util.TreeSet<>();
+        for(String line : lines){
+            String[] cells = line.split(",", 3);
+            if(cells.length >= 2 && cells[0].equals(day)){
+                out.add(cells[1]);
             }
         }
-        Files.createDirectories(PROJECTIONS_CSV.getParent());
-        Files.writeString(PROJECTIONS_CSV, out.toString(), StandardCharsets.UTF_8,
-                StandardOpenOption.CREATE, StandardOpenOption.APPEND);
-        System.out.println("archived " + rows + " projection rows ("
-                + String.join(", ", sources) + ") for " + today);
+        return out;
+    }
+
+    /**
+     * Who is archived: before the season, the preseason board (ADP 250 or
+     * better). In season also any man Sleeper projects for 3+ points this
+     * week - the men a waiver or a trade is decided over, most of whom have no
+     * preseason ADP (TRAPS #141).
+     */
+    static boolean kept(boolean inSeason, double adp, Double thisWeek){
+        return adp <= 250 || (inSeason && thisWeek != null && thisWeek >= 3);
+    }
+
+    /**
+     * The loop, with its effects passed in: each feed not yet recorded is read
+     * and appended on its own, and one that throws, or answers with nobody, is
+     * reported by name while the rest go on. Returns the failures.
+     */
+    static List<String> archive(String today, List<String> feeds, java.util.Set<String> recorded,
+                                java.util.function.Function<String, Map<String, Double>> own,
+                                java.util.function.Predicate<String> keep,
+                                java.util.function.Consumer<String> append){
+        List<String> failed = new ArrayList<>();
+        List<String> done = new ArrayList<>();
+        for(String feed : feeds){
+            if(recorded.contains(feed)){
+                done.add(feed + " (already)");
+                continue;
+            }
+            try {
+                StringBuilder rows = new StringBuilder();
+                int n = 0;
+                for(Map.Entry<String, Double> entry : new java.util.TreeMap<>(own.apply(feed)).entrySet()){
+                    if(keep.test(entry.getKey())){
+                        rows.append(String.join(",", today, feed, entry.getKey(),
+                                String.format("%.1f", entry.getValue()))).append("\n");
+                        n++;
+                    }
+                }
+                if(n == 0){
+                    throw new IllegalStateException("answered with nobody on the board");
+                }
+                append.accept(rows.toString());
+                done.add(feed + " " + n);
+            }
+            catch(RuntimeException problem){
+                failed.add(feed + ": " + problem.getMessage());
+            }
+        }
+        System.out.println("projection archive " + today + ": " + String.join(", ", done)
+                + (failed.isEmpty() ? "" : "; " + failed.size() + " failed"));
+        return failed;
     }
 
 }

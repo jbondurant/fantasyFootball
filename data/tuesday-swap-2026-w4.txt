@@ -1,0 +1,67 @@
+data: projections 2026-10-03, player metadata 2026-10-03
+TUESDAY SWAP  2026-10-03  season 2026, waivers for week 4  (justinb314; priced on sleeper-remaining, with ros beside it)
+157 free agents searched against all 16 roster spots = 2512 pairs, on the weekly-starter
+objective (480 drawn seasons), which prices a bench man by how often he would actually start.
+Gains are points over the games left (14.9 weeks to week 18, sleeper-remaining's own totals); 10.9 of those
+weeks are the regular season, so a gain is worth 0.73 of itself from here.
+Nothing under 11.3 points is named: that is the yardstick's own worst seed-to-seed spread,
+measured on sleeper-remaining on 2026-09-29 (ObjectiveStability), so a smaller gain is the measurement moving
+and not the roster.
+
+ADD                    POS  -> drop                             left from here  alt here    title
+Philadelphia Eagles    DEF  -> drop Baltimore Ravens            +0.8      +0.6      +0.1   -0.04
+Justice Hill           RB   -> drop Chris Rodriguez             -0.1      -0.0      -1.8   +0.00
+Ty Johnson             RB   -> drop Chris Rodriguez             -0.6      -0.5      -2.8   +0.00
+Kirk Cousins           QB   -> drop Chris Rodriguez             -0.7      -0.5      -2.8   +0.40
+Elic Ayomanor          WR   -> drop Chris Rodriguez             -0.8      -0.6      -2.8   +0.00
+Jalen Nailor           WR   -> drop Chris Rodriguez             -1.1      -0.8      -1.5   +0.00
+Greg Dulcich           TE   -> drop Chris Rodriguez             -1.3      -1.0      -1.2   +0.00
+Keon Coleman           WR   -> drop Tre' Harris                 -1.3      -1.0      +0.7   +0.00
+title is the change in your title odds in percentage points (TitleOdds, 20000 seasons, the same draws
+before and after); your odds now are 16.9%.
+alt here is the same move priced on ros and put in from-here points too, so the two columns
+read in one unit; ros is the rest-of-season model that has seen the results (RosModel),
+sleeper-remaining Sleeper's weekly projections for the games left, which drop a man ruled out.
+
+MUST ACTIVATE MIKE EVANS: he is Questionable, which an IR slot here does not take, so Sleeper blocks every move
+until he is back on the roster - and that takes a drop. With him active, what each man costs you:
+   drop                          left from here    title
+   Tre' Harris                   -1.9      -1.4   +0.00
+   Chris Rodriguez               -2.2      -1.6   +0.00
+   Jordan Addison                -2.8      -2.1   -0.11
+   Baltimore Ravens              -3.2      -2.4   -9.75
+   Dalton Schultz                -4.2      -3.1   -0.63
+   Khalil Shakir                 -4.7      -3.5   -0.10
+   Jakobi Meyers                 -8.7      -6.3   -0.22
+   Bo Nix                       -12.9      -9.4   -0.97
+   Harold Fannin                -21.1     -15.4   -3.15
+   Josh Downs                   -27.8     -20.4   -1.81
+   Malik Nabers                 -35.5     -26.0   -3.37
+   Rhamondre Stevenson          -52.9     -38.7   -3.58
+   Bhayshul Tuten               -71.1     -52.0   -6.08
+   Cam Skattebo                 -79.0     -57.8   -7.52
+   Brock Purdy                  -84.5     -61.8   -8.70
+   Derrick Henry               -138.1    -101.2  -11.58
+The top row is the cheapest man to lose. Activating him and dropping that man is one move in Sleeper.
+
+EVERY DROP FOR PHILADELPHIA EAGLES - the same claim against each man you hold:
+   drop Baltimore Ravens            +0.8
+   drop Chris Rodriguez             -2.4
+   drop Tre' Harris                 -3.9
+   drop Dalton Schultz              -7.1
+   drop Jordan Addison              -8.5
+   drop Khalil Shakir               -9.7
+   drop Bo Nix                     -12.1
+   drop Jakobi Meyers              -15.4
+   drop Harold Fannin              -23.9
+   drop Josh Downs                 -35.0
+   drop Malik Nabers               -43.3
+   drop Rhamondre Stevenson        -56.3
+   drop Bhayshul Tuten             -74.5
+   drop Cam Skattebo               -82.0
+   drop Brock Purdy                -83.7
+   drop Derrick Henry             -141.9
+
+DO NOTHING. The best plan on the board is worth +0.8 (0.6 from here), inside the
+floor, so it is not a move - it is noise with a transaction attached. Waiting is free and
+buys another week of evidence.

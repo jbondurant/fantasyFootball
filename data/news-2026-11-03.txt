@@ -1,0 +1,83 @@
+data: projections 2026-11-03, player metadata 2026-11-03
+NEWS CHECK  2026-11-03  season 2026, week 9  (justinb314)
+IR here: 2 slots; a tag that may sit in one: COV, Doubtful, IR, Out, PUP (league settings)
+SNAP and TGT are his share of his team's offensive snaps and targets over its last three games,
+a game he missed counting as zero. LEFT is Sleeper's weekly projections summed over the games he
+has left (sleeper-remaining) - the number that moves last; '-' is a man projected for none.
+NEWS is the day Sleeper last had news on him. PLAYS is how often a man listed with his status played,
+2018-2025 (PlayProbability; Sleeper's feed carries no practice line, so this is the status base rate).
+
+YOUR ROSTER
+                         POS TEAM HELD BY          STATUS             PLAYS    DEPTH NEWS   BYE NEXT       SNAP   TGT IR    LEFT  ADDS
+Brock Purdy              QB  SF   you              -                  -        QB1   10-26    8 w9 v LV    100%    0% -    271.4      
+Aaron Rodgers            QB  PIT  you              -                  -        QB1   11-01    9 w10 @CIN    99%    0% -    159.4      
+Derrick Henry            RB  BAL  you              -                  -        RB1   11-01   13 w9 v JAX    51%    5% -    134.0      
+Bhayshul Tuten           RB  JAX  you              Questionable Ankle 82%      RB1   11-03    7 w9 @BAL     59%    9% -    122.9      
+Rhamondre Stevenson      RB  NE   you              -                  -        RB1   11-01   11 w9 v GB     68%   10% -     94.4      
+Cam Skattebo             RB  NYG  you              Questionable Hams~ 82%      RB1   11-02    8 w9 @PHI     43%    3% -     85.4      
+Mike Evans               WR  SF   you (IR)         Out Achilles       0%       LWR1  10-27    8 w9 v LV     34%   16% yes  156.4      
+Malik Nabers             WR  NYG  you              -                  -        LWR1  10-26    8 w9 @PHI     84%   36% -    125.4      
+Jakobi Meyers            WR  JAX  you              Questionable Hams~ 82%      RWR2  11-03    7 w9 @BAL     73%   17% -     89.6      
+Jordan Addison           WR  MIN  you              -                  -        RWR2  11-01    6 w9 v BUF    55%   14% -     72.4      
+Chris Godwin Jr.         WR  TB   you              -                  -        SWR2  11-01   10 w9 @CHI     83%   25% -     72.2      
+Khalil Shakir            WR  BUF  you              -                  -        SWR2  11-02    7 w9 @MIN     65%   19% -     72.0 84816
+Josh Downs               WR  IND  you              -                  -        SWR1  11-02   13 w9 v DAL    84%   19% -     71.8      
+T.J. Hockenson           TE  MIN  you              -                  -        TE1   11-02    6 w9 v BUF    50%   14% -     83.0      
+Harold Fannin Jr.        TE  CLE  you              -                  -        TE1   11-01   11 w9 @NO      86%   24% -     79.9 82210
+Tyler Higbee             TE  LAR  you              -                  -        TE1   11-03   11 w9 @WAS     79%   10% -     63.7      
+Minnesota Vikings        DEF MIN  you              -                  -        -     -        6 w9 v BUF      -     - -     71.4      
+
+NAMED
+                         POS TEAM HELD BY          STATUS             PLAYS    DEPTH NEWS   BYE NEXT       SNAP   TGT IR    LEFT  ADDS
+Parker Washington        WR  JAX  patekxwater      -                  -        SWR1  11-02    7 w9 @BAL     75%   23% -    141.5      
+Ollie Gordon II          RB  MIA  itsabust         -                  -        RB1   11-01    6 w9 v DET    77%    5% -    123.4      
+Matthew Golden           WR  GB   tommyrads        -                  -        RWR2  10-30   11 w9 @NE      85%   31% -    111.8      
+Luther Burden III        WR  CHI  d0ddi            -                  -        RWR1  11-03   10 w9 v TB     52%   22% -    101.0      
+Chase Brown              RB  CIN  Hamrliks         -                  -        RB1   11-01    6 w9 @ATL     68%   17% -    136.8      
+
+TRENDING ADDS ACROSS SLEEPER, LAST 48 HOURS (FREE = on this league's wire)
+                         POS TEAM HELD BY          STATUS             PLAYS    DEPTH NEWS   BYE NEXT       SNAP   TGT IR    LEFT  ADDS
+Adonai Mitchell          WR  NYJ  jerem9604        -                  -        RWR3  11-03   13 w9 @KC      35%   13% -     49.9 2383272
+Tyler Allgeier           RB  ARI  d0ddi            -                  -        RB1   11-03   14 w9 @SEA     54%    8% -     55.8 1829600
+Gardner Minshew II       QB  ARI  FREE             -                  -        QB1   11-02   14 w9 @SEA     15%    0% -    132.2 1290796
+Devin Singletary         RB  NYG  Hamrliks         -                  -        RB2   11-03    8 w9 @PHI     22%    3% -     62.6 1101699
+Emmett Johnson           RB  KC   patekxwater      -                  -        RB2   11-02    5 w9 v NYJ    25%   11% -     41.2 1049373
+Houston Texans           DEF HOU  BHier            -                  -        -     -        8 w9 @LAC       -     - -     76.2 729785
+Detroit Lions            DEF DET  FREE             -                  -        -     -        6 w9 @MIA       -     - -     68.3 593163
+Mike Gesicki             TE  CIN  Renteez          -                  -        TE1   11-03    6 w9 @ATL     52%    8% -     67.1 426364
+Ryan Flournoy            WR  DAL  BHier            -                  -        SWR3  11-03   14 w9 @IND     78%   16% -     56.9 398152
+Malik Willis             QB  MIA  FREE             -                  -        QB1   11-03    6 w9 v DET   100%    0% -    168.9 395773
+Chris Rodriguez Jr.      RB  JAX  FREE             Questionable Hand  82%      RB2   11-03    7 w9 @BAL     21%    3% -     52.1 386253
+Malik Washington         WR  MIA  JFMarino         -                  -        SWR1  11-03    6 w9 v DET    78%   22% -     80.4 351664
+Treylon Burks            WR  WAS  itsabust         -                  -        RWR3  11-02    7 w9 v LAR    65%   19% -     46.8 318045
+New Orleans Saints       DEF NO   FREE             -                  -        -     -        8 w9 v CLE      -     - -     60.3 285020
+Jadarian Price           RB  SEA  Hamrliks (IR)    -                  -        RB2   11-03   11 w9 v ARI    14%    4% -     48.5 277578
+Dylan Sampson            RB  CLE  d0ddi            -                  -        RB2   11-03   11 w9 @NO      35%   11% -     45.7 257320
+Kenny Gainwell           RB  TB   jerem9604        -                  -        RB2   11-02   10 w9 @CHI     30%    4% -     51.2 238752
+Sione Vaki               RB  DET  FREE             -                  -        RB2   11-02    6 w9 @MIA     25%    1% -     38.5 238749
+Kirk Cousins             QB  LV   patekxwater      -                  -        QB1   11-02   13 w9 @SF     100%    0% -    185.5 218480
+New York Giants          DEF NYG  FREE             -                  -        -     -        8 w9 @PHI       -     - -     64.2 212408
+San Francisco 49ers      DEF SF   d0ddi            -                  -        -     -        8 w9 v LV       -     - -     65.6 208341
+Mike Washington Jr.      RB  LV   Renteez          -                  -        RB2   11-02   13 w9 @SF      40%    2% -     51.6 166731
+Elijah Mitchell          RB  PHI  Renteez          -                  -        -     11-03   10 w9 v NYG    27%    9% -     10.4 151245
+Chimere Dike             WR  TEN  FREE             -                  -        SWR4  11-02    9 w10 v JAX   45%    7% -     14.5 146448
+Kaelon Black             RB  SF   Renteez          -                  -        RB2   11-02    8 w9 v LV     30%    4% -     47.1 135338
+Sam Darnold              QB  SEA  FREE             -                  -        QB1   11-03   11 w9 v ARI   100%    0% -    165.2 135276
+Keenan Allen             WR  IND  KevinDA          -                  -        RWR2  11-03   13 w9 v DAL    60%   24% -     67.7 134280
+Chicago Bears            DEF CHI  FREE             -                  -        -     -       10 w9 v TB       -     - -     58.3 132541
+Seth McGowan             RB  IND  KevinDA          -                  -        RB2   11-02   13 w9 v DAL    27%    1% -     40.9 129152
+Alvin Kamara             RB  NO   Hamrliks         -                  -        RB1   10-25    8 w9 v CLE    36%   14% -     27.6 123368
+Tyler Shough             QB  NO   KevinDA          -                  -        QB1   10-25    8 w9 v CLE    99%    0% -    198.8 123040
+Jonah Coleman            RB  DEN  JFMarino         -                  -        RB1   11-02   10 w9 @CAR     39%    9% -     98.4 122716
+Tampa Bay Buccaneers     DEF TB   BHier            -                  -        -     -       10 w9 @CHI       -     - -     53.3 112775
+Jacksonville Jaguars     DEF JAX  KevinDA          -                  -        -     -        7 w9 @BAL       -     - -     72.1 110598
+Michael Mayer            TE  LV   FREE             -                  -        TE2   11-02   13 w9 @SF      80%   17% -     52.2 106488
+Bo Nix                   QB  DEN  BHier            -                  -        QB1   11-02   10 w9 @CAR    100%    0% -    178.9 100194
+J.J. McCarthy            QB  NYG  FREE             -                  -        QB1   11-03    8 w9 @PHI     42%    0% -    173.7 99885
+Caleb Douglas            WR  MIA  Hamrliks         -                  -        RWR2  11-03    6 w9 v DET    51%   12% -     60.6 98080
+Carson Wentz             QB  MIN  FREE             -                  -        QB2   09-21    6 w9 v BUF     0%    0% -        - 90924
+C.J. Stroud              QB  HOU  JakeSK           -                  -        QB1   10-26    8 w9 @LAC    100%    0% -    189.6 87612
+Terrance Ferguson        TE  LAR  itsabust (IR)    IR Ankle           -        TE5   11-02   11 w9 @WAS      0%    0% yes   34.7 85960
+Khalil Shakir            WR  BUF  you              -                  -        SWR2  11-02    7 w9 @MIN     65%   19% -     72.0 84816
+David Montgomery         RB  HOU  BHier (IR)       Out Groin          0%       RB1   11-02    8 w9 @LAC      5%    0% yes   99.4 84678
+Harold Fannin Jr.        TE  CLE  you              -                  -        TE1   11-01   11 w9 @NO      86%   24% -     79.9 82210
