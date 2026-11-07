@@ -28,7 +28,7 @@ import java.util.function.ToDoubleFunction;
  * Each trade with such men on one side only gives one answer: (other side - his side's healthy men)
  * / the absent men's full worth, on the season screen (pace and next projection, each off its chart,
  * in the ratio other leagues' trades put between them, a returning man's next projection being his
- * first one back). Medians, with a bootstrap interval over trades, and how even each treatment
+ * first one back, or his average over the weeks he is projected). Medians, with a bootstrap interval over trades, and how even each treatment
  * leaves those trades. One leak: a season's week projections were published at that week, so "due
  * back in week w" is known here earlier than it was then.
  *
@@ -36,8 +36,8 @@ import java.util.function.ToDoubleFunction;
  */
 public class AwayPrice {
 
-    /** A man's weeks after g games: the first week he is projected, its points, and how many of the weeks left he is projected in. */
-    record Back(int week, double points, int weeks, int weeksLeft) {
+    /** A man's weeks after g games: the first week he is projected, its points, how many of the weeks left he is projected in, and his average in those. */
+    record Back(int week, double points, int weeks, int weeksLeft, double average) {
         double share(){
             return weeksLeft == 0 ? 0 : (double) weeks / weeksLeft;
         }
@@ -48,22 +48,24 @@ public class AwayPrice {
         Map<String, Back> out = new HashMap<>();
         Map<String, Integer> count = new HashMap<>();
         Map<String, double[]> first = new HashMap<>();
+        Map<String, Double> total = new HashMap<>();
         for(int k = 0; k < weeksAfterG.size(); k++){
             int at = k;
             weeksAfterG.get(k).forEach((id, points) -> {
                 count.merge(id, 1, Integer::sum);
+                total.merge(id, points, Double::sum);
                 first.putIfAbsent(id, new double[]{at, points});
             });
         }
         first.forEach((id, f) -> {
             if(f[0] >= 2){
-                out.put(id, new Back((int) f[0], f[1], count.get(id), weeksAfterG.size()));
+                out.put(id, new Back((int) f[0], f[1], count.get(id), weeksAfterG.size(), total.get(id) / count.get(id)));
             }
         });
         return out;
     }
 
-    record Sample(double implied, double share, int weeksAway, double other, double healthy, double full, boolean pure, int games) {}
+    record Sample(double implied, double share, int weeksAway, double other, double healthy, double full, boolean pure, int games, double fullAverage) {}
 
     public static void main(String[] args) throws IOException {
         AAAConfiguration configuration = AAAConfiguration.getInstance();
@@ -116,11 +118,13 @@ public class AwayPrice {
                 Map<Position, Double> line = TradeScreens.line(TradeScreens.nextGame(season, g), positionOf, teams, flex);
                 double s = paceShare.applyAsDouble(g);
                 ToDoubleFunction<String> healthy = id -> s * pace.getOrDefault(id, 0.0) + (1 - s) * projection.getOrDefault(id, 0.0);
-                ToDoubleFunction<String> whenBack = id -> {
+                java.util.function.BiFunction<String, Double, Double> worth = (id, projected) -> {
                     Position p = positionOf.get(id);
-                    double back = TradeScreens.skill(p) && line.containsKey(p) ? projectionCharts.apply(g).at(-(absent.get(id).points() - line.get(p))) : 0;
+                    double back = TradeScreens.skill(p) && line.containsKey(p) ? projectionCharts.apply(g).at(-(projected - line.get(p))) : 0;
                     return s * pace.getOrDefault(id, 0.0) + (1 - s) * back;
                 };
+                ToDoubleFunction<String> whenBack = id -> worth.apply(id, absent.get(id).points());
+                ToDoubleFunction<String> onAverage = id -> worth.apply(id, absent.get(id).average());
                 List<String> withAbsent = two.get(inA ? 0 : 1), other = two.get(inA ? 1 : 0);
                 double h = withAbsent.stream().filter(id -> !absent.containsKey(id)).mapToDouble(healthy).sum();
                 double f = withAbsent.stream().filter(absent::containsKey).mapToDouble(whenBack).sum();
@@ -130,12 +134,17 @@ public class AwayPrice {
                 }
                 double share = withAbsent.stream().filter(absent::containsKey).mapToDouble(id -> absent.get(id).share()).average().orElse(0);
                 int away = withAbsent.stream().filter(absent::containsKey).mapToInt(id -> absent.get(id).week()).max().orElse(0);
-                samples.add(new Sample((o - h) / f, share, away, o, h, f, h < TradeScreens.NOTHING, g));
+                samples.add(new Sample((o - h) / f, share, away, o, h, f, h < TradeScreens.NOTHING, g, withAbsent.stream().filter(absent::containsKey).mapToDouble(onAverage).sum()));
             }
         }
         System.out.printf("AWAY PRICE: %,d trades in other leagues' seasons with week projections; %,d with absent men worth something on one side only%n", trades, samples.size());
         report("all", samples);
+        List<Sample> onAverage = samples.stream().map(x -> new Sample((x.other() - x.healthy()) / x.fullAverage(), x.share(), x.weeksAway(), x.other(), x.healthy(), x.fullAverage(), x.pure(), x.games(), x.fullAverage())).toList();
+        report("all, on his average", onAverage);
         report("he is all that side sends", samples.stream().filter(Sample::pure).toList());
+        report("he is all that side sends, average", onAverage.stream().filter(Sample::pure).toList());
+        report("he comes with healthy men", samples.stream().filter(x -> !x.pure()).toList());
+        report("he comes with healthy men, average", onAverage.stream().filter(x -> !x.pure()).toList());
         report("back within 3 weeks", samples.stream().filter(x -> x.weeksAway() <= 2).toList());
         report("back in 4 to 6 weeks", samples.stream().filter(x -> x.weeksAway() > 2 && x.weeksAway() <= 5).toList());
         report("back after that", samples.stream().filter(x -> x.weeksAway() > 5).toList());
@@ -143,18 +152,18 @@ public class AwayPrice {
         report("share of weeks left 40% to 70%", samples.stream().filter(x -> x.share() >= 0.4 && x.share() < 0.7).toList());
         report("share of weeks left 70% and over", samples.stream().filter(x -> x.share() >= 0.7).toList());
         // how even each treatment leaves these trades: 0 is what TradeScreens does today, 1 his full worth, share his worth times the weeks he has left
-        for(String treatment : List.of("zero", "share of weeks left", "half", "full")){
+        for(String treatment : List.of("zero", "share of weeks left", "half", "full, first game back", "full, his average")){
             double[] uneven = samples.stream().mapToDouble(x -> {
                 double d = switch(treatment){
                     case "zero" -> 0;
                     case "half" -> 0.5;
-                    case "full" -> 1;
+                    case "full, first game back", "full, his average" -> 1;
                     default -> x.share();
                 };
-                double a = x.healthy() + d * x.full();
+                double a = x.healthy() + d * (treatment.endsWith("average") ? x.fullAverage() : x.full());
                 return a + x.other() <= 0 ? 0 : Math.abs(a - x.other()) / (a + x.other());
             }).sorted().toArray();
-            System.out.printf("  priced at %-20s: median unevenness %.2f, mean %.2f%n", treatment,
+            System.out.printf("  priced at %-24s: median unevenness %.3f, mean %.3f%n", treatment,
                     uneven.length == 0 ? 0 : uneven[uneven.length / 2], Arrays.stream(uneven).average().orElse(0));
         }
     }
@@ -176,7 +185,7 @@ public class AwayPrice {
             medians[b] = draw[draw.length / 2];
         }
         Arrays.sort(medians);
-        System.out.printf("  %-34s %4d trades: share of his worth paid, median %.2f (90%% %.2f to %.2f); mean share of weeks left %.2f%n", name, implied.length,
+        System.out.printf("  %-36s %4d trades: share of his worth paid, median %.2f (90%% %.2f to %.2f); mean share of weeks left %.2f%n", name, implied.length,
                 implied[implied.length / 2], medians[100], medians[1900], samples.stream().mapToDouble(Sample::share).average().orElse(0));
     }
 }

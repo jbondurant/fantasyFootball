@@ -65,8 +65,8 @@ import java.util.function.ToDoubleFunction;
  *   projection for his next game, read off its own chart
  *   ({@link #projectionChart}). It has moved on news neither other screen
  *   carries (Justin: "cam skateboo reduced usage due to fumble loss of trust
- *   from coaches"). A man out for a while is read at his first game back
- *   ({@link #withReturns}). Pace and projection together are THIS SEASON's screen
+ *   from coaches"). A man out for a while is read at his average projection
+ *   when back ({@link #withReturns}). Pace and projection together are THIS SEASON's screen
  *   ({@link #seasonScreen}), in the ratio other leagues' trades put between
  *   them; draft value's share of the whole is DraftWeightCurve's.
  *
@@ -426,11 +426,14 @@ public class TradeScreens {
 
     /**
      * A MAN OUT FOR A WHILE IS WORTH WHAT HE IS WORTH WHEN BACK. Justin, 2026-11-07: "a lot of trades would
-     * not be as enticing for others as my current model shows if their players are on ir". These screens
-     * read such a man at zero, so a trade sending Lamar Jackson cost the other manager nothing. In other
-     * leagues' completed trades (AwayPrice, 509 of them) he fetched a median 94% of his full worth when back
-     * (90% interval 86% to 103%), about the same however long he had to go, so he is read at his full worth:
-     * here his first projected game back above the line, and in stillOut his pace.
+     * not be as enticing for others as my current model shows if their players are on ir", and "some managers,
+     * with finals in mind, don't mind the few weeks of 0 points, and value their injured players as if their
+     * average projection also applied to their 0 weeks". These screens read such a man at zero, so a trade
+     * sending Lamar Jackson cost the other manager nothing. In other leagues' completed trades (AwayPrice, 509
+     * of them) what he fetched did not depend on how long he had to go, and a man sent alone fetched a median
+     * 105% of his worth on his average projection (90% interval 95% to 115%). So here he reads at that average
+     * above the line, and in stillOut at his pace. Sent with healthy men he fetched less, 75%; every package on
+     * these screens adds up its men in full, and this is the same.
      */
     static Map<String, Double> withReturns(Map<String, Double> above, Map<String, AwayPrice.Back> absent, Map<Position, Double> line,
                                            Map<String, Position> positionOf){
@@ -438,7 +441,7 @@ public class TradeScreens {
         absent.forEach((id, back) -> {
             Position p = positionOf.get(id);
             if(skill(p) && line.containsKey(p)){
-                out.putIfAbsent(id, back.points() - line.get(p));
+                out.putIfAbsent(id, back.average() - line.get(p));
             }
         });
         return out;
@@ -906,7 +909,7 @@ public class TradeScreens {
                 projectedOf.putIfAbsent(id, p.position);
             }
         }
-        // who Sleeper has coming back, and when: every week left, for the men out longer than nextGame looks
+        // who Sleeper has coming back, and at what: every week left, for the men out longer than nextGame looks
         List<Map<String, Double>> weeksLeft = new ArrayList<>();
         for(int w = played + 1; w <= EraActuals.weeks(season); w++){
             weeksLeft.add(LeagueWeek.projected(season, w));

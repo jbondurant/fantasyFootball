@@ -249,9 +249,11 @@ longer matter at this point"); the curve still measures 30% there in other leagu
 -PdraftWeight still sets a what-if. Trades he would read as fair have their own list on the
 page, also eight a bucket, and nobody on IR is ever the man cut to make room.
 His view shows pace, projection and the two weighted, and the page's "on both" box
-takes a number you set. A man on IR or out for a while reads at his full worth when back, not
-zero (Justin, 2026-11-07, of JFMarino's IR men): in other leagues' completed trades he fetched a
-median 94% of it, however long he had to go (`./gradlew run -Pmain=AwayPrice`).
+takes a number you set. A man on IR or out for a while reads at his pace and his average
+projection when back, not zero (Justin, 2026-11-07: managers with finals in mind "value their
+injured players as if their average projection also applied to their 0 weeks"). In other leagues'
+completed trades what he fetched did not depend on how long he had to go, and a man sent alone
+fetched a median 105% of that; sent with healthy men, 75% (`./gradlew run -Pmain=AwayPrice`).
 
 The explorer searches WHOLE ROSTERS since 2026-11-06 (`TradeSearch`), every shape up to
 three men a side (`-PexplorerMaxSide=4` for four). Justin, of the top-eight limit: "that's

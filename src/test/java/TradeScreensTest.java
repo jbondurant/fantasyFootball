@@ -278,12 +278,13 @@ public class TradeScreensTest {
         assertEquals(20.0, absent.get("backIn3").points(), 0);
         assertEquals(2, absent.get("backIn3").week());
         assertEquals(0.5, absent.get("backIn3").share(), 0);
+        assertEquals(20.5, absent.get("backIn3").average(), 0);
     }
 
-    /** He reads at his first game back; a man already on the screen keeps his number. */
+    /** He reads at his average when back; a man already on the screen keeps his number. */
     @Test
-    public void aManOutForAWhileReadsAtHisFirstGameBack(){
-        Map<String, AwayPrice.Back> absent = Map.of("star", new AwayPrice.Back(5, 18.0, 4, 9), "there", new AwayPrice.Back(5, 30.0, 4, 9));
+    public void aManOutForAWhileReadsAtHisAverageWhenBack(){
+        Map<String, AwayPrice.Back> absent = Map.of("star", new AwayPrice.Back(5, 12.0, 4, 9, 18.0), "there", new AwayPrice.Back(5, 30.0, 4, 9, 30.0));
         Map<Position, Double> line = Map.of(Position.WR, 8.0);
         Map<String, Double> read = TradeScreens.withReturns(Map.of("there", 1.0), absent, line, Map.of("star", Position.WR, "there", Position.WR));
         assertEquals(10.0, read.get("star"), 1e-9);
