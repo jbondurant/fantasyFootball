@@ -256,4 +256,12 @@ public class TradeScreensTest {
         assertEquals(0.0, weight.applyAsDouble(8), 1e-12);
         assertEquals(0.0, weight.applyAsDouble(14), 1e-12);
     }
+
+    /** Each half of the season screen reads on its own, what he gets over what he gives, the man he cuts among what he gives. */
+    @Test
+    public void aSideIsWhatHeGetsOverWhatHeGivesOnOneValue(){
+        java.util.Map<String, Double> pace = java.util.Map.of("a", 30.0, "b", 10.0, "star", 50.0, "cut", 0.0);
+        assertEquals(0.8, TradeScreens.sideRatio(java.util.List.of("a", "b"), java.util.List.of("star", "cut"), pace::get), 1e-12);
+        assertEquals(Double.POSITIVE_INFINITY, TradeScreens.sideRatio(java.util.List.of("a"), java.util.List.of("cut"), pace::get));
+    }
 }

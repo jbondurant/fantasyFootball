@@ -148,7 +148,9 @@ details ul { padding-left: 1.2em; }
         <option value="rise">biggest rise in your title odds</option>
         <option value="you">most season points for you (Sleeper)</option>
         <option value="youMin">most for you on your weakest pricing</option>
-        <option value="blend">most generous on what he sees</option>
+        <option value="blend">most generous on what he sees (weighted)</option>
+        <option value="paceView">most generous on pace</option>
+        <option value="projView">most generous on projection</option>
       </select>
     </label>
     <label class="field" for="f-q">Player
@@ -175,7 +177,7 @@ details ul { padding-left: 1.2em; }
           <th>His title<small>points of odds</small></th>
           <th>Your season<small class="pricings">Sleeper · model · FantasyPros</small></th>
           <th>Keepers<small>you · him</small></th>
-          <th>His view<small>back of what he gives</small></th>
+          <th>His view<small>weighted · pace · projection</small></th>
           <th>Flags</th>
         </tr>
       </thead>
@@ -340,7 +342,7 @@ function init() {
     `<li><b>Keepers</b> is the change in each side's best two keeper surpluses for 2027, in season points over the pick a keeper costs.</li>`,
     DATA.draftWeight > 0
       ? `<li><b>His view</b> is what he gets back of what he gives on the numbers he can see: draft value and this season's screen (pace and Sleeper's projection), blended with draft value at ${Math.round(DATA.draftWeight * 100)}% after ${DATA.weeksPlayed} games. 100% or more reads fair to him.</li>`
-      : `<li><b>His view</b> is what he gets back of what he gives on this season's numbers (pace and Sleeper's projection). Draft spot no longer counts after ${DATA.weeksPlayed} games. 100% or more reads fair to him.</li>`,
+      : `<li><b>His view</b> is what he gets back of what he gives on this season's numbers, shown three ways. Pace is his points per game so far. Proj is Sleeper's projection for his next game. Each is read as rest-of-season value above the last starter at his position. The top number is the two weighted ${Math.round((DATA.paceShare ?? 0) * 100)}% pace and ${Math.round((1 - (DATA.paceShare ?? 0)) * 100)}% projection, the split other leagues' accepted trades show at this point in the season, and 100% or more on it reads fair to him. Draft spot no longer counts after ${DATA.weeksPlayed} games.</li>`,
     `<li><b>Hurt</b> names any player in the trade listed IR, Out, Doubtful, PUP, suspended or Questionable today. Sleeper projects an injured player back, so a trade that leans on one may be worth less than it reads.</li>`,
     `<li><b>Players tab.</b> Every rostered player, and every free agent near the top at his position on some pricing, ranked at his position three ways. The middle rank is the middle of the three, so two of the three rank him there or better and two rank him there or worse. No weights needed. Spread is how far apart they are: a big spread means the sources disagree. Sleeper and model points count from the week after this one, so a game already played this week doesn't skew them. A player with no Sleeper or model points left (out for the season) has no middle rank.</li>`,
     `<li>Coverage: every one-for-one, and two- and three-man packages among each side's most valuable players. For each manager, trades gaining you ${DATA.minGain} or more season points were simulated from least to most costly to him, keeping up to ${DATA.perBucket} per bucket, so each bucket holds the least costly trades in it, plus every trade that reads as fair to him, however costly. A manager marked "search capped" stopped at ${DATA.cap.toLocaleString()} simulations; a bucket short of trades there may have more.</li>`
@@ -363,7 +365,7 @@ function init() {
     const key = {
       him: (t) => -t.him, himAlt: (t) => -t.himAlt, himFp: (t) => -(t.himFp ?? 0), hisTitle: (t) => -t.hisTitle,
       rise: (t) => -t.rise, you: (t) => -t.you, youMin: (t) => -Math.min(t.you, t.youAlt, t.youFp ?? t.you),
-      blend: (t) => -(t.blend ?? 9)
+      blend: (t) => -(t.blend ?? 9), paceView: (t) => -(t.paceView ?? 9), projView: (t) => -(t.projView ?? 9)
     }[state.sort];
     list.sort((x, y) => key(x) - key(y) || y.rise - x.rise);
     $("count").textContent = `${list.length} of ${DATA.trades.length} trades`;
@@ -394,7 +396,7 @@ function init() {
       <td class="n" data-k="His title">${fmt(t.hisTitle)}</td>
       <td class="n" data-k="Your season">${fmt(t.you)}<span class="sub ${t.youAlt < 0 ? "neg" : ""}">${fmt(t.youAlt)}</span>${t.youFp == null ? "" : `<span class="sub ${t.youFp < 0 ? "neg" : ""}">${fmt(t.youFp)}</span>`}</td>
       <td class="n" data-k="Keepers">${fmt(t.myKeep)}<span class="sub">${fmt(t.hisKeep)}</span></td>
-      <td class="n" data-k="His view">${pct(t.blend)}<span class="sub">${DATA.draftWeight > 0 ? `draft ${pct(t.draft)} · season ${pct(t.seasonView)}` : "this season"}</span></td>
+      <td class="n" data-k="His view">${pct(t.blend)}<span class="sub">pace ${pct(t.paceView)}</span><span class="sub">proj ${pct(t.projView)}</span>${DATA.draftWeight > 0 ? `<span class="sub">draft ${pct(t.draft)}</span>` : ""}</td>
       <td data-k="Flags">${flags}</td>
     </tr>`;
   }

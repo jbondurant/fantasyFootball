@@ -46,11 +46,12 @@ THE WEIGHT THE SCREENS USE, measured week by week on other leagues' accepted tra
   gives him less than the 10th percentile is a NO (Screens.noChance).
 
 THE TRADE - you give Mike Evans,Rhamondre Stevenson, you get Nico Collins,Parker Washington. From HIS side:
-  he gets  Mike Evans               draft   32.1   season   69.1
-  he gets  Rhamondre Stevenson      draft   29.2   season   40.7
-  he gives Nico Collins             draft   62.2   season   60.3
-  he gives Parker Washington        draft   31.7   season   47.5
-  totals: draft 61.3 for 94.0, season 109.8 for 107.8
+  he gets  Mike Evans               draft   32.1   pace   47.4   projection  103.1   weighted   69.1
+  he gets  Rhamondre Stevenson      draft   29.2   pace   38.6   projection   44.1   weighted   40.7
+  he gives Nico Collins             draft   62.2   pace   48.5   projection   78.8   weighted   60.3
+  he gives Parker Washington        draft   31.7   pace   44.0   projection   53.0   weighted   47.5
+  totals: draft 61.3 for 94.0, weighted 109.8 for 107.8
+  he gets back: pace 93%, projection 112%, weighted 102% (pace 61%, projection 39%)
   fair to him - he gets back 102% of what he gives on what he can see (65% of the draft value, 102% of the season screen - pace and Sleeper's projection; after 8 games, draft value is 0% of what a man is worth in other leagues' trades)
 
 WHAT THE OBJECTIVE SAYS - 17 x the best legal lineup, the bench as insurance, 240 drawn seasons - on each pricing:

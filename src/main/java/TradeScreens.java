@@ -463,6 +463,18 @@ public class TradeScreens {
         return g -> charts.computeIfAbsent(g, k -> paceChart(boards, positions, k, teams, flex));
     }
 
+    /** What one side gets over what it gives, on one value. */
+    static double sideRatio(List<String> in, List<String> out, ToDoubleFunction<String> value){
+        double got = 0, gave = 0;
+        for(String id : in){
+            got += value.applyAsDouble(id);
+        }
+        for(String id : out){
+            gave += value.applyAsDouble(id);
+        }
+        return ratio(got, gave);
+    }
+
     static double ratio(double in, double out){
         return out < NOTHING ? Double.POSITIVE_INFINITY : in / out;
     }
@@ -802,11 +814,22 @@ public class TradeScreens {
      * league's own revealed k, the old form, kept for the report.
      */
     public record Context(Chart chart, History history, ToDoubleFunction<String> draft, ToDoubleFunction<String> points,
-                          int weeksPlayed, DoubleUnaryOperator weight, double k) {
+                          int weeksPlayed, DoubleUnaryOperator weight, double k,
+                          ToDoubleFunction<String> pace, ToDoubleFunction<String> projection, double paceShare) {
 
         /** A trade from his side: he receives what Justin gives and sends what Justin gets (and any man he must cut). */
         public Screens of(TradeMarket.Trade trade){
             return screen(trade.give(), trade.hisOut(), draft, points, history.sides(), trade.withManager(), weight, weeksPlayed);
+        }
+
+        /**
+         * The season screen's two halves from his side, each on its own: what he gets over
+         * what he gives on pace alone, then on Sleeper's next-game projection alone. Justin,
+         * 2026-11-06, of the one blended number: "can I get all 3 pace/ proj/ & the current
+         * pace&proj weighted average, instead of just 1".
+         */
+        public double[] paceAndProjection(TradeMarket.Trade trade){
+            return new double[]{sideRatio(trade.give(), trade.hisOut(), pace), sideRatio(trade.give(), trade.hisOut(), projection)};
         }
 
         /** The draft share today. */
@@ -854,10 +877,10 @@ public class TradeScreens {
                 projectedOf.putIfAbsent(id, p.position);
             }
         }
-        Map<String, Double> production = played == 0 ? Map.of() : seasonScreen(
-                predicted(sums, positionOf, played, teams, flex, paceCharts.apply(played), sidelined),
-                readOff(projectedAboveLine(season, played, projectedOf, teams, flex), projectionCharts.apply(played)),
-                paceShare.applyAsDouble(played));
+        Map<String, Double> paceNow = played == 0 ? Map.of() : predicted(sums, positionOf, played, teams, flex, paceCharts.apply(played), sidelined);
+        Map<String, Double> projectionNow = played == 0 ? Map.of()
+                : readOff(projectedAboveLine(season, played, projectedOf, teams, flex), projectionCharts.apply(played));
+        Map<String, Double> production = played == 0 ? Map.of() : seasonScreen(paceNow, projectionNow, paceShare.applyAsDouble(played));
         ToDoubleFunction<String> draft = id -> {
             Player p = Player.getPlayerFromSIDV2(id);
             return p != null && skill(p.position) ? chart.at(SleeperProjections.adpOf(id)) : 0;
@@ -880,7 +903,8 @@ public class TradeScreens {
         if(fixed == null || fixed.isBlank()){
             weight = draftOffLate(weight);
         }
-        return new Context(chart, history, draft, id -> production.getOrDefault(id, 0.0), played, weight, k);
+        return new Context(chart, history, draft, id -> production.getOrDefault(id, 0.0), played, weight, k,
+                id -> paceNow.getOrDefault(id, 0.0), id -> projectionNow.getOrDefault(id, 0.0), paceShare.applyAsDouble(played));
     }
 
     /**
@@ -1021,15 +1045,17 @@ public class TradeScreens {
                     hisOut.isEmpty() ? null : ownerOf.get(hisOut.get(0)), context.weight(), context.weeksPlayed());
             out.append(String.format("%nTHE TRADE - you give %s, you get %s. From HIS side:%n", give, get));
             for(String id : hisIn){
-                out.append(String.format("  he gets  %-24s draft %6.1f   season %6.1f%n", name(id), context.draft().applyAsDouble(id),
-                        context.points().applyAsDouble(id)));
+                out.append(String.format("  he gets  %-24s draft %6.1f   pace %6.1f   projection %6.1f   weighted %6.1f%n", name(id), context.draft().applyAsDouble(id),
+                        context.pace().applyAsDouble(id), context.projection().applyAsDouble(id), context.points().applyAsDouble(id)));
             }
             for(String id : hisOut){
-                out.append(String.format("  he gives %-24s draft %6.1f   season %6.1f%n", name(id), context.draft().applyAsDouble(id),
-                        context.points().applyAsDouble(id)));
+                out.append(String.format("  he gives %-24s draft %6.1f   pace %6.1f   projection %6.1f   weighted %6.1f%n", name(id), context.draft().applyAsDouble(id),
+                        context.pace().applyAsDouble(id), context.projection().applyAsDouble(id), context.points().applyAsDouble(id)));
             }
-            out.append(String.format("  totals: draft %.1f for %.1f, season %.1f for %.1f%n  %s%n", s.draftIn(), s.draftOut(),
-                    s.pointsIn(), s.pointsOut(), s.verdict()));
+            out.append(String.format("  totals: draft %.1f for %.1f, weighted %.1f for %.1f%n", s.draftIn(), s.draftOut(), s.pointsIn(), s.pointsOut()));
+            out.append(String.format("  he gets back: pace %s, projection %s, weighted %s (pace %.0f%%, projection %.0f%%)%n  %s%n",
+                    Screens.share(sideRatio(hisIn, hisOut, context.pace())), Screens.share(sideRatio(hisIn, hisOut, context.projection())),
+                    Screens.share(s.pointsRatio()), 100 * context.paceShare(), 100 * (1 - context.paceShare()), s.verdict()));
             out.append(objective(configuration, ownerOf, hisIn, hisOut));
         }
         System.out.print(out);

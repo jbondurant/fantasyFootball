@@ -1083,14 +1083,15 @@ public class TradeMarket {
                         "{\"m\":%s,\"give\":%s,\"get\":%s,\"cut\":%s,\"rise\":%.2f,\"se\":%.2f,\"hisTitle\":%.2f,"
                                 + "\"you\":%.1f,\"youAlt\":%.1f,\"youFp\":%.1f,\"him\":%.1f,\"himAlt\":%.1f,\"himFp\":%.1f,"
                                 + "\"myKeep\":%.1f,\"hisKeep\":%.1f,"
-                                + "\"draft\":%s,\"seasonView\":%s,\"blend\":%s,\"fair\":%b,\"asking\":%b,\"prec\":%d,"
+                                + "\"draft\":%s,\"paceView\":%s,\"projView\":%s,\"seasonView\":%s,\"blend\":%s,\"fair\":%b,\"asking\":%b,\"prec\":%d,"
                                 + "\"tank\":%b,\"hurtIn\":%s,\"hurtOut\":%s}",
                         jsonString(rival), jsonNames(c.trade().give(), nameOf), jsonNames(c.trade().get(), nameOf),
                         jsonNames(c.trade().hisCut(), nameOf), rise, 100 * d[0].se(), 100 * d[1].change(),
                         c.you(), c.youAlt(), c.youFp(), c.him(), other[1], himFp,
                         keeperValue(myAfter, surplus, everyPosition) - myKeepBase,
                         keeperValue(hisAfter, surplus, everyPosition) - hisKeepBase,
-                        jsonRatio(seen.draftRatio()), jsonRatio(seen.pointsRatio()), jsonRatio(seen.blendedRatio()),
+                        jsonRatio(seen.draftRatio()), jsonRatio(screens.paceAndProjection(c.trade())[0]), jsonRatio(screens.paceAndProjection(c.trade())[1]),
+                        jsonRatio(seen.pointsRatio()), jsonRatio(seen.blendedRatio()),
                         seen.fairToHim(), seen.worthAsking(), seen.precedents(), tanking,
                         jsonHurt(c.trade().get(), nameOf), jsonHurt(c.trade().give(), nameOf)));
             }
@@ -1105,12 +1106,12 @@ public class TradeMarket {
         return String.format(java.util.Locale.ROOT,
                 "{\"generated\":%s,\"season\":%s,\"weeksPlayed\":%d,\"me\":%s,\"myTitle\":%.2f,\"myPlayoffs\":%.1f,"
                         + "\"pricing\":%s,\"alt\":%s,\"reject\":%s,\"rejectBelow\":%.1f,\"fpPanel\":%s,\"step\":%.1f,\"top\":%.1f,\"perBucket\":%d,\"cap\":%d,\"minGain\":%.1f,"
-                        + "\"tankLine\":%.1f,\"tankLineAlt\":%.1f,\"sims\":%d,\"draftWeight\":%.2f,"
+                        + "\"tankLine\":%.1f,\"tankLineAlt\":%.1f,\"sims\":%d,\"draftWeight\":%.2f,\"paceShare\":%.2f,"
                         + "\"rivals\":[%s],\n\"playersFrom\":%d,\"players\":[%s],\n\"trades\":[%s]}",
                 jsonString(LocalDate.now().toString()), jsonString(LeagueWeek.season()), screens.weeksPlayed(), jsonString(me),
                 100 * stakes.title(me), 100 * stakes.playoffs().getOrDefault(me, 0.0), jsonString(source), jsonString(alt),
                 "[" + String.join(",", reject.stream().map(TradeMarket::jsonString).toList()) + "]", rejectBelow, fpPanelJson(), step, top, perBucket, cap, minGain, hisFloor, hisFloorAlt,
-                TitleOdds.SIMS, screens.weightNow(), rivals, playersFrom, players, rows);
+                TitleOdds.SIMS, screens.weightNow(), screens.paceShare(), rivals, playersFrom, players, rows);
     }
 
     /**
