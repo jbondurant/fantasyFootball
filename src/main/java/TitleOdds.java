@@ -541,7 +541,7 @@ public class TitleOdds {
      */
     public record Stakes(League league, Map<Integer, Map<String, Double>> projected, Map<String, double[]> means,
                          Outcomes base, Map<String, Double> weight, Map<String, Double> playoffs,
-                         Map<String, List<String>> rosters) {
+                         Map<String, List<String>> rosters, SeasonTable table, double[][] baseChance) {
 
         /** The title-odds change for two managers when their rosters become these. */
         public Delta[] swap(String a, List<String> aAfter, String b, List<String> bAfter){
@@ -553,7 +553,21 @@ public class TitleOdds {
             return new Swap(a, liveWeek(league, a, teamMeans(league, aAfter, projected)), b, liveWeek(league, b, teamMeans(league, bAfter, projected)));
         }
 
+        /**
+         * The same seasons as play, with the playoffs by formula (SeasonTable). On real trades 2026-11-07 this came
+         * about four times closer to the answer on 200,000 other seasons than playing the 20,000 did, five times faster.
+         */
         public Delta[] swap(Swap swap){
+            int a = league.managers().indexOf(swap.a()), b = league.managers().indexOf(swap.b());
+            double[][] mean = meansByIndex(means);
+            mean[a] = swap.aMeans();
+            mean[b] = swap.bMeans();
+            double[][] after = table.chances(mean, new int[]{a, b}, 0, baseChance[a].length);
+            return new Delta[]{SeasonTable.paired(baseChance[a], after[0]), SeasonTable.paired(baseChance[b], after[1])};
+        }
+
+        /** The same change with the playoffs played, as swap did until 2026-11-07. For comparison. */
+        public Delta[] played(Swap swap){
             Map<String, double[]> after = new HashMap<>(means);
             after.put(swap.a(), swap.aMeans());
             after.put(swap.b(), swap.bMeans());
@@ -561,10 +575,15 @@ public class TitleOdds {
             return new Delta[]{TitleOdds.title(base, played, swap.a()), TitleOdds.title(base, played, swap.b())};
         }
 
+        private double[][] meansByIndex(Map<String, double[]> byName){
+            return TitleOdds.meansByIndex(league, byName);
+        }
+
         /** The title-odds change for one manager whose roster becomes this. */
         public Delta one(String a, List<String> aAfter){
-            Outcomes after = play(league, with(means, league, Map.of(a, aAfter), projected), base.champion().length, SEED);
-            return TitleOdds.title(base, after, a);
+            int i = league.managers().indexOf(a);
+            double[][] mean = meansByIndex(with(means, league, Map.of(a, aAfter), projected));
+            return SeasonTable.paired(baseChance[i], table.chances(mean, new int[]{i}, 0, baseChance[i].length)[0]);
         }
 
         /**
@@ -577,15 +596,16 @@ public class TitleOdds {
             if(claimed.isEmpty()){
                 return one(a, aAfter);
             }
+            int i = league.managers().indexOf(a), seasons = baseChance[i].length;
             Map<String, double[]> before = TitleOdds.means(league, rosters, projected, claimed);
-            Outcomes was = play(league, before, base.champion().length, SEED);
+            double[] was = table.chances(meansByIndex(before), new int[]{i}, 0, seasons)[0];
             Map<String, double[]> then = new HashMap<>(before);
             then.put(a, liveWeek(league, a, teamMeans(league, aAfter, projected, claimed)));
-            return TitleOdds.title(was, play(league, then, base.champion().length, SEED), a);
+            return SeasonTable.paired(was, table.chances(meansByIndex(then), new int[]{i}, 0, seasons)[0]);
         }
 
         public double title(String manager){
-            return base.title(manager);
+            return java.util.Arrays.stream(baseChance[league.managers().indexOf(manager)]).average().orElse(0);
         }
 
         /** A rival's season, said in a word: presentation only, nothing is decided on it. */
@@ -615,10 +635,20 @@ public class TitleOdds {
             weight.put(m, average <= 0 ? 1.0 : raw.get(m) / average);
             playoffs.put(m, base.playoffs(m));
         }
-        return new Stakes(league, projected, means, base, weight, playoffs, rosters);
+        SeasonTable table = new SeasonTable(league, sims, SEED);
+        int[] everyone = java.util.stream.IntStream.range(0, league.managers().size()).toArray();
+        return new Stakes(league, projected, means, base, weight, playoffs, rosters, table, table.chances(meansByIndex(league, means), everyone, 0, sims));
     }
 
     /** Every manager's roster: every man held, IR slots included - a man on IR now is projected back when he is. */
+    static double[][] meansByIndex(League league, Map<String, double[]> byName){
+        double[][] mean = new double[league.managers().size()][];
+        for(int i = 0; i < mean.length; i++){
+            mean[i] = byName.getOrDefault(league.managers().get(i), new double[league.weeks()]);
+        }
+        return mean;
+    }
+
     static Map<String, List<String>> rosters(AAAConfiguration configuration){
         Map<String, List<String>> out = new TreeMap<>();
         LeagueOwners.today(configuration).forEach((id, m) -> out.computeIfAbsent(m, k -> new ArrayList<>()).add(id));

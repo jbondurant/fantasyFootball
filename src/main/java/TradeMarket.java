@@ -955,11 +955,10 @@ public class TradeMarket {
      * change simulated (TitleOdds, 20,000 seasons, the same draws before and after);
      * a trade is kept in its half-point bucket of Justin's rise (+0.5, +1.0, ... up
      * to -PexplorerTop and above) while that bucket holds fewer than
-     * -PexplorerPerBucket trades, least worse first. A simulation costs about a third
-     * of a second a thread, so -PexplorerCap bounds them per rival, TradeSearch.walk
-     * shares them across lanes and bands of gain, and each rival's counts say whether
-     * the cap was reached. -PexplorerEverything drops the cap and simulates every
-     * candidate, about ten hours at three a side. Everything Justin would judge on
+     * -PexplorerPerBucket trades, least worse first. -PexplorerCap bounds the simulations
+     * per rival, TradeSearch.walk shares them across lanes and bands of gain, and each
+     * rival's counts say whether the cap was reached. -PexplorerEverything drops the cap
+     * and simulates every candidate (RUNBOOK has what that costs). Everything Justin would judge on
      * rides along: every pricing for both sides, both title changes, keeper value,
      * his view, the tanking line as a fact, and any hurt man moving.
      *
@@ -988,7 +987,7 @@ public class TradeMarket {
                            WeeklyLineupValue fpValue, Set<String> reject, Set<String> barred, Map<String, Double> points, int activeLimit,
                            String players, int playersFrom, TradeScreens.Context screens, TitleOdds.Stakes stakes,
                            double hisFloor, double hisFloorAlt, Map<String, Double> surplus, Map<String, Position> everyPosition,
-                           String source, String alt){
+                           String source, String alt, java.time.LocalDateTime read){
         double step = 0.5;
         double top = Double.parseDouble(System.getProperty("explorerTop", "6.0"));
         int buckets = (int) Math.round((top - step) / step) + 1;          // +0.5 ... +top, the last open-ended
@@ -1023,7 +1022,7 @@ public class TradeMarket {
         boolean everything = Boolean.getBoolean("explorerEverything");
         int simulations = everything ? Integer.MAX_VALUE : cap;
         TradeSearch.Rules rules = new TradeSearch.Rules(maxSide, minGain, rejectBelow, reject.contains(FANTASYPROS), reject.contains(alt),
-                activeLimit, everything ? 1 << 28 : Integer.getInteger("explorerRetain", 400), stakes.league().live().isEmpty() ? 0 : 1, 0);
+                activeLimit, everything ? 1 << 28 : Integer.getInteger("explorerRetain", 400), stakes.league().live().isEmpty() ? 0 : 1);
         if(!stakes.league().live().isEmpty() && stakes.league().live().size() < stakes.league().managers().size()){
             System.out.printf("WARNING: %d of %d managers have this week's lineup fixed; the search's duplicate skip assumes all of them%n",
                     stakes.league().live().size(), stakes.league().managers().size());
@@ -1056,12 +1055,29 @@ public class TradeMarket {
             }, step, buckets, perBucket, simulations);
             return new Run(rival, found, walked, (searched - began) / 1e9, (System.nanoTime() - searched) / 1e9);
         }).toList();
-        System.out.printf("explorer: search and simulations took %.0f seconds awake, on %d threads; %,d candidates, %,d simulations would answer them all, %,d run, %,d trades reused another's%n",
+        System.out.printf("explorer: search and simulations took %.0f seconds awake, on %d threads; %,d candidates, %,d simulations would answer them all, %,d run, %,d held rows took another's result%n",
                 (System.nanoTime() - startedAt) / 1e9, java.util.concurrent.ForkJoinPool.commonPool().getParallelism() + 1,
                 runs.stream().mapToLong(r -> r.found().passed()).sum(), runs.stream().mapToLong(r -> r.found().outcomes()).sum(),
                 runs.stream().mapToLong(r -> r.walked().simulated()).sum(), runs.stream().mapToLong(r -> r.walked().reused()).sum());
         if(Boolean.getBoolean("explorerProveSkip")){
             proveTheSkip(me, rosters, universe, onIr, locked, projected, prices, screen, rules, stakes);
+        }
+        if(Boolean.getBoolean("explorerTitleCheck")){
+            // a spread of real candidates from each rival, every size of gain and cost
+            List<TitleOdds.Swap> sample = new ArrayList<>();
+            for(Run run : runs){
+                List<TradeSearch.Deal> any = run.found().lanes().get(TradeSearch.ANY_LANE);
+                List<String> his = rosters.get(run.rival());
+                for(int i = 0; i < 40 && !any.isEmpty(); i++){
+                    TradeSearch.Deal deal = any.get(i * any.size() / 40);
+                    List<String> myOut = new ArrayList<>(names.apply(deal.give));
+                    myOut.addAll(names.apply(deal.myCut));
+                    List<String> hisOut = new ArrayList<>(names.apply(deal.get));
+                    hisOut.addAll(names.apply(deal.hisCut));
+                    sample.add(stakes.after(me, swap(mine, myOut, names.apply(deal.get)), run.rival(), swap(his, hisOut, names.apply(deal.give))));
+                }
+            }
+            checkTheTitleMath(sample, me, stakes);
         }
 
         double myBase = season.applyAsDouble(mine), myAltBase = altValue.of(mine), myFpBase = fpValue.of(mine);
@@ -1112,10 +1128,10 @@ public class TradeMarket {
                             + "\"skipped\":%d,\"kept\":%d,\"capReached\":%b}",
                     jsonString(rival), jsonString(stakes.state(rival)), 100 * stakes.title(rival),
                     100 * stakes.playoffs().getOrDefault(rival, 0.0), run.found().searched(), run.found().passed(), run.found().vetoed(),
-                    run.walked().simulated(), run.walked().skipped(), run.walked().kept().size(), run.walked().capReached()));
+                    run.walked().simulated(), run.walked().skipped(), run.walked().kept().size(), run.walked().capReached() || run.found().trimmed()));
             System.out.printf("explorer: %s - %,d searched, %,d candidates needing %,d simulations (%,d more vetoed by %s), %d simulated, %d reused, %d skipped, %d kept%s, search %.0fs, simulations %.0fs%n",
                     rival, run.found().searched(), run.found().passed(), run.found().outcomes(), run.found().vetoed(), reject, run.walked().simulated(), run.walked().reused(),
-                    run.walked().skipped(), run.walked().kept().size(), run.walked().capReached() ? " (cap reached)" : "", run.searchSeconds(), run.walkSeconds());
+                    run.walked().skipped(), run.walked().kept().size(), run.walked().capReached() ? " (cap reached)" : run.found().trimmed() ? " (retain limit reached)" : "", run.searchSeconds(), run.walkSeconds());
         }
         if(disagreements > 0){
             System.out.printf("WARNING: the fast objective and the slow one disagreed by over 0.01 on %d of %d rows; the rows print the slow one%n",
@@ -1126,7 +1142,7 @@ public class TradeMarket {
                         + "\"pricing\":%s,\"alt\":%s,\"reject\":%s,\"rejectBelow\":%.1f,\"fpPanel\":%s,\"step\":%.1f,\"top\":%.1f,\"perBucket\":%d,\"cap\":%d,\"minGain\":%.1f,"
                         + "\"tankLine\":%.1f,\"tankLineAlt\":%.1f,\"sims\":%d,\"draftWeight\":%.2f,\"paceShare\":%.2f,\"maxSide\":%d,\"searched\":%d,\"everything\":%b,\"simulationsNeeded\":%d,\"simulationsRun\":%d,\"bothFloor\":%.2f,"
                         + "\"rivals\":[%s],\n\"playersFrom\":%d,\"players\":[%s],\n\"trades\":[%s]}",
-                jsonString(LocalDate.now().toString()), jsonString(LeagueWeek.season()), screens.weeksPlayed(), jsonString(me),
+                jsonString(read.format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))), jsonString(LeagueWeek.season()), screens.weeksPlayed(), jsonString(me),
                 100 * stakes.title(me), 100 * stakes.playoffs().getOrDefault(me, 0.0), jsonString(source), jsonString(alt),
                 "[" + String.join(",", reject.stream().map(TradeMarket::jsonString).toList()) + "]", rejectBelow, fpPanelJson(), step, top, perBucket, cap, minGain, hisFloor, hisFloorAlt,
                 TitleOdds.SIMS, screens.weightNow(), screens.paceShare(), maxSide, searched, everything,
@@ -1134,16 +1150,18 @@ public class TradeMarket {
     }
 
     /**
-     * The duplicate skip tested on the real league, in a way that can fail, against every candidate up to the
-     * explorer's limit. Counts each candidate's real simulation inputs against the count the search gave; reads the
-     * search's weekly points against those inputs; takes a sample of the trades the search treated as one and checks
-     * their inputs match, then plays some of them from scratch, all twelve rosters rebuilt, against each other and
-     * against the shortcut the explorer uses. A control shows what different points do, so a pass means something.
+     * The duplicate skip tested on the real league, on every candidate before any is merged, with no sampling. Each
+     * candidate's real simulation inputs are built the way the simulation builds them and grouped against the search's
+     * two fingerprints: two trades sharing a row or a count fingerprint must have equal inputs, and equal inputs must
+     * share a count fingerprint, so the count is compared as a grouping and not just a size. A control runs the same
+     * check on a fingerprint that leaves out the last week, which must fail. Then a few merged pairs are run from
+     * scratch, all twelve rosters rebuilt, against each other and against both routes from a trade's inputs.
      */
     private static void proveTheSkip(String me, Map<String, List<String>> rosters, List<String> universe, boolean[] onIr, boolean[] locked, double[] projected,
                                      TradeSearch.Prices prices, TradeSearch.Screen screen, TradeSearch.Rules rules, TitleOdds.Stakes stakes){
         record After(List<String> mine, List<String> his){}
-        record Tally(String rival, long counted, long real, double gap, int pairs, int inputsDiffer, int played, int playedDiffer, int shortcutDiffers, int controls, int controlsDiffer){}
+        record Tally(String rival, long candidates, long counted, long real, double gap, long rowWrong, long countWrong, long countSplit, long brokenWrong,
+                     int played, int playedDiffer, int shortcutDiffers){}
         Map<String, Integer> index = new HashMap<>();
         for(int i = 0; i < universe.size(); i++){
             index.put(universe.get(i), i);
@@ -1152,14 +1170,13 @@ public class TradeMarket {
         java.util.function.Function<int[], List<String>> names = men -> java.util.Arrays.stream(men).mapToObj(universe::get).toList();
         List<String> mine = rosters.get(me);
         TradeSearch.Rules all = new TradeSearch.Rules(rules.maxSide(), rules.minGain(), rules.rejectBelow(), rules.vetoOnFantasyPros(), rules.vetoOnModel(),
-                rules.activeLimit(), 1 << 28, rules.simulatedFrom(), 400);
+                rules.activeLimit(), 1, rules.simulatedFrom());
         TitleOdds.League league = stakes.league();
-        int sims = stakes.base().champion().length;
+        int sims = stakes.base().champion().length, from = rules.simulatedFrom();
         java.util.function.BiPredicate<TitleOdds.Delta[], TitleOdds.Delta[]> differ = (a, b) ->
                 a[0].change() != b[0].change() || a[0].se() != b[0].se() || a[1].change() != b[1].change() || a[1].se() != b[1].se();
         List<Tally> tallies = rosters.keySet().stream().filter(m -> !m.equals(me)).toList().parallelStream().map(rival -> {
             List<String> his = rosters.get(rival);
-            TradeSearch.Found found = TradeSearch.search(indices.apply(mine), indices.apply(his), onIr, locked, projected, prices, screen, all);
             java.util.function.Function<TradeSearch.Deal, After> after = deal -> {
                 List<String> myOut = new ArrayList<>(names.apply(deal.give));
                 myOut.addAll(names.apply(deal.myCut));
@@ -1168,81 +1185,235 @@ public class TradeMarket {
                 return new After(swap(mine, myOut, names.apply(deal.get)), swap(his, hisOut, names.apply(deal.give)));
             };
             java.util.function.Function<After, TitleOdds.Swap> inputs = a -> stakes.after(me, a.mine(), rival, a.his());
-            double[][] scratch = prices.simulated().scratch();
-            double[] weeks = new double[prices.simulated().weeks()];
-            Set<TitleOdds.Swap> real = new java.util.HashSet<>();
-            Set<String> met = new java.util.HashSet<>();
-            double gap = 0;
-            for(List<TradeSearch.Deal> lane : found.lanes()){
-                for(TradeSearch.Deal deal : lane){
-                    if(met.add(deal.key())){
-                        After a = after.apply(deal);
-                        TitleOdds.Swap in = inputs.apply(a);
-                        real.add(in);
-                        prices.simulated().of(indices.apply(a.mine()), a.mine().size(), scratch, weeks);
-                        for(int w = rules.simulatedFrom(); w < weeks.length; w++){
-                            gap = Math.max(gap, Math.abs(weeks[w] - in.aMeans()[w]));
-                        }
-                        prices.simulated().of(indices.apply(a.his()), a.his().size(), scratch, weeks);
-                        for(int w = rules.simulatedFrom(); w < weeks.length; w++){
-                            gap = Math.max(gap, Math.abs(weeks[w] - in.bMeans()[w]));
+            Map<Long, TitleOdds.Swap> byRow = new HashMap<>(), byCount = new HashMap<>(), byBroken = new HashMap<>();
+            Map<TitleOdds.Swap, Long> countOf = new HashMap<>();
+            Map<Long, TradeSearch.Deal> firstAtRow = new HashMap<>();
+            List<TradeSearch.Deal[]> pairs = new ArrayList<>();
+            java.util.Random pick = new java.util.Random(TitleOdds.SEED);
+            long[] t = new long[6];      // candidates, row wrong, count wrong, count split, broken wrong, merges
+            double[] gap = {0};
+            TradeSearch.Found found = TradeSearch.search(indices.apply(mine), indices.apply(his), onIr, locked, projected, prices, screen, all, (deal, rowKey, myWeeks, hisWeeks) -> {
+                t[0]++;
+                TitleOdds.Swap real = inputs.apply(after.apply(deal));
+                for(int w = from; w < myWeeks.length; w++){
+                    gap[0] = Math.max(gap[0], Math.max(Math.abs(myWeeks[w] - real.aMeans()[w]), Math.abs(hisWeeks[w] - real.bMeans()[w])));
+                }
+                long count = TradeSearch.sameSeason(myWeeks, hisWeeks, from);
+                long broken = TradeSearch.sameSeason(java.util.Arrays.copyOf(myWeeks, myWeeks.length - 1), java.util.Arrays.copyOf(hisWeeks, hisWeeks.length - 1), from);
+                TitleOdds.Swap there = byRow.putIfAbsent(rowKey, real);
+                t[1] += there != null && !there.equals(real) ? 1 : 0;
+                there = byCount.putIfAbsent(count, real);
+                t[2] += there != null && !there.equals(real) ? 1 : 0;
+                Long was = countOf.putIfAbsent(real, count);
+                t[3] += was != null && was != count ? 1 : 0;
+                there = byBroken.putIfAbsent(broken, real);
+                t[4] += there != null && !there.equals(real) ? 1 : 0;
+                TradeSearch.Deal first = firstAtRow.putIfAbsent(rowKey, deal);
+                if(first != null){
+                    t[5]++;
+                    if(pairs.size() < 10){
+                        pairs.add(new TradeSearch.Deal[]{first, deal});
+                    }
+                    else {
+                        int at = (int) (pick.nextDouble() * t[5]);
+                        if(at < 10){
+                            pairs.set(at, new TradeSearch.Deal[]{first, deal});
                         }
                     }
                 }
+            });
+            int playedDiffer = 0, shortcutDiffers = 0;
+            for(TradeSearch.Deal[] pair : pairs){
+                TitleOdds.Delta[][] fresh = new TitleOdds.Delta[2][];
+                for(int i = 0; i < 2; i++){
+                    After at = after.apply(pair[i]);
+                    Map<String, List<String>> everyone = new HashMap<>(rosters);
+                    everyone.put(me, at.mine());
+                    everyone.put(rival, at.his());
+                    TitleOdds.Outcomes seasons = TitleOdds.play(league, TitleOdds.means(league, everyone, stakes.projected()), sims, TitleOdds.SEED);
+                    fresh[i] = new TitleOdds.Delta[]{TitleOdds.title(stakes.base(), seasons, me), TitleOdds.title(stakes.base(), seasons, rival)};
+                }
+                playedDiffer += differ.test(fresh[0], fresh[1]) ? 1 : 0;
+                // the explorer's two routes from a trade's inputs, against the same trade from all twelve rosters: played, and by formula
+                TitleOdds.Swap in = inputs.apply(after.apply(pair[0]));
+                shortcutDiffers += differ.test(fresh[0], stakes.played(in)) ? 1 : 0;
+                After at = after.apply(pair[0]);
+                Map<String, List<String>> everyone = new HashMap<>(rosters);
+                everyone.put(me, at.mine());
+                everyone.put(rival, at.his());
+                int a = league.managers().indexOf(me), b = league.managers().indexOf(rival);
+                double[][] chance = stakes.table().chances(TitleOdds.meansByIndex(league, TitleOdds.means(league, everyone, stakes.projected())), new int[]{a, b}, 0, sims);
+                shortcutDiffers += differ.test(new TitleOdds.Delta[]{SeasonTable.paired(stakes.baseChance()[a], chance[0]), SeasonTable.paired(stakes.baseChance()[b], chance[1])}, stakes.swap(in)) ? 1 : 0;
             }
-            int inputsDiffer = 0, played = 0, playedDiffer = 0, shortcutDiffers = 0, controls = 0, controlsDiffer = 0;
-            TradeSearch.Deal last = null;
-            for(TradeSearch.Deal[] pair : found.merged()){
-                After a = after.apply(pair[0]), b = after.apply(pair[1]);
-                if(!inputs.apply(a).equals(inputs.apply(b))){
-                    inputsDiffer++;
-                }
-                if(played < 10){
-                    played++;
-                    TitleOdds.Delta[] fresh = new TitleOdds.Delta[2];
-                    TitleOdds.Delta[] other = new TitleOdds.Delta[2];
-                    for(int i = 0; i < 2; i++){
-                        After at = i == 0 ? a : b;
-                        Map<String, List<String>> everyone = new HashMap<>(rosters);
-                        everyone.put(me, at.mine());
-                        everyone.put(rival, at.his());
-                        TitleOdds.Outcomes seasons = TitleOdds.play(league, TitleOdds.means(league, everyone, stakes.projected()), sims, TitleOdds.SEED);
-                        TitleOdds.Delta[] d = {TitleOdds.title(stakes.base(), seasons, me), TitleOdds.title(stakes.base(), seasons, rival)};
-                        if(i == 0){
-                            fresh = d;
-                        }
-                        else {
-                            other = d;
-                        }
-                    }
-                    if(differ.test(fresh, other)){
-                        playedDiffer++;
-                    }
-                    if(differ.test(fresh, stakes.swap(inputs.apply(a)))){
-                        shortcutDiffers++;
-                    }
-                }
-                if(last != null && controls < 5 && !inputs.apply(after.apply(last)).equals(inputs.apply(a))){
-                    controls++;
-                    if(differ.test(stakes.swap(inputs.apply(after.apply(last))), stakes.swap(inputs.apply(a)))){
-                        controlsDiffer++;
-                    }
-                }
-                last = pair[0];
-            }
-            return new Tally(rival, found.outcomes(), real.size(), gap, found.merged().size(), inputsDiffer, played, playedDiffer, shortcutDiffers, controls, controlsDiffer);
+            return new Tally(rival, t[0], found.outcomes(), countOf.size(), gap[0], t[1], t[2], t[3], t[4], pairs.size(), playedDiffer, shortcutDiffers);
         }).toList();
-        System.out.printf("skip proof: the search counted %,d simulations; the candidates' real inputs number %,d%n",
-                tallies.stream().mapToLong(Tally::counted).sum(), tallies.stream().mapToLong(Tally::real).sum());
-        tallies.stream().filter(t -> t.counted() != t.real()).forEach(t -> System.out.printf("skip proof: %s counted %,d, real %,d%n", t.rival(), t.counted(), t.real()));
+        System.out.printf("skip proof: all %,d candidates rebuilt before any merge: %,d different simulation inputs, %,d by the search's count%n",
+                tallies.stream().mapToLong(Tally::candidates).sum(), tallies.stream().mapToLong(Tally::real).sum(), tallies.stream().mapToLong(Tally::counted).sum());
+        System.out.printf("skip proof: trades sharing a row with different inputs: %d; sharing a simulation with different inputs: %d; equal inputs counted as two: %d%n",
+                tallies.stream().mapToLong(Tally::rowWrong).sum(), tallies.stream().mapToLong(Tally::countWrong).sum(), tallies.stream().mapToLong(Tally::countSplit).sum());
+        System.out.printf("skip proof: control, the same check on a fingerprint leaving out the last week: %,d trades sharing with different inputs (this must not be 0)%n",
+                tallies.stream().mapToLong(Tally::brokenWrong).sum());
         System.out.printf("skip proof: largest gap between the search's weekly points and the simulation's, weeks %d on: %.9f; %d of %d managers have this week fixed%n",
-                rules.simulatedFrom(), tallies.stream().mapToDouble(Tally::gap).max().orElse(0), league.live().size(), league.managers().size());
-        System.out.printf("skip proof: %,d sampled pairs the search treated as one, %d with different simulation inputs%n",
-                tallies.stream().mapToInt(Tally::pairs).sum(), tallies.stream().mapToInt(Tally::inputsDiffer).sum());
-        System.out.printf("skip proof: %d of those played from scratch, all twelve rosters rebuilt: %d pairs came back different, %d differ from the explorer's shortcut%n",
+                from, tallies.stream().mapToDouble(Tally::gap).max().orElse(0), league.live().size(), league.managers().size());
+        System.out.printf("skip proof: %d merged pairs played from scratch, all twelve rosters rebuilt: %d came back different, %d differ from the shortcut, played or by formula%n",
                 tallies.stream().mapToInt(Tally::played).sum(), tallies.stream().mapToInt(Tally::playedDiffer).sum(), tallies.stream().mapToInt(Tally::shortcutDiffers).sum());
-        System.out.printf("skip proof: control, %d pairs with different inputs: %d came back different%n",
-                tallies.stream().mapToInt(Tally::controls).sum(), tallies.stream().mapToInt(Tally::controlsDiffer).sum());
+    }
+
+    /**
+     * SeasonTable tested on real candidates (Justin, 2026-11-07: "any way to improve title simulation, or find math...
+     * to arrive at same or better result"). First that it gives play's champion in every season, and how much faster;
+     * then how close each method comes to the same trade's answer on 200,000 other seasons by the formula, over several
+     * separate blocks of seasons, because every trade in one block shares that block's luck; and how close a quadratic
+     * in each team's weekly points comes, built from a few dozen runs a rival and then no more.
+     */
+    private static void checkTheTitleMath(List<TitleOdds.Swap> trades, String me, TitleOdds.Stakes stakes){
+        TitleOdds.League league = stakes.league();
+        List<String> managers = league.managers();
+        int sims = stakes.base().champion().length, tested = 5 * sims, truthSeasons = 200_000, total = tested + truthSeasons, n = managers.size();
+        long began = System.nanoTime();
+        SeasonTable table = new SeasonTable(league, total, TitleOdds.SEED);
+        System.out.printf("title check: %,d seasons drawn and kept in %.1f seconds; %d real trades%n", total, (System.nanoTime() - began) / 1e9, trades.size());
+        double[][] base = TitleOdds.meansByIndex(league, stakes.means());
+        int myIndex = managers.indexOf(me);
+        java.util.function.Function<TitleOdds.Swap, double[][]> meansOf = swap -> {
+            double[][] mean = base.clone();
+            mean[managers.indexOf(swap.a())] = swap.aMeans();
+            mean[managers.indexOf(swap.b())] = swap.bMeans();
+            return mean;
+        };
+
+        // the same seasons, one thread at a time, for a fair comparison of speed
+        int timed = Math.min(100, trades.size()), differ = 0;
+        double playSeconds = 0, tableSeconds = 0;
+        for(int t = 0; t < timed; t++){
+            TitleOdds.Swap swap = trades.get(t);
+            Map<String, double[]> after = new HashMap<>(stakes.means());
+            after.put(swap.a(), swap.aMeans());
+            after.put(swap.b(), swap.bMeans());
+            long a = System.nanoTime();
+            int[] played = TitleOdds.play(league, after, sims, TitleOdds.SEED).champion();
+            long b = System.nanoTime();
+            int[] kept = table.champions(meansOf.apply(swap), 0, sims);
+            long c = System.nanoTime();
+            playSeconds += (b - a) / 1e9;
+            tableSeconds += (c - b) / 1e9;
+            differ += java.util.Arrays.equals(played, kept) ? 0 : 1;
+        }
+        System.out.printf("title check: %d trades, %,d seasons each: %d with any season's champion different from play%n", timed, sims, differ);
+        System.out.printf("title check: one thread, ms a trade: play %.1f, the same seasons kept %.1f (%.0f times faster)%n",
+                1000 * playSeconds / timed, 1000 * tableSeconds / timed, playSeconds / tableSeconds);
+        int[] methods = {20_000, 10_000, 5_000, 2_000, 1_000};
+        for(int seasons : methods){
+            long a = System.nanoTime();
+            for(int t = 0; t < timed; t++){
+                TitleOdds.Swap swap = trades.get(t);
+                table.chances(meansOf.apply(swap), new int[]{managers.indexOf(swap.a()), managers.indexOf(swap.b())}, 0, seasons);
+            }
+            System.out.printf("title check: one thread, ms a trade: the formula on %,d seasons %.1f%n", seasons, (System.nanoTime() - a) / 1e6 / timed);
+        }
+
+        // how close, against the same trade on other seasons
+        int[] everyone = new int[n];
+        for(int i = 0; i < n; i++){
+            everyone[i] = i;
+        }
+        double[] baseChance = table.chances(base, everyone, 0, total)[myIndex];
+        int[] baseChampion = table.champions(base, 0, tested);
+        // method index: 0 is playing 20,000 seasons, then the formula on each size in methods. For each: squared error, stated error, in the same bucket, blocks
+        int columns = 1 + methods.length;
+        double[][] tally = new double[columns][4];
+        double[] truthTally = new double[3];    // stated error, lowest rise, highest rise
+        truthTally[1] = Double.MAX_VALUE;
+        truthTally[2] = -Double.MAX_VALUE;
+        Object lock = new Object();
+        trades.parallelStream().forEach(swap -> {
+            double[][] mean = meansOf.apply(swap);
+            double[] mine = table.chances(mean, new int[]{myIndex}, 0, total)[0];
+            int[] champion = table.champions(mean, 0, tested);
+            TitleOdds.Delta truth = SeasonTable.paired(java.util.Arrays.copyOfRange(baseChance, tested, total), java.util.Arrays.copyOfRange(mine, tested, total));
+            double[][] local = new double[columns][4];
+            for(int block = 0; block < tested / sims; block++){
+                double[] before = new double[sims], after = new double[sims];
+                for(int s = 0; s < sims; s++){
+                    before[s] = baseChampion[block * sims + s] == myIndex ? 1 : 0;
+                    after[s] = champion[block * sims + s] == myIndex ? 1 : 0;
+                }
+                add(local[0], SeasonTable.paired(before, after), truth);
+            }
+            for(int m = 0; m < methods.length; m++){
+                for(int block = 0; block < Math.min(20, tested / methods[m]); block++){
+                    int from = block * methods[m], to = from + methods[m];
+                    add(local[m + 1], SeasonTable.paired(java.util.Arrays.copyOfRange(baseChance, from, to), java.util.Arrays.copyOfRange(mine, from, to)), truth);
+                }
+            }
+            synchronized(lock){
+                for(int c = 0; c < columns; c++){
+                    for(int k = 0; k < 4; k++){
+                        tally[c][k] += local[c][k];
+                    }
+                }
+                truthTally[0] += truth.se();
+                truthTally[1] = Math.min(truthTally[1], truth.change());
+                truthTally[2] = Math.max(truthTally[2], truth.change());
+            }
+        });
+        System.out.printf("title check: the truth, 200,000 other seasons by the formula: typical standard error %.3f points, rises from %.2f to %.2f%n",
+                100 * truthTally[0] / trades.size(), 100 * truthTally[1], 100 * truthTally[2]);
+        for(int c = 0; c < columns; c++){
+            double blocks = tally[c][3];
+            System.out.printf("title check: %s on %,d seasons, %d blocks: off by %.3f points (root mean square), says +-%.3f, same half-point bucket %.0f%%%n",
+                    c == 0 ? "played" : "the formula", c == 0 ? sims : methods[c - 1], (int) (blocks / trades.size()),
+                    100 * Math.sqrt(tally[c][0] / blocks), 100 * tally[c][1] / blocks, 100 * tally[c][2] / blocks);
+        }
+
+        // no simulation at all per trade: a quadratic in each team's points in each week, one per rival
+        int from = league.firstFuture(), weeks = league.weeks(), bump = 3, step = 20_000;
+        long started = System.nanoTime();
+        Map<String, double[][]> slopes = new java.util.concurrent.ConcurrentHashMap<>();
+        managers.stream().filter(m -> !m.equals(me)).toList().parallelStream().forEach(rival -> {
+            int r = managers.indexOf(rival);
+            double[][] out = new double[4][weeks];    // my slope, my curve, his slope, his curve
+            for(int side = 0; side < 2; side++){
+                int who = side == 0 ? myIndex : r;
+                for(int w = from; w < weeks; w++){
+                    double[] t = new double[2];
+                    for(int sign = 0; sign < 2; sign++){
+                        double[][] mean = base.clone();
+                        mean[who] = base[who].clone();
+                        mean[who][w] += sign == 0 ? bump : -bump;
+                        t[sign] = SeasonTable.paired(java.util.Arrays.copyOf(baseChance, step), table.chances(mean, new int[]{myIndex}, 0, step)[0]).change();
+                    }
+                    out[2 * side][w] = (t[0] - t[1]) / (2.0 * bump);
+                    out[2 * side + 1][w] = (t[0] + t[1]) / (double) (bump * bump);
+                }
+            }
+            slopes.put(rival, out);
+        });
+        double built = (System.nanoTime() - started) / 1e9;
+        double square = 0;
+        int inBucket = 0;
+        for(TitleOdds.Swap swap : trades){
+            double[][] s = slopes.get(swap.b());
+            double[] mineBefore = base[myIndex], hisBefore = base[managers.indexOf(swap.b())];
+            double guess = 0;
+            for(int w = from; w < weeks; w++){
+                double dm = swap.aMeans()[w] - mineBefore[w], dh = swap.bMeans()[w] - hisBefore[w];
+                guess += s[0][w] * dm + 0.5 * s[1][w] * dm * dm + s[2][w] * dh + 0.5 * s[3][w] * dh * dh;
+            }
+            double truth = SeasonTable.paired(java.util.Arrays.copyOfRange(baseChance, tested, total),
+                    java.util.Arrays.copyOfRange(table.chances(meansOf.apply(swap), new int[]{myIndex}, 0, total)[0], tested, total)).change();
+            square += Math.pow(guess - truth, 2);
+            inBucket += Math.floor(200 * guess) == Math.floor(200 * truth) ? 1 : 0;
+        }
+        System.out.printf("title check: a quadratic per rival, built in %.0f seconds on all threads, then no simulation per trade: off by %.3f points, same half-point bucket %.0f%%%n",
+                built, 100 * Math.sqrt(square / trades.size()), 100.0 * inBucket / trades.size());
+    }
+
+    private static void add(double[] tally, TitleOdds.Delta estimate, TitleOdds.Delta truth){
+        tally[0] += Math.pow(estimate.change() - truth.change(), 2);
+        tally[1] += estimate.se();
+        tally[2] += Math.floor(200 * estimate.change()) == Math.floor(200 * truth.change()) ? 1 : 0;
+        tally[3]++;
     }
 
     /** The third pricing's name (WeeklyLineupValue.forSource). */
@@ -1585,6 +1756,7 @@ public class TradeMarket {
     }
 
     public static void main(String[] args) throws Exception {
+        java.time.LocalDateTime read = java.time.LocalDateTime.now();
         AAAConfiguration configuration = AAAConfiguration.getInstance();
         ON_IR = LeagueOwners.reserve(configuration);
         int scenarios = Integer.getInteger("scenarios", 240);
@@ -1812,12 +1984,12 @@ public class TradeMarket {
             String json = explorer(me, rosters, nameOf, season, (WeeklyLineupValue) value, (WeeklyLineupValue) altValue, fpValue, reject, barred, points,
                     configuration.getLeagueJson().getAsJsonArray("roster_positions").size(), players,
                     fpValue.weeks().get(0) + 1, screens, stakes,
-                    hisFloor, hisFloorAlt, surplus, everyPosition, source, alt);
+                    hisFloor, hisFloorAlt, surplus, everyPosition, source, alt, read);
             if(Boolean.getBoolean("explorerSearchOnly")){
                 System.out.println("-PexplorerSearchOnly: timing the search; no simulations, nothing written");
                 return;
             }
-            Path data = Path.of("data", "trade-explorer-" + LocalDate.now() + ".json");
+            Path data = Path.of("data", "trade-explorer-" + read.toLocalDate() + ".json");
             Files.writeString(data, json, StandardCharsets.UTF_8);
             String template;
             try(java.io.InputStream in = TradeMarket.class.getResourceAsStream("/trade-explorer.html")){
@@ -2015,7 +2187,7 @@ public class TradeMarket {
                 + "at least one accepted side in ten here took as little (who is named). Not offers to lead with. %d more were%n"
                 + "dropped: fewer than one accepted side in ten here ever took that little.%n", longShots.size(), noChance));
         for(Short s : longShots.subList(0, Math.min(5, longShots.size()))){
-            out.append(String.format("  %-28s %-28s %+8.1f %+8.1f  title %+5.1f+-%.1f  %s (%s): %s%n", label(s.trade().give(), nameOf),
+            out.append(String.format("  %-28s %-28s %+8.1f %+8.1f  title %+5.1f+-%.2f  %s (%s): %s%n", label(s.trade().give(), nameOf),
                     label(s.trade().get(), nameOf), s.season(), s.seasonAlt(), 100 * s.title()[0].change(), 100 * s.title()[0].se(),
                     s.trade().withManager(), stakes.state(s.trade().withManager()), s.seen().verdict()));
         }

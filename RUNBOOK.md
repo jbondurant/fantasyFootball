@@ -11,8 +11,8 @@ and trades, **Sunday morning** decides the lineup.
 Runs NewsCheck, TitleOdds, FaabRivals, TuesdaySwap, TradeMarket and
 LeagueConsole in that order, one after another, and stops at the first that
 fails. Since 2026-10-03 the wire, the trades and the page all say what each
-move does to your TITLE ODDS (TitleOdds: the rest of the season and the
-bracket played out on each week's projections), rivals are priced by the
+move does to your TITLE ODDS (TitleOdds: the rest of the season played out on
+each week's projections, the bracket by formula), rivals are priced by the
 season they are in (a point is worth little to a team out of it, which is
 where sell-for-keepers trades come from), FaabRivals shows who else a waiver
 target helps and how much FAAB each has left, and NewsCheck's PLAYS column is
@@ -246,8 +246,8 @@ Sleeper's, stop it, because a mis-read pricing vetoes trades wrongly.
 
 From 8 games on, "his view" ignores draft spot (Justin, 2026-11-04: "draft spot should no
 longer matter at this point"); the curve still measures 30% there in other leagues, and
--PdraftWeight still sets a what-if. Any trade he would read as fair stays on the page,
-outside the eight-a-bucket limit, and nobody on IR is ever the man cut to make room.
+-PdraftWeight still sets a what-if. Trades he would read as fair have their own list on the
+page, also eight a bucket, and nobody on IR is ever the man cut to make room.
 His view shows pace, projection and the two weighted, and the page's "on both" box
 takes a number you set.
 
@@ -271,12 +271,12 @@ the real league in a couple of minutes: the search's count against every candida
 simulation inputs, the search's points against those inputs, a sample of the trades it treated
 as one, some of them played from scratch, and a control with different points. What the skip
 drops is title-neutral only: a throw-in who never starts leaves no row, even one with keeper
-value. The numbers use the rosters and projections from when the run started, so read the
-result before the next waiver run, and TradeCheck what you send.
+value. The numbers use the rosters and projections from when the run started, which the page
+states, so read the result before the next waiver run, and TradeCheck what you send.
 
 Before sending one, run TradeCheck on its men and read the FP ros column too.
-FantasyPros' consensus is what Justin compares against, and the explorer prices
-only on Sleeper and the model. On 2026-10-29 the explorer's Nabers + Stevenson for
+FantasyPros' consensus is what Justin compares against, and in the explorer it can
+only veto, not rank. On 2026-10-29 the explorer's Nabers + Stevenson for
 Justin Jefferson read +16.0 on Sleeper's projections and +1.2 on the model, but
 FantasyPros had Nabers WR7 and Jefferson WR12. Justin: "fantasy pros has nabers
 ahead of justin jefferson". It was not sent.
