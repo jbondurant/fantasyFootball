@@ -42,6 +42,27 @@ public class StaleCacheFallbackTest {
         }
     }
 
+    /** A copy past its age is replaced only once a fresh one is in hand: a failed fetch must keep it, not fall back past it to an older day's. */
+    @Test
+    void anExpiredCopyFromTodaySurvivesAFailedFetch() throws Exception {
+        String prefix = "staleCacheExpiryTest";
+        Path yesterday = Path.of("./" + prefix + "2020-01-01.txt");
+        Path today = Path.of("./" + prefix + DateStuff.DateUtility.getTodaysDate() + ".txt");
+        try {
+            Files.writeString(yesterday, "an older day's copy");
+            Files.writeString(today, "this morning's copy");
+            assertTrue(today.toFile().setLastModified(System.currentTimeMillis() - 3_600_000L));
+            assertEquals("this morning's copy", InOutUtilities.getRecentWebPage("https://this-host-does-not-exist.invalid/feed.txt", prefix, 5));
+            assertTrue(Files.exists(today));
+            assertTrue(InOutUtilities.STALE.contains(today.getFileName().toString()), "and the run knows it was not refreshed");
+        }
+        finally {
+            InOutUtilities.STALE.remove(today.getFileName().toString());
+            Files.deleteIfExists(yesterday);
+            Files.deleteIfExists(today);
+        }
+    }
+
     @Test
     void withNothingCachedItStillThrows() {
         boolean threw = false;

@@ -1143,13 +1143,14 @@ public class TradeMarket {
         return String.format(java.util.Locale.ROOT,
                 "{\"generated\":%s,\"season\":%s,\"weeksPlayed\":%d,\"me\":%s,\"myTitle\":%.2f,\"myPlayoffs\":%.1f,"
                         + "\"pricing\":%s,\"alt\":%s,\"reject\":%s,\"rejectBelow\":%.1f,\"fpPanel\":%s,\"step\":%.1f,\"top\":%.1f,\"perBucket\":%d,\"cap\":%d,\"minGain\":%.1f,"
-                        + "\"tankLine\":%.1f,\"tankLineAlt\":%.1f,\"sims\":%d,\"draftWeight\":%.2f,\"paceShare\":%.2f,\"maxSide\":%d,\"searched\":%d,\"everything\":%b,\"simulationsNeeded\":%d,\"simulationsRun\":%d,\"bothFloor\":%.2f,"
+                        + "\"tankLine\":%.1f,\"tankLineAlt\":%.1f,\"sims\":%d,\"draftWeight\":%.2f,\"paceShare\":%.2f,\"maxSide\":%d,\"searched\":%d,\"everything\":%b,\"simulationsNeeded\":%d,\"simulationsRun\":%d,\"stale\":%s,\"bothFloor\":%.2f,"
                         + "\"rivals\":[%s],\n\"playersFrom\":%d,\"players\":[%s],\n\"trades\":[%s]}",
                 jsonString(read.format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))), jsonString(LeagueWeek.season()), screens.weeksPlayed(), jsonString(me),
                 100 * stakes.title(me), 100 * stakes.playoffs().getOrDefault(me, 0.0), jsonString(source), jsonString(alt),
                 "[" + String.join(",", reject.stream().map(TradeMarket::jsonString).toList()) + "]", rejectBelow, fpPanelJson(), step, top, perBucket, cap, minGain, hisFloor, hisFloorAlt,
                 TitleOdds.SIMS, screens.weightNow(), screens.paceShare(), maxSide, searched, everything,
-                runs.stream().mapToLong(r -> r.found().outcomes()).sum(), runs.stream().mapToLong(r -> r.walked().simulated()).sum(), TradeSearch.BOTH[TradeSearch.BOTH.length - 1], rivals, playersFrom, players, rows);
+                runs.stream().mapToLong(r -> r.found().outcomes()).sum(), runs.stream().mapToLong(r -> r.walked().simulated()).sum(),
+                "[" + String.join(",", InOutUtilities.STALE.stream().sorted().map(TradeMarket::jsonString).toList()) + "]", TradeSearch.BOTH[TradeSearch.BOTH.length - 1], rivals, playersFrom, players, rows);
     }
 
     /**

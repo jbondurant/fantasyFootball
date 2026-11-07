@@ -126,12 +126,22 @@ public class InOutUtilities {
         File today = new File("./" + filepathStart + DateUtility.getTodaysDate() + ".txt");
         if(today.isFile() && today.lastModified()
                 < System.currentTimeMillis() - maxAgeMinutes * 60_000L){
-            if(!today.delete()){
-                System.out.println("   could not expire " + today + "; it may be stale");
+            // Fetch before giving up the copy we have. Deleting first meant a failed fetch fell back past this
+            // morning's rosters to yesterday's (2026-11-07: a page dated 13:16 was built on rosters from the night before).
+            try {
+                downloadTodaysWebPage(webURL, filepathStart);
+            }
+            catch(RuntimeException unreachable){
+                System.out.println("   WARNING: could not fetch " + webURL
+                        + "\n   keeping " + today + " from earlier today - this data may be STALE");
+                STALE.add(today.getName());
             }
         }
         return getTodaysWebPage(webURL, filepathStart);
     }
+
+    /** The feeds this run could not refresh and read from an older copy, for a report to say so. */
+    public static final java.util.Set<String> STALE = java.util.concurrent.ConcurrentHashMap.newKeySet();
 
     public static String getTodaysWebPage(String webURL, String filepathStart){
         String fixtureDir = System.getProperty("fixtureDir");
@@ -168,6 +178,7 @@ public class InOutUtilities {
                 }
                 System.out.println("   WARNING: could not fetch " + webURL
                         + "\n   falling back to " + stale + " - this data is STALE");
+                STALE.add(Path.of(stale).getFileName().toString());
                 try {
                     return Files.readString(Path.of(stale));
                 }

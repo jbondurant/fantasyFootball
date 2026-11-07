@@ -295,6 +295,7 @@ function init() {
     `<span><b>${DATA.myPlayoffs.toFixed(0)}%</b>playoffs</span>` +
     `<span><b>${DATA.trades.length}</b>trades</span>` +
     (DATA.searched ? `<span><b>${DATA.searched.toLocaleString()}</b>searched</span>` : "") +
+    ((DATA.stale || []).length ? `<span><b>Could not refresh ${esc(DATA.stale.join(", "))}, so this page is built on an older copy.</b></span>` : "") +
     `<span>rosters and projections from ${esc(DATA.generated)} · season ${esc(DATA.season)} after ${DATA.weeksPlayed} games · ${DATA.sims.toLocaleString()} simulated seasons a trade</span>`;
 
   const byRival = {};
