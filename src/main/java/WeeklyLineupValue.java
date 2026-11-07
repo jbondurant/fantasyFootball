@@ -227,8 +227,14 @@ public class WeeklyLineupValue implements RosterValue {
 
         /** The first `count` men of `men` as a roster: the sum over every week of its best legal lineup. */
         public double of(int[] men, int count, double[][] scratch){
+            return of(men, count, scratch, null);
+        }
+
+        /** The same, writing each week's lineup into byWeek when it is given. */
+        public double of(int[] men, int count, double[][] scratch, double[] byWeek){
             double total = 0;
             for(int w = 0; w < points.length; w++){
+                double before = total;
                 double[] week = points[w];
                 for(int i = 0; i < KEEP.length; i++){
                     System.arraycopy(wire[w][i], 0, scratch[i], 0, KEEP[i]);
@@ -266,8 +272,16 @@ public class WeeklyLineupValue implements RosterValue {
                     }
                 }
                 total += (first == EMPTY ? 0 : first) + (second == EMPTY ? 0 : second);
+                if(byWeek != null){
+                    byWeek[w] = total - before;
+                }
             }
             return total;
+        }
+
+        /** How many weeks this prices. */
+        public int weeks(){
+            return points.length;
         }
 
         private static double filled(double[] top, int slots){

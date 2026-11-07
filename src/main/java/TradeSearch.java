@@ -2,9 +2,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 /**
@@ -23,11 +27,17 @@ import java.util.function.Function;
  * to drop a player regardless". A side already short cuts nobody.
  *
  * WHAT IS KEPT. The search can pass millions of trades and only a few thousand can be simulated
- * or read, so each manager's trades are held in LANES, each a separate question: any trade; one
+ * in an ordinary run or read in any, so each manager's trades are held in LANES, each a separate question: any trade; one
  * he would read as fair; one at each of BOTH or more on both pace and projection. Within a lane,
  * bands of Justin's gain (BAND points wide) keep the ones that cost the other team least, so a
- * big gain is never crowded out by a thousand small cheap ones. Trades that read the same to the
- * point on both sides - a man nobody would start thrown in - are one trade, the smaller.
+ * big gain is never crowded out by a thousand small cheap ones.
+ *
+ * THE DUPLICATE SKIP. Justin, 2026-11-07: "do the duplicate skip". Title odds depend on a trade
+ * only through both teams' lineup points in each week left, so trades leaving those the same -
+ * a man nobody would start thrown in - are one trade, the smaller, and one simulation. Exact: not
+ * rounded, not an estimate. Once this week is under way the simulation fixes it from the lineups
+ * as set, so trades differing only in what's left of this week still cost one simulation, though
+ * each keeps its own row and its own gain. Found counts how many simulations the candidates need.
  */
 final class TradeSearch {
 
@@ -42,8 +52,9 @@ final class TradeSearch {
     /** Each man's value on the screens he can see, by table index. */
     record Screen(double[] draft, double[] pace, double[] projection, double[] season, double draftShare) {}
 
+    /** simulatedFrom: the first week a roster can change in the simulation, 1 once this week's games have kicked off (TitleOdds.liveWeek). */
     record Rules(int maxSide, double minGain, double rejectBelow, boolean vetoOnFantasyPros, boolean vetoOnModel,
-                 int activeLimit, int retain) {}
+                 int activeLimit, int retain, int simulatedFrom) {}
 
     /** One trade, in table indices: what Justin sends, receives and cuts, and what the other manager cuts. */
     static final class Deal {
@@ -75,11 +86,12 @@ final class TradeSearch {
             .thenComparingInt(Deal::men).thenComparingDouble(d -> -d.blend)
             .thenComparing(d -> d.give, Arrays::compare).thenComparing(d -> d.get, Arrays::compare);
 
-    record Found(long searched, long vetoed, long passed, List<List<Deal>> lanes) {}
+    record Found(long searched, long vetoed, long passed, long outcomes, List<List<Deal>> lanes) {}
 
     record Kept(Deal deal, double rise, double se, double hisTitle) {}
 
-    record Walked(List<Kept> kept, int simulated, int skipped, boolean capReached) {}
+    /** simulated counts simulations run; reused, trades that took an equal trade's result instead of running one; skipped, trades the cap left unsimulated. */
+    record Walked(List<Kept> kept, int simulated, int reused, int skipped, boolean capReached) {}
 
     /** Every non-empty subset of these men up to this size. */
     static int[][] combos(int[] men, int maxSide){
@@ -192,8 +204,7 @@ final class TradeSearch {
             }
         }
 
-        void add(int lane, int band, Deal deal){
-            long key = (Math.round(deal.you * 10) << 32) ^ (Math.round(deal.him * 10) & 0xffffffffL);
+        void add(int lane, int band, long key, Deal deal){
             Map<Long, Deal> map = held[lane][band];
             Deal there = map.get(key);
             if(there == null || deal.men() < there.men() || deal.men() == there.men() && LEAST_WORSE.compare(deal, there) < 0){
@@ -234,6 +245,29 @@ final class TradeSearch {
         }
     }
 
+    /** A fingerprint of both teams' exact points by week, from this week on. */
+    static long sameSeason(double[] mine, double[] his, int from){
+        long h = 0x9E3779B97F4A7C15L;
+        for(double[] side : new double[][]{mine, his}){
+            for(int w = from; w < side.length; w++){
+                h = (h ^ Double.doubleToLongBits(side[w])) * 0xFF51AFD7ED558CCDL;
+                h ^= h >>> 29;
+            }
+        }
+        return h;
+    }
+
+    private static long different(long[] all, int n){
+        Arrays.sort(all, 0, n);
+        long count = 0;
+        for(int i = 0; i < n; i++){
+            if(i == 0 || all[i] != all[i - 1]){
+                count++;
+            }
+        }
+        return count;
+    }
+
     /**
      * Every trade between these two rosters. A trade gaining Justin less than the minimum, or
      * that a vetoing pricing calls a loss for him, goes no further; the rest are held in lanes.
@@ -241,6 +275,8 @@ final class TradeSearch {
      */
     static Found search(int[] mine, int[] his, boolean[] onIr, boolean[] locked, double[] projected, Prices prices, Screen screen, Rules rules){
         double[][] scratch = prices.sleeper().scratch();
+        double[] myWeeks = new double[prices.sleeper().weeks()], hisWeeks = new double[prices.sleeper().weeks()];
+        long[] outcomes = new long[1 << 16];
         int[] myBuffer = new int[mine.length + rules.maxSide()], hisBuffer = new int[his.length + rules.maxSide()];
         double myBase = prices.sleeper().of(mine, mine.length, scratch);
         double myFpBase = prices.fantasyPros().of(mine, mine.length, scratch);
@@ -278,7 +314,7 @@ final class TradeSearch {
                 }
                 int[] myCut = myOver <= 0 ? none : Arrays.copyOf(myCuts, myOver);
                 int n = roster(myBuffer, myRest, myCut, get);
-                double you = prices.sleeper().of(myBuffer, n, scratch) - myBase;
+                double you = prices.sleeper().of(myBuffer, n, scratch, myWeeks) - myBase;
                 if(you < rules.minGain()){
                     continue;
                 }
@@ -290,8 +326,13 @@ final class TradeSearch {
                 passed++;
                 int[] hisCut = hisOver <= 0 ? none : Arrays.copyOf(hisCuts[g], hisOver);
                 int m = roster(hisBuffer, hisRest[g], hisCut, give);
-                double him = prices.sleeper().of(hisBuffer, m, scratch) - hisBase;
-                int band = Math.max(0, Math.min(BANDS - 1, (int) (you / BAND)));
+                double him = prices.sleeper().of(hisBuffer, m, scratch, hisWeeks) - hisBase;
+                if(passed > outcomes.length){
+                    outcomes = Arrays.copyOf(outcomes, 2 * outcomes.length);
+                }
+                outcomes[(int) passed - 1] = sameSeason(myWeeks, hisWeeks, rules.simulatedFrom());
+                long same = sameSeason(myWeeks, hisWeeks, 0);
+                int band = band(you);
                 double outPace = sum(get, screen.pace()) + sum(hisCut, screen.pace());
                 double outProjection = sum(get, screen.projection()) + sum(hisCut, screen.projection());
                 double outDraft = sum(get, screen.draft()) + sum(hisCut, screen.draft());
@@ -306,12 +347,12 @@ final class TradeSearch {
                         if(deal == null){
                             deal = new Deal(give, get, myCut, hisCut, you, him, pace, projection, blend);
                         }
-                        lanes.add(l, band, deal);
+                        lanes.add(l, band, same, deal);
                     }
                 }
             }
         }
-        return new Found(searched, vetoed, passed, lanes.done());
+        return new Found(searched, vetoed, passed, different(outcomes, (int) passed), lanes.done());
     }
 
     private static int[] overlap(int[] order, int[] gone){
@@ -323,45 +364,68 @@ final class TradeSearch {
     }
 
     /**
-     * Each lane walked least worse for him first, its title-odds change simulated (a simulation
-     * costs about a quarter of a second, so at most `cap` of them), and each half-point bucket of
-     * Justin's rise kept to `perBucket` trades, per lane. Once a lane's lower buckets are full, a
-     * trade whose gain cannot plausibly reach an open one (twice the rate seen so far, plus a
-     * point) is skipped. A trade met in two lanes is simulated and kept once.
+     * First simulate: distinct outcomes, every lane and every band of gain taking a turn, the least
+     * costly first, until `cap` have run, so the cap cannot be spent before the big gains are reached
+     * (2026-11-07: spent cheapest-first, it lost the best trades the top-eight list had found, 7.1 at
+     * most against 8.6). Then choose: each lane least worse first, each half-point bucket of Justin's
+     * rise kept to `perBucket`, from what was simulated. A trade met in two lanes is kept once.
      */
-    static Walked walk(Found found, Function<Deal, double[]> simulate, double step, int buckets, int perBucket, int cap){
-        Map<String, double[]> done = new HashMap<>();
+    static <K> Walked walk(Found found, Function<Deal, K> outcome, Function<K, double[]> simulate, double step, int buckets, int perBucket, int cap){
+        List<List<Deal>> turns = new ArrayList<>();
+        for(List<Deal> lane : found.lanes()){
+            List<List<Deal>> byBand = new ArrayList<>();
+            for(int b = 0; b < BANDS; b++){
+                byBand.add(new ArrayList<>());
+            }
+            for(Deal deal : lane){
+                byBand.get(band(deal.you)).add(deal);
+            }
+            for(int b = BANDS - 1; b >= 0; b--){
+                if(!byBand.get(b).isEmpty()){
+                    turns.add(byBand.get(b));
+                }
+            }
+        }
+        Map<String, K> outcomes = new HashMap<>();
+        Set<K> toRun = new LinkedHashSet<>();
+        int reused = 0;
+        boolean capped = false, more = true;
+        for(int round = 0; more && !capped; round++){
+            more = false;
+            for(List<Deal> turn : turns){
+                if(round >= turn.size()){
+                    continue;
+                }
+                more = true;
+                Deal deal = turn.get(round);
+                if(outcomes.containsKey(deal.key())){
+                    continue;
+                }
+                K same = outcome.apply(deal);
+                if(!toRun.contains(same) && toRun.size() >= cap){
+                    capped = true;
+                    break;
+                }
+                outcomes.put(deal.key(), same);
+                if(!toRun.add(same)){
+                    reused++;
+                }
+            }
+        }
+        Map<K, double[]> done = new ConcurrentHashMap<>();
+        toRun.parallelStream().forEach(same -> done.put(same, simulate.apply(same)));
+
         Map<String, Kept> kept = new LinkedHashMap<>();
-        int skipped = 0;
-        boolean capped = false;
-        double sumRise = 0, sumYou = 0;
+        Set<String> notReached = new HashSet<>();
         for(List<Deal> lane : found.lanes()){
             int[] count = new int[buckets];
             for(Deal deal : lane){
-                if(Arrays.stream(count).allMatch(n -> n >= perBucket)){
-                    break;
+                K same = outcomes.get(deal.key());
+                if(same == null){
+                    notReached.add(deal.key());
+                    continue;
                 }
-                double[] result = done.get(deal.key());
-                if(result == null){
-                    double rate = sumYou > 0 ? Math.max(0.02, sumRise / sumYou) : 0.1;
-                    int reach = (int) Math.floor((2 * rate * deal.you + 1.0) / step) - 1;
-                    boolean open = false;
-                    for(int b = 0; b <= Math.min(reach, buckets - 1); b++){
-                        open |= count[b] < perBucket;
-                    }
-                    if(!open){
-                        skipped++;
-                        continue;
-                    }
-                    if(done.size() >= cap){
-                        capped = true;
-                        break;
-                    }
-                    result = simulate.apply(deal);
-                    done.put(deal.key(), result);
-                    sumRise += Math.max(0, result[0]);
-                    sumYou += deal.you;
-                }
+                double[] result = done.get(same);
                 if(result[0] < step){
                     continue;
                 }
@@ -372,6 +436,10 @@ final class TradeSearch {
                 }
             }
         }
-        return new Walked(new ArrayList<>(kept.values()), done.size(), skipped, capped);
+        return new Walked(new ArrayList<>(kept.values()), done.size(), reused, notReached.size(), capped);
+    }
+
+    static int band(double you){
+        return Math.max(0, Math.min(BANDS - 1, (int) (you / BAND)));
     }
 }

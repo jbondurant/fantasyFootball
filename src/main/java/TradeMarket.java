@@ -955,12 +955,11 @@ public class TradeMarket {
      * change simulated (TitleOdds, 20,000 seasons, the same draws before and after);
      * a trade is kept in its half-point bucket of Justin's rise (+0.5, +1.0, ... up
      * to -PexplorerTop and above) while that bucket holds fewer than
-     * -PexplorerPerBucket trades. Because the walk goes least worse first, the trades
-     * a bucket holds are the least worse in it. A simulation costs about a quarter
-     * of a second, so once a rival's lower buckets are full, a trade whose gain
-     * cannot plausibly reach an open bucket (twice the rate seen so far, plus a
-     * point) is skipped; -PexplorerCap bounds the simulations per rival, and each
-     * rival's counts say whether it was reached. Everything Justin would judge on
+     * -PexplorerPerBucket trades, least worse first. A simulation costs about a third
+     * of a second a thread, so -PexplorerCap bounds them per rival, TradeSearch.walk
+     * shares them across lanes and bands of gain, and each rival's counts say whether
+     * the cap was reached. -PexplorerEverything drops the cap and simulates every
+     * candidate, about ten hours at three a side. Everything Justin would judge on
      * rides along: every pricing for both sides, both title changes, keeper value,
      * his view, the tanking line as a fact, and any hurt man moving.
      *
@@ -1018,8 +1017,11 @@ public class TradeMarket {
         }
         TradeSearch.Prices prices = new TradeSearch.Prices(sleeper.table(universe), altValue.table(universe), fpValue.table(universe));
         TradeSearch.Screen screen = new TradeSearch.Screen(draft, pace, projection, seasonScreen, screens.weightNow());
+        // Justin, 2026-11-07, on a run he could leave overnight: every candidate simulated, no cap and nothing held back
+        boolean everything = Boolean.getBoolean("explorerEverything");
+        int simulations = everything ? Integer.MAX_VALUE : cap;
         TradeSearch.Rules rules = new TradeSearch.Rules(maxSide, minGain, rejectBelow, reject.contains(FANTASYPROS), reject.contains(alt),
-                activeLimit, Integer.getInteger("explorerRetain", 400));
+                activeLimit, everything ? 1 << 28 : Integer.getInteger("explorerRetain", 400), stakes.league().live().isEmpty() ? 0 : 1);
         boolean[] locked = new boolean[universe.size()];
         for(int i = 0; i < locked.length; i++){
             locked[i] = barred.contains(universe.get(i));
@@ -1036,18 +1038,79 @@ public class TradeMarket {
             List<String> his = rosters.get(rival);
             TradeSearch.Found found = TradeSearch.search(mineIndex, indices.apply(his), onIr, locked, projected, prices, screen, rules);
             long searched = System.nanoTime();
-            TradeSearch.Walked walked = Boolean.getBoolean("explorerSearchOnly") ? new TradeSearch.Walked(List.of(), 0, 0, false) : TradeSearch.walk(found, deal -> {
+            TradeSearch.Walked walked = Boolean.getBoolean("explorerSearchOnly") ? new TradeSearch.Walked(List.of(), 0, 0, 0, false) : TradeSearch.walk(found, deal -> {
                 List<String> myOut = new ArrayList<>(names.apply(deal.give));
                 myOut.addAll(names.apply(deal.myCut));
                 List<String> hisOut = new ArrayList<>(names.apply(deal.get));
                 hisOut.addAll(names.apply(deal.hisCut));
-                TitleOdds.Delta[] d = stakes.swap(me, swap(mine, myOut, names.apply(deal.get)), rival, swap(his, hisOut, names.apply(deal.give)));
+                return stakes.after(me, swap(mine, myOut, names.apply(deal.get)), rival, swap(his, hisOut, names.apply(deal.give)));
+            }, same -> {
+                TitleOdds.Delta[] d = stakes.swap(same);
                 return new double[]{100 * d[0].change(), 100 * d[0].se(), 100 * d[1].change()};
-            }, step, buckets, perBucket, cap);
+            }, step, buckets, perBucket, simulations);
             return new Run(rival, found, walked, (searched - began) / 1e9, (System.nanoTime() - searched) / 1e9);
         }).toList();
-        System.out.printf("explorer: search and simulations took %.0f seconds awake, on %d threads%n", (System.nanoTime() - startedAt) / 1e9,
-                java.util.concurrent.ForkJoinPool.commonPool().getParallelism() + 1);
+        System.out.printf("explorer: search and simulations took %.0f seconds awake, on %d threads; %,d candidates, %,d simulations would answer them all, %,d run, %,d trades reused another's%n",
+                (System.nanoTime() - startedAt) / 1e9, java.util.concurrent.ForkJoinPool.commonPool().getParallelism() + 1,
+                runs.stream().mapToLong(r -> r.found().passed()).sum(), runs.stream().mapToLong(r -> r.found().outcomes()).sum(),
+                runs.stream().mapToLong(r -> r.walked().simulated()).sum(), runs.stream().mapToLong(r -> r.walked().reused()).sum());
+        if(Boolean.getBoolean("explorerProveSkip")){
+            // the skip's claim tested on the real league: the search's fingerprint reads the same weekly points the
+            // simulation is given, and trades with equal points really do come back with equal title odds
+            double[][] scratch = prices.sleeper().scratch();
+            double[] weeks = new double[prices.sleeper().weeks()];
+            double worst = 0;
+            long rosterChecks = 0, pairs = 0, differ = 0;
+            long[] gapByWeek = new long[weeks.length];
+            String worstAt = "";
+            for(Run run : runs){
+                List<String> his = rosters.get(run.rival());
+                Map<TitleOdds.Swap, TradeSearch.Deal> first = new HashMap<>();
+                int provedHere = 0;
+                for(List<TradeSearch.Deal> lane : run.found().lanes()){
+                    for(TradeSearch.Deal deal : lane){
+                        List<String> myOut = new ArrayList<>(names.apply(deal.give));
+                        myOut.addAll(names.apply(deal.myCut));
+                        List<String> hisOut = new ArrayList<>(names.apply(deal.get));
+                        hisOut.addAll(names.apply(deal.hisCut));
+                        List<String> myAfter = swap(mine, myOut, names.apply(deal.get)), hisAfter = swap(his, hisOut, names.apply(deal.give));
+                        for(List<String> roster : List.of(myAfter, hisAfter)){
+                            prices.sleeper().of(indices.apply(roster), roster.size(), scratch, weeks);
+                            double[] means = TitleOdds.teamMeans(stakes.league(), roster, stakes.projected());
+                            for(int w = rules.simulatedFrom(); w < weeks.length; w++){
+                                double gap = Math.abs(weeks[w] - means[w]);
+                                if(gap > 0.001){
+                                    gapByWeek[w]++;
+                                }
+                                if(gap > worst){
+                                    worst = gap;
+                                    worstAt = String.format("week index %d, search %.3f, simulation %.3f, roster %s", w, weeks[w], means[w], roster.stream().map(id -> nameOf.getOrDefault(id, id)).toList());
+                                }
+                            }
+                            rosterChecks++;
+                        }
+                        TitleOdds.Swap same = stakes.after(me, myAfter, run.rival(), hisAfter);
+                        TradeSearch.Deal earlier = first.putIfAbsent(same, deal);
+                        if(earlier != null && !earlier.key().equals(deal.key()) && provedHere < 10){
+                            provedHere++;
+                            pairs++;
+                            List<String> theirOut = new ArrayList<>(names.apply(earlier.give));
+                            theirOut.addAll(names.apply(earlier.myCut));
+                            List<String> theirHisOut = new ArrayList<>(names.apply(earlier.get));
+                            theirHisOut.addAll(names.apply(earlier.hisCut));
+                            TitleOdds.Delta[] a = stakes.swap(me, myAfter, run.rival(), hisAfter);
+                            TitleOdds.Delta[] b = stakes.swap(me, swap(mine, theirOut, names.apply(earlier.get)), run.rival(), swap(his, theirHisOut, names.apply(earlier.give)));
+                            if(a[0].change() != b[0].change() || a[1].change() != b[1].change() || a[0].se() != b[0].se()){
+                                differ++;
+                            }
+                        }
+                    }
+                }
+            }
+            System.out.printf("explorer skip proof: %,d rosters over weeks %d on, largest gap between the search's weekly points and the simulation's %.9f; %d of 12 managers fixed this week; %d pairs of different trades with equal points simulated separately, %d came back different%n",
+                    rosterChecks, rules.simulatedFrom(), worst, stakes.league().live().size(), pairs, differ);
+            System.out.printf("explorer skip proof: rosters off by over 0.001, by week %s; the worst: %s%n", java.util.Arrays.toString(gapByWeek), worstAt);
+        }
 
         double myBase = season.applyAsDouble(mine), myAltBase = altValue.of(mine), myFpBase = fpValue.of(mine);
         double myKeepBase = keeperValue(mine, surplus, everyPosition);
@@ -1098,8 +1161,8 @@ public class TradeMarket {
                     jsonString(rival), jsonString(stakes.state(rival)), 100 * stakes.title(rival),
                     100 * stakes.playoffs().getOrDefault(rival, 0.0), run.found().searched(), run.found().passed(), run.found().vetoed(),
                     run.walked().simulated(), run.walked().skipped(), run.walked().kept().size(), run.walked().capReached()));
-            System.out.printf("explorer: %s - %,d searched, %,d candidates (%,d more vetoed by %s), %d simulated, %d skipped, %d kept%s, search %.0fs, simulations %.0fs%n",
-                    rival, run.found().searched(), run.found().passed(), run.found().vetoed(), reject, run.walked().simulated(),
+            System.out.printf("explorer: %s - %,d searched, %,d candidates needing %,d simulations (%,d more vetoed by %s), %d simulated, %d reused, %d skipped, %d kept%s, search %.0fs, simulations %.0fs%n",
+                    rival, run.found().searched(), run.found().passed(), run.found().outcomes(), run.found().vetoed(), reject, run.walked().simulated(), run.walked().reused(),
                     run.walked().skipped(), run.walked().kept().size(), run.walked().capReached() ? " (cap reached)" : "", run.searchSeconds(), run.walkSeconds());
         }
         if(disagreements > 0){
@@ -1109,12 +1172,13 @@ public class TradeMarket {
         return String.format(java.util.Locale.ROOT,
                 "{\"generated\":%s,\"season\":%s,\"weeksPlayed\":%d,\"me\":%s,\"myTitle\":%.2f,\"myPlayoffs\":%.1f,"
                         + "\"pricing\":%s,\"alt\":%s,\"reject\":%s,\"rejectBelow\":%.1f,\"fpPanel\":%s,\"step\":%.1f,\"top\":%.1f,\"perBucket\":%d,\"cap\":%d,\"minGain\":%.1f,"
-                        + "\"tankLine\":%.1f,\"tankLineAlt\":%.1f,\"sims\":%d,\"draftWeight\":%.2f,\"paceShare\":%.2f,\"maxSide\":%d,\"searched\":%d,\"bothFloor\":%.2f,"
+                        + "\"tankLine\":%.1f,\"tankLineAlt\":%.1f,\"sims\":%d,\"draftWeight\":%.2f,\"paceShare\":%.2f,\"maxSide\":%d,\"searched\":%d,\"everything\":%b,\"simulationsNeeded\":%d,\"bothFloor\":%.2f,"
                         + "\"rivals\":[%s],\n\"playersFrom\":%d,\"players\":[%s],\n\"trades\":[%s]}",
                 jsonString(LocalDate.now().toString()), jsonString(LeagueWeek.season()), screens.weeksPlayed(), jsonString(me),
                 100 * stakes.title(me), 100 * stakes.playoffs().getOrDefault(me, 0.0), jsonString(source), jsonString(alt),
                 "[" + String.join(",", reject.stream().map(TradeMarket::jsonString).toList()) + "]", rejectBelow, fpPanelJson(), step, top, perBucket, cap, minGain, hisFloor, hisFloorAlt,
-                TitleOdds.SIMS, screens.weightNow(), screens.paceShare(), maxSide, searched, TradeSearch.BOTH[TradeSearch.BOTH.length - 1], rivals, playersFrom, players, rows);
+                TitleOdds.SIMS, screens.weightNow(), screens.paceShare(), maxSide, searched, everything,
+                runs.stream().mapToLong(r -> r.found().outcomes()).sum(), TradeSearch.BOTH[TradeSearch.BOTH.length - 1], rivals, playersFrom, players, rows);
     }
 
     /** The third pricing's name (WeeklyLineupValue.forSource). */

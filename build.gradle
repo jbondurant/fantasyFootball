@@ -297,7 +297,7 @@ tasks.register('run', JavaExec) {
      // and how deep the Players tab lists free agents.
      'explorerReject', 'explorerRejectBelow', 'explorerPlayerDepth',
      // TradeSearch - most men a side in the explorer's whole-roster search, and trades held per lane, per band of gain
-     'explorerMaxSide', 'explorerRetain', 'explorerSearchOnly',
+     'explorerMaxSide', 'explorerRetain', 'explorerSearchOnly', 'explorerProveSkip', 'explorerEverything',
      // TradeMarket.faabBuys - price one man of each rival's for dollars and nobody back
      'faabBuy'].each { knob ->
         if (project.hasProperty(knob)) {

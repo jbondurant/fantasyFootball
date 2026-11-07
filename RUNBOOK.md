@@ -257,6 +257,20 @@ not an optimization i agree with". The terminal board and the console still use 
 eight (`DEFAULT_POOL`): their Side functions are far slower, so the explorer's page is the
 one to read for what exists.
 
+Trying every trade takes seconds; the title simulations are the cost, about 23 a second on
+this M1. An ordinary run stops at `-PexplorerCap` (2,500 a manager, about 20 minutes awake)
+and says so. To simulate every candidate, leave this running overnight, plugged in:
+
+    caffeinate -i ./gradlew run -Pmain=TradeMarket -PtradeExplorer=true -PexplorerEverything=true
+
+The duplicate skip (Justin, 2026-11-07) is what makes that possible: a simulation sees a trade
+only as both teams' lineup points by week, so trades with the same points share one, exactly.
+On 2026-11-07 that took 2,399,739 candidates to 820,257 simulations, about 10 hours rather
+than 29. `-PexplorerSearchOnly=true -PexplorerProveSkip=true` prints the count in seconds and
+tests the claim on the real league: the search's points against the simulation's, and pairs of
+trades with equal points simulated separately. Its numbers use the rosters and projections from
+when it started, so read the result before the next waiver run, and TradeCheck what you send.
+
 Before sending one, run TradeCheck on its men and read the FP ros column too.
 FantasyPros' consensus is what Justin compares against, and the explorer prices
 only on Sleeper and the model. On 2026-10-29 the explorer's Nabers + Stevenson for

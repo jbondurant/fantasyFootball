@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -517,6 +518,23 @@ public class TitleOdds {
     }
 
     /**
+     * Everything a trade changes about the seasons played. Play sees nothing else that a trade can
+     * move, and draws the same luck from the same seed, so two trades with an equal Swap have the
+     * same title odds exactly, however different the men named in them.
+     */
+    public record Swap(String a, double[] aMeans, String b, double[] bMeans) {
+        @Override
+        public boolean equals(Object o){
+            return o instanceof Swap s && a.equals(s.a) && b.equals(s.b) && Arrays.equals(aMeans, s.aMeans) && Arrays.equals(bMeans, s.bMeans);
+        }
+
+        @Override
+        public int hashCode(){
+            return 31 * (31 * a.hashCode() + b.hashCode()) + 31 * Arrays.hashCode(aMeans) + Arrays.hashCode(bMeans);
+        }
+    }
+
+    /**
      * One simulation, kept for the trade and wire tools: the base seasons, and
      * for every manager how much a point of weekly mean is worth to him relative
      * to the league average (`weight`) and his playoff odds.
@@ -527,11 +545,20 @@ public class TitleOdds {
 
         /** The title-odds change for two managers when their rosters become these. */
         public Delta[] swap(String a, List<String> aAfter, String b, List<String> bAfter){
-            Map<String, List<String>> changed = new HashMap<>();
-            changed.put(a, aAfter);
-            changed.put(b, bAfter);
-            Outcomes after = play(league, with(means, league, changed, projected), base.champion().length, SEED);
-            return new Delta[]{TitleOdds.title(base, after, a), TitleOdds.title(base, after, b)};
+            return swap(after(a, aAfter, b, bAfter));
+        }
+
+        /** All a trade changes about the seasons played: these two managers' weekly means. */
+        public Swap after(String a, List<String> aAfter, String b, List<String> bAfter){
+            return new Swap(a, liveWeek(league, a, teamMeans(league, aAfter, projected)), b, liveWeek(league, b, teamMeans(league, bAfter, projected)));
+        }
+
+        public Delta[] swap(Swap swap){
+            Map<String, double[]> after = new HashMap<>(means);
+            after.put(swap.a(), swap.aMeans());
+            after.put(swap.b(), swap.bMeans());
+            Outcomes played = play(league, after, base.champion().length, SEED);
+            return new Delta[]{TitleOdds.title(base, played, swap.a()), TitleOdds.title(base, played, swap.b())};
         }
 
         /** The title-odds change for one manager whose roster becomes this. */

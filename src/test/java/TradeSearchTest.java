@@ -44,7 +44,7 @@ public class TradeSearchTest {
         double[] season = POINTS.clone();
         TradeSearch.Screen screen = new TradeSearch.Screen(NOTHING, season, season, season, 0);
         return TradeSearch.search(MINE, HIS, onIr, locked, POINTS, new TradeSearch.Prices(t, t, t), screen,
-                new TradeSearch.Rules(maxSide, minGain, 0, false, false, limit, 400));
+                new TradeSearch.Rules(maxSide, minGain, 0, false, false, limit, 400, 0));
     }
 
     static List<TradeSearch.Deal> all(TradeSearch.Found found){
@@ -117,7 +117,7 @@ public class TradeSearchTest {
         Map<String, Integer> seen = new HashMap<>();
         for(TradeSearch.Deal d : all(search(3, 99, NONE, NONE, -999))){
             String key = Math.round(d.you * 10) + "/" + Math.round(d.him * 10);
-            int band = Math.max(0, Math.min(TradeSearch.BANDS - 1, (int) (d.you / TradeSearch.BAND)));
+            int band = TradeSearch.band(d.you);
             assertEquals(null, seen.put(key + "/" + band, d.men()), key);
         }
     }
@@ -133,14 +133,109 @@ public class TradeSearchTest {
         for(int l = 0; l < TradeSearch.LANES; l++){
             lanes.add(l < 2 ? lane : List.of());
         }
-        TradeSearch.Found found = new TradeSearch.Found(20, 0, 20, lanes);
-        TradeSearch.Walked walked = TradeSearch.walk(found, d -> new double[]{0.7, 0.1, -0.2}, 0.5, 12, 3, 999);
+        TradeSearch.Found found = new TradeSearch.Found(20, 0, 20, 20, lanes);
+        TradeSearch.Walked walked = TradeSearch.walk(found, TradeSearch.Deal::key, k -> new double[]{0.7, 0.1, -0.2}, 0.5, 12, 3, 999);
         assertEquals(3, walked.kept().size(), "three in the +0.5 bucket, the same three in the second lane");
         assertFalse(walked.capReached());
-        TradeSearch.Walked capped = TradeSearch.walk(found, d -> new double[]{0.1, 0.1, 0}, 0.5, 12, 3, 5);
+        TradeSearch.Walked capped = TradeSearch.walk(found, TradeSearch.Deal::key, k -> new double[]{0.1, 0.1, 0}, 0.5, 12, 3, 5);
         assertEquals(5, capped.simulated());
         assertTrue(capped.capReached());
+        assertEquals(15, capped.skipped(), "the rest were never simulated, and say so");
         assertEquals(0, capped.kept().size(), "a rise under a half point is in no bucket");
+    }
+
+    /** With the cap far short, every band of gain still gets simulated, and each bucket keeps its least costly from what ran. */
+    @Test
+    public void theCapReachesTheBigGains(){
+        List<TradeSearch.Deal> lane = new ArrayList<>();
+        for(int i = 0; i < 100; i++){       // a hundred cheap small gains, all less costly than the one big gain
+            lane.add(new TradeSearch.Deal(new int[]{i}, new int[]{i}, new int[0], new int[0], 4, -i, 1, 1, 1));
+        }
+        lane.add(new TradeSearch.Deal(new int[]{500}, new int[]{500}, new int[0], new int[0], 60, -500, 1, 1, 1));
+        List<List<TradeSearch.Deal>> lanes = new ArrayList<>();
+        for(int l = 0; l < TradeSearch.LANES; l++){
+            lanes.add(l == TradeSearch.ANY_LANE ? lane : List.of());
+        }
+        TradeSearch.Walked walked = TradeSearch.walk(new TradeSearch.Found(101, 0, 101, 101, lanes), TradeSearch.Deal::key,
+                k -> new double[]{k.startsWith("[500]") ? 6.2 : 0.7, 0.1, 0}, 0.5, 12, 8, 10);
+        assertEquals(10, walked.simulated());
+        assertTrue(walked.kept().stream().anyMatch(k -> k.deal().give[0] == 500), "the big gain was simulated although a hundred cost less");
+        assertTrue(walked.kept().stream().filter(k -> k.deal().give[0] != 500).allMatch(k -> k.deal().give[0] < 9), "and the small ones are the least costly");
+    }
+
+    /** Only the first trade of each outcome is simulated; the rest take its result and do not count against the cap. */
+    @Test
+    public void anOutcomeAlreadySimulatedIsNotSimulatedAgain(){
+        List<TradeSearch.Deal> lane = new ArrayList<>();
+        for(int i = 0; i < 20; i++){
+            lane.add(new TradeSearch.Deal(new int[]{i}, new int[]{i}, new int[0], new int[0], 50, -i, 1, 1, 1));
+        }
+        List<List<TradeSearch.Deal>> lanes = new ArrayList<>();
+        for(int l = 0; l < TradeSearch.LANES; l++){
+            lanes.add(l < 2 ? lane : List.of());
+        }
+        java.util.concurrent.atomic.AtomicInteger counted = new java.util.concurrent.atomic.AtomicInteger();
+        TradeSearch.Walked walked = TradeSearch.walk(new TradeSearch.Found(20, 0, 20, 4, lanes), d -> d.give[0] % 4, group -> {
+            counted.incrementAndGet();
+            return new double[]{0.5 + group, 0.1, 0};
+        }, 0.5, 12, 99, 4);
+        assertEquals(4, counted.get());
+        assertEquals(4, walked.simulated());
+        assertEquals(16, walked.reused(), "sixteen trades took another's result; meeting one again in the second lane is not a reuse");
+        assertFalse(walked.capReached(), "the cap counts simulations run, and all twenty trades were answered with four");
+        assertEquals(20, walked.kept().size(), "each is still its own row");
+        for(TradeSearch.Kept kept : walked.kept()){
+            assertEquals(0.5 + kept.deal().give[0] % 4, kept.rise());
+        }
+    }
+
+    /**
+     * A second quarterback on each side never starts, so throwing him in leaves both teams' weeks exactly as they
+     * were: one outcome, and the smaller trade stands for it. The count is checked against every trade, by hand.
+     */
+    @Test
+    public void aThrowInNobodyStartsIsTheSameTrade(){
+        List<String> men = List.of("myQb", "myBackup", "myRb", "hisQb", "hisBackup", "hisRb");
+        Position[] at = {Position.QB, Position.QB, Position.RB, Position.QB, Position.QB, Position.RB};
+        double[] nine = {20, 1, 5, 21, 2, 15}, ten = {18, 0.5, 7, 19, 1.5, 11};
+        Map<String, Position> positions = new HashMap<>();
+        Map<String, Double> weekNine = new HashMap<>(), weekTen = new HashMap<>();
+        for(int i = 0; i < men.size(); i++){
+            positions.put(men.get(i), at[i]);
+            weekNine.put(men.get(i), nine[i]);
+            weekTen.put(men.get(i), ten[i]);
+        }
+        WeeklyLineupValue.Table t = new WeeklyLineupValue(new TreeMap<>(Map.of(9, weekNine, 10, weekTen)),
+                new TreeMap<>(Map.of(9, Map.of(), 10, Map.of())), positions::get, "test").table(men);
+        int[] mine = {0, 1, 2}, his = {3, 4, 5};
+        double[] flat = new double[men.size()];
+        TradeSearch.Found found = TradeSearch.search(mine, his, new boolean[men.size()], new boolean[men.size()], flat,
+                new TradeSearch.Prices(t, t, t), new TradeSearch.Screen(flat, flat, flat, flat, 0),
+                new TradeSearch.Rules(3, -999, 0, false, false, 99, 400, 0));
+
+        double[][] scratch = t.scratch();
+        double[] myWeeks = new double[2], hisWeeks = new double[2];
+        java.util.Set<String> outcomes = new java.util.HashSet<>();
+        int trades = 0;
+        for(int[] give : TradeSearch.combos(mine, 3)){
+            for(int[] get : TradeSearch.combos(his, 3)){
+                int[] myAfter = java.util.stream.IntStream.concat(Arrays.stream(mine).filter(m -> !has(give, m)), Arrays.stream(get)).toArray();
+                int[] hisAfter = java.util.stream.IntStream.concat(Arrays.stream(his).filter(m -> !has(get, m)), Arrays.stream(give)).toArray();
+                t.of(myAfter, myAfter.length, scratch, myWeeks);
+                t.of(hisAfter, hisAfter.length, scratch, hisWeeks);
+                outcomes.add(Arrays.toString(myWeeks) + Arrays.toString(hisWeeks));
+                trades++;
+            }
+        }
+        assertEquals(trades, found.passed());
+        assertEquals(outcomes.size(), found.outcomes());
+        assertTrue(found.outcomes() < trades, "the throw-ins leave something to skip");
+
+        List<TradeSearch.Deal> any = all(found);
+        assertEquals(outcomes.size(), any.size(), "one row an outcome");
+        // my RB for his RB, with or without the backups changing hands, reads the same: the one-for-one stands for them all
+        assertTrue(any.stream().anyMatch(d -> Arrays.equals(d.give, new int[]{2}) && Arrays.equals(d.get, new int[]{5})));
+        assertFalse(any.stream().anyMatch(d -> Arrays.equals(d.give, new int[]{1, 2}) && Arrays.equals(d.get, new int[]{5})));
     }
 
     private static boolean has(int[] men, int m){
