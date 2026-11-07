@@ -1,3 +1,4 @@
+import PlayerImportAndSetup.Position;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
@@ -263,5 +264,35 @@ public class TradeScreensTest {
         java.util.Map<String, Double> pace = java.util.Map.of("a", 30.0, "b", 10.0, "star", 50.0, "cut", 0.0);
         assertEquals(0.8, TradeScreens.sideRatio(java.util.List.of("a", "b"), java.util.List.of("star", "cut"), pace::get), 1e-12);
         assertEquals(Double.POSITIVE_INFINITY, TradeScreens.sideRatio(java.util.List.of("a"), java.util.List.of("cut"), pace::get));
+    }
+
+    /** Out for a while: no projection for two weeks and one later. A man due next week, or never, is not that. */
+    @Test
+    public void aManOutForAWhileIsFoundWithHisFirstGameBack(){
+        Map<String, Double> soon = Map.of("healthy", 10.0, "byeNext", 9.0);
+        Map<String, Double> second = Map.of("healthy", 11.0, "byeNext", 9.5, "backIn2", 8.0);
+        Map<String, Double> third = Map.of("healthy", 12.0, "byeNext", 9.0, "backIn2", 8.5, "backIn3", 20.0);
+        Map<String, Double> fourth = Map.of("healthy", 12.0, "backIn2", 8.5, "backIn3", 21.0);
+        Map<String, AwayPrice.Back> absent = AwayPrice.absent(List.of(soon, second, third, fourth));
+        assertEquals(java.util.Set.of("backIn3"), absent.keySet());
+        assertEquals(20.0, absent.get("backIn3").points(), 0);
+        assertEquals(2, absent.get("backIn3").week());
+        assertEquals(0.5, absent.get("backIn3").share(), 0);
+    }
+
+    /** He reads at his first game back; a man already on the screen keeps his number. */
+    @Test
+    public void aManOutForAWhileReadsAtHisFirstGameBack(){
+        Map<String, AwayPrice.Back> absent = Map.of("star", new AwayPrice.Back(5, 18.0, 4, 9), "there", new AwayPrice.Back(5, 30.0, 4, 9));
+        Map<Position, Double> line = Map.of(Position.WR, 8.0);
+        Map<String, Double> read = TradeScreens.withReturns(Map.of("there", 1.0), absent, line, Map.of("star", Position.WR, "there", Position.WR));
+        assertEquals(10.0, read.get("star"), 1e-9);
+        assertEquals(1.0, read.get("there"), 1e-9);
+    }
+
+    /** Sidelined and coming back keeps his pace; sidelined for the year does not. */
+    @Test
+    public void onlyAManOutForTheYearLosesHisPace(){
+        assertEquals(java.util.Set.of("gone"), TradeScreens.stillOut(java.util.Set.of("back", "gone"), java.util.Set.of("back", "healthy")));
     }
 }

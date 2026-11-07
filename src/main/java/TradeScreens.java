@@ -56,7 +56,8 @@ import java.util.function.ToDoubleFunction;
  *   above the per-game points of the last starter at his position (the
  *   number on the player card, less the line), read off a chart of what men
  *   that far above the line after that many games went on to be worth over
- *   the rest of the season ({@link #paceChart}); zero for a man on IR. Until
+ *   the rest of the season ({@link #paceChart}); zero for a man on IR with no
+ *   week left projected ({@link #stillOut}). Until
  *   2026-10-22 this screen was the raw pace at 17 games, which overstates a
  *   hot start and made draft value look like it counted 73% at week 5.
  *
@@ -64,7 +65,8 @@ import java.util.function.ToDoubleFunction;
  *   projection for his next game, read off its own chart
  *   ({@link #projectionChart}). It has moved on news neither other screen
  *   carries (Justin: "cam skateboo reduced usage due to fumble loss of trust
- *   from coaches"). Pace and projection together are THIS SEASON's screen
+ *   from coaches"). A man out for a while is read at his first game back
+ *   ({@link #withReturns}). Pace and projection together are THIS SEASON's screen
  *   ({@link #seasonScreen}), in the ratio other leagues' trades put between
  *   them; draft value's share of the whole is DraftWeightCurve's.
  *
@@ -419,6 +421,33 @@ public class TradeScreens {
                 out.put(id, paceChart.at(-x));
             }
         });
+        return out;
+    }
+
+    /**
+     * A MAN OUT FOR A WHILE IS WORTH WHAT HE IS WORTH WHEN BACK. Justin, 2026-11-07: "a lot of trades would
+     * not be as enticing for others as my current model shows if their players are on ir". These screens
+     * read such a man at zero, so a trade sending Lamar Jackson cost the other manager nothing. In other
+     * leagues' completed trades (AwayPrice, 509 of them) he fetched a median 94% of his full worth when back
+     * (90% interval 86% to 103%), about the same however long he had to go, so he is read at his full worth:
+     * here his first projected game back above the line, and in stillOut his pace.
+     */
+    static Map<String, Double> withReturns(Map<String, Double> above, Map<String, AwayPrice.Back> absent, Map<Position, Double> line,
+                                           Map<String, Position> positionOf){
+        Map<String, Double> out = new HashMap<>(above);
+        absent.forEach((id, back) -> {
+            Position p = positionOf.get(id);
+            if(skill(p) && line.containsKey(p)){
+                out.putIfAbsent(id, back.points() - line.get(p));
+            }
+        });
+        return out;
+    }
+
+    /** The men whose pace reads zero: sidelined, with no week left projected. A man Sleeper has coming back keeps his. */
+    static Set<String> stillOut(Set<String> sidelined, Set<String> projectedLater){
+        Set<String> out = new HashSet<>(sidelined);
+        out.removeAll(projectedLater);
         return out;
     }
 
@@ -877,9 +906,25 @@ public class TradeScreens {
                 projectedOf.putIfAbsent(id, p.position);
             }
         }
-        Map<String, Double> paceNow = played == 0 ? Map.of() : predicted(sums, positionOf, played, teams, flex, paceCharts.apply(played), sidelined);
+        // who Sleeper has coming back, and when: every week left, for the men out longer than nextGame looks
+        List<Map<String, Double>> weeksLeft = new ArrayList<>();
+        for(int w = played + 1; w <= EraActuals.weeks(season); w++){
+            weeksLeft.add(LeagueWeek.projected(season, w));
+        }
+        Set<String> projectedLater = new HashSet<>();
+        weeksLeft.forEach(w -> projectedLater.addAll(w.keySet()));
+        Map<String, AwayPrice.Back> absent = AwayPrice.absent(weeksLeft);
+        for(String id : absent.keySet()){
+            Player p = Player.getPlayerFromSIDV2(id);
+            if(p != null && p.position != null){
+                projectedOf.putIfAbsent(id, p.position);
+            }
+        }
+        Map<String, Double> paceNow = played == 0 ? Map.of()
+                : predicted(sums, positionOf, played, teams, flex, paceCharts.apply(played), stillOut(sidelined, projectedLater));
         Map<String, Double> projectionNow = played == 0 ? Map.of()
-                : readOff(projectedAboveLine(season, played, projectedOf, teams, flex), projectionCharts.apply(played));
+                : readOff(withReturns(projectedAboveLine(season, played, projectedOf, teams, flex), absent,
+                        line(nextGame(season, played), projectedOf, teams, flex), projectedOf), projectionCharts.apply(played));
         Map<String, Double> production = played == 0 ? Map.of() : seasonScreen(paceNow, projectionNow, paceShare.applyAsDouble(played));
         ToDoubleFunction<String> draft = id -> {
             Player p = Player.getPlayerFromSIDV2(id);
