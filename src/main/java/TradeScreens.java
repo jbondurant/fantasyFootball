@@ -56,8 +56,8 @@ import java.util.function.ToDoubleFunction;
  *   above the per-game points of the last starter at his position (the
  *   number on the player card, less the line), read off a chart of what men
  *   that far above the line after that many games went on to be worth over
- *   the rest of the season ({@link #paceChart}); zero for a man on IR with no
- *   week left projected ({@link #stillOut}). Until
+ *   the rest of the season ({@link #paceChart}); zero for a man with nothing
+ *   real projected in any week left ({@link #stillOut}). Until
  *   2026-10-22 this screen was the raw pace at 17 games, which overstates a
  *   hot start and made draft value look like it counted 73% at week 5.
  *
@@ -429,29 +429,53 @@ public class TradeScreens {
      * not be as enticing for others as my current model shows if their players are on ir", and "some managers,
      * with finals in mind, don't mind the few weeks of 0 points, and value their injured players as if their
      * average projection also applied to their 0 weeks". These screens read such a man at zero, so a trade
-     * sending Lamar Jackson cost the other manager nothing. In other leagues' completed trades (AwayPrice, 509
-     * of them) what he fetched did not depend on how long he had to go, and a man sent alone fetched a median
-     * 105% of his worth on his average projection (90% interval 95% to 115%). So here he reads at that average
-     * above the line, and in stillOut at his pace. Sent with healthy men he fetched less, 75%; every package on
-     * these screens adds up its men in full, and this is the same.
+     * sending Lamar Jackson cost the other manager nothing. He now reads at his average projection when back
+     * above the line, and on pace at his pace. That is on the high side on purpose, and it is Justin's reading,
+     * not the measurement's: in other leagues' completed trades (AwayPrice) a man who had already missed the
+     * last week fetched about 15% less than a healthy man of the same worth in the same shape of trade, far
+     * above zero. Those trades cannot say how a known long absence was priced.
      */
-    static Map<String, Double> withReturns(Map<String, Double> above, Map<String, AwayPrice.Back> absent, Map<Position, Double> line,
+    static Map<String, Double> withReturns(Map<String, Double> above, Map<String, AwayPrice.Back> away, Map<Position, Double> line,
                                            Map<String, Position> positionOf){
         Map<String, Double> out = new HashMap<>(above);
-        absent.forEach((id, back) -> {
+        away.forEach((id, back) -> {
             Position p = positionOf.get(id);
             if(skill(p) && line.containsKey(p)){
-                out.putIfAbsent(id, back.average() - line.get(p));
+                out.put(id, back.average() - line.get(p));
             }
         });
         return out;
     }
 
-    /** The men whose pace reads zero: sidelined, with no week left projected. A man Sleeper has coming back keeps his. */
-    static Set<String> stillOut(Set<String> sidelined, Set<String> projectedLater){
-        Set<String> out = new HashSet<>(sidelined);
+    /** A man away with no game yet has no pace to read, and reads on projection alone rather than at the pace share of nothing. */
+    static Map<String, Double> paceWithReturns(Map<String, Double> pace, Map<String, Double> projection, Set<String> away){
+        Map<String, Double> out = new HashMap<>(pace);
+        for(String id : away){
+            if(!out.containsKey(id) && projection.containsKey(id)){
+                out.put(id, projection.get(id));
+            }
+        }
+        return out;
+    }
+
+    /** The men whose pace reads zero: nothing real projected in any week left, whatever the injury tag says. */
+    static Set<String> stillOut(Set<String> withGames, Set<String> projectedLater){
+        Set<String> out = new HashSet<>(withGames);
         out.removeAll(projectedLater);
         return out;
+    }
+
+    /** Who Sleeper has out for the next two weeks and back after that, from after g games. */
+    static Map<String, AwayPrice.Back> absentAfter(String season, int g, int lastWeek){
+        return AwayPrice.absent(weeksAfter(season, g, lastWeek));
+    }
+
+    private static List<Map<String, Double>> weeksAfter(String season, int g, int lastWeek){
+        List<Map<String, Double>> weeks = new ArrayList<>();
+        for(int w = g + 1; w <= lastWeek; w++){
+            weeks.add(LeagueWeek.projected(season, w));
+        }
+        return weeks;
     }
 
     /** A signal read off its chart: each man's value, the men the signal does not cover left out. */
@@ -766,11 +790,20 @@ public class TradeScreens {
                     int played = Math.max(0, Math.min(ends.containsKey(season) && row.has("created")
                             ? DraftWeightCurve.gamesPlayed(ends.get(season), row.get("created").getAsLong()) : leg - 1,
                             board.weekly().size()));
-                    Map<String, Double> production = productionAt.computeIfAbsent(played, k -> k == 0 ? Map.of() : seasonScreen(
-                            predicted(soFar(board.weekly().subList(0, k)), positionOf, k, teams, flex, paceCharts.apply(k), Set.of()),
-                            Integer.parseInt(season) < FIRST_PROJECTED ? Map.of()
-                                    : readOff(projectedAboveLine(season, k, positionOf, teams, flex), projectionCharts.apply(k)),
-                            paceShare.applyAsDouble(k)));
+                    Map<String, Double> production = productionAt.computeIfAbsent(played, k -> {
+                        if(k == 0){
+                            return Map.of();
+                        }
+                        // read as today's sides are, so a precedent and the trade it is set against are on one pricing
+                        Map<String, Double> pace = predicted(soFar(board.weekly().subList(0, k)), positionOf, k, teams, flex, paceCharts.apply(k), Set.of());
+                        if(Integer.parseInt(season) < FIRST_PROJECTED){
+                            return seasonScreen(pace, Map.of(), paceShare.applyAsDouble(k));
+                        }
+                        Map<String, AwayPrice.Back> away = absentAfter(season, k, EraActuals.weeks(season));
+                        Map<String, Double> projection = readOff(withReturns(projectedAboveLine(season, k, positionOf, teams, flex), away,
+                                line(nextGame(season, k), positionOf, teams, flex), positionOf), projectionCharts.apply(k));
+                        return seasonScreen(paceWithReturns(pace, projection, away.keySet()), projection, paceShare.applyAsDouble(k));
+                    });
                     Map<Integer, List<String>> in = byRoster(row, "adds");
                     Map<Integer, List<String>> out = byRoster(row, "drops");
                     Set<Integer> rosters = new LinkedHashSet<>(in.keySet());
@@ -909,25 +942,30 @@ public class TradeScreens {
                 projectedOf.putIfAbsent(id, p.position);
             }
         }
-        // who Sleeper has coming back, and at what: every week left, for the men out longer than nextGame looks
-        List<Map<String, Double>> weeksLeft = new ArrayList<>();
-        for(int w = played + 1; w <= EraActuals.weeks(season); w++){
-            weeksLeft.add(LeagueWeek.projected(season, w));
+        // who Sleeper has coming back, and at what: every week this league still plays
+        int lastWeek = Math.min(EraActuals.weeks(season), configuration.getLeagueJson().getAsJsonObject("settings").get("playoff_week_start").getAsInt() + 2);
+        List<Map<String, Double>> weeksLeft = weeksAfter(season, played, lastWeek);
+        Map<String, AwayPrice.Back> backs = AwayPrice.backs(weeksLeft);
+        Map<String, AwayPrice.Back> away = AwayPrice.absent(weeksLeft);
+        for(Map.Entry<String, AwayPrice.Back> e : backs.entrySet()){
+            String status = SleeperProjections.injuryStatusOf(e.getKey());
+            if(status != null && SIDELINED.contains(status)){
+                sidelined.add(e.getKey());
+                away.put(e.getKey(), e.getValue());     // on IR and due back soon reads the same way as due back late
+            }
         }
-        Set<String> projectedLater = new HashSet<>();
-        weeksLeft.forEach(w -> projectedLater.addAll(w.keySet()));
-        Map<String, AwayPrice.Back> absent = AwayPrice.absent(weeksLeft);
-        for(String id : absent.keySet()){
+        for(String id : away.keySet()){
             Player p = Player.getPlayerFromSIDV2(id);
             if(p != null && p.position != null){
                 projectedOf.putIfAbsent(id, p.position);
             }
         }
-        Map<String, Double> paceNow = played == 0 ? Map.of()
-                : predicted(sums, positionOf, played, teams, flex, paceCharts.apply(played), stillOut(sidelined, projectedLater));
         Map<String, Double> projectionNow = played == 0 ? Map.of()
-                : readOff(withReturns(projectedAboveLine(season, played, projectedOf, teams, flex), absent,
+                : readOff(withReturns(projectedAboveLine(season, played, projectedOf, teams, flex), away,
                         line(nextGame(season, played), projectedOf, teams, flex), projectedOf), projectionCharts.apply(played));
+        Map<String, Double> paceNow = played == 0 ? Map.of()
+                : paceWithReturns(predicted(sums, positionOf, played, teams, flex, paceCharts.apply(played),
+                        weeksLeft.isEmpty() ? sidelined : stillOut(sums.keySet(), backs.keySet())), projectionNow, away.keySet());
         Map<String, Double> production = played == 0 ? Map.of() : seasonScreen(paceNow, projectionNow, paceShare.applyAsDouble(played));
         ToDoubleFunction<String> draft = id -> {
             Player p = Player.getPlayerFromSIDV2(id);

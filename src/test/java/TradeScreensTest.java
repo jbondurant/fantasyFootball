@@ -281,19 +281,37 @@ public class TradeScreensTest {
         assertEquals(20.5, absent.get("backIn3").average(), 0);
     }
 
-    /** He reads at his average when back; a man already on the screen keeps his number. */
+    /** He reads at his average when back, whether due next week or later. */
     @Test
-    public void aManOutForAWhileReadsAtHisAverageWhenBack(){
-        Map<String, AwayPrice.Back> absent = Map.of("star", new AwayPrice.Back(5, 12.0, 4, 9, 18.0), "there", new AwayPrice.Back(5, 30.0, 4, 9, 30.0));
+    public void aManAwayReadsAtHisAverageWhenBack(){
+        Map<String, AwayPrice.Back> away = Map.of("late", new AwayPrice.Back(5, 12.0, 4, 9, 18.0), "soon", new AwayPrice.Back(0, 6.0, 9, 9, 10.0));
         Map<Position, Double> line = Map.of(Position.WR, 8.0);
-        Map<String, Double> read = TradeScreens.withReturns(Map.of("there", 1.0), absent, line, Map.of("star", Position.WR, "there", Position.WR));
-        assertEquals(10.0, read.get("star"), 1e-9);
-        assertEquals(1.0, read.get("there"), 1e-9);
+        Map<String, Double> read = TradeScreens.withReturns(Map.of("soon", -2.0, "healthy", 5.0), away, line,
+                Map.of("late", Position.WR, "soon", Position.WR, "healthy", Position.WR));
+        assertEquals(10.0, read.get("late"), 1e-9);
+        assertEquals(2.0, read.get("soon"), 1e-9);
+        assertEquals(5.0, read.get("healthy"), 1e-9);
     }
 
-    /** Sidelined and coming back keeps his pace; sidelined for the year does not. */
+    /** With no game yet he reads on projection alone, so his weighted value is not just the projection's share. A man with a pace keeps it. */
     @Test
-    public void onlyAManOutForTheYearLosesHisPace(){
-        assertEquals(java.util.Set.of("gone"), TradeScreens.stillOut(java.util.Set.of("back", "gone"), java.util.Set.of("back", "healthy")));
+    public void aManAwayWithNoGameReadsOnProjectionAlone(){
+        Map<String, Double> pace = TradeScreens.paceWithReturns(Map.of("played", 30.0), Map.of("played", 12.0, "rookie", 20.0, "healthyRookie", 9.0), Set.of("played", "rookie"));
+        assertEquals(30.0, pace.get("played"), 0);
+        assertEquals(20.0, pace.get("rookie"), 0);
+        assertFalse(pace.containsKey("healthyRookie"), "only a man away");
+    }
+
+    /** With nothing real projected in any week left he loses his pace, whatever his tag; coming back he keeps it. */
+    @Test
+    public void onlyAManWithNoWeekLeftLosesHisPace(){
+        assertEquals(Set.of("gone"), TradeScreens.stillOut(Set.of("back", "gone"), Set.of("back", "healthy")));
+    }
+
+    /** Stray rows are not a projection: a man Sleeper has at 0.1 a week is not coming back. */
+    @Test
+    public void aStrayRowIsNotAReturn(){
+        Map<String, AwayPrice.Back> backs = AwayPrice.backs(List.of(Map.of("stray", 0.1, "real", 9.0), Map.of("stray", 0.1, "real", 9.0)));
+        assertEquals(Set.of("real"), backs.keySet());
     }
 }

@@ -195,6 +195,7 @@ public class PlayerRawData {
                 }
                 System.out.println("COULD NOT REFRESH player metadata (" + unreachable.getMessage()
                         + "); using the copy from " + fetched);
+                InOutUtilities.STALE.add("player metadata");
             }
         }
     }

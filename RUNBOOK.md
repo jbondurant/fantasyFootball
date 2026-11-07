@@ -251,9 +251,11 @@ page, also eight a bucket, and nobody on IR is ever the man cut to make room.
 His view shows pace, projection and the two weighted, and the page's "on both" box
 takes a number you set. A man on IR or out for a while reads at his pace and his average
 projection when back, not zero (Justin, 2026-11-07: managers with finals in mind "value their
-injured players as if their average projection also applied to their 0 weeks"). In other leagues'
-completed trades what he fetched did not depend on how long he had to go, and a man sent alone
-fetched a median 105% of that; sent with healthy men, 75% (`./gradlew run -Pmain=AwayPrice`).
+injured players as if their average projection also applied to their 0 weeks"). That is on the
+high side on purpose, so a trade is not overstated. In other leagues' completed trades a man who
+had already missed the last week went for about 15% less than a healthy man of the same worth
+in the same shape of trade, far above zero; those trades cannot say how a known long absence was
+priced (`./gradlew run -Pmain=AwayPrice`).
 
 The explorer searches WHOLE ROSTERS since 2026-11-06 (`TradeSearch`), every shape up to
 three men a side (`-PexplorerMaxSide=4` for four). Justin, of the top-eight limit: "that's

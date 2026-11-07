@@ -129,15 +129,29 @@ public class InOutUtilities {
             // Fetch before giving up the copy we have. Deleting first meant a failed fetch fell back past this
             // morning's rosters to yesterday's (2026-11-07: a page dated 13:16 was built on rosters from the night before).
             try {
-                downloadTodaysWebPage(webURL, filepathStart);
+                String body = WebUrlUtility.urlToString(webURL);
+                if(!looksLikeData(body)){
+                    throw new RuntimeException("a body that is not data from " + webURL);
+                }
+                writeContentToFile(body, today.getPath());
+                STALE.remove(today.getName());
             }
             catch(RuntimeException unreachable){
-                System.out.println("   WARNING: could not fetch " + webURL
-                        + "\n   keeping " + today + " from earlier today - this data may be STALE");
+                System.out.println("   WARNING: could not refresh " + webURL + " (" + unreachable.getMessage()
+                        + ")\n   keeping " + today + " from earlier today - this data may be STALE");
                 STALE.add(today.getName());
             }
         }
         return getTodaysWebPage(webURL, filepathStart);
+    }
+
+    /** A 200 can still be no data: "[]", "null" or a captive portal's page must not replace a good copy. */
+    static boolean looksLikeData(String body){
+        if(emptyPayload(body)){
+            return false;
+        }
+        String trimmed = body.trim();
+        return trimmed.startsWith("[") || trimmed.startsWith("{");
     }
 
     /** The feeds this run could not refresh and read from an older copy, for a report to say so. */
@@ -295,9 +309,12 @@ public class InOutUtilities {
         writeContentToFile(webContent, todaysFilePath);
     }
 
+    /** Written beside it and moved into place, so a failed write leaves the copy that was there. */
     private static void writeContentToFile(String content, String filePath) {
-        try (PrintWriter out = new PrintWriter(filePath, StandardCharsets.UTF_8)) {
-            out.println(content);
+        Path target = Path.of(filePath), temporary = Path.of(filePath + "." + Thread.currentThread().threadId() + ".tmp.txt");
+        try {
+            Files.writeString(temporary, content + System.lineSeparator(), StandardCharsets.UTF_8);
+            Files.move(temporary, target, java.nio.file.StandardCopyOption.REPLACE_EXISTING, java.nio.file.StandardCopyOption.ATOMIC_MOVE);
         } catch (IOException e) {
             throw new RuntimeException("could not write " + filePath, e);
         }

@@ -18,6 +18,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 public class StaleCacheFallbackTest {
 
+    /** What these tests mark stale is not a real feed, and other tests read the stamp that reports it. */
+    @org.junit.jupiter.api.AfterEach
+    void forgetTheFeedsTheseTestsBroke(){
+        InOutUtilities.STALE.clear();
+    }
+
     @Test
     void anUnreachableFeedFallsBackToYesterdaysCopy() throws Exception {
         String prefix = "staleCacheFallbackTest";
@@ -60,6 +66,16 @@ public class StaleCacheFallbackTest {
             InOutUtilities.STALE.remove(today.getFileName().toString());
             Files.deleteIfExists(yesterday);
             Files.deleteIfExists(today);
+        }
+    }
+
+    /** A 200 with no data in it is a failed refresh. */
+    @Test
+    void aBodyThatIsNotDataIsNotARefresh(){
+        assertTrue(InOutUtilities.looksLikeData("[{\"roster_id\":1}]"));
+        assertTrue(InOutUtilities.looksLikeData("{\"a\":1}"));
+        for(String junk : new String[]{"[]", "{}", "null", "", "<html>sign in to this wifi</html>"}){
+            assertTrue(!InOutUtilities.looksLikeData(junk), junk);
         }
     }
 

@@ -58,7 +58,8 @@ public class DataStamp {
      * which is why it now lives at the call site.
      */
     public static String stamp(){
-        return "projections " + projections() + ", player metadata " + metadata();
+        return "projections " + projections() + ", player metadata " + metadata()
+                + (InOutUtilities.STALE.isEmpty() ? "" : ", COULD NOT REFRESH " + String.join(", ", new java.util.TreeSet<>(InOutUtilities.STALE)));
     }
 
     /** The labelled form, for a text report's header. */
