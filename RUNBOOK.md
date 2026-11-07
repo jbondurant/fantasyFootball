@@ -265,11 +265,14 @@ and says so. To simulate every candidate, leave this running overnight, plugged 
 
 The duplicate skip (Justin, 2026-11-07) is what makes that possible: a simulation sees a trade
 only as both teams' lineup points by week, so trades with the same points share one, exactly.
-On 2026-11-07 that took 2,399,739 candidates to 820,257 simulations, about 10 hours rather
-than 29. `-PexplorerSearchOnly=true -PexplorerProveSkip=true` prints the count in seconds and
-tests the claim on the real league: the search's points against the simulation's, and pairs of
-trades with equal points simulated separately. Its numbers use the rosters and projections from
-when it started, so read the result before the next waiver run, and TradeCheck what you send.
+On 2026-11-07 that took 2,399,739 candidates to 624,630 simulations, about 8 hours rather than
+29. `-PexplorerSearchOnly=true -PexplorerProveSkip=true` prints the count and tests the claim on
+the real league in a couple of minutes: the search's count against every candidate's real
+simulation inputs, the search's points against those inputs, a sample of the trades it treated
+as one, some of them played from scratch, and a control with different points. What the skip
+drops is title-neutral only: a throw-in who never starts leaves no row, even one with keeper
+value. The numbers use the rosters and projections from when the run started, so read the
+result before the next waiver run, and TradeCheck what you send.
 
 Before sending one, run TradeCheck on its men and read the FP ros column too.
 FantasyPros' consensus is what Justin compares against, and the explorer prices

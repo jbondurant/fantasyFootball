@@ -43,8 +43,8 @@ public class TradeSearchTest {
         WeeklyLineupValue.Table t = table();
         double[] season = POINTS.clone();
         TradeSearch.Screen screen = new TradeSearch.Screen(NOTHING, season, season, season, 0);
-        return TradeSearch.search(MINE, HIS, onIr, locked, POINTS, new TradeSearch.Prices(t, t, t), screen,
-                new TradeSearch.Rules(maxSide, minGain, 0, false, false, limit, 400, 0));
+        return TradeSearch.search(MINE, HIS, onIr, locked, POINTS, new TradeSearch.Prices(t, t, t, t), screen,
+                new TradeSearch.Rules(maxSide, minGain, 0, false, false, limit, 400, 0, 0));
     }
 
     static List<TradeSearch.Deal> all(TradeSearch.Found found){
@@ -133,7 +133,7 @@ public class TradeSearchTest {
         for(int l = 0; l < TradeSearch.LANES; l++){
             lanes.add(l < 2 ? lane : List.of());
         }
-        TradeSearch.Found found = new TradeSearch.Found(20, 0, 20, 20, lanes);
+        TradeSearch.Found found = new TradeSearch.Found(20, 0, 20, 20, List.of(), lanes);
         TradeSearch.Walked walked = TradeSearch.walk(found, TradeSearch.Deal::key, k -> new double[]{0.7, 0.1, -0.2}, 0.5, 12, 3, 999);
         assertEquals(3, walked.kept().size(), "three in the +0.5 bucket, the same three in the second lane");
         assertFalse(walked.capReached());
@@ -156,7 +156,7 @@ public class TradeSearchTest {
         for(int l = 0; l < TradeSearch.LANES; l++){
             lanes.add(l == TradeSearch.ANY_LANE ? lane : List.of());
         }
-        TradeSearch.Walked walked = TradeSearch.walk(new TradeSearch.Found(101, 0, 101, 101, lanes), TradeSearch.Deal::key,
+        TradeSearch.Walked walked = TradeSearch.walk(new TradeSearch.Found(101, 0, 101, 101, List.of(), lanes), TradeSearch.Deal::key,
                 k -> new double[]{k.startsWith("[500]") ? 6.2 : 0.7, 0.1, 0}, 0.5, 12, 8, 10);
         assertEquals(10, walked.simulated());
         assertTrue(walked.kept().stream().anyMatch(k -> k.deal().give[0] == 500), "the big gain was simulated although a hundred cost less");
@@ -175,7 +175,7 @@ public class TradeSearchTest {
             lanes.add(l < 2 ? lane : List.of());
         }
         java.util.concurrent.atomic.AtomicInteger counted = new java.util.concurrent.atomic.AtomicInteger();
-        TradeSearch.Walked walked = TradeSearch.walk(new TradeSearch.Found(20, 0, 20, 4, lanes), d -> d.give[0] % 4, group -> {
+        TradeSearch.Walked walked = TradeSearch.walk(new TradeSearch.Found(20, 0, 20, 4, List.of(), lanes), d -> d.give[0] % 4, group -> {
             counted.incrementAndGet();
             return new double[]{0.5 + group, 0.1, 0};
         }, 0.5, 12, 99, 4);
@@ -210,8 +210,8 @@ public class TradeSearchTest {
         int[] mine = {0, 1, 2}, his = {3, 4, 5};
         double[] flat = new double[men.size()];
         TradeSearch.Found found = TradeSearch.search(mine, his, new boolean[men.size()], new boolean[men.size()], flat,
-                new TradeSearch.Prices(t, t, t), new TradeSearch.Screen(flat, flat, flat, flat, 0),
-                new TradeSearch.Rules(3, -999, 0, false, false, 99, 400, 0));
+                new TradeSearch.Prices(t, t, t, t), new TradeSearch.Screen(flat, flat, flat, flat, 0),
+                new TradeSearch.Rules(3, -999, 0, false, false, 99, 400, 0, 50));
 
         double[][] scratch = t.scratch();
         double[] myWeeks = new double[2], hisWeeks = new double[2];
@@ -236,6 +236,118 @@ public class TradeSearchTest {
         // my RB for his RB, with or without the backups changing hands, reads the same: the one-for-one stands for them all
         assertTrue(any.stream().anyMatch(d -> Arrays.equals(d.give, new int[]{2}) && Arrays.equals(d.get, new int[]{5})));
         assertFalse(any.stream().anyMatch(d -> Arrays.equals(d.give, new int[]{1, 2}) && Arrays.equals(d.get, new int[]{5})));
+
+        assertFalse(found.merged().isEmpty());
+        for(TradeSearch.Deal[] pair : found.merged()){
+            assertEquals(pair[0].you, pair[1].you, "a pair handed back for testing is a pair the search treated as one");
+            assertEquals(pair[0].him, pair[1].him);
+        }
+    }
+
+    /** Past the cap, a trade can still take a result already due; only those needing a new simulation go unanswered. */
+    @Test
+    public void pastTheCapATradeStillTakesAKnownResult(){
+        List<TradeSearch.Deal> lane = new ArrayList<>();
+        for(int i = 0; i < 4; i++){
+            lane.add(new TradeSearch.Deal(new int[]{i}, new int[]{i}, new int[0], new int[0], 50, -i, 1, 1, 1));
+        }
+        List<List<TradeSearch.Deal>> lanes = new ArrayList<>();
+        for(int l = 0; l < TradeSearch.LANES; l++){
+            lanes.add(l == TradeSearch.ANY_LANE ? lane : List.of());
+        }
+        String[] outcome = {"a", "b", "c", "a"};
+        TradeSearch.Walked walked = TradeSearch.walk(new TradeSearch.Found(4, 0, 4, 3, List.of(), lanes), d -> outcome[d.give[0]],
+                same -> new double[]{1.2, 0.1, 0}, 0.5, 12, 99, 2);
+        assertEquals(2, walked.simulated());
+        assertTrue(walked.capReached());
+        assertEquals(1, walked.reused());
+        assertEquals(1, walked.skipped(), "c alone never ran");
+        assertEquals(3, walked.kept().size());
+    }
+
+    /** Three non-round weeks, a man whose only week is the first, and every trade's fingerprints compared with the exact vectors. */
+    private static WeeklyLineupValue.Table threeWeeks(List<String> men, Position[] at, double[][] byWeek){
+        Map<String, Position> positions = new HashMap<>();
+        TreeMap<Integer, Map<String, Double>> projected = new TreeMap<>();
+        TreeMap<Integer, Map<Position, List<Map.Entry<String, Double>>>> free = new TreeMap<>();
+        for(int i = 0; i < men.size(); i++){
+            positions.put(men.get(i), at[i]);
+        }
+        for(int w = 0; w < byWeek.length; w++){
+            Map<String, Double> week = new HashMap<>();
+            for(int i = 0; i < men.size(); i++){
+                if(byWeek[w][i] == byWeek[w][i]){
+                    week.put(men.get(i), byWeek[w][i]);
+                }
+            }
+            projected.put(9 + w, week);
+            free.put(9 + w, Map.of());
+        }
+        return new WeeklyLineupValue(projected, free, positions::get, "test").table(men);
+    }
+
+    /**
+     * Once this week is under way a roster can't change it in the simulation, so trades differing only this week need
+     * one simulation between them, while each keeps its own row. Non-round points, because a week's points read off a
+     * running total would carry rounding from the weeks before it and count the same season twice.
+     */
+    @Test
+    public void aTradeDifferingOnlyThisWeekIsOneSimulationAndItsOwnRow(){
+        List<String> men = List.of("myQb", "myRb", "myNow", "myNow2", "hisQb", "hisRb", "hisNow", "hisNow2");
+        Position[] at = {Position.QB, Position.RB, Position.RB, Position.RB, Position.QB, Position.RB, Position.RB, Position.RB};
+        double no = Double.NaN;
+        double[][] byWeek = {
+                {20.37, 7.19, 3.11, 2.73, 21.93, 15.71, 4.57, 1.91},
+                {18.43, 6.61, no, no, 19.17, 11.83, no, no},
+                {17.29, 8.03, no, no, 16.47, 12.59, no, no}};
+        WeeklyLineupValue.Table t = threeWeeks(men, at, byWeek);
+        int[] mine = {0, 1, 2, 3}, his = {4, 5, 6, 7};
+        double[] flat = new double[men.size()];
+        TradeSearch.Found found = TradeSearch.search(mine, his, new boolean[men.size()], new boolean[men.size()], flat,
+                new TradeSearch.Prices(t, t, t, t), new TradeSearch.Screen(flat, flat, flat, flat, 0),
+                new TradeSearch.Rules(3, -999, 0, false, false, 99, 400, 1, 0));
+        double[][] scratch = t.scratch();
+        double[] myWeeks = new double[3], hisWeeks = new double[3];
+        java.util.Set<String> later = new java.util.HashSet<>(), allWeeks = new java.util.HashSet<>();
+        for(int[] give : TradeSearch.combos(mine, 3)){
+            for(int[] get : TradeSearch.combos(his, 3)){
+                int[] myAfter = java.util.stream.IntStream.concat(Arrays.stream(mine).filter(m -> !has(give, m)), Arrays.stream(get)).toArray();
+                int[] hisAfter = java.util.stream.IntStream.concat(Arrays.stream(his).filter(m -> !has(get, m)), Arrays.stream(give)).toArray();
+                t.of(myAfter, myAfter.length, scratch, myWeeks);
+                t.of(hisAfter, hisAfter.length, scratch, hisWeeks);
+                // to the millionth, so the expected count can't share any rounding with the count it checks
+                later.add(rounded(myWeeks, 1) + rounded(hisWeeks, 1));
+                allWeeks.add(rounded(myWeeks, 0) + rounded(hisWeeks, 0));
+            }
+        }
+        assertTrue(later.size() < allWeeks.size(), "this week's men leave something for the simulated count to collapse");
+        assertEquals(later.size(), found.outcomes());
+        assertEquals(allWeeks.size(), all(found).size(), "one row for each different set of weeks, this one included");
+    }
+
+    private static String rounded(double[] weeks, int from){
+        return Arrays.toString(Arrays.stream(weeks).skip(from).mapToLong(p -> Math.round(p * 1e6)).toArray());
+    }
+
+    /** With -Pprojections on another pricing, what a trade looks like there can't merge what the simulation tells apart. */
+    @Test
+    public void aThrowInWhoStartsInTheSimulationIsNotADuplicate(){
+        List<String> men = List.of("myQb", "myBackup", "myRb", "hisQb", "hisBackup", "hisRb");
+        Position[] at = {Position.QB, Position.QB, Position.RB, Position.QB, Position.QB, Position.RB};
+        // on the pricing that finds trades, my backup never starts; in the simulation he is my starter
+        WeeklyLineupValue.Table finds = threeWeeks(men, at, new double[][]{{20, 1, 5, 21, 2, 15}});
+        WeeklyLineupValue.Table simulated = threeWeeks(men, at, new double[][]{{20, 22, 5, 21, 2, 15}});
+        int[] mine = {0, 1, 2}, his = {3, 4, 5};
+        double[] flat = new double[men.size()];
+        TradeSearch.Found same = TradeSearch.search(mine, his, new boolean[men.size()], new boolean[men.size()], flat,
+                new TradeSearch.Prices(finds, finds, finds, finds), new TradeSearch.Screen(flat, flat, flat, flat, 0),
+                new TradeSearch.Rules(3, -999, 0, false, false, 99, 400, 0, 0));
+        TradeSearch.Found apart = TradeSearch.search(mine, his, new boolean[men.size()], new boolean[men.size()], flat,
+                new TradeSearch.Prices(finds, finds, finds, simulated), new TradeSearch.Screen(flat, flat, flat, flat, 0),
+                new TradeSearch.Rules(3, -999, 0, false, false, 99, 400, 0, 0));
+        java.util.function.Predicate<TradeSearch.Deal> rbAndBackup = d -> Arrays.equals(d.give, new int[]{1, 2}) && Arrays.equals(d.get, new int[]{5});
+        assertFalse(all(same).stream().anyMatch(rbAndBackup), "on one pricing the backup changes nothing");
+        assertTrue(all(apart).stream().anyMatch(rbAndBackup), "the simulation can tell these apart, so the row stays");
     }
 
     private static boolean has(int[] men, int m){

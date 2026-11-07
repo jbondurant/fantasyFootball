@@ -234,7 +234,6 @@ public class WeeklyLineupValue implements RosterValue {
         public double of(int[] men, int count, double[][] scratch, double[] byWeek){
             double total = 0;
             for(int w = 0; w < points.length; w++){
-                double before = total;
                 double[] week = points[w];
                 for(int i = 0; i < KEEP.length; i++){
                     System.arraycopy(wire[w][i], 0, scratch[i], 0, KEEP[i]);
@@ -255,7 +254,7 @@ public class WeeklyLineupValue implements RosterValue {
                         }
                     }
                 }
-                total += filled(scratch[QB], 1) + filled(scratch[RB], 2) + filled(scratch[WR], 3) + filled(scratch[TE], 1)
+                double lineup = filled(scratch[QB], 1) + filled(scratch[RB], 2) + filled(scratch[WR], 3) + filled(scratch[TE], 1)
                         + filled(scratch[DEF], 1);
                 double first = EMPTY, second = EMPTY;
                 for(int at = RB; at <= TE; at++){
@@ -271,9 +270,10 @@ public class WeeklyLineupValue implements RosterValue {
                         }
                     }
                 }
-                total += (first == EMPTY ? 0 : first) + (second == EMPTY ? 0 : second);
+                lineup += (first == EMPTY ? 0 : first) + (second == EMPTY ? 0 : second);
+                total += lineup;
                 if(byWeek != null){
-                    byWeek[w] = total - before;
+                    byWeek[w] = lineup;
                 }
             }
             return total;
