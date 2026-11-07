@@ -248,6 +248,8 @@ From 8 games on, "his view" ignores draft spot (Justin, 2026-11-04: "draft spot 
 longer matter at this point"); the curve still measures 30% there in other leagues, and
 -PdraftWeight still sets a what-if. Any trade he would read as fair stays on the page,
 outside the eight-a-bucket limit, and nobody on IR is ever the man cut to make room.
+His view shows pace, projection and the two weighted, and the page's "on both" box
+takes a number you set; it is complete from -PexplorerBothFloor (85%) up.
 
 Before sending one, run TradeCheck on its men and read the FP ros column too.
 FantasyPros' consensus is what Justin compares against, and the explorer prices

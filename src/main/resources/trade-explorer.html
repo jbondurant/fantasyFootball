@@ -62,9 +62,11 @@ h2 { font-size: 1.25rem; text-transform: uppercase; letter-spacing: 0.06em; colo
 .filters { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); padding-block: 10px; border-bottom: 1px solid var(--line); display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: end; }
 body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
 .field { display: grid; gap: 3px; font-size: 0.75rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
-select, input[type="search"] { font: inherit; font-size: 0.9rem; text-transform: none; letter-spacing: 0; color: var(--ink); background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; min-width: 0; }
+select, input[type="search"], input[type="number"] { font: inherit; font-size: 0.9rem; text-transform: none; letter-spacing: 0; color: var(--ink); background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; min-width: 0; }
 .checks { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 0.85rem; }
 .checks label { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; }
+.bothgate { display: inline-flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+.bothgate input[type="number"] { width: 4.6em; padding: 2px 6px; font-family: var(--mono); }
 .count { margin-left: auto; font-family: var(--mono); font-size: 0.85rem; color: var(--muted); }
 
 .tablewrap { overflow-x: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; }
@@ -161,6 +163,11 @@ details ul { padding-left: 1.2em; }
       <label><input type="checkbox" id="f-hurt"> hide hurt players</label>
       <label><input type="checkbox" id="f-out"> hide teams out of it</label>
       <label><input type="checkbox" id="f-model"> hide what the model calls a loss for you</label>
+      <span class="bothgate">
+        <label><input type="checkbox" id="f-both"> at least</label>
+        <input type="number" id="f-bothN" min="0" max="300" step="5" value="100" aria-label="Minimum percent on both pace and projection">
+        <label for="f-both">% on both pace and projection</label>
+      </span>
     </div>
     <div class="count" id="count" aria-live="polite"></div>
   </div>
@@ -314,19 +321,19 @@ function init() {
 
   const state = {
     m: load("m", ""), bucket: load("bucket", ""), mode: load("mode", "exact"), sort: load("sort", "him"),
-    q: "", tank: load("tank", false), hurt: load("hurt", false), out: load("out", false), model: load("model", false)
+    q: "", tank: load("tank", false), hurt: load("hurt", false), out: load("out", false), model: load("model", false), both: load("both", false), bothN: load("bothN", 100)
   };
   const hashM = decodeURIComponent((location.hash || "").slice(1));
   if (hashM && rivalOf[hashM]) state.m = hashM;
   if (state.m && !rivalOf[state.m]) state.m = "";
   mgrSel.value = state.m; bucketSel.value = state.bucket; $("f-mode").value = state.mode; $("f-sort").value = state.sort;
-  $("f-tank").checked = state.tank; $("f-hurt").checked = state.hurt; $("f-out").checked = state.out; $("f-model").checked = state.model;
+  $("f-tank").checked = state.tank; $("f-hurt").checked = state.hurt; $("f-out").checked = state.out; $("f-model").checked = state.model; $("f-both").checked = state.both; $("f-bothN").value = state.bothN;
 
   const bind = (id, key, prop = "value") => $(id).addEventListener(prop === "checked" ? "change" : "input", (e) => {
     state[key] = e.target[prop]; if (key !== "q") save(key, state[key]); render();
   });
   bind("f-mgr", "m"); bind("f-bucket", "bucket"); bind("f-mode", "mode"); bind("f-sort", "sort"); bind("f-q", "q");
-  bind("f-tank", "tank", "checked"); bind("f-hurt", "hurt", "checked"); bind("f-out", "out", "checked"); bind("f-model", "model", "checked");
+  bind("f-tank", "tank", "checked"); bind("f-hurt", "hurt", "checked"); bind("f-out", "out", "checked"); bind("f-model", "model", "checked"); bind("f-both", "both", "checked"); bind("f-bothN", "bothN");
   $("managers").addEventListener("click", (e) => {
     const b = e.target.closest(".mgr"); if (!b) return;
     state.m = state.m === b.dataset.m ? "" : b.dataset.m; mgrSel.value = state.m; save("m", state.m); render();
@@ -345,7 +352,7 @@ function init() {
       : `<li><b>His view</b> is what he gets back of what he gives on this season's numbers, shown three ways. Pace is his points per game so far. Proj is Sleeper's projection for his next game. Each is read as rest-of-season value above the last starter at his position. The top number is the two weighted ${Math.round((DATA.paceShare ?? 0) * 100)}% pace and ${Math.round((1 - (DATA.paceShare ?? 0)) * 100)}% projection, the split other leagues' accepted trades show at this point in the season, and 100% or more on it reads fair to him. Draft spot no longer counts after ${DATA.weeksPlayed} games.</li>`,
     `<li><b>Hurt</b> names any player in the trade listed IR, Out, Doubtful, PUP, suspended or Questionable today. Sleeper projects an injured player back, so a trade that leans on one may be worth less than it reads.</li>`,
     `<li><b>Players tab.</b> Every rostered player, and every free agent near the top at his position on some pricing, ranked at his position three ways. The middle rank is the middle of the three, so two of the three rank him there or better and two rank him there or worse. No weights needed. Spread is how far apart they are: a big spread means the sources disagree. Sleeper and model points count from the week after this one, so a game already played this week doesn't skew them. A player with no Sleeper or model points left (out for the season) has no middle rank.</li>`,
-    `<li>Coverage: every one-for-one, and two- and three-man packages among each side's most valuable players. For each manager, trades gaining you ${DATA.minGain} or more season points were simulated from least to most costly to him, keeping up to ${DATA.perBucket} per bucket, so each bucket holds the least costly trades in it, plus every trade that reads as fair to him, however costly. A manager marked "search capped" stopped at ${DATA.cap.toLocaleString()} simulations; a bucket short of trades there may have more.</li>`
+    `<li>Coverage: every one-for-one, and two- and three-man packages among each side's most valuable players. For each manager, trades gaining you ${DATA.minGain} or more season points were simulated from least to most costly to him, keeping up to ${DATA.perBucket} per bucket, so each bucket holds the least costly trades in it, plus every trade that reads as fair to him or that gets ${Math.round((DATA.bothFloor ?? 0.85) * 100)}% or more on both pace and projection, however costly. So the "on both" box is complete from ${Math.round((DATA.bothFloor ?? 0.85) * 100)}% up; set it lower and some trades may be missing. A manager marked "search capped" stopped at ${DATA.cap.toLocaleString()} simulations; a bucket short of trades there may have more.</li>`
   ].join("");
 
   function render() {
@@ -359,6 +366,10 @@ function init() {
       if (state.hurt && (t.hurtIn.length || t.hurtOut.length)) return false;
       if (state.out && t.state === "out of it") return false;
       if (state.model && t.youAlt < 0) return false;
+      if (state.both) {
+        const least = (parseFloat(state.bothN) || 0) / 100;
+        if ((t.paceView ?? Infinity) < least || (t.projView ?? Infinity) < least) return false;
+      }
       if (q && ![...t.give, ...t.get].some((n) => n.toLowerCase().includes(q))) return false;
       return true;
     });

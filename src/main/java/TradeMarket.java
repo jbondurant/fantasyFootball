@@ -977,7 +977,10 @@ public class TradeMarket {
      * rest-of-season model is shown and does not veto unless named. What a trade does
      * to the other team is shown on all three and never filtered: lopsided and
      * tanking trades stay in, flagged. Any trade he would read as fair is simulated
-     * first and kept outside the bucket counts.
+     * first and kept outside the bucket counts, and so is any at -PexplorerBothFloor
+     * (85%) or more on BOTH pace and projection, because the page filters on a number
+     * Justin sets (2026-11-06: "yes, checkbox with number i can change") and a filter
+     * cannot show a trade the walk threw away.
      */
     static String explorer(String me, List<Trade> all, Map<String, List<String>> rosters, Map<String, String> nameOf,
                            java.util.function.ToDoubleFunction<List<String>> season, RosterValue altValue,
@@ -992,6 +995,7 @@ public class TradeMarket {
         int cap = Integer.getInteger("explorerCap", 1500);
         double minGain = Double.parseDouble(System.getProperty("explorerMinGain", "3"));
         double rejectBelow = Double.parseDouble(System.getProperty("explorerRejectBelow", "0"));
+        double bothFloor = Double.parseDouble(System.getProperty("explorerBothFloor", "0.85"));
         List<String> mine = rosters.get(me);
         double myBase = season.applyAsDouble(mine);
         double myAltBase = altValue.of(mine);
@@ -1033,7 +1037,8 @@ public class TradeMarket {
             // could fall outside every bucket. They are walked first and sit outside the count.
             Set<Cand> fair = new java.util.HashSet<>();
             for(Cand c : cands){
-                if(screens.of(c.trade()).fairToHim()){
+                double[] both = screens.paceAndProjection(c.trade());
+                if(screens.of(c.trade()).fairToHim() || both[0] >= bothFloor && both[1] >= bothFloor){
                     fair.add(c);
                 }
             }
@@ -1106,12 +1111,12 @@ public class TradeMarket {
         return String.format(java.util.Locale.ROOT,
                 "{\"generated\":%s,\"season\":%s,\"weeksPlayed\":%d,\"me\":%s,\"myTitle\":%.2f,\"myPlayoffs\":%.1f,"
                         + "\"pricing\":%s,\"alt\":%s,\"reject\":%s,\"rejectBelow\":%.1f,\"fpPanel\":%s,\"step\":%.1f,\"top\":%.1f,\"perBucket\":%d,\"cap\":%d,\"minGain\":%.1f,"
-                        + "\"tankLine\":%.1f,\"tankLineAlt\":%.1f,\"sims\":%d,\"draftWeight\":%.2f,\"paceShare\":%.2f,"
+                        + "\"tankLine\":%.1f,\"tankLineAlt\":%.1f,\"sims\":%d,\"draftWeight\":%.2f,\"paceShare\":%.2f,\"bothFloor\":%.2f,"
                         + "\"rivals\":[%s],\n\"playersFrom\":%d,\"players\":[%s],\n\"trades\":[%s]}",
                 jsonString(LocalDate.now().toString()), jsonString(LeagueWeek.season()), screens.weeksPlayed(), jsonString(me),
                 100 * stakes.title(me), 100 * stakes.playoffs().getOrDefault(me, 0.0), jsonString(source), jsonString(alt),
                 "[" + String.join(",", reject.stream().map(TradeMarket::jsonString).toList()) + "]", rejectBelow, fpPanelJson(), step, top, perBucket, cap, minGain, hisFloor, hisFloorAlt,
-                TitleOdds.SIMS, screens.weightNow(), screens.paceShare(), rivals, playersFrom, players, rows);
+                TitleOdds.SIMS, screens.weightNow(), screens.paceShare(), bothFloor, rivals, playersFrom, players, rows);
     }
 
     /**

@@ -296,6 +296,8 @@ tasks.register('run', JavaExec) {
      // TradeMarket.explorer - the pricings that veto a trade (default fantasypros), the gain below which they do (default 0),
      // and how deep the Players tab lists free agents.
      'explorerReject', 'explorerRejectBelow', 'explorerPlayerDepth',
+     // TradeMarket.explorer - at this share or more on both pace and projection a trade is kept outside the bucket limit
+     'explorerBothFloor',
      // TradeMarket.faabBuys - price one man of each rival's for dollars and nobody back
      'faabBuy'].each { knob ->
         if (project.hasProperty(knob)) {
