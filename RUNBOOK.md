@@ -220,8 +220,8 @@ strong, claims are worth a few points at most - stream, do not hoard.
 every trade on the board that raises his title odds by half a point or more, for
 each manager, in half-point buckets, sorted least worse for the other team. Nothing
 is filtered for tanking or contention (Justin: "those are things I'll establish
-subjectively"); they are columns and optional filters on the page. About an hour of
-title simulations, then publish the page to the same link:
+subjectively"); they are columns and optional filters on the page. About four minutes of
+title odds, then publish the page to the same link:
 
     ./gradlew run -Pmain=TradeMarket -PtradeExplorer=true
     # writes data/trade-explorer-<date>.json and data/trade-explorer.html
@@ -257,22 +257,34 @@ not an optimization i agree with". The terminal board and the console still use 
 eight (`DEFAULT_POOL`): their Side functions are far slower, so the explorer's page is the
 one to read for what exists.
 
-Trying every trade takes seconds; the title simulations are the cost, about 23 a second on
-this M1. An ordinary run stops at `-PexplorerCap` (2,500 a manager, about 20 minutes awake)
-and says so. To simulate every candidate, leave this running overnight, plugged in:
+Trying every trade takes seconds; the title odds are the cost, about 107 trades a second on
+this M1 (measured 2026-11-07). An ordinary run stops at `-PexplorerCap` (2,500 a manager, about
+four minutes awake) and says so. To answer every candidate, plugged in and awake:
 
     caffeinate -i ./gradlew run -Pmain=TradeMarket -PtradeExplorer=true -PexplorerEverything=true
 
-The duplicate skip (Justin, 2026-11-07) is what makes that possible: a simulation sees a trade
-only as both teams' lineup points by week, so trades with the same points share one, exactly.
-On 2026-11-07 that took 2,399,739 candidates to 624,630 simulations, about 8 hours rather than
-29. `-PexplorerSearchOnly=true -PexplorerProveSkip=true` prints the count and tests the claim on
-the real league in a couple of minutes: the search's count against every candidate's real
-simulation inputs, the search's points against those inputs, a sample of the trades it treated
-as one, some of them played from scratch, and a control with different points. What the skip
-drops is title-neutral only: a throw-in who never starts leaves no row, even one with keeper
-value. The numbers use the rosters and projections from when the run started, which the page
-states, so read the result before the next waiver run, and TradeCheck what you send.
+Three things make that possible (Justin, 2026-11-07: "do the duplicate skip", then "find math
+that relies on odds calculations instead of brute force"):
+
+- THE DUPLICATE SKIP. A simulation sees a trade only as both teams' lineup points by week, so
+  trades with the same points share one, exactly. On 2026-11-07 that took 2,399,739 candidates
+  to 624,630 simulations at three a side (about 97 minutes), and 35,307,543 to 5,569,759 at four
+  a side (about 14 hours, by arithmetic). What it drops is title-neutral only: a throw-in who
+  never starts leaves no row, even one with keeper value, unless he's what gets the trade onto
+  a list.
+- THE SAME SEASONS KEPT, the first half of `SeasonTable`: the champion of every season exactly
+  as `play` has it, about six times faster.
+- THE PLAYOFFS BY FORMULA, the second half: once a season's seeds and team errors are set the
+  bracket is worked out exactly. Tested on 440 real trades against 200,000 other seasons
+  (`-PexplorerSearchOnly=true -PexplorerTitleCheck=true`): playing 20,000 seasons took 146 ms a
+  trade and was off by 0.168 points; the formula on 20,000 took 27 ms and was off by 0.037. A
+  quadratic with no simulation per trade was off by 0.786, so it is not used.
+
+`-PexplorerSearchOnly=true -PexplorerProveSkip=true` tests the skip on the real league in about
+ten minutes: every candidate's real simulation inputs against the search's fingerprints, before
+any is merged, with a control fingerprint that must fail. The numbers use the rosters and
+projections from when the run started, which the page states, so read the result before the
+next waiver run, and TradeCheck what you send.
 
 Before sending one, run TradeCheck on its men and read the FP ros column too.
 FantasyPros' consensus is what Justin compares against, and in the explorer it can

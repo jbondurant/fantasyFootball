@@ -1053,6 +1053,9 @@ public class TradeMarket {
                 TitleOdds.Delta[] d = stakes.swap(same);
                 return new double[]{100 * d[0].change(), 100 * d[0].se(), 100 * d[1].change()};
             }, step, buckets, perBucket, simulations);
+            if(everything){
+                System.out.printf("explorer: %s done after %.0f minutes awake, %,d simulations%n", rival, (System.nanoTime() - startedAt) / 6e10, walked.simulated());
+            }
             return new Run(rival, found, walked, (searched - began) / 1e9, (System.nanoTime() - searched) / 1e9);
         }).toList();
         System.out.printf("explorer: search and simulations took %.0f seconds awake, on %d threads; %,d candidates, %,d simulations would answer them all, %,d run, %,d held rows took another's result%n",
