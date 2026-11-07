@@ -926,8 +926,9 @@ public class TradeScreens {
             }
             for(Map.Entry<String, JsonElement> e : db.entrySet()){
                 JsonObject p = e.getValue().isJsonObject() ? e.getValue().getAsJsonObject() : null;
+                // a name is not a man: Cleveland's linebacker Justin Jefferson crashed the check on the receiver (2026-11-06)
                 if(p != null && KalshiFair.normal(name).equals(KalshiFair.normal(ScreenData.text(p, "full_name")))
-                        && ScreenData.text(p, "team") != null){
+                        && ScreenData.text(p, "team") != null && Position.isStandardPosition(String.valueOf(ScreenData.text(p, "position")))){
                     out.add(e.getKey());
                 }
             }
