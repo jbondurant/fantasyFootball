@@ -94,6 +94,17 @@ td .sub { display: block; font-size: 0.75rem; color: var(--muted); }
 .split { background: var(--warn-soft); color: var(--warn); }
 tr.mine td:first-child { box-shadow: inset 3px 0 0 var(--field); }
 
+.sides { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.sides fieldset { margin: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 8px 12px 10px; min-width: 0; }
+.sides legend { font-family: var(--display); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); padding: 0 4px; }
+.picks { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 2px 12px; font-size: 0.86rem; }
+.picks label { display: flex; gap: 6px; align-items: baseline; cursor: pointer; padding: 2px 0; }
+.picks .soft { font-size: 0.75rem; }
+.verdict { margin: 0; }
+.btn { font: inherit; font-size: 0.85rem; color: var(--ink); background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; cursor: pointer; }
+.btn:focus-visible { outline: 2px solid var(--field); outline-offset: 2px; }
+.warnbox { background: var(--warn-soft); color: var(--warn); border-radius: 8px; padding: 8px 12px; margin: 0; }
+
 details { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 14px; }
 summary { cursor: pointer; font-weight: 600; }
 details p, details li { max-width: 75ch; color: var(--ink); }
@@ -107,6 +118,7 @@ details ul { padding-left: 1.2em; }
   td { border: 0; padding: 4px 10px; }
   td.n { text-align: left; }
   td[data-k]::before { content: attr(data-k); display: block; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+  .sides { grid-template-columns: 1fr; }
 }
 @media (prefers-reduced-motion: no-preference) { .mgr, select { transition: border-color 120ms ease; } }
 </style>
@@ -121,6 +133,7 @@ details ul { padding-left: 1.2em; }
   <div class="tabs" role="tablist" aria-label="View">
     <button type="button" class="tab" role="tab" id="tab-trades" aria-selected="true" aria-controls="view-trades">Trades</button>
     <button type="button" class="tab" role="tab" id="tab-players" aria-selected="false" aria-controls="view-players">Players</button>
+    <button type="button" class="tab" role="tab" id="tab-check" aria-selected="false" aria-controls="view-check">Check a trade</button>
   </div>
 
   <div id="view-trades" class="view" role="tabpanel" aria-labelledby="tab-trades">
@@ -236,6 +249,42 @@ details ul { padding-left: 1.2em; }
     </div>
   </div>
 
+  <div id="view-check" class="view" role="tabpanel" aria-labelledby="tab-check" hidden>
+    <div class="filters" role="region" aria-label="Trade to check">
+      <label class="field" for="c-m">Trade with
+        <select id="c-m"></select>
+      </label>
+      <button type="button" class="btn" id="c-clear">Clear</button>
+      <span class="count" id="c-status"></span>
+    </div>
+    <p class="warnbox" id="c-warn" hidden></p>
+    <div class="sides">
+      <fieldset><legend>You give</legend><div class="picks" id="c-give"></div></fieldset>
+      <fieldset><legend>You get</legend><div class="picks" id="c-get"></div></fieldset>
+    </div>
+    <p class="verdict" id="c-cut"></p>
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Source</th>
+            <th>Your season<small>points, rest of season</small></th>
+            <th>His season<small>points, rest of season</small></th>
+            <th>Accuracy<small>its error ÷ Sleeper's, below 1 is better</small></th>
+          </tr>
+        </thead>
+        <tbody id="c-rows"></tbody>
+      </table>
+    </div>
+    <div class="tablewrap">
+      <table>
+        <thead id="c-men-head"></thead>
+        <tbody id="c-men"></tbody>
+      </table>
+    </div>
+    <p class="soft" id="c-check"></p>
+  </div>
+
   <details>
     <summary>How to read this</summary>
     <ul id="howto"></ul>
@@ -272,6 +321,98 @@ function load(key, fallback) {
 function save(key, value) {
   try { localStorage.setItem("tradeExplorer." + key, JSON.stringify(value)); } catch (e) { /* storage blocked: filters just don't persist */ }
 }
+
+/*LAB-BEGIN*/
+// THE CHECK-A-TRADE PRICING: TradeMarket's season objective (WeeklyLineupValue) recomputed in the page, so any
+// trade can be priced on every source. Each week, a roster's best lineup (QB, 2 RB, 3 WR, TE, DEF and two flex from
+// RB/WR/TE) out of its men and that week's best free agents, which every roster may start; summed over the weeks.
+// A side over the active limit cuts its lowest-projected men not on IR and not in the deal. checkLab holds this to
+// the Java numbers on every row of the trades tab.
+const LAB_SLOTS = { QB: 1, RB: 2, WR: 3, TE: 1, DEF: 1 };
+const LAB_FLEX = ["RB", "WR", "TE"];
+const LAB_TOL = 0.06;   // the trades tab prints to 0.1 (0.05 either way), and the page ships values to four places
+
+function labWeek(lab, key, w, roster) {
+  const pool = {};
+  for (const p in LAB_SLOTS) pool[p] = (lab.wire[key][w][p] || []).slice();
+  for (const i of roster) {
+    const v = lab.pts[key][i][w], p = lab.men[i].p;
+    if (v != null && p in pool) pool[p].push(v);
+  }
+  let sum = 0;
+  const flex = [];
+  for (const p in LAB_SLOTS) {
+    const list = pool[p].sort((a, b) => b - a), n = LAB_SLOTS[p];
+    for (let k = 0; k < Math.min(n, list.length); k++) sum += list[k];
+    if (LAB_FLEX.includes(p)) flex.push(...list.slice(n));
+  }
+  flex.sort((a, b) => b - a);
+  for (let k = 0; k < Math.min(2, flex.length); k++) sum += flex[k];
+  return sum;
+}
+
+function labSeason(lab, key, roster) {
+  let total = 0;
+  for (let w = 0; w < lab.weeks.length; w++) total += labWeek(lab, key, w, roster);
+  return total;
+}
+
+// who a side cuts to stay at the active limit, lowest cut key first (ties: universe order); null if it cannot
+function labCut(lab, roster, out, incoming) {
+  const men = lab.men, gone = new Set(out);
+  const stays = roster.filter((i) => !men[i].ir).length - out.filter((i) => !men[i].ir).length;
+  const over = stays + incoming - lab.activeLimit;
+  const order = roster.filter((i) => !men[i].ir && !men[i].locked && !gone.has(i)).sort((a, b) => men[a].cut - men[b].cut || a - b);
+  return over > order.length ? null : order.slice(0, Math.max(0, over));
+}
+
+function labRoster(lab, manager) {
+  return lab.men.map((m, i) => i).filter((i) => lab.men[i].o === manager);
+}
+
+// a trade: give and get are indices into lab.men; every source's season change for each side
+function labPrice(lab, me, rival, give, get) {
+  const mine = labRoster(lab, me), his = labRoster(lab, rival);
+  const myCut = labCut(lab, mine, give, get.length), hisCut = labCut(lab, his, get, give.length);
+  if (!myCut || !hisCut) return { feasible: false, myCut, hisCut, by: {} };
+  const without = (r, out) => r.filter((i) => !out.includes(i));
+  const myAfter = without(mine, give.concat(myCut)).concat(get), hisAfter = without(his, get.concat(hisCut)).concat(give);
+  const by = {};
+  for (const s of lab.sources) {
+    by[s.key] = { you: labSeason(lab, s.key, myAfter) - labSeason(lab, s.key, mine),
+                  him: labSeason(lab, s.key, hisAfter) - labSeason(lab, s.key, his) };
+  }
+  return { feasible: true, myCut, hisCut, by };
+}
+
+// every trades-tab row recomputed: its cuts and its six season numbers against the Java ones
+function checkLab(data) {
+  const lab = data.lab, at = {};
+  lab.men.forEach((m, i) => { at[m.o + "|" + m.n] = i; });
+  const fields = [[data.pricing, "you", "him"], [data.alt, "youAlt", "himAlt"], ["fantasypros", "youFp", "himFp"]].filter(([k]) => lab.pts[k]);
+  const out = { rows: 0, off: 0, cutsOff: 0, unmatched: 0, worst: 0, examples: [] };
+  for (const t of data.trades) {
+    const give = t.give.map((n) => at[data.me + "|" + n]), get = t.get.map((n) => at[t.m + "|" + n]);
+    if (give.includes(undefined) || get.includes(undefined)) { out.unmatched++; continue; }
+    out.rows++;
+    const r = labPrice(lab, data.me, t.m, give, get);
+    const names = (list) => (list || []).map((i) => lab.men[i].n).sort().join("|");
+    if (!r.feasible || names(r.myCut) !== [...t.myCut].sort().join("|") || names(r.hisCut) !== [...t.cut].sort().join("|")) out.cutsOff++;
+    let bad = !r.feasible;
+    for (const [key, y, h] of fields) {
+      if (!r.feasible) break;
+      const d = Math.max(Math.abs(r.by[key].you - t[y]), Math.abs(r.by[key].him - t[h]));
+      out.worst = Math.max(out.worst, d);
+      if (d > LAB_TOL) bad = true;
+    }
+    if (bad) {
+      out.off++;
+      if (out.examples.length < 5) out.examples.push(`${t.m}: ${t.give.join(" + ")} for ${t.get.join(" + ")}`);
+    }
+  }
+  return out;
+}
+/*LAB-END*/
 
 function init() {
   if (!DATA) {
@@ -356,6 +497,7 @@ function init() {
     `<li><b>Hurt</b> names any player in the trade listed IR, Out, Doubtful, PUP, suspended or Questionable today. Sleeper projects an injured player back, so a trade that leans on one may be worth less than it reads.</li>`,
     `<li><b>Players tab.</b> Every rostered player, and every free agent near the top at his position on some pricing, ranked at his position three ways. The middle rank is the middle of the three, so two of the three rank him there or better and two rank him there or worse. No weights needed. Spread is how far apart they are: a big spread means the sources disagree. Sleeper and model points count from the week after this one, so a game already played this week doesn't skew them. A player with no Sleeper or model points left (out for the season) has no middle rank.</li>`,
     `<li><b>Injured players in his view.</b> A player on IR or out for a while counts at his full value when back: his pace so far (or only his projection, if he hasn't played) and Sleeper's average projection over the weeks it has him playing, as if that covered the weeks he misses too. That's how you said some managers with the finals in mind see it, so it leans toward not overstating a trade. In other leagues' completed trades, players who had already missed a week went for about 15% less than healthy players of the same value in the same kind of trade, so a typical manager may take a little less than this page shows. Those trades can't say how a long absence was priced, because return dates are only known in hindsight. A player with no real projection left this season counts as nothing. This is only how he reads to the other manager; your title odds count him only in the weeks Sleeper projects him to play.</li>`,
+    DATA.lab ? `<li><b>Check a trade.</b> Pick any players you'd give and get with one manager. Every source prices both sides' rest of season the way the Trades tab does: each week's best lineup, with that week's best free agents open to everyone, over weeks ${DATA.lab.weeks[0]}–${DATA.lab.weeks[DATA.lab.weeks.length - 1]}, and a side over ${DATA.lab.activeLimit} active players cuts its lowest-projected player not on IR. Each source covers only the weeks Sleeper has a player playing. <i>Model</i>, <i>Season pace</i> and <i>Last 3 games</i> are a flat points-a-game rate in those weeks. <i>FantasyPros ranks</i> and <i>CBS rest of season</i> scale Sleeper's weeks to the source's points a game. <i>ESPN</i> uses its own projection for each week. A player a source doesn't cover keeps Sleeper's number, and every source uses Sleeper's numbers for defences except FantasyPros. <b>Accuracy</b> comes from replaying ${esc(DATA.lab.measured || "past seasons")}: each source's forecast of a player's points a game for the rest of the season after ${DATA.lab.seen} weeks, against what he then scored. It shows that source's typical error divided by Sleeper's on the same players, by position, so below 1 beats Sleeper. Two readings: "better" or "worse than Sleeper" is past the noise across those seasons, and "= Sleeper" isn't. For Sleeper and ESPN the forecast tested is their projection for the next game. CBS and FantasyPros don't publish their old rest-of-season numbers, so they can't be tested. Title odds are only on the Trades tab, simulated on Sleeper.</li>` : "",
     `<li><b>Coverage.</b> Every trade up to ${DATA.maxSide} players a side from both whole rosters, ${(DATA.searched || 0).toLocaleString()} in all, in any shape. A side that ends over the roster limit cuts its lowest-projected player who isn't on IR. Trades that change neither team's lineup points in any week simulate the same, so they share one simulation, and each list below shows only the smallest of them. So a throw-in who never starts is left off, even one with keeper value, unless he's what gets the trade onto a list. Then, per half-point bucket and manager, the page keeps up to ${DATA.perBucket} of the least costly trades on each of these: any trade, fair to him, and 100%, 95%, 90% and ${Math.round((DATA.bothFloor ?? 0.85) * 100)}% on both pace and projection. So the "on both" box has trades to show at any number from ${Math.round((DATA.bothFloor ?? 0.85) * 100)}% up, but this is the least costly of them, not all of them; below that, it only shows what's already here. ${(DATA.simulationsRun || 0) >= (DATA.simulationsNeeded || 0) ? `Every candidate was simulated: ${(DATA.simulationsRun || 0).toLocaleString()} simulations.` : `Simulating every candidate would take ${(DATA.simulationsNeeded || 0).toLocaleString()} simulations, and this run did ${(DATA.simulationsRun || 0).toLocaleString()}, shared across those lists and across sizes of gain. A manager marked "search capped" has trades that were never simulated, so a bucket may be short or may miss a less costly trade.`}</li>`
   ].join("");
 
@@ -466,16 +608,118 @@ function init() {
   }
   renderPlayers();
 
+  // ---------------------------------------------------------------- check a trade
+  const lab = DATA.lab;
+  if (lab) {
+    const men = lab.men;
+    const posOrder = { QB: 0, RB: 1, WR: 2, TE: 3, DEF: 4 };
+    const sorted = (list) => list.sort((a, b) => (posOrder[men[a].p] ?? 9) - (posOrder[men[b].p] ?? 9) || men[b].cut - men[a].cut);
+    const cstate = { m: load("c.m", ""), give: load("c.give", []), get: load("c.get", []) };
+    const rivalsByTitle = [...DATA.rivals].sort((a, b) => b.title - a.title);
+    if (!rivalsByTitle.some((r) => r.m === cstate.m)) cstate.m = rivalsByTitle[0]?.m || "";
+    $("c-m").innerHTML = rivalsByTitle.map((r) => `<option value="${esc(r.m)}">${esc(r.m)} · ${esc(r.state)}</option>`).join("");
+    $("c-m").value = cstate.m;
+    const accuracy = {};
+    (lab.accuracy || []).forEach((a) => { (accuracy[a.source] ||= {})[a.pos] = a; });
+
+    // the page's own arithmetic, held to the trades tab once
+    const check = checkLab(DATA);
+    $("c-check").textContent = check.off === 0
+      ? `This tab's arithmetic, run on all ${check.rows.toLocaleString()} trades on the Trades tab, gives every one of their season numbers to within ${LAB_TOL} (largest difference ${check.worst.toFixed(3)}) and the same players cut${check.cutsOff ? `, except ${check.cutsOff} cut lists` : ""}.`
+      : "";
+    if (check.off > 0) {
+      $("c-warn").hidden = false;
+      $("c-warn").textContent = `This tab disagrees with the Trades tab on ${check.off} of ${check.rows} trades (for example ${check.examples.join("; ")}), so don't rely on it until that's fixed.`;
+    }
+
+    const pick = (list, chosen, side) => sorted(list).map((i) => {
+      const m = men[i];
+      return `<label><input type="checkbox" data-side="${side}" value="${esc(m.n)}"${chosen.includes(m.n) ? " checked" : ""}> ${esc(m.n)} <span class="soft">${esc(m.p)}${m.ir ? " · IR slot" : ""}</span></label>`;
+    }).join("");
+    function drawPicks() {
+      $("c-give").innerHTML = pick(labRoster(lab, DATA.me), cstate.give, "give");
+      $("c-get").innerHTML = pick(labRoster(lab, cstate.m), cstate.get, "get");
+    }
+    const indexOf = (owner, name) => men.findIndex((m) => m.o === owner && m.n === name);
+    const perGame = (key, i) => {
+      let total = 0, games = 0;
+      lab.pts[key][i].forEach((v) => { if (v != null) { total += v; games++; } });
+      return games ? total / games : null;
+    };
+
+    function renderCheck() {
+      cstate.give = cstate.give.filter((n) => indexOf(DATA.me, n) >= 0);
+      cstate.get = cstate.get.filter((n) => indexOf(cstate.m, n) >= 0);
+      save("c.m", cstate.m); save("c.give", cstate.give); save("c.get", cstate.get);
+      const give = cstate.give.map((n) => indexOf(DATA.me, n)), get = cstate.get.map((n) => indexOf(cstate.m, n));
+      $("c-status").textContent = `${lab.sources.length} sources · weeks ${lab.weeks[0]}–${lab.weeks[lab.weeks.length - 1]}`;
+      if (!give.length && !get.length) {
+        $("c-cut").textContent = "Pick the players you'd give and the players you'd get.";
+        $("c-rows").innerHTML = ""; $("c-men").innerHTML = ""; $("c-men-head").innerHTML = "";
+        return;
+      }
+      const r = labPrice(lab, DATA.me, cstate.m, give, get);
+      const names = (list) => list.map((i) => esc(men[i].n)).join(", ");
+      if (!r.feasible) {
+        $("c-cut").textContent = `${r.myCut ? cstate.m : "You"} would be over the ${lab.activeLimit}-player limit with no one left who can be cut, so the trade can't be made as it stands.`;
+        $("c-rows").innerHTML = "";
+      } else {
+        $("c-cut").innerHTML = [r.myCut.length ? `You'd cut ${names(r.myCut)} to make room.` : "", r.hisCut.length ? `${esc(cstate.m)} would cut ${names(r.hisCut)}.` : ""].join(" ").trim()
+          || "Nobody needs to be cut.";
+        const positions = [...new Set(give.concat(get).map((i) => men[i].p).filter((p) => p !== "DEF"))];
+        const acc = (key) => {
+          if (key === lab.sources[0].key) return `<span class="soft">the baseline</span>`;
+          const byPos = accuracy[key];
+          if (!byPos) return `<span class="soft">not measured</span>`;
+          const cells = positions.map((p) => byPos[p]
+            ? `${esc(p)} <b>${byPos[p].ratio.toFixed(2)}</b><span class="sub">${esc(byPos[p].reading)}, ${byPos[p].men} players</span>`
+            : `${esc(p)} <span class="soft">–</span>`);
+          return cells.length ? cells.join("") : `<span class="soft">not measured for defences</span>`;
+        };
+        const cls = (v) => v > 0.05 ? "pos" : v < -0.05 ? "neg" : "soft";
+        $("c-rows").innerHTML = lab.sources.map((s) => {
+          const b = r.by[s.key];
+          return `<tr>
+            <td data-k="Source"><b>${esc(s.label)}</b></td>
+            <td class="n" data-k="Your season"><span class="rise ${cls(b.you)}">${fmt(b.you)}</span></td>
+            <td class="n" data-k="His season"><span class="${cls(b.him)}">${fmt(b.him)}</span></td>
+            <td data-k="Accuracy vs Sleeper">${acc(s.key)}</td>
+          </tr>`;
+        }).join("");
+      }
+      $("c-men-head").innerHTML = `<tr><th>Player<small>points a game, weeks ${lab.weeks[0]}–${lab.weeks[lab.weeks.length - 1]}</small></th>${lab.sources.map((s) => `<th>${esc(s.label)}</th>`).join("")}</tr>`;
+      $("c-men").innerHTML = give.concat(get).map((i) => `<tr class="${men[i].o === DATA.me ? "mine" : ""}">
+          <td data-k="Player">${esc(men[i].n)}<span class="sub">${esc(men[i].p)} · ${men[i].o === DATA.me ? "you give" : "you get"}${men[i].ir ? " · IR slot" : ""}</span></td>
+          ${lab.sources.map((s) => { const v = perGame(s.key, i); return `<td class="n" data-k="${esc(s.label)}">${v == null ? '<span class="soft">–</span>' : v.toFixed(1)}</td>`; }).join("")}
+        </tr>`).join("");
+    }
+    drawPicks();
+    renderCheck();
+    $("c-m").addEventListener("input", (e) => { cstate.m = e.target.value; cstate.get = []; drawPicks(); renderCheck(); });
+    $("c-clear").addEventListener("click", () => { cstate.give = []; cstate.get = []; drawPicks(); renderCheck(); });
+    $("view-check").addEventListener("change", (e) => {
+      const box = e.target.closest("input[type=checkbox]"); if (!box) return;
+      const list = box.dataset.side === "give" ? cstate.give : cstate.get;
+      const at = list.indexOf(box.value);
+      if (box.checked && at < 0) list.push(box.value);
+      if (!box.checked && at >= 0) list.splice(at, 1);
+      renderCheck();
+    });
+  } else {
+    $("tab-check").hidden = true;
+  }
+
+  const TABS = ["trades", "players", "check"];
   function showTab(which) {
-    const players = which === "players";
-    $("tab-trades").setAttribute("aria-selected", String(!players));
-    $("tab-players").setAttribute("aria-selected", String(players));
-    $("view-trades").hidden = players; $("view-players").hidden = !players;
+    for (const t of TABS) {
+      $("tab-" + t).setAttribute("aria-selected", String(t === which));
+      $("view-" + t).hidden = t !== which;
+    }
     save("tab", which);
   }
-  $("tab-trades").addEventListener("click", () => showTab("trades"));
-  $("tab-players").addEventListener("click", () => showTab("players"));
-  showTab(!hashM && load("tab", "trades") === "players" ? "players" : "trades");
+  TABS.forEach((t) => $("tab-" + t).addEventListener("click", () => showTab(t)));
+  const savedTab = load("tab", "trades");
+  showTab(!hashM && TABS.includes(savedTab) && (savedTab !== "check" || lab) ? savedTab : "trades");
 }
 init();
 </script>

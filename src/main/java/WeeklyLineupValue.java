@@ -349,14 +349,39 @@ public class WeeklyLineupValue implements RosterValue {
     }
 
     /**
-     * The objective on one pricing ("sleeper-remaining", "ros" or "fantasypros")
-     * for the weeks from the one in progress to the end of the fantasy playoffs,
-     * with every man rostered in the league today kept off the wire.
+     * The pricings forSource knows. Any other name is refused: until 2026-11-07
+     * an unknown name was priced on Sleeper's weekly numbers under its own label.
+     * "sleeper" and "sleeper-remaining" are the same weekly numbers.
+     */
+    public static final List<String> SOURCES = List.of("sleeper-remaining", "sleeper", "ros", "fantasypros", "espn", "cbs", "pace", "last3");
+
+    /**
+     * The objective on one pricing for the weeks from the one in progress to the
+     * end of the fantasy playoffs, with every man rostered in the league today
+     * kept off the wire. Every pricing starts from Sleeper's weekly projections:
+     * a man is in a week only where Sleeper projects him, and games under way
+     * this week are out. On them:
+     *  - ros, pace, last3: a flat rate in each of those weeks (RosModel's blend,
+     *    his points a game so far, over his last three games);
+     *  - fantasypros: his FantasyPros rank read onto Sleeper's points a game
+     *    (perGameScale), as a factor on his weeks;
+     *  - cbs: CBS's rest-of-season points a game over Sleeper's, as a factor;
+     *  - espn: ESPN's own projection for each week (EspnWeekly), where it has a
+     *    number for him above zero.
+     * A man the source does not cover keeps Sleeper's number (defences
+     * everywhere but fantasypros), and the run prints how many that was.
      */
     public static WeeklyLineupValue forSource(AAAConfiguration configuration, String source){
+        if(!SOURCES.contains(source)){
+            throw new IllegalArgumentException("no weekly pricing called '" + source + "'; known: " + String.join(", ", SOURCES));
+        }
         TitleOdds.League league = TitleOdds.league(configuration);
         Set<String> owned = LeagueOwners.today(configuration).keySet();
-        Map<String, Double> rates = "ros".equals(source) ? RosModel.rates() : Map.of();
+        Map<String, Double> rates = switch(source){
+            case "ros" -> RosModel.rates();
+            case "pace", "last3" -> RosModel.recentRates(source);
+            default -> Map.of();
+        };
         Set<String> started = NflverseGames.kickedOff(NflverseGames.games(), league.season(), league.thisWeek(),
                 java.time.LocalDateTime.now(java.time.ZoneId.of("America/New_York")));
         java.util.function.Function<String, Position> positionOf = id -> {
@@ -364,28 +389,88 @@ public class WeeklyLineupValue implements RosterValue {
             return p == null ? null : p.position;
         };
         Map<String, Double> scale = Map.of();
-        if("fantasypros".equals(source)){
+        if("fantasypros".equals(source) || "cbs".equals(source)){
             List<Map<String, Double>> weeks = new ArrayList<>();
             for(int w = league.thisWeek(); w <= league.lastWeek(); w++){
                 weeks.add(LeagueWeek.projected(league.season(), w));   // every week priced, games under way included
             }
-            scale = perGameScale(weeks, fantasyProsRanks(), positionOf);
+            scale = "fantasypros".equals(source) ? perGameScale(weeks, fantasyProsRanks(), positionOf)
+                    : perGameFactor(weeks, cbsPerGame());
         }
+        Map<Integer, Map<String, Double>> own = "espn".equals(source)
+                ? EspnWeekly.season(league.season()).byWeek() : Map.of();
         TreeMap<Integer, Map<String, Double>> projected = new TreeMap<>();
         TreeMap<Integer, Map<Position, List<Map.Entry<String, Double>>>> free = new TreeMap<>();
+        Set<String> covered = new java.util.HashSet<>();
+        Set<String> priced = new java.util.HashSet<>();
         for(int w = league.thisWeek(); w <= league.lastWeek(); w++){
             Map<String, Double> week = new HashMap<>();
+            Map<String, Double> ownWeek = own.getOrDefault(w, Map.of());
             for(Map.Entry<String, Double> e : LeagueWeek.projected(league.season(), w).entrySet()){
                 if(w == league.thisWeek() && started.contains(ProjectionSources.teamOf(e.getKey()))){
                     continue;           // his game this week is under way or over: a move now cannot reach it
                 }
-                week.put(e.getKey(), rates.getOrDefault(e.getKey(), e.getValue()) * scale.getOrDefault(e.getKey(), 1.0));
+                String id = e.getKey();
+                Double mine = ownWeek.get(id);
+                double value = mine != null && mine > 0 ? mine     // ESPN keeps a bye or an empty line as 0.0
+                        : rates.getOrDefault(id, e.getValue()) * scale.getOrDefault(id, 1.0);
+                if(owned.contains(id)){
+                    priced.add(id);
+                    if(mine != null && mine > 0 || rates.containsKey(id) || scale.containsKey(id)){
+                        covered.add(id);
+                    }
+                }
+                week.put(id, value);
             }
             projected.put(w, week);
             free.put(w, freeAgents(week, owned, positionOf));
         }
+        if(!source.startsWith("sleeper")){
+            System.out.printf("%s: %d of the %d rostered men Sleeper projects priced on its own numbers, the rest on Sleeper's%n",
+                    source, covered.size(), priced.size());
+        }
         return new WeeklyLineupValue(projected, free, positionOf,
                 "weekly lineups on " + source + ", weeks " + league.thisWeek() + "-" + league.lastWeek());
+    }
+
+    /** CBS's rest-of-season points a game (points / games left), by Sleeper id; men with no games left are out. */
+    static Map<String, Double> cbsPerGame(){
+        Map<String, Double> out = new HashMap<>();
+        CbsProjections.leagueLinesBySleeperID("restofseason").forEach((id, line) -> {
+            if(line[1] > 0){
+                out.put(id, line[0] / line[1]);
+            }
+        });
+        return out;
+    }
+
+    /**
+     * A source's points a game read as a factor on Sleeper's: the source's rate
+     * over Sleeper's points per projected game across these weeks. A man with no
+     * Sleeper points or no source rate gets no factor.
+     */
+    static Map<String, Double> perGameFactor(List<Map<String, Double>> weeks, Map<String, Double> rate){
+        Map<String, Double> totals = new HashMap<>();
+        Map<String, Integer> games = new HashMap<>();
+        for(Map<String, Double> week : weeks){
+            week.forEach((id, pts) -> {
+                totals.merge(id, pts, Double::sum);
+                games.merge(id, 1, Integer::sum);
+            });
+        }
+        Map<String, Double> out = new HashMap<>();
+        rate.forEach((id, r) -> {
+            double own = totals.getOrDefault(id, 0.0) / Math.max(1, games.getOrDefault(id, 0));
+            if(own > 0){
+                out.put(id, r / own);
+            }
+        });
+        return out;
+    }
+
+    /** One man's value in one week on this pricing; null where it has none (a bye, not projected, or his game under way). */
+    public Double value(int week, String id){
+        return projected.getOrDefault(week, Map.of()).get(id);
     }
 
     /** FantasyPros' rest-of-season consensus rank of each man at his position (its half-PPR pages), by Sleeper id. */

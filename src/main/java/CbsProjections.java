@@ -66,10 +66,22 @@ public class CbsProjections {
 
     /** "season" or "restofseason", league-scored, by Sleeper id. */
     public static HashMap<String, Double> leaguePointsBySleeperID(String timeframe){
+        HashMap<String, Double> out = new HashMap<>();
+        leagueLinesBySleeperID(timeframe).forEach((id, line) -> out.put(id, line[0]));
+        return out;
+    }
+
+    /**
+     * Each man's league points and games on a CBS page, by Sleeper id: {points,
+     * gp}. On the rest-of-season page gp counts his games left through week 18,
+     * this week's included, so points / gp is the rate the trade explorer's cbs
+     * pricing reads (WeeklyLineupValue.forSource).
+     */
+    public static HashMap<String, double[]> leagueLinesBySleeperID(String timeframe){
         String season = AAAConfiguration.getInstance().getSeason();
         LeagueScoringSettings scoring =
                 SleeperLeague.getSeriousLeague().league.leagueScoringSettings;
-        HashMap<String, Double> out = new HashMap<>();
+        HashMap<String, double[]> out = new HashMap<>();
         for(String position : new String[]{"QB", "RB", "WR", "TE"}){
             String html = InOutUtilities.getTodaysWebPage(url(position, season, timeframe),
                     (timeframe.equals("season") ? "cbsProjections_" : "cbsRosProjections_") + position + "_" + season);
@@ -96,8 +108,8 @@ public class CbsProjections {
                     continue;
                 }
                 double points = SleeperProjections.scoreStatLine(stats, scoring);
-                out.put(player.sleeperIDString, points);
                 double games = stats.get("gp").getAsDouble();
+                out.put(player.sleeperIDString, new double[]{points, games});
                 if(games > 0){
                     bestPerGame = Math.max(bestPerGame, points / games);
                 }

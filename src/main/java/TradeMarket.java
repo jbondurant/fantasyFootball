@@ -987,7 +987,7 @@ public class TradeMarket {
                            WeeklyLineupValue fpValue, Set<String> reject, Set<String> barred, Map<String, Double> points, int activeLimit,
                            String players, int playersFrom, TradeScreens.Context screens, TitleOdds.Stakes stakes,
                            double hisFloor, double hisFloorAlt, Map<String, Double> surplus, Map<String, Position> everyPosition,
-                           String source, String alt, java.time.LocalDateTime read){
+                           String source, String alt, java.time.LocalDateTime read, String lab){
         double step = 0.5;
         double top = Double.parseDouble(System.getProperty("explorerTop", "6.0"));
         int buckets = (int) Math.round((top - step) / step) + 1;          // +0.5 ... +top, the last open-ended
@@ -1144,14 +1144,103 @@ public class TradeMarket {
                 "{\"generated\":%s,\"season\":%s,\"weeksPlayed\":%d,\"me\":%s,\"myTitle\":%.2f,\"myPlayoffs\":%.1f,"
                         + "\"pricing\":%s,\"alt\":%s,\"reject\":%s,\"rejectBelow\":%.1f,\"fpPanel\":%s,\"step\":%.1f,\"top\":%.1f,\"perBucket\":%d,\"cap\":%d,\"minGain\":%.1f,"
                         + "\"tankLine\":%.1f,\"tankLineAlt\":%.1f,\"sims\":%d,\"draftWeight\":%.2f,\"paceShare\":%.2f,\"maxSide\":%d,\"searched\":%d,\"everything\":%b,\"simulationsNeeded\":%d,\"simulationsRun\":%d,\"stale\":%s,\"projectionsFrom\":%s,\"bothFloor\":%.2f,"
-                        + "\"rivals\":[%s],\n\"playersFrom\":%d,\"players\":[%s],\n\"trades\":[%s]}",
+                        + "\"rivals\":[%s],\n\"playersFrom\":%d,\"players\":[%s],\n\"lab\":%s,\n\"trades\":[%s]}",
                 jsonString(read.format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm"))), jsonString(LeagueWeek.season()), screens.weeksPlayed(), jsonString(me),
                 100 * stakes.title(me), 100 * stakes.playoffs().getOrDefault(me, 0.0), jsonString(source), jsonString(alt),
                 "[" + String.join(",", reject.stream().map(TradeMarket::jsonString).toList()) + "]", rejectBelow, fpPanelJson(), step, top, perBucket, cap, minGain, hisFloor, hisFloorAlt,
                 TitleOdds.SIMS, screens.weightNow(), screens.paceShare(), maxSide, searched, everything,
                 runs.stream().mapToLong(r -> r.found().outcomes()).sum(), runs.stream().mapToLong(r -> r.walked().simulated()).sum(),
                 "[" + String.join(",", InOutUtilities.STALE.stream().sorted().map(TradeMarket::jsonString).toList()) + "]",
-                jsonString(projectionsFrom(LeagueWeek.season(), stakes.league().thisWeek())), TradeSearch.BOTH[TradeSearch.BOTH.length - 1], rivals, playersFrom, players, rows);
+                jsonString(projectionsFrom(LeagueWeek.season(), stakes.league().thisWeek())), TradeSearch.BOTH[TradeSearch.BOTH.length - 1], rivals, playersFrom, players, lab, rows);
+    }
+
+    /**
+     * THE CHECK-A-TRADE TAB'S DATA (2026-11-07). Justin: "fix trade finder site
+     * ... so that i can analyse a potential trade not only as sleeper and
+     * fantasypros, but with gambling sites or any other good proxy for future
+     * performance ... to find tools that would see the jeanty stevenson trade as
+     * neutral or bad for me while also having decent predictive accuracy compared
+     * to sleeper". The page prices any trade itself, so it ships what the
+     * objective reads: every rostered man in the search's universe order (which
+     * breaks ties in the cut), his IR slot, whether -Pexclude locks him, and his
+     * cut key; each pricing's value for him in each week and each week's wire;
+     * and each pricing's measured accuracy against Sleeper (RosModel's
+     * data/ros-accuracy.tsv) at this many weeks seen. The page checks itself
+     * against the trades tab: every row's six season numbers, recomputed from
+     * this, must match the Java ones.
+     */
+    static String labJson(Map<String, List<String>> rosters, Map<String, String> nameOf, Set<String> barred, Map<String, Double> points, int activeLimit,
+                          Map<String, WeeklyLineupValue> pricings, Map<String, String> labels, int weeksSeen) throws java.io.IOException {
+        List<String> universe = new ArrayList<>();
+        rosters.values().forEach(universe::addAll);
+        Map<String, String> ownerOf = new HashMap<>();
+        rosters.forEach((m, ids) -> ids.forEach(id -> ownerOf.put(id, m)));
+        WeeklyLineupValue first = pricings.values().iterator().next();
+        List<Integer> weeks = first.weeks();
+        java.util.function.DoubleFunction<String> num = v -> String.format(java.util.Locale.ROOT, "%.4f", v);
+        StringBuilder men = new StringBuilder();
+        for(int i = 0; i < universe.size(); i++){
+            String id = universe.get(i);
+            Player p = Player.getPlayerFromSIDV2(id);
+            men.append(i == 0 ? "" : ",").append(String.format("{\"id\":%s,\"n\":%s,\"p\":%s,\"o\":%s,\"ir\":%b,\"locked\":%b,\"cut\":%s}",
+                    jsonString(id), jsonString(name(id, nameOf)), jsonString(p == null || p.position == null ? "" : p.position.name()),
+                    jsonString(ownerOf.get(id)), ON_IR.contains(id), barred.contains(id), num.apply(points.getOrDefault(id, 0.0))));
+        }
+        StringBuilder pts = new StringBuilder(), wire = new StringBuilder(), sources = new StringBuilder();
+        for(Map.Entry<String, WeeklyLineupValue> e : pricings.entrySet()){
+            WeeklyLineupValue v = e.getValue();
+            if(!v.weeks().equals(weeks)){
+                throw new IllegalStateException(e.getKey() + " prices weeks " + v.weeks() + ", the others " + weeks);
+            }
+            List<String> rows = new ArrayList<>();
+            for(String id : universe){
+                List<String> cells = new ArrayList<>();
+                for(int w : weeks){
+                    Double x = v.value(w, id);
+                    cells.add(x == null ? "null" : num.apply(x));
+                }
+                rows.add("[" + String.join(",", cells) + "]");
+            }
+            List<String> perWeek = new ArrayList<>();
+            for(int w : weeks){
+                List<String> byPosition = new ArrayList<>();
+                for(Position position : TitleOdds.WIRE_DEPTH.keySet().stream().sorted().toList()){
+                    byPosition.add(jsonString(position.name()) + ":[" + String.join(",", v.wire(w, position).stream().map(num::apply).toList()) + "]");
+                }
+                perWeek.add("{" + String.join(",", byPosition) + "}");
+            }
+            String sep = pts.length() == 0 ? "" : ",";
+            pts.append(sep).append(jsonString(e.getKey())).append(":[").append(String.join(",", rows)).append("]");
+            wire.append(sep).append(jsonString(e.getKey())).append(":[").append(String.join(",", perWeek)).append("]");
+            sources.append(sep).append(String.format("{\"key\":%s,\"label\":%s}", jsonString(e.getKey()), jsonString(labels.get(e.getKey()))));
+        }
+        // each pricing's accuracy, by the estimator RosModel scored for it; the rest were never measured
+        Map<String, String> estimatorOf = Map.of("sleeper-remaining", "sleeper", "ros", "blend", "espn", "espn", "pace", "pace", "last3", "last3");
+        int seen = RosModel.seenFor(weeksSeen);
+        List<String> accuracy = new ArrayList<>();
+        String measured = "";
+        if(Files.exists(RosModel.ACCURACY)){
+            for(String line : Files.readAllLines(RosModel.ACCURACY, StandardCharsets.UTF_8)){
+                if(line.startsWith("#")){
+                    // "... on the same men, 2018 2019 ... 2025" -> "2018-2025, 8 seasons"
+                    String[] seasons = line.substring(line.lastIndexOf(", ") + 2).trim().split(" ");
+                    measured = seasons[0] + "–" + seasons[seasons.length - 1] + ", " + seasons.length + " seasons";
+                    continue;
+                }
+                String[] f = line.split("\t");
+                if(f.length < 11 || f[0].equals("estimator") || Integer.parseInt(f[1]) != seen){
+                    continue;
+                }
+                for(Map.Entry<String, String> e : estimatorOf.entrySet()){
+                    if(e.getValue().equals(f[0]) && pricings.containsKey(e.getKey())){
+                        accuracy.add(String.format("{\"source\":%s,\"pos\":%s,\"men\":%s,\"rmse\":%s,\"rmseSleeper\":%s,\"ratio\":%s,\"diff\":%s,\"se\":%s,\"reading\":%s}",
+                                jsonString(e.getKey()), jsonString(f[2]), f[3], f[4], f[5], f[6], f[7], f[8], jsonString(f[10])));
+                    }
+                }
+            }
+        }
+        return String.format("{\"weeks\":%s,\"activeLimit\":%d,\"seen\":%d,\"measured\":%s,\"sources\":[%s],\"men\":[%s],\n\"pts\":{%s},\n\"wire\":{%s},\"accuracy\":[%s]}",
+                weeks, activeLimit, seen, jsonString(measured), sources, men, pts, wire, String.join(",", accuracy));
     }
 
     /**
@@ -1993,10 +2082,28 @@ public class TradeMarket {
             System.out.print(weeklyWireNote(pricings.get(0), "sleeper-remaining") + weeklyWireNote(fpValue, FANTASYPROS));
             String players = playersJson(pricings, WeeklyLineupValue.fantasyProsRanks(), ownerOf,
                     Integer.getInteger("explorerPlayerDepth", 40));
+            // the Check-a-trade tab: the three pricings above and every other the objective knows, each on its own
+            // numbers; one that cannot be read today is left off the tab and said so, not priced as Sleeper's
+            Map<String, WeeklyLineupValue> lab = new java.util.LinkedHashMap<>();
+            lab.put("sleeper-remaining", pricings.get(0));
+            lab.put("ros", pricings.get(1));
+            lab.put(FANTASYPROS, fpValue);
+            for(String name : List.of("espn", "cbs", "pace", "last3")){
+                try {
+                    lab.put(name, WeeklyLineupValue.forSource(configuration, name));
+                }
+                catch(RuntimeException unread){
+                    System.out.println("WARNING: the " + name + " pricing could not be built today, so the Check-a-trade tab leaves it off: " + unread);
+                }
+            }
+            Map<String, String> labels = Map.of("sleeper-remaining", "Sleeper", "ros", "Model", FANTASYPROS, "FantasyPros ranks",
+                    "espn", "ESPN", "cbs", "CBS rest of season", "pace", "Season pace", "last3", "Last 3 games");
+            String labData = labJson(rosters, nameOf, barred, points, configuration.getLeagueJson().getAsJsonArray("roster_positions").size(),
+                    lab, labels, screens.weeksPlayed());
             String json = explorer(me, rosters, nameOf, season, (WeeklyLineupValue) value, (WeeklyLineupValue) altValue, fpValue, reject, barred, points,
                     configuration.getLeagueJson().getAsJsonArray("roster_positions").size(), players,
                     fpValue.weeks().get(0) + 1, screens, stakes,
-                    hisFloor, hisFloorAlt, surplus, everyPosition, source, alt, read);
+                    hisFloor, hisFloorAlt, surplus, everyPosition, source, alt, read, labData);
             if(Boolean.getBoolean("explorerSearchOnly")){
                 System.out.println("-PexplorerSearchOnly: timing the search; no simulations, nothing written");
                 return;

@@ -227,6 +227,20 @@ title odds, then publish the page to the same link:
     # writes data/trade-explorer-<date>.json and data/trade-explorer.html
     # publish data/trade-explorer.html to https://claude.ai/artifact/Lt8wxdiaT7X1YJHvYnHueN
 
+The page's **Check a trade** tab prices any trade you pick on every source the
+objective knows. Each source's accuracy against Sleeper comes from RosModel's replay
+of 2018-2025 (data/ros-accuracy.tsv). It changes only when RosModel is rerun, so
+rerun it after a season ends, or when an estimator is added:
+
+    ./gradlew run -Pmain=RosModel
+
+Justin, 2026-11-07, on Stevenson for Jeanty: "find tools that would see the jeanty
+stevenson trade as neutral or bad for me while also having decent predictive
+accuracy compared to sleeper". After 8 weeks the recent-form windows are the worst
+forecasters there: RB error is 1.31x Sleeper's for the last 3 games and 1.27x for the
+last 4. The model (0.92x) beats Sleeper. CBS and FantasyPros keep no past numbers to
+test. A source that disagrees is worth a look, and its accuracy says how much.
+
 Since 2026-10-29 Sleeper finds and FantasyPros vetoes. Justin: "we use sleeper as base
 to find trades, and then fantasy pros as a second step filter to reject trades that
 disadvantage me". Trades are found and ranked on Sleeper's projections (a gain of 3

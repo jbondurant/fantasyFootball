@@ -83,4 +83,16 @@ public class RosModelTest {
         assertEquals(10, RosModel.blend(1, 10, 8), 1e-9);
         assertEquals(8, RosModel.blend(0, 10, 8), 1e-9);
     }
+
+    @Test
+    public void lastPlayedSkipsByesAndTakesAllWhenShort(){
+        double nan = Double.NaN;
+        InSeasonLearning.Man m = new InSeasonLearning.Man("2025", "x", PlayerImportAndSetup.Position.RB, 1, 1,
+                new double[]{10, 20, nan, 5, 3, nan, 2, 1, 40}, 9);
+        assertEquals((1 + 2 + 3) / 3.0, RosModel.lastPlayed(m, 8, 3), 1e-12, "weeks 8, 7, 5: the bye in 6 is skipped");
+        assertEquals((1 + 2 + 3 + 5) / 4.0, RosModel.lastPlayed(m, 8, 4), 1e-12);
+        assertEquals((10 + 20) / 2.0, RosModel.lastPlayed(m, 3, 4), 1e-12, "two games through week 3: both");
+        assertNull(RosModel.lastPlayed(new InSeasonLearning.Man("2025", "y", PlayerImportAndSetup.Position.RB, 1, 1,
+                new double[]{nan, nan}, 2), 2, 3));
+    }
 }

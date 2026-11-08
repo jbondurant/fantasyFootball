@@ -8,6 +8,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -101,9 +102,38 @@ public class RosModel {
     static final Map<Position, Integer> DEPTH = new EnumMap<>(Map.of(
             Position.QB, 28, Position.RB, 74, Position.WR, 96, Position.TE, 32));
 
-    /** One man at k games seen: the two estimates and what he then did. */
+    /**
+     * One man at k games seen: the two estimates and what he then did, with
+     * {@code alt} the other estimators scored on the same men (ALT, and the
+     * leave-one-season-out blend once main has fitted it).
+     */
     record Case(String season, Position position, int seen, String id, double posterior, double sleeper,
-                double target, Double espn) {}
+                double target, Double espn, Map<String, Double> alt) {}
+
+    /**
+     * The estimators beyond the two blended, scored against Sleeper's on the same
+     * men (2026-11-07, for the trade explorer's Check-a-trade tab): his points a
+     * game so far (the posterior with no prior), and over his last three and
+     * last four played games, all of them when he has fewer. Justin, on
+     * Stevenson for Ashton Jeanty: "find tools that would see the jeanty
+     * stevenson trade as neutral or bad for me while also having decent
+     * predictive accuracy compared to sleeper". A recent window is the
+     * estimator a role change shows in first.
+     */
+    static final List<String> ALT = List.of("pace", "last3", "last4");
+
+    /** Points a game over his last {@code n} played games through week {@code seen}; all of them with fewer; null with none. */
+    static Double lastPlayed(InSeasonLearning.Man m, int seen, int n){
+        double total = 0;
+        int games = 0;
+        for(int w = Math.min(seen, m.weeks()); w >= 1 && games < n; w--){
+            if(m.played(w)){
+                total += m.week()[w - 1];
+                games++;
+            }
+        }
+        return games == 0 ? null : total / games;
+    }
 
     /**
      * The least-squares weight on {@code a} against {@code b} for predicting
@@ -200,10 +230,14 @@ public class RosModel {
                         EspnWeekly.Season espnSeason = espn.get(season);
                         Double espnNext = espnSeason == null ? null
                                 : espnSeason.byWeek().getOrDefault(seen + 1, Map.of()).get(man.id());
+                        Map<String, Double> alt = new LinkedHashMap<>();
+                        alt.put("pace", man.pointsThrough(seen) / man.gamesThrough(seen));
+                        alt.put("last3", lastPlayed(man, seen, 3));
+                        alt.put("last4", lastPlayed(man, seen, 4));
                         cases.add(new Case(season, position, seen, man.id(),
                                 InSeasonLearning.estimate(man, seen, kappa, priors.get(season), level),
                                 next.get(man.id()),
-                                man.restPoints(seen + 1) / man.restGames(seen + 1), espnNext));
+                                man.restPoints(seen + 1) / man.restGames(seen + 1), espnNext, alt));
                     }
                 }
             }
@@ -399,6 +433,46 @@ public class RosModel {
      * multiplied by his weeks. WeeklyLineupValue lays it out week by week, in
      * the weeks Sleeper projects him to play.
      */
+    /**
+     * This season's points a game so far ("pace") or over his last three played
+     * games ("last3"), from the weeks before the one in progress, for every
+     * quarterback, back, receiver and tight end with a game. These are the ALT
+     * estimators the backtest scores, served to the trade explorer as pricings.
+     */
+    public static Map<String, Double> recentRates(String estimator){
+        String season = LeagueWeek.season();
+        int done = LeagueWeek.week() - 1;
+        List<Map<String, Double>> played = new ArrayList<>();
+        java.util.Set<String> ids = new java.util.HashSet<>();
+        for(int w = 1; w <= done; w++){
+            Map<String, Double> week = LeagueWeek.actual(season, w);
+            played.add(week);
+            ids.addAll(week.keySet());
+        }
+        Map<String, Double> out = new HashMap<>();
+        for(String id : ids){
+            Player p = Player.getPlayerFromSIDV2(id);
+            if(p == null || !java.util.Arrays.asList(InSeasonLearning.POSITIONS).contains(p.position)){
+                continue;
+            }
+            double[] week = new double[done];
+            for(int w = 0; w < done; w++){
+                Double pts = played.get(w).get(id);
+                week[w] = pts == null ? Double.NaN : pts;
+            }
+            InSeasonLearning.Man man = new InSeasonLearning.Man(season, id, p.position, 0, 0, week, done);
+            if(man.gamesThrough(done) == 0){
+                continue;
+            }
+            out.put(id, switch(estimator){
+                case "pace" -> man.pointsThrough(done) / man.gamesThrough(done);
+                case "last3" -> lastPlayed(man, done, 3);
+                default -> throw new IllegalArgumentException("no recent rate called " + estimator);
+            });
+        }
+        return out;
+    }
+
     public static Map<String, Double> rates(){
         Map<String, Double> out = new HashMap<>();
         blend().forEach((id, r) -> out.put(id, r.rate()));
@@ -426,6 +500,97 @@ public class RosModel {
         }
         System.out.printf("ros: %d men set to their blended rate times the weeks Sleeper projects them to play%n", set);
         return out;
+    }
+
+    /** Where the explorer reads each estimator's accuracy against Sleeper's: one stable file, overwritten by each run. */
+    static final Path ACCURACY = Path.of("data", "ros-accuracy.tsv");
+
+    /** An estimator's value in a case: the two blended, ESPN, or one of {@code alt}. Null where it has none. */
+    static Double estimate(Case c, String estimator){
+        return switch(estimator){
+            case "sleeper" -> c.sleeper();
+            case "posterior" -> c.posterior();
+            case "espn" -> c.espn();
+            default -> c.alt().get(estimator);
+        };
+    }
+
+    /**
+     * EVERY ESTIMATOR AGAINST SLEEPER, ON THE SAME MEN. Each estimator's RMSE
+     * on the cases where it has a number, beside Sleeper's on those same cases,
+     * their ratio, and the paired difference in squared error clustered by
+     * season. The blend's weight is fitted leave-one-season-out first, as in the
+     * main table. Writes {@link #ACCURACY} for the trade explorer.
+     */
+    static String accuracy(List<Case> cases, List<String> withWeeks) throws IOException {
+        for(int seen : SEEN){
+            for(Position position : InSeasonLearning.POSITIONS){
+                for(String held : withWeeks){
+                    List<double[]> train = new ArrayList<>();
+                    for(Case c : cases){
+                        if(c.seen() == seen && c.position() == position && !c.season().equals(held)){
+                            train.add(new double[]{c.posterior(), c.sleeper(), c.target()});
+                        }
+                    }
+                    if(train.size() < 10){
+                        continue;
+                    }
+                    double w = blendWeight(train);
+                    for(Case c : cases){
+                        if(c.seen() == seen && c.position() == position && c.season().equals(held)){
+                            c.alt().put("blend", blend(w, c.posterior(), c.sleeper()));
+                        }
+                    }
+                }
+            }
+        }
+        List<String> estimators = new ArrayList<>(List.of("blend", "posterior", "espn"));
+        estimators.addAll(ALT);
+        StringBuilder out = new StringBuilder();
+        StringBuilder tsv = new StringBuilder();
+        tsv.append(String.format("# RosModel %s: each estimator of a man's rate from week k+2 on after k weeks, against Sleeper's week k+1 projection on the same men, %s%n",
+                LocalDate.now(), String.join(" ", withWeeks)));
+        tsv.append("estimator\tseen\tpos\tmen\trmse\trmse_sleeper\tratio\tdiff\tse\tseasons\treading\n");
+        out.append("\n== EVERY ESTIMATOR AGAINST SLEEPER, on the men each one covers ==\n");
+        out.append("blend = the model (-Pprojections=ros); posterior = InSeasonLearning's rule; espn = ESPN's week k+1 projection;\n");
+        out.append("pace = points a game so far; last3 / last4 = over his last three / four played games. ratio = RMSE / Sleeper's\n");
+        out.append("RMSE on the same men; diff = estimator minus Sleeper in squared error, mean over seasons +- se.\n");
+        for(int seen : SEEN){
+            out.append(String.format("%n-- after %d game%s --%n%-10s %-4s %5s %8s %8s %6s   %-22s %s%n", seen, seen == 1 ? "" : "s",
+                    "estimator", "pos", "men", "RMSE", "Sleeper", "ratio", "diff (sq err)", "reading"));
+            for(String estimator : estimators){
+                for(Position position : InSeasonLearning.POSITIONS){
+                    Map<String, List<Double>> sqE = new TreeMap<>();
+                    Map<String, List<Double>> sqS = new TreeMap<>();
+                    Map<String, List<Double>> diff = new TreeMap<>();
+                    int men = 0;
+                    for(Case c : cases){
+                        Double e = c.seen() == seen && c.position() == position ? estimate(c, estimator) : null;
+                        if(e == null){
+                            continue;
+                        }
+                        men++;
+                        double ee = sq(e - c.target()), es = sq(c.sleeper() - c.target());
+                        sqE.computeIfAbsent(c.season(), k -> new ArrayList<>()).add(ee);
+                        sqS.computeIfAbsent(c.season(), k -> new ArrayList<>()).add(es);
+                        diff.computeIfAbsent(c.season(), k -> new ArrayList<>()).add(ee - es);
+                    }
+                    if(men < 20){
+                        continue;
+                    }
+                    double rmse = Math.sqrt(overSeasons(sqE)[0]), rmseS = Math.sqrt(overSeasons(sqS)[0]);
+                    double[] d = overSeasons(diff);
+                    String reading = !RosBands.separated(d) ? "= Sleeper" : d[0] < 0 ? "better than Sleeper" : "worse than Sleeper";
+                    out.append(String.format("%-10s %-4s %5d %8.2f %8.2f %6.2f   %+7.2f +- %-10.2f %s%n", estimator, position, men,
+                            rmse, rmseS, rmse / rmseS, d[0], d[1], reading));
+                    tsv.append(String.format("%s\t%d\t%s\t%d\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%d\t%s%n", estimator, seen, position, men,
+                            rmse, rmseS, rmse / rmseS, d[0], d[1], (int) d[2], reading));
+                }
+            }
+        }
+        Files.writeString(ACCURACY, tsv.toString(), StandardCharsets.UTF_8);
+        out.append(String.format("%nwritten to %s, which the trade explorer reads%n", ACCURACY));
+        return out.toString();
     }
 
     public static void main(String[] args) throws IOException {
@@ -654,6 +819,8 @@ public class RosModel {
         out.append(espnEarned.size() * 2 <= SEEN.length
                 ? "gives, so on this evidence a second shop is noise and -Pprojections=ros stays the two-way blend.\n"
                 : "gives - more than that, so the three-way blend is worth building into the source.\n");
+
+        out.append(accuracy(cases, withWeeks));
 
         out.append("\n== THE READING ==\n");
         out.append("w is the weight the data puts on the posterior against Sleeper's next-week number (0 = all Sleeper, 1 = all posterior).\n");
