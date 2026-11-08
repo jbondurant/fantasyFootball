@@ -280,6 +280,32 @@ public class TradeCheck {
             }
         }
 
+        // today's read of each week left: a role change shows first in the near weeks, which Sleeper revisits
+        // most, and the far weeks can still carry the old role (Jeanty, 2026-11-07: 26.8 rushing yards in week 9)
+        System.out.printf("%nSLEEPER'S PROJECTION BY WEEK, today's read: league points, then projected rushing yards and targets%n");
+        System.out.printf("%-22s", "player");
+        for(int w = week; w <= EraActuals.weeks(season); w++){
+            System.out.printf(" %13s", "w" + w);
+        }
+        System.out.println();
+        List<Map<String, Double>> pointsByWeek = new ArrayList<>();
+        List<Map<String, JsonObject>> linesByWeek = new ArrayList<>();
+        for(int w = week; w <= EraActuals.weeks(season); w++){
+            String body = LeagueWeek.projectionsBody(season, w);
+            pointsByWeek.add(LeagueWeek.projectedFrom(body));
+            linesByWeek.add(ScreenData.projectedLines(body));
+        }
+        for(int i = 0; i < ids.size(); i++){
+            System.out.printf("%-22s", shown.get(i));
+            for(int k = 0; k < pointsByWeek.size(); k++){
+                Double pts = pointsByWeek.get(k).get(ids.get(i));
+                JsonObject line = linesByWeek.get(k).get(ids.get(i));
+                System.out.printf(" %13s", pts == null ? "bye/none" : String.format("%.1f %.0f/%.1f", pts,
+                        FaabDemand.stat(line, "rush_yd"), FaabDemand.stat(line, "rec_tgt")));
+            }
+            System.out.println();
+        }
+
         System.out.printf("%nSLEEPER'S WEEKLY PROJECTIONS, weeks %d-%d summed, as read on each day the repo saved them all%n",
                 week + 1, EraActuals.weeks(season));
         System.out.println("(points / weeks in which he carries a projection; a bye is a week without one)");

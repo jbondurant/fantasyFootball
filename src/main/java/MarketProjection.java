@@ -30,12 +30,20 @@ import java.util.Map;
  *
  *     ./gradlew run -Pmain=MarketProjection -Pweek=3                 (live Kalshi read)
  *     ./gradlew run -Pmain=MarketProjection -Pweek=3 -Poffline=true  (the latest archived read)
+ *     ./gradlew run -Pmain=MarketProjection -Poffline=true -Pplayers="Ashton Jeanty,Rhamondre Stevenson"
  */
 public class MarketProjection {
 
     /** id -> {Sleeper's league points, the market's, the number of priced stats}. */
     static Map<String, double[]> week(String season, int week, Map<String, List<KalshiMarkets.Contract>> bySeries,
                                       Map<PropModel.Stat, PropModel.Fitted> model, LeagueScoringSettings scoring) throws IOException {
+        return week(season, week, bySeries, model, scoring, new HashMap<>());
+    }
+
+    /** The same, also filling byStat: id -> each priced stat -> {Sleeper's expected stat, the market's}. */
+    static Map<String, double[]> week(String season, int week, Map<String, List<KalshiMarkets.Contract>> bySeries,
+                                      Map<PropModel.Stat, PropModel.Fitted> model, LeagueScoringSettings scoring,
+                                      Map<String, Map<String, double[]>> byStat) throws IOException {
         String body = LeagueWeek.projectionsBody(season, week);
         Map<String, JsonObject> projected = ScreenData.projectedLines(body);
         Map<String, Double> sleeperPoints = LeagueWeek.projectedFrom(body);
@@ -81,6 +89,7 @@ public class MarketProjection {
             double[] v = out.computeIfAbsent(id, k -> new double[]{sleeperPoints.getOrDefault(id, 0.0), sleeperPoints.getOrDefault(id, 0.0), 0});
             v[1] += weight.get(s.name()) * (market - mu);
             v[2]++;
+            byStat.computeIfAbsent(id, k -> new java.util.TreeMap<>()).put(s.name(), new double[]{mu, market});
         }
         return out;
     }
@@ -93,7 +102,8 @@ public class MarketProjection {
         boolean offline = Boolean.parseBoolean(System.getProperty("offline", "false"));
         Map<String, List<KalshiMarkets.Contract>> bySeries = offline ? KalshiMarkets.latestArchived() : KalshiMarkets.snapshot();
         Map<PropModel.Stat, PropModel.Fitted> model = PropModel.fit();
-        Map<String, double[]> market = week(season, week, bySeries, model, scoring);
+        Map<String, Map<String, double[]>> byStat = new HashMap<>();
+        Map<String, double[]> market = week(season, week, bySeries, model, scoring, byStat);
         Map<String, Double> sleeper = LeagueWeek.projected(season, week);
 
         String me = System.getProperty("me", configuration.getUserIDToDisplayName().getOrDefault(configuration.getMyID(), configuration.getMyID()));
@@ -150,6 +160,25 @@ public class MarketProjection {
         out.append(String.format("%nbest lineup on Sleeper: %.1f points; on the market: %.1f%n", a.starters(), b.starters()));
         out.append(onlyMarket.isEmpty() ? "the two agree on every starter.\n"
                 : "the market starts " + String.join(", ", onlyMarket) + " where Sleeper starts " + String.join(", ", onlySleeper) + ".\n");
+
+        // Justin, 2026-11-07, on Stevenson for Ashton Jeanty: "what about using polymarket or other established
+        // betting website odds?" - the market's read of a man's role this week, stat by stat, for anyone named
+        String named = System.getProperty("players", "");
+        if(!named.isBlank()){
+            out.append("\nnamed men, league points this week, then each stat Kalshi prices (Sleeper's expected stat -> the market's):\n");
+            for(String id : TradeScreens.idsNamed(named)){
+                Player p = Player.getPlayerFromSIDV2(id);
+                double s = sleeper.getOrDefault(id, 0.0);
+                double[] m = market.get(id);
+                out.append(String.format("  %-24s %-3s %6.1f -> %6.1f  (%+.1f)  %s%n", p == null ? id : p.firstName + " " + p.lastName,
+                        p == null ? "" : p.position, s, m == null ? s : m[1], m == null ? 0 : m[1] - s, ownerOf.getOrDefault(id, "free")));
+                if(m == null){
+                    out.append("      no Kalshi price passed the quote filter\n");
+                }
+                byStat.getOrDefault(id, Map.of()).forEach((stat, v) ->
+                        out.append(String.format("      %-18s %6.1f -> %6.1f%n", stat, v[0], v[1])));
+            }
+        }
 
         out.append("\nlargest market-minus-Sleeper gaps this week, any man (a gap is news the market has, or noise on a thin book):\n");
         List<Map.Entry<String, double[]>> gaps = new ArrayList<>(market.entrySet());

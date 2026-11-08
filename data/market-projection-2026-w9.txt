@@ -1,0 +1,59 @@
+MARKET PROJECTION  2026-11-07T19:59:05  (week 9; archived Kalshi read; 265 men with a priced stat)
+Sleeper's weekly projection with every stat Kalshi prices replaced by the market's (2025 backtest: closer to what
+happened by about 1% RMSE, QB passing and touchdowns most, receptions not at all). League points.
+
+justinb314's roster      pos    Sleeper    market     diff  priced
+Brock Purdy              QB        26.2      24.3     -1.9       5
+Rhamondre Stevenson      RB        12.3      13.8     +1.5       4
+Malik Nabers             WR        13.1      12.9     -0.2       3
+Bhayshul Tuten           RB        12.4      12.4     +0.0       -
+Derrick Henry            RB        11.2      11.2     +0.0       -
+T.J. Hockenson           TE         8.5       8.9     +0.4       3
+Harold Fannin Jr.        TE         9.2       8.9     -0.3       3
+Josh Downs               WR         8.9       8.4     -0.5       3
+Jordan Addison           WR         7.6       8.4     +0.8       3
+Chicago Bears            DEF        7.9       7.9     +0.0       -
+Khalil Shakir            WR         7.4       7.9     +0.6       3
+Jakobi Meyers            WR         7.7       7.7     +0.0       -
+Chris Godwin Jr.         WR         7.5       6.7     -0.8       3
+Minnesota Vikings        DEF        6.3       6.3     +0.0       -
+Mike Evans               WR         0.0       0.0     +0.0       -
+Cam Skattebo             RB         0.0       0.0     +0.0       -
+
+best lineup on Sleeper: 117.3 points; on the market: 117.1
+the market starts Jordan Addison where Sleeper starts Jakobi Meyers.
+
+named men, league points this week, then each stat Kalshi prices (Sleeper's expected stat -> the market's):
+  Ashton Jeanty            RB    10.2 ->   12.0  (+1.8)  Hamrliks
+      receiving yards      29.7 ->   36.3
+      receptions            4.0 ->    4.5
+      rushing yards        26.8 ->   34.0
+      touchdowns            0.4 ->    0.5
+  Mike Washington Jr.      RB     7.7 ->    7.4  (-0.3)  Renteez
+      rushing yards        41.0 ->   38.5
+      touchdowns            0.4 ->    0.4
+  Rhamondre Stevenson      RB    12.3 ->   13.8  (+1.5)  justinb314
+      receiving yards      22.8 ->   26.3
+      receptions            3.1 ->    3.5
+      rushing yards        49.0 ->   56.3
+      touchdowns            0.6 ->    0.6
+  Corey Kiner              RB     6.1 ->    5.1  (-1.0)  free
+      rushing yards        33.0 ->   23.6
+      touchdowns            0.3 ->    0.3
+
+largest market-minus-Sleeper gaps this week, any man (a gap is news the market has, or noise on a thin book):
+  Jaxon Smith-Njigba       WR    20.7 ->   16.0  (-4.7)  itsabust
+  Roschon Johnson          RB     0.4 ->    5.0  (+4.6)  JakeSK
+  Brock Bowers             TE    15.2 ->   11.1  (-4.1)  jerem9604
+  Bijan Robinson           RB    22.0 ->   18.0  (-3.9)  BHier
+  Jahmyr Gibbs             RB    22.9 ->   19.2  (-3.7)  JakeSK
+  Puka Nacua               WR    19.4 ->   15.9  (-3.4)  JakeSK
+  Blake Corum              RB     6.8 ->   10.3  (+3.4)  JakeSK
+  Christian McCaffrey      RB    20.8 ->   17.5  (-3.3)  KevinDA
+  Alvin Kamara             RB     8.0 ->   11.3  (+3.3)  Hamrliks
+  Kenneth Walker III       RB    20.0 ->   16.9  (-3.1)  tommyrads
+  Cyrus Allen              WR     0.9 ->    3.8  (+2.9)  JFMarino
+  Bucky Irving             RB    16.1 ->   13.3  (-2.8)  itsabust
+  J.K. Dobbins             RB     9.1 ->    6.4  (-2.7)  BHier
+  Noah Fant                TE     4.6 ->    2.0  (-2.6)  free
+  Tyler Shough             QB    18.1 ->   20.7  (+2.6)  KevinDA

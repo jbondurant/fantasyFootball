@@ -1977,3 +1977,21 @@ real every time.
     percentile of 52%, reads as a long shot rather than a NO - 7 of 60 accepted
     sides took as little, never Renteez - and it stays off every list because
     it costs Justin 3.8 on the games left.
+
+152. **A role change priced in the near week and not in the far ones.** On
+    2026-11-07 the explorer had Rhamondre Stevenson for Ashton Jeanty at +2.91
+    of title odds. Justin: "the narratives surrounding jeanty reduced workload
+    concern me". The stat rows bore him out (TradeCheck's workload table):
+    Jeanty's carries ran 23, 21, 19, 15, 10, 10, 8, 2, and in week 8 Mike
+    Washington Jr. had 25 and nine of the ten red-zone carries. The coach
+    called it his decision, made week to week. Sleeper's week-9 projection had
+    already priced it (Jeanty 27 rushing yards, Washington 41), and so had
+    Kalshi's props (34 and 38.5, MarketProjection -Pplayers). Weeks 10-18
+    still read the old role: Jeanty 40-54 rushing yards a week, Washington
+    23-28. Sleeper revisits the near week first, so a summed projection can be
+    one part news and nine parts stale, and every pricing built on it inherits
+    that. The trade was +2.91 on those projections, +1.38 at 85% of Jeanty's,
+    +0.92 at 80% and +0.05 at 70% (TradeScreens -PprojectionScale). When the
+    news is a role change, compare the near week's projected line with the
+    far weeks' before trusting the sum. Then price the trade at the role the
+    news describes and read off the factor where the gain crosses zero.
