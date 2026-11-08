@@ -345,7 +345,10 @@ gain crosses zero is the break-even (2026-11-07: Stevenson for Jeanty helped dow
 about 0.7). It is not saved, so it cannot overwrite the day's real report. Kalshi's
 props give the market's read of this week's role, stat by stat (MarketProjection
 -Pplayers). Sleeper's projection by week in TradeCheck shows whether its later weeks
-have heard the news (TRAPS #152).
+have heard the news (TRAPS #152). For the rest of the season rather than one game, Polymarket's
+season ladders (SeasonProps -Pplayers) give the factor to try:
+
+    ./gradlew run -Pmain=SeasonProps -Pplayers="Ashton Jeanty,Rhamondre Stevenson"
 
     ./gradlew run -Pmain=TradeScreens -Psend="Rhamondre Stevenson" -Preceive="Ashton Jeanty" -PprojectionScale="Ashton Jeanty=0.7"
 

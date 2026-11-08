@@ -1995,3 +1995,11 @@ real every time.
     news is a role change, compare the near week's projected line with the
     far weeks' before trusting the sum. Then price the trade at the role the
     news describes and read off the factor where the gain crosses zero.
+    The season market is the check on that "role the news describes". The same
+    day, Polymarket's season ladder (SeasonProps) put Jeanty's rushing over the
+    games left at 91% of Sleeper's, 41.7 yards a game against 46.1. It gave 36%
+    that he passes Sleeper's rushing touchdowns, and with rushing yards alone at
+    the market's median his points factor was 0.97. The market priced a
+    discount, not the collapse that week 8 alone suggested, and the trade read
+    +2.38 at 95% and +1.86 at 90%. That market was thin: about $3,400 of
+    liquidity, and Kalshi's season markets were dead.

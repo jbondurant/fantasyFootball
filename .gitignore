@@ -45,3 +45,4 @@ data/kalshi-history/
 
 # other leagues' trades, harvested by OtherLeagues (Sleeper public API); rebuildable
 data/other-leagues/
+data/polymarket/
