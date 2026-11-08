@@ -16,6 +16,7 @@ import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -1046,14 +1047,44 @@ public class TradeScreens {
         return out;
     }
 
+    /**
+     * -PprojectionScale="Ashton Jeanty=0.7": each named man's Sleeper weekly projections,
+     * this week and after, times his factor (LeagueWeek.WhatIf). Ids in the order named.
+     */
+    static Map<String, Double> scaleNamed(String csv) throws IOException {
+        Map<String, Double> out = new LinkedHashMap<>();
+        for(String raw : csv.split(",")){
+            if(raw.isBlank()){
+                continue;
+            }
+            String[] parts = raw.split("=");
+            List<String> ids = parts.length == 2 ? idsNamed(parts[0]) : List.of();
+            if(ids.size() != 1){
+                throw new IllegalArgumentException("projectionScale wants Name=factor naming one man, got \"" + raw.trim() + "\" ("
+                        + ids.size() + " men by that name)");
+            }
+            out.put(ids.get(0), Double.parseDouble(parts[1].trim()));
+        }
+        return out;
+    }
+
     public static void main(String[] args) throws Exception {
         AAAConfiguration configuration = AAAConfiguration.getInstance();
         TradeMarket.ON_IR = LeagueOwners.reserve(configuration);
+        String scale = System.getProperty("projectionScale", "");
+        if(!scale.isBlank()){
+            LeagueWeek.whatIf = new LeagueWeek.WhatIf(LeagueWeek.season(), LeagueWeek.week(), scaleNamed(scale));
+        }
         Context context = load(configuration);
         History history = context.history();
         StringBuilder out = new StringBuilder();
         out.append(String.format("TRADE SCREENS  %s  (what the man opposite sees; season %s, week %d)%n%n", LocalDate.now(),
                 LeagueWeek.season(), context.weeksPlayed()));
+        if(LeagueWeek.whatIf != null){
+            out.append(String.format("WHAT-IF, NOT THE REAL PROJECTIONS: Sleeper's weekly projections from week %d on are scaled - %s.%n"
+                    + "The ros model takes this week's Sleeper projection as one input, so it moves part of the way; the season feed%n"
+                    + "and FantasyPros' ranks do not move. This report is not saved.%n%n", LeagueWeek.whatIf.from(), scale));
+        }
 
         out.append("THE DRAFT-VALUE CHART - season points above the last starter at his position, for a man drafted at each ADP\n");
         out.append("(every board EraBoards joins to outcomes, fitted to fall with ADP):\n  ");
@@ -1145,6 +1176,9 @@ public class TradeScreens {
             out.append(objective(configuration, ownerOf, hisIn, hisOut));
         }
         System.out.print(out);
+        if(LeagueWeek.whatIf != null){
+            return;
+        }
         Path report = Path.of("data", "trade-screens-" + LocalDate.now() + ".txt");
         Files.writeString(report, out.toString(), StandardCharsets.UTF_8);
         System.out.println("\nwritten to " + report);

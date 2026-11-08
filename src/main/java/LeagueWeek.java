@@ -101,7 +101,30 @@ public class LeagueWeek {
      * different answers.
      */
     public static Map<String, Double> projected(String season, int week){
-        return projectedFrom(projectionsBody(season, week));
+        return scaled(projectedFrom(projectionsBody(season, week)), season, week, whatIf);
+    }
+
+    /**
+     * A WHAT-IF, off unless a tool sets it (TradeScreens' -PprojectionScale): named
+     * men's projections multiplied, in one season from one week on, so every reader
+     * of the weekly feed - title odds, the weekly lineups, the other manager's
+     * projection screen - prices the same imagined role. Justin, 2026-11-07, on
+     * Stevenson for Ashton Jeanty: "the narratives surrounding jeanty reduced
+     * workload concern me"; Jeanty's carries had gone 23, 21, 19, 15, 10, 10, 8, 2
+     * while Sleeper still projected him as a lead back.
+     */
+    record WhatIf(String season, int from, Map<String, Double> scale) {}
+
+    static volatile WhatIf whatIf = null;
+
+    /** A week's projections under a what-if: weeks before its first, and other seasons, read as they were. */
+    static Map<String, Double> scaled(Map<String, Double> points, String season, int week, WhatIf what){
+        if(what == null || !what.season().equals(season) || week < what.from()){
+            return points;
+        }
+        Map<String, Double> out = new HashMap<>(points);
+        what.scale().forEach((id, k) -> out.computeIfPresent(id, (key, p) -> p * k));
+        return out;
     }
 
     /** The raw projection feed of a week, same policy - for readers that need the projected stat line, not only its points. */

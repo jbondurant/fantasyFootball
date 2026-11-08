@@ -7,9 +7,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -39,6 +41,13 @@ import com.google.gson.JsonParser;
  * rest-of-season expert consensus rank at the position (half-PPR pages), the
  * view a man checking a trade outside Sleeper sees beside the two the trade
  * tools price on.
+ *
+ * Justin, 2026-11-07, on Stevenson for Ashton Jeanty: "the narratives
+ * surrounding jeanty reduced workload concern me". The workload table puts
+ * a number on a narrative before the projections have priced it: each finished
+ * week's share of his club's offensive snaps, his carries and red-zone carries
+ * against his club's running backs', and his targets against his club's, from
+ * Sleeper's stat rows, with his club's last three games and its season pooled.
  *
  *     ./gradlew run -Pmain=TradeCheck -Pplayers="Malik Nabers,Ja'Marr Chase"
  */
@@ -84,6 +93,81 @@ public class TradeCheck {
         return out;
     }
 
+    /** One man's week against his club's: offensive snaps, carries and red-zone carries against its running backs', targets against all of its. */
+    record Work(double snaps, double teamSnaps, double carries, double rbCarries, double targets, double teamTargets,
+                double rzCarries, double rbRzCarries) {}
+
+    /**
+     * His work in one week's /stats rows. His club is the one his own row names,
+     * so a man traded mid-season is measured against the team he played for; with
+     * no row it is today's club and his counts are zero - a missed game is the
+     * news. Null where that club has no rows: a bye. A running back is the
+     * position his row names that week.
+     */
+    static Work work(String id, String team, JsonArray rows){
+        JsonObject mine = null;
+        for(JsonElement e : rows){
+            if(e.isJsonObject() && id.equals(ScreenData.text(e.getAsJsonObject(), "player_id"))){
+                mine = e.getAsJsonObject();
+            }
+        }
+        String club = mine != null && ScreenData.text(mine, "team") != null ? ScreenData.text(mine, "team") : team;
+        double teamSnaps = 0, rbCarries = 0, teamTargets = 0, rbRz = 0;
+        boolean played = false;
+        for(JsonElement e : rows){
+            JsonObject row = e.isJsonObject() ? e.getAsJsonObject() : null;
+            if(row == null || club == null || !club.equals(ScreenData.text(row, "team"))){
+                continue;
+            }
+            played = true;
+            JsonObject stats = ScreenData.object(row, "stats");
+            teamSnaps = Math.max(teamSnaps, FaabDemand.stat(stats, "tm_off_snp"));
+            teamTargets += FaabDemand.stat(stats, "rec_tgt");
+            if("RB".equals(ScreenData.text(ScreenData.object(row, "player"), "position"))){
+                rbCarries += FaabDemand.stat(stats, "rush_att");
+                rbRz += FaabDemand.stat(stats, "rush_rz_att");
+            }
+        }
+        if(!played){
+            return null;
+        }
+        JsonObject stats = mine == null ? null : ScreenData.object(mine, "stats");
+        return new Work(FaabDemand.stat(stats, "off_snp"), teamSnaps, FaabDemand.stat(stats, "rush_att"), rbCarries,
+                FaabDemand.stat(stats, "rec_tgt"), teamTargets, FaabDemand.stat(stats, "rush_rz_att"), rbRz);
+    }
+
+    /** Weeks pooled: his counts summed over his club's, per game in the counts. Null with no games. */
+    static Work pooled(List<Work> weeks){
+        double[] s = new double[8];
+        int games = 0;
+        for(Work w : weeks){
+            if(w == null){
+                continue;
+            }
+            games++;
+            double[] v = {w.snaps(), w.teamSnaps(), w.carries(), w.rbCarries(), w.targets(), w.teamTargets(), w.rzCarries(), w.rbRzCarries()};
+            for(int i = 0; i < 8; i++){
+                s[i] += v[i];
+            }
+        }
+        if(games == 0){
+            return null;
+        }
+        for(int i = 0; i < 8; i++){
+            s[i] /= games;
+        }
+        return new Work(s[0], s[1], s[2], s[3], s[4], s[5], s[6], s[7]);
+    }
+
+    /** "22 81%": his count and his share of his club's; a share alone for snaps. */
+    static String cell(double mine, double theirs, boolean count){
+        String share = theirs > 0 ? String.format("%.0f%%", 100 * mine / theirs) : "-";
+        if(!count){
+            return share;
+        }
+        return (mine == Math.rint(mine) ? String.format("%.0f", mine) : String.format("%.1f", mine)) + " " + share;
+    }
+
     public static void main(String[] args) throws IOException {
         String season = LeagueWeek.season();
         int week = LeagueWeek.week();
@@ -109,6 +193,7 @@ public class TradeCheck {
         }
         List<String> ids = new ArrayList<>();
         List<String> shown = new ArrayList<>();
+        List<String> teams = new ArrayList<>();
         System.out.printf("TRADE CHECK  season %s, Sleeper on week %d (week %d is %s)%n%n", season, week, week,
                 LeagueWeek.finished(season, week) ? "finished" : "in progress - its points are partial");
         System.out.printf("%-22s %-4s %-4s %-12s %-24s %7s %6s %6s %8s %7s %9s %7s  %s%n", "player", "pos", "team", "owner",
@@ -127,6 +212,7 @@ public class TradeCheck {
                 String id = e.getKey();
                 ids.add(id);
                 shown.add(name);
+                teams.add(ScreenData.text(p, "team"));
                 StringBuilder byWeek = new StringBuilder();
                 double total = 0;
                 int games = 0;
@@ -150,6 +236,49 @@ public class TradeCheck {
         System.out.println("\nseason = Sleeper's season feed (what TradeMarket prices on by default); ros = the rest-of-season model;");
         System.out.println("next wk = Sleeper's projection for next week; FP ros = FantasyPros' rest-of-season consensus rank at the");
         System.out.println("position (half PPR), the median of the last three days' pulls. Points are this league's scoring.");
+
+        int done = LeagueWeek.finished(season, week) ? week : week - 1;
+        List<JsonArray> rows = new ArrayList<>();
+        for(int w = 1; w <= done; w++){
+            rows.add(JsonParser.parseString(LeagueWeek.teamStatsBody(season, w)).getAsJsonArray());
+        }
+        System.out.printf("%nWORKLOAD BY WEEK, weeks 1-%d from Sleeper's stat rows%s%n", done,
+                done < week ? " (week " + week + " is in progress and left out)" : "");
+        System.out.println("snaps = his share of his club's offensive snaps; carries and red-zone carries = his, and his share of his");
+        System.out.println("club's running backs'; targets = his, and his share of his club's. last 3 and season are per game, pooled");
+        System.out.println("over his club's games: a game he missed counts as zero, a bye is left out.");
+        String[] measures = {"snaps", "carries", "targets", "red-zone carries"};
+        for(int i = 0; i < ids.size(); i++){
+            List<Work> work = new ArrayList<>();
+            for(JsonArray weekRows : rows){
+                work.add(work(ids.get(i), teams.get(i), weekRows));
+            }
+            List<Work> played = work.stream().filter(Objects::nonNull).toList();
+            Work last3 = pooled(played.subList(Math.max(0, played.size() - 3), played.size()));
+            Work all = pooled(played);
+            System.out.printf("%n%-22s", shown.get(i) + " (" + teams.get(i) + ")");
+            for(int w = 1; w <= done; w++){
+                System.out.printf(" %8s", "w" + w);
+            }
+            System.out.printf(" %11s %11s%n", "last 3", "season");
+            for(int m = 0; m < measures.length; m++){
+                System.out.printf("  %-20s", measures[m]);
+                List<Work> cols = new ArrayList<>(work);
+                cols.add(last3);
+                cols.add(all);
+                for(int c = 0; c < cols.size(); c++){
+                    Work w = cols.get(c);
+                    String text = w == null ? (c < work.size() ? "bye" : "-") : switch(m){
+                        case 0 -> cell(w.snaps(), w.teamSnaps(), false);
+                        case 1 -> cell(w.carries(), w.rbCarries(), true);
+                        case 2 -> cell(w.targets(), w.teamTargets(), true);
+                        default -> cell(w.rzCarries(), w.rbRzCarries(), true);
+                    };
+                    System.out.printf(c < work.size() ? " %8s" : " %11s", text);
+                }
+                System.out.println();
+            }
+        }
 
         System.out.printf("%nSLEEPER'S WEEKLY PROJECTIONS, weeks %d-%d summed, as read on each day the repo saved them all%n",
                 week + 1, EraActuals.weeks(season));

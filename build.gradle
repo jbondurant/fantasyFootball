@@ -279,6 +279,8 @@ tasks.register('run', JavaExec) {
      'faabTargets',
      // TradeScreens: free agents taken as already claimed before a trade is priced
      'assume',
+     // TradeScreens: a what-if - "Name=factor,..." scales those men's Sleeper weekly projections from this week on
+     'projectionScale',
      // OtherLeagues: how many league-seasons like this one to harvest, and from which seasons
      'otherLeagues', 'otherSeasons', 'otherUsers',
      // TradeScreens: draft value's share fixed after the first game, a what-if in place of DraftWeightCurve's curve

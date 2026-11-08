@@ -336,6 +336,16 @@ manager's lineup before and after:
     ./gradlew run -Pmain=TradeScreens -Psend="Malik Nabers,Rhamondre Stevenson" -Preceive="Ja'Marr Chase"
     ./gradlew run -Pmain=TradeCheck -Pplayers="Malik Nabers,Ja'Marr Chase"   # points by week, ADP, every projection, FantasyPros' ROS rank, and Sleeper's weekly sums by date
 
+TradeCheck also prints each man's workload by week (snap share, carries and red-zone
+carries against his club's running backs, targets), so a role-change story can be
+read off the stat rows before the projections price it. When the story says a man's
+projection is too high, price the trade under a smaller one: the what-if multiplies
+his Sleeper weekly projections from this week on, and the factor where your title
+gain crosses zero is the break-even (2026-11-07: Stevenson for Jeanty helped down to
+about 0.7). It is not saved, so it cannot overwrite the day's real report.
+
+    ./gradlew run -Pmain=TradeScreens -Psend="Rhamondre Stevenson" -Preceive="Ashton Jeanty" -PprojectionScale="Ashton Jeanty=0.7"
+
 Once a season, after it ends and `EraBoards.LAST_SEASON` has moved to it, add it
 to the draft-weight curve (about an hour of downloading the first time, minutes
 after; cached and gitignored):
