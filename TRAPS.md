@@ -2003,3 +2003,54 @@ real every time.
     discount, not the collapse that week 8 alone suggested, and the trade read
     +2.38 at 95% and +1.86 at 90%. That market was thin: about $3,400 of
     liquidity, and Kalshi's season markets were dead.
+
+153. **An accuracy number printed beside a different estimator.** On 2026-11-07
+    the Check-a-trade tab put RosModel's replay accuracy beside each source's
+    row. The Sleeper and ESPN rows were priced on each week's own projection,
+    but the replay had scored each one's projection for the next game, used as
+    a flat rate. Their later-week projections cannot be replayed: they were
+    read after those seasons. The commit (c31cc6a) and the chat both said "only
+    CBS, which keeps no past numbers to test, reads it as a loss". A review the
+    next day priced Sleeper and ESPN the way they were scored. Stevenson for
+    Jeanty then reads -17.9 on Sleeper's next game and -6.6 on ESPN's, both
+    losses, against +26.3 on Sleeper's weeks, which still give Jeanty his old
+    role (TRAPS #152). The model (+16.3), the one estimator the replay finds
+    better than Sleeper's next game for running backs (0.92), still reads it as
+    a gain. CBS was testable after all, on what the repo saved on 2026-09-25
+    (ForwardAccuracy), and read the same as Sleeper's next game. The tab now
+    shows each source's accuracy only for the form that was tested. A source
+    whose priced form was never tested says "not measured". The same review
+    found pace and last-3 pricing free agents nobody had scored, so one
+    backup's 25.5-point game set every team's waiver quarterback. Those
+    sources now price only the model's population. A number from a test
+    belongs only to the thing the test measured.
+
+154. **An average accuracy, read as the accuracy for the case in front of
+    you.** The Check-a-trade tab's accuracy column is each source's error over
+    every player, and most players' roles are steady. Justin's question was
+    about one whose role had just changed: "the narratives surrounding jeanty
+    reduced workload concern me". Over all running backs the model beats
+    Sleeper's next-game number (0.92 of its error after 8 weeks), so "the most
+    accurate source says the trade is a gain" was the answer on 2026-11-08.
+    RoleChange asked it of lead backs whose carries had just fallen to 40% of
+    their average or less (78 games, 2018-2025, the event fixed before any
+    outcome was read). There the model's edge was 0.97 and not separable, it
+    ran 0.8 points a game high, and pace ran 1.5 high. Half of those backs got
+    their carries back, and the ones with a forecast to score kept 79% of
+    their points a game, against 94% for lead backs in ordinary weeks. Before
+    quoting a source's accuracy at a decision, ask whether the decision is an
+    ordinary case of what the accuracy was measured on.
+
+155. **An empty line that meant two things.** ESPN keeps a week it does not
+    project as an empty stat line, which the repo scores as 0.0. The first
+    Check-a-trade build read every such line as "no number" and put Sleeper's
+    there, so a week ESPN had a man sitting out was priced as if he played. The
+    fix (2026-11-08) read every one as zero. That priced Lamar Jackson, on IR
+    and empty in every week because ESPN does not project him at all, as zero
+    for the weeks Sleeper has him back, and it scored ESPN's correct
+    sitting-out calls as misses against a per-played-game target (QB ratio 1.15;
+    0.91 once fixed). The line means two things. With a number above zero in
+    some other week, ESPN has him not playing that week. With none anywhere,
+    ESPN has no view of him (WeeklyLineupValue.espnView). The tab now marks
+    the second kind as Sleeper's numbers. Two fixes in two days each read the
+    same value one way.

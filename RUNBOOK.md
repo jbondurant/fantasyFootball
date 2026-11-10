@@ -236,10 +236,44 @@ rerun it after a season ends, or when an estimator is added:
 
 Justin, 2026-11-07, on Stevenson for Jeanty: "find tools that would see the jeanty
 stevenson trade as neutral or bad for me while also having decent predictive
-accuracy compared to sleeper". After 8 weeks the recent-form windows are the worst
-forecasters there: RB error is 1.31x Sleeper's for the last 3 games and 1.27x for the
-last 4. The model (0.92x) beats Sleeper. CBS and FantasyPros keep no past numbers to
-test. A source that disagrees is worth a look, and its accuracy says how much.
+accuracy compared to sleeper". Each source's accuracy is shown only for the form that
+was tested. The replay tests points so far, the model, and Sleeper's and ESPN's
+next-game projections. ForwardAccuracy scores this season's saved Sleeper, ESPN and CBS
+rest-of-season numbers on the weeks since:
+
+    ./gradlew run -Pmain=ForwardAccuracy
+
+On 2026-11-08 the tested forms split on Stevenson for Jeanty: Sleeper next game -17.9
+and ESPN next game -6.6 against the model's +16.3. The model is the only estimator
+measurably better than Sleeper's next game for running backs (0.92), and the
+recent-form windows are the worst (RB 1.31x for the last 3 games). The betting markets
+have no saved season lines to test. Retracted, c31cc6a: "only CBS ... reads it as a
+loss" scored Sleeper and ESPN in a form they weren't priced in (TRAPS #153).
+
+Those accuracies are averages over every player, and most roles are steady. RoleChange
+asks it for the case that started this: a lead back (12+ carries a game) whose carries
+fall to 40% of that or less in a game.
+
+    ./gradlew run -Pmain=RoleChange
+
+On 2018-2025 there were 78 such games, 43 with a forecast to score. About half of those
+backs got their carries back (49% of the 43 to 75%+ of before). The 43 went from 11.7
+points a game to 9.3 from two weeks on (79%); lead backs in ordinary weeks keep 94%. No
+forecast was separable from Sleeper's next-game number there. The model's error was
+0.97 of it, against 0.94 in ordinary weeks, and the season-long numbers ran high (the
+model +0.8 a game, pace +1.5, Sleeper's next game +0.3). After two low games running
+(36 backs) it was Sleeper's next game that ran low, by 1.1. So after a collapse read
+him between Sleeper's next-game number and the model's (TRAPS #154).
+
+Overtaken on 2026-11-08: Stevenson hurt a tendon behind his knee against Green Bay and
+is expected to miss a few weeks. Jeanty had 6 carries and 7 targets on 64% of snaps,
+and Sleeper cut his later weeks by about 1.5 a game. The tab flags a listed injury
+beside the player; each source prices it only once it has updated. It also names the
+players a source has no numbers of its own for.
+
+A change to the page's own text or script needs no new search:
+
+    ./gradlew run -Pmain=TradeMarket -PexplorerPageOnly=true
 
 Since 2026-10-29 Sleeper finds and FantasyPros vetoes. Justin: "we use sleeper as base
 to find trades, and then fantasy pros as a second step filter to reject trades that

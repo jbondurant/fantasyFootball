@@ -202,10 +202,18 @@ public class RosModel {
                             Map<String, Map<Position, double[]>> priors,
                             Map<String, Map<Position, InSeasonLearning.Kappa>> kappas, List<String> withWeeks,
                             Map<String, EspnWeekly.Season> espn){
+        return cases(harvest, seasons, priors, kappas, withWeeks, espn, SEEN);
+    }
+
+    /** The same at any weeks seen: RoleChange asks at every week a role can collapse in, not only SEEN's. */
+    static List<Case> cases(Map<String, List<InSeasonLearning.Man>> harvest, List<String> seasons,
+                            Map<String, Map<Position, double[]>> priors,
+                            Map<String, Map<Position, InSeasonLearning.Kappa>> kappas, List<String> withWeeks,
+                            Map<String, EspnWeekly.Season> espn, int[] seens){
         List<Case> cases = new ArrayList<>();
         for(String season : seasons){
             boolean any = false;
-            for(int seen : SEEN){
+            for(int seen : seens){
                 Map<String, Double> next;
                 try {
                     next = LeagueWeek.projected(season, seen + 1);
@@ -429,15 +437,14 @@ public class RosModel {
     }
 
     /**
-     * Each blended man's rate per PLAYED game - the ros pricing before it is
-     * multiplied by his weeks. WeeklyLineupValue lays it out week by week, in
-     * the weeks Sleeper projects him to play.
-     */
-    /**
      * This season's points a game so far ("pace") or over his last three played
-     * games ("last3"), from the weeks before the one in progress, for every
-     * quarterback, back, receiver and tight end with a game. These are the ALT
-     * estimators the backtest scores, served to the trade explorer as pricings.
+     * games ("last3"), from the weeks before the one in progress. These are the
+     * ALT estimators the backtest scores, served to the trade explorer as
+     * pricings, and only for the men it scored them on: the preseason board, as
+     * for the blend (blend's keys). Past it a man keeps Sleeper's number. The
+     * review of 2026-11-08 found that pricing every man with a game let Gardner
+     * Minshew's one 25.5-point game set the waiver quarterback, which every team
+     * may start, in 8 of 9 weeks.
      */
     public static Map<String, Double> recentRates(String estimator){
         String season = LeagueWeek.season();
@@ -450,9 +457,10 @@ public class RosModel {
             ids.addAll(week.keySet());
         }
         Map<String, Double> out = new HashMap<>();
+        java.util.Set<String> board = blend().keySet();
         for(String id : ids){
             Player p = Player.getPlayerFromSIDV2(id);
-            if(p == null || !java.util.Arrays.asList(InSeasonLearning.POSITIONS).contains(p.position)){
+            if(p == null || !board.contains(id)){
                 continue;
             }
             double[] week = new double[done];
@@ -473,6 +481,11 @@ public class RosModel {
         return out;
     }
 
+    /**
+     * Each blended man's rate per PLAYED game - the ros pricing before it is
+     * multiplied by his weeks. WeeklyLineupValue lays it out week by week, in
+     * the weeks Sleeper projects him to play.
+     */
     public static Map<String, Double> rates(){
         Map<String, Double> out = new HashMap<>();
         blend().forEach((id, r) -> out.put(id, r.rate()));
@@ -516,14 +529,14 @@ public class RosModel {
     }
 
     /**
-     * EVERY ESTIMATOR AGAINST SLEEPER, ON THE SAME MEN. Each estimator's RMSE
-     * on the cases where it has a number, beside Sleeper's on those same cases,
-     * their ratio, and the paired difference in squared error clustered by
-     * season. The blend's weight is fitted leave-one-season-out first, as in the
-     * main table. Writes {@link #ACCURACY} for the trade explorer.
+     * The model's blend for every case, its weight fitted on the other seasons'
+     * cases at the same weeks seen and position (as the main table fits it),
+     * put into each case's alt as "blend". A group too small to fit gets none.
      */
-    static String accuracy(List<Case> cases, List<String> withWeeks) throws IOException {
-        for(int seen : SEEN){
+    static void fitBlend(List<Case> cases, List<String> withWeeks){
+        java.util.Set<Integer> seens = new java.util.TreeSet<>();
+        cases.forEach(c -> seens.add(c.seen()));
+        for(int seen : seens){
             for(Position position : InSeasonLearning.POSITIONS){
                 for(String held : withWeeks){
                     List<double[]> train = new ArrayList<>();
@@ -544,6 +557,17 @@ public class RosModel {
                 }
             }
         }
+    }
+
+    /**
+     * EVERY ESTIMATOR AGAINST SLEEPER, ON THE SAME MEN. Each estimator's RMSE
+     * on the cases where it has a number, beside Sleeper's on those same cases,
+     * their ratio, and the paired difference in squared error clustered by
+     * season. The blend's weight is fitted leave-one-season-out first, as in the
+     * main table. Writes {@link #ACCURACY} for the trade explorer.
+     */
+    static String accuracy(List<Case> cases, List<String> withWeeks) throws IOException {
+        fitBlend(cases, withWeeks);
         List<String> estimators = new ArrayList<>(List.of("blend", "posterior", "espn"));
         estimators.addAll(ALT);
         StringBuilder out = new StringBuilder();

@@ -1,0 +1,191 @@
+ROLE CHANGE  2026-11-09  (running backs on the draft board, 2018-2025)
+A lead back: 12+ carries a game over 3+ games. The event, fixed before any outcome was read: a game at 40% of that
+average or less, the first of his season, weeks 4-13. Forecasts are of his points a game from two weeks on.
+bias = forecast minus what he scored; ratio = RMSE / Sleeper next game's; the last column is mean over seasons +- se.
+
+== one game at 40% of his carries or less ==
+78 back-weeks in 8 seasons; 43 scored (Sleeper projected him the next week and he played 3+ games from the week after)
+carries a game: 14.8 before, 4.2 in the game; 11.4 after for the 74 who played again, 38 of them (51%) back to 75%+ of before
+the scored backs' carries: 14.6 before, 11.0 after, 21 of 43 (49%) back to 75%+
+points a game, the scored backs: 11.7 before the game, 9.3 from two weeks on (79%)
+forecast           backs    bias    RMSE  ratio   sq err - Sleeper next's  reading
+Sleeper next game     43   +0.26    3.28   1.00     +0.00 +- 0.00         the baseline
+model                 43   +0.84    3.19   0.97     -0.55 +- 1.31         = Sleeper next game
+season so far         43   +0.99    3.44   1.05     +1.11 +- 1.84         = Sleeper next game
+pace                  43   +1.48    4.20   1.28     +6.87 +- 3.59         = Sleeper next game
+last 3 games          43   -0.43    4.32   1.32     +7.97 +- 6.10         = Sleeper next game
+ESPN next game        42   +0.88    3.63   1.11     +2.57 +- 1.61         = Sleeper next game
+
+== two games running at half his earlier carries or less ==
+50 back-weeks in 8 seasons; 36 scored (Sleeper projected him the next week and he played 3+ games from the week after)
+carries a game: 15.6 before, 6.4 in the games; 11.6 after for the 50 who played again, 23 of them (46%) back to 75%+ of before
+the scored backs' carries: 15.5 before, 11.5 after, 15 of 36 (42%) back to 75%+
+points a game, the scored backs: 12.0 before the game, 10.0 from two weeks on (83%)
+forecast           backs    bias    RMSE  ratio   sq err - Sleeper next's  reading
+Sleeper next game     36   -1.08    5.04   1.00     +0.00 +- 0.00         the baseline
+model                 36   -0.25    4.94   0.98     -0.99 +- 2.98         = Sleeper next game
+season so far         36   +0.05    5.04   1.00     +0.02 +- 3.81         = Sleeper next game
+pace                  36   +0.30    5.23   1.04     +2.00 +- 4.25         = Sleeper next game
+last 3 games          36   -2.21    5.74   1.14     +7.62 +- 7.32         = Sleeper next game
+ESPN next game        35   -0.99    5.43   1.05     +2.82 +- 3.32         = Sleeper next game
+
+== the comparison: lead backs in the weeks that were not a collapse ==
+1502 back-weeks in 8 seasons; 1171 scored (Sleeper projected him the next week and he played 3+ games from the week after)
+carries a game: 15.5 before, 15.5 in the game; 14.7 after for the 1489 who played again, 1206 of them (81%) back to 75%+ of before
+the scored backs' carries: 15.6 before, 14.9 after, 973 of 1171 (83%) back to 75%+
+points a game, the scored backs: 14.2 before the game, 13.4 from two weeks on (94%)
+forecast           backs    bias    RMSE  ratio   sq err - Sleeper next's  reading
+Sleeper next game   1171   +0.33    4.48   1.00     +0.00 +- 0.00         the baseline
+model               1171   +0.02    4.20   0.94     -2.44 +- 0.38         better than Sleeper next game
+season so far       1171   -0.12    4.20   0.94     -2.45 +- 0.51         better than Sleeper next game
+pace                1171   +0.86    4.85   1.08     +3.41 +- 1.06         worse than Sleeper next game
+last 3 games        1171   +1.03    5.94   1.32    +15.16 +- 1.27         worse than Sleeper next game
+ESPN next game      1164   +0.92    4.70   1.05     +1.88 +- 0.41         worse than Sleeper next game
+
+-- one game at 40% or less, each one --
+season week back                     carries before  in game    after pts before  Sleeper pts after
+2018   4    Dion Lewis                         13.0      4.0      9.3       9.9      9.5      7.8
+2018   4    Isaiah Crowell                     12.7      4.0     11.2      15.1        -        -
+2018   4    Alfred Morris                      13.3      4.0      8.4       7.2        -        -
+2018   5    Adrian Peterson                    18.7      4.0     15.9      17.0      9.8     11.0
+2018   7    LeSean McCoy                       12.2      2.0     12.3       7.9      9.2      8.3
+2018   7    Sony Michel                        18.2      4.0     16.3      13.5        -        -
+2018   7    Bilal Powell                       12.5      5.0        -       8.3        -        -
+2018   8    Carlos Hyde                        19.0      6.0      7.4      12.2        -        -
+2019   4    Todd Gurley                        14.7      5.0     15.8       9.7     13.2     13.3
+2019   5    Austin Ekeler                      14.0      3.0      6.6      23.5     14.2     14.8
+2019   7    David Johnson                      12.7      1.0      2.8      17.7        -        -
+2019   7    Kerryon Johnson                    17.4      5.0     10.5      12.1        -        -
+2019   7    David Montgomery                   13.8      2.0     17.1       9.2     10.5      9.7
+2019   9    Sony Michel                        17.5      4.0     14.7      10.9        -        -
+2019   10   Alvin Kamara                       14.3      4.0     11.6      15.3     16.6     14.1
+2019   10   Frank Gore                         13.3      5.0      7.9       8.0      6.0      3.5
+2019   11   James Conner                       13.9      5.0      7.0      15.6        -        -
+2019   12   Chris Carson                       20.0      8.0     17.5      14.0     12.2     14.4
+2019   13   Tevin Coleman                      12.8      5.0      4.3      12.5      6.3      3.2
+2020   4    Austin Ekeler                      15.7      2.0     11.2      17.3        -        -
+2020   4    Nick Chubb                         17.0      6.0     16.6      17.8        -        -
+2020   8    Clyde Edwards-Helaire              16.4      6.0     12.0      13.9     11.2     11.3
+2020   8    Adrian Peterson                    13.3      5.0      7.9       8.6      8.6      7.5
+2020   9    David Johnson                      14.4      2.0     11.0      12.0        -        -
+2020   9    Melvin Gordon                      15.0      6.0     14.9      12.6      9.4     13.5
+2020   9    Ronald Jones                       14.6      3.0     14.4      12.0      8.8     12.0
+2020   12   Josh Jacobs                        19.9      7.0     16.8      15.4        -        -
+2020   13   Antonio Gibson                     12.6      2.0     14.5      14.9        -        -
+2021   4    Damien Harris                      15.0      4.0     13.9       8.2     13.3     16.2
+2021   4    Mark Ingram                        15.3      6.0     10.8       7.2      7.9      7.3
+2021   5    Saquon Barkley                     13.0      2.0     13.5      13.9        -        -
+2021   6    Alexander Mattison                 13.0      3.0      6.6       9.7        -        -
+2021   7    Mike Davis                         12.4      4.0      6.5       9.4      9.1      5.5
+2021   8    James Robinson                     14.0      4.0     10.9      15.7        -        -
+2021   8    James Conner                       12.7      5.0     15.4      10.6      8.1     18.6
+2021   9    Chuba Hubbard                      13.5      3.0      7.6       8.6      2.2      7.1
+2021   10   Darrell Henderson                  15.1      5.0      5.8      15.3        -        -
+2021   12   D'Andre Swift                      13.7      3.0      5.5      15.7        -        -
+2022   4    Leonard Fournette                  19.0      3.0     10.8      10.9     15.2     10.2
+2022   5    Damien Harris                      13.3      4.0      8.2      12.3        -        -
+2022   5    Antonio Gibson                     13.3      3.0      9.3      11.5      5.0      9.3
+2022   7    Breece Hall                        12.7      4.0        -      15.2        -        -
+2022   7    AJ Dillon                          12.2      4.0     10.9       8.2      7.6     10.6
+2022   7    James Robinson                     13.5      0.0      7.3      11.0      6.1      4.8
+2022   10   Cordarrelle Patterson              14.2      5.0      9.7      14.9     10.9      9.4
+2022   12   Travis Etienne Jr.                 13.1      2.0     14.5      12.5     14.2     10.5
+2022   12   Dameon Pierce                      17.5      5.0     20.0      12.3        -        -
+2022   13   Kenneth Walker III                 13.5      3.0     22.5      13.6        -        -
+2023   4    Javonte Williams                   12.0      2.0     14.9       7.3        -        -
+2023   4    AJ Dillon                          13.0      5.0     12.2       4.9      9.5      7.7
+2023   5    James Conner                       15.5      6.0     17.5      12.7        -        -
+2023   5    James Cook III                     14.0      5.0     14.7      13.2     11.3     13.0
+2023   5    Brian Robinson Jr.                 15.3      6.0     11.1      14.8     10.1     10.9
+2023   6    David Montgomery                   22.0      6.0     13.9      19.3        -        -
+2023   6    Zack Moss                          22.3      7.0      9.7      20.4      7.7      6.6
+2023   7    Bijan Robinson                     13.3      1.0     13.3      13.5     14.0     13.3
+2023   8    Miles Sanders                      12.2      2.0      6.6       6.9      2.9      3.3
+2023   9    Gus Edwards                        13.1      5.0     11.0      10.9      7.8      9.2
+2023   11   Kenneth Walker III                 16.1      4.0     14.0      14.1        -        -
+2023   12   Dameon Pierce                      15.6      5.0      5.2       7.4      4.7      3.1
+2024   4    Zach Charbonnet                    13.3      2.0      7.2      16.9      6.5      8.6
+2024   5    De'Von Achane                      13.3      3.0     12.3      14.3        -        -
+2024   7    Zamir White                        12.3      3.0      4.3       3.3        -        -
+2024   7    Devin Singletary                   14.0      5.0      5.2      10.1      6.6      4.2
+2024   8    Jordan Mason                       18.3      6.0      4.8      13.5        -        -
+2024   12   Brian Robinson Jr.                 14.6      5.0     13.0      13.5     12.3      4.8
+2024   12   J.K. Dobbins                       15.2      6.0     18.5      14.5        -        -
+2024   13   Aaron Jones Sr.                    16.3      5.0     14.2      12.8     13.2     12.0
+2025   5    Saquon Barkley                     19.3      6.0     17.9      13.9     17.0     13.3
+2025   6    David Montgomery                   12.2      4.0      8.5      13.7     10.6      7.4
+2025   7    Ashton Jeanty                      17.5      6.0     15.5      14.0        -        -
+2025   7    Tony Pollard                       15.3      6.0     14.4       9.3      8.7     10.5
+2025   8    Jordan Mason                       14.0      4.0      7.9      11.0      8.0      6.0
+2025   8    Cam Skattebo                       14.0      3.0        -      15.0        -        -
+2025   9    Chuba Hubbard                      13.2      5.0      6.3      10.9      5.0      5.7
+2025   11   Josh Jacobs                        18.0      7.0     13.0      17.8        -        -
+2025   12   Alvin Kamara                       12.8      3.0        -       8.0        -        -
+2025   12   Rico Dowdle                        15.3      6.0     12.4      13.6     12.7      6.8
+
+-- two games running at half or less, each one --
+season week back                     carries before  in game    after pts before  Sleeper pts after
+2018   7    Christian McCaffrey                15.8      7.5     14.1      15.7     15.5     24.5
+2018   7    Alfred Morris                      12.4      4.5      8.0       6.9        -        -
+2018   8    Carlos Hyde                        20.0     10.0      7.4      12.2        -        -
+2018   10   Sony Michel                        18.2      7.5     17.2      11.4        -        -
+2019   6    Austin Ekeler                      14.0      4.0      6.8      21.6     10.9     14.0
+2019   7    Kerryon Johnson                    18.5      9.0     10.5      12.1        -        -
+2019   7    David Montgomery                   14.5      6.5     17.1       9.2     10.5      9.7
+2019   10   Alvin Kamara                       15.0      7.5     11.6      15.3     16.6     14.1
+2019   10   David Johnson                      12.7      3.0      2.4      15.2      7.4      4.4
+2019   11   Leonard Fournette                  20.4      9.5     16.6      15.1     13.6     10.8
+2019   11   Sony Michel                        17.5      7.0     15.5      10.1     10.7      7.9
+2019   13   Dalvin Cook                        20.3     10.0     13.5      21.1        -        -
+2020   7    Chris Carson                       13.3      6.5     12.5      17.7        -        -
+2020   8    Clyde Edwards-Helaire              17.8      7.0     12.0      13.9     11.2     11.3
+2020   9    Melvin Gordon                      16.4      7.0     14.9      12.6      9.4     13.5
+2020   9    Ronald Jones                       15.7      5.0     14.4      12.0      8.8     12.0
+2020   9    Adrian Peterson                    13.3      6.5      7.9       7.6      5.8      8.0
+2020   10   Jonathan Taylor                    14.3      6.5     19.8      11.3      7.8     25.1
+2020   13   David Johnson                      14.4      6.0     11.3      10.7        -        -
+2020   13   Todd Gurley                        17.7      8.0      5.0      12.9     11.2      4.3
+2021   6    Devin Singletary                   12.3      5.5     11.6       7.3        -        -
+2021   8    Alexander Mattison                 13.0      2.5      7.1       8.2      4.9      7.2
+2021   8    Mark Ingram                        14.3      6.0     10.3       5.9      6.0      7.5
+2021   10   Chuba Hubbard                      13.5      6.0      7.4       8.1      2.6      7.1
+2021   11   Saquon Barkley                     13.0      4.0     14.6      11.3     15.2      9.0
+2022   5    Leonard Fournette                  19.0      8.5     10.5      11.9     15.6      9.3
+2022   6    Antonio Gibson                     13.3      4.0      9.8      10.3      6.3      8.6
+2022   7    Damien Harris                      13.3      3.5      9.2      10.1      8.5      6.0
+2022   7    James Robinson                     13.8      6.0      7.3      11.0      6.1      4.8
+2022   12   Travis Etienne Jr.                 13.3      6.5     14.5      12.5     14.2     10.5
+2022   12   Dameon Pierce                      18.3      7.5     20.0      12.3        -        -
+2023   5    Tony Pollard                       20.7      9.5     14.3      14.4     15.0     10.5
+2023   5    James Conner                       17.0      8.5     17.5      12.7        -        -
+2023   6    Javonte Williams                   12.0      6.0     15.4       6.1     10.7     11.2
+2023   8    Bijan Robinson                     13.3      6.0     13.6      11.6     12.8     14.5
+2023   8    Miles Sanders                      13.5      4.5      6.6       6.9      2.9      3.3
+2023   9    Kenneth Walker III                 18.2      8.5     13.3      15.1     11.6      9.5
+2023   9    Zack Moss                          19.0      9.0      8.5      16.7      4.2      7.2
+2023   10   David Montgomery                   22.0      9.0     14.1      16.0     10.4     11.8
+2024   5    De'Von Achane                      14.3      6.5     12.3      14.3        -        -
+2024   5    Zach Charbonnet                    13.3      2.0      7.6      14.7      5.4      9.0
+2024   8    Alvin Kamara                       17.3      8.5     17.8      18.1     17.4     12.7
+2024   8    Zamir White                        12.3      2.5      5.5       3.3        -        -
+2024   8    Devin Singletary                   14.0      3.5      5.6       8.6      6.1      4.3
+2024   10   Jordan Mason                       18.3      3.5      6.0      12.0        -        -
+2025   6    Saquon Barkley                     19.3      9.0     18.5      14.4     15.8     14.3
+2025   7    Tony Pollard                       16.4      8.0     14.4       9.3      8.7     10.5
+2025   9    Alvin Kamara                       13.4      6.0     12.5       8.4        -        -
+2025   9    Jordan Mason                       14.0      7.0      7.6       9.6      7.4      6.3
+2025   10   Chuba Hubbard                      13.2      4.0      6.7       9.6      3.4      6.2
+
+== THIS SEASON, weeks 1-8 (and who holds him here) ==
+Ashton Jeanty            Hamrliks     one game: week 8, 2 carries against 15.1 a game before
+Ashton Jeanty            Hamrliks     two games running: weeks 7 and 8, 5.0 carries a game against 16.3 before
+Aaron Jones Sr.          JFMarino     one game: week 8, 5 carries against 17.5 a game before
+Aaron Jones Sr.          JFMarino     two games running: weeks 7 and 8, 6.5 carries a game against 19.4 before
+Cam Skattebo             justinb314   one game: week 6, 0 carries against 16.2 a game before
+Cam Skattebo             justinb314   two games running: weeks 5 and 6, 6.5 carries a game against 17.0 before
+Chuba Hubbard            JFMarino     one game: week 7, 7 carries against 17.8 a game before
+Emanuel Wilson           free         one game: week 8, 0 carries against 15.9 a game before
+J.K. Dobbins             BHier        two games running: weeks 7 and 8, 6.5 carries a game against 13.5 before
+Jonathan Taylor          jerem9604    one game: week 8, 8 carries against 20.0 a game before
+TreVeyon Henderson       d0ddi        one game: week 5, 4 carries against 12.7 a game before
+TreVeyon Henderson       d0ddi        two games running: weeks 5 and 6, 5.5 carries a game against 12.7 before

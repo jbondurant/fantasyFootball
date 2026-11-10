@@ -1,5 +1,6 @@
 import PlayerImportAndSetup.Position;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -79,14 +80,33 @@ public class WeeklyLineupValue implements RosterValue {
     private final TreeMap<Integer, Map<Position, List<Map.Entry<String, Double>>>> free;
     private final java.util.function.Function<String, Position> positionOf;
     private final String label;
+    /** id -> how much of his numbers are this pricing's own (coverage); null when all of them are, for every man. */
+    private final Map<String, Integer> coverage;
 
     WeeklyLineupValue(TreeMap<Integer, Map<String, Double>> projected,
                       TreeMap<Integer, Map<Position, List<Map.Entry<String, Double>>>> free,
                       java.util.function.Function<String, Position> positionOf, String label){
+        this(projected, free, positionOf, label, null);
+    }
+
+    WeeklyLineupValue(TreeMap<Integer, Map<String, Double>> projected,
+                      TreeMap<Integer, Map<Position, List<Map.Entry<String, Double>>>> free,
+                      java.util.function.Function<String, Position> positionOf, String label, Map<String, Integer> coverage){
         this.projected = projected;
         this.free = free;
         this.positionOf = positionOf;
         this.label = label;
+        this.coverage = coverage;
+    }
+
+    /**
+     * How much of a man's numbers on this pricing are its own: 2 all of them, 1
+     * this week's only (the betting markets, where Kalshi prices his game and
+     * Polymarket has no season line for him), 0 none - he is on Sleeper's
+     * numbers under this pricing's label. The Check-a-trade tab says which.
+     */
+    public int coverage(String id){
+        return coverage == null ? 2 : coverage.getOrDefault(id, 0);
     }
 
     @Override
@@ -349,11 +369,29 @@ public class WeeklyLineupValue implements RosterValue {
     }
 
     /**
+     * The pricings a search may be FOUND on (-Pprojections for TradeMarket and
+     * TuesdaySwap under the weekly objective): the ones ProjectionSources also
+     * resolves to season points, which order the cuts. The others are for the
+     * Check-a-trade tab; named there, their cut order would silently be the
+     * season feed's (review, 2026-11-08).
+     */
+    public static final List<String> FINDERS = List.of("sleeper-remaining", "sleeper", "ros");
+
+    /** Refuses a -Pprojections name the weekly objective cannot search on. */
+    public static void requireFinder(String source){
+        if(!FINDERS.contains(source)){
+            throw new IllegalArgumentException("-Pprojections=" + source + " has no weekly search; use one of " + String.join(", ", FINDERS)
+                    + (SOURCES.contains(source) ? " (the Check-a-trade tab prices trades on " + source + ")" : " or -Pobjective=drawn"));
+        }
+    }
+
+    /**
      * The pricings forSource knows. Any other name is refused: until 2026-11-07
      * an unknown name was priced on Sleeper's weekly numbers under its own label.
      * "sleeper" and "sleeper-remaining" are the same weekly numbers.
      */
-    public static final List<String> SOURCES = List.of("sleeper-remaining", "sleeper", "ros", "fantasypros", "espn", "cbs", "pace", "last3");
+    public static final List<String> SOURCES = List.of("sleeper-remaining", "sleeper", "sleeper-next", "ros", "fantasypros", "espn", "espn-next",
+            "cbs", "market", "pace", "last3");
 
     /**
      * The objective on one pricing for the weeks from the one in progress to the
@@ -361,76 +399,205 @@ public class WeeklyLineupValue implements RosterValue {
      * kept off the wire. Every pricing starts from Sleeper's weekly projections:
      * a man is in a week only where Sleeper projects him, and games under way
      * this week are out. On them:
-     *  - ros, pace, last3: a flat rate in each of those weeks (RosModel's blend,
-     *    his points a game so far, over his last three games);
+     *  - ros, pace, last3, cbs, sleeper-next, espn-next: a flat rate in each of
+     *    those weeks (RosModel's blend; his points a game so far; over his last
+     *    three games; CBS's rest-of-season points over its games left; Sleeper's
+     *    or ESPN's projection for his next game not yet kicked off, the form
+     *    RosModel scores them in);
      *  - fantasypros: his FantasyPros rank read onto Sleeper's points a game
      *    (perGameScale), as a factor on his weeks;
-     *  - cbs: CBS's rest-of-season points a game over Sleeper's, as a factor;
-     *  - espn: ESPN's own projection for each week (EspnWeekly), where it has a
-     *    number for him above zero.
-     * A man the source does not cover keeps Sleeper's number (defences
-     * everywhere but fantasypros), and the run prints how many that was.
+     *  - espn: ESPN's own projection for each week (EspnWeekly) for every man it
+     *    has a view of (espnView), a week it leaves empty as zero;
+     *  - market: the betting markets (Justin, 2026-11-08: "add betting markets as
+     *    a source with not measured accuracy"). Kalshi's props in place of
+     *    Sleeper's stat line for this week's game where Kalshi prices him
+     *    (MarketProjection); everywhere else Sleeper's numbers times his
+     *    Polymarket season ladders' factor (SeasonProps.marketFactors), where a
+     *    ladder is quoted tightly enough to have a median.
+     * A man the source has no numbers for keeps Sleeper's (defences everywhere
+     * but fantasypros; under espn-next, Sleeper's next game). coverage(id) says
+     * which men those are, and the run prints how many.
      */
     public static WeeklyLineupValue forSource(AAAConfiguration configuration, String source){
         if(!SOURCES.contains(source)){
             throw new IllegalArgumentException("no weekly pricing called '" + source + "'; known: " + String.join(", ", SOURCES));
         }
         TitleOdds.League league = TitleOdds.league(configuration);
+        int first = league.thisWeek(), last = league.lastWeek();
         Set<String> owned = LeagueOwners.today(configuration).keySet();
-        Map<String, Double> rates = switch(source){
-            case "ros" -> RosModel.rates();
-            case "pace", "last3" -> RosModel.recentRates(source);
-            default -> Map.of();
-        };
-        Set<String> started = NflverseGames.kickedOff(NflverseGames.games(), league.season(), league.thisWeek(),
+        Set<String> started = NflverseGames.kickedOff(NflverseGames.games(), league.season(), first,
                 java.time.LocalDateTime.now(java.time.ZoneId.of("America/New_York")));
         java.util.function.Function<String, Position> positionOf = id -> {
             Player p = Player.getPlayerFromSIDV2(id);
             return p == null ? null : p.position;
         };
-        Map<String, Double> scale = Map.of();
-        if("fantasypros".equals(source) || "cbs".equals(source)){
-            List<Map<String, Double>> weeks = new ArrayList<>();
-            for(int w = league.thisWeek(); w <= league.lastWeek(); w++){
-                weeks.add(LeagueWeek.projected(league.season(), w));   // every week priced, games under way included
+        // Sleeper's weeks as every pricing takes them: a game under way or over this week is out, a move now cannot reach it
+        TreeMap<Integer, Map<String, Double>> sleeper = new TreeMap<>();
+        List<Map<String, Double>> unfiltered = new ArrayList<>();
+        for(int w = first; w <= last; w++){
+            Map<String, Double> all = LeagueWeek.projected(league.season(), w);
+            unfiltered.add(all);
+            Map<String, Double> week = new HashMap<>();
+            for(Map.Entry<String, Double> e : all.entrySet()){
+                if(w != first || !started.contains(ProjectionSources.teamOf(e.getKey()))){
+                    week.put(e.getKey(), e.getValue());
+                }
             }
-            scale = "fantasypros".equals(source) ? perGameScale(weeks, fantasyProsRanks(), positionOf)
-                    : perGameFactor(weeks, cbsPerGame());
+            sleeper.put(w, week);
         }
-        Map<Integer, Map<String, Double>> own = "espn".equals(source)
-                ? EspnWeekly.season(league.season()).byWeek() : Map.of();
+        Map<String, Double> rates = Map.of(), scale = Map.of();
+        Map<Integer, Map<String, Double>> own = Map.of();
+        Set<String> mine = null, part = Set.of();     // the men it has its own numbers for; null: all of them (Sleeper's own forms)
+        switch(source){
+            case "ros" -> {
+                rates = RosModel.rates();
+                mine = rates.keySet();
+            }
+            case "pace", "last3" -> {
+                rates = RosModel.recentRates(source);
+                mine = rates.keySet();
+            }
+            case "cbs" -> {
+                rates = cbsPerGame();
+                mine = rates.keySet();
+            }
+            case "sleeper-next" -> rates = nextGame(sleeper, null);
+            case "espn-next" -> {
+                Map<String, Double> theirs = nextGame(sleeper, EspnWeekly.season(league.season()).byWeek());
+                Map<String, Double> both = new HashMap<>(nextGame(sleeper, null));
+                both.putAll(theirs);
+                rates = both;
+                mine = theirs.keySet();
+            }
+            case "fantasypros" -> {
+                scale = perGameScale(unfiltered, fantasyProsRanks(), positionOf);   // every week priced, games under way included
+                mine = scale.keySet();
+            }
+            case "espn" -> {
+                Map<Integer, Map<String, Double>> espn = EspnWeekly.season(league.season()).byWeek();
+                mine = espnView(espn, first, last);
+                Map<Integer, Map<String, Double>> weeks = new HashMap<>();
+                for(int w = first; w <= last; w++){
+                    Map<String, Double> theirs = espn.getOrDefault(w, Map.of());
+                    Map<String, Double> week = new HashMap<>();
+                    for(String id : mine){
+                        week.put(id, theirs.getOrDefault(id, 0.0));
+                    }
+                    weeks.put(w, week);
+                }
+                own = weeks;
+            }
+            case "market" -> {
+                Map<String, Double> kalshi = marketThisWeek(league);
+                own = Map.of(first, kalshi);
+                Set<String> projectedMen = new java.util.HashSet<>();
+                unfiltered.forEach(week -> projectedMen.addAll(week.keySet()));
+                try {
+                    scale = SeasonProps.marketFactors(projectedMen);
+                }
+                catch(IOException | InterruptedException e){
+                    if(e instanceof InterruptedException){
+                        Thread.currentThread().interrupt();
+                    }
+                    throw new IllegalStateException("Polymarket could not be read: " + e, e);
+                }
+                mine = scale.keySet();
+                part = new java.util.HashSet<>(kalshi.keySet());
+                part.retainAll(sleeper.get(first).keySet());     // only where this week's game is still to come
+            }
+            default -> { }
+        }
         TreeMap<Integer, Map<String, Double>> projected = new TreeMap<>();
         TreeMap<Integer, Map<Position, List<Map.Entry<String, Double>>>> free = new TreeMap<>();
-        Set<String> covered = new java.util.HashSet<>();
-        Set<String> priced = new java.util.HashSet<>();
-        for(int w = league.thisWeek(); w <= league.lastWeek(); w++){
+        for(int w = first; w <= last; w++){
             Map<String, Double> week = new HashMap<>();
             Map<String, Double> ownWeek = own.getOrDefault(w, Map.of());
-            for(Map.Entry<String, Double> e : LeagueWeek.projected(league.season(), w).entrySet()){
-                if(w == league.thisWeek() && started.contains(ProjectionSources.teamOf(e.getKey()))){
-                    continue;           // his game this week is under way or over: a move now cannot reach it
-                }
+            for(Map.Entry<String, Double> e : sleeper.get(w).entrySet()){
                 String id = e.getKey();
-                Double mine = ownWeek.get(id);
-                double value = mine != null && mine > 0 ? mine     // ESPN keeps a bye or an empty line as 0.0
-                        : rates.getOrDefault(id, e.getValue()) * scale.getOrDefault(id, 1.0);
-                if(owned.contains(id)){
-                    priced.add(id);
-                    if(mine != null && mine > 0 || rates.containsKey(id) || scale.containsKey(id)){
-                        covered.add(id);
-                    }
-                }
-                week.put(id, value);
+                Double theirs = ownWeek.get(id);
+                week.put(id, theirs != null ? theirs : rates.getOrDefault(id, e.getValue()) * scale.getOrDefault(id, 1.0));
             }
             projected.put(w, week);
             free.put(w, freeAgents(week, owned, positionOf));
         }
-        if(!source.startsWith("sleeper")){
-            System.out.printf("%s: %d of the %d rostered men Sleeper projects priced on its own numbers, the rest on Sleeper's%n",
-                    source, covered.size(), priced.size());
+        Map<String, Integer> coverage = null;
+        if(mine != null){
+            coverage = new HashMap<>();
+            for(String id : part){
+                coverage.put(id, 1);
+            }
+            for(String id : mine){
+                coverage.put(id, 2);
+            }
+            int priced = 0, all = 0, some = 0;
+            for(String id : owned){
+                boolean projectedAtAll = false;
+                for(Map<String, Double> week : sleeper.values()){
+                    projectedAtAll |= week.containsKey(id);
+                }
+                if(projectedAtAll){
+                    priced++;
+                    all += coverage.getOrDefault(id, 0) == 2 ? 1 : 0;
+                    some += coverage.getOrDefault(id, 0) == 1 ? 1 : 0;
+                }
+            }
+            System.out.printf("%s: %d of the %d rostered men Sleeper projects priced on its own numbers%s, the rest on Sleeper's%n",
+                    source, all, priced, some == 0 ? "" : ", " + some + " more for this week only");
         }
         return new WeeklyLineupValue(projected, free, positionOf,
-                "weekly lineups on " + source + ", weeks " + league.thisWeek() + "-" + league.lastWeek());
+                "weekly lineups on " + source + ", weeks " + first + "-" + last, coverage);
+    }
+
+    /**
+     * The men ESPN has a view of over these weeks: a projection above zero in
+     * at least one. ESPN keeps an empty line as 0.0, and it leaves a man empty
+     * in every week when it does not project him at all (most men on IR; Lamar
+     * Jackson, 2026-11-08), so a man with nothing above zero is one it has no
+     * numbers for, and he keeps Sleeper's. For a man it does have numbers for,
+     * an empty week is ESPN saying he does not play it (Jeremiyah Love, empty
+     * to week 14 and projected from 15). Two reviews, 2026-11-08: first the
+     * pricing put Sleeper's number over every empty line, then zero over every
+     * one, IR men included.
+     */
+    static Set<String> espnView(Map<Integer, Map<String, Double>> espn, int first, int last){
+        Set<String> out = new java.util.HashSet<>();
+        for(int w = first; w <= last; w++){
+            espn.getOrDefault(w, Map.of()).forEach((id, points) -> {
+                if(points > 0){
+                    out.add(id);
+                }
+            });
+        }
+        return out;
+    }
+
+    /**
+     * Each man's projection for his next game, the form RosModel scores
+     * Sleeper and ESPN in (a week k+1 projection as his rate from then on):
+     * Sleeper's number in the first of these weeks that carries him. With
+     * ESPN's weeks, ESPN's number in the first week Sleeper carries him and
+     * ESPN has him above zero; a man ESPN never has above zero there is left
+     * out. The weeks are forSource's, so a game already kicked off this week is
+     * not his next. RosModel's replay scored ESPN's number for the very next
+     * week, a zero included, and only for men Sleeper projected that week.
+     */
+    static Map<String, Double> nextGame(java.util.SortedMap<Integer, Map<String, Double>> sleeper, Map<Integer, Map<String, Double>> espn){
+        Map<String, Double> out = new HashMap<>();
+        for(Map.Entry<Integer, Map<String, Double>> week : sleeper.entrySet()){
+            Map<String, Double> theirs = espn == null ? null : espn.getOrDefault(week.getKey(), Map.of());
+            for(Map.Entry<String, Double> e : week.getValue().entrySet()){
+                if(out.containsKey(e.getKey())){
+                    continue;
+                }
+                if(theirs == null){
+                    out.put(e.getKey(), e.getValue());
+                }
+                else if(theirs.getOrDefault(e.getKey(), 0.0) > 0){
+                    out.put(e.getKey(), theirs.get(e.getKey()));
+                }
+            }
+        }
+        return out;
     }
 
     /** CBS's rest-of-season points a game (points / games left), by Sleeper id; men with no games left are out. */
@@ -444,28 +611,21 @@ public class WeeklyLineupValue implements RosterValue {
         return out;
     }
 
-    /**
-     * A source's points a game read as a factor on Sleeper's: the source's rate
-     * over Sleeper's points per projected game across these weeks. A man with no
-     * Sleeper points or no source rate gets no factor.
-     */
-    static Map<String, Double> perGameFactor(List<Map<String, Double>> weeks, Map<String, Double> rate){
-        Map<String, Double> totals = new HashMap<>();
-        Map<String, Integer> games = new HashMap<>();
-        for(Map<String, Double> week : weeks){
-            week.forEach((id, pts) -> {
-                totals.merge(id, pts, Double::sum);
-                games.merge(id, 1, Integer::sum);
-            });
+    /** This week's league points with every stat Kalshi prices at the market's (MarketProjection), by Sleeper id. */
+    static Map<String, Double> marketThisWeek(TitleOdds.League league){
+        try {
+            LeagueScoringSettings scoring = SleeperLeague.getSeriousLeague().league.leagueScoringSettings;
+            Map<String, Double> out = new HashMap<>();
+            MarketProjection.week(league.season(), league.thisWeek(), KalshiMarkets.snapshot(), PropModel.fit(), scoring)
+                    .forEach((id, v) -> out.put(id, v[1]));
+            return out;
         }
-        Map<String, Double> out = new HashMap<>();
-        rate.forEach((id, r) -> {
-            double own = totals.getOrDefault(id, 0.0) / Math.max(1, games.getOrDefault(id, 0));
-            if(own > 0){
-                out.put(id, r / own);
+        catch(IOException | InterruptedException e){
+            if(e instanceof InterruptedException){
+                Thread.currentThread().interrupt();
             }
-        });
-        return out;
+            throw new IllegalStateException("Kalshi could not be read: " + e, e);
+        }
     }
 
     /** One man's value in one week on this pricing; null where it has none (a bye, not projected, or his game under way). */

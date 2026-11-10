@@ -79,12 +79,23 @@ public class CbsProjections {
      */
     public static HashMap<String, double[]> leagueLinesBySleeperID(String timeframe){
         String season = AAAConfiguration.getInstance().getSeason();
+        Map<String, String> pages = new java.util.LinkedHashMap<>();
+        for(String position : POSITIONS){
+            pages.put(position, InOutUtilities.getTodaysWebPage(url(position, season, timeframe),
+                    (timeframe.equals("season") ? "cbsProjections_" : "cbsRosProjections_") + position + "_" + season));
+        }
+        return linesFrom(pages, timeframe);
+    }
+
+    static final String[] POSITIONS = {"QB", "RB", "WR", "TE"};
+
+    /** The same from pages already read, by position - a dated cache file, for ForwardAccuracy. */
+    static HashMap<String, double[]> linesFrom(Map<String, String> pages, String timeframe){
         LeagueScoringSettings scoring =
                 SleeperLeague.getSeriousLeague().league.leagueScoringSettings;
         HashMap<String, double[]> out = new HashMap<>();
-        for(String position : new String[]{"QB", "RB", "WR", "TE"}){
-            String html = InOutUtilities.getTodaysWebPage(url(position, season, timeframe),
-                    (timeframe.equals("season") ? "cbsProjections_" : "cbsRosProjections_") + position + "_" + season);
+        for(String position : POSITIONS){
+            String html = pages.get(position);
             checkServed(html, timeframe, position);
             double bestPerGame = 0;
             Matcher rows = ROW.matcher(html);

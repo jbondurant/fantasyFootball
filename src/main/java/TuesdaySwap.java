@@ -454,6 +454,9 @@ public class TuesdaySwap {
         // THE OBJECTIVE (2026-10-24): each week's best lineup with that week's best free agents in the pool for
         // nothing, a claim priced against the wire without him (WeeklyLineupValue). -Pobjective=drawn: the old one.
         boolean drawn = "drawn".equals(System.getProperty("objective", "weekly"));
+        if(!drawn){
+            WeeklyLineupValue.requireFinder(source);
+        }
         RosterValue value = drawn ? WeeklyStarterValue.forCurrentBoard(configuration, points, scenarios, 424_242L)
                 : WeeklyLineupValue.forSource(configuration, source);
         Objective objective = Objective.of(value);

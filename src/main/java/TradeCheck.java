@@ -242,8 +242,24 @@ public class TradeCheck {
         for(int w = 1; w <= done; w++){
             rows.add(JsonParser.parseString(LeagueWeek.teamStatsBody(season, w)).getAsJsonArray());
         }
-        System.out.printf("%nWORKLOAD BY WEEK, weeks 1-%d from Sleeper's stat rows%s%n", done,
-                done < week ? " (week " + week + " is in progress and left out)" : "");
+        // the week in progress, for clubs whose game kicked off four hours ago or more (NewsCheck's rule): the day
+        // after a role change is when the table is wanted (2026-11-09, the Monday after Jeanty's week 9)
+        java.util.Set<String> playing = java.util.Set.of();
+        if(done < week){
+            List<NflverseGames.Game> games = NflverseGames.games();
+            java.util.Set<String> over = NflverseGames.kickedOff(games, season, week,
+                    java.time.LocalDateTime.now(java.time.ZoneId.of("America/New_York")).minusHours(4));
+            playing = NflverseGames.playing(games, season, week);
+            JsonArray live = new JsonArray();
+            for(JsonElement e : JsonParser.parseString(LeagueWeek.teamStatsBody(season, week)).getAsJsonArray()){
+                if(e.isJsonObject() && over.contains(ScreenData.text(e.getAsJsonObject(), "team"))){
+                    live.add(e);
+                }
+            }
+            rows.add(live);
+        }
+        System.out.printf("%nWORKLOAD BY WEEK, weeks 1-%d from Sleeper's stat rows%s%n", rows.size(),
+                done < week ? " (week " + week + " is in progress: only games that kicked off four hours ago or more; tbd = not yet)" : "");
         System.out.println("snaps = his share of his club's offensive snaps; carries and red-zone carries = his, and his share of his");
         System.out.println("club's running backs'; targets = his, and his share of his club's. last 3 and season are per game, pooled");
         System.out.println("over his club's games: a game he missed counts as zero, a bye is left out.");
@@ -256,8 +272,9 @@ public class TradeCheck {
             List<Work> played = work.stream().filter(Objects::nonNull).toList();
             Work last3 = pooled(played.subList(Math.max(0, played.size() - 3), played.size()));
             Work all = pooled(played);
+            boolean pending = done < week && work.get(work.size() - 1) == null && playing.contains(teams.get(i));
             System.out.printf("%n%-22s", shown.get(i) + " (" + teams.get(i) + ")");
-            for(int w = 1; w <= done; w++){
+            for(int w = 1; w <= rows.size(); w++){
                 System.out.printf(" %8s", "w" + w);
             }
             System.out.printf(" %11s %11s%n", "last 3", "season");
@@ -268,7 +285,7 @@ public class TradeCheck {
                 cols.add(all);
                 for(int c = 0; c < cols.size(); c++){
                     Work w = cols.get(c);
-                    String text = w == null ? (c < work.size() ? "bye" : "-") : switch(m){
+                    String text = w == null ? (c == work.size() - 1 && pending ? "tbd" : c < work.size() ? "bye" : "-") : switch(m){
                         case 0 -> cell(w.snaps(), w.teamSnaps(), false);
                         case 1 -> cell(w.carries(), w.rbCarries(), true);
                         case 2 -> cell(w.targets(), w.teamTargets(), true);

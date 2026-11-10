@@ -9,6 +9,7 @@ import java.util.TreeMap;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class WeeklyLineupValueTest {
 
@@ -199,5 +200,46 @@ public class WeeklyLineupValueTest {
             }
             assertEquals(value.of(roster), table.of(indices, size, scratch), 1e-9);
         }
+    }
+
+    /** Lamar on IR is empty every week; Love is empty until ESPN has him back; "back" is projected this week. */
+    @Test
+    public void espnHasAViewOnlyOfAManItProjectsAboveZeroSomewhere(){
+        Map<Integer, Map<String, Double>> espn = Map.of(
+                9, Map.of("lamar", 0.0, "love", 0.0, "back", 12.0),
+                10, Map.of("lamar", 0.0, "love", 8.0));
+        assertEquals(java.util.Set.of("love", "back"), WeeklyLineupValue.espnView(espn, 9, 10));
+        assertEquals(java.util.Set.of("back"), WeeklyLineupValue.espnView(espn, 9, 9), "a week outside the window is not a view");
+        assertEquals(java.util.Set.of(), WeeklyLineupValue.espnView(Map.of(), 9, 10));
+    }
+
+    @Test
+    public void theNextGameIsTheFirstWeekThatCarriesHim(){
+        TreeMap<Integer, Map<String, Double>> sleeper = new TreeMap<>(Map.of(
+                9, Map.of("a", 10.0),
+                10, Map.of("a", 12.0, "b", 7.0),
+                11, Map.of("b", 9.0, "c", 5.0)));
+        assertEquals(Map.of("a", 10.0, "b", 7.0, "c", 5.0), WeeklyLineupValue.nextGame(sleeper, null));
+        // ESPN has a empty in week 9 and at 11.5 in week 10, b never above zero, and c not at all
+        Map<Integer, Map<String, Double>> espn = Map.of(9, Map.of("a", 0.0), 10, Map.of("a", 11.5, "b", 0.0), 11, Map.of("b", 0.0));
+        assertEquals(Map.of("a", 11.5), WeeklyLineupValue.nextGame(sleeper, espn),
+                "an empty line this week is not his rate for the season, and a man ESPN never projects is not ESPN's");
+    }
+
+    @Test
+    public void aSearchIsRefusedOnAPricingThatOnlyTheCheckTabHas(){
+        WeeklyLineupValue.requireFinder("sleeper-remaining");
+        WeeklyLineupValue.requireFinder("ros");
+        assertThrows(IllegalArgumentException.class, () -> WeeklyLineupValue.requireFinder("pace"));
+        assertThrows(IllegalArgumentException.class, () -> WeeklyLineupValue.requireFinder("posterior"));
+    }
+
+    @Test
+    public void coverageIsFullUnlessThePricingNamesTheMenItHasNumbersFor(){
+        assertEquals(2, value(week(20, 15.0)).coverage("anyone"), "Sleeper's own pricings cover every man");
+        WeeklyLineupValue partial = new WeeklyLineupValue(new TreeMap<>(), new TreeMap<>(), POSITION::get, "test", Map.of("jeanty", 2, "kalshiOnly", 1));
+        assertEquals(2, partial.coverage("jeanty"));
+        assertEquals(1, partial.coverage("kalshiOnly"));
+        assertEquals(0, partial.coverage("stevenson"), "a man it has no numbers for is on Sleeper's");
     }
 }

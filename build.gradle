@@ -300,6 +300,8 @@ tasks.register('run', JavaExec) {
      'explorerReject', 'explorerRejectBelow', 'explorerPlayerDepth',
      // TradeSearch - most men a side in the explorer's whole-roster search, and trades held per lane, per band of gain
      'explorerMaxSide', 'explorerRetain', 'explorerSearchOnly', 'explorerProveSkip', 'explorerEverything', 'explorerTitleCheck',
+     // TradeMarket.pageOnly - rebuild data/trade-explorer.html from the newest saved JSON and the template, nothing read or simulated
+     'explorerPageOnly',
      // TradeMarket.faabBuys - price one man of each rival's for dollars and nobody back
      'faabBuy'].each { knob ->
         if (project.hasProperty(knob)) {

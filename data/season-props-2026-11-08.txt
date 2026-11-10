@@ -1,0 +1,21 @@
+SEASON PROPS  2026-11-08T08:29:48  (season 2026, week 9; Polymarket's season ladders against Sleeper's projections)
+Lines are midpoints with a spread of 20 cents or less, read linearly between lines. 'So far' is Sleeper's stat
+rows through week 8, and week 9 for a club whose game ended; 'left' is Sleeper's projected lines summed over the weeks after.
+
+Ashton Jeanty (LV, Hamrliks)
+  rushing yards: 337 so far; Sleeper projects 414.7 more over 9 games (46.1 a game), 751.7 in all
+    lines:  574.5 74%  774.5 40%  974.5 15%  1174.5 2%  (1 left out: spread over 20c or price at an end)
+    market: 43% that he passes Sleeper's 751.7; median 712.7, which leaves 375.7 over 9 games (41.7 a game), 91% of Sleeper's
+  rushing touchdowns: 1 so far; Sleeper projects 2.9 more over 9 games (0.3 a game), 3.9 in all
+    lines:  3.5 38%  5.5 24%  7.5 12%  9.5 10%  (1 left out: spread over 20c or price at an end)
+    market: 35% that he passes Sleeper's 3.9; no median inside the lines
+  league points over the weeks left: Sleeper 125.4; with each priced stat at the market's median 121.5; factor 0.97
+
+Rhamondre Stevenson (NE, justinb314)
+  rushing touchdowns: 2 so far; Sleeper projects 2.8 more over 9 games (0.3 a game), 4.8 in all
+    lines: none quoted tightly enough  (4 left out: spread over 20c or price at an end)
+    market: no reading of whether he passes Sleeper's 4.8; no median inside the lines
+  rushing yards: 367 so far; Sleeper projects 358.0 more over 9 games (39.8 a game), 725.0 in all
+    lines: none quoted tightly enough  (5 left out: spread over 20c or price at an end)
+    market: no reading of whether he passes Sleeper's 725.0; no median inside the lines
+  league points over the weeks left: Sleeper 95.4; with each priced stat at the market's median 95.4; factor 1.00
