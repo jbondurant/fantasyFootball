@@ -2,6 +2,9 @@
 
 Draft and trade tooling for a 12 team, half PPR, 2 keeper Sleeper league.
 
+What it is for, where it falls short of that, and the rebuild in progress: WIN.md.
+The weekly how-to: RUNBOOK.md.
+
 ## Configuring a season
 
 `AAAConfigurationSleeperLeague` holds the league id and the Sleeper username,

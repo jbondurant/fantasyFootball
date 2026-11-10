@@ -316,8 +316,9 @@ public class LeagueWeek {
     public static String teamStatsBody(String season, int week){
         String url = "https://api.sleeper.app/stats/nfl/" + season + "/" + week
                 + "?season_type=regular&position[]=QB&position[]=RB&position[]=WR&position[]=TE";
-        return feed(url, "sleeperTeamStats" + season + "w" + week,
-                "sleeperLiveTeamStats" + season + "w" + week, season, week);
+        // a week in progress changes as its games end, so its copy is read again after half an hour (getLiveWebPage)
+        return finished(season, week) ? InOutUtilities.getCachedForever(url, "sleeperTeamStats" + season + "w" + week)
+                : InOutUtilities.getLiveWebPage(url, "sleeperLiveTeamStats" + season + "w" + week, 30);
     }
 
     /** The number of maps each key appears in. */

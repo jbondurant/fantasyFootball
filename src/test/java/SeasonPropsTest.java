@@ -61,4 +61,13 @@ public class SeasonPropsTest {
         assertEquals(0.395, ladder.get(1).p(), 1e-12);
         assertEquals(2, leftOut[0], "a 26-cent spread and a 1-cent midpoint");
     }
+
+    /** 0.91 - 0.71 is 0.20000000000000007 in doubles; the rule is twenty cents or less. */
+    @Test
+    public void aSpreadOfExactlyTwentyCentsIsKept(){
+        JsonArray markets = JsonParser.parseString("[{\"groupItemTitle\":\"774.5+ rushing yards\",\"bestBid\":0.71,\"bestAsk\":0.91}]").getAsJsonArray();
+        int[] leftOut = {0};
+        assertEquals(1, SeasonProps.ladder(markets, leftOut).size());
+        assertEquals(0, leftOut[0]);
+    }
 }

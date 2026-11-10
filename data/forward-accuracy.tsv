@@ -1,10 +1,10 @@
-# ForwardAccuracy 2026-11-09: saved 2026-09-25, weeks 4-8, 164 men
+# ForwardAccuracy 2026-11-10: saved 2026-09-25, weeks 4-8, 164 men
 source	vintage	weeks	pos	men	rmse	rmse_base	ratio	diff	se	reading
 sleeper-remaining	2026-09-25	4-8	QB	23	4.905	5.618	0.873	-7.495	4.916	= Sleeper's next game
 sleeper-remaining	2026-09-25	4-8	RB	49	4.763	4.725	1.008	0.360	1.091	= Sleeper's next game
 sleeper-remaining	2026-09-25	4-8	WR	64	3.090	3.287	0.940	-1.261	0.345	better than Sleeper's next game
 sleeper-remaining	2026-09-25	4-8	TE	28	2.871	3.003	0.956	-0.778	0.462	= Sleeper's next game
-espn	2026-09-25	4-8	QB	23	5.098	5.618	0.908	-5.563	3.629	= Sleeper's next game
+espn	2026-09-25	4-8	QB	23	5.142	5.618	0.915	-5.112	3.545	= Sleeper's next game
 espn	2026-09-25	4-8	RB	48	4.410	4.682	0.942	-2.474	2.012	= Sleeper's next game
 espn	2026-09-25	4-8	WR	63	3.245	3.313	0.979	-0.449	0.765	= Sleeper's next game
 espn	2026-09-25	4-8	TE	28	2.789	3.003	0.929	-1.243	1.114	= Sleeper's next game

@@ -4,6 +4,11 @@ The draft is done. This is what the rest of 2026 looks like. Two moments matter
 each week and they are not the same moment: **Tuesday morning** decides claims
 and trades, **Sunday morning** decides the lineup.
 
+**Being rebuilt (2026-11-10).** An audit found the loop below does not steer by title
+odds everywhere: lists ranked in points, a claim gate from a retired objective, FAAB
+with no clock, trades priced on one source for both sides. WIN.md has the findings,
+the redesign and what is done so far.
+
 ## Tuesday morning, one command
 
     ./weekly.sh
@@ -257,17 +262,21 @@ fall to 40% of that or less in a game.
     ./gradlew run -Pmain=RoleChange
 
 On 2018-2025 there were 78 such games, 43 with a forecast to score. About half of those
-backs got their carries back (49% of the 43 to 75%+ of before). The 43 went from 11.7
+backs got their carries back (21 of the 43 to 75%+ of before). The 43 went from 11.7
 points a game to 9.3 from two weeks on (79%); lead backs in ordinary weeks keep 94%. No
-forecast was separable from Sleeper's next-game number there. The model's error was
-0.97 of it, against 0.94 in ordinary weeks, and the season-long numbers ran high (the
-model +0.8 a game, pace +1.5, Sleeper's next game +0.3). After two low games running
-(36 backs) it was Sleeper's next game that ran low, by 1.1. So after a collapse read
-him between Sleeper's next-game number and the model's (TRAPS #154).
+forecast was separable from Sleeper's next-game number there, in error or in bias.
+Counting each back once, Sleeper's next game ran 0.3 a game high (+- 0.6), the model 0.9
+(+- 0.6) and pace 1.6 (+- 0.7), and the model's error equalled Sleeper's next game's (1.00,
+against 0.94 in ordinary weeks). After two low games running (36 backs) the picture was
+the same: Sleeper's next game -0.3, the model +0.7, pace +1.3. So after a collapse lean
+toward Sleeper's next-game number. The season-long numbers tend to run about a point
+high, though 43 backs cannot prove it (TRAPS #154). Retracted, 6e73d63: "it was Sleeper's
+next game that ran low, by 1.1 ... read him between" was a mean of season means, in which
+2018's one scored back had an eighth of the weight.
 
 Overtaken on 2026-11-08: Stevenson hurt a tendon behind his knee against Green Bay and
 is expected to miss a few weeks. Jeanty had 6 carries and 7 targets on 64% of snaps,
-and Sleeper cut his later weeks by about 1.5 a game. The tab flags a listed injury
+and Sleeper cut his later weeks by about 1.9 a game. The tab flags a listed injury
 beside the player; each source prices it only once it has updated. It also names the
 players a source has no numbers of its own for.
 

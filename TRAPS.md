@@ -2034,23 +2034,37 @@ real every time.
     accurate source says the trade is a gain" was the answer on 2026-11-08.
     RoleChange asked it of lead backs whose carries had just fallen to 40% of
     their average or less (78 games, 2018-2025, the event fixed before any
-    outcome was read). There the model's edge was 0.97 and not separable, it
-    ran 0.8 points a game high, and pace ran 1.5 high. Half of those backs got
-    their carries back, and the ones with a forecast to score kept 79% of
-    their points a game, against 94% for lead backs in ordinary weeks. Before
-    quoting a source's accuracy at a decision, ask whether the decision is an
-    ordinary case of what the accuracy was measured on.
+    outcome was read). Of the 43 with a forecast to score, half got their
+    carries back, and they kept 79% of their points a game, against 94% for
+    lead backs in ordinary weeks. There the model's edge was gone (its error
+    1.00 of Sleeper's next game's), it ran 0.9 points a game high and pace 1.6,
+    where Sleeper's next game ran 0.3. None of that is separable on 43 backs.
+    Before quoting a source's accuracy at a decision, ask whether the decision
+    is an ordinary case of what the accuracy was measured on.
+    The first report of this study (6e73d63) was itself wrong in its
+    averages. It took the mean of season means, as RosModel does on hundreds
+    of cases a season, with seasons that held one to eight backs. 2018's one
+    scored back in the two-game group (McCaffrey, forecast 15.5, scored 24.5)
+    carried an eighth of the weight, and the report said Sleeper's next game
+    "ran low, by 1.1" where the backs' own mean was -0.3. A rule was written on
+    that sign ("read him between"). A review rebuilt the table per back. Count
+    each case once when the groups are this small, and print the standard
+    error beside any bias a sentence will lean on.
 
-155. **An empty line that meant two things.** ESPN keeps a week it does not
-    project as an empty stat line, which the repo scores as 0.0. The first
-    Check-a-trade build read every such line as "no number" and put Sleeper's
-    there, so a week ESPN had a man sitting out was priced as if he played. The
-    fix (2026-11-08) read every one as zero. That priced Lamar Jackson, on IR
-    and empty in every week because ESPN does not project him at all, as zero
-    for the weeks Sleeper has him back, and it scored ESPN's correct
-    sitting-out calls as misses against a per-played-game target (QB ratio 1.15;
-    0.91 once fixed). The line means two things. With a number above zero in
-    some other week, ESPN has him not playing that week. With none anywhere,
-    ESPN has no view of him (WeeklyLineupValue.espnView). The tab now marks
-    the second kind as Sleeper's numbers. Two fixes in two days each read the
-    same value one way.
+155. **An empty line, read three ways in three days.** ESPN keeps a week it
+    does not project as an empty stat line, which the repo scores as 0.0. The
+    first Check-a-trade build put Sleeper's number over every empty line, and
+    a review said that hid ESPN's view. The second put zero over every one,
+    which priced Lamar Jackson, on IR and empty in every week because ESPN
+    does not project him at all, as zero for the weeks Sleeper has him back.
+    The third put zero only where ESPN projected the man in some other week,
+    and TRAPS said the zero reading had "scored ESPN's correct sitting-out
+    calls as misses". A review checked the case behind that sentence. The
+    whole move in ESPN's quarterback ratio (1.15 to 0.91) was one man, Jayden
+    Daniels, whom ESPN left empty for three weeks: he sat one and played two.
+    An empty line is not a forecast of zero. Since 2026-11-10 a man keeps
+    Sleeper's number in a week ESPN leaves empty, the tab marks him "partly
+    Sleeper's", ForwardAccuracy scores ESPN in that same form (QB 0.92) and
+    prints how many such weeks there were and how many the man played (3 and
+    2). Each fix was made from the last complaint, not from what the empty
+    line was evidence of.

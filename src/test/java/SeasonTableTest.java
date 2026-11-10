@@ -42,7 +42,7 @@ public class SeasonTableTest {
             }
             schedule.put(w, games);
         }
-        return new TitleOdds.League("2026", 10, 14, 15, 6, median, spread, managers, managerOf, wins, banked, schedule, underWay, teamSigma);
+        return new TitleOdds.League("2026", 10, 14, 15, 6, median, spread, managers, managerOf, wins, banked, schedule, underWay, teamSigma, true);
     }
 
     static double[][] means(TitleOdds.League league, long seed){

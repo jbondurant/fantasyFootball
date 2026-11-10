@@ -302,6 +302,8 @@ tasks.register('run', JavaExec) {
      'explorerMaxSide', 'explorerRetain', 'explorerSearchOnly', 'explorerProveSkip', 'explorerEverything', 'explorerTitleCheck',
      // TradeMarket.pageOnly - rebuild data/trade-explorer.html from the newest saved JSON and the template, nothing read or simulated
      'explorerPageOnly',
+     // TitleOdds.league - play the fixed bracket the tool used until 2026-11-10 instead of the league's re-seeding, as a check
+     'fixedBracket',
      // TradeMarket.faabBuys - price one man of each rival's for dollars and nobody back
      'faabBuy'].each { knob ->
         if (project.hasProperty(knob)) {

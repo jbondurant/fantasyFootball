@@ -145,6 +145,43 @@ public class InOutUtilities {
         return getTodaysWebPage(webURL, filepathStart);
     }
 
+    /**
+     * A feed that changes within the day AND is rightly empty at times: a week's
+     * stat rows, which are empty until its first game ends. It is read again
+     * once the day's copy is older than maxAgeMinutes, as getRecentWebPage does,
+     * except that an empty answer leaves the copy as it is, with no warning and
+     * nothing marked stale. Until 2026-11-10 the day's first read stood all day,
+     * so a tool run after a game read the rows from before it: SeasonProps
+     * counted that game neither in a man's stats so far nor in his games left.
+     */
+    public static String getLiveWebPage(String webURL, String filepathStart, int maxAgeMinutes){
+        String fixtureDir = System.getProperty("fixtureDir");
+        if(fixtureDir != null && !fixtureDir.isBlank()
+                && new File(fixtureDir, filepathStart + ".txt").isFile()){
+            return getTodaysWebPage(webURL, filepathStart);
+        }
+        File today = new File("./" + filepathStart + DateUtility.getTodaysDate() + ".txt");
+        if(today.isFile() && today.lastModified()
+                < System.currentTimeMillis() - maxAgeMinutes * 60_000L){
+            try {
+                String body = WebUrlUtility.urlToString(webURL);
+                if(looksLikeData(body)){
+                    writeContentToFile(body, today.getPath());
+                    STALE.remove(today.getName());
+                }
+                else {
+                    today.setLastModified(System.currentTimeMillis());      // asked, and nothing yet: not again for maxAgeMinutes
+                }
+            }
+            catch(RuntimeException unreachable){
+                System.out.println("   WARNING: could not refresh " + webURL + " (" + unreachable.getMessage()
+                        + ")\n   keeping " + today + " from earlier today - this data may be STALE");
+                STALE.add(today.getName());
+            }
+        }
+        return getTodaysWebPage(webURL, filepathStart);
+    }
+
     /** A 200 can still be no data: "[]", "null" or a captive portal's page must not replace a good copy. */
     static boolean looksLikeData(String body){
         if(emptyPayload(body)){

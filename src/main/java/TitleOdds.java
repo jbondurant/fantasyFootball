@@ -35,7 +35,12 @@ import java.util.TreeMap;
  *     SeasonOutlook measures from the league's real team-weeks;
  *   - played weeks are banked as they happened (head to head and median game);
  *   - the top six by wins (then points) are seeded, 3 v 6 and 4 v 5 in week 15,
- *     1 and 2 meet those winners in week 16 (a fixed bracket), the final in 17.
+ *     1 and 2 meet those winners in week 16, the final in 17. This league
+ *     RE-SEEDS (playoff_seed_type 1): the 1 seed meets the lowest seed left, so
+ *     when the 6 beats the 3 it is 1 v 6 and 2 v the 4-5 winner. Until
+ *     2026-11-10 the bracket was fixed (1 v the 4-5 winner whatever happened),
+ *     and the setting went unread. Sleeper's own brackets show it: in 2021 and
+ *     2024 the 6 seed won and played the 1 seed.
  *
  * A move is priced as the change in a manager's title odds. Both seasons are
  * drawn from the SAME random numbers - one draw per team per week, in a fixed
@@ -59,7 +64,7 @@ public class TitleOdds {
     public record League(String season, int thisWeek, int lastRegular, int playoffStart, int playoffTeams,
                          boolean medianGame, double spread, List<String> managers, Map<Integer, String> managerOf,
                          Map<String, Integer> wins, Map<String, Double> banked, Map<Integer, List<int[]>> schedule,
-                         Map<String, double[]> live, double teamSigma) {
+                         Map<String, double[]> live, double teamSigma, boolean reseed) {
         /** The first week no game of which has started: the live week settles, the team error starts after it. */
         int firstFuture(){
             return live.isEmpty() ? 0 : 1;
@@ -182,8 +187,12 @@ public class TitleOdds {
         }
         double spread = SeasonOutlook.measuredSpread(SeasonOutlook.measureSpread(configuration));
         Map<String, double[]> live = live(leagueID, thisWeek, managerOf);
+        // -PfixedBracket=true plays the bracket this tool used until 2026-11-10, to see what the league's rule is worth
+        boolean reseed = settings.has("playoff_seed_type") && settings.get("playoff_seed_type").getAsInt() == 1
+                && !Boolean.getBoolean("fixedBracket");
         return new League(LeagueWeek.season(), thisWeek, lastRegular, playoffStart, playoffTeams, medianGame, spread,
-                managers, managerOf, wins, banked, schedule, live, TeamError.sigmaFrom(thisWeek + (live.isEmpty() ? 0 : 1), TeamError.table()));
+                managers, managerOf, wins, banked, schedule, live, TeamError.sigmaFrom(thisWeek + (live.isEmpty() ? 0 : 1), TeamError.table()),
+                reseed);
     }
 
     /** Each manager's {scored, still to play} this week, from the lineups as set and the games that have kicked off. */
@@ -482,8 +491,10 @@ public class TitleOdds {
             int r1 = league.playoffStart() - league.thisWeek();
             int threeSix = winner(order[2], order[5], drawn[r1]);
             int fourFive = winner(order[3], order[4], drawn[r1]);
-            int semiA = winner(order[0], fourFive, drawn[r1 + 1]);
-            int semiB = winner(order[1], threeSix, drawn[r1 + 1]);
+            // re-seeded, the 1 seed meets the lowest seed left: the 6 when he is through
+            boolean sixOn = league.reseed() && threeSix == order[5];
+            int semiA = winner(order[0], sixOn ? threeSix : fourFive, drawn[r1 + 1]);
+            int semiB = winner(order[1], sixOn ? fourFive : threeSix, drawn[r1 + 1]);
             champion[s] = winner(semiA, semiB, drawn[r1 + 2]);
         }
         return new Outcomes(managers, champion, playoffs, byes);
@@ -675,9 +686,9 @@ public class TitleOdds {
                 + "sd %.1f a week (TeamError: how far this league's rosters landed from their projections from this point,%n"
                 + "2021-2025)%s.%n", league.teamSigma(), league.teamSigma() == 0 ? " - NO TABLE, so none drawn: run TeamError" : ""));
         out.append(String.format("Weeks %d-%d played out on Sleeper's projection for each week (byes and men ruled out leave the lineup),%n"
-                + "spread %.1f a week (SeasonOutlook's measurement)%s; six make it, seeds 1-2 skip week %d, a fixed bracket after.%n",
+                + "spread %.1f a week (SeasonOutlook's measurement)%s; six make it, seeds 1-2 skip week %d, %s.%n",
                 league.thisWeek(), league.lastWeek(), league.spread(), league.medianGame() ? ", a median game every regular week" : "",
-                league.playoffStart()));
+                league.playoffStart(), league.reseed() ? "re-seeded after it (the 1 seed meets the lowest seed left)" : "a FIXED bracket after (-PfixedBracket)"));
         out.append("'per pt' is how much his title odds move per point of weekly mean added to every week he has left.\n\n");
         // THE RECORD AS SLEEPER KEEPS IT, and how strong each team projects from here.
         // Justin, 2026-10-06: "I don't think i have that much ahead of jake and d0ddi,

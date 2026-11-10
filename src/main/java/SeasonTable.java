@@ -27,7 +27,7 @@ import java.util.Random;
 final class SeasonTable {
 
     private final int n, weeks, sims, regular, round1, firstFuture;
-    private final boolean medianGame;
+    private final boolean medianGame, reseed;
     private final double[] luck, effect, first;
     private final double spread;
     private final int[][] games;
@@ -43,6 +43,7 @@ final class SeasonTable {
         round1 = league.playoffStart() - league.thisWeek();
         firstFuture = league.firstFuture();
         medianGame = league.medianGame();
+        reseed = league.reseed();
         spread = league.spread();
         Map<String, Integer> indexOf = new HashMap<>();
         baseWins = new int[n];
@@ -86,7 +87,7 @@ final class SeasonTable {
 
     /** One thread's working space. */
     private final class Work {
-        final double[] score = new double[n], sorted = new double[n], points = new double[n], reach = new double[n], title = new double[n];
+        final double[] score = new double[n], sorted = new double[n], points = new double[n], title = new double[n];
         final int[] wins = new int[n], order = new int[n];
     }
 
@@ -169,7 +170,8 @@ final class SeasonTable {
             seeds(mean, s, w);
             int[] o = w.order;
             int threeSix = winner(mean, s, o[2], o[5], round1), fourFive = winner(mean, s, o[3], o[4], round1);
-            int semiA = winner(mean, s, o[0], fourFive, round1 + 1), semiB = winner(mean, s, o[1], threeSix, round1 + 1);
+            boolean sixOn = reseed && threeSix == o[5];        // as TitleOdds.play: the 1 seed meets the lowest seed left
+            int semiA = winner(mean, s, o[0], sixOn ? threeSix : fourFive, round1 + 1), semiB = winner(mean, s, o[1], sixOn ? fourFive : threeSix, round1 + 1);
             out[s - from] = winner(mean, s, semiA, semiB, round1 + 2);
         }
         return out;
@@ -183,28 +185,42 @@ final class SeasonTable {
         return variance <= 0 ? (gap >= 0 ? 1 : 0) : phi(gap / Math.sqrt(variance));
     }
 
-    /** From the seeds in w.order, each manager's exact chance of the title, in w.title. */
+    /**
+     * From the seeds in w.order, each manager's exact chance of the title, in w.title: the four ways
+     * the first round can go, each with its two semi-finals and the four finals they can make. In a
+     * league that re-seeds, the 6 seed through meets the 1 seed and the 4-5 winner meets the 2.
+     */
     private void bracket(double[][] mean, int s, Work w){
         int[] o = w.order;
-        double[] reach = w.reach, title = w.title;
+        double[] title = w.title;
         Arrays.fill(title, 0);
         double p36 = beats(mean, s, o[2], o[5], round1), p45 = beats(mean, s, o[3], o[4], round1);
-        double a3 = beats(mean, s, o[0], o[3], round1 + 1), a4 = beats(mean, s, o[0], o[4], round1 + 1);
-        double b2 = beats(mean, s, o[1], o[2], round1 + 1), b5 = beats(mean, s, o[1], o[5], round1 + 1);
-        reach[o[0]] = p45 * a3 + (1 - p45) * a4;
-        reach[o[3]] = p45 * (1 - a3);
-        reach[o[4]] = (1 - p45) * (1 - a4);
-        reach[o[1]] = p36 * b2 + (1 - p36) * b5;
-        reach[o[2]] = p36 * (1 - b2);
-        reach[o[5]] = (1 - p36) * (1 - b5);
-        int[] sideA = {o[0], o[3], o[4]}, sideB = {o[1], o[2], o[5]};
-        for(int x : sideA){
-            for(int y : sideB){
-                double meet = reach[x] * reach[y], win = beats(mean, s, x, y, round1 + 2);
-                title[x] += meet * win;
-                title[y] += meet * (1 - win);
+        for(int a = 0; a < 2; a++){
+            for(int b = 0; b < 2; b++){
+                double reached = (a == 0 ? p36 : 1 - p36) * (b == 0 ? p45 : 1 - p45);
+                if(reached == 0){
+                    continue;
+                }
+                int threeSix = a == 0 ? o[2] : o[5], fourFive = b == 0 ? o[3] : o[4];
+                boolean sixOn = reseed && a == 1;
+                int x = sixOn ? threeSix : fourFive, y = sixOn ? fourFive : threeSix;      // 1 v x, 2 v y
+                double one = beats(mean, s, o[0], x, round1 + 1), two = beats(mean, s, o[1], y, round1 + 1);
+                last(mean, s, title, reached * one * two, o[0], o[1]);
+                last(mean, s, title, reached * one * (1 - two), o[0], y);
+                last(mean, s, title, reached * (1 - one) * two, x, o[1]);
+                last(mean, s, title, reached * (1 - one) * (1 - two), x, y);
             }
         }
+    }
+
+    /** A final between x and y that is reached with this chance: each one's share of it, added to title. */
+    private void last(double[][] mean, int s, double[] title, double reached, int x, int y){
+        if(reached == 0){
+            return;
+        }
+        double win = beats(mean, s, x, y, round1 + 2);
+        title[x] += reached * win;
+        title[y] += reached * (1 - win);
     }
 
     /** For a test: each manager's chance of the title in one season, from these means. */

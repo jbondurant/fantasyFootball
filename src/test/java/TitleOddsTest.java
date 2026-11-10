@@ -30,7 +30,7 @@ public class TitleOddsTest {
             wins.put(managers.get(i), 0);
         }
         Map<Integer, List<int[]>> schedule = Map.of(1, List.of(new int[]{1, 2}, new int[]{3, 4}, new int[]{5, 6}));
-        return new TitleOdds.League("2026", 1, 1, 2, 6, true, spread, managers, managerOf, wins, new TreeMap<>(), schedule, Map.of(), 0.0);
+        return new TitleOdds.League("2026", 1, 1, 2, 6, true, spread, managers, managerOf, wins, new TreeMap<>(), schedule, Map.of(), 0.0, true);
     }
 
     static Map<String, double[]> flat(double a){
@@ -76,7 +76,7 @@ public class TitleOddsTest {
         }
         live.put("B", new double[]{140, 0});         // B beat A, finished
         TitleOdds.League done = new TitleOdds.League("2026", 1, 1, 2, 6, true, 25, base.managers(), base.managerOf(),
-                base.wins(), base.banked(), base.schedule(), live, 0.0);
+                base.wins(), base.banked(), base.schedule(), live, 0.0, true);
         assertEquals(0.0, done.liveSpread("A"), 1e-12, "nothing left to play, nothing left to draw");
         live.put("C", new double[]{50, 50});
         assertEquals(25 * Math.sqrt(0.5), done.liveSpread("C"), 1e-12, "half the lineup still to play: the spread of half a week");
@@ -98,7 +98,7 @@ public class TitleOddsTest {
     public void aTeamErrorPullsAFavouriteTowardTheField(){
         TitleOdds.League sure = league(10);
         TitleOdds.League unsure = new TitleOdds.League("2026", 1, 1, 2, 6, true, 10, sure.managers(), sure.managerOf(),
-                sure.wins(), sure.banked(), sure.schedule(), Map.of(), 15.0);
+                sure.wins(), sure.banked(), sure.schedule(), Map.of(), 15.0, true);
         double certain = TitleOdds.play(sure, flat(120), 8_000, 3L).title("A");
         double doubted = TitleOdds.play(unsure, flat(120), 8_000, 3L).title("A");
         assertTrue(doubted < certain - 0.05, "a 15-point team error must cost the favourite: " + certain + " -> " + doubted);
@@ -292,6 +292,36 @@ public class TitleOddsTest {
         for(int k = 0; k < 50; k++){
             assertEquals(85.0, r.draw(80, random, 20), 1e-9, "a man projected 80 draws from men projected 70-89, all +5");
             assertEquals(5.0, r.draw(10, random, 20), 1e-9, "and one projected 10 from men all -5");
+        }
+    }
+
+    /**
+     * Seeds A, C, B, E, D, F from week 1 (wins, then points). In the first round
+     * the 6 seed F beats the 3 seed B, and E beats D. Re-seeded, the semi-finals
+     * are A v F and C v E: A beats F, E beats C, and A beats E in the final. On a
+     * fixed bracket they are A v E and C v F: E beats A, C beats F, and C wins.
+     * This league re-seeds: in 2021 and 2024 the 6 seed won and played the 1.
+     */
+    @Test
+    public void aLeagueThatReseedsSendsTheSixSeedToTheOneSeed(){
+        Map<String, double[]> means = new HashMap<>();
+        means.put("A", new double[]{160, 100, 100, 150});
+        means.put("B", new double[]{150, 100, 100, 100});
+        means.put("C", new double[]{140, 100, 110, 120});
+        means.put("D", new double[]{130, 100, 100, 100});
+        means.put("E", new double[]{120, 150, 120, 100});
+        means.put("F", new double[]{110, 200, 90, 100});
+        TitleOdds.League reseeds = league(0.001);
+        TitleOdds.League fixed = new TitleOdds.League("2026", 1, 1, 2, 6, true, 0.001, reseeds.managers(), reseeds.managerOf(),
+                reseeds.wins(), reseeds.banked(), reseeds.schedule(), Map.of(), 0.0, false);
+        assertEquals(1.0, TitleOdds.play(reseeds, means, 200, 5L).title("A"), 1e-9, "1 v 6, then the final against E");
+        assertEquals(1.0, TitleOdds.play(fixed, means, 200, 5L).title("C"), 1e-9, "the old bracket: 1 v the 4-5 winner");
+        // the formula bracket and the played one are the same rule
+        double[][] byIndex = TitleOdds.meansByIndex(reseeds, means);
+        assertEquals(1.0, new SeasonTable(reseeds, 50, 5L).titleChances(byIndex, 0)[0], 1e-6);
+        assertEquals(1.0, new SeasonTable(fixed, 50, 5L).titleChances(byIndex, 0)[2], 1e-6);
+        for(int champion : new SeasonTable(reseeds, 50, 5L).champions(byIndex)){
+            assertEquals(0, champion, "A, season for season");
         }
     }
 }

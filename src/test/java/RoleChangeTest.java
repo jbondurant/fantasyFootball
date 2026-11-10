@@ -53,4 +53,16 @@ public class RoleChangeTest {
         assertEquals(6.0, RoleChange.after(new double[]{20, 20, 20, 2, X, 4, 8}, 4), 1e-12);
         assertTrue(Double.isNaN(RoleChange.after(JEANTY, 8)));
     }
+
+    /** One season with a single back at -9 and one with three at +1: the backs' mean is -1.5, not the -4 a mean of season means gives. */
+    @Test
+    public void everyBackCountsOnceAndASeasonIsOneCluster(){
+        double[] m = RoleChange.pooled(java.util.Map.of("2018", java.util.List.of(-9.0), "2019", java.util.List.of(1.0, 1.0, 1.0)));
+        assertEquals(-1.5, m[0], 1e-12);
+        assertEquals(3.75, m[1], 1e-12, "sqrt(2/1 x (7.5^2 + 7.5^2)) / 4");
+        assertEquals(2, m[2], 1e-12);
+        assertTrue(Double.isNaN(RoleChange.pooled(java.util.Map.of("2018", java.util.List.of(1.0, 2.0)))[1]), "one season is no spread of seasons");
+        assertEquals(1.5, RoleChange.median(java.util.List.of(3.0, 1.0, 2.0, 0.0)), 1e-12);
+        assertEquals(2.0, RoleChange.median(java.util.List.of(3.0, 1.0, 2.0)), 1e-12);
+    }
 }

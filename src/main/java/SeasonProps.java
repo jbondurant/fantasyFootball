@@ -131,7 +131,7 @@ public class SeasonProps {
                 continue;
             }
             double b = Double.parseDouble(bid), a = Double.parseDouble(ask), mid = (a + b) / 2;
-            if(a - b > 0.20 || mid <= 0.02 || mid >= 0.98){
+            if(a - b > 0.20 + 1e-9 || mid <= 0.02 || mid >= 0.98){       // 0.91 - 0.71 is 0.20000000000000007 in doubles
                 leftOut[0]++;
                 continue;
             }
@@ -390,8 +390,11 @@ public class SeasonProps {
                 }
             }
             double sleeperLeft = ctx.pointsLeft(id), f = factor(ctx, id, readings);
-            out.append(String.format("  league points over the weeks left: Sleeper %.1f; with each priced stat at the market's median %.1f; factor %.2f%n",
-                    sleeperLeft, Double.isNaN(f) ? sleeperLeft : sleeperLeft * f, Double.isNaN(f) ? 1.0 : f));
+            out.append(Double.isNaN(f)
+                    ? String.format("  league points over the weeks left: Sleeper %.1f; no factor (%s)%n", sleeperLeft,
+                    sleeperLeft > 0 ? "no priced stat has a median inside its lines" : "Sleeper projects him for nothing")
+                    : String.format("  league points over the weeks left: Sleeper %.1f; with each priced stat at the market's median %.1f; factor %.2f%n",
+                    sleeperLeft, sleeperLeft * f, f));
         }
         System.out.print(out);
         Path report = Path.of("data", "season-props-" + java.time.LocalDate.now() + ".txt");

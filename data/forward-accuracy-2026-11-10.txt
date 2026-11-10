@@ -1,0 +1,28 @@
+FORWARD ACCURACY  2026-11-10  (season 2026; finished weeks through 8)
+Each source's forecast, as saved that day, of a man's points per played game over the finished weeks after it,
+against Sleeper's next-game forecast on the same men. ratio = RMSE / Sleeper next game's; diff = squared error minus
+Sleeper next game's, mean over men +- se. One season, a few weeks: a first look.
+
+== saved 2026-09-25, scored on weeks 4-8: 164 men ==
+source             pos    men     RMSE baseline  ratio   diff (sq err)          reading
+sleeper-remaining  QB      23     4.91     5.62   0.87     -7.50 +- 4.92       = Sleeper's next game
+sleeper-remaining  RB      49     4.76     4.73   1.01     +0.36 +- 1.09       = Sleeper's next game
+sleeper-remaining  WR      64     3.09     3.29   0.94     -1.26 +- 0.35       better than Sleeper's next game
+sleeper-remaining  TE      28     2.87     3.00   0.96     -0.78 +- 0.46       = Sleeper's next game
+espn               QB      23     5.14     5.62   0.92     -5.11 +- 3.55       = Sleeper's next game
+espn               RB      48     4.41     4.68   0.94     -2.47 +- 2.01       = Sleeper's next game
+espn               WR      63     3.24     3.31   0.98     -0.45 +- 0.76       = Sleeper's next game
+espn               TE      28     2.79     3.00   0.93     -1.24 +- 1.11       = Sleeper's next game
+espn-next          QB      23     5.43     5.62   0.97     -2.04 +- 3.19       = Sleeper's next game
+espn-next          RB      48     4.55     4.68   0.97     -1.24 +- 1.93       = Sleeper's next game
+espn-next          WR      63     3.27     3.31   0.99     -0.26 +- 0.78       = Sleeper's next game
+espn-next          TE      28     2.78     3.00   0.93     -1.29 +- 1.17       = Sleeper's next game
+cbs                QB      23     5.71     5.62   1.02     +1.10 +- 2.94       = Sleeper's next game
+cbs                RB      47     4.56     4.73   0.96     -1.62 +- 2.36       = Sleeper's next game
+cbs                WR      59     3.37     3.37   1.00     +0.03 +- 1.52       = Sleeper's next game
+cbs                TE      27     3.18     3.05   1.04     +0.80 +- 1.26       = Sleeper's next game
+ESPN left 3 man-weeks empty for men it projected in other weeks of these; the man played in 2 of them.
+
+2026-10-26: 1 finished week after it - too few, skipped
+
+written to data/forward-accuracy.tsv, which the trade explorer reads

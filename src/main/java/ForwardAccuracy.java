@@ -34,10 +34,12 @@ import java.util.TreeSet;
  *    that day, over the weeks it projected him;
  *  - sleeper-next: Sleeper's projection that day for his first of those weeks;
  *  - espn and espn-next: the same from ESPN's projections that day, by the
- *    page's own rules (WeeklyLineupValue.nextGame): over the weeks ESPN had him
- *    above zero. A week ESPN left empty is ESPN saying he does not play it,
- *    which a rate per played game cannot score, and a man ESPN had nothing
- *    above zero for is not scored as ESPN's;
+ *    page's own rules: ESPN's number in each week it had him above zero and
+ *    Sleeper's in a week it left empty (WeeklyLineupValue.aboveZero), and for
+ *    the next game the first week it had him above zero (nextGame). A man ESPN
+ *    had nothing above zero for is not scored as ESPN's. The report counts the
+ *    weeks ESPN left empty for a man it projected in others, and how many of
+ *    them he played;
  *  - cbs: CBS's rest-of-season points over its games left, that day.
  * Each is set against Sleeper's next-game forecast on the same men, as RosModel's
  * replay is. The men are RosModel's: the preseason board who have played (its
@@ -175,6 +177,7 @@ public class ForwardAccuracy {
                 actual.add(LeagueWeek.actual(season, w));
             }
 
+            int blank = 0, blankPlayed = 0;
             Map<String, Double> slpNext = WeeklyLineupValue.nextGame(sleeper, null);
             Map<String, Double> espNext = WeeklyLineupValue.nextGame(sleeper, espn);
             List<Case> cases = new ArrayList<>();
@@ -186,6 +189,7 @@ public class ForwardAccuracy {
                     continue;
                 }
                 List<Double> slp = new ArrayList<>(), esp = new ArrayList<>();
+                int theirs = 0, empty = 0, emptyPlayed = 0;
                 for(int w = first; w <= done; w++){
                     Double s = sleeper.get(w).get(id);
                     if(s == null){
@@ -193,9 +197,18 @@ public class ForwardAccuracy {
                     }
                     slp.add(s);
                     double e = espn.getOrDefault(w, Map.of()).getOrDefault(id, 0.0);
+                    esp.add(e > 0 ? e : s);
                     if(e > 0){
-                        esp.add(e);
+                        theirs++;
                     }
+                    else {
+                        empty++;
+                        emptyPlayed += actual.get(w - first).containsKey(id) ? 1 : 0;
+                    }
+                }
+                if(theirs > 0){
+                    blank += empty;
+                    blankPlayed += emptyPlayed;
                 }
                 if(!slpNext.containsKey(id)){
                     continue;
@@ -203,7 +216,7 @@ public class ForwardAccuracy {
                 Map<String, Double> forecast = new LinkedHashMap<>();
                 forecast.put("sleeper-next", slpNext.get(id));
                 forecast.put("sleeper-remaining", mean(slp));
-                forecast.put("espn", mean(esp));
+                forecast.put("espn", theirs > 0 ? mean(esp) : null);
                 forecast.put("espn-next", espNext.get(id));
                 double[] c = cbs.get(id);
                 if(c != null && c[1] > 0){
@@ -215,6 +228,8 @@ public class ForwardAccuracy {
             header = String.format("# ForwardAccuracy %s: saved %s, weeks %s, %d men", LocalDate.now(), day, weeks, cases.size());
             out.append(String.format("%n== saved %s, scored on weeks %s: %d men ==%n%-18s %-4s %5s %8s %8s %6s   %-22s %s%n", day, weeks, cases.size(),
                     "source", "pos", "men", "RMSE", "baseline", "ratio", "diff (sq err)", "reading"));
+            String empties = String.format("ESPN left %d man-weeks empty for men it projected in other weeks of these; the man played in %d of them.%n",
+                    blank, blankPlayed);
             for(Object[] r : score(cases, SOURCES, "sleeper-next")){
                 String reading = reading((double) r[6], (double) r[7], (int) r[2]);
                 out.append(String.format("%-18s %-4s %5d %8.2f %8.2f %6.2f   %+7.2f +- %-10.2f %s%n", r[0], r[1], (int) r[2], (double) r[3],
@@ -222,6 +237,7 @@ public class ForwardAccuracy {
                 tsv.append(String.format("%s\t%s\t%s\t%s\t%d\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%s%n", r[0], day, weeks, r[1], (int) r[2],
                         (double) r[3], (double) r[4], (double) r[5], (double) r[6], (double) r[7], reading));
             }
+            out.append(empties);
         }
         // the latest scored day only: the explorer shows one check per source
         StringBuilder latest = new StringBuilder(tsv.substring(0, tsv.indexOf("\n") + 1));

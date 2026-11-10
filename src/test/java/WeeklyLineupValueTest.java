@@ -202,15 +202,53 @@ public class WeeklyLineupValueTest {
         }
     }
 
-    /** Lamar on IR is empty every week; Love is empty until ESPN has him back; "back" is projected this week. */
+    /** A flat rate of 15 for both men: the rostered one takes it, and the free fill-in keeps his one start at 13 and his 2 after. */
     @Test
-    public void espnHasAViewOnlyOfAManItProjectsAboveZeroSomewhere(){
-        Map<Integer, Map<String, Double>> espn = Map.of(
-                9, Map.of("lamar", 0.0, "love", 0.0, "back", 12.0),
-                10, Map.of("lamar", 0.0, "love", 8.0));
-        assertEquals(java.util.Set.of("love", "back"), WeeklyLineupValue.espnView(espn, 9, 10));
-        assertEquals(java.util.Set.of("back"), WeeklyLineupValue.espnView(espn, 9, 9), "a week outside the window is not a view");
-        assertEquals(java.util.Set.of(), WeeklyLineupValue.espnView(Map.of(), 9, 10));
+    public void aSourcePricesRosteredMenAndLeavesTheWireOnSleepersWeeks(){
+        TreeMap<Integer, Map<String, Double>> sleeper = new TreeMap<>(Map.of(
+                10, Map.of("mine", 12.0, "fillIn", 13.0),
+                11, Map.of("mine", 11.0, "fillIn", 2.0)));
+        java.util.Set<String> owned = java.util.Set.of("mine");
+        TreeMap<Integer, Map<String, Double>> flat = WeeklyLineupValue.priced(sleeper, owned, false,
+                Map.of("mine", 15.0, "fillIn", 15.0), Map.of(), Map.of());
+        assertEquals(Map.of("mine", 15.0, "fillIn", 13.0), flat.get(10));
+        assertEquals(Map.of("mine", 15.0, "fillIn", 2.0), flat.get(11));
+        assertEquals(15.0, WeeklyLineupValue.priced(sleeper, owned, true, Map.of("fillIn", 15.0), Map.of(), Map.of()).get(11).get("fillIn"),
+                1e-12, "Sleeper's own weeks and the model price every man");
+        // FantasyPros' 54.9-point waiver quarterback, 2026-11-09: a free agent's one start times a rank factor of 4.14
+        TreeMap<Integer, Map<String, Double>> factor = WeeklyLineupValue.priced(sleeper, owned, false, Map.of(),
+                Map.of("mine", 2.0, "fillIn", 4.14), Map.of());
+        assertEquals(24.0, factor.get(10).get("mine"), 1e-12);
+        assertEquals(13.0, factor.get(10).get("fillIn"), 1e-12);
+    }
+
+    /** ESPN has Stevenson empty in week 10 and at 11.3 in week 12, Jeanty in both, and Lamar Jackson (IR) empty throughout. */
+    @Test
+    public void anEmptyEspnWeekKeepsSleepersNumberAndTheManIsPartlyEspns(){
+        Map<Integer, Map<String, Double>> own = WeeklyLineupValue.aboveZero(Map.of(
+                10, Map.of("stevenson", 0.0, "jeanty", 12.2, "lamar", 0.0),
+                12, Map.of("stevenson", 11.3, "jeanty", 13.9, "lamar", 0.0)));
+        assertEquals(Map.of("jeanty", 12.2), own.get(10), "an empty line is not a number");
+        TreeMap<Integer, Map<String, Double>> sleeper = new TreeMap<>(Map.of(
+                10, Map.of("stevenson", 10.6, "jeanty", 10.5),
+                12, Map.of("stevenson", 10.8, "jeanty", 12.6, "lamar", 22.1)));
+        java.util.Set<String> owned = java.util.Set.of("stevenson", "jeanty", "lamar");
+        TreeMap<Integer, Map<String, Double>> priced = WeeklyLineupValue.priced(sleeper, owned, false, Map.of(), Map.of(), own);
+        assertEquals(10.6, priced.get(10).get("stevenson"), 1e-12, "Sleeper's, where ESPN leaves the week empty");
+        assertEquals(11.3, priced.get(12).get("stevenson"), 1e-12);
+        assertEquals(22.1, priced.get(12).get("lamar"), 1e-12, "ESPN never projects him");
+        Map<String, Integer> coverage = WeeklyLineupValue.coverage(sleeper, owned, java.util.Set.of(), own);
+        assertEquals(2, coverage.get("jeanty"));
+        assertEquals(1, coverage.get("stevenson"));
+        assertFalse(coverage.containsKey("lamar"));
+        assertEquals(2, WeeklyLineupValue.coverage(sleeper, owned, java.util.Set.of("lamar"), own).get("lamar"), "a season number covers him whole");
+    }
+
+    @Test
+    public void aNextGameRateIsNotLaidOverADefence(){
+        POSITION.put("back", Position.RB);
+        POSITION.put("ravens", Position.DEF);
+        assertEquals(Map.of("back", 10.0), WeeklyLineupValue.skill(Map.of("back", 10.0, "ravens", 8.4, "nobody", 3.0), POSITION::get));
     }
 
     @Test
